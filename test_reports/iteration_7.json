@@ -1,0 +1,44 @@
+{
+  "summary": "Phase P1 (Workspace Kanban) + P2 (Manuscript Review Workflow) + P3 (Resend DRY-RUN email infrastructure) tested end-to-end. Backend: 20/20 pytest PASS. Frontend: all critical flows working as Elena (owner), Rafael (reviewer), Marcus (author). One missing-testid gap on Reviews dashboard tabs.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Reviews.jsx — 4 tab triggers (Pending invitations / In progress / Completed / Declined)",
+        "issue": "Spec requires data-testid='reviews-tab-pending', 'reviews-tab-in_progress', 'reviews-tab-completed', 'reviews-tab-declined' on each tab. All FOUR are MISSING. Tabs render visually with correct labels and badge counts (Pending 1, In progress 1, Completed 1, Declined 1) and clicking by text works, but automation cannot target tabs by spec testid.",
+        "selector": "buttons containing 'Pending invitations' / 'In progress' / 'Completed' / 'Declined' under [data-testid=reviews-dashboard]",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_phase_kanban_review_email_test.py",
+    "/app/test_reports/pytest/pytest_phase_kre.xml"
+  ],
+  "action_items": [
+    "Add data-testid={`reviews-tab-${status}`} to each of the 4 tab triggers in /app/frontend/src/pages/Reviews.jsx (status keys: pending, in_progress, completed, declined) to match the spec."
+  ],
+  "critical_code_review_comments": [
+    "services/email_service.py is well-layered: typed helpers (send_password_reset / send_workspace_invitation / send_review_request / send_collaboration_invitation) are canonical and the ResendProvider bridge has EVENT_KIND_TO_EMAIL=set() — explicit dedup avoids double-sends. Verified empirically: one [email:UNCONFIGURED] log per single trigger API call.",
+    "GET /api/workspaces/{ws_id}/tasks correctly aggregates across all linked projects, enriches project + assignee, and normalises legacy 'todo' → 'backlog' on the wire (~/research_os.py:471-497). 403 for non-members enforced via _ws_role().",
+    "Review workflow state machine is tight: pending → accepted → completed (verdict required), pending → declined (no further actions). Verdict cascades to manuscript.status (accepted→accepted, rejected→rejected, minor/major_revision→revision_requested). Verified end-to-end via test_full_review_lifecycle_request_accept_verdict.",
+    "POST /review-requests/{rid}/respond and /verdict both enforce reviewer_id == caller and proper status guards (cannot verdict before accepting, cannot re-respond to non-pending). Notification dispatched to requester + manuscript authors on verdict.",
+    "GET /api/email/config returns the exact missing[] list (RESEND_API_KEY, EMAIL_FROM, APP_BASE_URL all blank → all 3 reported). Templates catalog matches spec exactly. All 5 preview URLs render valid HTML with content-length > 200 bytes.",
+    "Resend SDK (resend>=2.0) installed and importable. With RESEND_API_KEY blank the service short-circuits in _send_via_resend's caller path — no SDK call attempted. is_live() returns False as expected.",
+    "Frontend WorkspaceKanban: HTML5 native drag-and-drop (draggable=true verified on cards). 5 columns, per-column quick-add composer with kanban-new-title-{status} + kanban-new-submit-{status} all wired. kanban-project-picker dropdown present. Verified: creating a TEST_UI_KAN_<ts> task via Backlog '+' composer appears in the backlog column immediately.",
+    "Frontend ManuscriptDetail right rail: 'Reviews' tab works, manuscript-review-assign-btn present, manuscript-review-{id} cards render reviewer name + section + status pill (DECLINED, MINOR REVISION, ACCEPTED, PENDING all visible on RO Test Paper). Manuscript status field shows 'Revision requested' confirming the verdict cascade is reflected in UI.",
+    "/reviews page (Reviews.jsx) renders the reviewer dashboard with badge counts on each tab (Pending invitations 1, In progress 1, Completed 1, Declined 1). Accept → moves card to In progress with 'Submit verdict' button → verdict form has select / comment / submit testids all wired. Only the 4 tab triggers themselves are missing the spec testids (see frontend_issues)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_phase_kanban_review_email_test.py (NEW — 20 pytest tests: 3 Kanban + 4 Review workflow + 13 Email infra)"
+  ],
+  "success_rate": {"backend": "100% (20/20)", "frontend": "Critical flows 100%. 1 missing-testid gap on 4 Reviews dashboard tab triggers."},
+  "test_credentials": "elena.varga@synaptiq.io / demo123 (Owner), marcus.okafor@synaptiq.io / demo123 (author/PI), rafael.santos@synaptiq.io / demo123 (reviewer), aiko.tanaka@synaptiq.io / demo123 (non-member 403), admin@synaptiq.io / admin123 (admin for /api/email/test).",
+  "seed_data_creation": "Tests create review-requests on the seeded RO Test Paper (6a2d843b…) targeting Rafael — accepted + minor_revision verdict path, plus a decline path. Created a TEST_UI_KAN_<ts> task in seeded workspace RO Test Lab → RO Test Project via UI quick-add. Manuscript status correctly cascaded to 'revision_requested' from the minor_revision verdict. All new review_requests left in completed/declined states for next iteration.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run with: REACT_APP_BACKEND_URL=https://idea-to-pub.preview.emergentagent.com pytest /app/backend/tests/backend_phase_kanban_review_email_test.py -v --tb=short. All 20 pass in ~4s. Email DRY-RUN confirmed via grep on /var/log/supervisor/backend.err.log for 'synaptiq.email' — single log line per trigger API call. The only frontend regression risk is the missing reviews-tab-{status} testids on Reviews.jsx tab triggers. nav-reviews, reviews-dashboard, review-accept-{id}, review-decline-{id}, review-verdict-{id}, review-verdict-select/-comment/-submit-{id}, manuscript-reviews-tab, manuscript-review-assign-btn, manuscript-review-{id}, workspace-tab-tasks, kanban-col-{status}, kanban-task-{id}, kanban-add-{status}, kanban-new-title-{status}, kanban-new-submit-{status}, kanban-project-picker — ALL VERIFIED PRESENT.",
+  "rca of the issue": "Reviews.jsx tab triggers render with semantically correct labels and badge counts but were not given the data-testid='reviews-tab-{status}' attribute the spec requires. Fix is purely additive (one attribute per tab button). Not a functional bug — keyboard/mouse interaction works fine — only an automation/testability gap."
+}

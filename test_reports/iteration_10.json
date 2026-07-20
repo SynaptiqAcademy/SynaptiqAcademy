@@ -1,0 +1,64 @@
+{
+  "summary": "Phase P0 frontend (AI Usage dashboard, Research Copilot assistant drawer, Saved Search controls). Found ONE CRITICAL blocker: /ai-usage crashes with an uncaught React runtime error so the entire dashboard never renders. Other components (sidebar nav link, assistant launcher/drawer on Workspace, save-search buttons on Journals/Conferences/Grants) load correctly and have all required data-testid attributes. The Send button on the Assistant drawer is partially intercepted by the 'Made with Emergent' fixed badge at bottom-right of viewport which blocks Playwright clicks (likely also marginally affects real users when drawer is fully open at 1920x1080).",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "/api/matching/analytics",
+        "issue": "`recent[]` contains 4 legacy ai_requests records with `credits_consumed` stored as the FULL `consume_credits()` dict `{consumed: int, balance: int, action: str}` instead of an int. New records (post-fix) store an int. Returning a mixed-shape field breaks any consumer that treats it as a number.",
+        "priority": "CRITICAL"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "pages/AIUsage.jsx (Recent activity section)",
+        "issue": "Renders `−{r.credits_consumed || 0}` directly. When backend returns `credits_consumed` as an object the whole page throws 'Objects are not valid as a React child (found: object with keys {consumed, balance, action})'. Crash happens BEFORE any KPI / sparkline / by-kind / matching-breakdown / popular-venues block renders, so the ENTIRE /ai-usage page is unusable for both elena and admin.",
+        "selector": "[data-testid='recent-ai-activity']",
+        "priority": "CRITICAL"
+      },
+      {
+        "component": "AssistantPanel (drawer Send region)",
+        "issue": "The fixed `Made with Emergent` badge (a[id='emergent-badge']) sits bottom-right of the viewport with very high z-index and intercepts pointer events on top of the right-side drawer's Send button + composer area. Playwright clicks on [data-testid='assistant-send'] timed out for this reason. Real users can probably still click around the badge but it's a real overlay/contrast bug.",
+        "selector": "[data-testid='assistant-send']",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "/ai-usage initial render",
+        "issue": "Backend payload causes immediate frontend crash. Cannot verify KPI counts, sparkline, by-kind bars, matching breakdown, popular venues, admin top-users until both sides agree on a numeric shape for credits_consumed.",
+        "affected_selectors": ["[data-testid='ai-usage-kpis']","[data-testid='usage-sparkline']","[data-testid='ai-usage-by-kind']","[data-testid='matching-breakdown']","[data-testid='popular-venues']","[data-testid='admin-top-users']","[data-testid='recent-ai-activity']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "1) FRONTEND quick fix in /app/frontend/src/pages/AIUsage.jsx Recent activity loop: coerce credits_consumed to a number, e.g. `const cc = typeof r.credits_consumed === 'number' ? r.credits_consumed : (r.credits_consumed?.consumed || 0);` then render `−{cc}`. Same defensive read everywhere `credits_consumed` is rendered.",
+    "2) BACKEND normalisation in /app/backend/routers/matching.py /matching/analytics: in the `recent` aggregation, project credits_consumed to its `.consumed` sub-field when it is an object (e.g. add `{$set: {credits_consumed: {$cond: [{$eq: [{$type: '$credits_consumed'}, 'object']}, '$credits_consumed.consumed', '$credits_consumed']}}}`). Same fix in by_kind/last_30d/totals $sum since those silently fail on object values too.",
+    "3) DATA MIGRATION: one-off `db.ai_requests.updateMany({credits_consumed: {$type: 'object'}}, [{$set: {credits_consumed: '$credits_consumed.consumed'}}])`. 4 records currently affected (3 for elena: journal_matching=10, conference_matching=5, grant_matching=10, reviewer_matching=10).",
+    "4) Z-INDEX: bump assistant drawer / SaveSearch drawer / SaveSearch modal above the global Emergent badge, or shift the badge when a drawer is open. Drawer is currently z-50 — increase to z-[60] or hide the badge programmatically when a drawer is mounted.",
+    "5) Re-run /ai-usage for both elena and admin after the fix to confirm KPI / sparkline / popular-venues / admin-top-users render."
+  ],
+  "critical_code_review_comments": [
+    "AIUsage.jsx assumes `r.credits_consumed` is always a number; never coerce. Same pattern in AssistantPanel.jsx message bubble `{msg.credits_consumed}` — would crash if assistant_message audit ever had a dict.",
+    "AssistantPanel: history `messages` insert uses optimistic id `tmp-${Date.now()}` and never resolves to real id when the assistant message returns. If the user sends two messages quickly the optimistic key may collide. Low risk but worth a UUID.",
+    "AssistantPanel.send: when balance < ASSISTANT_COST it toasts but only checks the locally cached balance — if the cache is stale the server still throws 402 (handled), but the local balance check should also handle balance==null (currently `balance && ...`, which silently allows sending when balance is unknown — that's fine but document).",
+    "SavedSearchControls.PreviewModal does NOT have a data-testid — adding one (e.g. `data-testid='saved-search-preview-modal'`) would make automated testing of the preview list deterministic.",
+    "AIUsage.jsx Popular venues uses `<Link>` wrapping `<HBar>` — the inner HBar contains text + a div; that's fine but click target spans both — fine. Just noting.",
+    "Drawer z-index war with Emergent badge — drawer should portal to body with z-[100]; or just `pointer-events-none` the badge while drawer is open."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "n/a (backend testing not requested; but discovered 1 data-shape regression in /matching/analytics)",
+    "frontend": "Partial: sidebar nav-ai-usage ✅; AssistantLauncher on workspace ✅ (drawer renders with balance 98/100, 4 quick-action chips, input, send button, history toggle); /ai-usage ❌ (full crash); save-search + manage drawer on /journals not validated end-to-end due to badge overlay and run-time budget; manuscript/project launchers visited but interaction-blocked by Emergent badge overlay."
+  },
+  "test_credentials": "elena.varga@synaptiq.io / demo123 (balance 98/100 at end of run); admin@synaptiq.io / admin123 (admin scope auto-detected in AIUsage but page crashes before render).",
+  "seed_data_creation": "None. Used existing 9 workspaces, manuscripts, projects. No saved searches created/deleted in this run (blocked).",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "PRIORITY 1: After main agent applies fixes (coerce credits_consumed + run data migration + fix drawer z-index vs Emergent badge), re-test (a) /ai-usage for elena (KPIs, sparkline, by-kind, matching-breakdown, popular-venues with names not IDs, recent activity), (b) /ai-usage as admin (admin badge + admin-top-users block), (c) full Assistant flow on Workspace: open drawer → send 'Hello…' message → assert reply received within 60s and balance decremented by 2, (d) Workspace history toggle shows saved session, (e) Manuscript drawer shows 8 quick actions including Improve Abstract, click Improve Abstract triggers user bubble, (f) Project drawer shows 4 quick actions, (g) Journals/Conferences/Grants save-search modal → submit → toast 'Search saved' → saved-searches drawer lists item → preview returns ≤10 items → edit → update frequency → delete with confirm → item disappears, (h) kind-filter: drawer on /conferences must NOT show journal saved searches, (i) responsive at 1366x768. Elena currently has saved searches from previous runs visible in her account — check /api/searches before testing to see existing items. The Made-with-Emergent badge is intercepting clicks on bottom-right drawer elements at 1920x1080; either fix z-index or test with badge hidden via `document.getElementById('emergent-badge').style.display='none'` in your script preamble.",
+  "rca of the issue": "Phase-7 backend matching.py used to write `credits_consumed: charged` (full dict from consume_credits) into ai_requests. That was later patched to `credits_consumed: charged.get('consumed')` but 4 historical records remain with dict values (visible via `db.ai_requests.count_documents({'credits_consumed': {'$type': 'object'}}) == 4`). The new /matching/analytics endpoint returns these raw in `recent[]`; AIUsage.jsx renders `r.credits_consumed` directly inside JSX, so React throws. Reproduction: login as elena → /ai-usage → immediate uncaught error overlay 'Objects are not valid as a React child (found: object with keys {consumed, balance, action})'. Mitigation: (a) frontend coerce, (b) backend normalise on read, (c) one-off data migration script. Confirmed via curl /api/matching/analytics showing 4 of 11 recent[] entries have credits_consumed as dict."
+}

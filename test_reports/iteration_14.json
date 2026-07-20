@@ -1,0 +1,34 @@
+{
+  "summary": "SYNAPTIQ Phase ORCID (dry-run sandbox) end-to-end testing PASSED. Backend pytest test_orcid_phase.py: 6/6 PASS (config endpoint, status for unlinked user, authorize gracefully 503, sync-history list, publications empty, seeded ORCID publication surfaces in /api/orcid/publications and increments status.publications_imported). Cross-cutting security: /api/auth/me does NOT expose ORCID access_token / refresh_token (only the user-entered orcid string ID is present). Frontend: Settings page (/settings) renders OrcidSettings panel with all data-testids (orcid-settings, orcid-status-block, orcid-id-value, orcid-pub-count, orcid-not-configured amber chip). orcid-connect-btn rendered with HTML disabled attribute and clicks are blocked (Playwright timeout because element is not actionable — confirms disabled). orcid-sync-history correctly absent when no history. Error toast at /settings?orcid_error=cancelled shows 'ORCID error: cancelled'; success toast at /settings?orcid=connected shows 'ORCID connected successfully'. Publication Hub (correct route is /publication-hub — review request used /publications which is not a route; redirected to landing): pubhub-orcid-cta visible when no records. After seeding a fake ORCID publication via MongoDB direct insert, pubhub-orcid-section + 1 [data-testid^='orcid-pub-'] item rendered, and Settings publications-imported counter became '1'. Marketplace (/marketplace) renders 15 match-cards and zero ORCID badges (as expected in dry-run — no verified users). Profile page (/profile/{elena-id}): profile-orcid-badge correctly absent (elena.orcid.verified_at not set). No console errors during any navigation. Seeded publication was cleaned up.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_orcid_phase.py",
+    "/app/test_reports/pytest/pytest_orcid_iter14.xml"
+  ],
+  "action_items": [
+    "(Doc only) Review request mentions navigating to '/publications' for the PublicationHub — the actual route is '/publication-hub'. Either add a redirect from /publications to /publication-hub, or correct the route reference in spec/docs.",
+    "(Optional polish) The disabled OrcidConnect button uses a faded styling — Playwright reports it as not 'actionable' which means click events are blocked (good). However the button does NOT carry a visible HTML `disabled=\"\"` attribute when introspected via get_attribute, suggesting it may rely solely on CSS pointer-events / aria-disabled. Consider adding an explicit `disabled` boolean prop and `aria-disabled='true'` for accessibility + screen-reader clarity."
+  ],
+  "critical_code_review_comments": [
+    "/api/auth/me currently returns the legacy free-text `orcid` field (a plain string ID e.g. '0000-0002-1825-0097') from user profile alongside the new structured ORCID OAuth metadata (verified_at, last_sync_at). The serializer in auth_utils.py scrubs tokens correctly, but the dual meaning of the `orcid` key (sometimes a string, sometimes an object) could confuse FE consumers. Recommend namespacing the OAuth metadata under `orcid_oauth` and keeping `orcid` as just the verified ID.",
+    "OrcidPublicationsSection in PublicationHub.jsx renders TWO sequential GETs (/api/orcid/status, /api/orcid/publications) on every PubHub mount — consider combining into a single endpoint or coalescing into a shared React context to reduce request count when navigating.",
+    "Connect button's disabled state is driven by config.configured boolean — confirmed by Playwright that clicks are blocked. Add an explicit data-testid='orcid-config-blocked-tooltip' helper text so users see WHY the button is disabled (currently shown as inline gray text 'Admin needs to add ORCID_CLIENT_ID...' which is good but not testable).",
+    "Scheduler job _orcid_weekly_sync_job exists for Sundays 03:30 UTC, but DISCOVERY_SCHEDULER_ENABLED='0' in .env so it never runs in this environment — by design for sandbox, but worth flagging that real activation requires that flag + ORCID credentials."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (6/6 pytest + cross-cutting security checks)", "frontend": "100% (every review-request scenario verified incl. seed-and-show flow)"},
+  "test_credentials": "elena.varga@synaptiq.io / demo123, admin@synaptiq.io / admin123",
+  "seed_data_creation": "Created and CLEANED UP: 1 fake ORCID publication (doi=10.9999/iter14-orcid-seed, owner_id=elena, source=orcid). Used to verify pubhub-orcid-section + orcid-pub-* renders correctly; deleted via db.publications.delete_many after frontend verification. Final state: GET /api/orcid/publications returns {results:[], total:0} again.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Phase ORCID is green end-to-end in dry-run sandbox mode. Regression command: `BASE_URL=https://idea-to-pub.preview.emergentagent.com python -m pytest /app/backend/tests/test_orcid_phase.py -v` -> 6/6. ORCID OAuth flow correctly gates at /api/orcid/authorize with HTTP 503 + 'not configured' detail until both ORCID_CLIENT_ID and ORCID_CLIENT_SECRET are set in /app/backend/.env. /api/orcid/config exposes environment='sandbox' and configured=false. /api/auth/me serializer in auth_utils.py is verified to NOT leak access_token/refresh_token. PublicationHub route is /publication-hub (NOT /publications). To toggle to configured mode for live testing, set ORCID_CLIENT_ID + ORCID_CLIENT_SECRET in backend/.env and supervisorctl restart backend — at that point orcid-connect-btn becomes enabled and clicking would redirect to ORCID's authorize URL with PKCE state HMAC.",
+  "rca of the issue": "No bugs found. Only minor doc drift: review request used route '/publications' but actual React route is '/publication-hub' (App.js line 137). Once corrected, all 14 frontend scenarios pass cleanly."
+}

@@ -1,0 +1,40 @@
+{
+  "summary": "Phase III SYNAPTIQ testing complete. Backend: 27/27 tests passing across regression (Elena login, discover feed, manuscripts list), auth (register, forgot/reset/change password), onboarding completion, marketing pages (8 paths return 200), billing (plans/subscription/checkout-503/portal-503/webhook persistence), and credits (balance, consume via ai_collaborator_matching with usage entry, exhaustion -> 402 with 'Insufficient research credits'). Frontend: Landing FAQ (8 items, expandable), all 8 marketing pages render, Pricing shows 3 plans with 'Most popular' on Researcher and monthly/annual toggle changes 19->15 / 199->159, Elena login redirects to /discover, sidebar credits-widget renders (Free 90/100), Settings has all 4 password-change data-testids and mismatch shows inline error, ProtectedRoute redirects unauthed /discover to /login, fresh register redirects to /onboarding which shows 'STEP 1 OF 5 · PERSONAL' and blocks advance with inline validation message.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Settings — Subscription card", "issues": ["Spec mentions copy 'Credits left X/Y' but page shows the credits info via different wording (still presents balance and Change plan link). Cosmetic only; functionality intact."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_phase3_test.py",
+    "/app/test_reports/pytest/pytest_phase3.xml"
+  ],
+  "action_items": [
+    "(Optional) Align Settings subscription card copy with spec 'Credits left X/Y' if exact wording matters for marketing/QA scripts."
+  ],
+  "critical_code_review_comments": [
+    "auth.py: forgot-password correctly avoids enumeration (always ok=true) and gates debug_reset_token behind EXPOSE_RESET_TOKEN env. Reset-token is JWT with type='password_reset' and 30-min TTL, persisted in password_resets with single-use enforcement — solid.",
+    "credits_service.consume_credits uses atomic $inc with $gte guard preventing race-condition overdraw — verified by exhausting 100 credits over 10 calls; 11th request returns 402 with structured detail.",
+    "billing.create_checkout / create_portal return 503 with structured JSON detail (message + next_step) when Stripe unconfigured — no Python tracebacks leaked. Webhook persists raw event to billing_events.",
+    "ProtectedRoute correctly enforces both auth (->/login) and onboarded flag (->/onboarding); /onboarding itself uses requireOnboarded=false to break the loop.",
+    "models.OnboardingComplete enforces required arrays (research_areas/_interests/_keywords) via Pydantic; backend POST /api/users/me/onboarding flips onboarded=true and recomputes full_name in a single update.",
+    "Plans catalogue is the single source of truth for prices (€0/19/199 monthly, €0/15/159 annual) and credit allowances (100/2000/50000) — matches spec exactly.",
+    "Phase I & II regression intact: Elena login, /api/discover/feed, /api/manuscripts list all green."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_phase3_test.py (new — 27 tests)"
+  ],
+  "success_rate": {"backend": "100% (27/27)", "frontend": "100% on tested critical flows"},
+  "test_credentials": "elena.varga@synaptiq.io / demo123 (Elena, onboarded=true); admin@synaptiq.io / admin123; plus freshly-registered users via /api/auth/register for onboarding/credit-exhaustion paths.",
+  "seed_data_creation": "Tests register ephemeral users at @example.com domains (pydantic EmailStr rejects .test TLD — switched to example.com). Each fresh user starts with 100 credits and onboarded=false. No teardown but data is namespaced (ftest_*, phase3_*).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Backend phase3 test file at /app/backend/tests/backend_phase3_test.py — keep for regression. Gotchas: (1) pydantic EmailStr rejects .test TLD, use @example.com for fresh users; (2) test_consume_via_collaborator_matching depends on EMERGENT_LLM_KEY working — skip if 5xx; (3) test_insufficient_credits_exhaust makes up to 12 LLM calls so it's slow (~70s). Backend external URL same as before (REACT_APP_BACKEND_URL=https://idea-to-pub.preview.emergentagent.com). Stripe vars in backend/.env are intentionally empty — 503 is expected. EXPOSE_RESET_TOKEN=1 surfaces debug_reset_token on /api/auth/forgot-password response.",
+  "rca of the issue": "N/A — no failing tests after correcting fresh-user email domain to @example.com (pydantic EmailStr blocks reserved .test TLD). Implementation is fully aligned with the spec including 503 stubs, onboarding enforcement, credits atomicity, and password-flow JTI tracking."
+}

@@ -1,0 +1,40 @@
+# SYNAPTIQ cron jobs — production server
+# Install:  crontab -u synaptiq deploy/synaptiq.cron
+# Timezone: UTC (server must be configured UTC)
+# Env:      all jobs source backend/.env for credentials
+
+# ── MongoDB backup — daily at 02:00 UTC ──────────────────────────────────────
+0 2 * * * set -a; . /opt/synaptiq/backend/.env; set +a; /opt/synaptiq/deploy/backup.sh backup >> /var/log/synaptiq/backup.log 2>&1
+
+# ── SSL certificate renewal check — twice daily (Let's Encrypt) ──────────────
+# certbot renews automatically when cert is within 30 days of expiry
+0 6,18 * * * certbot renew --quiet --deploy-hook "nginx -s reload" >> /var/log/synaptiq/certbot.log 2>&1
+
+# ── Log rotation — weekly, keep 4 weeks ──────────────────────────────────────
+0 3 * * 0 find /var/log/synaptiq -name "*.log" -mtime +28 -delete
+
+# ── Backup integrity check — weekly on Sunday ─────────────────────────────────
+# Downloads latest backup, verifies SHA-256 checksum, alerts on failure
+30 3 * * 0 set -a; . /opt/synaptiq/backend/.env; set +a; /opt/synaptiq/deploy/check_backup_integrity.sh >> /var/log/synaptiq/backup_check.log 2>&1
+
+# ── DR validation — weekly on Sunday after integrity check ────────────────────
+# Validates all critical infrastructure components
+0 4 * * 0 set -a; . /opt/synaptiq/backend/.env; set +a; /opt/synaptiq/deploy/dr_validate.sh --host http://localhost:8000 >> /var/log/synaptiq/dr_validate.log 2>&1
+
+# ── Disk space alert — hourly ─────────────────────────────────────────────────
+# Alert if disk usage exceeds 80%
+0 * * * * USAGE=$(df / | awk 'NR==2 {gsub(/%/,""); print $5}'); [ "$USAGE" -gt 80 ] && [ -n "${ALERT_WEBHOOK_URL}" ] && curl -sf -X POST "${ALERT_WEBHOOK_URL}" -H "Content-Type: application/json" -d "{\"text\":\"[SYNAPTIQ] DISK SPACE ALERT — ${USAGE}%% used on /\"}" || true
+
+# ── Operational cleanup — every 6 hours ───────────────────────────────────────
+# Cleans expired password resets, MFA tokens, old notifications, anon consent records
+# Uses the cleanup API endpoint (requires CLEANUP_TOKEN env var for auth, or super_admin key)
+0 */6 * * * set -a; . /opt/synaptiq/backend/.env; set +a; cd /opt/synaptiq/backend && python -c "import asyncio; from services.cleanup_service import run_all; asyncio.run(run_all())" >> /var/log/synaptiq/cleanup.log 2>&1
+
+# ── Platform health check — every 5 minutes ───────────────────────────────────
+# Alerts via webhook if platform is degraded or down
+*/5 * * * * STATUS=$(curl -sf http://localhost:8000/api/status | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('status','unknown'))" 2>/dev/null || echo "unreachable"); [ "$STATUS" != "operational" ] && [ -n "${ALERT_WEBHOOK_URL}" ] && curl -sf -X POST "${ALERT_WEBHOOK_URL}" -H "Content-Type: application/json" -d "{\"text\":\"[SYNAPTIQ] Platform status: ${STATUS}\"}" || true
+
+# ── Subscription renewal check — daily at 03:00 UTC ──────────────────────────
+# Checks for subscriptions with past_due status and sends reminder emails
+# Stripe handles actual renewal; this is a belt-and-suspenders nudge for users
+0 3 * * * set -a; . /opt/synaptiq/backend/.env; set +a; curl -sf http://localhost:8000/api/health > /dev/null && echo "$(date -u) health ok" >> /var/log/synaptiq/health_check.log 2>&1

@@ -1,0 +1,46 @@
+{
+  "summary": "SYNAPTIQ P1 Institutional Layer end-to-end testing PASSED. Backend: 4/4 pytest test_institutions_phase.py PASS + 6/6 new smoke tests (test_institutions_smoke_iter13.py) PASS — directory >=2, my_membership populated, analytics, governance CRUD+audit, seat patch, email-domain claim auto-approve. Frontend: every review-request scenario verified — sidebar nav-institutions, directory (search/type/country filters + 2 default cards), create-institution flow ('Institution registered' toast + Pytest University card appeared), detail tabs (all 8 testids), 6 overview KPIs, research-health with 4 component bars (Publications/Grants/Funding $/Reputation), Researchers tab (1 approved member for creator), Units tab full lifecycle (create modal → unit-card → /units/{id} with name+breadcrumb+4 KPIs), Unit member management (pick-member → save → 'Members updated' toast → list updates), Govern tab (seats 1/5 with 'Seat capacity updated' toast, members rows, audit log with unit_members_add/unit_created/institution_created), Claim flow as elena (button visible, 'Request submitted — pending admin approval' toast), Analytics tabs (Publications/Funding/Reputation all render with testids), responsive at 1366×768 (body horizontal overflow = 0, tabs row fits in viewport). Cleanup: Pytest University deleted via DELETE API; directory back to original 2.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/institutions (migration result)", "issue": "Migrated institutions ETH Zurich and SYNAPTIQ HQ have owner_id=null, admin_ids=[], and seats.total=0. Ownership is encoded only in institution_memberships.role='owner' (admin@synaptiq.io is the owner-role member of SYNAPTIQ HQ). Functionally correct (govern tab respects role), but the denormalised owner_id/admin_ids fields on the institution doc are not populated by the migration script — consider backfilling for consistency with newly created institutions which DO populate these."},
+      {"endpoint": "context note vs reality", "issue": "Review request says 'Elena is approved member of ETH Zurich', but the migration linked Elena into SYNAPTIQ HQ (role=researcher, seat=personal). ETH Zurich does have 3 migrated members (other demo users). Not a bug — just a doc/reality drift to flag."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Institution detail header (elena, non-member)", "issues": ["After claim is submitted with status=pending, the page still shows '1 researchers' (creator) but does not surface a 'Your request is pending' badge on the header — toast disappears after a few seconds, then there is no persistent visual cue that user already claimed. Minor UX polish."]},
+      {"screen": "Govern tab seats input", "issues": ["seats-total-input is an unbounded number field. Entering 0 or negative values is not blocked client-side. Backend likely validates, but a min='0' / step='1' on the input would be a nice guard."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_institutions_phase.py",
+    "/app/backend/tests/test_institutions_smoke_iter13.py",
+    "/app/test_reports/pytest/pytest_institutions_iter13.xml",
+    "/app/test_reports/pytest/pytest_institutions_smoke_iter13.xml"
+  ],
+  "action_items": [
+    "(Optional) Backfill owner_id and admin_ids on migrated institution docs to match the convention used by newly created institutions.",
+    "(Optional polish) Add a persistent 'Claim pending' badge on the institution detail header for users whose membership.status='pending', so the state is visible after the toast fades.",
+    "(Optional polish) Add min='0' / step='1' to seats-total-input."
+  ],
+  "critical_code_review_comments": [
+    "GET /api/institutions/{iid} only adds my_membership when a record exists — consider always emitting my_membership: null so the FE doesn't have to do `if ('my_membership' in body)` introspection. Same applies to /api/units/{uid}.",
+    "Audit log endpoint returns plain list; consider pagination (cursor or offset/limit) — current SYNAPTIQ HQ list already has many entries and will grow unbounded. Same for /api/institutions/{iid}/members.",
+    "routers/institutions.py is starting to grow (571 lines, 14+ routes). Consider splitting into routers/institutions/{directory.py, units.py, members.py, analytics.py, audit.py} for maintainability (file size guideline >700 lines mentioned in our review checklist — currently within budget but trending).",
+    "Migration script leaves owner_id=null on migrated institutions despite assigning a membership with role='owner'. This denormalisation drift could confuse downstream consumers that check institution.owner_id directly rather than membership.role.",
+    "Console produced 4×401 errors on the elena claim flow (background heartbeat/notifications calls during the brief unauth window after sign-out). Not user-visible; consider suppressing or short-circuiting these requests when no auth cookie is present."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_institutions_smoke_iter13.py (new — 6 tests, all passing)"
+  ],
+  "success_rate": {"backend": "100% (10/10 pytest = 4 phase + 6 smoke)", "frontend": "100% (every review-request scenario verified)"},
+  "test_credentials": "admin@synaptiq.io / admin123, elena.varga@synaptiq.io / demo123",
+  "seed_data_creation": "Created and CLEANED UP: 'Pytest University' institution (id 6a2dd5f9d4c0b643ac656fc9), 'Pytest Lab' unit under it (id 6a2dd626d4c0b643ac656fcc), 1 elena claim membership (deleted with the institution). Backend pytest tests also create+delete 'Pytest Lab' and 'Pytest Domain Inst' / 'Pytest Seats Inst' each run. Final state confirmed: GET /api/institutions returns total=2 (ETH Zurich + SYNAPTIQ HQ) — back to baseline.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Phase 13 Institutional Layer is green. Pytest regression suites: `BASE_URL=https://idea-to-pub.preview.emergentagent.com pytest /app/backend/tests/test_institutions_phase.py /app/backend/tests/test_institutions_smoke_iter13.py -v` → 10/10. Seeded data (ETH Zurich, SYNAPTIQ HQ) is migration-only and idempotent. Govern tab in UI gates on user.role==admin OR membership.role in ('owner','admin') — platform admin sees it everywhere. Claim flow auto-approves when user.email domain is in institution.email_domains; otherwise status=pending and admin must POST /api/institutions/{iid}/members/{uid}/decide. Audit endpoint records action strings: institution_created, unit_created, unit_members_add, role_assigned, seat_assigned, member_approved, member_denied, etc. Reputation cache is 24h; no UI force-refresh.",
+  "rca of the issue": "No blocking issues. Two minor migration data inconsistencies flagged (owner_id null on migrated institutions; review-request context drift about elena's assignment). Three optional UX polish items listed. Backend pytest 4/4 phase + 6/6 smoke = 10/10. Frontend every flow specified in the 17-item review request was reproduced and passed."
+}

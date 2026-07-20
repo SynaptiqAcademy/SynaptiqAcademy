@@ -1,0 +1,54 @@
+# SYNAPTIQ backend — systemd service unit
+# For bare-metal / VM deployments (alternative to Docker)
+#
+# Install:
+#   sudo cp deploy/synaptiq-backend.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable synaptiq-backend
+#   sudo systemctl start synaptiq-backend
+#
+# Logs: journalctl -u synaptiq-backend -f
+
+[Unit]
+Description=SYNAPTIQ FastAPI Backend
+Documentation=https://synaptiq.academy
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=synaptiq
+Group=synaptiq
+WorkingDirectory=/opt/synaptiq/backend
+
+# Load production env file
+EnvironmentFile=/opt/synaptiq/backend/.env
+
+# Gunicorn with uvicorn workers
+ExecStart=/opt/synaptiq/venv/bin/gunicorn server:app \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --workers 4 \
+    --bind 127.0.0.1:8000 \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info
+
+# Restart policy
+Restart=always
+RestartSec=5
+StartLimitInterval=60
+StartLimitBurst=5
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/synaptiq/backend /tmp
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=2G
+
+[Install]
+WantedBy=multi-user.target

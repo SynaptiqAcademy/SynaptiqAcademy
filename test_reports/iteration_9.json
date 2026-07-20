@@ -1,0 +1,47 @@
+{
+  "summary": "Phase 6 (AI matching + deadlines) tested end-to-end. 11/11 backend pytest cases pass including all 4 LIVE Claude Sonnet 4.5 matchers (journal/conference/grant/reviewer) calling EMERGENT_LLM_KEY. Frontend AI Match modal, AI toolbar (4 buttons), DeadlinesWidget (discover + workspace), and credits decrement all verified visually.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Manuscript detail (and other pages)", "issues": ["React hydration warning in console: 'In HTML, <span> cannot be a child of <option>'. Cosmetic — does not break UI but should be cleaned up (TargetJournal select renders a <span> inside <option> somewhere)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_phase6_test.py",
+    "/app/test_reports/pytest/pytest_phase6.xml"
+  ],
+  "action_items": [
+    "(low) Remove <span> wrapper inside <option> tag to silence hydration warning."
+  ],
+  "critical_code_review_comments": [
+    "matching.py: refund logic only triggers on HTTPException — if `consume_credits` succeeds but a non-HTTPException (e.g. mongo write fail in _record_request) is raised AFTER the LLM call, credits are NOT refunded. Consider broader try/except around LLM+audit block. (Edge case, not blocking.)",
+    "routers/matching.py /matching/grant: returns {request_id, recommendations, credits, latency} but is missing `manuscript_id` (or project_id) in response payload — minor consistency gap with journal/conference/reviewer responses.",
+    "services/ai/matching.py match_reviewers: builds `overlap_areas` then never uses it — dead code; the candidate pool relies on `onboarded:True` filter only. Works because LLM does the real ranking, but the cheap-prefilter is essentially a no-op (passes ~all 6 demo reviewers each time).",
+    "deadlines _user_deadlines: revision_due item is appended even when `dueby` is None (urgency falls back to 'upcoming'). Either skip when dueby is None or default to a sensible due date. Minor data-quality concern."
+  ],
+  "updated_files": ["/app/backend/tests/backend_phase6_test.py"],
+  "success_rate": {"backend": "100% (11/11)", "frontend": "100% (all 4 AI toolbar buttons + modal + DeadlinesWidget rendered correctly)"},
+  "test_credentials": "elena.varga@synaptiq.io / demo123 (author of manuscript 6a2d843b404f238d2070afc2); admin@synaptiq.io / admin123 (used for 403-non-author + analytics global scope).",
+  "seed_data_creation": "None. Used existing manuscript 6a2d843b404f238d2070afc2 + 6 demo users + discovery DB.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend test file /app/backend/tests/backend_phase6_test.py is reusable but BURNS ~35 credits each run (4 live LLM calls). Each LLM call takes 13–18s; full suite ~87s. To re-run without burning credits, set EMERGENT_LLM_KEY to blank and tests will fail-fast — better to use a separate test user or top up credits beforehand. Elena's balance is now ~10/100 after this run; top her up before re-running.",
+  "verified_features": [
+    "POST /api/matching/journal (200, 10 credits, returns enriched journal cards with score/rationale/concerns)",
+    "POST /api/matching/conference (200, 5 credits)",
+    "POST /api/matching/grant (200, 10 credits, eligibility_match present in each rec)",
+    "POST /api/matching/reviewer (200, 10 credits, excludes authors, collaboration_risk present)",
+    "Forbidden case: admin (non-author) → 403/404",
+    "GET /api/matching/history?kind=journal_matching returns user-scoped records with stringified _id",
+    "GET /api/matching/history returns rows for all 4 kinds after 4 matchers",
+    "GET /api/matching/analytics scope=user for elena, scope=global for admin",
+    "GET /api/deadlines/mine returns sorted items, counts buckets, total",
+    "GET /api/workspaces/{id}/dashboard embeds upcoming_deadlines[]",
+    "FRONTEND: 4 AI buttons (data-testid=ai-match-journal/conference/grant/reviewer) visible with credit cost labels on manuscript detail",
+    "FRONTEND: AIMatchModal (data-testid=ai-match-modal) opens, shows loading spinner, then ranked cards with score ring (color-coded), Q-quartile + OA + APC badges, rationale, concerns, 'Add to Pub Hub' button",
+    "FRONTEND: DeadlinesWidget (data-testid=deadlines-widget) on /discover sidebar AND /workspaces/{id} overview right rail",
+    "FRONTEND: sidebar credits counter decremented (55 → 10) after 4 LLM matches + 1 UI match"
+  ]
+}

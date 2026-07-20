@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: synaptiq-backend-pdb
+  namespace: synaptiq
+spec:
+  minAvailable: 2           # Keep at least 2 pods running during maintenance
+  selector:
+    matchLabels:
+      app: synaptiq-backend

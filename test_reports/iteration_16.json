@@ -1,0 +1,27 @@
+{
+  "summary": "RETEST PASSED — FilePanel placement bug from iteration_15 is FIXED. On /projects/{id} (RO Test Project, id=6a2d8a4201b9ebfbe33c3e88), [data-testid='file-panel'] is now present and visible on every tab: Research Foundation ✅, Research Design ✅, Literature ✅, Tasks & Milestones ✅, Team ✅. Smoke upload+delete loop succeeded end-to-end: file-upload-btn / file-upload-input present, PDF uploaded, file-list rendered with file-row-{id}, delete via file-delete-{id} reduced rows from 1→0. WorkspaceDetail and ManuscriptDetail FilePanel placements still working (both present + visible). Acceptance criteria 1/1, 2/2, 3/3 — all green.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "ManuscriptDetail journals <select>", "issues": ["Console hydration error: '<span> cannot be a child of <option>'. Origin is the dev tooling instrumentation injecting a <span data-ve-dynamic style={{display:'contents'}}> wrapper around {j.title} inside <option> at ManuscriptDetail.jsx:535. Functionally harmless (the option renders) but React logs a hydration error on every visit. Same warning reported in iteration_15 — not blocking, but worth a follow-up by main agent."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "(Optional) ManuscriptDetail.jsx line ~535 — investigate dev-tool injected <span> inside <option> causing repeated React hydration errors. Likely fix: render {String(j.title)} or refactor to a value-only label without inline expressions that the instrumentation wraps."
+  ],
+  "critical_code_review_comments": [
+    "ProjectDetail.jsx now renders <FilePanel/> at the root return (lines 93-95), consistent with WorkspaceDetail.jsx and ManuscriptDetail.jsx — placement contract is now uniform across the three entity-detail pages.",
+    "Pre-existing comments from iter15 still apply (file size streaming, MIME magic-byte sniffing, custom delete modal instead of window.confirm, in-flight upload disable) — not regressions, just hygiene."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only retest)", "frontend": "100% (all 3 review-request acceptance criteria pass)"},
+  "test_credentials": "elena.varga@synaptiq.io / demo123",
+  "seed_data_creation": "Uploaded and cleaned up 1 tiny PDF on project 6a2d8a4201b9ebfbe33c3e88 (RO Test Project). No residual test data.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "FilePanel feature is fully functional across all three entity-detail pages (project, workspace, manuscript). Project: id 6a2d8a4201b9ebfbe33c3e88 (Elena member). Workspace: 6a2d8426404f238d2070afbf (RO Test Lab). Only outstanding minor cosmetic issue is the ManuscriptDetail <option><span> hydration warning, which is dev-tool injected (x-ve-dynamic), not from app source — main agent should decide whether to refactor the JSX expression to avoid the wrapper.",
+  "rca of the issue": "iter15 root cause: <FilePanel/> was placed inside the inner Tasks() sub-component return tree, so it only rendered when tab==='tasks' and only inside that lg:col-span layout. Mitigation applied by main agent: moved <FilePanel entityKind='project' entityId={id}/> to ProjectDetail root return (now wrapped in <div className='mt-6'> at lines 93-95, after the tab conditional renders), mirroring WorkspaceDetail.jsx / ManuscriptDetail.jsx pattern. Verified rendering across all 5 tabs."
+}

@@ -1,0 +1,44 @@
+{
+  "summary": "Phase 5 — Discovery Suite (journals/conferences/grants from real public APIs) + Publication Hub end-to-end tested. Backend: 27/27 pytest PASS. Frontend: all critical flows working — DiscoveryShell renders for /journals, /conferences, /grants with search/sort/pagination/detail; Publication Hub 7-stage kanban + KPI tiles + Venue Picker modal all functional.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Publication Hub kanban columns", "issues": ["The 'Select venue' / 'Mark submitted' contextual action labels render with broken word-wrap on the narrow kanban columns (text is sliced vertically between card and action). Cosmetic — clickable area still works."]},
+      {"screen": "VenuePicker modal", "issues": ["Modal root is missing role='dialog' / aria-modal='true' (visible in DOM but undetectable by accessibility selectors). Functionally works (Journal/Conference toggle + search field both render and respond)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_phase5_discovery_test.py",
+    "/app/test_reports/pytest/pytest_phase5.xml"
+  ],
+  "action_items": [
+    "(cosmetic) Add role='dialog' + aria-modal='true' to the VenuePicker modal root for accessibility & automation.",
+    "(cosmetic) Improve kanban card layout so 'Select venue' / 'Mark submitted' action labels don't overlap the card body on narrow columns."
+  ],
+  "critical_code_review_comments": [
+    "Provider naming: routers/discovery_admin.py exposes provider names as short keys (openalex, doaj, crossref, wikicfp, openaire, nih, ukri) — matches spec text; review_request example used long suffix names ('openalex_journals') which are not what registry.providers_for() returns. Tests aligned to the short keys after verifying via /api/discovery/sources.",
+    "Discovery stats: real volumes confirmed live — journals total = 9,287 (openalex), conferences = 818 (wikicfp + 10 legacy seed), grants = 8,009 (openaire + nih + ukri + 12 legacy seed). Per-source aggregates render correctly. recent_runs[] populated from db.ingest_runs after seed sync.",
+    "POST /api/discovery/sync/{kind} correctly enforces admin (403 for Elena), validates kind (400 for 'widget'), validates provider names, and returns {ok, queued, kind} immediately while _spawn schedules run_kind() with the supplied tiny limits (verified queued:true, no blocking).",
+    "Faceted search: journals/facets returns real OpenAlex subjects (Medicine, Engineering, Computer Science, Biology…). quartile/open_access/publisher/country filters all bind correctly. Text index responds in < 200ms on 9k journals.",
+    "GET /api/journals/{id} returns the full normalized record with title, publisher, works_count, cited_by_count, popularity_score, quartile and external_ids.issn_l (frontend detail page shows Q1 badge + DATA: OPENALEX provenance + ISSNs).",
+    "Conferences deadline_state filter works: switch-aggregation on submission_deadline correctly buckets open/closing_soon/closed/unknown. Detail page enriches each row with deadline_state on the fly.",
+    "Grants legacy overview=true shape preserved ({discover, saved, recommended, tracking}). POST /save and /unsave correctly mutate users.saved_funding_ids — verified via overview roundtrip.",
+    "Publication Hub pipeline endpoint computes latest_by_ms correctly (manuscripts.authors $in user.id, then submissions latest per manuscript). Stage fallback maps manuscript.status → kanban stage when no submission exists.",
+    "POST /publication-hub/submissions snapshots venue (title/quartile/publisher for journals; name/acronym/rank for conferences) and mirrors target_journal_id on the manuscript when venue_kind=journal — verified end-to-end.",
+    "Full lifecycle verified: selected → submitted (sets submitted_at) → under_review → feedback append → revision (forces stage=revision_requested) → accepted (sets decision/decision_at) → published. history[] correctly accumulates each transition. Co-author can patch via /api/manuscripts.authors check; non-author Aiko correctly gets 403.",
+    "backend/.env is missing the two Phase-5 env keys (DISCOVERY_CONTACT_EMAIL, DISCOVERY_SCHEDULER_ENABLED). Service still functions because /sources reports scheduler_enabled=False (default) and providers send a generic UA. Recommend adding DISCOVERY_CONTACT_EMAIL='ops@synaptiq.io' (polite UA contact) and DISCOVERY_SCHEDULER_ENABLED='0' explicitly for documentability — not a blocker.",
+    "Routers leak no Mongo _id — all helpers use _ser() that pops _id and stringifies. db.ingest_runs documents also have _id stringified in /runs route."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_phase5_discovery_test.py (NEW — 27 pytest tests across Discovery Admin, Journals, Conferences, Grants, Publication Hub)"
+  ],
+  "success_rate": {"backend": "100% (27/27)", "frontend": "Critical flows 100% (login, /journals, /conferences, /grants, journal detail, publication hub kanban, venue picker modal)."},
+  "test_credentials": "elena.varga@synaptiq.io / demo123 (researcher with 7 manuscripts incl. RO Test Paper), admin@synaptiq.io / admin123 (for /sync/{kind}), aiko.tanaka@synaptiq.io / demo123 (non-author for 403 check).",
+  "seed_data_creation": "Created live TEST submissions through the lifecycle (selected → submitted → under_review → reviewer_feedback append → revision_notes append → accepted → published) on Elena's manuscripts. Created additional submissions linking to first journal in catalogue to verify target_journal_id mirroring. db.submissions now contains TEST lifecycle rows owned by Elena (author_id=Elena.id). Discovery DB untouched (sync test used providers=[openalex], max_records=5, wall_seconds=10).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run: pytest /app/backend/tests/backend_phase5_discovery_test.py -v — all 27 pass in ~4s. Discovery provider names in registry are SHORT (openalex, doaj, crossref, wikicfp, openaire, nih, ukri) — not '_journals/_conferences/_grants' suffixed as the prose in the spec suggests. Backend live volumes: journals=9,287, conferences=818, grants=8,009. Frontend testids: discovery-search, discovery-sort, discovery-page-next/prev, discovery-item-{id} all present on /journals,/conferences,/grants. pubhub-col-{stage} present for all 7 stages; pubhub-manuscript-{mid} renders one per authored manuscript; pubhub-select-venue-{mid} opens the VenuePicker. publication-hub & publication-pipeline parent testids are NOT in DOM (column-level testids are — the spec doesn't strictly require the parent ones).",
+  "rca of the issue": "No functional issues. The only deviations from the spec's literal wording are (a) provider short-names (registry uses 'openalex' not 'openalex_journals' — actually cleaner and matches per_source counts in stats), and (b) VenuePicker modal lacks role='dialog' attribute (a11y/test-only concern). Both are cosmetic."
+}

@@ -1,0 +1,68 @@
+{
+  "summary": "Hardening Phase (iter 18) tested: CORS, slowapi rate limit (5/min), bcrypt cookies, password policy, /verify-email + /resend-verification, /forgot-password no-leak, consent endpoints, cookie consent banner UI, /verify-email page error state, privacy/cookies policy pages, and login regression. 13/14 backend tests passing; all frontend hardening flows green. 1 failure is INFRASTRUCTURE-LEVEL (ingress strips backend CORS allowlist).",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "CORS preflight + responses",
+        "issue": "K8s/Cloudflare ingress overrides backend's Access-Control-Allow-Origin to '*' AND sets Access-Control-Allow-Credentials: true. This combination is invalid per browser spec — browsers will reject cross-origin authenticated requests. Backend code (CORSMiddleware with explicit allowlist) is correctly configured; the override happens AT THE INGRESS, not in FastAPI. Tested with curl: even when Origin header is the allowlisted preview URL, the response returns ACAO='*'. App still works in preview (frontend is same-origin) but any external CORS consumer is broken and this defeats the hardening goal.",
+        "priority": "P1"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "hardening_feature_results": {
+    "cors_allowlist": "BACKEND CODE CORRECT, but ingress overrides → effective ACAO='*' (P1 infra)",
+    "password_policy_8_chars_letter_digit": "PASS — 422 for short/no-mix, 200 for StrongPass123",
+    "registration_returns_email_verified_false_and_sent_true": "PASS",
+    "no_debug_verification_token_leaked": "PASS (EXPOSE_RESET_TOKEN=0)",
+    "login_httponly_cookies_lax_max_age": "PASS — HttpOnly, SameSite=lax, Max-Age=86400 (access) / 1209600 (refresh)",
+    "login_invalid_credentials_401": "PASS",
+    "rate_limit_5_per_minute": "PASS — 7 logins → mix of 401 + at least one 429",
+    "forgot_password_no_debug_reset_token": "PASS — body only {ok, message}",
+    "verify_email_missing_token_400": "PASS — detail='Token required'",
+    "verify_email_junk_token_400": "PASS — detail='Invalid verification token'",
+    "resend_verification_existing_user_200": "PASS",
+    "resend_verification_unknown_email_no_enumeration": "PASS — {ok: true}",
+    "consent_post_and_get_latest_no_ip_hash_leak": "PASS",
+    "me_no_password_hash_no_orcid_tokens": "PASS",
+    "frontend_cookie_consent_banner_3_buttons": "PASS — banner + accept/reject/manage testids",
+    "frontend_manage_prefs_4_rows": "PASS — essential locked/always-on; preferences/analytics/marketing toggleable",
+    "frontend_save_prefs_persists_and_calls_api": "PASS — POST /api/consent fired, localStorage['synaptiq_consent_v1'] populated, banner dismissed",
+    "frontend_verify_email_junk_shows_error_and_resend": "PASS — verify-error + verify-resend-btn rendered",
+    "frontend_privacy_and_cookies_routes": "PASS — both render legal copy without errors",
+    "frontend_login_regression": "PASS — elena.varga@synaptiq.io / demo123 → /discover"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_hardening_iter18.py",
+    "/app/test_reports/pytest/pytest_hardening_iter18.xml"
+  ],
+  "action_items": [
+    "P1: Investigate Kubernetes ingress / Cloudflare config that is rewriting Access-Control-Allow-Origin to '*' on /api/* responses. Backend CORSMiddleware is correctly configured but is being overridden by infrastructure. Without fixing this, the 'no wildcard with credentials' hardening goal is not achieved at the edge. Note: this is NOT a code change — main agent should flag to deployment/infra layer.",
+    "Optional: harden the consent banner to also include a privacy-cookies link role assertion (currently text+href works fine)."
+  ],
+  "critical_code_review_comments": [
+    "auth.py: _validate_password is invoked AFTER db.users.find_one for duplicate email check in register — fine, but ordering means a weak password by an already-registered email returns 400 'Email already registered' instead of password policy hint. Minor UX nit.",
+    "auth.py register: cookies are set even when EMAIL_VERIFICATION_REQUIRED=1 path is skipped — currently EMAIL_VERIFICATION_REQUIRED=0 in env so registration auto-logs-in. If the product intends gated access pre-verification, env flag toggles correctly; verified by reading code.",
+    "consent.py: ConsentPrefs.essential default True is enforced server-side regardless of input — good. Source field is normalized to 'banner' if invalid — also good.",
+    "rate_limit.py: relies on X-Forwarded-For first IP — ingress correctly sets this in preview env; OK.",
+    "server.py CORS: if CORS_ORIGINS is '*' or empty, code refuses to pass wildcard with credentials and instead sets _origins=[]. This is the right fail-safe BUT the actual production-deploy ingress is overriding regardless — see P1 above."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_hardening_iter18.py (new)"
+  ],
+  "success_rate": {
+    "backend": "92% (13/14 hardening assertions; 1 fail is infra, not backend code)",
+    "frontend": "100% (all consent + verify-email + policy flows pass; login regression OK)"
+  },
+  "test_credentials": "Used elena.varga@synaptiq.io / demo123 (demo) and dynamic TEST_*@example.com for fresh registrations. Admin not exercised this iteration.",
+  "seed_data_creation": "Each registration test created a one-shot user TEST_*_<uuid>@example.com — left in DB (no cleanup endpoint). Consent records were also created with random consent_id values. Volume is small (<10 docs).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Hardening iter18 verified. The ONLY outstanding hardening gap is the ingress overriding backend CORS to '*' with credentials — this is an infra/deploy concern, not a code bug. If revisiting, run /app/backend/tests/test_hardening_iter18.py with a 60-second cooldown between sequential runs to avoid 5/min rate-limit collisions. Confirm CORS by curl -i -X OPTIONS with Origin header set.",
+  "rca_of_the_issue": "CORS '*' RCA: FastAPI CORSMiddleware was configured with explicit allow_origins=['https://idea-to-pub.preview.emergentagent.com','http://localhost:3000'] and allow_credentials=True. However curl shows responses returning 'access-control-allow-origin: *' along with 'access-control-allow-credentials: true'. Cloudflare/K8s ingress in front of the backend is rewriting the ACAO header. Reproduction: curl -i -X OPTIONS https://idea-to-pub.preview.emergentagent.com/api/auth/login -H 'Origin: https://idea-to-pub.preview.emergentagent.com' -H 'Access-Control-Request-Method: POST' → ACAO=*. Mitigation: change ingress/Cloudflare cors config to either (a) pass through upstream Access-Control-* headers untouched, or (b) configure the ingress itself with the matching explicit allowlist."
+}

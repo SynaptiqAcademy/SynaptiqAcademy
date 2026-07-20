@@ -1,0 +1,106 @@
+{
+  "theme_and_archetype": {
+    "domain": "Academic Collaboration Network & Research OS",
+    "theme": "Light",
+    "archetype": "Modified Archetype 4/5 (Clean Academic/Editorial)",
+    "description": "A clean, scholarly, and editorial interface combining the trust of Nature.com with the functionality of Notion and LinkedIn. Uses left-aligned editorial typography, a restrained palette with a strong academic Oxford Blue accent, generous whitespace, and elegant information density. Avoids typical SaaS tropes (no purple gradients, no soft muddy shadows)."
+  },
+  "color_palette": {
+    "background": {
+      "page": "bg-[#FDFDFD] or bg-slate-50",
+      "surface": "bg-white",
+      "surface_alt": "bg-slate-100",
+      "rules": "Never use pure white #FFFFFF for the entire page background. Use a subtle paper-like off-white. Cards can be pure white to stand out."
+    },
+    "text": {
+      "primary": "text-slate-900",
+      "secondary": "text-slate-600",
+      "tertiary": "text-slate-500",
+      "inverse": "text-white"
+    },
+    "accent": {
+      "primary": "bg-[#0F2847] hover:bg-[#1A3A63]",
+      "primary_text": "text-[#0F2847]",
+      "secondary": "text-[#8A1538]",
+      "rules": "Oxford Blue (#0F2847) is the primary CTA and active state color. Bordeaux/Crimson (#8A1538) can be used sparingly for critical alerts or specific reputation metrics."
+    },
+    "borders": {
+      "default": "border-slate-200",
+      "focus": "focus:ring-2 focus:ring-[#0F2847] focus:ring-offset-1"
+    }
+  },
+  "typography": {
+    "fonts": {
+      "headings": "Cormorant Garamond, font-serif",
+      "body": "IBM Plex Sans, font-sans",
+      "mono": "IBM Plex Mono, font-mono"
+    },
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl font-serif text-slate-900 tracking-tight leading-none",
+      "h2": "text-3xl sm:text-4xl font-serif text-slate-900 tracking-tight",
+      "h3": "text-xl sm:text-2xl font-serif text-slate-900",
+      "h4_overline": "text-xs uppercase tracking-[0.2em] text-slate-500 font-sans font-semibold",
+      "body_large": "text-lg text-slate-800 font-sans leading-relaxed",
+      "body_base": "text-base text-slate-700 font-sans leading-relaxed",
+      "body_small": "text-sm text-slate-600 font-sans",
+      "stats_number": "text-4xl font-serif text-slate-900 tracking-tighter"
+    },
+    "alignment": "Strictly left-aligned for an editorial feel. Center alignment should only be used for standalone quotes or specific isolated UI states."
+  },
+  "layout_and_spacing": {
+    "philosophy": "Generous Spacing + High Information Density. Use large paddings (p-8, p-12) for outer containers, but keep tabular data and widgets compact.",
+    "grids": {
+      "dashboard": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6. Use 'Control Room' dense metrics style within the editorial frame.",
+      "discover_feed": "grid-cols-1 lg:grid-cols-12 gap-8. Main feed spans col-span-8, sidebar/recommendations span col-span-4."
+    },
+    "containers": "Max-width containers (max-w-7xl) mx-auto for general layouts. Articles/Project documents should be max-w-3xl for optimal reading length."
+  },
+  "surface_strategies": {
+    "style": "Print-Inspired / Grid Borders",
+    "rules": [
+      "Use sharp edges (rounded-none) or very subtle radii (rounded-sm) to maintain a serious, document-like feel.",
+      "Use thin 1px borders (border border-slate-200) to separate sections, mimicking newspaper columns or academic journals.",
+      "Avoid drop shadows. Rely on border contrast and background color shifts to define hierarchy. If shadow is absolutely necessary for a floating menu, use shadow-sm.",
+      "No glassmorphism. Use solid, opaque backgrounds for all panels and dialogs to ensure maximum readability."
+    ]
+  },
+  "component_instructions": {
+    "general": "Use pure HTML/Tailwind for marketing/landing pages. Use Shadcn UI for the dashboard, workspace, and interactive areas, but deeply customize them to fit the editorial theme.",
+    "buttons": "Flat, sharp corners (rounded-none or rounded-sm). Primary button: bg-[#0F2847] text-white hover:bg-slate-800. Secondary: bg-transparent border border-slate-300 text-slate-900 hover:bg-slate-50.",
+    "cards": "Cardless or very flat cards. border border-slate-200 bg-white p-6 rounded-sm. No shadows.",
+    "tables": "Crucial for research OS. Use Shadcn tables. Left-align all columns except numerical metrics. border-b on rows, no vertical dividers.",
+    "tabs": "Override Shadcn default tabs to look like editorial section headers (e.g., thick bottom border for active state, transparent background).",
+    "forms": "Inputs should have sharp borders, minimal padding, focus:ring-1 focus:border-[#0F2847].",
+    "icons": "lucide-react with strokeWidth={1.5} to match the crisp, elegant typography."
+  },
+  "motion_and_interactions": {
+    "philosophy": "Restrained, crisp, and functional.",
+    "hover_states": "Text links should have an underline that appears on hover. Rows in tables should turn very light gray (bg-slate-50) on hover.",
+    "transitions": "transition-colors duration-200 ease-in-out. Avoid scaling transforms (no hover:scale-105) to keep the UI feeling stable and serious.",
+    "loading": "Use simple skeleton loaders or a thin top-of-page progress bar. No bouncy or playful spinners."
+  },
+  "media_and_images": {
+    "philosophy": "Use authentic, high-quality photography representing academia, research, and data.",
+    "image_urls": {
+      "hero_background": {
+        "url": "https://images.unsplash.com/photo-1741707596397-efaae09503b5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA0MTJ8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwbGlicmFyeSUyMGludGVyaW9yfGVufDB8fHx8MTc4MTM1NjQ2MHww&ixlib=rb-4.1.0&q=85",
+        "description": "Classic university library interior. Use as an editorial header image with a max-h-[40vh] and a slight black/30 overlay if text is placed directly on top."
+      },
+      "profile_avatar_1": {
+        "url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzB8MHwxfHNlYXJjaHwxfHxyZXNlYXJjaGVyJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzgxMzU2NDYwfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Male researcher portrait. Use for user profile placeholders."
+      },
+      "profile_avatar_2": {
+        "url": "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzB8MHwxfHNlYXJjaHwyfHxyZXNlYXJjaGVyJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzgxMzU2NDYwfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Female researcher presenting. Use for collaboration or team placeholders."
+      },
+      "project_cover_data": {
+        "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODh8MHwxfHNlYXJjaHwyfHxkYXRhJTIwc2NpZW5jZSUyMGFuYWx5dGljc3xlbnwwfHx8fDE3ODEzNTY0NjB8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Data analytics laptop dashboard. Use for project/workspace cover images."
+      }
+    }
+  },
+  "testing_guidelines": {
+    "requirements": "All interactive elements (buttons, links, form inputs, tabs, menu items) and key informational elements (h-index, publication count, collaboration score) MUST include a `data-testid` attribute. Convention is kebab-case, role-based."
+  }
+}

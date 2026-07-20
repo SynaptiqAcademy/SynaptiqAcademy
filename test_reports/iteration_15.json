@@ -1,0 +1,45 @@
+{
+  "summary": "SYNAPTIQ Research File Layer + Marketplace v2 enrichment — backend GREEN (30/30 incl. 17/17 phase pytest + 13/13 new file lifecycle/security/marketplace-no-regression smoke). Frontend: workspace FilePanel works end-to-end (upload v1, expand detail w/ Versions+Activity, new-version → v2 above v1, download via expect_download, delete v2, toasts: 'File uploaded' / 'New version uploaded' / 'Deleted', activity shows 'upload' + actor 'Elena Vargas'). MANUSCRIPT FilePanel renders (file-panel testid present). 1 critical compile bug FIXED by test agent (see updated_files). 1 critical placement bug REMAINING on ProjectDetail (FilePanel only nested inside Tasks sub-component, so [data-testid='file-panel'] does NOT render on /projects/{id} default Foundation tab, and even on the Tasks tab it did not appear in our run — review-request acceptance criterion fails). Empty-state, responsive 1366x768, marketplace search non-regression all OK. Marketplace ORCID badges count=0 in dry-run sandbox (expected).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "ProjectDetail.jsx", "issue": "FilePanel placed inside the inner `Tasks` sub-component (line 291) instead of at the page root. As a result [data-testid='file-panel'] does NOT render on the default /projects/{id} tab (Foundation), and was also not seen in our test on the Tasks tab. Review-request requires panel visible on /projects/{id}.", "selector": "[data-testid='file-panel']", "priority": "HIGH"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "ManuscriptDetail journal <select>", "issues": ["Console hydration warning: '<span> cannot be a child of <option>' — appears to come from dynamic test-instrumentation injection, but worth checking the <option> render to avoid React hydration errors."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_files_smoke_iter15.py",
+    "/app/test_reports/pytest/pytest_iter15.xml"
+  ],
+  "action_items": [
+    "MAIN AGENT: Move <FilePanel entityKind='project' entityId={project.id} /> out of the inner `Tasks` component in ProjectDetail.jsx (currently inside Tasks() return tree at line 291). Place it at the bottom of the ProjectDetail root return (after the closing tabs/conditional region) so it renders on every project tab — mirror the pattern used in WorkspaceDetail.jsx and ManuscriptDetail.jsx.",
+    "MAIN AGENT (optional polish): Investigate ManuscriptDetail journals <select> rendering a <span> child inside <option> (hydration warning seen in console). Most likely the {j.title} expression is wrapped by a tooling span — switch to plain text content.",
+    "MAIN AGENT (UX): On WorkspaceDetail the file-panel was previously misplaced inside the {tab==='tasks'} block AND caused a JSX-adjacency compile error. We fixed the compile error by moving it to the page root (after InviteModal). Please confirm this is the intended placement; if FilePanel should only show on a specific tab, reposition accordingly."
+  ],
+  "critical_code_review_comments": [
+    "WorkspaceDetail.jsx had a hard compile error ('Adjacent JSX elements must be wrapped in an enclosing tag' at line 363) caused by placing <FilePanel/> as a sibling of <WorkspaceKanban/> inside the same {tab==='tasks' && ( ... )} expression. The entire /workspaces/{id} page failed to compile prior to fix — this means review of WorkspaceDetail likely wasn't smoke-tested locally. Recommend a `yarn build` step in CI to catch this class of regression.",
+    "ProjectDetail.jsx — FilePanel is rendered from inside a deeply nested sub-component (Tasks) tied to a tab, while in WorkspaceDetail and ManuscriptDetail it lives at the page root. Inconsistent placement contract across the three entity-detail pages.",
+    "routers/files.py upload() reads `await file.read()` BEFORE checking the size — for a 51MB upload this means we buffer the whole payload in memory before raising 413. Consider streaming a length check (Content-Length header) or chunked read with running total to short-circuit oversize uploads earlier (current behaviour still works correctly per tests, but consumes RAM proportional to file size).",
+    "routers/files.py — ALLOWED_MIME relies purely on the client-supplied Content-Type header. A malicious client can label .exe as application/pdf and bypass the gate. Recommend `python-magic` sniff for at least the PDF/Office magic bytes, OR enforce extension whitelist parity with mime.",
+    "files.py — owner_id check vs `user['id']` in delete: admin role bypass exists, but Co-PI / Workspace Admin cannot delete files uploaded by other members. This may be intentional but doc the policy.",
+    "FilePanel.jsx — `if (!confirm(...))` uses the browser's native confirm() dialog (synchronous, blocks event loop, not stylable). Replace with a custom modal for consistency with the rest of the Synaptiq design system.",
+    "FilePanel.jsx upload() does not block multi-click while in-flight beyond the visual spinner — `setUploading(true)` is correct but a second file selection event before the first POST resolves can still race. Consider disabling the label/input while uploading."
+  ],
+  "updated_files": [
+    "/app/frontend/src/pages/WorkspaceDetail.jsx (fix: extracted misplaced FilePanel out of {tab==='tasks'} JSX-adjacency error and moved to page root after InviteModal — restored compileability of /workspaces/{id})",
+    "/app/backend/tests/test_files_smoke_iter15.py (new: 13 pytest cases — full file lifecycle, security 415/403/413, marketplace non-regression, cleanup)"
+  ],
+  "success_rate": {
+    "backend": "100% (17/17 phase pytest + 13/13 new smoke = 30/30)",
+    "frontend": "85% (workspace + manuscript FilePanel work; project FilePanel placement broken)"
+  },
+  "test_credentials": "elena.varga@synaptiq.io / demo123, admin@synaptiq.io / admin123 (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "Uploaded and cleaned up: 1 tiny PDF (v1+v2) on workspace 'RO Test Lab' (id 6a2d8426404f238d2070afbf), 1 tiny PDF on a manuscript (attempted but Elena was not author on first manuscript — got 403 as designed). All test files cleaned up via DELETE /api/files/{id} before exit. Storage backend round-trips correctly (download returned 23 bytes of PDF content, Content-Disposition attachment present).",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "WorkspaceDetail.jsx compile error has been fixed by this agent. ProjectDetail.jsx STILL has FilePanel mis-placed inside the inner Tasks() component and is the only acceptance-criterion failure. After main agent moves <FilePanel/> to the project page root, re-run: (1) `cd /app/backend && python -m pytest tests/test_files_smoke_iter15.py tests/test_files_phase.py tests/test_marketplace_phase.py tests/test_orcid_phase.py tests/test_institutions_phase.py -v` should remain 30/30; (2) navigate /projects/{any-elena-project-id} and check [data-testid='file-panel'] is visible regardless of selected tab; (3) optionally do one upload+delete loop there. ORCID still in dry-run sandbox so marketplace ORCID-badge count is expected to be 0 — that's not a bug. Existing workspace 'RO Test Lab' (id 6a2d8426404f238d2070afbf) is a clean target for further file-layer testing.",
+  "rca of the issue": "WorkspaceDetail.jsx — A FilePanel JSX node was inserted as a sibling of <WorkspaceKanban/> inside the same `{tab === 'tasks' && ( ... )}` short-circuit expression, which only allows one root JSX element. Babel parser raised 'Adjacent JSX elements must be wrapped in an enclosing tag'. The compile error masked all subsequent rendering on /workspaces/{id}. Fix: remove FilePanel from inside the tasks-tab conditional and append it once at the page root (after the InviteModal block) using a `<div className='mt-6'>` wrapper, matching the pattern in ManuscriptDetail.jsx (line 622-624). ProjectDetail.jsx — same intent (embed FilePanel on the page) was incorrectly satisfied by placing the node inside the inner Tasks() sub-component's return tree (line 291). Mitigation: move it to the root return tree of ProjectDetail() right before the closing </div> of the page (around line 333 area), exactly like Manuscript/Workspace."
+}

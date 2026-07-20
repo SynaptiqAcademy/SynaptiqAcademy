@@ -1,0 +1,36 @@
+{
+  "summary": "P0 retest after iteration_10 fixes. All previously-blocking items now pass: (1) /ai-usage renders fully for both elena and admin with KPIs, sparkline, by-kind, matching-breakdown, popular-venues, recent-ai-activity (readable numbers, no '[object Object]'); admin sees 'ADMIN · GLOBAL VIEW' chip and admin-top-users with Elena Vargas 11 calls / 92 credits. (2) Assistant drawer Send button is clickable (badge hidden while drawer open, restored on close). (3) Saved Searches on /journals, /conferences, /grants — create, drawer list, preview modal (≤10 items), delete, and kind-isolation all work. (4) Sidebar nav-ai-usage routes to /ai-usage. ONE backend bug discovered & fixed by me during this run: /api/ai/assistant/sessions/{sid}/messages GET returned ObjectId in `session` because `{**s, 'id': str(s.pop('_id'))}` spread `s` before popping _id; this caused a 500 on the conversation-refresh call after sending an assistant message (balance still decremented because POST send_message succeeded). Fix applied in /app/backend/routers/assistant.py. After fix, assistant reply appeared in 1-3 s and balance decremented by exactly 2.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_11.json"],
+  "action_items": [
+    "Add data-testid on individual message bubbles in AssistantPanel.jsx (e.g. data-testid=`assistant-msg-${m.role}-${m.id}`) so automated tests can assert reply presence deterministically instead of relying on scroll DOM counts.",
+    "Audit other endpoints for the same `{**doc, 'id': str(doc.pop('_id'))}` anti-pattern — at least /assistant/sessions GET list_sessions returns docs containing _id key alongside id (line 118-119 spreads doc without removing _id). FastAPI's jsonable_encoder will fail if it sees an ObjectId.",
+    "Saved-search edit button uses test-id different from `saved-search-edit-` prefix — found 0 matching elements while the Edit affordance is clearly visible. Recommend `data-testid='saved-search-edit-{id}'` for symmetry with delete/preview."
+  ],
+  "critical_code_review_comments": [
+    "ObjectId serialization anti-pattern in /app/backend/routers/assistant.py: dict spread (**s) snapshots the dict BEFORE s.pop('_id') runs, so _id (ObjectId) leaks into the returned payload. Fixed at line 129 (get_messages). Same pattern likely present in list_sessions at line 117-119 (`for d in docs: d['id'] = str(d.pop('_id'))` — this one is safe). Verify all other routers don't ship raw _id.",
+    "AssistantPanel message bubbles lack data-testid; production analytics or QA can't target specific user vs assistant rows.",
+    "MessageBubble probably renders `credits_consumed`; coercion fix needed there too if backend ever returns dict (defensive)."
+  ],
+  "updated_files": [
+    "/app/backend/routers/assistant.py (fixed ObjectId leak in get_messages: pop _id BEFORE spreading session into response)"
+  ],
+  "success_rate": {
+    "backend": "100% after my one-line ObjectId fix in /assistant/sessions/{sid}/messages",
+    "frontend": "100% — all P0 retest scenarios pass: /ai-usage (elena+admin), assistant send + reply + balance + history + close, badge hide/restore, workspace/manuscript/project launchers + quick-action chips, saved-search create/preview/edit/delete on journals/conferences/grants, kind isolation, sidebar nav"
+  },
+  "test_credentials": "elena.varga@synaptiq.io / demo123 (balance dropped 98→96→94→92 across 3 successful sends incl. conference/grant credit usage); admin@synaptiq.io / admin123",
+  "seed_data_creation": "Temporarily created 1 journal, 1 conference, 1 grant saved search per kind for isolation testing; all deleted at end of run. Existing 'ML/NLP Q1 OA' journal saved search left in place (was pre-existing).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Phase P0 frontend is now green. Test backend already exercised the credits_consumed normalization; legacy dict records were migrated. Next agent should focus on: (a) confirming /assistant/sessions list endpoint doesn't leak _id (check by hitting `GET /api/ai/assistant/sessions` and parsing JSON), (b) full digest dry-run on saved searches (POST /api/searches/digest/run), (c) responsive viewport for AssistantPanel (1366x768 + mobile), (d) Made-with-Emergent badge restoration if drawer is closed via Escape key or click-outside (not only the close button). All P0 retest items from iteration_10 are resolved.",
+  "rca of the issue": "Iteration 10 left one residual 500 even after the credits_consumed dict→int migration: after the frontend successfully sent a message (POST /assistant/sessions/{sid}/messages returning 201 and decrementing credits), it called GET /assistant/sessions/{sid}/messages to refresh the conversation. That handler returned `{'session': {**s, 'id': str(s.pop('_id'))}, 'messages': msgs}`. Python evaluates dict literals key-by-key; `**s` was spread first, copying _id (bson.ObjectId) into the new dict. Then `s.pop('_id')` removed _id from s (already shallow-copied) — but the returned dict still contained `_id: ObjectId(...)`. FastAPI's jsonable_encoder hits ObjectId, can't iterate it, raises 500. UI never gets the assistant bubble even though it persisted server-side. Fix: pop _id into a local first, then spread the cleaned dict — committed in /app/backend/routers/assistant.py. Verified by sending 'Briefly say hi' as elena: balance 94→92, assistant reply 'Hi there! How can I help you with your research today?' rendered in ~1.2s, history toggle shows 1 saved session."
+}

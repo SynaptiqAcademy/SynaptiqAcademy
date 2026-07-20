@@ -1,0 +1,597 @@
+/* @import must come before @tailwind directives so browsers and PostCSS respect it */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Merriweather:wght@700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SYNAPTIQ DESIGN SYSTEM — Phase I Foundation
+   Single source of truth for all visual decisions.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Token registry ─────────────────────────────────────────────────────────── */
+:root {
+  /* ─── Brand palette ──────────────────────────────────── */
+  --sq-navy-50:    #eef2f8;
+  --sq-navy-100:   #d4dde9;
+  --sq-navy-200:   #aabcd3;
+  --sq-navy-300:   #7c97b8;
+  --sq-navy-400:   #52739e;
+  --sq-navy-500:   #2f5486;
+  --sq-navy-600:   #1c3e6d;
+  --sq-navy-700:   #0F2847;
+  --sq-navy-800:   #0a1c34;
+  --sq-navy-900:   #060f1f;
+
+  --sq-crimson-50:  #fdf2f5;
+  --sq-crimson-100: #f8d7e4;
+  --sq-crimson-200: #f1afc9;
+  --sq-crimson-300: #e082aa;
+  --sq-crimson-400: #c85585;
+  --sq-crimson-500: #aa2d63;
+  --sq-crimson-600: #8A1538;
+  --sq-crimson-700: #6d102d;
+
+  /* ─── Secondary accents (charts, AI surfaces) ─────────── */
+  /* Mirrors lib/tokens.js's VIOLET/TEAL exactly — named so pages stop
+     inventing their own one-off purple/teal per file. */
+  --sq-violet:      #8B5CF6;
+  --sq-violet-bg:   #F5F3FF;
+  --sq-violet-text: #6D28D9;
+  --sq-teal:        #14B8A6;
+  --sq-teal-bg:     #F0FDFA;
+  --sq-teal-text:   #0F766E;
+
+  /* ─── Semantic surface ────────────────────────────────── */
+  --sq-bg:          #FDFDFB;
+  --sq-surface:     #FFFFFF;
+  --sq-surface-2:   #F8FAFC;
+  --sq-border:      rgba(15, 23, 42, 0.08);
+  --sq-border-strong: rgba(15, 23, 42, 0.14);
+  --sq-border-soft:   rgba(15, 23, 42, 0.06);  /* internal card/list dividers, lighter than the outer border */
+
+  /* ─── Text hierarchy ──────────────────────────────────── */
+  /* Mirrors lib/tokens.js's TEXT_* exactly. */
+  --sq-text-primary:   #0f172a;
+  --sq-text-strong:    #374151;
+  --sq-text-secondary: #475569;
+  --sq-text-tertiary:  #64748b;
+  --sq-text-muted:     #94a3b8;
+  --sq-text-disabled:  #cbd5e1;
+
+  /* ─── Semantic state colors ───────────────────────────── */
+  /* Mirrors lib/tokens.js's SUCCESS_BG/TEXT etc. exactly — the ONE success/
+     warning/danger/info palette. Badge, Alert, Callout, and every other
+     component with a status variant read from here, not their own guess. */
+  --sq-success-bg:    #ECFDF5;
+  --sq-success-text:  #065F46;
+  --sq-success-border: #A7F3D0;
+  --sq-warning-bg:    #FFFBEB;
+  --sq-warning-text:  #92400E;
+  --sq-warning-border: #FDE68A;
+  --sq-danger-bg:     #FEF2F2;
+  --sq-danger-text:   #991B1B;
+  --sq-danger-border: #FECACA;
+  --sq-info-bg:       #EFF6FF;
+  --sq-info-text:     #1D4ED8;
+  --sq-info-border:   #BFDBFE;
+
+  /* ─── Navy "wash" (pre-blended tints) ─────────────────── */
+  /* NOTE: Tailwind's `/[alpha]` opacity-modifier syntax does NOT work on
+     theme colors backed by a plain `var(--x)` hex reference (verified live —
+     it silently resolves to transparent). These are pre-blended instead. */
+  --sq-navy-wash:        rgba(15, 40, 71, 0.08);  /* = lib/tokens.js NAVY_08 */
+  --sq-navy-wash-border: rgba(15, 40, 71, 0.15);
+
+  /* ─── Border radius ───────────────────────────────────── */
+  /* Decision: 6px base. Warm enough to feel premium, structured enough
+     to convey academic professionalism. Used by Linear, GitHub, Stripe. */
+  --radius:           0.375rem;   /* 6px — drives tailwind rounded-lg */
+  --sq-radius-none:   0px;
+  --sq-radius-xs:     2px;
+  --sq-radius-sm:     4px;
+  --sq-radius-md:     6px;        /* = --radius */
+  --sq-radius-lg:     8px;
+  --sq-radius-xl:     10px;
+  --sq-radius-2xl:    14px;
+  --sq-radius-3xl:    20px;       /* hero/marketing-scale only */
+  --sq-radius-full:   9999px;
+  /* Component-specific radii */
+  --sq-radius-card:   6px;
+  --sq-radius-btn:    6px;
+  --sq-radius-input:  6px;
+  --sq-radius-badge:  4px;
+  --sq-radius-modal:  10px;
+
+  /* ─── Elevation / Shadow ──────────────────────────────── */
+  /* Decision: subtle multi-layer shadows over flat borders alone.
+     Cards have a base shadow + tighter top shadow, creating a lifted feeling
+     without heavy darkness. Hover lifts further. This creates clear spatial
+     hierarchy on the white-on-warm-white background. */
+  --sq-shadow-none:  none;
+  --sq-shadow-xs:    0 1px 2px rgba(15, 23, 42, 0.04);
+  --sq-shadow-sm:    0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.03);
+  --sq-shadow-md:    0 2px 8px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --sq-shadow-lg:    0 4px 16px rgba(15, 23, 42, 0.10), 0 2px 6px rgba(15, 23, 42, 0.05);
+  --sq-shadow-xl:    0 8px 28px rgba(15, 23, 42, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06);
+  --sq-shadow-2xl:   0 20px 60px rgba(15, 23, 42, 0.18), 0 6px 20px rgba(15, 23, 42, 0.08); /* hero/marketing-scale only */
+  /* Semantic shadow tokens */
+  --sq-shadow-card:        0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+  --sq-shadow-card-hover:  0 4px 12px rgba(15, 23, 42, 0.09), 0 2px 4px rgba(15, 23, 42, 0.04);
+  --sq-shadow-modal:       0 16px 48px rgba(15, 23, 42, 0.18), 0 4px 16px rgba(15, 23, 42, 0.08);
+  --sq-shadow-dropdown:    0 4px 16px rgba(15, 23, 42, 0.10), 0 2px 6px rgba(15, 23, 42, 0.05);
+  --sq-shadow-focus:       0 0 0 3px rgba(15, 40, 71, 0.15);
+  --sq-shadow-inset:       inset 0 1px 3px rgba(15, 23, 42, 0.07);
+
+  /* ─── Typography ──────────────────────────────────────── */
+  --sq-text-2xs:    0.625rem;    /* 10px */
+  --sq-text-xs:     0.6875rem;   /* 11px */
+  --sq-text-sm:     0.75rem;     /* 12px */
+  --sq-text-base:   0.8125rem;   /* 13px */
+  --sq-text-md:     0.875rem;    /* 14px */
+  --sq-text-lg:     1rem;        /* 16px */
+  --sq-text-xl:     1.125rem;    /* 18px */
+  --sq-text-2xl:    1.25rem;     /* 20px */
+  --sq-text-3xl:    1.5rem;      /* 24px */
+  --sq-text-4xl:    1.875rem;    /* 30px */
+  --sq-text-5xl:    2.25rem;     /* 36px */
+  --sq-text-display: 3rem;       /* 48px */
+  --sq-text-hero:   4rem;        /* 64px */
+
+  /* ─── Spacing ─────────────────────────────────────────── */
+  --sq-space-1:  0.25rem;
+  --sq-space-2:  0.5rem;
+  --sq-space-3:  0.75rem;
+  --sq-space-4:  1rem;
+  --sq-space-5:  1.25rem;
+  --sq-space-6:  1.5rem;
+  --sq-space-8:  2rem;
+  --sq-space-10: 2.5rem;
+  --sq-space-12: 3rem;
+  --sq-space-16: 4rem;
+  --sq-space-20: 5rem;
+  --sq-space-24: 6rem;
+
+  /* ─── Global shell chrome ─────────────────────────────── */
+  /* One set of dimensions for Sidebar / TopNav / page container — shared by
+     the "app" and "admin" shell variants. Mirrors lib/tokens.js's HEADER_H /
+     SIDEBAR_W / SIDEBAR_W_COLLAPSED / CONTAINER_MAX. */
+  --sq-header-height:            56px;
+  --sq-sidebar-width:            232px;
+  --sq-sidebar-width-collapsed:  56px;
+  --sq-container-max:            1280px;
+
+  /* ─── Motion ──────────────────────────────────────────── */
+  --sq-ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --sq-ease-in:     cubic-bezier(0.4, 0, 1, 1);
+  --sq-ease-spring: cubic-bezier(0.22, 0.68, 0, 1.2);
+  --sq-dur-fast:    100ms;
+  --sq-dur-normal:  150ms;
+  --sq-dur-slow:    250ms;
+  --sq-dur-slower:  400ms;
+
+  /* ─── Z-index ─────────────────────────────────────────── */
+  --sq-z-dropdown: 10;
+  --sq-z-sticky:   20;
+  --sq-z-fixed:    30;
+  --sq-z-overlay:  40;
+  --sq-z-modal:    50;
+  --sq-z-popover:  60;
+  --sq-z-toast:    70;
+  --sq-z-tooltip:  80;
+
+  /* ─── shadcn token overrides ──────────────────────────── */
+  --background:         60 6% 99%;
+  --foreground:         222 47% 11%;
+  --card:               0 0% 100%;
+  --card-foreground:    222 47% 11%;
+  --popover:            0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary:            213 65% 17%;
+  --primary-foreground: 0 0% 100%;
+  --secondary:          210 14% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted:              210 14% 96%;
+  --muted-foreground:   215 14% 40%;
+  --accent:             213 65% 17%;
+  --accent-foreground:  0 0% 100%;
+  --destructive:        343 65% 32%;
+  --destructive-foreground: 0 0% 100%;
+  --border:             215 14% 89%;
+  --input:              215 14% 89%;
+  --ring:               213 65% 17%;
+}
+
+/* ── Base resets ────────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--sq-bg);
+    color: #0f172a;
+    margin: 0;
+    /* Prevent layout shift from scrollbar appearance */
+    overflow-y: scroll;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    letter-spacing: -0.015em;
+  }
+  /* Backwards-compat alias — maps font-serif to Plus Jakarta Sans across all app code */
+  .font-serif {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+  .font-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  [data-debug-wrapper="true"] { display: contents !important; }
+}
+
+/* Marketing pages — Merriweather only for h1/h2 */
+.marketing-page h1,
+.marketing-page h2,
+.marketing-page .font-serif {
+  font-family: 'Merriweather', Georgia, serif;
+  letter-spacing: -0.015em;
+}
+.marketing-page h3,
+.marketing-page h4,
+.marketing-page h5,
+.marketing-page h6 {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+/* ── Scrollbar — refined to 6px ─────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.15);
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.28); }
+* { scrollbar-width: thin; scrollbar-color: rgba(15,23,42,0.15) transparent; }
+
+/* ── Selection ──────────────────────────────────────────────────────────────── */
+::selection { background-color: var(--sq-navy-700); color: #fff; }
+
+/* ── Focus ring — WCAG 2.1 AA ──────────────────────────────────────────────── */
+:where(
+  button,
+  [role="button"],
+  [type="submit"],
+  [type="button"],
+  [type="reset"],
+  a,
+  input,
+  select,
+  textarea
+):focus-visible {
+  outline: 2px solid var(--sq-navy-700);
+  outline-offset: 2px;
+  border-radius: var(--sq-radius-sm);
+}
+
+/* ── Animation utilities ────────────────────────────────────────────────────── */
+@keyframes sq-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes sq-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes sq-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+@keyframes sq-slide-right {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0);    }
+}
+@keyframes sq-highlight {
+  0%   { color: var(--sq-navy-700); }
+  40%  { color: #2563eb; }
+  100% { color: var(--sq-navy-700); }
+}
+@keyframes sq-skeleton-shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+@keyframes sq-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.sq-fade-up   { animation: sq-fade-up   0.45s var(--sq-ease-out) both; }
+.sq-fade-in   { animation: sq-fade-in   0.25s ease-out both; }
+.sq-slide-up  { animation: sq-slide-up  0.22s var(--sq-ease-out) both; }
+.sq-highlight { animation: sq-highlight 0.6s ease-out; }
+
+.sq-delay-1 { animation-delay:  80ms; }
+.sq-delay-2 { animation-delay: 160ms; }
+.sq-delay-3 { animation-delay: 240ms; }
+.sq-delay-4 { animation-delay: 320ms; }
+.sq-delay-5 { animation-delay: 400ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sq-fade-up, .sq-fade-in, .sq-slide-up, .sq-highlight { animation: none !important; }
+}
+
+/* ── Reveal on scroll ───────────────────────────────────────────────────────── */
+.sq-reveal       { opacity: 0; transform: translateY(14px); transition: opacity 0.5s ease-out, transform 0.5s ease-out; }
+.sq-reveal.sq-in { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .sq-reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* ── Skeleton shimmer ───────────────────────────────────────────────────────── */
+.sq-skeleton {
+  background-color: #f1f5f9;
+  background-image: linear-gradient(90deg, #f1f5f9 0%, #e8edf3 45%, #f1f5f9 90%);
+  background-size: 1200px 100%;
+  animation: sq-skeleton-shimmer 1.6s ease-in-out infinite;
+  border-radius: var(--sq-radius-sm);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sq-skeleton { animation: none; background-image: none; }
+}
+
+/* ── Card baseline ──────────────────────────────────────────────────────────── */
+.sq-card {
+  background: #fff;
+  border: 1px solid var(--sq-border);
+  border-radius: var(--sq-radius-card);
+  box-shadow: var(--sq-shadow-card);
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+}
+.sq-card-hover:hover,
+.sq-card.interactive:hover {
+  box-shadow: var(--sq-shadow-card-hover);
+  border-color: var(--sq-border-strong);
+}
+
+/* ── Typography utilities ───────────────────────────────────────────────────── */
+.overline {
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 0.6875rem;   /* 11px */
+  font-weight: 600;
+  color: #64748b;
+}
+/* Alias for legacy .sq-overline usage */
+.sq-overline { @apply overline; }
+
+.sq-label {
+  font-size: var(--sq-text-base);
+  font-weight: 500;
+  color: #475569;
+}
+.sq-caption {
+  font-size: var(--sq-text-sm);
+  color: #94a3b8;
+  line-height: 1.55;
+}
+.sq-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--sq-text-sm);
+}
+.sq-page-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.sq-page-subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-top: 0.375rem;
+  line-height: 1.5;
+}
+
+/* ── Stat display ───────────────────────────────────────────────────────────── */
+.sq-stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+.sq-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #64748b;
+  margin-top: 0.375rem;
+}
+.sq-stat-delta-pos { font-size: 0.75rem; font-weight: 600; color: #059669; }
+.sq-stat-delta-neg { font-size: 0.75rem; font-weight: 600; color: var(--sq-crimson-600); }
+
+/* ── Empty state ────────────────────────────────────────────────────────────── */
+.sq-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--sq-space-16) var(--sq-space-8);
+}
+.sq-empty-icon  { color: #cbd5e1; margin-bottom: var(--sq-space-5); }
+.sq-empty-title { font-size: 0.9375rem; font-weight: 600; color: #1e293b; margin: 0 0 0.375rem; }
+.sq-empty-desc  { font-size: 0.8125rem; color: #64748b; line-height: 1.55; max-width: 280px; margin: 0 auto; }
+
+/* ── Form atoms ─────────────────────────────────────────────────────────────── */
+.sq-form-group { display: flex; flex-direction: column; gap: 0.375rem; }
+.sq-form-label { font-size: 0.8125rem; font-weight: 500; color: #374151; }
+.sq-form-hint  { font-size: 0.75rem;   color: #6b7280; }
+.sq-form-error { font-size: 0.75rem;   color: var(--sq-crimson-600); }
+
+/* ── Table base ─────────────────────────────────────────────────────────────── */
+.sq-tbl { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+.sq-tbl thead th {
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #64748b;
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+  background: #f8fafc;
+}
+.sq-tbl thead th:first-child { border-radius: var(--sq-radius-sm) 0 0 0; }
+.sq-tbl thead th:last-child  { border-radius: 0 var(--sq-radius-sm) 0 0; }
+.sq-tbl tbody td {
+  padding: 0.6875rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  line-height: 1.45;
+}
+.sq-tbl tbody tr:last-child td  { border-bottom: none; }
+.sq-tbl tbody tr:hover td       { background: #f8fafc; }
+
+/* ── Divider ────────────────────────────────────────────────────────────────── */
+.sq-divider { border: none; border-top: 1px solid var(--sq-border); margin: 0; }
+
+/* ── Editorial link ─────────────────────────────────────────────────────────── */
+a.editorial-link {
+  color: var(--sq-navy-700);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 150ms;
+}
+a.editorial-link:hover { border-bottom-color: var(--sq-navy-700); }
+
+.editorial-rule { position: relative; }
+.editorial-rule::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0;
+  width: 28px; height: 2px;
+  background: var(--sq-navy-700);
+  border-radius: 1px;
+}
+
+/* ── Cursor ─────────────────────────────────────────────────────────────────── */
+.sq-cursor::after {
+  content: '|';
+  animation: sq-blink 900ms step-end infinite;
+  margin-left: 1px;
+  color: var(--sq-navy-700);
+}
+
+/* ── FAQ details ─────────────────────────────────────────────────────────────── */
+details.faq-item summary { list-style: none; }
+details.faq-item summary::-webkit-details-marker { display: none; }
+details.faq-item .faq-chevron { transition: transform 200ms ease-out; }
+details.faq-item[open] .faq-chevron { transform: rotate(180deg); }
+details.faq-item .faq-body { overflow: hidden; max-height: 0; transition: max-height 220ms ease-out; }
+details.faq-item[open] .faq-body { max-height: 400px; }
+
+/* ── Shadow utilities ────────────────────────────────────────────────────────── */
+.sq-shadow-xs   { box-shadow: var(--sq-shadow-xs);   }
+.sq-shadow-sm   { box-shadow: var(--sq-shadow-sm);   }
+.sq-shadow-md   { box-shadow: var(--sq-shadow-md);   }
+.sq-shadow-lg   { box-shadow: var(--sq-shadow-lg);   }
+.sq-shadow-xl   { box-shadow: var(--sq-shadow-xl);   }
+.sq-shadow-card { box-shadow: var(--sq-shadow-card); }
+
+/* ── Landing page ────────────────────────────────────────────────────────────── */
+.sq-dot-grid {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.10) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Extended animation delays for hero staggering */
+.sq-delay-6 { animation-delay: 480ms; }
+.sq-delay-7 { animation-delay: 600ms; }
+
+/* Feature section number decoration */
+.sq-section-num {
+  font-family: ui-monospace, monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--sq-navy-700);
+  text-transform: uppercase;
+}
+
+/* Workflow step connector line */
+.sq-step-line::after {
+  content: '';
+  position: absolute;
+  top: 17px;
+  left: calc(100% + 8px);
+  width: calc(100% - 16px);
+  height: 1px;
+  background: linear-gradient(to right, rgba(15,40,71,0.3), rgba(15,40,71,0.06));
+}
+
+/* Pricing featured card */
+.sq-pricing-featured {
+  background: #0F2847;
+  border-color: #0F2847;
+  box-shadow: 0 20px 60px rgba(15,40,71,0.35), 0 4px 20px rgba(15,40,71,0.15);
+  transform: translateY(-8px);
+}
+
+/* Hero preview glow */
+.sq-hero-preview {
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.10),
+    0 24px 80px rgba(0,0,0,0.5),
+    0 8px 32px rgba(0,0,0,0.25);
+  transform: perspective(1400px) rotateX(3deg);
+  transform-origin: top center;
+}
+
+/* ── Sidebar transitions ─────────────────────────────────────────────────────── */
+.sq-sidebar {
+  transition: width var(--sq-dur-slow) var(--sq-ease-out);
+  will-change: width;
+}
+.sq-sidebar-item-label {
+  transition: opacity var(--sq-dur-fast) ease, width var(--sq-dur-slow) var(--sq-ease-out);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.sq-sidebar--collapsed .sq-sidebar-item-label {
+  opacity: 0;
+  width: 0;
+  pointer-events: none;
+}
+.sq-sidebar--collapsed .sq-sidebar-section-label {
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+}
+
+/* ── Application Preferences — real, working effects ─────────────────────────
+   Applied by src/lib/applyPreferenceEffects.js based on the client-only
+   sq_app_preferences store (see hooks/usePreferences.js). */
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+html[data-focus-indicators="true"] :focus-visible {
+  outline: 2px solid #0F2847 !important;
+  outline-offset: 2px !important;
+}
+html[data-high-contrast="true"] {
+  filter: contrast(1.15);
+}
