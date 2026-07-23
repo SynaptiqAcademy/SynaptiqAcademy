@@ -1,0 +1,20 @@
+## Railway deployment config for the SYNAPTIQ backend (FastAPI).
+##
+## This lives at the repo root (not backend/) because Root Directory is a
+## Railway *service* setting (Dashboard → Settings → Source) that cannot be
+## set via git, and Railway/Railpack look for their config files at the repo
+## root by default. See railpack.json (also at repo root) for the actual
+## install/start commands, which explicitly `cd backend` / reference
+## `backend/requirements.txt` so this works with Root Directory left at "/".
+##
+## Frontend (/frontend) is deployed separately on Vercel and is untouched by
+## this file.
+
+[build]
+builder = "RAILPACK"
+
+[deploy]
+healthcheckPath = "/api/health/live"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

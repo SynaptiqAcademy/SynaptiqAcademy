@@ -1,0 +1,17 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "provider": "python",
+  "packages": {
+    "python": "3.11"
+  },
+  "steps": {
+    "install": {
+      "commands": [
+        "pip install -r backend/requirements.txt"
+      ]
+    }
+  },
+  "deploy": {
+    "startCommand": "cd backend && gunicorn server:app -k uvicorn.workers.UvicornWorker --workers ${WORKERS:-2} --bind 0.0.0.0:$PORT --timeout 120 --max-requests 1000 --max-requests-jitter 100 --access-logfile - --error-logfile -"
+  }
+}
