@@ -121,23 +121,6 @@ export default function GraphCanvas({ rootNodeId, onNodeSelect, selectedNodeId }
       .finally(() => setLoading(false));
   }, [rootNodeId]);
 
-  // Build simulation when data changes
-  useEffect(() => {
-    if (!graphData.nodes.length) return;
-    simRef.current = buildSimulation(graphData.nodes, graphData.edges);
-
-    let ticks = 0;
-    function animate() {
-      if (!simRef.current) return;
-      simRef.current.tick(ticks < 80 ? 0.4 : 0.1);
-      ticks++;
-      draw();
-      rafRef.current = requestAnimationFrame(animate);
-    }
-    rafRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [graphData, selectedNodeId, hovered]);
-
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !simRef.current) return;
@@ -206,6 +189,23 @@ export default function GraphCanvas({ rootNodeId, onNodeSelect, selectedNodeId }
 
     ctx.restore();
   }, [graphData, selectedNodeId, hovered]);
+
+  // Build simulation when data changes
+  useEffect(() => {
+    if (!graphData.nodes.length) return;
+    simRef.current = buildSimulation(graphData.nodes, graphData.edges);
+
+    let ticks = 0;
+    function animate() {
+      if (!simRef.current) return;
+      simRef.current.tick(ticks < 80 ? 0.4 : 0.1);
+      ticks++;
+      draw();
+      rafRef.current = requestAnimationFrame(animate);
+    }
+    rafRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [graphData, draw]);
 
   // Mouse handlers
   function getNodeAt(canvasX, canvasY) {

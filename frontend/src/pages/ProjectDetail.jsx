@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
@@ -37,11 +37,11 @@ export default function ProjectDetail() {
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const { data } = await api.get(`/projects/${id}`);
     setProject(data);
-  };
-  useEffect(() => { load(); }, [id]);
+  }, [id]);
+  useEffect(() => { load(); }, [load]);
 
   const save = async (patch) => {
     setSaving(true);
@@ -187,8 +187,8 @@ function Literature({ projectId }) {
   const [items, setItems] = useState([]);
   const [form, setForm] = useState({ title: "", authors: "", year: "", source_type: "Paper", notes: "", url: "" });
   const [adding, setAdding] = useState(false);
-  const load = async () => { const r = await api.get(`/projects/${projectId}/literature`); setItems(r.data); };
-  useEffect(() => { load(); }, [projectId]);
+  const load = useCallback(async () => { const r = await api.get(`/projects/${projectId}/literature`); setItems(r.data); }, [projectId]);
+  useEffect(() => { load(); }, [load]);
   const add = async () => {
     if (!form.title.trim()) return;
     setAdding(true);
@@ -250,11 +250,11 @@ function Tasks({ projectId, members }) {
   const [milestones, setMilestones] = useState([]);
   const [tForm, setTForm] = useState({ title: "", assignee_id: "", due_date: "", priority: "medium" });
   const [mForm, setMForm] = useState({ title: "", due_date: "", description: "" });
-  const load = async () => {
+  const load = useCallback(async () => {
     const [t, m] = await Promise.all([api.get(`/projects/${projectId}/tasks`), api.get(`/projects/${projectId}/milestones`)]);
     setTasks(t.data); setMilestones(m.data);
-  };
-  useEffect(() => { load(); }, [projectId]);
+  }, [projectId]);
+  useEffect(() => { load(); }, [load]);
 
   const addTask = async () => {
     if (!tForm.title.trim()) return;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import api from "../../lib/api";
 import { TID } from "../../lib/testIds";
 import { toast } from "sonner";
@@ -28,17 +28,17 @@ export default function WorkspaceKanban({ wsId, canEdit }) {
   const [draggingId, setDraggingId] = useState(null);
   const [dragOver, setDragOver] = useState(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await api.get(`/workspaces/${wsId}/tasks`);
       setData(data || { projects: [], tasks: [] });
-      if (!projectId && data?.projects?.length) setProjectId(data.projects[0].id);
+      if (data?.projects?.length) setProjectId((prev) => prev || data.projects[0].id);
     } catch (e) {
       setData({ projects: [], tasks: [] });
     } finally { setLoading(false); }
-  };
-  useEffect(() => { load(); }, [wsId]);
+  }, [wsId]);
+  useEffect(() => { load(); }, [wsId, load]);
 
   const byCol = useMemo(() => {
     const map = Object.fromEntries(COLUMNS.map((c) => [c.key, []]));

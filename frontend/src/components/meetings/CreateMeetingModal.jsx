@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal } from "@/components/ds/Modal";
 import { Button } from "@/components/ds/Button";
 import { Input } from "@/components/ds/Input";
@@ -36,23 +36,22 @@ function toLocalInputValue(d) {
 /**
  * CreateMeetingModal — modern create/quick-create modal for a new meeting.
  */
-export function CreateMeetingModal({ open, onClose, onCreated, defaultType, defaultWorkspaceId, defaultProjectId, defaultDate }) {
-  const now = useMemo(() => {
-    if (defaultDate) {
-      const d = new Date(defaultDate);
-      const withTime = new Date();
-      d.setHours(withTime.getHours(), withTime.getMinutes(), 0, 0);
-      return d;
-    }
-    return new Date();
-  }, [open, defaultDate]);
-  const inHour = useMemo(() => new Date(now.getTime() + 60 * 60 * 1000), [now]);
+function computeDefaultStart(defaultDate) {
+  if (defaultDate) {
+    const d = new Date(defaultDate);
+    const withTime = new Date();
+    d.setHours(withTime.getHours(), withTime.getMinutes(), 0, 0);
+    return d;
+  }
+  return new Date();
+}
 
+export function CreateMeetingModal({ open, onClose, onCreated, defaultType, defaultWorkspaceId, defaultProjectId, defaultDate }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [meetingType, setMeetingType] = useState(defaultType || "Research Meeting");
-  const [startAt, setStartAt] = useState(toLocalInputValue(now));
-  const [endAt, setEndAt] = useState(toLocalInputValue(inHour));
+  const [startAt, setStartAt] = useState(() => toLocalInputValue(computeDefaultStart(defaultDate)));
+  const [endAt, setEndAt] = useState(() => toLocalInputValue(new Date(computeDefaultStart(defaultDate).getTime() + 60 * 60 * 1000)));
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
   const [location, setLocation] = useState("");
   const [videoLink, setVideoLink] = useState("");
@@ -76,14 +75,15 @@ export function CreateMeetingModal({ open, onClose, onCreated, defaultType, defa
 
   useEffect(() => {
     if (!open) return;
+    const freshStart = computeDefaultStart(defaultDate);
+    const freshEnd = new Date(freshStart.getTime() + 60 * 60 * 1000);
     setMeetingType(defaultType || "Research Meeting");
     setWorkspaceId(defaultWorkspaceId || "");
     setProjectId(defaultProjectId || "");
-    setStartAt(toLocalInputValue(now));
-    setEndAt(toLocalInputValue(inHour));
+    setStartAt(toLocalInputValue(freshStart));
+    setEndAt(toLocalInputValue(freshEnd));
     api.get("/workspaces").then((r) => setWorkspaces(r.data || [])).catch(() => setWorkspaces([]));
     api.get("/projects").then((r) => setProjects(r.data || [])).catch(() => setProjects([]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, defaultType, defaultWorkspaceId, defaultProjectId, defaultDate]);
 
   useEffect(() => {

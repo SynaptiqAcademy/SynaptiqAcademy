@@ -8,7 +8,7 @@
  * Features: upload, list (current versions), version history, activity log,
  * metadata edit, download, delete.
  */
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import api from "../../lib/api";
 import { toast } from "sonner";
 import {
@@ -42,13 +42,13 @@ export default function FilePanel({ entityKind, entityId }) {
   const [previewing, setPreviewing] = useState(null);
   const inputRef = useRef(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const { data } = await api.get(`/files?entity_kind=${entityKind}&entity_id=${entityId}`);
       setFiles(data || []);
     } catch (e) { setFiles([]); }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [entityKind, entityId]);
+  }, [entityKind, entityId]);
+  useEffect(() => { load(); }, [load]);
 
   const upload = async (e, replacesId = null) => {
     const f = e.target.files?.[0];
@@ -133,7 +133,7 @@ function FileRow({ f, expanded, onExpand, onPreview, onDownload, onDelete, onUpl
   const [name, setName] = useState(f.filename);
   const Icon = TYPE_ICON[f.ext] || FileText;
 
-  const loadAux = async () => {
+  const loadAux = useCallback(async () => {
     if (versions !== null) return;
     try {
       const [v, a] = await Promise.all([
@@ -142,8 +142,8 @@ function FileRow({ f, expanded, onExpand, onPreview, onDownload, onDelete, onUpl
       ]);
       setVersions(v.data || []); setActivity(a.data || []);
     } catch (e) {}
-  };
-  useEffect(() => { if (expanded) loadAux(); /* eslint-disable-next-line */ }, [expanded]);
+  }, [versions, f.id]);
+  useEffect(() => { if (expanded) loadAux(); }, [expanded, loadAux]);
 
   const saveRename = async () => {
     if (!name.trim() || name === f.filename) { setEditing(false); return; }

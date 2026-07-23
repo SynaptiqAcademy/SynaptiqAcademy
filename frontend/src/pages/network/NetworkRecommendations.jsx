@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Brain, RefreshCw, X, ArrowRight, Loader } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
@@ -49,16 +49,16 @@ export default function NetworkRecommendations() {
   const [generating, setGenerating] = useState(false);
   const [catFilter, setCatFilter] = useState("");
 
-  const fetchRecs = async () => {
+  const fetchRecs = useCallback(async () => {
     setLoading(true);
     try {
       const params = catFilter ? { category: catFilter } : {};
       const r = await axios.get("/api/network/recommendations", { params });
       setRecs(r.data || []);
     } catch { } finally { setLoading(false); }
-  };
+  }, [catFilter]);
 
-  useEffect(() => { fetchRecs(); }, [catFilter]);
+  useEffect(() => { fetchRecs(); }, [fetchRecs]);
 
   const handleGenerate = async () => {
     setGenerating(true);

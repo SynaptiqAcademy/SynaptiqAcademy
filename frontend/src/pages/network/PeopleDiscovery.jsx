@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { Search, X, Shield } from "lucide-react";
@@ -75,7 +75,11 @@ export default function PeopleDiscovery() {
     }
   }, []);
 
-  useEffect(() => { search(filters, page); }, []);
+  const initialSearchStateRef = useRef({ filters, page });
+  useEffect(() => {
+    const { filters: f0, page: p0 } = initialSearchStateRef.current;
+    search(f0, p0);
+  }, [search]);
 
   const handleSearch = e => {
     e.preventDefault();

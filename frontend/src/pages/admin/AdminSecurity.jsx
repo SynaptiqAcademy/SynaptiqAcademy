@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Lock, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
@@ -27,7 +27,7 @@ export default function AdminSecurity() {
   const [showForceConfirm, setShowForceConfirm] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [fl, bi] = await Promise.all([
@@ -41,9 +41,9 @@ export default function AdminSecurity() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [hours]);
 
-  useEffect(() => { loadData(); }, [hours]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const blockIp = async (ip) => {
     if (!blockReason.trim()) { toast.error("Please provide a reason"); return; }

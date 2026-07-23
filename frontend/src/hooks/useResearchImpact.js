@@ -22,7 +22,8 @@ function useFetch(url, { skip = false, deps = [] } = {}) {
       .finally(() => setLoading(false));
   }, [url, skip]);
 
-  useEffect(() => { fetch_(); }, [fetch_, ...deps]);
+  const depsKey = JSON.stringify(deps);
+  useEffect(() => { fetch_(); }, [fetch_, depsKey]);
 
   return { data, loading, error, refetch: fetch_ };
 }

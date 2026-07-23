@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { Plus, Users, Search, Lock } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
@@ -129,7 +129,7 @@ export default function ResearchGroups() {
   const [tab, setTab] = useState("discover");
   const [myGroups, setMyGroups] = useState([]);
 
-  const fetchGroups = async () => {
+  const fetchGroups = useCallback(async () => {
     setLoading(true);
     try {
       const params = { limit: 30 };
@@ -139,16 +139,18 @@ export default function ResearchGroups() {
       setResults(r.data.results || []);
       setTotal(r.data.total || 0);
     } catch { } finally { setLoading(false); }
-  };
+  }, [q, typeFilter]);
 
-  const fetchMyGroups = async () => {
+  const fetchMyGroups = useCallback(async () => {
     try {
       const r = await axios.get("/api/network/groups/mine");
       setMyGroups(r.data || []);
     } catch { }
-  };
+  }, []);
 
-  useEffect(() => { fetchGroups(); fetchMyGroups(); }, []);
+  const fetchGroupsRef = useRef(fetchGroups);
+  useEffect(() => { fetchGroupsRef.current = fetchGroups; }, [fetchGroups]);
+  useEffect(() => { fetchGroupsRef.current(); fetchMyGroups(); }, [fetchMyGroups]);
 
   const handleJoin = async (id) => {
     await axios.post(`/api/network/groups/${id}/join`);

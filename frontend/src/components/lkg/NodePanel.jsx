@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { X, ExternalLink, Clock, GitBranch, Layers } from "lucide-react";
 import { getNodeEdges, getNodeTimeline } from "../../services/lkgEngine";
 
@@ -41,15 +41,7 @@ export default function NodePanel({ node, onClose, onNavigate }) {
   const [tab, setTab]           = useState("edges");
   const [loading, setLoading]   = useState(false);
 
-  useEffect(() => {
-    if (!node) return;
-    setEdges([]);
-    setTimeline(null);
-    setTab("edges");
-    loadEdges();
-  }, [node?.node_id]);
-
-  async function loadEdges() {
+  const loadEdges = useCallback(async () => {
     if (!node) return;
     setLoading(true);
     try {
@@ -60,9 +52,9 @@ export default function NodePanel({ node, onClose, onNavigate }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [node]);
 
-  async function loadTimeline() {
+  const loadTimeline = useCallback(async () => {
     if (!node || timeline) return;
     setLoading(true);
     try {
@@ -73,7 +65,15 @@ export default function NodePanel({ node, onClose, onNavigate }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [node, timeline]);
+
+  useEffect(() => {
+    if (!node) return;
+    setEdges([]);
+    setTimeline(null);
+    setTab("edges");
+    loadEdges();
+  }, [node, loadEdges]);
 
   if (!node) return null;
 

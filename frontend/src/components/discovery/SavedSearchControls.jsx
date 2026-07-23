@@ -10,7 +10,7 @@
  *   - "Save search" button (opens modal to name + pick digest frequency)
  *   - "Saved searches" button (opens drawer to list / edit / delete / preview)
  */
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import api from "../../lib/api";
 import { toast } from "sonner";
 import {
@@ -30,13 +30,13 @@ export default function SavedSearchControls({ kind, query, filters }) {
   const [busy, setBusy] = useState(false);
   const [count, setCount] = useState(null);
 
-  const loadCount = async () => {
+  const loadCount = useCallback(async () => {
     try {
       const { data } = await api.get("/searches");
       setCount((data || []).filter((s) => s.kind === kind).length);
     } catch (e) { /* ignore */ }
-  };
-  useEffect(() => { loadCount(); }, [kind]);
+  }, [kind]);
+  useEffect(() => { loadCount(); }, [loadCount]);
 
   const save = async () => {
     if (!name.trim()) { toast.error("Name required"); return; }
@@ -249,7 +249,7 @@ function SavedSearchCard({ s, isEditing, onEdit, onCancelEdit, onUpdate, onDelet
   const [name, setName] = useState(s.name);
   const [freq, setFreq] = useState(s.frequency);
 
-  useEffect(() => { setName(s.name); setFreq(s.frequency); }, [s.id]);
+  useEffect(() => { setName(s.name); setFreq(s.frequency); }, [s.id, s.name, s.frequency]);
 
   return (
     <div className="border border-slate-200 bg-white p-4" data-testid={`saved-search-${s.id}`}>

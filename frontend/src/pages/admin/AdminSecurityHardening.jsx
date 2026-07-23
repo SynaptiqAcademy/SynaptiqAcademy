@@ -10,7 +10,7 @@ import { NAVY, WARM, BRD } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 
 // ── data hook ─────────────────────────────────────────────────────────────────
-function useApi(path, deps = []) {
+function useApi(path) {
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
@@ -19,7 +19,7 @@ function useApi(path, deps = []) {
     try { const r = await api.get(path); setData(r.data); }
     catch (e) { setError(e?.response?.data?.detail || "Failed"); }
     finally { setLoading(false); }
-  }, [path, ...deps]);
+  }, [path]);
   return { data, loading, error, fetch };
 }
 
@@ -38,7 +38,7 @@ const sevPill = (sev) => (
 // ─────────────────────────────────────────────────────────────────────────────
 function DevicesTab() {
   const { data, loading, error, fetch } = useApi("/api/admin/hardening/devices");
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetch(); }, [fetch]);
 
   const revoke = async (id) => {
     await api.delete(`/admin/hardening/devices/${id}`);
@@ -95,7 +95,7 @@ function DevicesTab() {
 // ─────────────────────────────────────────────────────────────────────────────
 function SessionsTab() {
   const { data, loading, error, fetch } = useApi("/api/admin/hardening/sessions");
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetch(); }, [fetch]);
 
   const terminate = async (id) => {
     await api.post("/admin/hardening/sessions/terminate", { session_id: id });
@@ -175,7 +175,7 @@ function IPAllowlistTab() {
   const [label, setLabel] = useState("");
   const [saving, setSaving] = useState(false);
   const [addErr, setAddErr] = useState("");
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetch(); }, [fetch]);
 
   const add = async () => {
     if (!ip.trim()) return;
@@ -293,7 +293,7 @@ function BreakGlassTab() {
   const [token, setToken]     = useState(null);
   const [genLoading, setGenLoading] = useState(false);
   const [genError, setGenError]   = useState("");
-  useEffect(() => { fetchHistory(); }, []);
+  useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
   const generate = async () => {
     if (!reason.trim()) { setGenError("Reason is required"); return; }
@@ -382,7 +382,7 @@ function SecurityEventsTab() {
   const { data, loading, error, fetch } = useApi(
     `/api/admin/hardening/security-events?${severity ? `severity=${severity}&` : ""}${resolved !== undefined ? `resolved=${resolved}&` : ""}limit=50`
   );
-  useEffect(() => { fetch(); }, [severity, resolved]);
+  useEffect(() => { fetch(); }, [severity, resolved, fetch]);
 
   const resolve = async (id) => {
     await api.post(`/admin/hardening/security-events/${id}/resolve`, { note: resolveNote });
@@ -504,10 +504,10 @@ function AuditLogTab() {
   const { data, loading, fetch } = useApi(
     `/api/admin/hardening/audit?limit=100${debouncedAction ? `&action=${encodeURIComponent(debouncedAction)}` : ""}`
   );
-  useEffect(() => { fetch(); }, [debouncedAction]);
+  useEffect(() => { fetch(); }, [debouncedAction, fetch]);
 
   const { data: summary, fetch: fetchSummary } = useApi("/api/admin/hardening/audit/summary");
-  useEffect(() => { fetchSummary(); }, []);
+  useEffect(() => { fetchSummary(); }, [fetchSummary]);
 
   const events = data?.events || [];
 
@@ -586,7 +586,7 @@ function AuditLogTab() {
 // ─────────────────────────────────────────────────────────────────────────────
 function CertificationTab() {
   const { data, loading, error, fetch } = useApi("/api/admin/hardening/certification");
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetch(); }, [fetch]);
 
   if (loading) return <div className="text-sm text-slate-400 animate-pulse">Computing certification scores…</div>;
   if (error)   return <div className="text-sm text-red-500">{error}</div>;

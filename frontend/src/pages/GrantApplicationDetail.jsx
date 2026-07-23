@@ -155,13 +155,13 @@ export default function GrantApplicationDetail() {
     }
   }, [id, sectionKey]);
 
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => { load(); }, [id, load]);
 
   useEffect(() => {
     if (app) {
       setDraft((app.proposal_sections || {})[sectionKey] || "");
     }
-  }, [sectionKey, app?.id]);
+  }, [sectionKey, app]);
 
   const loadTab = useCallback(async (k) => {
     setTab(k);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Plus, Search, Users, Mail, BarChart2, ChevronLeft, ChevronRight,
@@ -267,7 +267,9 @@ export default function GrantCollaborationHub() {
 
   const LIMIT = 20;
 
-  const fetchCollaborations = useCallback(async (currentPage = 1, currentFilters = filters) => {
+  const initialFiltersRef = useRef(filters);
+
+  const fetchCollaborations = useCallback(async (currentPage = 1, currentFilters = {}) => {
     try {
       const params = { page: currentPage, limit: LIMIT };
       if (currentFilters.status) params.status = currentFilters.status;
@@ -307,7 +309,7 @@ export default function GrantCollaborationHub() {
     const init = async () => {
       setLoading(true);
       await Promise.all([
-        fetchCollaborations(1, filters),
+        fetchCollaborations(1, initialFiltersRef.current),
         fetchMyCollabs(),
         fetchAnalytics(),
         fetchMyInvitations(),
@@ -315,7 +317,7 @@ export default function GrantCollaborationHub() {
       setLoading(false);
     };
     init();
-  }, []);
+  }, [fetchCollaborations, fetchMyCollabs, fetchAnalytics, fetchMyInvitations]);
 
   const handleSearch = () => {
     setPage(1);

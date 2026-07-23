@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { Plus, Search, Clock } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
@@ -208,7 +208,7 @@ export default function OpenCollaborations() {
   const [tab, setTab] = useState("discover");
   const [mine, setMine] = useState({ owned: [], applied: [] });
 
-  const fetchCollabs = async () => {
+  const fetchCollabs = useCallback(async () => {
     setLoading(true);
     try {
       const params = { limit: 30 };
@@ -218,16 +218,18 @@ export default function OpenCollaborations() {
       setResults(r.data.results || []);
       setTotal(r.data.total || 0);
     } catch { } finally { setLoading(false); }
-  };
+  }, [q, typeFilter]);
 
-  const fetchMine = async () => {
+  const fetchMine = useCallback(async () => {
     try {
       const r = await axios.get("/api/network/collaborations/mine");
       setMine(r.data || { owned: [], applied: [] });
     } catch { }
-  };
+  }, []);
 
-  useEffect(() => { fetchCollabs(); fetchMine(); }, []);
+  const fetchCollabsRef = useRef(fetchCollabs);
+  useEffect(() => { fetchCollabsRef.current = fetchCollabs; }, [fetchCollabs]);
+  useEffect(() => { fetchCollabsRef.current(); fetchMine(); }, [fetchMine]);
 
   return (
     <DiscoveryLayout

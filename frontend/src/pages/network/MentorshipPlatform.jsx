@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { UserCheck, Star, X } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
@@ -202,7 +202,7 @@ export default function MentorshipPlatform() {
   const [myRequests, setMyRequests] = useState([]);
   const [myProfile, setMyProfile] = useState(null);
 
-  const fetchMentors = async () => {
+  const fetchMentors = useCallback(async () => {
     setLoading(true);
     try {
       const params = { limit: 20, ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)) };
@@ -210,23 +210,25 @@ export default function MentorshipPlatform() {
       setMentors(r.data.results || []);
       setTotal(r.data.total || 0);
     } catch { } finally { setLoading(false); }
-  };
+  }, [filters]);
 
-  const fetchMyRequests = async () => {
+  const fetchMyRequests = useCallback(async () => {
     try {
       const r = await axios.get("/api/network/mentors/requests?role=mentee");
       setMyRequests(r.data || []);
     } catch { }
-  };
+  }, []);
 
-  const fetchMyProfile = async () => {
+  const fetchMyProfile = useCallback(async () => {
     try {
       const r = await axios.get("/api/network/mentors/me");
       setMyProfile(r.data);
     } catch { }
-  };
+  }, []);
 
-  useEffect(() => { fetchMentors(); fetchMyRequests(); fetchMyProfile(); }, []);
+  const fetchMentorsRef = useRef(fetchMentors);
+  useEffect(() => { fetchMentorsRef.current = fetchMentors; }, [fetchMentors]);
+  useEffect(() => { fetchMentorsRef.current(); fetchMyRequests(); fetchMyProfile(); }, [fetchMyRequests, fetchMyProfile]);
 
   return (
     <DiscoveryLayout

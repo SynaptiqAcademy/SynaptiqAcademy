@@ -4,7 +4,7 @@
  *
  * Plus a "Govern" panel for admins (members + audit + seats).
  */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
@@ -32,13 +32,13 @@ export default function InstitutionDetail() {
   const [inst, setInst] = useState(null);
   const [tab, setTab] = useState("overview");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const { data } = await api.get(`/institutions/${id}`);
       setInst(data);
     } catch { toast.error("Institution not found"); }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  }, [id]);
+  useEffect(() => { load(); }, [load]);
 
   const isAdmin = useMemo(() => {
     if (!inst) return false;
@@ -210,14 +210,14 @@ function OverviewTab({ id }) {
 function ResearchersTab({ id, isAdmin }) {
   const [members, setMembers] = useState(null);
   const [status, setStatus] = useState("approved");
-  const load = async () => {
+  const load = useCallback(async () => {
     setMembers(null);
     try {
       const { data } = await api.get(`/institutions/${id}/members?status=${status}`);
       setMembers(data);
     } catch { setMembers([]); }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [status, id]);
+  }, [status, id]);
+  useEffect(() => { load(); }, [load]);
   if (members === null) return <LoadingBlock />;
   return (
     <div className="space-y-3">
@@ -260,14 +260,14 @@ function ResearchersTab({ id, isAdmin }) {
 function UnitsTab({ id, isAdmin }) {
   const [tree, setTree] = useState(null);
   const [creating, setCreating] = useState(false);
-  const load = async () => {
+  const load = useCallback(async () => {
     setTree(null);
     try {
       const { data } = await api.get(`/institutions/${id}/units`);
       setTree(data);
     } catch { setTree([]); }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  }, [id]);
+  useEffect(() => { load(); }, [load]);
   if (tree === null) return <LoadingBlock />;
   const rootUnits = tree.filter((u) => !u.parent_id);
   return (
@@ -508,13 +508,13 @@ function GovernTab({ id, inst, onChanged }) {
   const [collab, setCollab] = useState(null);
   const [seatsTotal, setSeatsTotal] = useState(inst.seats?.total || 0);
 
-  const load = async () => {
+  const load = useCallback(() => {
     api.get(`/institutions/${id}/audit`).then(({ data }) => setAudit(data));
     api.get(`/institutions/${id}/members`).then(({ data }) => setMembers(data));
     api.get(`/institutions/${id}/analytics/marketplace`).then(({ data }) => setMktActivity(data));
     api.get(`/institutions/${id}/analytics/collaboration`).then(({ data }) => setCollab(data));
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  }, [id]);
+  useEffect(() => { load(); }, [load]);
 
   const decide = async (uid, decision) => {
     await api.post(`/institutions/${id}/members/${uid}/decide`, { decision });
@@ -669,7 +669,7 @@ function CollaborationTab({ id, inst, isAdmin }) {
   const [formOpen, setFormOpen] = useState(false);
   const [posting, setPosting] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const [collabRes, memberRes] = await Promise.allSettled([
         api.get("/collaborations?limit=10"),
@@ -680,8 +680,8 @@ function CollaborationTab({ id, inst, isAdmin }) {
     } catch (_) {
       setCollabs([]);
     }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  }, [id]);
+  useEffect(() => { load(); }, [load]);
 
   const post = async () => {
     if (!form.title.trim()) { toast.error("Title required"); return; }

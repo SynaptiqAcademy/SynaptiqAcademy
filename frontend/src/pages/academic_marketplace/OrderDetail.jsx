@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -21,7 +21,7 @@ export default function OrderDetail() {
   const [revNote, setRevNote] = useState("");
   const [msg, setMsg] = useState(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     Promise.all([
       fetch(`${API}/orders/${id}`).then(r => r.json()),
       fetch(`${API}/contracts/${id}`).then(r => r.json()),
@@ -30,9 +30,9 @@ export default function OrderDetail() {
       setContract(c.error ? null : c);
       setLoading(false);
     }).catch(() => setLoading(false));
-  };
+  }, [id]);
 
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => { load(); }, [load]);
 
   const transition = async (status, note = "") => {
     setActionLoading(true);

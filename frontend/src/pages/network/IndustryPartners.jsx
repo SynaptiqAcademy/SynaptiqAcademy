@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { Search, ArrowRight } from "lucide-react";
 import { NAVY, WARM, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
@@ -20,7 +20,7 @@ export default function IndustryPartners() {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
 
-  const search = async (pg) => {
+  const search = useCallback(async (pg) => {
     setLoading(true);
     try {
       const params = { page: pg, limit: 20, type: "industry" };
@@ -29,9 +29,11 @@ export default function IndustryPartners() {
       setResults(r.data.results || []);
       setTotal(r.data.total || 0);
     } catch { setResults([]); } finally { setLoading(false); }
-  };
+  }, [q]);
 
-  useEffect(() => { search(1); }, []);
+  const searchRef = useRef(search);
+  useEffect(() => { searchRef.current = search; }, [search]);
+  useEffect(() => { searchRef.current(1); }, []);
 
   const handleSearch = e => { e.preventDefault(); setPage(1); search(1); };
 

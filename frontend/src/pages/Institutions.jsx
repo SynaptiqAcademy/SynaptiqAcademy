@@ -4,7 +4,7 @@
  * Premium "institution storefront" — search/filter by country & type,
  * browse cards (name, country, type, member count). Owners can create.
  */
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import api from "../lib/api";
 import { toast } from "sonner";
 import { Spinner, EmptyState, Button, Input, FormSelect, Textarea, Modal, Card } from "@/components/ds";
@@ -30,7 +30,7 @@ export default function Institutions() {
   const [items, setItems] = useState(null);
   const [creating, setCreating] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setItems(null);
     try {
       const params = new URLSearchParams();
@@ -40,8 +40,8 @@ export default function Institutions() {
       const { data } = await api.get(`/institutions?${params.toString()}`);
       setItems(data.results || []);
     } catch { setItems([]); }
-  };
-  useEffect(() => { const t = setTimeout(load, q ? 300 : 0); return () => clearTimeout(t); /* eslint-disable-next-line */ }, [q, type, country]);
+  }, [q, type, country]);
+  useEffect(() => { const t = setTimeout(load, q ? 300 : 0); return () => clearTimeout(t); }, [q, load]);
 
   return (
     <DiscoveryLayout

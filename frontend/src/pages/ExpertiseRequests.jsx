@@ -4,7 +4,7 @@
  * Filters: kind, research area, free text.
  * Action: open detail page; create new (modal).
  */
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { toast } from "sonner";
@@ -46,7 +46,7 @@ export default function ExpertiseRequests() {
   const [creating, setCreating] = useState(false);
   const [tab, setTab] = useState("open");  // open | matching | mine
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setItems(null);
     try {
       if (tab === "matching") {
@@ -67,8 +67,8 @@ export default function ExpertiseRequests() {
       toast.error("Failed to load requests");
       setItems([]);
     }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [kind, q, tab]);
+  }, [kind, q, tab]);
+  useEffect(() => { load(); }, [load]);
 
   return (
     <DiscoveryLayout

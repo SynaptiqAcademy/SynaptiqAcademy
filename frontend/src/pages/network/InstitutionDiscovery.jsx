@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { Building2, Search } from "lucide-react";
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
@@ -34,7 +34,7 @@ export default function InstitutionDiscovery() {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({ q: "", country: "", type: "" });
 
-  const search = async (f, pg) => {
+  const search = useCallback(async (f, pg) => {
     setLoading(true);
     try {
       const params = { page: pg, limit: 20, ...Object.fromEntries(Object.entries(f).filter(([, v]) => v)) };
@@ -47,9 +47,10 @@ export default function InstitutionDiscovery() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { search(filters, 1); }, []);
+  const initialFiltersRef = useRef(filters);
+  useEffect(() => { search(initialFiltersRef.current, 1); }, [search]);
 
   const handleSearch = e => { e.preventDefault(); setPage(1); search(filters, 1); };
 

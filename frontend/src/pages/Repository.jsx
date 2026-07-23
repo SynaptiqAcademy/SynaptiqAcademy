@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import api from "../lib/api";
 import { Link } from "react-router-dom";
 import { TID } from "../lib/testIds";
@@ -269,7 +269,7 @@ export default function Repository() {
   const [q, setQ]           = useState("");
   const [showNew, setShowNew] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const params = {};
       if (filter) params.item_type = filter;
@@ -277,9 +277,13 @@ export default function Repository() {
       const { data } = await api.get("/repository", { params });
       setItems(data || []);
     } catch { setItems([]); }
-  };
+  }, [filter, q]);
 
-  useEffect(() => { load(); }, [filter]);
+  // Refetch automatically on filter change; `q` (free-text search) is applied
+  // only when the user explicitly triggers search(), not on every keystroke.
+  const loadRef = useRef(load);
+  useEffect(() => { loadRef.current = load; }, [load]);
+  useEffect(() => { loadRef.current(); }, [filter]);
 
   const search = () => load();
 

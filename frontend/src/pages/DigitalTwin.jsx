@@ -516,7 +516,7 @@ export default function DigitalTwin() {
     }
   }, [profile, twin]);
 
-  useEffect(() => { loadTab(activeTab); }, [activeTab]);
+  useEffect(() => { loadTab(activeTab); }, [activeTab, loadTab]);
 
   async function handleSync() {
     setSyncing(true);

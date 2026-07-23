@@ -3,7 +3,7 @@
  * (a flexible unit type). Shows members, child units, and aggregate stats
  * scoped to this unit's member subset.
  */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
@@ -29,7 +29,7 @@ export default function UnitDetail() {
   const [allInstMembers, setAllInstMembers] = useState([]);
   const [editingMembers, setEditingMembers] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const { data } = await api.get(`/units/${id}`);
       setU(data);
@@ -43,8 +43,8 @@ export default function UnitDetail() {
     } catch (e) {
       toast.error("Unit not found");
     }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  }, [id]);
+  useEffect(() => { load(); }, [load]);
 
   const isAdmin = useMemo(() => {
     if (!u) return false;
@@ -55,7 +55,7 @@ export default function UnitDetail() {
   }, [u, user]);
 
   // Aggregate stats from this subset of users
-  const userIds = members.map((m) => m.user_id);
+  const userIds = useMemo(() => members.map((m) => m.user_id), [members]);
   const [stats, setStats] = useState(null);
   useEffect(() => {
     if (!userIds.length) { setStats({ publications: 0, workspaces: 0, grants: 0, manuscripts_open: 0 }); return; }
@@ -65,7 +65,7 @@ export default function UnitDetail() {
       const avg = overalls.length ? overalls.reduce((a, b) => a + b, 0) / overalls.length : 0;
       setStats((s) => ({ ...(s || {}), reputation_avg: Math.round(avg * 10) / 10 }));
     }).catch(() => {});
-  }, [members.length]);
+  }, [userIds]);
 
   if (!u) return <div className="p-6"><SkeletonCard rows={4} /></div>;
 

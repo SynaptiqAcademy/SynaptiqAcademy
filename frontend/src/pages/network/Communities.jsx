@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { MessageSquare, Plus, Users, ChevronRight, Send } from "lucide-react";
 import { NAVY, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
@@ -53,14 +53,14 @@ function CommunityDetail({ community, onClose }) {
   const [form, setForm] = useState({ content: "", title: "", type: "discussion" });
   const [posting, setPosting] = useState(false);
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       const r = await axios.get(`/api/network/communities/${community.id}/posts`);
       setPosts(r.data.results || []);
     } catch { }
-  };
+  }, [community.id]);
 
-  useEffect(() => { fetchPosts(); }, [community.id]);
+  useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
   const handlePost = async () => {
     if (!form.content.trim()) return;
@@ -171,7 +171,7 @@ export default function Communities() {
   const [openCommunity, setOpenCommunity] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
 
-  const fetchCommunities = async () => {
+  const fetchCommunities = useCallback(async () => {
     setLoading(true);
     try {
       const params = { limit: 30 };
@@ -181,13 +181,16 @@ export default function Communities() {
       setResults(r.data.results || []);
       setTotal(r.data.total || 0);
     } catch { } finally { setLoading(false); }
-  };
+  }, [q, topicFilter]);
 
-  const fetchMyCommunities = async () => {
+  const fetchMyCommunities = useCallback(async () => {
     try { const r = await axios.get("/api/network/communities/mine"); setMyCommunities(r.data || []); } catch { }
-  };
+  }, []);
 
-  useEffect(() => { fetchCommunities(); fetchMyCommunities(); }, []);
+  // Only auto-fetch on mount; subsequent searches are user-triggered (Enter / Search button).
+  const fetchCommunitiesRef = useRef(fetchCommunities);
+  useEffect(() => { fetchCommunitiesRef.current = fetchCommunities; }, [fetchCommunities]);
+  useEffect(() => { fetchCommunitiesRef.current(); fetchMyCommunities(); }, [fetchMyCommunities]);
 
   const handleJoin = async id => { await axios.post(`/api/network/communities/${id}/join`); fetchCommunities(); fetchMyCommunities(); };
   const handleLeave = async id => { await axios.post(`/api/network/communities/${id}/leave`); fetchCommunities(); fetchMyCommunities(); };

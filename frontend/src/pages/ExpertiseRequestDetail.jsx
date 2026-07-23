@@ -2,7 +2,7 @@
  * ExpertiseRequestDetail — view a single expertise request, apply, and
  * (if owner) review applicants + accept/reject.
  */
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { toast } from "sonner";
@@ -28,7 +28,7 @@ export default function ExpertiseRequestDetail() {
   const [msg, setMsg] = useState("");
   const [applying, setApplying] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const { data } = await api.get(`/expertise/${id}`);
       setR(data);
@@ -36,8 +36,8 @@ export default function ExpertiseRequestDetail() {
       toast.error("Request not found");
       navigate("/expertise");
     }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  }, [id, navigate]);
+  useEffect(() => { load(); }, [load]);
 
   const apply = async () => {
     if (msg.trim().length < 10) { toast.error("Message must be ≥ 10 chars"); return; }
@@ -254,11 +254,11 @@ function AttachmentsSection({ requestId, isOwner }) {
   const [picking, setPicking] = React.useState(false);
   const [previewing, setPreviewing] = React.useState(null);
 
-  const load = async () => {
+  const load = React.useCallback(async () => {
     try { const { data } = await api.get(`/expertise/${requestId}/attachments`); setItems(data || []); }
     catch { setItems([]); }
-  };
-  React.useEffect(() => { load(); /* eslint-disable-next-line */ }, [requestId]);
+  }, [requestId]);
+  React.useEffect(() => { load(); }, [load]);
 
   const openPicker = async () => {
     setPicking(true);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, User, FolderOpen, FileText, Users2, BookOpen, RadioTower } from "lucide-react";
 import { toast } from "sonner";
@@ -101,7 +101,7 @@ export default function AdminUserDetail() {
   const [timelineError, setTimelineError] = useState("");
   const [liveBanner, setLiveBanner] = useState(null);
 
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
     try {
       const r = await api.get(`/admin/users/${uid}`);
       setUser(r.data);
@@ -112,9 +112,9 @@ export default function AdminUserDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [uid]);
 
-  const loadTimeline = async () => {
+  const loadTimeline = useCallback(async () => {
     setTimelineLoading(true);
     setTimelineError("");
     try {
@@ -128,10 +128,12 @@ export default function AdminUserDetail() {
     } finally {
       setTimelineLoading(false);
     }
-  };
+  }, [uid]);
 
-  useEffect(() => { loadUser(); }, [uid]);
-  useEffect(() => { if (tab === "Timeline" && !timelineData) loadTimeline(); }, [tab, uid]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadUser(); }, [loadUser]);
+  useEffect(() => {
+    if (tab === "Timeline" && !timelineData) loadTimeline();
+  }, [tab, timelineData, loadTimeline]);
 
   // Live refresh banner: surface security events tied to this user's email,
   // or domain events (e.g. user.verified) tied to this user's id.

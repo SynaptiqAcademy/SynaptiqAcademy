@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { Search } from "lucide-react";
 import { NAVY, TEXT_SECONDARY } from "@/lib/tokens";
@@ -27,7 +27,7 @@ export default function ProjectsDiscovery() {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({ q: "", discipline: "", methodology: "" });
 
-  const search = async (f, pg) => {
+  const search = useCallback(async (f, pg) => {
     setLoading(true);
     try {
       const params = { page: pg, limit: 20, ...Object.fromEntries(Object.entries(f).filter(([, v]) => v)) };
@@ -36,9 +36,10 @@ export default function ProjectsDiscovery() {
       setTotal(r.data.total || 0);
       setPages(r.data.pages || 1);
     } catch { setResults([]); } finally { setLoading(false); }
-  };
+  }, []);
 
-  useEffect(() => { search(filters, 1); }, []);
+  const initialFiltersRef = useRef(filters);
+  useEffect(() => { search(initialFiltersRef.current, 1); }, [search]);
 
   const handleSearch = e => { e.preventDefault(); setPage(1); search(filters, 1); };
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { Search, Coins } from "lucide-react";
@@ -20,7 +20,7 @@ export default function Funding() {
   const [agency, setAgency] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     const params = {};
     if (q) params.q = q;
@@ -29,8 +29,12 @@ export default function Funding() {
     const { data } = await api.get("/funding", { params });
     setItems(data);
     setLoading(false);
-  };
-  useEffect(() => { load(); }, []);
+  }, [q, area, agency]);
+
+  // Only auto-fetch on mount; subsequent searches are user-triggered (Enter / Apply filters).
+  const loadRef = useRef(load);
+  useEffect(() => { loadRef.current = load; }, [load]);
+  useEffect(() => { loadRef.current(); }, []);
 
   return (
     <DiscoveryLayout

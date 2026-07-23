@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
@@ -20,7 +20,7 @@ export default function CollaborationDetail() {
   const [applying, setApplying] = useState(false);
   const navigate = useNavigate();
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const { data } = await api.get(`/collaborations/${id}`);
       setCollab(data);
@@ -31,8 +31,8 @@ export default function CollaborationDetail() {
     } catch (e) {
       toast.error("Failed to load collaboration");
     }
-  };
-  useEffect(() => { load(); }, [id]);
+  }, [id, user]);
+  useEffect(() => { load(); }, [load]);
 
   const apply = async () => {
     if (!message.trim()) { toast.error("Add a short pitch message"); return; }

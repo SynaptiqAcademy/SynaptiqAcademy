@@ -199,7 +199,7 @@ export default function AIMatchModal({ open, onClose, kind, manuscriptId, projec
       .then(({ data }) => setData(data))
       .catch((e) => setError(e?.response?.data?.detail || "Match failed"))
       .finally(() => setLoading(false));
-  }, [open, kind]);
+  }, [open, kind, manuscriptId, projectId, query, meta.endpoint]);
 
   if (!open) return null;
 

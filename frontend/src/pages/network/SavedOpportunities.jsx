@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Bookmark, Trash2, FileText, Building2, Layers, MessageSquare, Handshake, Calendar } from "lucide-react";
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
@@ -45,16 +45,16 @@ export default function SavedOpportunities() {
   const [loading, setLoading] = useState(false);
   const [typeFilter, setTypeFilter] = useState("");
 
-  const fetchSaved = async () => {
+  const fetchSaved = useCallback(async () => {
     setLoading(true);
     try {
       const params = typeFilter ? { item_type: typeFilter } : {};
       const r = await axios.get("/api/network/saved", { params });
       setSaved(r.data || { items: [], by_type: {}, total: 0 });
     } catch { } finally { setLoading(false); }
-  };
+  }, [typeFilter]);
 
-  useEffect(() => { fetchSaved(); }, [typeFilter]);
+  useEffect(() => { fetchSaved(); }, [fetchSaved]);
 
   const handleUnsave = async item => {
     await axios.delete("/api/network/saved", { data: { item_type: item.item_type, item_id: item.item_id } });

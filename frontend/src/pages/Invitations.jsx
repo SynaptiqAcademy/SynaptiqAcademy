@@ -1,7 +1,7 @@
 /**
  * Invitations — sent + received marketplace invitations with accept/decline/withdraw.
  */
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { toast } from "sonner";
@@ -212,7 +212,7 @@ export default function Invitations() {
   const [tab, setTab] = useState("received");
   const [items, setItems] = useState(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setItems(null);
     try {
       const { data } = await api.get(`/marketplace/invitations?direction=${tab}`);
@@ -220,9 +220,9 @@ export default function Invitations() {
     } catch {
       setItems([]);
     }
-  };
+  }, [tab]);
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [tab]);
+  useEffect(() => { load(); }, [load]);
 
   const handleDecide = async (id, decision, extras = {}) => {
     try {

@@ -11,7 +11,7 @@
  *   entityId
  *   entityTitle (string for header)
  */
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import api from "../../lib/api";
 import { toast } from "sonner";
 import { useAuth } from "../../contexts/AuthContext";
@@ -65,11 +65,11 @@ export default function AssistantPanel({ open, onClose, entityKind, entityId, en
 
   const quickActions = useMemo(() => QUICK_ACTIONS_BY_KIND[entityKind] || [], [entityKind]);
 
-  const loadCredits = async () => {
+  const loadCredits = useCallback(async () => {
     try { const { data } = await api.get("/credits/balance"); setBalance(data); } catch {}
-  };
+  }, []);
 
-  const loadSessions = async () => {
+  const loadSessions = useCallback(async () => {
     if (!open) return;
     try {
       const { data } = await api.get(`/assistant/sessions?entity_kind=${entityKind}&entity_id=${entityId}`);
@@ -78,17 +78,17 @@ export default function AssistantPanel({ open, onClose, entityKind, entityId, en
         setSessionId(data[0].id);
       }
     } catch (e) { /* ignore */ }
-  };
+  }, [open, entityKind, entityId, sessionId]);
 
-  const loadMessages = async (sid) => {
+  const loadMessages = useCallback(async (sid) => {
     if (!sid) { setMessages([]); return; }
     try {
       const { data } = await api.get(`/assistant/sessions/${sid}/messages`);
       setMessages(data.messages || []);
     } catch (e) { setMessages([]); }
-  };
+  }, []);
 
-  const newSession = async (title) => {
+  const newSession = useCallback(async (title) => {
     setCreating(true);
     try {
       const { data } = await api.post("/assistant/sessions", {
@@ -103,14 +103,14 @@ export default function AssistantPanel({ open, onClose, entityKind, entityId, en
       toast.error(e?.response?.data?.detail || "Failed to start session");
       return null;
     } finally { setCreating(false); }
-  };
+  }, [entityKind, entityId]);
 
-  const ensureSession = async () => {
+  const ensureSession = useCallback(async () => {
     if (sessionId) return sessionId;
     return await newSession();
-  };
+  }, [sessionId, newSession]);
 
-  const send = async (text, cap) => {
+  const send = useCallback(async (text, cap) => {
     const body = (text || "").trim();
     if (!body || busy) return;
     if (balance && balance.balance < ASSISTANT_COST) {
@@ -141,9 +141,9 @@ export default function AssistantPanel({ open, onClose, entityKind, entityId, en
         setDraft(body);
       }
     } finally { setBusy(false); }
-  };
+  }, [busy, balance, ensureSession, capability, loadCredits, refreshMe]);
 
-  const deleteSession = async (sid) => {
+  const deleteSession = useCallback(async (sid) => {
     if (!confirm("Delete this conversation? This cannot be undone.")) return;
     try {
       await api.delete(`/assistant/sessions/${sid}`);
@@ -153,10 +153,10 @@ export default function AssistantPanel({ open, onClose, entityKind, entityId, en
         setMessages([]);
       }
     } catch (e) { toast.error("Failed"); }
-  };
+  }, [sessionId]);
 
-  useEffect(() => { if (open) { loadSessions(); loadCredits(); } }, [open, entityKind, entityId]);
-  useEffect(() => { loadMessages(sessionId); }, [sessionId]);
+  useEffect(() => { if (open) { loadSessions(); loadCredits(); } }, [open, loadSessions, loadCredits]);
+  useEffect(() => { loadMessages(sessionId); }, [sessionId, loadMessages]);
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages.length, busy]);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { Plus, MapPin, Clock, Users, CheckCircle } from "lucide-react";
 import { NAVY, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
@@ -150,7 +150,7 @@ export default function ConferenceNetworking() {
   const [myEvents, setMyEvents] = useState({ registered: [], organized: [] });
   const [registeredIds, setRegisteredIds] = useState(new Set());
 
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
       const params = { limit: 30 };
@@ -159,17 +159,19 @@ export default function ConferenceNetworking() {
       setEvents(r.data.results || []);
       setTotal(r.data.total || 0);
     } catch { } finally { setLoading(false); }
-  };
+  }, [typeFilter]);
 
-  const fetchMyEvents = async () => {
+  const fetchMyEvents = useCallback(async () => {
     try {
       const r = await axios.get("/api/network/events/mine");
       setMyEvents(r.data || { registered: [], organized: [] });
       setRegisteredIds(new Set((r.data?.registered || []).map(e => e.id)));
     } catch { }
-  };
+  }, []);
 
-  useEffect(() => { fetchEvents(); fetchMyEvents(); }, []);
+  const fetchEventsRef = useRef(fetchEvents);
+  useEffect(() => { fetchEventsRef.current = fetchEvents; }, [fetchEvents]);
+  useEffect(() => { fetchEventsRef.current(); fetchMyEvents(); }, [fetchMyEvents]);
 
   const handleRegister = async id => { await axios.post(`/api/network/events/${id}/register`); fetchEvents(); fetchMyEvents(); };
   const handleUnregister = async id => { await axios.post(`/api/network/events/${id}/unregister`); fetchEvents(); fetchMyEvents(); };

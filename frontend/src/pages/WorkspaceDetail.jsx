@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
@@ -119,7 +119,7 @@ function InviteModal({ wsId, onClose, onInvited, existingIds }) {
       } catch { setResults([]); }
     }, 220);
     return () => clearTimeout(t);
-  }, [q]);
+  }, [q, existingIds]);
 
   const invite = async (uid) => {
     setBusy(uid);
@@ -221,7 +221,7 @@ export default function WorkspaceDetail() {
   const [stageChanging, setStageChanging] = useState(false);
   const navigate = useNavigate();
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const [a, b] = await Promise.all([
         api.get(`/workspaces/${id}`),
@@ -237,34 +237,34 @@ export default function WorkspaceDetail() {
     } catch {
       toast.error("Failed to load workspace");
     }
-  };
+  }, [id, coauthorOrder.length]);
 
-  const loadDiscussions = async () => {
+  const loadDiscussions = useCallback(async () => {
     try {
       const { data } = await api.get(`/workspaces/${id}/activity`, { params: { limit: 50 } });
       setDiscussions(Array.isArray(data) ? data : (data.items || []));
     } catch { setDiscussions([]); }
-  };
+  }, [id]);
 
-  const loadReviewsData = async () => {
+  const loadReviewsData = useCallback(async () => {
     try {
       const { data } = await api.get(`/workspaces/${id}/activity`, { params: { kind: "review", limit: 30 } });
       setReviewsData(Array.isArray(data) ? data : (data.items || []));
     } catch { setReviewsData([]); }
-  };
+  }, [id]);
 
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     if (analytics) return;
     try {
       const { data } = await api.get(`/workspaces/${id}/analytics`);
       setAnalytics(data);
     } catch { setAnalytics(null); }
-  };
+  }, [id, analytics]);
 
-  useEffect(() => { load(); }, [id]);
-  useEffect(() => { if (tab === "analytics") loadAnalytics(); }, [tab]);
-  useEffect(() => { if (tab === "collaboration") loadDiscussions(); }, [tab]);
-  useEffect(() => { if (tab === "reviews") loadReviewsData(); }, [tab]);
+  useEffect(() => { load(); }, [id, load]);
+  useEffect(() => { if (tab === "analytics") loadAnalytics(); }, [tab, loadAnalytics]);
+  useEffect(() => { if (tab === "collaboration") loadDiscussions(); }, [tab, loadDiscussions]);
+  useEffect(() => { if (tab === "reviews") loadReviewsData(); }, [tab, loadReviewsData]);
 
   const myRole = dash?.your_role || (ws?.member_roles?.[user?.id]) || (ws?.owner_id === user?.id ? "Owner" : "Researcher");
   const isAdmin = WS_ADMIN_ROLES.has(myRole);

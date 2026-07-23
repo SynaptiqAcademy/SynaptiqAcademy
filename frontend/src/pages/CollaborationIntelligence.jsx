@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Sparkles, Lock, RotateCcw, Clock, Users, Globe, Building2, GraduationCap,
@@ -748,16 +748,21 @@ export default function CollaborationIntelligence() {
   const autoRunFired = useRef(false);
 
   // Parse context injected from Gap Finder
-  const searchParams = new URLSearchParams(location.search);
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const fromGap = searchParams.get("from_gap") === "1";
   const gapTopic = searchParams.get("topic") || "";
   const gapQuestion = searchParams.get("question") || "";
-  const gapKeywords = searchParams.get("keywords")?.split(",").filter(Boolean) || [];
+  const gapKeywords = useMemo(
+    () => searchParams.get("keywords")?.split(",").filter(Boolean) || [],
+    [searchParams]
+  );
   const gapDiscipline = searchParams.get("discipline") || "";
 
-  const initialAreas = gapTopic
-    ? [...gapKeywords.slice(0, 3), ...(gapDiscipline ? [gapDiscipline] : [])].slice(0, 4)
-    : [];
+  const initialAreas = useMemo(() => (
+    gapTopic
+      ? [...gapKeywords.slice(0, 3), ...(gapDiscipline ? [gapDiscipline] : [])].slice(0, 4)
+      : []
+  ), [gapTopic, gapKeywords, gapDiscipline]);
 
   const [filters, setFilters] = useState({ research_areas: initialAreas, min_score: 0 });
   const [showFilters, setShowFilters] = useState(false);

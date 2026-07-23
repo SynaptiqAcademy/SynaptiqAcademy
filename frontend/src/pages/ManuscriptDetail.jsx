@@ -86,11 +86,11 @@ function ReadinessCard({ dash, m }) {
 
 function VersionTimeline({ mid, currentVersion, onRestored }) {
   const [versions, setVersions] = useState([]);
-  const load = async () => {
+  const load = useCallback(async () => {
     try { const { data } = await api.get(`/manuscripts/${mid}/versions`); setVersions(data || []); }
     catch { setVersions([]); }
-  };
-  useEffect(() => { load(); }, [mid, currentVersion]);
+  }, [mid]);
+  useEffect(() => { load(); }, [mid, currentVersion, load]);
 
   const restore = async (v) => {
     if (!confirm(`Restore version v${v}? Current draft will be snapshotted first.`)) return;
@@ -146,11 +146,11 @@ function CommentsPanel({ mid, section }) {
   const [items, setItems] = useState([]);
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
-  const load = async () => {
+  const load = useCallback(async () => {
     try { const { data } = await api.get(`/manuscripts/${mid}/comments?section=${section}`); setItems(data || []); }
     catch { setItems([]); }
-  };
-  useEffect(() => { load(); }, [mid, section]);
+  }, [mid, section]);
+  useEffect(() => { load(); }, [load]);
   const submit = async () => {
     if (!body.trim()) return;
     setBusy(true);
@@ -314,11 +314,11 @@ function ReviewsPanel({ m, currentUserId, authors, refresh }) {
   const isLead = m.lead_author_id === currentUserId;
   const isAuthor = (m.authors || []).includes(currentUserId);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try { const { data } = await api.get(`/manuscripts/${m.id}/review-requests`); setItems(data || []); }
     catch { setItems([]); }
-  };
-  useEffect(() => { load(); }, [m.id]);
+  }, [m.id]);
+  useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
     const t = setTimeout(async () => {
@@ -330,7 +330,7 @@ function ReviewsPanel({ m, currentUserId, authors, refresh }) {
       } catch { setResults([]); }
     }, 220);
     return () => clearTimeout(t);
-  }, [q]);
+  }, [q, currentUserId, m.authors]);
 
   const assign = async (uid) => {
     setBusy(uid);
@@ -476,7 +476,7 @@ export default function ManuscriptDetail() {
   const [journalMatches, setJournalMatches] = useState(null);
   const lastSavedLen = useRef(0);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const [a, b] = await Promise.all([
       api.get(`/manuscripts/${id}`),
       api.get(`/manuscripts/${id}/dashboard`).catch(() => ({ data: null })),
@@ -484,9 +484,14 @@ export default function ManuscriptDetail() {
     setM(a.data); setDash(b.data);
     const sec = (a.data.sections || {})[sectionKey] || "";
     setDraft(sec); lastSavedLen.current = sec.length;
-  };
+  }, [id, sectionKey]);
+
+  // Only re-fetch the manuscript (+ journals list) when the id changes; sectionKey
+  // switches are handled by the effect below, not by re-running this initial load.
+  const loadRef = useRef(load);
+  useEffect(() => { loadRef.current = load; }, [load]);
   useEffect(() => {
-    load();
+    loadRef.current();
     api.get("/journals?limit=80&page_size=80").then((r) => setJournals(r.data.items || r.data || [])).catch(() => {});
   }, [id]);
   useEffect(() => {
@@ -494,7 +499,7 @@ export default function ManuscriptDetail() {
       const v = (m.sections || {})[sectionKey] || "";
       setDraft(v); lastSavedLen.current = v.length;
     }
-  }, [sectionKey, m?.id]);
+  }, [sectionKey, m]);
 
   const saveSection = async () => {
     const sections = { ...(m.sections || {}), [sectionKey]: draft };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ResearchLayout } from "@/layouts";
 import { ACCENT } from "@/lib/tokens";
 import { Card, H3, Caption, Input, Textarea, Button, LoadingOverlay, ErrorState } from "@/components/ds";
@@ -14,14 +14,14 @@ export default function DisputeDetail() {
   const [evidContent, setEvidContent] = useState("");
   const [sending, setSending] = useState(false);
 
-  const load = () => {
+  const load = useCallback(() => {
     fetch(`${API}/disputes/${id}`).then(r => r.json()).then(d => {
       setDispute(d.error ? null : d);
       setLoading(false);
     }).catch(() => setLoading(false));
-  };
+  }, [id]);
 
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => { load(); }, [load]);
 
   const sendMsg = async () => {
     if (!msgText.trim()) return;
