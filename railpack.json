@@ -6,12 +6,14 @@
   },
   "steps": {
     "install": {
+      "inputs": [{ "local": true }],
       "commands": [
         "if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; else pip install -r requirements.txt; fi"
       ]
     }
   },
   "deploy": {
+    "inputs": [{ "step": "install" }],
     "startCommand": "if [ -d backend ]; then cd backend; fi && gunicorn server:app -k uvicorn.workers.UvicornWorker --workers ${WORKERS:-2} --bind 0.0.0.0:$PORT --timeout 120 --max-requests 1000 --max-requests-jitter 100 --access-logfile - --error-logfile -"
   }
 }
