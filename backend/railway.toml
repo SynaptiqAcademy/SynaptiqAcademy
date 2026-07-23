@@ -1,0 +1,23 @@
+## Railway deployment config for the SYNAPTIQ backend (FastAPI).
+##
+## The Railway service's Root Directory is set to `backend` and its Config
+## File Path is set to `backend/railway.toml` (both set via the GraphQL API,
+## since neither is settable from a committed file). With Root Directory
+## scoped to backend/, Railpack's build context IS this directory, so all
+## paths here are relative to backend/ (e.g. `requirements.txt`, not
+## `backend/requirements.txt`) -- matching the local dev layout.
+##
+## Builder is Railpack (Railway's current default), not the repo's
+## deploy/Dockerfile -- that Dockerfile's COPY paths assume a repo-root
+## build context, which no longer matches once Root Directory is backend.
+
+[build]
+builder = "RAILPACK"
+buildCommand = "pip install -r requirements.txt"
+
+[deploy]
+startCommand = "gunicorn server:app -k uvicorn.workers.UvicornWorker --workers ${WORKERS:-2} --bind 0.0.0.0:$PORT --timeout 120 --max-requests 1000 --max-requests-jitter 100 --access-logfile - --error-logfile -"
+healthcheckPath = "/api/health/live"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
