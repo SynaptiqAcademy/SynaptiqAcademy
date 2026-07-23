@@ -32,6 +32,7 @@
  * real payload (type, priority, body, link, and aggregate counts).
  */
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { Button } from "@/components/ds";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import api from "../lib/api";
@@ -469,7 +470,6 @@ export default function Notifications() {
         knownLabels={knownLabels}
         showArchived={showArchived} setShowArchived={setShowArchived}
       />
-
       {/* ══════════════ CENTER + RIGHT ══════════════ */}
       <div className="flex-1 min-w-0 flex flex-col">
 
@@ -532,7 +532,6 @@ export default function Notifications() {
           </div>
         </div>
       </div>
-
       {/* ── RIGHT panel as a mobile/tablet slide-over ── */}
       {mobilePanelOpen && selected && (
         <div className="xl:hidden fixed inset-0 z-50 flex justify-end" style={{ background: "rgba(15,23,42,0.35)" }} onClick={() => setMobilePanelOpen(false)}>
@@ -543,9 +542,16 @@ export default function Notifications() {
           >
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${HAIR}` }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_PRIMARY }}>Details</span>
-              <button onClick={() => setMobilePanelOpen(false)} aria-label="Close details" style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_MUTED }}>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setMobilePanelOpen(false)}
+                aria-label="Close details"
+                style={{
+                  color: TEXT_MUTED
+                }}>
                 <X size={18} />
-              </button>
+              </Button>
             </div>
             <IntelligencePanel
               selected={selected}
@@ -567,7 +573,6 @@ export default function Notifications() {
           </div>
         </div>
       )}
-
       {shortcutsOpen && <ShortcutsModal onClose={() => setShortcutsOpen(false)} rows={INBOX_SHORTCUT_ROWS} />}
     </div>
   );
@@ -791,18 +796,26 @@ function Toolbar({ q, setQ, searchRef, sortBy, setSortBy, unreadCount, hasRead, 
           onBlur={e => e.target.style.borderColor = HAIR}
         />
         {q && (
-          <button onClick={() => setQ("")} aria-label="Clear search" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: TEXT_MUTED }}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setQ("")}
+            aria-label="Clear search"
+            style={{
+              position: "absolute",
+              right: 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: TEXT_MUTED
+            }}>
             <X size={13} />
-          </button>
+          </Button>
         )}
       </div>
-
       <span style={{ fontSize: "0.72rem", color: TEXT_DISABLED, flexShrink: 0 }}>
         {resultCount} {resultCount === 1 ? "item" : "items"}
       </span>
-
       <div className="flex-1" />
-
       {/* Sort */}
       <div style={{ position: "relative" }}>
         <ToolbarBtn icon={ArrowUpDown} label={sortBy === "priority" ? "Priority" : "Newest"} onClick={() => setSortOpen(o => !o)} />
@@ -826,17 +839,13 @@ function Toolbar({ q, setQ, searchRef, sortBy, setSortBy, unreadCount, hasRead, 
           </>
         )}
       </div>
-
       {unreadCount > 0 && (
         <ToolbarBtn icon={CheckCheck} label="Mark all read" onClick={onMarkAll} />
       )}
-
       {hasRead && (
         <ToolbarBtn icon={X} label="Clear read" onClick={onClearRead} />
       )}
-
       <ToolbarBtn icon={Keyboard} onClick={onShortcuts} title="Keyboard shortcuts" />
-
       <Link to="/settings" aria-label="Settings" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, borderRadius: RADIUS_MD, color: TEXT_MUTED, border: `1px solid ${HAIR}` }}>
         <Settings size={13} />
       </Link>
@@ -1130,9 +1139,16 @@ function IntelligencePanel({
                 style={{ flex: 1, fontSize: "0.78rem", padding: "6px 9px", border: `1px solid ${HAIR}`, borderRadius: RADIUS_MD, outline: "none" }}
               />
               {labelInput.trim() && (
-                <button onClick={() => { onSetLabel(labelInput.trim()); setLabelInput(""); }} aria-label="Add label" style={{ background: "none", border: "none", cursor: "pointer", color: ACCENT }}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => { onSetLabel(labelInput.trim()); setLabelInput(""); }}
+                  aria-label="Add label"
+                  style={{
+                    color: ACCENT
+                  }}>
                   <Plus size={15} />
-                </button>
+                </Button>
               )}
             </div>
           )}

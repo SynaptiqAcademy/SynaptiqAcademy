@@ -59,18 +59,38 @@ function GoalCard({ goal, onUpdate, onDelete }) {
             ("icon", 36px) size would visually overpower this compact header
             row, so they're left hand-rolled */}
         <div style={{ display: "flex", gap: 4 }}>
-          <button onClick={() => setEditing(v => !v)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: TEXT_SECONDARY }}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setEditing(v => !v)}
+            style={{
+              padding: 4,
+              color: TEXT_SECONDARY
+            }}>
             <Pencil size={14} />
-          </button>
-          <button onClick={() => onDelete(goal.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#dc2626" }}>
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => onDelete(goal.id)}
+            style={{
+              padding: 4,
+              color: "#dc2626"
+            }}>
             <Trash2 size={14} />
-          </button>
-          <button onClick={() => setOpen(v => !v)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: TEXT_SECONDARY }}>
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setOpen(v => !v)}
+            style={{
+              padding: 4,
+              color: TEXT_SECONDARY
+            }}>
             {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
+          </Button>
         </div>
       </div>
-
       {editing && (
         <div style={{ padding: "0 16px 12px", borderTop: `1px solid ${BRD}`, paddingTop: 12 }}>
           <label style={{ fontSize: 12, color: TEXT_SECONDARY, display: "block", marginBottom: 4 }}>Update Progress ({progress}%)</label>
@@ -85,7 +105,6 @@ function GoalCard({ goal, onUpdate, onDelete }) {
           </div>
         </div>
       )}
-
       {open && (
         <div style={{ padding: "10px 16px 14px", borderTop: `1px solid ${BRD}`, background: WARM }}>
           {goal.description && <p style={{ margin: "0 0 10px", fontSize: 13, color: "#334155" }}>{goal.description}</p>}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useReducer, useRef, useMemo } from "react";
+import { Button, EmptyState } from "@/components/ds";
 import { getDailyWelcomeMessage, getGreeting } from "@/lib/welcomeEngine";
 import { Link } from "react-router-dom";
 import { AIWorkspaceLayout } from "@/layouts";
@@ -851,10 +852,7 @@ function LeftPanel({ state, dispatch, onNewChat, onSelectConv, onPin, onArchive,
             </div>
           )}
           {state.conversations.length===0&&(
-            <div style={{textAlign:"center",padding:"40px 20px"}}>
-              <MessageSquare size={22} style={{color:"rgba(255,255,255,0.2)",margin:"0 auto 10px"}}/>
-              <p style={{fontSize:"0.78rem",color:"rgba(255,255,255,0.3)"}}>No research sessions yet</p>
-            </div>
+            <EmptyState dark size="sm" icon={<MessageSquare />} title="No research sessions yet" />
           )}
         </div>
         <div style={{padding:"12px 14px",borderTop:"1px solid rgba(255,255,255,0.07)",flexShrink:0}}>
@@ -1078,15 +1076,47 @@ function ConversationHeader({ conv, onPin, onArchive, onDelete, onTitleChange })
             {conv.title||"New session"}
           </span>
         )}
-        <button onClick={startEdit} style={{background:"none",border:"none",cursor:"pointer",color:"#94a3b8",padding:2,flexShrink:0}}><Edit2 size={12}/></button>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={startEdit}
+          style={{
+            color:"#94a3b8",
+            padding:2,
+            flexShrink:0
+          }}><Edit2 size={12}/></Button>
       </div>
       <div style={{display:"flex",gap:4,marginLeft:12,flexShrink:0}}>
-        <button onClick={function(){onPin(conv.id,!conv.pinned);}} title={conv.pinned?"Unpin":"Pin"}
-          style={{background:"none",border:"none",cursor:"pointer",padding:6,borderRadius:6,color:conv.pinned?NAVY:"#94a3b8"}}><Pin size={14}/></button>
-        <button onClick={function(){onArchive(conv.id);}} title="Archive"
-          style={{background:"none",border:"none",cursor:"pointer",padding:6,borderRadius:6,color:"#94a3b8"}}><Archive size={14}/></button>
-        <button onClick={function(){onDelete(conv.id);}} title="Delete"
-          style={{background:"none",border:"none",cursor:"pointer",padding:6,borderRadius:6,color:"#94a3b8"}}><Trash2 size={14}/></button>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={function(){onPin(conv.id,!conv.pinned);}}
+          title={conv.pinned?"Unpin":"Pin"}
+          style={{
+            padding:6,
+            borderRadius:6,
+            color:conv.pinned?NAVY:"#94a3b8"
+          }}><Pin size={14}/></Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={function(){onArchive(conv.id);}}
+          title="Archive"
+          style={{
+            padding:6,
+            borderRadius:6,
+            color:"#94a3b8"
+          }}><Archive size={14}/></Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={function(){onDelete(conv.id);}}
+          title="Delete"
+          style={{
+            padding:6,
+            borderRadius:6,
+            color:"#94a3b8"
+          }}><Trash2 size={14}/></Button>
       </div>
     </div>
   );
@@ -1161,7 +1191,15 @@ function InputArea({ state, dispatch, onSend }) {
               {charCount>2000 && <span style={{fontSize:"0.7rem",fontFamily:"monospace",color:charCount>3800?"#DC2626":"#F59E0B"}}>{charCount}/{MAX}</span>}
             </div>
             <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-              <button disabled title="Voice input coming soon" style={{background:"none",border:"none",cursor:"not-allowed",color:"#cbd5e1",padding:4}}><Mic size={16}/></button>
+              <Button
+                size="icon"
+                variant="ghost"
+                disabled
+                title="Voice input coming soon"
+                style={{
+                  color:"#cbd5e1",
+                  padding:4
+                }}><Mic size={16}/></Button>
               <button onClick={onSend} disabled={state.sending||!state.inputText.trim()}
                 style={{display:"flex",alignItems:"center",gap:6,padding:"8px 18px",background:state.sending||!state.inputText.trim()?"#E2E8F0":NAVY,color:state.sending||!state.inputText.trim()?"#94a3b8":"#fff",border:"none",borderRadius:10,cursor:state.sending||!state.inputText.trim()?"not-allowed":"pointer",fontSize:"0.82rem",fontWeight:600,transition:"all 150ms"}}>
                 <Send size={13}/>{state.sending?"Analysing…":"Send"}
@@ -1314,7 +1352,7 @@ function RightPanel({ state, dispatch, onRefreshContext, onDeleteMemory, onClear
                   </div>
                 )}
                 {state.memory.length===0 ? (
-                  <p style={{fontSize:"0.75rem",color:"#94a3b8",fontStyle:"italic",margin:0}}>No memories yet.</p>
+                  <EmptyState size="inline" title="No memories yet." />
                 ) : (
                   <div>
                     <div style={{display:"flex",flexDirection:"column",gap:6}}>

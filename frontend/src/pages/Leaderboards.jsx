@@ -5,6 +5,7 @@ import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import { ACCENT, EMERALD, NAVY, WARM } from "@/lib/tokens";
+import { Avatar } from "@/components/ds";
 import {
   Award, Shield, Globe, Building2, BookOpen, ClipboardCheck, Users,
   GraduationCap, BarChart2, Star, TrendingUp, ArrowRight, ChevronLeft,
@@ -79,10 +80,6 @@ function getProgressPct(score, levelInfo) {
   const range  = next.min - levelInfo.min;
   const within = Math.round(score) - levelInfo.min;
   return Math.min(100, Math.max(0, Math.round((within / range) * 100)));
-}
-
-function initials(name) {
-  return (name || "?").split(" ").filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join("");
 }
 
 function fmtPts(n) {
@@ -649,22 +646,7 @@ function CategorySidebar({ categories, active, onSelect, country, setCountry, in
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
 function AvatarCircle({ item, size = 48 }) {
-  const [err, setErr] = useState(false);
-  if (item?.avatar_url && !err) {
-    return (
-      <img
-        src={item.avatar_url}
-        alt={item.full_name || ""}
-        onError={() => setErr(true)}
-        style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: `1.5px solid ${BORDER}` }}
-      />
-    );
-  }
-  return (
-    <div style={{ width: size, height: size, borderRadius: "50%", background: NAVY, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: Math.round(size * 0.3), fontWeight: 700, color: "white" }}>
-      {initials(item?.full_name)}
-    </div>
-  );
+  return <Avatar url={item?.avatar_url} name={item?.full_name} size={size} border />;
 }
 
 // ── Rank medal / number ────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 /* eslint-disable */
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { Button } from "@/components/ds";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { ChevronDown, Menu, X } from "lucide-react";
@@ -173,10 +174,8 @@ export default function MarketingLayout({ children }) {
 
   return (
     <div className="marketing-page min-h-screen bg-white flex flex-col">
-
       {/* Animation */}
       <style>{`@keyframes resFadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
-
       {/* ── Header ───────────────────────────────────────────────────────────── */}
       <header
         className="bg-white sticky top-0 z-30"
@@ -261,14 +260,19 @@ export default function MarketingLayout({ children }) {
             </div>
 
             {/* Mobile toggle */}
-            <button
+            <Button
+              size="icon"
+              variant="ghost"
               className="lg:hidden"
               onClick={function() { setMobileOpen(function(o) { return !o; }); }}
-              style={{ padding: 6, color: T_GRAY, background: "transparent", border: "none", cursor: "pointer", borderRadius: 6 }}
               aria-label="Toggle navigation"
-            >
+              style={{
+                padding: 6,
+                color: T_GRAY,
+                borderRadius: 6
+              }}>
               {mobileOpen ? <X size={20} strokeWidth={1.5} /> : <Menu size={20} strokeWidth={1.5} />}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -318,10 +322,8 @@ export default function MarketingLayout({ children }) {
           </div>
         )}
       </header>
-
       {/* ── Main ─────────────────────────────────────────────────────────────── */}
       <main className="flex-1">{children}</main>
-
       {/* ── Footer ───────────────────────────────────────────────────────────── */}
       <footer style={{ background: "#0a1220", color: "#94a3b8" }}>
         <style>{`

@@ -6,6 +6,10 @@ import api from "../lib/api";
 import { Avatar } from "@/components/ds/Avatar";
 import EmptyState from "@/components/ds/EmptyState";
 import { SkeletonCard, Spinner } from "@/components/ds/LoadingState";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { Tag } from "@/components/ds/Tag";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import { NAVY, WARM, ACCENT } from "@/lib/tokens";
@@ -70,8 +74,9 @@ function FeedItem({ item }) {
   const actorName = actor.full_name || actor.name || "Researcher";
 
   return (
-    <div
-      style={{ display: "flex", gap: 14, padding: "18px 20px", background: hovered ? WARM : "white", border: `1px solid ${hovered ? NAVY + "30" : BORDER}`, marginBottom: 8, transition: "all 0.12s", cursor: "default" }}
+    <Card
+      padding="lg"
+      style={{ display: "flex", gap: 14, marginBottom: 8, background: hovered ? WARM : "white", transition: "all 0.12s", cursor: "default" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -89,9 +94,9 @@ function FeedItem({ item }) {
               <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{actorName}</span>
             </Link>
             <span style={{ fontSize: 12, color: "#64748B" }}>{item.content || meta.verb}</span>
-            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: meta.color, background: meta.color + "12", border: `1px solid ${meta.color}28`, padding: "1px 7px" }}>
+            <Badge color={meta.color} size="sm" style={{ textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
               {meta.label}
-            </span>
+            </Badge>
           </div>
           <span style={{ fontSize: 11, color: "#94A3B8", flexShrink: 0, display: "flex", alignItems: "center", gap: 3 }}>
             <Clock size={10} strokeWidth={1.5} />
@@ -130,7 +135,7 @@ function FeedItem({ item }) {
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 

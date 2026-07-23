@@ -10,6 +10,14 @@ import AssistantLauncher from "../components/ai/AssistantLauncher";
 import FilePanel from "../components/files/FilePanel";
 import { SkeletonCard } from "../components/ds/LoadingState";
 import { EmptyState } from "../components/ds/EmptyState";
+import { Button } from "../components/ds/Button";
+import { NavTabs } from "../components/ds/NavTabs";
+import { Input } from "../components/ds/Input";
+import { Textarea } from "../components/ds/Textarea";
+import { FormSelect } from "../components/ds/FormSelect";
+import { Card } from "../components/ds/Card";
+import { Badge } from "../components/ds/Badge";
+import { Checkbox } from "../components/ds/Form";
 import { ResearchLayout } from "@/layouts";
 import { NAVY } from "@/lib/tokens";
 
@@ -55,9 +63,7 @@ export default function ProjectDetail() {
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-[11px] font-mono text-slate-400 border border-slate-200 px-1.5 py-0.5 capitalize">
-                  {project.visibility} project
-                </span>
+                <Badge variant="outline" className="capitalize">{project.visibility} project</Badge>
               </div>
               <h1 className="text-[1.4rem] font-semibold text-slate-900 tracking-tight leading-snug">
                 {project.title}
@@ -67,13 +73,13 @@ export default function ProjectDetail() {
               )}
             </div>
             <div className="flex flex-col items-end gap-2 shrink-0">
-              <button
+              <Button
                 data-testid={TID.openChatBtn}
                 onClick={() => navigate("/messages", { state: { openContext: { type: "project", id } } })}
-                className="inline-flex items-center gap-2 border border-slate-200 rounded-btn text-slate-600 px-4 h-9 text-[13px] font-medium hover:border-slate-300 hover:bg-slate-50 transition-colors"
+                variant="ghost"
               >
                 <MessageSquare size={12} strokeWidth={1.5} /> Project chat
-              </button>
+              </Button>
               <AssistantLauncher entityKind="project" entityId={id} entityTitle={project.title} />
             </div>
           </div>
@@ -92,19 +98,11 @@ export default function ProjectDetail() {
         </div>
       </header>
 
-      <nav className="flex border-b border-slate-200 overflow-x-auto">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-4 py-2.5 text-[13px] font-medium border-b-2 -mb-px whitespace-nowrap transition-colors ${
-              tab === t.key ? "border-[#0F2847] text-slate-900" : "border-transparent text-slate-500 hover:text-slate-900"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
+      <NavTabs
+        tabs={TABS.map((t) => ({ id: t.key, label: t.label }))}
+        active={tab}
+        onChange={setTab}
+      />
 
       {tab === "foundation" && <Foundation project={project} onSave={save} saving={saving} />}
       {tab === "design"     && <Design project={project} onSave={save} saving={saving} />}
@@ -147,9 +145,9 @@ function Foundation({ project, onSave, saving }) {
       <TextBlock label="Research questions"          value={f.research_questions}     onChange={(v) => setF({ ...f, research_questions: v })} rows={4} />
       <TextBlock label="Hypotheses (one per line)"   value={f.hypotheses}             onChange={(v) => setF({ ...f, hypotheses: v })} rows={4} />
       <TextBlock label="Expected contributions"      value={f.expected_contributions} onChange={(v) => setF({ ...f, expected_contributions: v })} />
-      <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 bg-[#0F2847] text-white px-4 h-9 text-xs font-medium hover:bg-[#1a3d65] disabled:opacity-40 transition-colors">
-        {saving ? "Saving…" : "Save research foundation"}
-      </button>
+      <Button onClick={save} disabled={saving} loading={saving}>
+        Save research foundation
+      </Button>
     </div>
   );
 }
@@ -550,29 +548,19 @@ function Team({ members, projectId }) {
 
 function TextBlock({ label, value, onChange, rows = 3 }) {
   return (
-    <div>
-      <label className="block text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1.5">{label}</label>
-      <textarea
-        rows={rows}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2.5 border border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] resize-y transition-colors"
-      />
-    </div>
+    <Textarea
+      label={label}
+      rows={rows}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    />
   );
 }
 
 function SelectBlock({ label, value, options, onChange }) {
   return (
-    <div>
-      <label className="block text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1.5">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-9 px-3 border border-slate-200 bg-white text-[13px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors"
-      >
-        {options.map((o) => <option key={o} value={o}>{o || "Select…"}</option>)}
-      </select>
-    </div>
+    <FormSelect label={label} value={value} onChange={(e) => onChange(e.target.value)}>
+      {options.map((o) => <option key={o} value={o}>{o || "Select…"}</option>)}
+    </FormSelect>
   );
 }

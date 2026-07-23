@@ -20,6 +20,11 @@ import {
   ChevronRight, ArrowRight, Bot, Cpu, Lightbulb, Clock, Info,
 } from "lucide-react";
 import { Spinner } from "@/components/ds/LoadingState";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { Tag } from "@/components/ds/Tag";
+import { Alert } from "@/components/ds/Alert";
+import { StatCard } from "@/components/ds/StatCard";
 import { AIWorkspaceLayout } from "@/layouts";
 
 // ─── Credit costs (mirrors plans_catalogue.py CREDIT_COSTS) ─────────────────
@@ -239,15 +244,12 @@ function ToolCard({ tool }) {
   const cost = CREDIT_COST[tool.to];
   const unit = CREDIT_UNIT[tool.to];
   return (
-    <Link
-      to={tool.to}
-      className="group block border border-slate-200 bg-white p-5 hover:border-[#0F2847] transition-colors"
-    >
+    <Card to={tool.to} padding="lg" className="group hover:border-[#0F2847]">
       <div className="flex items-start justify-between gap-2 mb-3">
         <Icon size={18} strokeWidth={1.5} className="text-[#0F2847] mt-0.5 shrink-0" />
-        <span className="text-[10px] font-mono text-slate-400 shrink-0">
+        <Badge variant={cost === 0 ? "success" : "neutral"} size="sm" className="shrink-0">
           {cost === 0 ? "Free" : `${cost} credits ${unit}`}
-        </span>
+        </Badge>
       </div>
       <div className="font-serif text-base text-slate-900 group-hover:text-[#0F2847] transition-colors mb-2">
         {tool.label}
@@ -260,37 +262,39 @@ function ToolCard({ tool }) {
       <div className="mt-2 flex items-center gap-1 text-xs text-[#0F2847] opacity-0 group-hover:opacity-100 transition-opacity">
         Launch tool <ArrowRight size={11} strokeWidth={1.5} />
       </div>
-    </Link>
+    </Card>
   );
 }
 
 // ─── Credit balance widget ────────────────────────────────────────────────────
 function CreditWidget({ balance, loading }) {
   return (
-    <div className="border border-[#0F2847] bg-[#0F2847] text-white p-5 flex items-center justify-between gap-6">
-      <div>
-        <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Research Credits</div>
-        <div className="font-serif text-4xl mt-1">
-          {loading ? "—" : (balance ?? 0).toLocaleString()}
+    <Card padding="lg" style={{ background: "#0F2847", borderColor: "#0F2847", color: "#fff" }}>
+      <div className="flex items-center justify-between gap-6">
+        <div>
+          <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Research Credits</div>
+          <div className="font-serif text-4xl mt-1 flex items-center">
+            {loading ? <Spinner size={24} color="#ffffff" /> : (balance ?? 0).toLocaleString()}
+          </div>
+          <div className="text-xs text-slate-400 mt-1">available for AI tools</div>
         </div>
-        <div className="text-xs text-slate-400 mt-1">available for AI tools</div>
+        <div className="flex flex-col gap-2 items-end">
+          <Link
+            to="/ai-credits"
+            className="text-xs border border-white/30 text-white px-3 py-1.5 hover:bg-white/10 inline-flex items-center gap-1"
+          >
+            <Coins size={11} strokeWidth={1.5} />
+            Manage credits
+          </Link>
+          <Link
+            to="/settings/billing"
+            className="text-xs text-slate-400 hover:text-white px-3 py-1.5 inline-flex items-center gap-1"
+          >
+            Purchase credits <ChevronRight size={10} strokeWidth={1.5} />
+          </Link>
+        </div>
       </div>
-      <div className="flex flex-col gap-2 items-end">
-        <Link
-          to="/ai-credits"
-          className="text-xs border border-white/30 text-white px-3 py-1.5 hover:bg-white/10 inline-flex items-center gap-1"
-        >
-          <Coins size={11} strokeWidth={1.5} />
-          Manage credits
-        </Link>
-        <Link
-          to="/settings/billing"
-          className="text-xs text-slate-400 hover:text-white px-3 py-1.5 inline-flex items-center gap-1"
-        >
-          Purchase credits <ChevronRight size={10} strokeWidth={1.5} />
-        </Link>
-      </div>
-    </div>
+    </Card>
   );
 }
 
@@ -328,7 +332,7 @@ export default function AISuite() {
 
         {/* ── Educational header ───────────────────────────────────────── */}
         <div className="grid lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 border border-slate-200 bg-white p-6">
+          <Card padding="lg" className="lg:col-span-2">
             <div className="overline flex items-center gap-2 mb-3">
               <Info size={12} strokeWidth={1.5} className="text-[#0F2847]" />
               How AI Suite works
@@ -345,17 +349,13 @@ export default function AISuite() {
             <div className="flex items-center gap-1 flex-wrap">
               {WORKFLOW_STEPS.map((step, i) => (
                 <React.Fragment key={step.label}>
-                  <Link
-                    to={step.to}
-                    className={`text-[11px] px-2 py-1 font-mono transition-colors ${
-                      step.current
-                        ? "bg-[#0F2847] text-white"
-                        : step.done
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                        : "bg-slate-50 text-slate-500 border border-slate-200"
-                    }`}
-                  >
-                    {step.label}
+                  <Link to={step.to} style={{ textDecoration: "none" }}>
+                    <Tag
+                      variant={step.current || step.done ? "active" : "default"}
+                      color={step.current ? "#0F2847" : step.done ? "#059669" : undefined}
+                    >
+                      {step.label}
+                    </Tag>
                   </Link>
                   {i < WORKFLOW_STEPS.length - 1 && (
                     <ArrowRight size={10} strokeWidth={1.5} className="text-slate-300 shrink-0" />
@@ -363,38 +363,33 @@ export default function AISuite() {
                 </React.Fragment>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* Credit widget */}
           <div>
             <CreditWidget balance={balance} loading={loading} />
             {totalUsed30d > 0 && (
-              <div className="mt-3 border border-slate-200 bg-white p-4">
-                <div className="overline mb-2">Last 30 days</div>
-                <div className="font-serif text-2xl text-slate-900">{totalUsed30d}</div>
-                <div className="text-xs text-slate-500 font-mono">credits consumed</div>
-                <Link to="/ai-usage" className="mt-2 text-xs text-[#0F2847] border-b border-[#0F2847] inline-flex items-center gap-1 hover:opacity-70">
-                  View analytics <ChevronRight size={10} strokeWidth={1.5} />
-                </Link>
-              </div>
+              <StatCard
+                className="mt-3"
+                label="Last 30 days"
+                value={totalUsed30d}
+                sub="credits consumed — view analytics"
+                to="/ai-usage"
+              />
             )}
           </div>
         </div>
 
         {/* ── Quick-launch from workspace recommendation ────────────────── */}
-        <div className="border border-amber-200 bg-amber-50 p-4 flex items-start gap-3">
-          <Sparkles size={16} strokeWidth={1.5} className="text-amber-700 mt-0.5 shrink-0" />
-          <div>
-            <div className="text-sm font-medium text-amber-900">Launch AI directly from your Workspace</div>
-            <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-              Open any workspace, go to the <strong>AI Enhancement</strong> tab, and get tool recommendations
-              matched to your document's current stage.
-            </p>
-            <Link to="/workspaces" className="mt-2 inline-flex items-center gap-1 text-xs text-amber-900 border-b border-amber-300 hover:opacity-70">
-              Go to Workspaces <ArrowRight size={10} strokeWidth={1.5} />
-            </Link>
-          </div>
-        </div>
+        <Alert variant="warning" icon={Sparkles} title="Launch AI directly from your Workspace">
+          <p className="leading-relaxed">
+            Open any workspace, go to the <strong>AI Enhancement</strong> tab, and get tool recommendations
+            matched to your document's current stage.
+          </p>
+          <Link to="/workspaces" className="mt-2 inline-flex items-center gap-1 text-xs border-b border-current hover:opacity-70">
+            Go to Workspaces <ArrowRight size={10} strokeWidth={1.5} />
+          </Link>
+        </Alert>
 
         {/* ── Tool categories ───────────────────────────────────────────── */}
         {CATEGORIES.map((cat) => {
@@ -429,17 +424,15 @@ export default function AISuite() {
               { to: "/copilot",     label: "Research Copilot", icon: Sparkles,  desc: "Multi-agent AI orchestration" },
               { to: "/workspaces",  label: "Research Workspaces", icon: FlaskConical, desc: "Launch AI from your documents" },
             ].map(({ to, label, icon: Icon, desc }) => (
-              <Link
-                key={to}
-                to={to}
-                className="border border-slate-200 bg-white p-4 hover:border-[#0F2847] transition-colors group flex items-start gap-3"
-              >
-                <Icon size={15} strokeWidth={1.5} className="text-[#0F2847] mt-0.5 shrink-0" />
-                <div>
-                  <div className="text-sm font-medium text-slate-900 group-hover:text-[#0F2847] transition-colors">{label}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">{desc}</div>
+              <Card key={to} to={to} padding="md" className="group hover:border-[#0F2847]">
+                <div className="flex items-start gap-3">
+                  <Icon size={15} strokeWidth={1.5} className="text-[#0F2847] mt-0.5 shrink-0" />
+                  <div>
+                    <div className="text-sm font-medium text-slate-900 group-hover:text-[#0F2847] transition-colors">{label}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">{desc}</div>
+                  </div>
                 </div>
-              </Link>
+              </Card>
             ))}
           </div>
         </section>

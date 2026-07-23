@@ -33,6 +33,7 @@
  * new dependency; full LaTeX and GFM tables are out of scope for the same reason.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ds";
 import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
 import api, { BACKEND_URL } from "../lib/api";
 import { TID } from "../lib/testIds";
@@ -640,7 +641,20 @@ function ReactionsBar({ messageId, reactions, currentUserId, onReactionToggle, m
         );
       })}
       <div style={{ position: "relative" }}>
-        <button onClick={() => setPickerOpen(p => !p)} aria-label="Add reaction" style={{ width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 99, border: "none", background: "transparent", color: DISABLED, cursor: "pointer" }}><Smile size={13} /></button>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => setPickerOpen(p => !p)}
+          aria-label="Add reaction"
+          style={{
+            width: 20,
+            height: 20,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 99,
+            color: DISABLED
+          }}><Smile size={13} /></Button>
         {pickerOpen && (
           <div style={{ position: "absolute", [mine ? "right" : "left"]: 0, bottom: "100%", marginBottom: 4, background: WHITE, border: `1px solid ${HAIR}`, borderRadius: 10, padding: 6, display: "flex", gap: 4, zIndex: 20, boxShadow: "0 8px 24px rgba(15,23,42,0.14)" }} onMouseLeave={() => setPickerOpen(false)}>
             {REACTION_EMOJIS.map(e => <button key={e} onClick={() => { onReactionToggle(messageId, e); setPickerOpen(false); }} style={{ fontSize: 16, background: "none", border: "none", cursor: "pointer", padding: 4, borderRadius: 6 }}>{e}</button>)}
@@ -842,7 +856,14 @@ function SharePicker({ onClose, onPick }) {
             <SectionLabel>Share to conversation</SectionLabel>
             <h2 style={{ fontSize: "1.05rem", fontWeight: 700, color: INK, margin: "4px 0 0", letterSpacing: "-0.02em" }}>Pick an academic resource</h2>
           </div>
-          <button onClick={onClose} aria-label="Close" style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}><X size={18} /></button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              color: MUTED
+            }}><X size={18} /></Button>
         </div>
         <div style={{ padding: "12px 24px", borderBottom: `1px solid ${HAIR}`, display: "flex", flexWrap: "wrap", gap: 6 }}>
           {Object.keys(ENDPOINTS).map(k => (
@@ -935,7 +956,6 @@ function Composer({
           <span style={{ fontSize: "0.82rem", fontWeight: 600, color: ACCENT }}>Drop to attach</span>
         </div>
       )}
-
       {replyingTo && (
         <div style={{ display: "flex", alignItems: "flex-start", gap: 8, borderLeft: `2px solid ${ACCENT}`, borderRadius: 8, paddingLeft: 10, paddingTop: 5, paddingBottom: 5, marginBottom: 8, background: `${ACCENT}06` }}>
           <Reply size={12} style={{ color: ACCENT, marginTop: 2, flexShrink: 0 }} />
@@ -943,39 +963,63 @@ function Composer({
             <div style={{ fontSize: "0.68rem", fontWeight: 700, color: ACCENT, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>Replying to {replyingTo.sender_name}</div>
             <div style={{ fontSize: "0.78rem", color: "#4A5468", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{replyingTo.snippet}</div>
           </div>
-          <button onClick={onCancelReply} aria-label="Cancel reply" style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}><X size={13} /></button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onCancelReply}
+            aria-label="Cancel reply"
+            style={{
+              color: MUTED
+            }}><X size={13} /></Button>
         </div>
       )}
-
       {editingMessage && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, borderLeft: "2px solid #D97706", borderRadius: 8, paddingLeft: 10, paddingTop: 5, paddingBottom: 5, marginBottom: 8, background: "#FFFBEB" }}>
           <Pencil size={12} style={{ color: "#D97706", flexShrink: 0 }} />
           <div style={{ flex: 1, fontSize: "0.76rem", fontWeight: 650, color: "#92400E" }}>Editing message</div>
-          <button onClick={onCancelEdit} aria-label="Cancel edit" style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}><X size={13} /></button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onCancelEdit}
+            aria-label="Cancel edit"
+            style={{
+              color: MUTED
+            }}><X size={13} /></Button>
         </div>
       )}
-
       {pendingAttachments.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
           {pendingAttachments.map(a => (
             <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 6, border: `1px solid ${HAIR}`, borderRadius: 8, padding: "4px 10px", fontSize: "0.76rem" }}>
               <FileText size={12} style={{ color: ACCENT }} />
               <span style={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.filename}</span>
-              <button onClick={() => onRemoveAttachment(a.id)} aria-label={`Remove attachment ${a.name || ""}`.trim()} style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}><X size={12} /></button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => onRemoveAttachment(a.id)}
+                aria-label={`Remove attachment ${a.name || ""}`.trim()}
+                style={{
+                  color: MUTED
+                }}><X size={12} /></Button>
             </div>
           ))}
         </div>
       )}
-
       {pendingShare && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, border: `1px solid ${ACCENT}`, borderRadius: 8, padding: "6px 12px", marginBottom: 8, fontSize: "0.78rem" }}>
           <Share2 size={13} style={{ color: ACCENT }} />
           <span style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: MUTED }}>{pendingShare.type}</span>
           <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: INK, fontWeight: 600 }}>{pendingShare.title}</span>
-          <button onClick={onRemoveShare} aria-label="Remove shared item" style={{ background: "none", border: "none", cursor: "pointer", color: MUTED }}><X size={13} /></button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onRemoveShare}
+            aria-label="Remove shared item"
+            style={{
+              color: MUTED
+            }}><X size={13} /></Button>
         </div>
       )}
-
       <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
         <div style={{ display: "flex", gap: 3 }}>
           <button data-testid={TID.attachBtn} onClick={onUploadClick} title="Attach file" style={composerIconStyle}><Paperclip size={15} /></button>

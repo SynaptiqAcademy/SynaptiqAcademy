@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { Button } from "@/components/ds";
 import {
   Activity, CalendarDays, Search, Plus, RefreshCw, Download,
   Star, X, ChevronDown, ChevronUp, BookOpen, GraduationCap,
@@ -84,7 +85,6 @@ function EventCard({ event, onDelete }) {
           style={{ position: "absolute", top: 10, right: 36 }}
         />
       )}
-
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
         <div style={{
           width: 32, height: 32, borderRadius: 8,
@@ -144,11 +144,17 @@ function EventCard({ event, onDelete }) {
         </div>
 
         {event.source === "manual" && onDelete && (
-          <button onClick={() => onDelete(event._id)}
-            style={{ background: "none", border: "none", cursor: "pointer",
-              color: TEXT_SECONDARY, padding: 4, flexShrink: 0 }}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => onDelete(event._id)}
+            style={{
+              color: TEXT_SECONDARY,
+              padding: 4,
+              flexShrink: 0
+            }}>
             <X size={14} />
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -204,9 +210,15 @@ function AddEventModal({ catalogue, onClose, onAdd }) {
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
           <h2 style={{ fontSize: 16, fontWeight: 700, color: NAVY, margin: 0 }}>Add Timeline Event</h2>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_SECONDARY }}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onClose}
+            style={{
+              color: TEXT_SECONDARY
+            }}>
             <X size={18} />
-          </button>
+          </Button>
         </div>
 
         {error && <div style={{ color: ACCENT, fontSize: 13, marginBottom: 12 }}>{error}</div>}

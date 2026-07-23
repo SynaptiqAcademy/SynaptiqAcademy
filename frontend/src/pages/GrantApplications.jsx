@@ -13,6 +13,10 @@ import {
 import { EmptyState } from "@/components/ds/EmptyState";
 import { SkeletonPage } from "@/components/ds/LoadingState";
 import { FilterChip } from "@/components/ds/SearchBar";
+import { Badge as DsBadge } from "@/components/ds/Badge";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { StatCard, StatGrid } from "@/components/ds/StatCard";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const EMRL  = "#059669";
@@ -80,15 +84,7 @@ function LifecycleNav({ current }) {
 // ─── Status badge ─────────────────────────────────────────────────────────────
 function Badge({ status }) {
   const s = STATUS[status] || { label: status || "—", color: "#64748B", bg: "#F8FAFC", border: "#CBD5E1" };
-  return (
-    <span style={{
-      fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
-      padding: "3px 8px", background: s.bg, color: s.color, border: `1px solid ${s.border}`,
-      whiteSpace: "nowrap",
-    }}>
-      {s.label}
-    </span>
-  );
+  return <DsBadge color={s.color}>{s.label}</DsBadge>;
 }
 
 // ─── Analytics panel ──────────────────────────────────────────────────────────
@@ -101,50 +97,28 @@ function AnalyticsPanel({ data }) {
     { label: "Success Rate",       value: data.success_rate != null ? `${data.success_rate}%` : "—", icon: TrendingUp, accent: data.success_rate > 0 ? EMRL : "#94A3B8" },
   ];
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 28 }}>
-      {items.map(({ label, value, icon: Icon, accent }) => (
-        <div key={label} style={{ background: "#fff", border: `1px solid ${BRD}`, padding: "16px 20px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94A3B8" }}>{label}</span>
-            <Icon size={13} strokeWidth={1.5} style={{ color: accent }} />
-          </div>
-          <span style={{ fontSize: 26, fontWeight: 700, color: "#0F172A", fontFamily: "Georgia, serif", letterSpacing: "-0.02em", lineHeight: 1 }}>
-            {value}
-          </span>
-        </div>
+    <StatGrid cols={4} className="mb-7">
+      {items.map(({ label, value, icon: Icon }) => (
+        <StatCard key={label} label={label} value={value} icon={<Icon />} />
       ))}
-    </div>
+    </StatGrid>
   );
 }
 
 // ─── Application card ─────────────────────────────────────────────────────────
 function ApplicationCard({ app }) {
-  const [hov, setHov] = useState(false);
   const budget = fmtBudget(app.requested_budget, app.currency);
 
   return (
-    <Link
-      to={`/grant-applications/${app.id}`}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        display: "block", textDecoration: "none",
-        background: "#fff",
-        border: `1px solid ${hov ? BRDH : BRD}`,
-        padding: "20px 24px",
-        boxShadow: hov ? "0 4px 20px rgba(15,23,42,0.09)" : "none",
-        transition: "border-color 150ms, box-shadow 150ms",
-      }}
-    >
+    <Card to={`/grant-applications/${app.id}`} padding="lg">
       <div style={{ display: "flex", alignItems: "flex-start", gap: 20, justifyContent: "space-between" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: NAVY, marginBottom: 6 }}>
             {app.agency_name || "Grant Application"}
           </div>
           <h3 style={{
-            fontSize: 16, fontWeight: 600, color: hov ? NAVY : "#0F172A",
+            fontSize: 16, fontWeight: 600, color: "#0F172A",
             margin: 0, lineHeight: 1.4, fontFamily: "Georgia, serif",
-            transition: "color 150ms",
           }}>
             {app.grant?.title || app.grant_title || "Untitled Grant"}
           </h3>
@@ -167,9 +141,7 @@ function ApplicationCard({ app }) {
               </span>
             )}
             {!app.is_pi && (
-              <span style={{ fontSize: 10, fontWeight: 600, color: "#7C3AED", background: "#F5F3FF", border: "1px solid #C4B5FD", padding: "2px 6px" }}>
-                Team Member
-              </span>
+              <DsBadge color="#7C3AED">Team Member</DsBadge>
             )}
             {app.updated_at && (
               <span style={{ fontSize: 10, fontFamily: "monospace", color: "#CBD5E1" }}>
@@ -180,25 +152,10 @@ function ApplicationCard({ app }) {
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
           <Badge status={app.status} />
-          <ChevronRight size={14} strokeWidth={1.5} style={{ color: hov ? NAVY : "#E2E8F0", transition: "color 150ms" }} />
+          <ChevronRight size={14} strokeWidth={1.5} style={{ color: "#E2E8F0" }} />
         </div>
       </div>
-    </Link>
-  );
-}
-
-// ─── Skeleton ────────────────────────────────────────────────────────────────
-function Skeleton() {
-  return (
-    <>
-      <style>{`@keyframes rl-pulse{0%,100%{opacity:.45}50%{opacity:.2}}.rl-sk{background:#E2E8F0;animation:rl-pulse 1.8s ease-in-out infinite}`}</style>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 28 }}>
-        {[1,2,3,4].map((i) => <div key={i} className="rl-sk" style={{ height: 80 }} />)}
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {[1,2,3].map((i) => <div key={i} className="rl-sk" style={{ height: 90 }} />)}
-      </div>
-    </>
+    </Card>
   );
 }
 

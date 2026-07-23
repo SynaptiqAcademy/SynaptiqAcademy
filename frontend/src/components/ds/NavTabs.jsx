@@ -77,7 +77,7 @@ export function NavTabs({
             whiteSpace: "nowrap",
             transition: "color 150ms",
             marginBottom: -1, // flush with border-bottom of container
-            outline: "none",
+            outlineOffset: 2,
           };
         } else if (isPill) {
           tabStyle = {
@@ -95,7 +95,7 @@ export function NavTabs({
             opacity: isDisabled ? 0.4 : 1,
             whiteSpace: "nowrap",
             transition: "all 150ms",
-            outline: "none",
+            outlineOffset: 2,
           };
         } else if (isSegment) {
           tabStyle = {
@@ -116,7 +116,7 @@ export function NavTabs({
             opacity: isDisabled ? 0.4 : 1,
             whiteSpace: "nowrap",
             transition: "all 150ms",
-            outline: "none",
+            outlineOffset: 2,
           };
         }
 

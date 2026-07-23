@@ -59,9 +59,16 @@ function MissionCard({ mission, onComplete, onUpdate }) {
             ("icon", 36px) size would visually overpower this compact row,
             so it's left hand-rolled */}
         <div style={{ display: "flex", gap: 4 }}>
-          <button onClick={() => setEditing(v => !v)} style={{ background: "none", border: "none", cursor: "pointer", padding: 3, color: TEXT_SECONDARY }}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setEditing(v => !v)}
+            style={{
+              padding: 3,
+              color: TEXT_SECONDARY
+            }}>
             <Pencil size={13} />
-          </button>
+          </Button>
         </div>
       </div>
       {editing && (
@@ -73,7 +80,7 @@ function MissionCard({ mission, onComplete, onUpdate }) {
             <span style={{ fontSize: 12, color: TEXT_SECONDARY }}>Progress ({progress}%)</span>
             <input type="range" min={0} max={100} value={progress} onChange={e => setProgress(Number(e.target.value))} style={{ flex: 1 }} />
             <Button onClick={save} size="sm" style={{ background: ACCENT }}>Save</Button>
-            <button onClick={() => setEditing(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X size={13} color={TEXT_SECONDARY} /></button>
+            <Button size="icon" variant="ghost" onClick={() => setEditing(false)}><X size={13} color={TEXT_SECONDARY} /></Button>
           </div>
         </div>
       )}

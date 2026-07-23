@@ -3,8 +3,11 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { toast } from "sonner";
 import { ExternalLink, Coins, Globe, Calendar, Bookmark, BookmarkCheck, FilePlus, CheckCircle2 } from "lucide-react";
-import { NAVY } from "@/lib/tokens";
 import { SkeletonCard } from "@/components/ds/LoadingState";
+import { Badge } from "@/components/ds/Badge";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Tag, TagGroup } from "@/components/ds/Tag";
 
 const fmtAmount = (fa) => {
   if (!fa || !fa.amount) return null;
@@ -78,44 +81,41 @@ export default function GrantDetail() {
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           <Coins size={16} strokeWidth={1.5} className="text-[#0F2847]" />
           {g.funding_type && (
-            <span className="overline border border-[#0F2847]/20 bg-[#0F2847]/5 text-[#0F2847] px-2 py-0.5">{g.funding_type}</span>
+            <Badge variant="default">{g.funding_type}</Badge>
           )}
           {fmtAmount(g.funding_amount) && (
-            <span className="overline border border-emerald-300 bg-emerald-50 text-emerald-700 px-2 py-0.5">{fmtAmount(g.funding_amount)}</span>
+            <Badge variant="success">{fmtAmount(g.funding_amount)}</Badge>
           )}
           {g.source && (
-            <span className="overline border border-slate-200 bg-slate-50 text-slate-600 px-2 py-0.5">
-              Source: {g.source}
-            </span>
+            <Badge variant="neutral">Source: {g.source}</Badge>
           )}
         </div>
         <h1 className="font-serif text-5xl text-slate-900 mt-2 leading-tight">{g.title}</h1>
         <div className="mt-2 text-sm text-slate-500">{g.sponsor}</div>
 
         <div className="mt-4 flex items-center gap-3 flex-wrap">
-          <button
+          <Button
             onClick={toggleSave}
-            className="inline-flex items-center gap-2 text-xs border border-[#0F2847] text-[#0F2847] px-3 py-1.5 hover:bg-[#0F2847] hover:text-white transition-colors"
+            variant="outline"
+            size="sm"
           >
             {saved ? <BookmarkCheck size={12} strokeWidth={1.5} /> : <Bookmark size={12} strokeWidth={1.5} />}
             {saved ? "Saved" : "Save"}
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={startApplication}
             disabled={applying}
-            className={`inline-flex items-center gap-2 text-xs px-4 py-1.5 transition-colors disabled:opacity-50 ${
-              hasApplication
-                ? "border border-emerald-600 text-emerald-700 hover:bg-emerald-50"
-                : "bg-[#0F2847] text-white hover:bg-slate-800"
-            }`}
+            variant={hasApplication ? "outline" : "primary"}
+            size="sm"
+            className={hasApplication ? "!border-emerald-600 !text-emerald-700 hover:!bg-emerald-50" : ""}
           >
             {hasApplication ? (
               <><CheckCircle2 size={12} strokeWidth={1.5} /> Open application ({g.user_application.status})</>
             ) : (
               <><FilePlus size={12} strokeWidth={1.5} /> {applying ? "Creating…" : "Start application"}</>
             )}
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -135,12 +135,12 @@ export default function GrantDetail() {
           )}
           <section className="border-t border-slate-200 pt-6">
             <h2 className="overline mb-3">Research areas</h2>
-            <div className="flex flex-wrap gap-2">
+            <TagGroup gap={8}>
               {(g.research_areas || []).map((s, i) => (
-                <span key={i} className="text-sm px-3 py-1 border border-slate-300 text-slate-700">{s}</span>
+                <Tag key={i}>{s}</Tag>
               ))}
-              {(!g.research_areas || g.research_areas.length === 0) && <span className="text-sm text-slate-500">—</span>}
-            </div>
+            </TagGroup>
+            {(!g.research_areas || g.research_areas.length === 0) && <span className="text-sm text-slate-500">—</span>}
           </section>
           {g.eligibility && (
             <section className="border-t border-slate-200 pt-6">
@@ -151,11 +151,11 @@ export default function GrantDetail() {
           {(g.keywords || []).length > 0 && (
             <section className="border-t border-slate-200 pt-6">
               <h2 className="overline mb-3">Keywords</h2>
-              <div className="flex flex-wrap gap-1.5">
+              <TagGroup gap={6}>
                 {g.keywords.map((k, i) => (
-                  <span key={i} className="text-xs font-mono px-2 py-0.5 border border-slate-200 text-slate-600">{k}</span>
+                  <Tag key={i} size="sm" className="font-mono">{k}</Tag>
                 ))}
-              </div>
+              </TagGroup>
             </section>
           )}
           {g.url && (
@@ -169,7 +169,7 @@ export default function GrantDetail() {
         </div>
 
         <aside className="lg:col-span-4 space-y-4">
-          <div className="border border-slate-200 bg-white p-6 space-y-3 text-sm">
+          <Card padding="lg" className="space-y-3 text-sm">
             <div className="overline">Key facts</div>
             <div className="flex items-center justify-between"><span className="text-slate-500">Sponsor</span><span className="text-slate-900 text-right max-w-[60%] leading-snug">{g.sponsor || "—"}</span></div>
             {g.program && <div className="flex items-center justify-between"><span className="text-slate-500">Program</span><span className="text-slate-900 text-right">{g.program}</span></div>}
@@ -178,17 +178,17 @@ export default function GrantDetail() {
             {g.deadline && <div className="flex items-center justify-between"><span className="text-slate-500">Deadline</span><span className="text-slate-900 font-mono flex items-center gap-1"><Calendar size={11} />{g.deadline}</span></div>}
             {fmtAmount(g.funding_amount) && <div className="flex items-center justify-between"><span className="text-slate-500">Amount</span><span className="text-emerald-700 font-medium">{fmtAmount(g.funding_amount)}</span></div>}
             {g.status && <div className="flex items-center justify-between"><span className="text-slate-500">Status</span><span className="text-slate-900">{g.status}</span></div>}
-          </div>
+          </Card>
 
           {/* Matching hints */}
           {g.match_score != null && (
-            <div className="border border-emerald-200 bg-emerald-50/60 p-4">
+            <Card padding="md" className="border-emerald-200 bg-emerald-50/60">
               <div className="overline text-emerald-700 mb-1">Match score: {g.match_score}</div>
               <div className="text-xs text-emerald-700">{g.match_reason}</div>
               {g.eligibility_estimate && (
                 <div className="text-xs text-emerald-600 font-mono mt-1">Eligibility: {g.eligibility_estimate}</div>
               )}
-            </div>
+            </Card>
           )}
         </aside>
       </div>

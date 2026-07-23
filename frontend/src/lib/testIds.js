@@ -18,6 +18,7 @@ export const TID = {
   authToggleLink: "auth-toggle-link",
   forgotEmail: "forgot-email-input",
   forgotSubmit: "forgot-submit-btn",
+  forgotError: "forgot-error",
   forgotSent: "forgot-sent",
   resetNewPassword: "reset-new-password-input",
   resetConfirmPassword: "reset-confirm-password-input",

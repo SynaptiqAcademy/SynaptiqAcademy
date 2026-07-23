@@ -1,5 +1,6 @@
 /* eslint-disable */
 import React, { useState, useRef, useEffect, useMemo } from "react";
+import { Button } from "@/components/ds";
 import { Link } from "react-router-dom";
 import MarketingLayout from "../../components/layout/MarketingLayout";
 import { ArrowRight, Search, Building2, Globe, ChevronRight, Star, TrendingUp, Users, BarChart3, BookOpen, Award, Filter, X } from "lucide-react";
@@ -439,7 +440,6 @@ export default function CustomerStories() {
 
   return (
     <MarketingLayout>
-
       {/* Hero */}
       <section style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, paddingTop: 72, paddingBottom: 64 }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
@@ -466,14 +466,12 @@ export default function CustomerStories() {
           </div>
         </div>
       </section>
-
       {/* Featured story */}
       <section style={{ background: LIGHT, borderBottom: `1px solid ${BORDER}` }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-16 lg:py-20">
           {featured && <FeaturedStory story={featured} />}
         </div>
       </section>
-
       {/* Filter bar + grid */}
       <section style={{ background: "#fff" }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-16 lg:py-20">
@@ -488,7 +486,13 @@ export default function CustomerStories() {
                 placeholder="Search by institution, country…"
                 style={{ border: "none", background: "transparent", outline: "none", fontSize: "0.83rem", color: "#0a0f1a", width: "100%" }}
               />
-              {search && <button onClick={() => setSearch("")} style={{ border: "none", background: "none", cursor: "pointer", color: "#94a3b8" }}><X size={12} /></button>}
+              {search && <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setSearch("")}
+                style={{
+                  color: "#94a3b8"
+                }}><X size={12} /></Button>}
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {categories.map(cat => (
@@ -526,7 +530,6 @@ export default function CustomerStories() {
           )}
         </div>
       </section>
-
       {/* Stats band */}
       <section style={{ background: NAVY }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-20">
@@ -547,7 +550,6 @@ export default function CustomerStories() {
           </div>
         </div>
       </section>
-
       {/* CTA */}
       <section style={{ background: LIGHT }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-24 text-center">
@@ -565,7 +567,6 @@ export default function CustomerStories() {
           </div>
         </div>
       </section>
-
     </MarketingLayout>
   );
 }

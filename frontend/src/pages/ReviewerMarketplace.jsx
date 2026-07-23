@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import { ACCENT, EMERALD, NAVY, WARM } from "@/lib/tokens";
 import { DiscoveryLayout } from "@/layouts";
+import { Avatar, Button } from "@/components/ds";
 import {
   Search, X, ChevronDown, ChevronLeft, ChevronRight, ArrowRight,
   CheckCircle, Award, Shield, Globe, Building2, MapPin, BookOpen,
@@ -34,15 +35,6 @@ function computeSlug(name) {
 function profileUrl(r) {
   const slug = r.slug || computeSlug(r.full_name);
   return `/researcher/${slug}`;
-}
-
-function initials(name) {
-  return (name || "?")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0].toUpperCase())
-    .join("");
 }
 
 function fmtDate(iso) {
@@ -210,7 +202,6 @@ export default function ReviewerMarketplace() {
         }
         .sq-pulse { animation: sq-pulse 1.8s ease-in-out infinite; }
       `}</style>
-
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <HeroSection
         user={user}
@@ -225,7 +216,6 @@ export default function ReviewerMarketplace() {
         }}
         onPostRequest={() => setShowCreate(true)}
       />
-
       {/* ── AI Recommendations ───────────────────────────────────────────── */}
       {(recsLoading || recs) && (
         <AiRecsPanel
@@ -235,12 +225,10 @@ export default function ReviewerMarketplace() {
           toggleCompare={toggleCompare}
         />
       )}
-
       {/* ── Open Review Requests strip ────────────────────────────────────── */}
       {openRequests.length > 0 && (
         <OpenRequestsStrip requests={openRequests} onPost={() => setShowCreate(true)} />
       )}
-
       {/* ── Reviewer Explorer ─────────────────────────────────────────────── */}
       <div ref={explorerRef} style={{ marginTop: 36, display: "flex", gap: 24, alignItems: "flex-start" }}>
 
@@ -265,9 +253,21 @@ export default function ReviewerMarketplace() {
                 onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
               />
               {q && (
-                <button onClick={() => setQ("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "#94A3B8", cursor: "pointer", display: "flex", alignItems: "center", background: "none", border: "none", outline: "none" }}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setQ("")}
+                  style={{
+                    position: "absolute",
+                    right: 10,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: "#94A3B8",
+                    display: "flex",
+                    alignItems: "center"
+                  }}>
                   <X size={13} strokeWidth={1.5} />
-                </button>
+                </Button>
               )}
             </div>
             <button
@@ -331,13 +331,10 @@ export default function ReviewerMarketplace() {
           )}
         </div>
       </div>
-
       {/* ── Review Services strip ─────────────────────────────────────────── */}
       <ReviewServicesStrip onPost={() => setShowCreate(true)} />
-
       {/* ── Academic Integrity note ───────────────────────────────────────── */}
       <IntegrityNote />
-
       {/* ── Compare panel ─────────────────────────────────────────────────── */}
       {compareList.length >= 2 && (
         <ComparePanel
@@ -346,7 +343,6 @@ export default function ReviewerMarketplace() {
           onClose={() => setCompareList([])}
         />
       )}
-
       {/* ── Create Request Modal ──────────────────────────────────────────── */}
       {showCreate && (
         <CreateRequestModal
@@ -463,11 +459,18 @@ function AiRecsPanel({ recs, loading, compareList, toggleCompare }) {
           <span style={{ fontSize: 12, fontWeight: 700, color: NAVY, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Reviewer Matches</span>
           <span style={{ fontSize: 11, color: "#94A3B8" }}>Matched to your expertise and current work</span>
         </div>
-        <button onClick={() => setExpanded((v) => !v)} style={{ color: "#94A3B8", cursor: "pointer", display: "flex", alignItems: "center", background: "none", border: "none", outline: "none" }}>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => setExpanded((v) => !v)}
+          style={{
+            color: "#94A3B8",
+            display: "flex",
+            alignItems: "center"
+          }}>
           <ChevronDown size={13} strokeWidth={1.5} style={{ transform: expanded ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms" }} />
-        </button>
+        </Button>
       </div>
-
       {expanded && (
         <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4 }}>
           {loading
@@ -542,22 +545,7 @@ function OpenRequestsStrip({ requests, onPost }) {
 
 // ── Avatar circle ─────────────────────────────────────────────────────────────
 function AvatarCircle({ r, size = 44 }) {
-  const [imgError, setImgError] = useState(false);
-  if (r?.avatar_url && !imgError) {
-    return (
-      <img
-        src={r.avatar_url}
-        alt={r.full_name || ""}
-        onError={() => setImgError(true)}
-        style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1.5px solid #E4E8EF" }}
-      />
-    );
-  }
-  return (
-    <div style={{ width: size, height: size, borderRadius: "50%", background: NAVY, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: Math.round(size * 0.33), fontWeight: 700, color: "white" }}>
-      {initials(r?.full_name)}
-    </div>
-  );
+  return <Avatar url={r?.avatar_url} name={r?.full_name} size={size} border />;
 }
 
 // ── Reviewer card (full grid) ─────────────────────────────────────────────────
@@ -1131,9 +1119,16 @@ function CreateRequestModal({ onClose, onCreated }) {
             <h2 style={{ fontFamily: "Georgia, serif", fontSize: 18, color: NAVY, fontWeight: 400 }}>Post Review Request</h2>
             <p style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>Describe what you need reviewed and let AI match you with qualified reviewers.</p>
           </div>
-          <button onClick={onClose} style={{ color: "#94A3B8", cursor: "pointer", display: "flex", background: "none", border: "none", outline: "none" }}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onClose}
+            style={{
+              color: "#94A3B8",
+              display: "flex"
+            }}>
             <X size={18} strokeWidth={1.5} />
-          </button>
+          </Button>
         </div>
 
         {/* Form */}

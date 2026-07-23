@@ -37,8 +37,13 @@ export default function Login() {
     // below doesn't disable the button until React re-renders, so a second
     // click landing before that paint would otherwise fire a second request.
     if (submittingRef.current) return;
-    submittingRef.current = true;
     setErr("");
+    // See Register.jsx — native `required` silently blocks the submit event
+    // before this handler runs when a field is empty, so it never got a
+    // chance to give feedback for that case. `noValidate` below hands it back.
+    if (!email.trim())  { setErr("Please enter your email address."); return; }
+    if (!password)      { setErr("Please enter your password."); return; }
+    submittingRef.current = true;
     setLoading(true);
     try {
       const data = await login(email, password, remember);
@@ -81,7 +86,7 @@ export default function Login() {
           subtitle="Continue your research journey with Synaptiq."
         />
 
-        <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <form onSubmit={onSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <AuthInput
             label="Email"
             type="email"

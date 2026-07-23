@@ -4,8 +4,10 @@ import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { toast } from "sonner";
-import { NAVY } from "@/lib/tokens";
 import { SkeletonCard } from "@/components/ds/LoadingState";
+import { Card } from "@/components/ds/Card";
+import { Button } from "@/components/ds/Button";
+import { Tag, TagGroup } from "@/components/ds/Tag";
 
 export default function FundingDetail() {
   const { id } = useParams();
@@ -44,30 +46,31 @@ export default function FundingDetail() {
 
         <section className="border-t border-slate-200 pt-8">
           <h2 className="overline mb-4">Research areas</h2>
-          <div className="flex flex-wrap gap-2">
+          <TagGroup gap={8}>
             {(g.research_areas || []).map((a) => (
-              <span key={a} className="text-sm px-3 py-1 border border-slate-300 text-slate-700">{a}</span>
+              <Tag key={a}>{a}</Tag>
             ))}
-            {(g.research_areas || []).length === 0 && <div className="text-slate-500 text-sm">—</div>}
-          </div>
+          </TagGroup>
+          {(g.research_areas || []).length === 0 && <div className="text-slate-500 text-sm">—</div>}
         </section>
       </div>
 
       <aside className="lg:col-span-4 space-y-6">
-        <div className="border border-slate-200 bg-white p-6 space-y-3 text-sm">
+        <Card padding="lg" className="space-y-3 text-sm">
           <Detail label="Funding amount" value={g.amount} />
           <Detail label="Deadline" value={g.deadline} />
           <Detail label="Duration" value={g.duration || "—"} />
           <Detail label="Type" value={g.funding_type || "Grant"} />
           <Detail label="Agency" value={g.agency} />
-        </div>
-        <button
+        </Card>
+        <Button
           data-testid={TID.fundingSaveBtn}
           onClick={toggleSave}
-          className={`w-full inline-flex items-center justify-center gap-2 py-3 text-sm transition-colors ${saved ? "bg-[#0F2847] text-white hover:bg-slate-800" : "border border-[#0F2847] text-[#0F2847] hover:bg-[#0F2847] hover:text-white"}`}
+          variant={saved ? "primary" : "outline"}
+          className="w-full"
         >
           {saved ? <><BookmarkCheck size={14} strokeWidth={1.5} /> Saved</> : <><Bookmark size={14} strokeWidth={1.5} /> Save to grants</>}
-        </button>
+        </Button>
       </aside>
     </div>
   );

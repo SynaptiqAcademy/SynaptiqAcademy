@@ -1,7 +1,7 @@
 /* eslint-disable */
 import React, { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import api from "../lib/api";
+import api, { getErrorMessage } from "../lib/api";
 import { TID } from "../lib/testIds";
 import {
   AuthLayout, AuthCard, AuthHeader, AuthTitle, AuthInput,
@@ -14,10 +14,16 @@ export default function ForgotPassword() {
   const [sent,      setSent]      = useState(false);
   const [debugLink, setDebugLink] = useState("");
   const [loading,   setLoading]   = useState(false);
+  const [err,       setErr]       = useState("");
   const submittingRef = useRef(false);
 
   async function submit(e) {
     e.preventDefault();
+    setErr("");
+    // Native `required` silently blocks the submit event before this
+    // handler runs when the field is empty (see Login.jsx/Register.jsx) —
+    // `noValidate` on the form hands it back to this explicit check.
+    if (!email.trim()) { setErr("Please enter your email address."); return; }
     if (submittingRef.current) return;
     submittingRef.current = true;
     setLoading(true);
@@ -27,7 +33,12 @@ export default function ForgotPassword() {
       if (data.debug_reset_token) {
         setDebugLink(`${window.location.origin}/reset-password?token=${data.debug_reset_token}`);
       }
-    } catch (_) {}
+    } catch (e) {
+      // Previously silently swallowed — the user would see the button stop
+      // loading with no indication the request failed, and could be left
+      // waiting indefinitely for a reset email that was never sent.
+      setErr(getErrorMessage(e) || "Something went wrong. Please try again.");
+    }
     finally {
       setLoading(false);
       submittingRef.current = false;
@@ -47,7 +58,7 @@ export default function ForgotPassword() {
               subtitle="Enter your email and we'll send you a secure reset link."
             />
 
-            <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <form onSubmit={submit} noValidate style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <AuthInput
                 label="Email address"
                 type="email"
@@ -58,6 +69,7 @@ export default function ForgotPassword() {
                 autoComplete="email"
                 testId={TID.forgotEmail}
               />
+              <ErrorBanner error={err} testId={TID.forgotError} />
               <div style={{ marginTop: 4 }}>
                 <AuthButton loading={loading} disabled={sent} testId={TID.forgotSubmit}>
                   Send Reset Link

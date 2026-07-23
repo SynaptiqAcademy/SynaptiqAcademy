@@ -186,7 +186,6 @@ export default function ResearchPlanning() {
         </Button>
       }
     >
-
       {loading ? <div style={{ textAlign: "center", padding: 40 }}><Spinner size={28} color={ACCENT} /></div> : (
         <div style={{ display: "grid", gridTemplateColumns: selected ? "320px 1fr" : "1fr", gap: 20 }}>
           <div>
@@ -207,7 +206,7 @@ export default function ResearchPlanning() {
                   <div style={{ fontSize: 15, fontWeight: 800, color: NAVY }}>{selected.title}</div>
                   <div style={{ fontSize: 12, color: TEXT_SECONDARY }}>Overall: {selected.overall_completion}% complete · Est. end: {selected.estimated_end_date}</div>
                 </div>
-                <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", cursor: "pointer" }}><X size={16} color={TEXT_SECONDARY} /></button>
+                <Button size="icon" variant="ghost" onClick={() => setSelected(null)}><X size={16} color={TEXT_SECONDARY} /></Button>
               </Card.Header>
               <div style={{ padding: 16, maxHeight: 600, overflowY: "auto" }}>
                 {(selected.stages || []).map(s => <StageRow key={s.key} stage={s} onAdvance={advance} />)}
@@ -216,7 +215,6 @@ export default function ResearchPlanning() {
           )}
         </div>
       )}
-
       {showNew && <GenerateModal onClose={() => setShowNew(false)} onCreate={rm => { setRoadmaps(rs => [rm, ...rs]); setSelected(rm); }} />}
     </AIWorkspaceLayout>
   );

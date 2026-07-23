@@ -6,8 +6,9 @@ import {
   Smartphone, Lock,
 } from "lucide-react";
 import api from "@/lib/api";
-import { NAVY, WARM, BRD } from "@/lib/tokens";
+import { NAVY, WARM, BRD, EMERALD, AMBER, CRIMSON } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
+import { Card, Button, Input, Alert, Spinner } from "@/components/ds";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 function usePost(path) {
@@ -48,7 +49,7 @@ function MFAStatusCard({ status, onRefresh }) {
   if (!status) return null;
   const { enabled, configured_at, last_used_at, use_count, recovery_codes_remaining, enrollment_pending } = status;
   return (
-    <div className={`rounded-md border p-5 ${enabled ? "border-green-300 bg-green-50" : "border-amber-300 bg-amber-50"}`}>
+    <Card accent={enabled ? EMERALD : AMBER} padding="lg">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           {enabled
@@ -59,9 +60,9 @@ function MFAStatusCard({ status, onRefresh }) {
             {enabled ? "MFA Active" : enrollment_pending ? "Enrollment in Progress" : "MFA Not Configured"}
           </span>
         </div>
-        <button onClick={onRefresh} className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1">
+        <Button variant="link" size="sm" onClick={onRefresh}>
           <RefreshCw className="w-3 h-3" /> Refresh
-        </button>
+        </Button>
       </div>
 
       {enabled && (
@@ -92,7 +93,7 @@ function MFAStatusCard({ status, onRefresh }) {
           MFA is strongly recommended for the super-administrator account. Configure TOTP with Google Authenticator, Microsoft Authenticator, or Authy.
         </p>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -143,13 +144,9 @@ function MFAEnrollment({ onComplete }) {
       <p className="text-sm text-slate-500 mb-5 max-w-sm mx-auto">
         Use Google Authenticator, Microsoft Authenticator, or Authy to generate time-based codes.
       </p>
-      <button
-        onClick={startEnroll}
-        disabled={loading}
-        className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50"
-      >
+      <Button variant="primary" onClick={startEnroll} loading={loading}>
         {loading ? "Generating…" : "Start Enrollment"}
-      </button>
+      </Button>
       {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
     </div>
   );
@@ -188,8 +185,8 @@ function MFAEnrollment({ onComplete }) {
       <div>
         <h3 className="font-bold text-slate-800 mb-2">Step 2 — Verify Code</h3>
         <p className="text-sm text-slate-500 mb-3">Enter the 6-digit code from your authenticator to confirm enrollment.</p>
-        <div className="flex gap-2">
-          <input
+        <div className="flex gap-2 items-start">
+          <Input
             type="text"
             inputMode="numeric"
             maxLength={6}
@@ -197,15 +194,12 @@ function MFAEnrollment({ onComplete }) {
             value={code}
             onChange={e => setCode(e.target.value.replace(/\D/g, ""))}
             onKeyDown={e => e.key === "Enter" && confirmEnroll()}
-            className="w-36 text-center text-xl font-mono tracking-widest border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-36 text-center text-xl font-mono tracking-widest"
+            wrapperClassName="!mb-0"
           />
-          <button
-            onClick={confirmEnroll}
-            disabled={loading || code.length !== 6}
-            className="px-5 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50"
-          >
+          <Button variant="primary" onClick={confirmEnroll} disabled={loading || code.length !== 6} loading={loading}>
             {loading ? "Verifying…" : "Verify & Activate"}
-          </button>
+          </Button>
         </div>
         {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
       </div>
@@ -214,20 +208,16 @@ function MFAEnrollment({ onComplete }) {
 
   if (step === "recovery") return (
     <div className="space-y-4">
-      <div className="bg-green-50 border border-green-300 rounded-md p-4 flex items-start gap-3">
-        <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-        <div>
-          <div className="font-semibold text-green-800">MFA Successfully Activated</div>
-          <div className="text-sm text-green-700">Save your recovery codes. They will not be shown again.</div>
-        </div>
-      </div>
+      <Alert variant="success" title="MFA Successfully Activated">
+        Save your recovery codes. They will not be shown again.
+      </Alert>
 
       <div>
         <div className="flex items-center justify-between mb-2">
           <div className="text-sm font-semibold text-slate-700">Recovery Codes (10)</div>
-          <button onClick={copyAll} className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+          <Button variant="link" size="sm" onClick={copyAll}>
             <Copy className="w-3 h-3" /> {copied ? "Copied!" : "Copy all"}
-          </button>
+          </Button>
         </div>
         <div className="grid grid-cols-2 gap-1.5">
           {recoveryCodes.map((c, i) => (
@@ -241,12 +231,9 @@ function MFAEnrollment({ onComplete }) {
         </p>
       </div>
 
-      <button
-        onClick={onComplete}
-        className="w-full px-4 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800"
-      >
+      <Button variant="primary" onClick={onComplete} className="w-full">
         I've saved my recovery codes — Done
-      </button>
+      </Button>
     </div>
   );
 
@@ -271,40 +258,38 @@ function DisableMFA({ onComplete }) {
   };
 
   if (!confirm) return (
-    <div className="rounded-md border border-red-300 bg-red-50 p-4">
+    <Card accent={CRIMSON} className="bg-red-50">
       <div className="font-semibold text-red-800 mb-1">Disable MFA</div>
       <p className="text-sm text-red-700 mb-3">
         Disabling MFA removes an important layer of protection. Only do this if you are re-enrolling or replacing your authenticator device.
       </p>
-      <button onClick={() => setConfirm(true)} className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700">
+      <Button variant="danger" size="sm" onClick={() => setConfirm(true)}>
         Continue to disable
-      </button>
-    </div>
+      </Button>
+    </Card>
   );
 
   return (
-    <div className="rounded-md border border-red-300 bg-red-50 p-4 space-y-3">
-      <div className="font-semibold text-red-800">Confirm Disable MFA</div>
-      <p className="text-sm text-red-700">Enter your current 6-digit authentication code or a recovery code:</p>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          placeholder="000000 or XXXXX-XXXXX"
-          value={code}
-          onChange={e => setCode(e.target.value)}
-          className="flex-1 border border-red-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-        />
-        <button
-          onClick={disable}
-          disabled={loading || !code}
-          className="px-4 py-2 bg-red-700 text-white text-sm rounded-lg hover:bg-red-800 disabled:opacity-50"
-        >
-          {loading ? "Disabling…" : "Disable MFA"}
-        </button>
+    <Card accent={CRIMSON} className="bg-red-50">
+      <div className="space-y-3">
+        <div className="font-semibold text-red-800">Confirm Disable MFA</div>
+        <p className="text-sm text-red-700">Enter your current 6-digit authentication code or a recovery code:</p>
+        <div className="flex gap-2 items-start">
+          <Input
+            type="text"
+            placeholder="000000 or XXXXX-XXXXX"
+            value={code}
+            onChange={e => setCode(e.target.value)}
+            wrapperClassName="flex-1 !mb-0"
+          />
+          <Button variant="danger" onClick={disable} disabled={loading || !code} loading={loading}>
+            {loading ? "Disabling…" : "Disable MFA"}
+          </Button>
+        </div>
+        {error && <div className="text-sm text-red-700">{error}</div>}
+        <Button variant="link" size="sm" onClick={() => setConfirm(false)}>Cancel</Button>
       </div>
-      {error && <div className="text-sm text-red-700">{error}</div>}
-      <button onClick={() => setConfirm(false)} className="text-xs text-red-600 hover:underline">Cancel</button>
-    </div>
+    </Card>
   );
 }
 
@@ -328,22 +313,23 @@ function RegenerateRecoveryCodes({ onComplete }) {
 
   if (newCodes.length > 0) return (
     <div className="space-y-3">
-      <div className="bg-amber-50 border border-amber-200 rounded-md p-3 text-sm text-amber-800">
+      <Alert variant="warning">
         Old codes are now invalidated. Save these new codes.
-      </div>
+      </Alert>
       <div className="grid grid-cols-2 gap-1.5">
         {newCodes.map((c, i) => (
           <code key={i} className="bg-slate-900 text-green-400 text-xs font-mono px-3 py-1.5 rounded">{c}</code>
         ))}
       </div>
-      <div className="flex gap-2">
-        <button
+      <div className="flex gap-2 items-center">
+        <Button
+          variant="link"
+          size="sm"
           onClick={() => { navigator.clipboard.writeText(newCodes.join("\n")); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-          className="text-xs text-indigo-600 hover:underline"
         >
           {copied ? "Copied!" : "Copy all"}
-        </button>
-        <button onClick={onComplete} className="text-xs text-slate-500 hover:underline ml-auto">Done</button>
+        </Button>
+        <Button variant="link" size="sm" onClick={onComplete} className="!ml-auto">Done</Button>
       </div>
     </div>
   );
@@ -351,23 +337,20 @@ function RegenerateRecoveryCodes({ onComplete }) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-slate-600">Enter your current TOTP code to regenerate all recovery codes:</p>
-      <div className="flex gap-2">
-        <input
+      <div className="flex gap-2 items-start">
+        <Input
           type="text"
           inputMode="numeric"
           maxLength={6}
           placeholder="000000"
           value={code}
           onChange={e => setCode(e.target.value.replace(/\D/g, ""))}
-          className="w-32 text-center font-mono tracking-widest border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-32 text-center font-mono tracking-widest"
+          wrapperClassName="!mb-0"
         />
-        <button
-          onClick={regen}
-          disabled={loading || code.length !== 6}
-          className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-        >
+        <Button variant="primary" onClick={regen} disabled={loading || code.length !== 6} loading={loading}>
           {loading ? "Regenerating…" : "Regenerate Codes"}
-        </button>
+        </Button>
       </div>
       {error && <div className="text-sm text-red-600">{error}</div>}
     </div>
@@ -387,7 +370,9 @@ export default function AdminMFACenter() {
     <AdministrationLayout title="MFA Center" subtitle="Multi-factor authentication for admin@synaptiq.academy">
       {/* Status */}
       {loading ? (
-        <div className="text-sm text-slate-400 animate-pulse">Loading MFA status…</div>
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <Spinner size={16} /> Loading MFA status…
+        </div>
       ) : (
         <MFAStatusCard status={status} onRefresh={fetch} />
       )}
@@ -396,27 +381,18 @@ export default function AdminMFACenter() {
       {view === "status" && status && (
         <div className="flex flex-wrap gap-3">
           {!status.enabled && (
-            <button
-              onClick={() => setView("enroll")}
-              className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 flex items-center gap-2"
-            >
+            <Button variant="primary" onClick={() => setView("enroll")}>
               <Shield className="w-4 h-4" /> Set Up MFA
-            </button>
+            </Button>
           )}
           {status.enabled && (
             <>
-              <button
-                onClick={() => setView("regen")}
-                className="px-4 py-2 bg-slate-100 text-slate-700 text-sm rounded-lg hover:bg-slate-200 flex items-center gap-2"
-              >
+              <Button variant="subtle" onClick={() => setView("regen")}>
                 <RefreshCw className="w-4 h-4" /> Regenerate Recovery Codes
-              </button>
-              <button
-                onClick={() => setView("disable")}
-                className="px-4 py-2 border border-red-300 text-red-600 text-sm rounded-lg hover:bg-red-50 flex items-center gap-2"
-              >
+              </Button>
+              <Button variant="outline" className="!border-red-300 !text-red-600 hover:!bg-red-50" onClick={() => setView("disable")}>
                 <Lock className="w-4 h-4" /> Disable MFA
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -424,32 +400,34 @@ export default function AdminMFACenter() {
 
       {/* Sub-panels */}
       {view === "enroll" && (
-        <div className="bg-white border border-slate-200 rounded-md p-6">
+        <Card padding="xl">
           <MFAEnrollment onComplete={refresh} />
-        </div>
+        </Card>
       )}
       {view === "disable" && status?.enabled && (
         <DisableMFA onComplete={refresh} />
       )}
       {view === "regen" && status?.enabled && (
-        <div className="bg-white border border-slate-200 rounded-md p-5">
+        <Card padding="lg">
           <div className="font-semibold text-slate-800 mb-3">Regenerate Recovery Codes</div>
           <RegenerateRecoveryCodes onComplete={refresh} />
-        </div>
+        </Card>
       )}
 
       {/* Authenticator guide */}
-      <div className="bg-slate-50 border border-slate-200 rounded-md p-4 text-sm text-slate-600">
-        <div className="font-medium text-slate-700 mb-2">Compatible Authenticator Apps</div>
-        <div className="grid grid-cols-3 gap-2">
-          {["Google Authenticator", "Microsoft Authenticator", "Authy"].map(app => (
-            <div key={app} className="flex items-center gap-1.5 text-xs">
-              <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
-              {app}
-            </div>
-          ))}
+      <Card className="bg-slate-50" padding="md">
+        <div className="text-sm text-slate-600">
+          <div className="font-medium text-slate-700 mb-2">Compatible Authenticator Apps</div>
+          <div className="grid grid-cols-3 gap-2">
+            {["Google Authenticator", "Microsoft Authenticator", "Authy"].map(app => (
+              <div key={app} className="flex items-center gap-1.5 text-xs">
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                {app}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </Card>
     </AdministrationLayout>
   );
 }

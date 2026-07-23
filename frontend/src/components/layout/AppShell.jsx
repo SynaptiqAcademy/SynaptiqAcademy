@@ -66,6 +66,9 @@ export default function AppShell({ children }) {
 
   return (
     <div className="min-h-screen flex" style={{ background: "#FAFAFA" }}>
+      {/* Keyboard-only skip link — invisible until focused via Tab */}
+      <a href="#main-content" className="sq-skip-link">Skip to content</a>
+
       {/* Desktop sidebar — lg+ only */}
       <Sidebar />
 
@@ -95,7 +98,7 @@ export default function AppShell({ children }) {
         {/* Main content
             pt-14: offset fixed mobile top bar (no effect on lg since TopBar is in-flow)
             pb-20/md:pb-6: offset fixed mobile bottom nav */}
-        <main className="flex-1 pt-14 lg:pt-0 pb-20 md:pb-0">
+        <main id="main-content" tabIndex={-1} className="flex-1 pt-14 lg:pt-0 pb-20 md:pb-0">
           <ContentFrame variant="app">
             {children}
           </ContentFrame>

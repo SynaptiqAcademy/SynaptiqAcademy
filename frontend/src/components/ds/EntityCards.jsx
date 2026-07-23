@@ -1,5 +1,6 @@
 /* eslint-disable */
 import React from "react";
+import { Button } from "./Button";
 import {
   FileText, BookOpen, DollarSign, Calendar, Building2,
   Users, Bookmark, BookmarkCheck, ExternalLink, Star,
@@ -68,14 +69,20 @@ export function GrantCard({ grant, onClick, saved, onSave }) {
           </h3>
         </div>
         {onSave && (
-          <button onClick={e => { e.stopPropagation(); onSave?.(); }}
-            style={{ background: "none", border: "none", cursor: "pointer", color: saved ? AMBER : TEXT_MUTED, flexShrink: 0, padding: 0 }}
-            aria-label={saved ? "Unsave grant" : "Save grant"}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={e => { e.stopPropagation(); onSave?.(); }}
+            aria-label={saved ? "Unsave grant" : "Save grant"}
+            style={{
+              color: saved ? AMBER : TEXT_MUTED,
+              flexShrink: 0,
+              padding: 0
+            }}>
             {saved ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
-          </button>
+          </Button>
         )}
       </div>
-
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
         {fmtAmt && (
           <span style={{ fontFamily: FONT_SERIF, fontSize: "1rem", fontWeight: 700, color: NAVY }}>{fmtAmt}</span>
@@ -89,14 +96,12 @@ export function GrantCard({ grant, onClick, saved, onSave }) {
           </span>
         )}
       </div>
-
       {match_score != null && (
         <div style={{ marginBottom: 10 }}>
           <ProgressBar value={match_score} max={100} size="sm"
             label="Match" valueLabel={`${match_score}%`} colorByValue />
         </div>
       )}
-
       <TagGroup gap={4}>
         {research_areas.slice(0, 2).map(a => <Tag key={a} size="sm">{a}</Tag>)}
       </TagGroup>

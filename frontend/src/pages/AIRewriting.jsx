@@ -4,6 +4,7 @@ import { PenLine, Lock, RotateCcw, Clock, Copy, Check, ChevronDown, ChevronUp } 
 import api from "../lib/api";
 import { WARM } from "@/lib/tokens";
 import { ErrorState } from "@/components/ds/ErrorState";
+import { Button } from "@/components/ds";
 import { AIWorkspaceLayout } from "@/layouts";
 
 
@@ -140,20 +141,14 @@ function InputView({ onResult, gated }) {
             <ErrorState message={error} type="generic" />
           )}
 
-          <button type="submit" disabled={!valid || running}
-            className="w-full bg-[#0F2847] text-white py-3 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-            {running ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Rewriting — this may take 10–20 seconds…
-              </>
-            ) : (
+          <Button type="submit" disabled={!valid} loading={running} className="w-full py-3">
+            {running ? "Rewriting — this may take 10–20 seconds…" : (
               <>
                 <PenLine size={15} strokeWidth={1.5} />
                 Rewrite · 2 Credits
               </>
             )}
-          </button>
+          </Button>
         </form>
 
         {/* Info panel */}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Button } from "@/components/ds";
 import { DiscoveryLayout } from "@/layouts";
 import { Link, NavLink } from "react-router-dom";
 import api from "../lib/api";
@@ -232,13 +233,11 @@ export default function Conferences() {
         }
         .sq-pulse { animation: sq-pulse 1.8s ease-in-out infinite; }
       `}</style>
-
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <HeroHeader
         user={user}
         onExplore={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })}
       />
-
       {/* ── Tabs ──────────────────────────────────────────────────────────── */}
       <div style={{ margin: "0 -24px", borderBottom: `1px solid ${BORDER}`, background: "white", display: "flex", paddingLeft: 24 }}>
         {TABS.map((tab) => (
@@ -261,7 +260,6 @@ export default function Conferences() {
           </NavLink>
         ))}
       </div>
-
       {/* ── Recommendations ───────────────────────────────────────────────── */}
       {(recsLoading || recs) && (
         <RecsPanel
@@ -272,10 +270,8 @@ export default function Conferences() {
           user={user}
         />
       )}
-
       {/* ── Deadline ticker ───────────────────────────────────────────────── */}
       {upcoming.length > 0 && <DeadlineTicker items={upcoming} />}
-
       {/* ── Explorer ──────────────────────────────────────────────────────── */}
       <div ref={explorerRef} style={{ marginTop: 32, display: "flex", gap: 24, alignItems: "flex-start" }}>
 
@@ -307,9 +303,21 @@ export default function Conferences() {
                 onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
               />
               {q && (
-                <button onClick={() => setQ("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "#94A3B8", cursor: "pointer", display: "flex", alignItems: "center", background: "none", border: "none", outline: "none" }}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setQ("")}
+                  style={{
+                    position: "absolute",
+                    right: 10,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: "#94A3B8",
+                    display: "flex",
+                    alignItems: "center"
+                  }}>
                   <X size={13} strokeWidth={1.5} />
-                </button>
+                </Button>
               )}
             </div>
 
@@ -406,10 +414,8 @@ export default function Conferences() {
           )}
         </div>
       </div>
-
       {/* ── Submission prep strip ────────────────────────────────────────── */}
       <SubmissionPrepStrip />
-
       {/* ── Compare panel ────────────────────────────────────────────────── */}
       {compareList.length >= 2 && (
         <ComparePanel
@@ -527,12 +533,19 @@ function RecsPanel({ recs, loading, compareList, toggleCompare, user }) {
           <Link to="/academic-passport" style={{ fontSize: 11, color: "#64748B", textDecoration: "none", display: "flex", alignItems: "center", gap: 3 }}>
             Update profile <ArrowRight size={10} strokeWidth={1.5} />
           </Link>
-          <button onClick={() => setExpanded((v) => !v)} style={{ color: "#94A3B8", cursor: "pointer", display: "flex", alignItems: "center", background: "none", border: "none", outline: "none" }}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setExpanded((v) => !v)}
+            style={{
+              color: "#94A3B8",
+              display: "flex",
+              alignItems: "center"
+            }}>
             <ChevronDown size={13} strokeWidth={1.5} style={{ transform: expanded ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease-out" }} />
-          </button>
+          </Button>
         </div>
       </div>
-
       {expanded && (
         <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 4 }}>
           {loading

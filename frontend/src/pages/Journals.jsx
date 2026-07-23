@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
+import { Button } from "@/components/ds";
 import { DiscoveryLayout } from "@/layouts";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
@@ -885,12 +886,20 @@ function ComparePanel({ journals, onRemove, onClose, onClearAll }) {
           <button onClick={onClearAll} style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", background: "none", border: "none", cursor: "pointer" }}>
             Clear all
           </button>
-          <button onClick={onClose} style={{ color: "rgba(255,255,255,0.5)", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 2 }}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onClose}
+            style={{
+              color: "rgba(255,255,255,0.5)",
+              display: "flex",
+              alignItems: "center",
+              padding: 2
+            }}>
             <X size={14} strokeWidth={1.5} />
-          </button>
+          </Button>
         </div>
       </div>
-
       {/* Comparison table */}
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>

@@ -48,9 +48,16 @@ function AutomationCard({ auto, onToggle, onRun, onDelete }) {
         {/* Delete control: bare 14px icon-only button — Button's smallest
             ("icon", 36px) size would visually overpower this compact card
             row, so it's left hand-rolled */}
-        <button onClick={() => onDelete(auto.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#dc2626" }}>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => onDelete(auto.id)}
+          style={{
+            padding: 4,
+            color: "#dc2626"
+          }}>
           <Trash2 size={14} />
-        </button>
+        </Button>
       </div>
     </Card>
   );

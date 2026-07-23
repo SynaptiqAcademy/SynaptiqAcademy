@@ -3,7 +3,9 @@ import { Settings as SettingsIcon, Search, Clock } from "lucide-react";
 import { SettingsGrid } from "./SettingsGrid";
 import { PreferenceCard } from "./PreferenceCard";
 import { PreferenceRow } from "./PreferenceRow";
-import { NAVY, TEXT_MUTED, TEXT_SECONDARY } from "@/lib/tokens";
+import { Button } from "@/components/ds/Button";
+import { List, ListItem } from "@/components/ds/List";
+import { Caption, Meta } from "@/components/ds/Typography";
 
 const LANDING_OPTIONS = [
   { value: "discover", label: "Home" },
@@ -120,24 +122,29 @@ export function GeneralSection({ prefs, setPref, recentChanges = [] }) {
         description="A log of your latest settings updates."
       >
         {recentChanges.length === 0 ? (
-          <p style={{ fontSize: 12.5, color: TEXT_MUTED, margin: 0 }}>No changes yet this session.</p>
+          <Caption>No changes yet this session.</Caption>
         ) : (
           <>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <List border={false} radius={0} style={{ background: "transparent" }}>
               {visibleChanges.map((c) => (
-                <div key={c.key + c.at} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: TEXT_SECONDARY }}>{c.label}</span>
-                  <span style={{ fontSize: 12, color: TEXT_MUTED, flexShrink: 0 }}>{timeAgo(c.at)}</span>
-                </div>
+                <ListItem
+                  key={c.key + c.at}
+                  compact
+                  title={c.label}
+                  trailing={<Meta style={{ flexShrink: 0 }}>{timeAgo(c.at)}</Meta>}
+                  style={{ padding: "6px 0" }}
+                />
               ))}
-            </div>
+            </List>
             {recentChanges.length > 5 && (
-              <button
+              <Button
+                variant="link"
+                size="sm"
                 onClick={() => setExpanded((e) => !e)}
-                style={{ fontSize: 12.5, fontWeight: 600, color: NAVY, background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", marginTop: 2 }}
+                style={{ marginTop: 2, alignSelf: "flex-start" }}
               >
                 {expanded ? "Show less" : "View all changes →"}
-              </button>
+              </Button>
             )}
           </>
         )}

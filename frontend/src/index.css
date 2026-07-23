@@ -247,6 +247,26 @@
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
+/* ── Skip link — keyboard-only "skip to content" ──────────────────────────────── */
+.sq-skip-link {
+  position: fixed;
+  top: -48px;
+  left: 12px;
+  z-index: var(--sq-z-tooltip);
+  background: var(--sq-navy-700);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: var(--sq-radius-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--sq-shadow-lg);
+  transition: top 150ms var(--sq-ease-out);
+}
+.sq-skip-link:focus {
+  top: 12px;
+}
+
 /* ── Scrollbar — refined to 6px ─────────────────────────────────────────────── */
 ::-webkit-scrollbar       { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -262,6 +282,15 @@
 ::selection { background-color: var(--sq-navy-700); color: #fff; }
 
 /* ── Focus ring — WCAG 2.1 AA ──────────────────────────────────────────────── */
+/* !important is deliberate here: ~140 hand-rolled buttons/inputs across the
+   app set inline style={{outline: "none"}} (the common "reset native button
+   chrome" idiom) with no replacement focus indicator, which silently defeats
+   this rule since inline styles always beat external stylesheet rules. This
+   is the single choke point that restores a visible keyboard-focus state
+   everywhere at once instead of hand-editing every call site. Components
+   that already implement their own richer focus treatment (border/box-shadow
+   driven by onFocus/onBlur state, e.g. ds/SearchBar, ds/Input) are unaffected
+   — this only adds the outline back on top, it doesn't remove anything. */
 :where(
   button,
   [role="button"],
@@ -273,8 +302,8 @@
   select,
   textarea
 ):focus-visible {
-  outline: 2px solid var(--sq-navy-700);
-  outline-offset: 2px;
+  outline: 2px solid var(--sq-navy-700) !important;
+  outline-offset: 2px !important;
   border-radius: var(--sq-radius-sm);
 }
 

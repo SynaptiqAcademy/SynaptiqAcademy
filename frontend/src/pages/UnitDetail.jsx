@@ -9,11 +9,9 @@ import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import { userTypeLabel } from "../lib/userTypes";
-import { NAVY } from "@/lib/tokens";
-import { SkeletonCard } from "@/components/ds/LoadingState";
+import { SkeletonCard, Card, StatCard, StatGrid, EmptyState, Button, Modal } from "@/components/ds";
 import {
-  Layers, Users, BookOpen, Coins, Award, ArrowLeft, ChevronRight, Loader2,
-  Plus, Trash2, X, UserPlus,
+  Layers, Users, Award, ChevronRight, UserPlus,
 } from "lucide-react";
 
 const TYPE_LABEL = {
@@ -105,79 +103,78 @@ export default function UnitDetail() {
           )}
         </div>
         {isAdmin && (
-          <button data-testid="manage-unit-members-btn" onClick={() => setEditingMembers(true)} className="text-xs inline-flex items-center gap-1.5 border border-slate-300 px-3 py-2 hover:border-[#0F2847]">
+          <Button data-testid="manage-unit-members-btn" variant="ghost" size="sm" onClick={() => setEditingMembers(true)}>
             <UserPlus size={11} strokeWidth={1.5} /> Manage members
-          </button>
+          </Button>
         )}
       </header>
 
       {/* KPI */}
-      <section className="grid sm:grid-cols-4 gap-3" data-testid="unit-kpis">
-        <Kpi label="Members" value={u.member_count} icon={Users} />
-        <Kpi label="Sub-units" value={u.child_count} icon={Layers} />
-        <Kpi label="Reputation avg" value={stats?.reputation_avg ?? "—"} icon={Award} />
-        <Kpi label="Type" value={TYPE_LABEL[u.type]} icon={Layers} />
-      </section>
+      <StatGrid cols={4} data-testid="unit-kpis">
+        <StatCard label="Members" value={u.member_count} icon={<Users />} />
+        <StatCard label="Sub-units" value={u.child_count} icon={<Layers />} />
+        <StatCard label="Reputation avg" value={stats?.reputation_avg ?? "—"} icon={<Award />} />
+        <StatCard label="Type" value={TYPE_LABEL[u.type]} icon={<Layers />} />
+      </StatGrid>
 
       {/* Members */}
-      <section className="border border-slate-200 bg-white p-5">
+      <Card padding="lg">
         <div className="overline mb-3">Researchers in this {TYPE_LABEL[u.type]?.toLowerCase()}</div>
-        {members.length === 0 && <div className="text-xs text-slate-500" data-testid="unit-members-empty">No members yet.</div>}
+        {members.length === 0 && (
+          <EmptyState data-testid="unit-members-empty" size="sm" dashed={false} title="No members yet." />
+        )}
         <div className="grid sm:grid-cols-2 gap-2" data-testid="unit-members-list">
           {members.map((m) => (
-            <Link key={m.user_id} to={`/profile/${m.user_id}`} className="flex items-center gap-3 border border-slate-200 p-3 hover:border-[#0F2847]" data-testid={`unit-member-${m.user_id}`}>
-              <div className="w-8 h-8 bg-[#0F2847] text-white text-[10px] font-serif flex items-center justify-center">
-                {(m.user?.full_name || "").split(" ").map((p) => p[0]).filter(Boolean).slice(0,2).join("").toUpperCase()}
+            <Card key={m.user_id} to={`/profile/${m.user_id}`} padding="sm" data-testid={`unit-member-${m.user_id}`}>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-[#0F2847] text-white text-[10px] font-serif flex items-center justify-center">
+                  {(m.user?.full_name || "").split(" ").map((p) => p[0]).filter(Boolean).slice(0,2).join("").toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-serif text-sm text-slate-900 truncate">{m.user?.full_name || m.user_id}</div>
+                  <div className="text-[10px] font-mono text-slate-500 truncate">{userTypeLabel(m.user)}</div>
+                </div>
+                <span className="overline text-[#0F2847]">{m.role}</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-serif text-sm text-slate-900 truncate">{m.user?.full_name || m.user_id}</div>
-                <div className="text-[10px] font-mono text-slate-500 truncate">{userTypeLabel(m.user)}</div>
-              </div>
-              <span className="overline text-[#0F2847]">{m.role}</span>
-            </Link>
+            </Card>
           ))}
         </div>
-      </section>
+      </Card>
 
       {/* Sub-units */}
       {children.length > 0 && (
-        <section className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <div className="overline mb-3">Sub-units</div>
           <div className="grid sm:grid-cols-2 gap-3" data-testid="unit-children-list">
             {children.map((c) => (
-              <Link key={c.id} to={`/units/${c.id}`} className="block border border-slate-200 p-3 hover:border-[#0F2847]">
+              <Card key={c.id} to={`/units/${c.id}`} padding="sm">
                 <span className="overline">{TYPE_LABEL[c.type] || c.type}</span>
                 <div className="font-serif text-base text-slate-900 mt-1">{c.name}</div>
                 <div className="text-[10px] font-mono text-slate-500">{c.member_count} members</div>
-              </Link>
+              </Card>
             ))}
           </div>
-        </section>
+        </Card>
       )}
 
-      {editingMembers && (
-        <ManageMembersModal
-          unit={u} allMembers={allInstMembers} currentIds={members.map((m) => m.user_id)}
-          onClose={() => setEditingMembers(false)} onChanged={load}
-        />
-      )}
+      <Modal
+        open={editingMembers}
+        onClose={() => setEditingMembers(false)}
+        title={`Manage members — ${u.name}`}
+        data-testid="manage-unit-members-modal"
+      >
+        {editingMembers && (
+          <ManageMembersBody
+            unit={u} allMembers={allInstMembers} currentIds={members.map((m) => m.user_id)}
+            onClose={() => setEditingMembers(false)} onChanged={load}
+          />
+        )}
+      </Modal>
     </div>
   );
 }
 
-function Kpi({ label, value, icon: Icon }) {
-  return (
-    <div className="border border-slate-200 bg-white p-4">
-      <div className="overline flex items-center gap-1.5">
-        <Icon size={11} strokeWidth={1.5} className="text-[#0F2847]" />
-        {label}
-      </div>
-      <div className="font-serif text-2xl text-slate-900 mt-1">{value}</div>
-    </div>
-  );
-}
-
-function ManageMembersModal({ unit, allMembers, currentIds, onClose, onChanged }) {
+function ManageMembersBody({ unit, allMembers, currentIds, onClose, onChanged }) {
   const [selected, setSelected] = useState(new Set(currentIds));
   const [busy, setBusy] = useState(false);
   const toggle = (uid) => setSelected((s) => {
@@ -198,31 +195,23 @@ function ManageMembersModal({ unit, allMembers, currentIds, onClose, onChanged }
     finally { setBusy(false); }
   };
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900/50 flex items-center justify-center px-4" onClick={onClose} data-testid="manage-unit-members-modal">
-      <div className="bg-white w-full max-w-lg border border-slate-200 max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="border-b border-slate-200 px-5 py-4 flex items-center justify-between">
-          <h3 className="font-serif text-lg text-slate-900">Manage members — {unit.name}</h3>
-          <button onClick={onClose}><X size={16} strokeWidth={1.5} /></button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-5 space-y-2">
-          {allMembers.length === 0 && <div className="text-xs text-slate-500">No approved institution members to add.</div>}
-          {allMembers.map((m) => (
-            <label key={m.user_id} className="flex items-center gap-3 cursor-pointer border border-slate-200 p-2 hover:border-[#0F2847]" data-testid={`pick-member-${m.user_id}`}>
-              <input type="checkbox" checked={selected.has(m.user_id)} onChange={() => toggle(m.user_id)} />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm">{m.user?.full_name || m.user_id}</div>
-                <div className="text-[10px] font-mono text-slate-500">{userTypeLabel(m.user)}</div>
-              </div>
-              <span className="overline text-[#0F2847]">{m.role}</span>
-            </label>
-          ))}
-        </div>
-        <div className="border-t border-slate-200 px-5 py-3 flex items-center justify-end gap-2">
-          <button onClick={onClose} className="text-xs text-slate-600 px-3 py-2">Cancel</button>
-          <button data-testid="save-unit-members" onClick={save} disabled={busy} className="text-xs bg-[#0F2847] text-white px-4 py-2 hover:bg-slate-800 disabled:opacity-50 inline-flex items-center gap-1.5">
-            {busy && <Loader2 size={11} className="animate-spin" />} Save
-          </button>
-        </div>
+    <div className="flex flex-col max-h-[60vh]">
+      <div className="flex-1 overflow-y-auto space-y-2">
+        {allMembers.length === 0 && <div className="text-xs text-slate-500">No approved institution members to add.</div>}
+        {allMembers.map((m) => (
+          <label key={m.user_id} className="flex items-center gap-3 cursor-pointer border border-slate-200 p-2 hover:border-[#0F2847]" data-testid={`pick-member-${m.user_id}`}>
+            <Checkbox checked={selected.has(m.user_id)} onChange={() => toggle(m.user_id)} />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm">{m.user?.full_name || m.user_id}</div>
+              <div className="text-[10px] font-mono text-slate-500">{userTypeLabel(m.user)}</div>
+            </div>
+            <span className="overline text-[#0F2847]">{m.role}</span>
+          </label>
+        ))}
+      </div>
+      <div className="border-t border-slate-200 pt-3 mt-3 flex items-center justify-end gap-2">
+        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+        <Button data-testid="save-unit-members" size="sm" onClick={save} disabled={busy} loading={busy}>Save</Button>
       </div>
     </div>
   );

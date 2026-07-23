@@ -1,5 +1,6 @@
 /* eslint-disable */
 import React from "react";
+import { Button } from "./Button";
 import { CheckCircle, AlertTriangle, XCircle, Info, X } from "lucide-react";
 import {
   EMERALD, AMBER, CRIMSON, INFO, BRD, SURF2, TEXT_STRONG, TEXT_TERTIARY,
@@ -60,13 +61,21 @@ export function Alert({ variant = "info", title, children, onDismiss, icon: Cust
         )}
       </div>
       {onDismiss && (
-        <button
+        <Button
+          size="icon"
+          variant="ghost"
           onClick={onDismiss}
-          style={{ background: "none", border: "none", cursor: "pointer", color: c.text, padding: 0, flexShrink: 0, opacity: 0.6, lineHeight: 0, marginTop: 2 }}
           aria-label="Dismiss"
-        >
+          style={{
+            color: c.text,
+            padding: 0,
+            flexShrink: 0,
+            opacity: 0.6,
+            lineHeight: 0,
+            marginTop: 2
+          }}>
           <X size={14} />
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -94,13 +103,20 @@ export function Banner({ variant = "info", children, onDismiss, action, style })
       <span style={{ flex: 1, fontSize: "0.8125rem", fontWeight: 500, color: c.text }}>{children}</span>
       {action && <div style={{ flexShrink: 0 }}>{action}</div>}
       {onDismiss && (
-        <button
+        <Button
+          size="icon"
+          variant="ghost"
           onClick={onDismiss}
-          style={{ background: "none", border: "none", cursor: "pointer", color: c.text, padding: 0, opacity: 0.6, lineHeight: 0, flexShrink: 0 }}
           aria-label="Dismiss"
-        >
+          style={{
+            color: c.text,
+            padding: 0,
+            opacity: 0.6,
+            lineHeight: 0,
+            flexShrink: 0
+          }}>
           <X size={14} />
-        </button>
+        </Button>
       )}
     </div>
   );

@@ -92,7 +92,6 @@ export default function PeopleDiscovery() {
 
   return (
     <DiscoveryLayout title="Find Researchers">
-
       {/* Search bar */}
       <form onSubmit={handleSearch} style={{ display: "flex", gap: 10, marginBottom: 16 }}>
         <Input
@@ -106,7 +105,6 @@ export default function PeopleDiscovery() {
           Search
         </Button>
       </form>
-
       {/* Filters */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
         {[
@@ -124,9 +122,19 @@ export default function PeopleDiscovery() {
               style={{ paddingRight: filters[key] ? 30 : undefined }}
             />
             {filters[key] && (
-              <button onClick={() => clearFilter(key)} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => clearFilter(key)}
+                style={{
+                  position: "absolute",
+                  right: 8,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  padding: 0
+                }}>
                 <X size={13} color={TEXT_SECONDARY} />
-              </button>
+              </Button>
             )}
           </div>
         ))}
@@ -139,7 +147,6 @@ export default function PeopleDiscovery() {
           {CAREER_STAGES.map(s => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
         </FormSelect>
       </div>
-
       {/* Results */}
       {loading ? (
         <LoadingOverlay text="Searching…" />
@@ -150,7 +157,6 @@ export default function PeopleDiscovery() {
           {results.map((p, i) => <PersonCard key={p.id || i} person={p} />)}
         </div>
       )}
-
       {/* Pagination */}
       {pages > 1 && (
         <div style={{ marginTop: 20 }}>

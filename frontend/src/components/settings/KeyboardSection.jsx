@@ -3,9 +3,14 @@ import { Keyboard, Command, Zap } from "lucide-react";
 import { SettingsGrid } from "./SettingsGrid";
 import { PreferenceCard } from "./PreferenceCard";
 import { PreferenceRow } from "./PreferenceRow";
+import { Tag } from "@/components/ds/Tag";
+import { List, ListItem } from "@/components/ds/List";
 import { QUICK_ACTIONS } from "@/config/navigation";
-import { BRD, TEXT_MUTED, TEXT_PRIMARY } from "@/lib/tokens";
+import { BRD, TEXT_PRIMARY } from "@/lib/tokens";
 
+// Kbd renders a native <kbd> element styled as a physical key — this is a
+// semantic HTML element (not a status/label pill), so it's kept hand-rolled
+// rather than forced into Tag/Badge, which represent something different.
 function Kbd({ children }) {
   return (
     <kbd style={{
@@ -35,14 +40,17 @@ export function KeyboardSection({ prefs, setPref }) {
   return (
     <SettingsGrid>
       <PreferenceCard icon={Keyboard} title="Navigation Shortcuts" description="Press G, then the letter, in quick succession">
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <List border={false} radius={0} style={{ background: "transparent" }}>
           {NAV_SHORTCUTS.map((s) => (
-            <div key={s.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 12, color: TEXT_MUTED }}>{s.label}</span>
-              <span style={{ display: "flex", gap: 4 }}>{s.keys.map((k) => <Kbd key={k}>{k}</Kbd>)}</span>
-            </div>
+            <ListItem
+              key={s.label}
+              compact
+              title={s.label}
+              trailing={<span style={{ display: "flex", gap: 4 }}>{s.keys.map((k) => <Kbd key={k}>{k}</Kbd>)}</span>}
+              style={{ padding: "6px 0" }}
+            />
           ))}
-        </div>
+        </List>
         <PreferenceRow
           label="Enable G-key Navigation Shortcuts"
           value={prefs.gKeyShortcutsEnabled}
@@ -51,22 +59,25 @@ export function KeyboardSection({ prefs, setPref }) {
       </PreferenceCard>
 
       <PreferenceCard icon={Command} title="Global Shortcuts">
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <List border={false} radius={0} style={{ background: "transparent" }}>
           {GLOBAL_SHORTCUTS.map((s) => (
-            <div key={s.keys.join("+")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 12, color: TEXT_MUTED }}>{s.label}</span>
-              <span style={{ display: "flex", gap: 4 }}>{s.keys.map((k) => <Kbd key={k}>{k}</Kbd>)}</span>
-            </div>
+            <ListItem
+              key={s.keys.join("+")}
+              compact
+              title={s.label}
+              trailing={<span style={{ display: "flex", gap: 4 }}>{s.keys.map((k) => <Kbd key={k}>{k}</Kbd>)}</span>}
+              style={{ padding: "6px 0" }}
+            />
           ))}
-        </div>
+        </List>
       </PreferenceCard>
 
       <PreferenceCard icon={Zap} title="Quick Actions" description="Available from the Command Palette" style={{ gridColumn: "1 / -1" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
           {QUICK_ACTIONS.slice(0, 8).map((a) => (
-            <div key={a.label} style={{ fontSize: 12, color: TEXT_PRIMARY, padding: "6px 10px", border: `1px solid ${BRD}`, borderRadius: 6 }}>
+            <Tag key={a.label} style={{ justifyContent: "flex-start", width: "100%" }}>
               {a.label}
-            </div>
+            </Tag>
           ))}
         </div>
       </PreferenceCard>

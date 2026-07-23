@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { LegalLayout, Section } from "./legal/LegalLayout";
+import { Badge } from "@/components/ds";
 
 const SECTIONS = [
   { id: "what",       label: "1. What Are Cookies" },
@@ -41,7 +42,7 @@ export default function Cookies() {
           <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
             <div style={{ background: "#F7F8FA", padding: "12px 16px", borderBottom: "1px solid #e2e8f0" }}>
               <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: "0.88rem", color: "#0f172a" }}>access_token</span>
-              <span style={{ marginLeft: 12, fontSize: "0.72rem", fontWeight: 600, background: "#DCFCE7", color: "#166534", padding: "2px 8px", borderRadius: 999 }}>Essential</span>
+              <Badge variant="success" style={{ marginLeft: 12 }}>Essential</Badge>
             </div>
             <div style={{ padding: "12px 16px" }}>
               <table style={{ width: "100%", fontSize: "0.82rem", borderCollapse: "collapse" }}>
@@ -67,7 +68,7 @@ export default function Cookies() {
           <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
             <div style={{ background: "#F7F8FA", padding: "12px 16px", borderBottom: "1px solid #e2e8f0" }}>
               <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: "0.88rem", color: "#0f172a" }}>refresh_token</span>
-              <span style={{ marginLeft: 12, fontSize: "0.72rem", fontWeight: 600, background: "#DCFCE7", color: "#166534", padding: "2px 8px", borderRadius: 999 }}>Essential</span>
+              <Badge variant="success" style={{ marginLeft: 12 }}>Essential</Badge>
             </div>
             <div style={{ padding: "12px 16px" }}>
               <table style={{ width: "100%", fontSize: "0.82rem", borderCollapse: "collapse" }}>
@@ -93,7 +94,7 @@ export default function Cookies() {
           <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
             <div style={{ background: "#F7F8FA", padding: "12px 16px", borderBottom: "1px solid #e2e8f0" }}>
               <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: "0.88rem", color: "#0f172a" }}>csrf_token</span>
-              <span style={{ marginLeft: 12, fontSize: "0.72rem", fontWeight: 600, background: "#DCFCE7", color: "#166534", padding: "2px 8px", borderRadius: 999 }}>Essential</span>
+              <Badge variant="success" style={{ marginLeft: 12 }}>Essential</Badge>
             </div>
             <div style={{ padding: "12px 16px" }}>
               <table style={{ width: "100%", fontSize: "0.82rem", borderCollapse: "collapse" }}>

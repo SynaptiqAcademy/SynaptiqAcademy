@@ -47,6 +47,14 @@ export default function Register() {
   async function onSubmit(e) {
     e.preventDefault();
     setErr("");
+    // The native `required` attribute on these fields silently blocks the
+    // browser's submit event before React ever sees it when a field is
+    // empty — this handler then never runs, so the app's own styled error
+    // banner (used for every other validation case below) never appears.
+    // `noValidate` on the <form> hands all of that back to this function so
+    // every validation failure gets the same visible, consistent feedback.
+    if (!fullName.trim()) { setErr("Please enter your full name."); return; }
+    if (!email.trim()) { setErr("Please enter your email address."); return; }
     if (password.length < 8) { setErr("Password must be at least 8 characters."); return; }
     if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
       setErr("Password must contain at least one letter and one digit.");
@@ -98,7 +106,7 @@ export default function Register() {
           subtitle="Join researchers, universities and research teams from around the world."
         />
 
-        <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <form onSubmit={onSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {/* Row: Full Name + Institution */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <AuthInput

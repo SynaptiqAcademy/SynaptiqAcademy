@@ -27,7 +27,7 @@ import { Button } from "@/components/ds/Button";
 import { Input } from "@/components/ds/Input";
 import { Badge } from "@/components/ds/Badge";
 import { FormField } from "@/components/ds/Form";
-import { Modal } from "@/components/ds/Modal";
+import { Modal, Dialog } from "@/components/ds/Modal";
 import { EmptyState } from "@/components/ds/EmptyState";
 import { Spinner } from "@/components/ds/LoadingState";
 import { NAVY, WARM, BRD, EMERALD, CRIMSON, TEXT_MUTED, TEXT_SECONDARY, TEXT_PRIMARY, TEXT_DISABLED, DANGER_BG } from "@/lib/tokens";
@@ -92,6 +92,9 @@ export default function AccountSecurity() {
   const [code, setCode] = useState("");
   const [mfaBusy, setMfaBusy] = useState(false);
   const [mfaErr, setMfaErr] = useState("");
+
+  const [revokeTarget, setRevokeTarget] = useState(null); // session being confirmed for revoke
+  const [revokeBusy, setRevokeBusy] = useState(false);
 
   const refreshAll = async () => {
     api.get("/mfa/status").then((r) => setMfaStatus(r.data)).catch(() => {});
@@ -177,12 +180,16 @@ export default function AccountSecurity() {
   };
 
   const revokeSession = async (sessionId) => {
+    setRevokeBusy(true);
     try {
       await api.post(`/auth/sessions/${sessionId}/revoke`);
       toast.success("Session revoked.");
+      setRevokeTarget(null);
       refreshAll();
     } catch (e) {
       toast.error(getErrorMessage(e));
+    } finally {
+      setRevokeBusy(false);
     }
   };
 
@@ -283,7 +290,7 @@ export default function AccountSecurity() {
                       {s.is_current ? (
                         <Badge variant="success" size="sm">Current Session</Badge>
                       ) : (
-                        <Button size="sm" variant="ghost" onClick={() => revokeSession(s.session_id)}>Revoke</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setRevokeTarget(s)}>Revoke</Button>
                       )}
                     </div>
                   );
@@ -410,6 +417,17 @@ export default function AccountSecurity() {
           </div>
         )}
       </Modal>
+
+      <Dialog
+        open={!!revokeTarget}
+        onClose={() => setRevokeTarget(null)}
+        onConfirm={() => revokeSession(revokeTarget.session_id)}
+        title="Revoke this session?"
+        description={revokeTarget ? `"${revokeTarget.label}" (${revokeTarget.ip || "unknown IP"}) will be signed out immediately.` : ""}
+        confirmLabel="Revoke Session"
+        variant="destructive"
+        loading={revokeBusy}
+      />
     </SettingsLayout>
   );
 }

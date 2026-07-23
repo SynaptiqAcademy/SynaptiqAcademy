@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { Button } from "@/components/ds";
 import {
   SlidersHorizontal, Palette, Globe2, Sparkles, Layers, PenTool,
   Keyboard, Accessibility, FlaskConical, Search, X, ShieldCheck, CloudCog,
@@ -118,7 +119,6 @@ export function SettingsNav({ activeCategory, onSelect }) {
           Application Preferences
         </div>
       </div>
-
       <div style={{ position: "relative", marginBottom: 14 }}>
         <Search size={13} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", color: TEXT_MUTED }} />
         <input
@@ -129,9 +129,21 @@ export function SettingsNav({ activeCategory, onSelect }) {
           style={{ width: "100%", height: 32, padding: "0 40px 0 28px", border: `1px solid ${BRD}`, borderRadius: 6, fontSize: 12, outline: "none", boxSizing: "border-box" }}
         />
         {query ? (
-          <button onClick={() => setQuery("")} aria-label="Clear search" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: TEXT_MUTED, display: "flex" }}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setQuery("")}
+            aria-label="Clear search"
+            style={{
+              position: "absolute",
+              right: 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: TEXT_MUTED,
+              display: "flex"
+            }}>
             <X size={12} />
-          </button>
+          </Button>
         ) : (
           <span style={{
             position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
@@ -142,7 +154,6 @@ export function SettingsNav({ activeCategory, onSelect }) {
           </span>
         )}
       </div>
-
       {results !== null ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {results.length === 0 ? (
@@ -194,7 +205,6 @@ export function SettingsNav({ activeCategory, onSelect }) {
           })}
         </nav>
       )}
-
       <Card padding="lg" style={{ marginTop: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
           <CloudCog size={14} style={{ color: NAVY }} />

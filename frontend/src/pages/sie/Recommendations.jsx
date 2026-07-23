@@ -46,9 +46,15 @@ function RecCard({ rec, onDismiss }) {
             {/* Dismiss control: bare 13px icon-only button — Button's smallest
                 ("icon", 36px) size would visually overpower this compact card
                 row, so it's left hand-rolled */}
-            <button onClick={() => onDismiss(rec.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => onDismiss(rec.id)}
+              style={{
+                padding: 2
+              }}>
               <X size={13} color={TEXT_SECONDARY} />
-            </button>
+            </Button>
           </div>
         </div>
         <p style={{ margin: "0 0 8px", fontSize: 12, color: "#334155" }}>{rec.description}</p>
@@ -123,7 +129,6 @@ export default function Recommendations() {
           );
         })}
       </div>
-
       {loading ? (
         <div style={{ textAlign: "center", padding: 40 }}><Spinner size={28} color={ACCENT} /></div>
       ) : recs.length === 0 ? (

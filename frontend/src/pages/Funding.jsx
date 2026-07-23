@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { Search, Coins } from "lucide-react";
-import { NAVY } from "@/lib/tokens";
 import { Spinner } from "@/components/ds/LoadingState";
+import { EmptyState } from "@/components/ds/EmptyState";
+import { Card } from "@/components/ds/Card";
+import { Button } from "@/components/ds/Button";
+import { Input } from "@/components/ds/Input";
+import { FormSelect } from "@/components/ds/FormSelect";
+import { Tag, TagGroup } from "@/components/ds/Tag";
 import { DiscoveryLayout } from "@/layouts";
 
 const AREAS = ["Artificial Intelligence", "Healthcare", "Management", "Economics", "Education", "Public Health", "Cybersecurity", "Engineering", "Psychology"];
@@ -34,47 +38,45 @@ export default function Funding() {
       subtitle="A searchable database of funding opportunities — grants, fellowships, and programmes."
     >
       <div className="grid sm:grid-cols-4 gap-3">
-        <div className="relative sm:col-span-2">
-          <Search size={14} strokeWidth={1.5} className="absolute left-3 top-3 text-slate-400" />
-          <input
-            data-testid={TID.fundingSearch}
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && load()}
-            placeholder="Search title, agency, description…"
-            className="w-full pl-9 pr-3 py-2 border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
-          />
-        </div>
-        <select value={area} onChange={(e) => setArea(e.target.value)} className="px-3 py-2 border border-slate-300 bg-white">
+        <Input
+          data-testid={TID.fundingSearch}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && load()}
+          placeholder="Search title, agency, description…"
+          prefix={<Search size={14} strokeWidth={1.5} />}
+          wrapperClassName="sm:col-span-2"
+        />
+        <FormSelect value={area} onChange={(e) => setArea(e.target.value)}>
           <option value="">All research areas</option>
           {AREAS.map((a) => <option key={a}>{a}</option>)}
-        </select>
-        <input value={agency} onChange={(e) => setAgency(e.target.value)} placeholder="Agency…" className="px-3 py-2 border border-slate-300 bg-white" />
+        </FormSelect>
+        <Input value={agency} onChange={(e) => setAgency(e.target.value)} placeholder="Agency…" />
       </div>
-      <button onClick={load} className="text-sm text-[#0F2847] border-b border-[#0F2847] hover:opacity-70">Apply filters</button>
+      <Button variant="link" size="sm" onClick={load}>Apply filters</Button>
 
       <div data-testid={TID.fundingList} className="space-y-4">
         {loading && <div className="py-4 flex justify-center"><Spinner size={16} /></div>}
         {!loading && items.length === 0 && (
-          <div className="text-sm text-slate-500 py-12 text-center border border-dashed border-slate-300">No funding opportunities match your filters.</div>
+          <EmptyState title="No funding opportunities match your filters." size="sm" />
         )}
         {items.map((g) => (
-          <Link
+          <Card
             key={g.id}
             to={`/funding/${g.id}`}
             data-testid={TID.fundingCard(g.id)}
-            className="block border border-slate-200 bg-white p-6 hover:border-[#0F2847] transition-colors"
+            padding="lg"
           >
             <div className="grid sm:grid-cols-12 gap-6">
               <div className="sm:col-span-8 min-w-0">
                 <div className="overline text-[#0F2847]">{g.funding_type || "Grant"} · {g.agency}</div>
                 <h3 className="font-serif text-2xl text-slate-900 mt-2 leading-snug">{g.title}</h3>
                 <p className="text-sm text-slate-600 mt-3 line-clamp-2">{g.description || "Funding opportunity."}</p>
-                <div className="flex flex-wrap gap-2 mt-4">
+                <TagGroup gap={8} className="mt-4">
                   {(g.research_areas || []).slice(0, 4).map((a) => (
-                    <span key={a} className="text-xs px-2 py-0.5 bg-slate-100 text-slate-700">{a}</span>
+                    <Tag key={a} size="sm">{a}</Tag>
                   ))}
-                </div>
+                </TagGroup>
               </div>
               <div className="sm:col-span-4 sm:border-l sm:border-slate-200 sm:pl-6 space-y-2 text-xs">
                 <Row label="Amount" value={g.amount} icon={<Coins size={12} strokeWidth={1.5} />} />
@@ -82,7 +84,7 @@ export default function Funding() {
                 <Row label="Duration" value={g.duration || "—"} />
               </div>
             </div>
-          </Link>
+          </Card>
         ))}
       </div>
     </DiscoveryLayout>

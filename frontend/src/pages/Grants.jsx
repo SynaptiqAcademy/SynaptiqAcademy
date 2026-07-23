@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Button } from "@/components/ds";
 import { DiscoveryLayout } from "@/layouts";
 import { Link, NavLink } from "react-router-dom";
 import api from "../lib/api";
@@ -243,13 +244,11 @@ export default function Grants() {
         }
         .sq-pulse { animation: sq-pulse 1.8s ease-in-out infinite; }
       `}</style>
-
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <HeroHeader
         user={user}
         onFindGrants={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })}
       />
-
       {/* ── Tabs ──────────────────────────────────────────────────────────── */}
       <div
         style={{
@@ -280,7 +279,6 @@ export default function Grants() {
           </NavLink>
         ))}
       </div>
-
       {/* ── AI Match panel ────────────────────────────────────────────────── */}
       {(matchesLoading || (matches && matches.length > 0)) && (
         <MatchesPanel
@@ -293,10 +291,8 @@ export default function Grants() {
           user={user}
         />
       )}
-
       {/* ── Deadline ticker ───────────────────────────────────────────────── */}
       {upcoming.length > 0 && <DeadlineTicker items={upcoming} />}
-
       {/* ── Grant Explorer ────────────────────────────────────────────────── */}
       <div ref={explorerRef} style={{ marginTop: 32, display: "flex", gap: 24, alignItems: "flex-start" }}>
 
@@ -506,10 +502,8 @@ export default function Grants() {
           )}
         </div>
       </div>
-
       {/* ── Application prep strip ───────────────────────────────────────── */}
       <ApplicationPrepStrip />
-
       {/* ── Compare panel ────────────────────────────────────────────────── */}
       {compareList.length >= 2 && (
         <ComparePanel
@@ -665,18 +659,22 @@ function MatchesPanel({ matches, loading, isSaved, toggleSave, compareList, togg
           >
             Update profile <ArrowRight size={10} strokeWidth={1.5} />
           </Link>
-          <button
+          <Button
+            size="icon"
+            variant="ghost"
             onClick={() => setExpanded((v) => !v)}
-            style={{ color: "#94A3B8", cursor: "pointer", display: "flex", alignItems: "center", background: "none", border: "none", outline: "none" }}
-          >
+            style={{
+              color: "#94A3B8",
+              display: "flex",
+              alignItems: "center"
+            }}>
             <ChevronDown
               size={13} strokeWidth={1.5}
               style={{ transform: expanded ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease-out" }}
             />
-          </button>
+          </Button>
         </div>
       </div>
-
       {expanded && (
         <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 4 }}>
           {loading
@@ -737,15 +735,22 @@ function MatchCard({ g, isSaved, onSave, isCompared, onCompare }) {
             </div>
           </div>
         </div>
-        <button
+        <Button
+          size="icon"
+          variant="ghost"
           onClick={(e) => onSave(g, e)}
-          style={{ color: isSaved ? ACCENT : "#CBD5E1", cursor: "pointer", padding: 2, display: "flex", alignItems: "center", background: "none", border: "none", outline: "none", transition: "color 150ms", flexShrink: 0 }}
           title={isSaved ? "Remove from saved" : "Save grant"}
-        >
+          style={{
+            color: isSaved ? ACCENT : "#CBD5E1",
+            padding: 2,
+            display: "flex",
+            alignItems: "center",
+            transition: "color 150ms",
+            flexShrink: 0
+          }}>
           {isSaved ? <BookmarkCheck size={14} strokeWidth={1.5} /> : <Bookmark size={14} strokeWidth={1.5} />}
-        </button>
+        </Button>
       </div>
-
       {/* Type */}
       {g.funding_type && (
         <div style={{ marginBottom: 7 }}>
@@ -754,29 +759,24 @@ function MatchCard({ g, isSaved, onSave, isCompared, onCompare }) {
           </span>
         </div>
       )}
-
       {/* Title */}
       <div style={{ fontFamily: "Georgia, serif", fontSize: 13, color: "#0F172A", lineHeight: 1.4, marginBottom: 6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
         {g.title}
       </div>
-
       {/* Sponsor */}
       <div style={{ fontSize: 11, color: "#64748B", marginBottom: 8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
         {g.sponsor}
       </div>
-
       {/* Match reason */}
       {g.match_reason && (
         <div style={{ fontSize: 10, color: "#94A3B8", fontStyle: "italic", marginBottom: 8, lineHeight: 1.4 }}>
           {g.match_reason}
         </div>
       )}
-
       {/* Score bar */}
       <div style={{ height: 2, background: "#F1F5F9", marginBottom: 8, borderRadius: 1 }}>
         <div style={{ height: "100%", width: `${Math.min(100, score)}%`, background: color, borderRadius: 1, transition: "width 700ms ease-out" }} />
       </div>
-
       {/* Meta */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
         {amount && <span style={{ fontSize: 10, color: EMERALD, fontWeight: 700 }}>{amount}</span>}
@@ -983,7 +983,6 @@ function GrantCard({ g, isSaved, onSave, isCompared, onCompare }) {
       {deadline && !deadline.closed && d !== null && d <= 30 && (
         <div style={{ height: 2, background: deadline.color }} />
       )}
-
       <div style={{ padding: "14px 16px", flex: 1, display: "flex", flexDirection: "column", gap: 0 }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
@@ -999,13 +998,21 @@ function GrantCard({ g, isSaved, onSave, isCompared, onCompare }) {
               </span>
             )}
           </div>
-          <button
+          <Button
+            size="icon"
+            variant="ghost"
             onClick={(e) => onSave(g, e)}
-            style={{ color: isSaved ? ACCENT : "#CBD5E1", cursor: "pointer", padding: 2, display: "flex", alignItems: "center", flexShrink: 0, background: "none", border: "none", outline: "none", transition: "color 150ms" }}
             title={isSaved ? "Remove from saved" : "Save grant"}
-          >
+            style={{
+              color: isSaved ? ACCENT : "#CBD5E1",
+              padding: 2,
+              display: "flex",
+              alignItems: "center",
+              flexShrink: 0,
+              transition: "color 150ms"
+            }}>
             {isSaved ? <BookmarkCheck size={15} strokeWidth={1.5} /> : <Bookmark size={15} strokeWidth={1.5} />}
-          </button>
+          </Button>
         </div>
 
         {/* Title */}
@@ -1063,7 +1070,6 @@ function GrantCard({ g, isSaved, onSave, isCompared, onCompare }) {
           )}
         </div>
       </div>
-
       {/* Card footer */}
       <div
         style={{

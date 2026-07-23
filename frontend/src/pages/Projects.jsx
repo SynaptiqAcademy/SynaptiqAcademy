@@ -10,6 +10,9 @@ import { SearchBar, FilterChip } from "../components/ds/SearchBar";
 import { Button } from "../components/ds/Button";
 import { Input } from "../components/ds/Input";
 import { Textarea } from "../components/ds/Textarea";
+import { Card } from "../components/ds/Card";
+import { Badge } from "../components/ds/Badge";
+import { Tag } from "../components/ds/Tag";
 import { ACCENT, NAVY, WARM, BRD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import {
@@ -173,21 +176,19 @@ export default function Projects() {
       subtitle={`${getGreeting()}, ${firstName}. From question to publication — every study starts here.`}
       actions={
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <Link
-            to="/collaboration-intelligence"
-            className="flex items-center gap-1.5 border border-slate-200 text-slate-600 text-xs px-3 py-1.5 hover:bg-slate-50 transition-colors"
-          >
+          <Button as={Link} to="/collaboration-intelligence" variant="ghost" size="sm">
             <BrainCircuit size={12} strokeWidth={1.5} />
             Find Collaborators
-          </Link>
-          <button
+          </Button>
+          <Button
             data-testid={TID.projectCreateBtn}
             onClick={() => setShowNew((v) => !v)}
-            className="flex items-center gap-1.5 bg-[#6B0E28] text-white text-sm px-3 py-1.5 hover:opacity-90 transition-opacity"
+            variant="primary"
+            size="sm"
           >
             <Plus size={13} strokeWidth={2} />
             New Project
-          </button>
+          </Button>
         </div>
       }
       meta={statsMeta}
@@ -195,7 +196,7 @@ export default function Projects() {
 
       {/* ── CREATE FORM ──────────────────────────────────────────────────── */}
       {showNew && (
-        <div style={{ border: `1px solid ${BORDER}`, background: "white", padding: 24, marginTop: 24, maxWidth: 640 }}>
+        <Card padding="xl" style={{ marginTop: 24, maxWidth: 640 }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 18 }}>
             New Research Project
           </div>
@@ -247,7 +248,7 @@ export default function Projects() {
               Cancel
             </Button>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* ── SEARCH + FILTER ──────────────────────────────────────────────── */}
@@ -299,12 +300,13 @@ export default function Projects() {
             title="No projects match your filters"
             description="Try adjusting or clearing your search."
             action={
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => { setQ(""); setStageFilter(""); setVisFilter(""); }}
-                style={{ fontSize: 12, color: NAVY, background: "white", border: `1px solid ${BORDER}`, padding: "7px 16px", cursor: "pointer" }}
               >
                 Clear filters
-              </button>
+              </Button>
             }
             size="sm"
             dashed={true}
@@ -346,12 +348,11 @@ function ProjectCard({ p, idx, userId }) {
   const VisIcon = visIcon;
 
   return (
-    <Link
+    <Card
       to={`/projects/${p.id}`}
       data-testid={TID.projectCard(p.id)}
-      style={{ display: "flex", flexDirection: "column", border: `1px solid ${BORDER}`, background: "white", textDecoration: "none", transition: "border-color 0.15s, box-shadow 0.15s, transform 0.12s" }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = NAVY + "50"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(15,40,71,0.1)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}
+      padding="none"
+      style={{ display: "flex", flexDirection: "column" }}
     >
       {/* Stage accent bar */}
       <div style={{ height: 3, background: stage.color, flexShrink: 0 }} />
@@ -364,14 +365,12 @@ function ProjectCard({ p, idx, userId }) {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
             {src && (
-              <span style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 600, color: src.color, border: `1px solid ${src.color}30`, background: src.color + "10", padding: "2px 6px" }}>
-                {src.label}
-              </span>
+              <Badge color={src.color} size="sm">{src.label}</Badge>
             )}
-            <span style={{ fontSize: 10, display: "flex", alignItems: "center", gap: 3, color: "#94A3B8", border: `1px solid ${BORDER}`, padding: "2px 7px", fontFamily: "monospace" }}>
+            <Badge variant="outline" size="sm">
               <VisIcon size={9} strokeWidth={1.5} />
               {p.visibility}
-            </span>
+            </Badge>
           </div>
         </div>
 
@@ -391,16 +390,14 @@ function ProjectCard({ p, idx, userId }) {
         {(p.keywords || []).length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 14 }}>
             {p.keywords.slice(0, 4).map((k) => (
-              <span key={k} style={{ fontSize: 10, padding: "2px 7px", background: WARM, border: `1px solid ${BORDER}`, color: "#475569" }}>{k}</span>
+              <Tag key={k} size="sm">{k}</Tag>
             ))}
           </div>
         )}
 
         {/* Stage badge */}
         <div style={{ marginTop: "auto", marginBottom: 14 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: stage.color, background: stage.bg, padding: "3px 8px", border: `1px solid ${stage.color}30` }}>
-            {stage.label}
-          </span>
+          <Badge color={stage.color} size="sm">{stage.label}</Badge>
         </div>
 
         {/* Completeness bar */}
@@ -424,9 +421,7 @@ function ProjectCard({ p, idx, userId }) {
               {memberCount} {memberCount === 1 ? "member" : "members"}
             </span>
             {!isOwner && (
-              <span style={{ fontSize: 10, color: "#7C3AED", background: "#FAF5FF", border: "1px solid #DDD6FE", padding: "1px 6px", fontFamily: "monospace", fontWeight: 600 }}>
-                Collab
-              </span>
+              <Badge variant="purple" size="sm">Collab</Badge>
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -437,7 +432,7 @@ function ProjectCard({ p, idx, userId }) {
           </div>
         </div>
       </div>
-    </Link>
+    </Card>
   );
 }
 
@@ -501,13 +496,7 @@ function QuickActions() {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
         {actions.map(({ label, to, icon: Icon, desc }) => (
-          <Link
-            key={to}
-            to={to}
-            style={{ display: "flex", gap: 12, alignItems: "flex-start", border: `1px solid ${BORDER}`, background: "white", padding: "14px 16px", textDecoration: "none", transition: "border-color 0.15s, box-shadow 0.15s" }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = NAVY + "50"; e.currentTarget.style.boxShadow = "0 2px 10px rgba(15,40,71,0.07)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
-          >
+          <Card key={to} to={to} padding="md" style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
             <div style={{ width: 30, height: 30, background: WARM, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <Icon size={13} strokeWidth={1.5} style={{ color: NAVY }} />
             </div>
@@ -515,7 +504,7 @@ function QuickActions() {
               <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", marginBottom: 3 }}>{label}</div>
               <div style={{ fontSize: 11, color: "#94A3B8", lineHeight: 1.4 }}>{desc}</div>
             </div>
-          </Link>
+          </Card>
         ))}
       </div>
     </div>
@@ -527,49 +516,40 @@ function QuickActions() {
 function ProjectEmptyState({ onNew }) {
   return (
     <div style={{ marginTop: 28 }}>
-      <div style={{ border: `1px solid ${BORDER}`, background: "white", padding: "56px 40px", textAlign: "center", marginBottom: 24 }}>
-        <div style={{ width: 56, height: 56, background: WARM, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-          <FolderOpen size={24} strokeWidth={0.75} style={{ color: "#CBD5E1" }} />
-        </div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#0f172a", margin: "0 0 10px", letterSpacing: "-0.02em" }}>
-          Start your first research project
-        </h2>
-        <p style={{ fontSize: 14, color: "#64748B", lineHeight: 1.7, margin: "0 auto 28px", maxWidth: 440 }}>
-          Projects are your research command centers — each one integrates AI tools, team collaboration, literature, tasks, milestones, and manuscript workflows in one place.
-        </p>
-        <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-          <button
-            data-testid={TID.projectCreateBtn}
-            onClick={onNew}
-            style={{ display: "inline-flex", alignItems: "center", gap: 7, background: NAVY, color: "white", border: "none", padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-          >
-            <Plus size={13} strokeWidth={2} />
-            Create a project
-          </button>
-          <Link
-            to="/collaborations"
-            style={{ display: "inline-flex", alignItems: "center", gap: 7, border: `1px solid ${BORDER}`, color: "#374151", padding: "10px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}
-          >
-            Browse collaborations
-            <ArrowRight size={12} strokeWidth={1.5} />
-          </Link>
-        </div>
-      </div>
+      <EmptyState
+        icon={<FolderOpen strokeWidth={0.75} />}
+        title="Start your first research project"
+        description="Projects are your research command centers — each one integrates AI tools, team collaboration, literature, tasks, milestones, and manuscript workflows in one place."
+        size="lg"
+        className="mb-6"
+        action={
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+            <Button data-testid={TID.projectCreateBtn} onClick={onNew}>
+              <Plus size={13} strokeWidth={2} />
+              Create a project
+            </Button>
+            <Button as={Link} to="/collaborations" variant="ghost">
+              Browse collaborations
+              <ArrowRight size={12} strokeWidth={1.5} />
+            </Button>
+          </div>
+        }
+      />
 
       {/* Feature highlights */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 24 }}>
         {[
           { icon: BrainCircuit, title: "AI-powered research",  desc: "From literature review to manuscript review — AI assists every stage." },
           { icon: Users,        title: "Team collaboration",   desc: "Invite co-investigators, assign tasks, share workspaces seamlessly." },
           { icon: Target,       title: "Full lifecycle",        desc: "Manage from first idea through publication and citation tracking." },
         ].map(({ icon: Icon, title, desc }) => (
-          <div key={title} style={{ border: `1px solid ${BORDER}`, background: WARM, padding: "20px 18px" }}>
+          <Card key={title} variant="ghost" padding="md" style={{ background: WARM, border: `1px solid ${BORDER}` }}>
             <div style={{ width: 32, height: 32, background: "white", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
               <Icon size={14} strokeWidth={1.5} style={{ color: NAVY }} />
             </div>
             <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", marginBottom: 6 }}>{title}</div>
             <p style={{ fontSize: 12, color: "#64748B", lineHeight: 1.55, margin: 0 }}>{desc}</p>
-          </div>
+          </Card>
         ))}
       </div>
     </div>

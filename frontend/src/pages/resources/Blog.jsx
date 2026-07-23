@@ -1,5 +1,6 @@
 /* eslint-disable */
 import React, { useState, useRef, useEffect, useMemo } from "react";
+import { Button } from "@/components/ds";
 import { Link } from "react-router-dom";
 import MarketingLayout from "../../components/layout/MarketingLayout";
 import { ArrowRight, Search, Clock, Calendar, Tag, ChevronRight, X, BookOpen, BrainCircuit, Globe, Building2, TrendingUp, Shield, Lightbulb, Layers } from "lucide-react";
@@ -728,7 +729,6 @@ export default function Blog() {
 
   return (
     <MarketingLayout>
-
       {/* Hero */}
       <section style={{ background: "#fff", borderBottom: `1px solid ${BORDER}`, paddingTop: 72, paddingBottom: 64 }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
@@ -749,20 +749,24 @@ export default function Blog() {
                 <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search articles, topics, authors…"
                   style={{ border: "none", background: "transparent", outline: "none", fontSize: "0.87rem", color: "#0a0f1a", width: "100%" }}
                 />
-                {search && <button onClick={() => setSearch("")} style={{ border: "none", background: "none", cursor: "pointer", color: "#94a3b8" }}><X size={14} /></button>}
+                {search && <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setSearch("")}
+                  style={{
+                    color: "#94a3b8"
+                  }}><X size={14} /></Button>}
               </div>
             </div>
           </div>
         </div>
       </section>
-
       {/* Featured */}
       <section style={{ background: LIGHT, borderBottom: `1px solid ${BORDER}` }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-16 lg:py-20">
           {featured && <FeaturedArticle article={featured} />}
         </div>
       </section>
-
       {/* Main — sidebar + grid */}
       <section style={{ background: "#fff" }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-16 lg:py-20">
@@ -856,7 +860,6 @@ export default function Blog() {
           </div>
         </div>
       </section>
-
     </MarketingLayout>
   );
 }

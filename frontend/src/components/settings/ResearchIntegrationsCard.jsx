@@ -1,5 +1,5 @@
 import React from "react";
-import { TYPE } from "@/lib/tokens";
+import { Label } from "@/components/ds/Typography";
 import OrcidSettings from "@/components/orcid/OrcidSettings";
 import OpenAlexSettings from "@/components/citations/OpenAlexSettings";
 
@@ -13,7 +13,7 @@ import OpenAlexSettings from "@/components/citations/OpenAlexSettings";
 export function ResearchIntegrationsCard() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={TYPE.label}>Research Platform Sync</div>
+      <Label as="p">Research Platform Sync</Label>
       <OrcidSettings />
       <OpenAlexSettings />
     </div>

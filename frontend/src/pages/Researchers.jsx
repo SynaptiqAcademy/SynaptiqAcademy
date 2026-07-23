@@ -6,6 +6,7 @@ import { TID } from "../lib/testIds";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import { ACCENT, EMERALD, NAVY, WARM } from "@/lib/tokens";
+import { Avatar, Button } from "@/components/ds";
 import {
   Search, X, ChevronDown, ChevronLeft, ChevronRight, ArrowRight,
   Users, Globe, Building2, MapPin, BookOpen, Award, TrendingUp,
@@ -29,15 +30,6 @@ function computeSlug(fullName) {
 function profileUrl(r) {
   const slug = r.slug || computeSlug(r.full_name);
   return `/researcher/${slug}`;
-}
-
-function initials(name) {
-  return (name || "?")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0].toUpperCase())
-    .join("");
 }
 
 function hasOrcid(r) {
@@ -242,20 +234,16 @@ export default function Researchers() {
         }
         .sq-pulse { animation: sq-pulse 1.8s ease-in-out infinite; }
       `}</style>
-
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <HeroSection user={user} total={totalInPlatform} onExplore={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} />
-
       {/* ── Recently Viewed ───────────────────────────────────────────────── */}
       {recentlyViewed.length > 0 && (
         <RecentlyViewedStrip researchers={recentlyViewed} isSaved={isSaved} toggleSave={toggleSave} />
       )}
-
       {/* ── AI Recommendations ────────────────────────────────────────────── */}
       {(aiRecsLoading || aiRecs) && (
         <AiRecsPanel recs={aiRecs} loading={aiRecsLoading} isSaved={isSaved} toggleSave={toggleSave} compareList={compareList} toggleCompare={toggleCompare} />
       )}
-
       {/* ── Discovery Sections ────────────────────────────────────────────── */}
       <DiscoverySections
         sections={sections}
@@ -268,7 +256,6 @@ export default function Researchers() {
         toggleCompare={toggleCompare}
         user={user}
       />
-
       {/* ── Explorer ──────────────────────────────────────────────────────── */}
       <div ref={explorerRef} style={{ marginTop: 48 }}>
         <div style={{ marginBottom: 20 }}>
@@ -304,9 +291,21 @@ export default function Researchers() {
                 onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
               />
               {q && (
-                <button onClick={() => setQ("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "#94A3B8", cursor: "pointer", display: "flex", alignItems: "center", background: "none", border: "none", outline: "none" }}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setQ("")}
+                  style={{
+                    position: "absolute",
+                    right: 10,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: "#94A3B8",
+                    display: "flex",
+                    alignItems: "center"
+                  }}>
                   <X size={13} strokeWidth={1.5} />
-                </button>
+                </Button>
               )}
             </div>
 
@@ -359,10 +358,8 @@ export default function Researchers() {
           </div>
         </div>
       </div>
-
       {/* ── CTA strip ─────────────────────────────────────────────────────── */}
       <CollaborationStrip />
-
       {/* ── Compare panel ─────────────────────────────────────────────────── */}
       {compareList.length >= 2 && (
         <ComparePanel
@@ -495,11 +492,18 @@ function AiRecsPanel({ recs, loading, isSaved, toggleSave, compareList, toggleCo
           <span style={{ fontSize: 12, fontWeight: 700, color: NAVY, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Recommendations</span>
           <span style={{ fontSize: 11, color: "#94A3B8" }}>Powered by your research profile</span>
         </div>
-        <button onClick={() => setExpanded((v) => !v)} style={{ color: "#94A3B8", cursor: "pointer", display: "flex", alignItems: "center", background: "none", border: "none", outline: "none" }}>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => setExpanded((v) => !v)}
+          style={{
+            color: "#94A3B8",
+            display: "flex",
+            alignItems: "center"
+          }}>
           <ChevronDown size={13} strokeWidth={1.5} style={{ transform: expanded ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms" }} />
-        </button>
+        </Button>
       </div>
-
       {expanded && (
         <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4 }}>
           {loading
@@ -591,38 +595,7 @@ function DiscoverySections({ sections, loading, activeSection, setActiveSection,
 
 // ── Avatar circle ─────────────────────────────────────────────────────────────
 function AvatarCircle({ r, size = 44 }) {
-  const [imgError, setImgError] = useState(false);
-  const bg = NAVY;
-
-  if (r?.avatar_url && !imgError) {
-    return (
-      <img
-        src={r.avatar_url}
-        alt={r.full_name || ""}
-        onError={() => setImgError(true)}
-        style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1.5px solid #E4E8EF" }}
-      />
-    );
-  }
-
-  return (
-    <div style={{
-      width: size,
-      height: size,
-      borderRadius: "50%",
-      background: bg,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      flexShrink: 0,
-      fontSize: Math.round(size * 0.34),
-      fontWeight: 700,
-      color: "white",
-      letterSpacing: "0.02em",
-    }}>
-      {initials(r?.full_name)}
-    </div>
-  );
+  return <Avatar url={r?.avatar_url} name={r?.full_name} size={size} border />;
 }
 
 // ── Researcher Card (full) ─────────────────────────────────────────────────────
@@ -685,13 +658,20 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
           </div>
 
           {/* Save button */}
-          <button
+          <Button
+            size="icon"
+            variant="ghost"
             onClick={(e) => onSave(r, e)}
             title={saved ? "Remove from saved" : "Save researcher"}
-            style={{ flexShrink: 0, color: saved ? NAVY : "#CBD5E1", cursor: "pointer", display: "flex", alignItems: "center", background: "none", border: "none", outline: "none", padding: 2 }}
-          >
+            style={{
+              flexShrink: 0,
+              color: saved ? NAVY : "#CBD5E1",
+              display: "flex",
+              alignItems: "center",
+              padding: 2
+            }}>
             {saved ? <BookmarkCheck size={14} strokeWidth={1.5} /> : <Bookmark size={14} strokeWidth={1.5} />}
-          </button>
+          </Button>
         </div>
 
         {/* Institution / Location */}
@@ -753,7 +733,6 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
           )}
         </div>
       </div>
-
       {/* Card footer */}
       <div
         style={{ borderTop: `1px solid ${BORDER}`, padding: "7px 16px", display: "flex", gap: 10, background: "#FAFBFC", alignItems: "center" }}
@@ -829,11 +808,17 @@ function ResearcherCardCompact({ r, isSaved, onSave, isCompared, onCompare, show
           <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "Georgia, serif" }}>{r?.full_name}</div>
           <div style={{ fontSize: 10, color: "#64748B", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r?.institution || r?.country || ""}</div>
         </div>
-        <button onClick={(e) => onSave && onSave(r, e)} style={{ color: isSaved ? NAVY : "#CBD5E1", cursor: "pointer", flexShrink: 0, background: "none", border: "none", outline: "none" }}>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={(e) => onSave && onSave(r, e)}
+          style={{
+            color: isSaved ? NAVY : "#CBD5E1",
+            flexShrink: 0
+          }}>
           {isSaved ? <BookmarkCheck size={12} strokeWidth={1.5} /> : <Bookmark size={12} strokeWidth={1.5} />}
-        </button>
+        </Button>
       </div>
-
       {(r?.research_areas || []).slice(0, 2).length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginBottom: 6 }}>
           {(r.research_areas || []).slice(0, 2).map((a, i) => (
@@ -841,7 +826,6 @@ function ResearcherCardCompact({ r, isSaved, onSave, isCompared, onCompare, show
           ))}
         </div>
       )}
-
       {showExplanation && r?.explanation && (
         <div style={{ fontSize: 10, color: "#94A3B8", fontStyle: "italic", lineHeight: 1.4 }}>{r.explanation}</div>
       )}
