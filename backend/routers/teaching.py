@@ -597,7 +597,7 @@ async def update_lesson(lesson_id: str, body: dict, user: dict = Depends(get_cur
     await db.teaching_lessons.update_one({"_id": _oid(lesson_id)}, {"$set": update})
     if workspace_id:
         await _log_activity(db, workspace_id, user, "lesson_edited",
-                            f'Edited lesson "{doc.get('title', '')}"',
+                            f'Edited lesson "{doc.get("title", "")}"',
                             entity_id=lesson_id, entity_type="lesson")
     updated = await db.teaching_lessons.find_one({"_id": _oid(lesson_id)})
     return _ser(updated)
@@ -771,7 +771,7 @@ async def update_assessment(assessment_id: str, body: dict, user: dict = Depends
     await db.teaching_assessments.update_one({"_id": _oid(assessment_id)}, {"$set": update})
     if workspace_id:
         await _log_activity(db, workspace_id, user, "assessment_edited",
-                            f'Edited assessment "{doc.get('title', '')}"',
+                            f'Edited assessment "{doc.get("title", "")}"',
                             entity_id=assessment_id, entity_type="assessment")
     updated = await db.teaching_assessments.find_one({"_id": _oid(assessment_id)})
     return _ser(updated)
@@ -1540,7 +1540,7 @@ async def post_lesson_comment(lesson_id: str, body: CommentCreate, user: dict = 
     doc["_id"] = result.inserted_id
     if workspace_id:
         await _log_activity(db, workspace_id, user, "comment_added",
-                            f'Commented on lesson "{lesson.get('title', '')}"',
+                            f'Commented on lesson "{lesson.get("title", "")}"',
                             entity_id=lesson_id, entity_type="lesson")
     return _ser_comment(doc)
 
@@ -1599,7 +1599,7 @@ async def post_assessment_comment(assessment_id: str, body: CommentCreate, user:
     doc["_id"] = result.inserted_id
     if workspace_id:
         await _log_activity(db, workspace_id, user, "comment_added",
-                            f'Commented on assessment "{assessment.get('title', '')}"',
+                            f'Commented on assessment "{assessment.get("title", "")}"',
                             entity_id=assessment_id, entity_type="assessment")
     return _ser_comment(doc)
 
@@ -1694,7 +1694,7 @@ async def restore_lesson_version(lesson_id: str, version_id: str, user: dict = D
     await db.teaching_lessons.update_one({"_id": _oid(lesson_id)}, {"$set": restore_data})
     if workspace_id:
         await _log_activity(db, workspace_id, user, "lesson_restored",
-                            f'Restored lesson "{lesson.get('title', '')}" to an earlier version',
+                            f'Restored lesson "{lesson.get("title", "")}" to an earlier version',
                             entity_id=lesson_id, entity_type="lesson")
     updated = await db.teaching_lessons.find_one({"_id": _oid(lesson_id)})
     return _ser(updated)
@@ -1765,7 +1765,7 @@ async def restore_assessment_version(assessment_id: str, version_id: str, user: 
     await db.teaching_assessments.update_one({"_id": _oid(assessment_id)}, {"$set": restore_data})
     if workspace_id:
         await _log_activity(db, workspace_id, user, "assessment_restored",
-                            f'Restored assessment "{assessment.get('title', '')}" to an earlier version',
+                            f'Restored assessment "{assessment.get("title", "")}" to an earlier version',
                             entity_id=assessment_id, entity_type="assessment")
     updated = await db.teaching_assessments.find_one({"_id": _oid(assessment_id)})
     return _ser(updated)
