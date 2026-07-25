@@ -470,6 +470,10 @@ app.include_router(comments_router.router)
 from routers import wiki as wiki_router
 app.include_router(wiki_router.router)
 
+# Workspace redesign — real-time collaborative editing (Phase 5)
+from routers import wiki_collab as wiki_collab_router
+app.include_router(wiki_collab_router.router)
+
 # Phase 7 — Public platform status endpoint
 from routers.platform_status import router as platform_status_router
 app.include_router(platform_status_router)

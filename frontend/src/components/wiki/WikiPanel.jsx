@@ -217,7 +217,7 @@ export default function WikiPanel({ workspaceId, members = [] }) {
               </div>
             </div>
 
-            <WikiEditor key={active.id} content={active.content} onSave={saveContent} />
+            <WikiEditor key={active.id} pageId={active.id} content={active.content} onSave={saveContent} />
           </div>
         )}
       </div>
