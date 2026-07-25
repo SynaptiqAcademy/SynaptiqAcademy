@@ -656,6 +656,37 @@ async def add_activity(workspace_id: str, body: dict, user: dict = Depends(get_c
     return _ser(entry)
 
 
+@router.patch("/{workspace_id}/activity/{activity_id}")
+async def update_activity(
+    workspace_id: str, activity_id: str, body: dict, user: dict = Depends(get_current_user)
+):
+    """Update an activity entry's metadata — used by the Reviews tab's
+    Approve/Reject actions on review-request entries. Any member (not just
+    admins) can respond to a review, matching who can already post one."""
+    db = get_db()
+    db = DBProxy(db, SecurityContext.from_user(user))
+
+    try:
+        ws = await db.workspaces.find_one({"_id": ObjectId(workspace_id)})
+        aoid = ObjectId(activity_id)
+    except Exception:
+        raise HTTPException(404, "Not found")
+    if not ws:
+        raise HTTPException(404, "Not found")
+    _assert_member(ws, user["id"])
+    entry = await db.workspace_activity.find_one({"_id": aoid, "workspace_id": workspace_id})
+    if not entry:
+        raise HTTPException(404, "Not found")
+
+    update = {}
+    if "metadata" in body and isinstance(body["metadata"], dict):
+        update["metadata"] = body["metadata"]
+    if update:
+        await db.workspace_activity.update_one({"_id": aoid}, {"$set": update})
+        entry.update(update)
+    return _ser(entry)
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # INVITATIONS
 # ══════════════════════════════════════════════════════════════════════════════
