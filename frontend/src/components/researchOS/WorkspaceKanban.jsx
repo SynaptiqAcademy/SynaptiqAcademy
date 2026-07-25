@@ -53,27 +53,28 @@ function useAutoScroll(active) {
   }, [active]);
 }
 
-function TaskCard({ task, canEdit, onDragStart, onDragEnd, dragging, onOpen, onMove }) {
+function TaskCard({ task, canEdit, onDragStart, onDragEnd, dragging, onOpen, onMove, selectMode, selected, onToggleSelect }) {
   const [hov, setHov] = useState(false);
+  const handleClick = () => selectMode ? onToggleSelect(task.id) : onOpen(task);
   return (
     <div
       data-testid={TID.kanbanTask(task.id)}
       role="listitem"
       aria-label={`${task.title}, ${task.priority || "no"} priority${task.assignee ? `, assigned to ${task.assignee.full_name}` : ""}`}
       tabIndex={0}
-      draggable={canEdit}
+      draggable={canEdit && !selectMode}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
-      onClick={() => onOpen(task)}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(task); } }}
+      onClick={handleClick}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleClick(); } }}
       style={{
-        background: WHITE,
-        border: `1px solid ${hov ? BRDH : BRD}`,
+        background: selected ? "rgba(15,40,71,0.05)" : WHITE,
+        border: `1px solid ${selected ? NAVY : hov ? BRDH : BRD}`,
         borderRadius: RADIUS_MD,
         padding: "12px 12px",
-        cursor: canEdit ? "grab" : "pointer",
+        cursor: selectMode ? "pointer" : canEdit ? "grab" : "pointer",
         opacity: dragging ? 0.4 : 1,
         transform: hov ? transform.liftSm : transform.none,
         transition: transition.hoverCard,
@@ -81,7 +82,18 @@ function TaskCard({ task, canEdit, onDragStart, onDragEnd, dragging, onOpen, onM
       }}
     >
       <div className="flex items-start gap-2">
-        {canEdit && <GripVertical size={12} strokeWidth={1.5} style={{ color: TEXT_MUTED, marginTop: 2, flexShrink: 0 }} aria-hidden="true" />}
+        {selectMode ? (
+          <input
+            type="checkbox"
+            checked={!!selected}
+            onChange={() => onToggleSelect(task.id)}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Select ${task.title}`}
+            style={{ marginTop: 2, flexShrink: 0 }}
+          />
+        ) : canEdit && (
+          <GripVertical size={12} strokeWidth={1.5} style={{ color: TEXT_MUTED, marginTop: 2, flexShrink: 0 }} aria-hidden="true" />
+        )}
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontSize: 13, color: TEXT_PRIMARY, lineHeight: 1.4 }}>{task.title}</div>
           <div className="flex items-center gap-2 flex-wrap" style={{ marginTop: 8 }}>
@@ -107,7 +119,7 @@ function TaskCard({ task, canEdit, onDragStart, onDragEnd, dragging, onOpen, onM
           )}
         </div>
 
-        {canEdit && (
+        {canEdit && !selectMode && (
           <div onClick={(e) => e.stopPropagation()}>
             <Dropdown
               align="right"
@@ -158,6 +170,8 @@ export default function WorkspaceKanban({ wsId, canEdit }) {
   const prefs = useRef(loadPrefs(wsId));
   const [collapsed, setCollapsed] = useState(() => prefs.current.collapsed || {});
   const [wipLimits, setWipLimits] = useState(() => prefs.current.wipLimits || {});
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
 
   useAutoScroll(draggingId != null);
 
@@ -207,6 +221,12 @@ export default function WorkspaceKanban({ wsId, canEdit }) {
     return map;
   }, [filteredTasks]);
 
+  // Best-effort activity logging onto the workspace's real activity feed —
+  // reuses the existing endpoint rather than inventing a parallel log.
+  const logActivity = (message, kind = "task") => {
+    api.post(`/workspaces/${wsId}/activity`, { message, kind }).catch(() => {});
+  };
+
   const moveTask = async (task, newStatus, { silent = false } = {}) => {
     if (task.status === newStatus) return;
     const prevStatus = task.status;
@@ -214,9 +234,11 @@ export default function WorkspaceKanban({ wsId, canEdit }) {
     try {
       await api.patch(`/projects/tasks/${task.id}`, { status: newStatus });
       if (!silent) {
-        toast.success(`Moved to ${COLUMNS.find((c) => c.key === newStatus)?.label}`, {
+        const label = COLUMNS.find((c) => c.key === newStatus)?.label;
+        toast.success(`Moved to ${label}`, {
           action: { label: "Undo", onClick: () => moveTask({ ...task, status: newStatus }, prevStatus, { silent: true }) },
         });
+        logActivity(`Moved "${task.title}" to ${label}`);
       }
     } catch (e) {
       toast.error("Failed to move task");
@@ -229,6 +251,7 @@ export default function WorkspaceKanban({ wsId, canEdit }) {
     if (!projectId) { toast.error("Pick a project first"); return; }
     try {
       await api.post(`/projects/${projectId}/tasks`, { title: newTitle, status, priority: "medium" });
+      logActivity(`Created task "${newTitle}"`);
       setNewTitle(""); setComposing(null);
       load();
     } catch (e) { toast.error("Failed to create"); }
@@ -259,6 +282,30 @@ export default function WorkspaceKanban({ wsId, canEdit }) {
   };
 
   const toggleCollapse = (key) => setCollapsed((c) => ({ ...c, [key]: !c[key] }));
+
+  const toggleSelect = (id) => setSelectedIds((prev) => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+
+  const exitSelectMode = () => { setSelectMode(false); setSelectedIds(new Set()); };
+
+  const bulkMove = async (newStatus) => {
+    const ids = Array.from(selectedIds);
+    if (!ids.length) return;
+    const label = COLUMNS.find((c) => c.key === newStatus)?.label;
+    setData((d) => ({ ...d, tasks: d.tasks.map((t) => ids.includes(t.id) ? { ...t, status: newStatus } : t) }));
+    try {
+      await Promise.all(ids.map((id) => api.patch(`/projects/tasks/${id}`, { status: newStatus })));
+      toast.success(`Moved ${ids.length} task${ids.length === 1 ? "" : "s"} to ${label}`);
+      logActivity(`Bulk-moved ${ids.length} task${ids.length === 1 ? "" : "s"} to ${label}`);
+      exitSelectMode();
+    } catch (e) {
+      toast.error("Some tasks failed to move");
+      load();
+    }
+  };
 
   if (loading) {
     return (
@@ -322,8 +369,41 @@ export default function WorkspaceKanban({ wsId, canEdit }) {
           <FormSelect size="sm" data-testid={TID.kanbanProjectPicker} value={projectId} onChange={(e) => setProjectId(e.target.value)} style={{ width: 150 }}>
             {(data.projects || []).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
           </FormSelect>
+          {canEdit && (
+            <Button size="sm" variant={selectMode ? "primary" : "ghost"} onClick={() => selectMode ? exitSelectMode() : setSelectMode(true)}>
+              {selectMode ? "Cancel selection" : "Select"}
+            </Button>
+          )}
         </div>
       </div>
+
+      {selectMode && selectedIds.size > 0 && (
+        <div
+          className="flex items-center gap-3 flex-wrap"
+          style={{ position: "sticky", top: 8, zIndex: 5, background: NAVY, borderRadius: RADIUS_MD, padding: "10px 14px" }}
+        >
+          <span style={{ fontSize: 13, color: WHITE, fontWeight: 600 }}>{selectedIds.size} selected</span>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>Move to:</span>
+          {COLUMNS.map((c) => (
+            <button
+              key={c.key}
+              onClick={() => bulkMove(c.key)}
+              style={{
+                fontSize: 12, color: WHITE, background: "rgba(255,255,255,0.12)", border: "none",
+                borderRadius: RADIUS_SM, padding: "4px 10px", cursor: "pointer",
+              }}
+            >
+              {c.label}
+            </button>
+          ))}
+          <button
+            onClick={exitSelectMode}
+            style={{ marginLeft: "auto", fontSize: 12, color: "rgba(255,255,255,0.6)", background: "none", border: "none", cursor: "pointer" }}
+          >
+            Clear
+          </button>
+        </div>
+      )}
 
       {/* Board */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
@@ -408,6 +488,9 @@ export default function WorkspaceKanban({ wsId, canEdit }) {
                       onDragEnd={() => { setDraggingId(null); setDragOver(null); }}
                       onOpen={openEdit}
                       onMove={moveTask}
+                      selectMode={selectMode}
+                      selected={selectedIds.has(t.id)}
+                      onToggleSelect={toggleSelect}
                     />
                   ))}
                   {tasks.length === 0 && composing !== col.key && (
