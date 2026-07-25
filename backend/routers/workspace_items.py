@@ -206,6 +206,18 @@ async def update_item(item_id: str, payload: WorkspaceItemUpdate, user: dict = D
     if update.get("status") == "published" and item.get("status") != "published":
         update.setdefault("completed_at", _now())
 
+    # Wiki pages: snapshot the pre-edit content/title as a version whenever
+    # content changes, so "Version History" reflects every real save rather
+    # than only being populated by a dedicated endpoint.
+    if item.get("item_type") == "wiki_page" and "content" in update:
+        await db.wiki_page_versions.insert_one({
+            "page_id":   item_id,
+            "title":     item.get("title"),
+            "content":   item.get("content"),
+            "saved_by":  item.get("creator_id"),
+            "created_at": item.get("updated_at") or item.get("created_at"),
+        })
+
     if update:
         update["updated_at"] = _now()
         update["version"] = (item.get("version") or 1) + 1

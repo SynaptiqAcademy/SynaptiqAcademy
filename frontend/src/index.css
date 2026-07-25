@@ -57,7 +57,7 @@
   --sq-text-strong:    #374151;
   --sq-text-secondary: #475569;
   --sq-text-tertiary:  #64748b;
-  --sq-text-muted:     #94a3b8;
+  --sq-text-muted:     #63707f;
   --sq-text-disabled:  #cbd5e1;
 
   /* ─── Semantic state colors ───────────────────────────── */
@@ -404,7 +404,7 @@
 }
 .sq-caption {
   font-size: var(--sq-text-sm);
-  color: #94a3b8;
+  color: #63707f;
   line-height: 1.55;
 }
 .sq-mono {
@@ -624,3 +624,43 @@ html[data-focus-indicators="true"] :focus-visible {
 html[data-high-contrast="true"] {
   filter: contrast(1.15);
 }
+
+/* ── Wiki editor (Tiptap/ProseMirror) — Tiptap ships zero default styling,
+   so without this the editor renders headings/lists/code/quotes as flat,
+   unstyled text. ─────────────────────────────────────────────────────── */
+.sq-wiki-editor .ProseMirror {
+  outline: none;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: #0f172a;
+}
+.sq-wiki-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #94a3b8;
+  pointer-events: none;
+  height: 0;
+}
+.sq-wiki-editor .ProseMirror h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; margin: 1.2em 0 0.4em; }
+.sq-wiki-editor .ProseMirror h2 { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.01em; margin: 1.1em 0 0.4em; }
+.sq-wiki-editor .ProseMirror h3 { font-size: 1.1rem; font-weight: 700; margin: 1em 0 0.3em; }
+.sq-wiki-editor .ProseMirror h1:first-child,
+.sq-wiki-editor .ProseMirror h2:first-child,
+.sq-wiki-editor .ProseMirror h3:first-child,
+.sq-wiki-editor .ProseMirror p:first-child { margin-top: 0; }
+.sq-wiki-editor .ProseMirror p { margin: 0.5em 0; }
+.sq-wiki-editor .ProseMirror ul, .sq-wiki-editor .ProseMirror ol { padding-left: 1.4em; margin: 0.5em 0; }
+.sq-wiki-editor .ProseMirror li { margin: 0.2em 0; }
+.sq-wiki-editor .ProseMirror a { color: #0F2847; text-decoration: underline; }
+.sq-wiki-editor .ProseMirror blockquote {
+  border-left: 3px solid #e2e8f0; margin: 0.75em 0; padding: 0.2em 0 0.2em 1em; color: #475569;
+}
+.sq-wiki-editor .ProseMirror code {
+  background: #f1f5f9; border-radius: 4px; padding: 0.1em 0.35em; font-size: 0.85em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.sq-wiki-editor .ProseMirror pre {
+  background: #0f172a; color: #f8fafc; border-radius: 8px; padding: 0.75em 1em; overflow-x: auto; margin: 0.75em 0;
+}
+.sq-wiki-editor .ProseMirror pre code { background: none; padding: 0; color: inherit; }
+.sq-wiki-editor .ProseMirror hr { border: none; border-top: 1px solid #e2e8f0; margin: 1.5em 0; }

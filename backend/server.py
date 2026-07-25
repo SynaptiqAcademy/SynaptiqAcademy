@@ -466,6 +466,10 @@ app.include_router(workspace_items_router.router)
 from routers import comments as comments_router
 app.include_router(comments_router.router)
 
+# Workspace redesign — Knowledge Wiki (Phase 4)
+from routers import wiki as wiki_router
+app.include_router(wiki_router.router)
+
 # Phase 7 — Public platform status endpoint
 from routers.platform_status import router as platform_status_router
 app.include_router(platform_status_router)

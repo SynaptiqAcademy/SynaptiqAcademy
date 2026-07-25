@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ds/Avatar";
 import { useAuth } from "../contexts/AuthContext";
 import { userTypeLabel } from "../lib/userTypes";
 import WorkspaceKanban from "../components/researchOS/WorkspaceKanban";
+import WikiPanel from "../components/wiki/WikiPanel";
 import DeadlinesWidget from "../components/ai/DeadlinesWidget";
 import AssistantLauncher from "../components/ai/AssistantLauncher";
 import FilePanel from "../components/files/FilePanel";
@@ -34,6 +35,7 @@ import {
 const TABS = [
   { key: "overview",      label: "Overview"      },
   { key: "tasks",         label: "Tasks"         },
+  { key: "wiki",          label: "Wiki"          },
   { key: "team",          label: "Team"          },
   { key: "coauthors",     label: "Co-Authors"    },
   { key: "pipeline",      label: "Pipeline"      },
@@ -525,6 +527,10 @@ export default function WorkspaceDetail() {
 
       {tab === "tasks" && (
         <WorkspaceKanban wsId={id} canEdit={WS_ADMIN_ROLES.has(myRole) || myRole === "Co-Investigator" || myRole === "Researcher"} />
+      )}
+
+      {tab === "wiki" && (
+        <WikiPanel workspaceId={id} members={ws?.members_info || []} />
       )}
 
       {tab === "team" && (
