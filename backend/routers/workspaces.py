@@ -36,6 +36,7 @@ from auth_utils import get_current_user
 from db import get_db
 from models import WorkspaceCreate, WorkspaceUpdate
 from services.permissions import assert_quota
+from services.workspace_metrics import compute_task_metrics, compute_content_activity
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -585,10 +586,14 @@ async def workspace_analytics(
         {"$limit": 10},
     ]
 
-    by_day, by_kind, contribs = await asyncio.gather(
+    project_ids = doc.get("project_ids", []) or []
+
+    by_day, by_kind, contribs, task_metrics, content_activity = await asyncio.gather(
         db.workspace_activity.aggregate(by_day_pipeline).to_list(366),
         db.workspace_activity.aggregate(by_kind_pipeline).to_list(20),
         db.workspace_activity.aggregate(contrib_pipeline).to_list(10),
+        compute_task_metrics(db, project_ids, days),
+        compute_content_activity(db, workspace_id, project_ids, days),
     )
 
     return {
@@ -596,6 +601,9 @@ async def workspace_analytics(
         "activity_by_day":  [{"date": a["_id"], "count": a["count"]} for a in by_day],
         "activity_by_kind": [{"kind": a["_id"], "count": a["count"]} for a in by_kind],
         "top_contributors": [{"user_id": c["_id"], "name": c["name"], "actions": c["count"]} for c in contribs],
+        "tasks":            task_metrics,
+        "comments_by_day":  content_activity["comments_by_day"],
+        "wiki_edits_by_day": content_activity["wiki_edits_by_day"],
     }
 
 

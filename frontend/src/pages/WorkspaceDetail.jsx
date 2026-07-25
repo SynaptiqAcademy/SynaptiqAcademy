@@ -25,12 +25,13 @@ import { FormSelect } from "@/components/ds/FormSelect";
 import { NavTabs } from "@/components/ds/NavTabs";
 import { Modal } from "@/components/ds/Modal";
 import { Alert } from "@/components/ds/Alert";
+import { BarChart, LineChart, DonutChart } from "@/components/ds/Chart";
 import {
   Send, MessageSquare, UserPlus, Activity, Target, FileText,
   Beaker, Users2, ShieldCheck, Trash2, Search, ChevronRight,
   BarChart2, LogOut, ArrowRightLeft,
   BrainCircuit, BookMarked, Microscope, PenLine, AlignLeft, Sparkles,
-  Coins, ArrowRight, Info,
+  Coins, ArrowRight, Info, AlertTriangle, Clock, GitBranch, ListTodo,
 } from "lucide-react";
 
 const TABS = [
@@ -713,6 +714,148 @@ export default function WorkspaceDetail() {
                   </div>
                 )}
               </Card>
+
+              {analytics.tasks && (
+                <>
+                  <div className="grid sm:grid-cols-4 gap-4">
+                    <Card padding="lg">
+                      <div className="overline mb-2">Completion rate</div>
+                      <div className="flex items-center gap-3">
+                        <DonutChart value={Math.round((analytics.tasks.completion_rate_overall || 0) * 100)} size={44} strokeWidth={5}>
+                          <span className="text-[11px] font-bold text-slate-900">
+                            {analytics.tasks.completion_rate_overall != null ? `${Math.round(analytics.tasks.completion_rate_overall * 100)}%` : "—"}
+                          </span>
+                        </DonutChart>
+                        <div className="text-xs text-slate-500 font-mono">{analytics.tasks.tasks_completed_total} of {analytics.tasks.tasks_total} tasks</div>
+                      </div>
+                    </Card>
+                    <Card padding="lg">
+                      <div className="overline">Overdue</div>
+                      <div className="text-2xl font-bold mt-2" style={{ color: analytics.tasks.overdue_count > 0 ? "#DC2626" : "#0f172a" }}>{analytics.tasks.overdue_count}</div>
+                      <div className="text-xs text-slate-500 font-mono mt-1">open tasks past due date</div>
+                    </Card>
+                    <Card padding="lg">
+                      <div className="overline">Blocked</div>
+                      <div className="text-2xl font-bold text-slate-900 mt-2">{analytics.tasks.blocked_count}</div>
+                      <div className="text-xs text-slate-500 font-mono mt-1">waiting on a dependency</div>
+                    </Card>
+                    <Card padding="lg">
+                      <div className="overline">Work in progress</div>
+                      <div className="text-2xl font-bold text-slate-900 mt-2">{analytics.tasks.wip_count}</div>
+                      <div className="text-xs text-slate-500 font-mono mt-1">in progress + review</div>
+                    </Card>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <Card padding="lg">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Clock size={14} strokeWidth={1.5} className="text-[#0F2847]" />
+                        <div className="overline">Cycle time</div>
+                      </div>
+                      {analytics.tasks.cycle_time_days.sample_size === 0 ? (
+                        <div className="text-sm text-slate-500">Not enough completed tasks with tracked status history yet.</div>
+                      ) : (
+                        <>
+                          <div className="text-2xl font-bold text-slate-900">{analytics.tasks.cycle_time_days.avg}d <span className="text-sm font-normal text-slate-500">avg</span></div>
+                          <div className="text-xs text-slate-500 font-mono mt-1">median {analytics.tasks.cycle_time_days.median}d · {analytics.tasks.cycle_time_days.sample_size} tasks · in-progress → completed</div>
+                        </>
+                      )}
+                    </Card>
+                    <Card padding="lg">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Clock size={14} strokeWidth={1.5} className="text-[#0F2847]" />
+                        <div className="overline">Lead time</div>
+                      </div>
+                      {analytics.tasks.lead_time_days.sample_size === 0 ? (
+                        <div className="text-sm text-slate-500">Not enough completed tasks yet.</div>
+                      ) : (
+                        <>
+                          <div className="text-2xl font-bold text-slate-900">{analytics.tasks.lead_time_days.avg}d <span className="text-sm font-normal text-slate-500">avg</span></div>
+                          <div className="text-xs text-slate-500 font-mono mt-1">median {analytics.tasks.lead_time_days.median}d · {analytics.tasks.lead_time_days.sample_size} tasks · created → completed</div>
+                        </>
+                      )}
+                    </Card>
+                  </div>
+
+                  <Card padding="lg">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Activity size={14} strokeWidth={1.5} className="text-[#0F2847]" />
+                      <div className="overline">Burndown — open tasks over time</div>
+                    </div>
+                    {analytics.tasks.tasks_total === 0 ? (
+                      <div className="text-sm text-slate-500">No tasks yet.</div>
+                    ) : (
+                      <LineChart series={[{ label: "Open tasks", data: analytics.tasks.burndown.map((d) => d.open_count), color: "#0F2847" }]} height={140} />
+                    )}
+                  </Card>
+
+                  <Card padding="lg">
+                    <div className="flex items-center gap-2 mb-4">
+                      <GitBranch size={14} strokeWidth={1.5} className="text-[#0F2847]" />
+                      <div className="overline">Cumulative flow by status</div>
+                    </div>
+                    {analytics.tasks.tasks_total === 0 ? (
+                      <div className="text-sm text-slate-500">No tasks yet.</div>
+                    ) : (
+                      <LineChart
+                        height={140}
+                        series={[
+                          { label: "Backlog", data: analytics.tasks.cumulative_flow.map((d) => d.backlog), color: "#63707f" },
+                          { label: "Planned", data: analytics.tasks.cumulative_flow.map((d) => d.planned), color: "#0284C7" },
+                          { label: "In progress", data: analytics.tasks.cumulative_flow.map((d) => d.in_progress), color: "#D97706" },
+                          { label: "Review", data: analytics.tasks.cumulative_flow.map((d) => d.review), color: "#7C3AED" },
+                          { label: "Completed", data: analytics.tasks.cumulative_flow.map((d) => d.completed), color: "#059669" },
+                        ]}
+                      />
+                    )}
+                  </Card>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <Card padding="lg">
+                      <div className="flex items-center gap-2 mb-4">
+                        <ListTodo size={14} strokeWidth={1.5} className="text-[#0F2847]" />
+                        <div className="overline">Workload by assignee</div>
+                      </div>
+                      {analytics.tasks.workload_by_assignee.length === 0 ? (
+                        <div className="text-sm text-slate-500">No open tasks assigned.</div>
+                      ) : (
+                        <BarChart
+                          data={analytics.tasks.workload_by_assignee.map((w) => ({ label: w.name || "Unassigned", value: w.open_count }))}
+                          showValues showLabels height={90}
+                        />
+                      )}
+                    </Card>
+                    <Card padding="lg">
+                      <div className="flex items-center gap-2 mb-4">
+                        <AlertTriangle size={14} strokeWidth={1.5} className="text-[#0F2847]" />
+                        <div className="overline">Completed per week</div>
+                      </div>
+                      {analytics.tasks.completed_trend.length === 0 ? (
+                        <div className="text-sm text-slate-500">No tasks completed in this period.</div>
+                      ) : (
+                        <BarChart
+                          data={analytics.tasks.completed_trend.map((w) => ({ label: w.period_start.slice(5), value: w.count }))}
+                          showValues showLabels height={90}
+                        />
+                      )}
+                    </Card>
+                  </div>
+
+                  <Card padding="lg">
+                    <div className="overline mb-3">Content activity (last {analytics.period_days} days)</div>
+                    <div className="flex gap-8">
+                      <div>
+                        <div className="text-2xl font-bold text-slate-900">{(analytics.comments_by_day || []).reduce((s, d) => s + d.count, 0)}</div>
+                        <div className="text-xs text-slate-500 font-mono mt-1">comments</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold text-slate-900">{(analytics.wiki_edits_by_day || []).reduce((s, d) => s + d.count, 0)}</div>
+                        <div className="text-xs text-slate-500 font-mono mt-1">wiki edits</div>
+                      </div>
+                    </div>
+                  </Card>
+                </>
+              )}
             </>
           )}
         </div>

@@ -278,7 +278,11 @@ async def create_task(project_id: str, payload: TaskCreate, user: dict = Depends
         if doc["parent_task_id"] not in valid_ids:
             raise HTTPException(400, "Unknown parent_task_id")
 
-    doc.update({"project_id": project_id, "created_by": user["id"], "created_at": _now()})
+    created_at = _now()
+    doc.update({
+        "project_id": project_id, "created_by": user["id"], "created_at": created_at,
+        "status_history": [{"status": doc.get("status", "todo"), "at": created_at}],
+    })
     result = await db.tasks.insert_one(doc)
     doc["_id"] = result.inserted_id
     return _ser(doc)
@@ -329,7 +333,10 @@ async def update_task(task_id: str, payload: TaskUpdate, user: dict = Depends(ge
             raise HTTPException(400, "That parent would create a circular task hierarchy")
 
     if update:
-        await db.tasks.update_one({"_id": oid}, {"$set": update})
+        mongo_update = {"$set": update}
+        if "status" in update and update["status"] != task.get("status"):
+            mongo_update["$push"] = {"status_history": {"status": update["status"], "at": _now()}}
+        await db.tasks.update_one({"_id": oid}, mongo_update)
     doc = await db.tasks.find_one({"_id": oid})
     return _ser(doc)
 
