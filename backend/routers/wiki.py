@@ -17,10 +17,11 @@ import logging
 from typing import Optional
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from auth_utils import get_current_user
 from db import get_db
+from rate_limit import limiter, WRITE_RATE
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 from routers.workspaces import _assert_member, _now, _ser
@@ -147,7 +148,9 @@ async def duplicate_page(page_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.get("/workspaces/{workspace_id}/wiki/search")
+@limiter.limit(WRITE_RATE)
 async def search_wiki(
+    request: Request,
     workspace_id: str,
     q: str = Query(..., min_length=1, max_length=200),
     limit: int = Query(default=20, ge=1, le=100),

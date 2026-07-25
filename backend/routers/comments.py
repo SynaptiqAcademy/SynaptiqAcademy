@@ -34,11 +34,12 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from auth_utils import get_current_user
 from db import get_db
 from models import GenericCommentCreate, GenericCommentUpdate, COMMENT_TARGET_TYPES
+from rate_limit import limiter, WRITE_RATE
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 from repo.audit import AuditTrail
@@ -158,7 +159,8 @@ async def list_comments(
 
 
 @router.post("", status_code=201)
-async def create_comment(payload: GenericCommentCreate, user: dict = Depends(get_current_user)):
+@limiter.limit(WRITE_RATE)
+async def create_comment(request: Request, payload: GenericCommentCreate, user: dict = Depends(get_current_user)):
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 

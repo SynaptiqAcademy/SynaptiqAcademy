@@ -290,13 +290,13 @@ class TaskCreate(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     progress: Optional[int] = Field(default=0, ge=0, le=100)
-    depends_on: Optional[List[str]] = None       # other task ids in the same project
+    depends_on: Optional[List[str]] = Field(default=None, max_length=200)  # other task ids in the same project
     parent_task_id: Optional[str] = None
     is_milestone: Optional[bool] = False
 
 
 class TaskUpdate(BaseModel):
-    title: Optional[str] = None
+    title: Optional[str] = Field(default=None, max_length=300)
     assignee_id: Optional[str] = None
     due_date: Optional[str] = None
     priority: Optional[str] = None
@@ -304,7 +304,7 @@ class TaskUpdate(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     progress: Optional[int] = Field(default=None, ge=0, le=100)
-    depends_on: Optional[List[str]] = None
+    depends_on: Optional[List[str]] = Field(default=None, max_length=200)
     parent_task_id: Optional[str] = None
     is_milestone: Optional[bool] = None
 
@@ -564,10 +564,14 @@ class WorkspaceItemUpdate(BaseModel):
     priority:     Optional[str] = None
     start_date:   Optional[str] = None
     due_date:     Optional[str] = None
-    completed_at: Optional[str] = None
+    # completed_at is intentionally NOT client-settable — the server sets it
+    # automatically on the draft->published transition (routers/workspace_items.py).
+    # A client-writable version was a mass-assignment hole (forgeable completion
+    # timestamps) closed in the Phase 10 security pass; no legitimate caller
+    # ever sent this field.
     progress_percentage: Optional[int] = Field(default=None, ge=0, le=100)
     assignee_ids: Optional[List[str]] = None
-    dependency_ids: Optional[List[str]] = None
+    dependency_ids: Optional[List[str]] = Field(default=None, max_length=200)
     labels:       Optional[List[str]] = None
     position:     Optional[int] = None
     icon:         Optional[str] = None
@@ -590,10 +594,12 @@ COMMENT_TARGET_TYPES = ["workspace_item", "task", "manuscript", "workspace"]
 class GenericCommentCreate(BaseModel):
     target_type: str
     target_id:   str
-    workspace_id: Optional[str] = None   # used to authorize + scope notifications
     content:     str = Field(..., min_length=1, max_length=8000)
     parent_comment_id: Optional[str] = None
-    mentions:    Optional[List[str]] = None   # user ids explicitly mentioned
+    # Capped: mentions drive notification sends (routers/comments.py
+    # _notify_mentions) — an unbounded list would let a single comment spam
+    # notifications to an arbitrary number of user ids.
+    mentions:    Optional[List[str]] = Field(default=None, max_length=50)
 
     @field_validator("target_type")
     @classmethod

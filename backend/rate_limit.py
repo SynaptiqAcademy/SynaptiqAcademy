@@ -44,6 +44,10 @@ def _is_test() -> bool:
     return os.environ.get("APP_ENV", "").lower() == "test"
 
 
+def _is_production() -> bool:
+    return os.environ.get("APP_ENV", "development").lower() in ("prod", "production")
+
+
 def _hostname_reachable(hostname: str, port: int, timeout: float = 1.0) -> bool:
     """Return True if hostname:port resolves (DNS only, no TCP connect)."""
     old = socket.getdefaulttimeout()
@@ -60,10 +64,13 @@ def _hostname_reachable(hostname: str, port: int, timeout: float = 1.0) -> bool:
 def _resolve_redis_url(raw: str) -> str | None:
     """Resolve *raw* REDIS_URL to a usable URL, or None for in-memory fallback.
 
-    Handles Docker-only hostnames gracefully: if the hostname in the URL cannot
-    be resolved (e.g. ``synaptiq_redis`` outside Docker), we substitute
-    ``localhost`` with the same port and credentials and try again.  If neither
-    works, we return None so the rate limiter uses MemoryStorage.
+    Handles Docker-only hostnames gracefully outside production: if the
+    hostname in the URL cannot be resolved (e.g. ``synaptiq_redis`` outside
+    Docker), we substitute ``localhost`` with the same port and credentials
+    and try again. In production, an unresolvable hostname means REDIS_URL
+    is misconfigured for this deployment — substituting localhost there
+    would never work and would only mask the real problem, so we log it
+    plainly and degrade to MemoryStorage instead of guessing.
     """
     if not raw:
         return None
@@ -79,7 +86,17 @@ def _resolve_redis_url(raw: str) -> str | None:
         if _hostname_reachable(hostname, port):
             return raw
 
-        # 2. Try substituting localhost (works for local dev with Redis running)
+        if _is_production():
+            logger.error(
+                "Rate limiter: REDIS_URL hostname %r does not resolve in this "
+                "environment — using in-memory storage. This almost always means "
+                "REDIS_URL is set to the wrong value for this deployment. "
+                "Check the REDIS_URL environment variable.",
+                hostname,
+            )
+            return None
+
+        # 2. Non-production convenience: try substituting localhost
         # Replace only the first occurrence so we don't corrupt URL-encoded passwords
         localhost_url = raw.replace(hostname, "localhost", 1)
         if _hostname_reachable("localhost", port):
@@ -135,3 +152,10 @@ limiter = Limiter(
 # Default rate-limit policy (env-overridable).
 # In APP_ENV=test the limiter is disabled so this value is never evaluated.
 AUTH_RATE = os.environ.get("RATE_LIMIT_AUTH", "5/minute")
+
+# General authenticated-write policy — comment creation, wiki search, and
+# similar endpoints that are cheap individually but abusable at volume
+# (notification-spam via comments, repeated full-collection scans via
+# search). Looser than AUTH_RATE since these are behind auth + real
+# membership checks already, not a credential-stuffing surface.
+WRITE_RATE = os.environ.get("RATE_LIMIT_WRITE", "30/minute")
