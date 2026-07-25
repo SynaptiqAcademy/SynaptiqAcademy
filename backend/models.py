@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import List, Literal, Optional
+from typing import Dict, List, Literal, Optional
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
@@ -343,6 +343,12 @@ class WorkspaceUpdate(BaseModel):
     keywords:       Optional[List[str]] = None
     status:         Optional[str] = None
     project_ids:    Optional[List[str]] = None
+    # CRediT co-authorship — author order + contribution roles per member,
+    # and the designated corresponding author. Previously tracked only in
+    # frontend component state and never persisted (lost on every refresh).
+    coauthor_order:          Optional[List[str]] = None
+    coauthor_roles:          Optional[Dict[str, List[str]]] = None
+    corresponding_author_id: Optional[str] = None
 
 
 # ============== MANUSCRIPTS ==============
@@ -492,3 +498,97 @@ class ActionItemUpdate(BaseModel):
 
 class MeetingNoteCreate(BaseModel):
     body: str = Field(..., min_length=1, max_length=10000)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# WORKSPACE ITEMS — generic content model (Workspace redesign Phase 2)
+#
+# A single, reusable shape for workspace-owned content that isn't a
+# project-scoped `Task` (which already has its own working model/endpoints
+# used by the Kanban board — intentionally NOT migrated here to avoid
+# rewriting a tested, working system). Used first for wiki pages; designed
+# so milestones/documents/timeline items can adopt it later without another
+# migration.
+# ══════════════════════════════════════════════════════════════════════════════
+WORKSPACE_ITEM_TYPES = ["wiki_page", "milestone", "document", "timeline_item", "note"]
+WORKSPACE_ITEM_STATUSES = ["draft", "published", "archived"]
+
+
+class WorkspaceItemCreate(BaseModel):
+    item_type:    str                          # one of WORKSPACE_ITEM_TYPES
+    project_id:   Optional[str] = None
+    parent_id:    Optional[str] = None          # nesting (e.g. wiki page hierarchy)
+    title:        str = Field(..., min_length=1, max_length=300)
+    description:  Optional[str] = ""
+    content:      Optional[dict] = None         # structured content (e.g. Tiptap JSON)
+    status:       Optional[str] = "draft"
+    priority:     Optional[str] = None          # low | medium | high
+    start_date:   Optional[str] = None
+    due_date:     Optional[str] = None
+    progress_percentage: Optional[int] = Field(default=None, ge=0, le=100)
+    assignee_ids: Optional[List[str]] = None
+    dependency_ids: Optional[List[str]] = None
+    labels:       Optional[List[str]] = None
+    position:     Optional[int] = None          # ordering within parent/column
+    icon:         Optional[str] = None           # wiki page icon (emoji or key)
+    cover_image:  Optional[str] = None
+
+    @field_validator("item_type")
+    @classmethod
+    def _valid_item_type(cls, v):
+        if v not in WORKSPACE_ITEM_TYPES:
+            raise ValueError(f"item_type must be one of {WORKSPACE_ITEM_TYPES}")
+        return v
+
+
+class WorkspaceItemUpdate(BaseModel):
+    parent_id:    Optional[str] = None
+    title:        Optional[str] = None
+    description:  Optional[str] = None
+    content:      Optional[dict] = None
+    status:       Optional[str] = None
+    priority:     Optional[str] = None
+    start_date:   Optional[str] = None
+    due_date:     Optional[str] = None
+    completed_at: Optional[str] = None
+    progress_percentage: Optional[int] = Field(default=None, ge=0, le=100)
+    assignee_ids: Optional[List[str]] = None
+    dependency_ids: Optional[List[str]] = None
+    labels:       Optional[List[str]] = None
+    position:     Optional[int] = None
+    icon:         Optional[str] = None
+    cover_image:  Optional[str] = None
+    expected_version: Optional[int] = None  # optimistic concurrency check
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# GENERIC COMMENTS — polymorphic comment system (Workspace redesign Phase 3)
+#
+# One comments collection for any commentable entity (workspace items, tasks,
+# manuscripts, ...) instead of a per-entity comments table. The pre-existing
+# `manuscript_comments` collection is left untouched (nothing reads/writes it
+# differently) — manuscripts get a thin adapter routing new comments through
+# this generic system going forward without breaking old data or endpoints.
+# ══════════════════════════════════════════════════════════════════════════════
+COMMENT_TARGET_TYPES = ["workspace_item", "task", "manuscript", "workspace"]
+
+
+class GenericCommentCreate(BaseModel):
+    target_type: str
+    target_id:   str
+    workspace_id: Optional[str] = None   # used to authorize + scope notifications
+    content:     str = Field(..., min_length=1, max_length=8000)
+    parent_comment_id: Optional[str] = None
+    mentions:    Optional[List[str]] = None   # user ids explicitly mentioned
+
+    @field_validator("target_type")
+    @classmethod
+    def _valid_target_type(cls, v):
+        if v not in COMMENT_TARGET_TYPES:
+            raise ValueError(f"target_type must be one of {COMMENT_TARGET_TYPES}")
+        return v
+
+
+class GenericCommentUpdate(BaseModel):
+    content:  Optional[str] = None
+    resolved: Optional[bool] = None

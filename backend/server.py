@@ -247,6 +247,7 @@ async def _db_unavailable_handler(request: Request, exc: Exception):
     logger.error(
         "Database unavailable on %s %s — trace=%s — %s",
         request.method, request.url.path, trace_id, classify_mongo_error(exc),
+        exc_info=True,
     )
     return JSONResponse(
         status_code=503,
@@ -457,6 +458,10 @@ app.include_router(twin_router.router)
 from routers import ara as ara_router
 app.include_router(ara_router.router)
 
+# Workspace redesign — generic content model (Phase 2)
+from routers import workspace_items as workspace_items_router
+app.include_router(workspace_items_router.router)
+
 # Phase 7 — Public platform status endpoint
 from routers.platform_status import router as platform_status_router
 app.include_router(platform_status_router)
@@ -648,6 +653,7 @@ async def startup():
             "Startup: MongoDB unreachable — skipping seed/migrations for this run "
             "(idempotent, will run on next successful startup). %s",
             classify_mongo_error(ping_exc),
+            exc_info=True,
         )
         return
 
@@ -730,6 +736,23 @@ async def startup():
             logger.info("Security indexes created")
         except Exception as sec_e:
             logger.warning("Security index creation warning: %s", sec_e)
+
+        # ── Workspace redesign indexes (items, comments) ────────────────────
+        try:
+            await db.workspace_items.create_index([("workspace_id", 1), ("item_type", 1)])
+            await db.workspace_items.create_index([("workspace_id", 1), ("status", 1)])
+            await db.workspace_items.create_index([("workspace_id", 1), ("parent_id", 1)])
+            await db.workspace_items.create_index([("assignee_ids", 1)])
+            await db.workspace_items.create_index([("due_date", 1)])
+            await db.workspace_items.create_index([("dependency_ids", 1)])
+            await db.workspace_items.create_index([("deleted_at", 1)])
+            await db.item_comments.create_index([("target_type", 1), ("target_id", 1), ("created_at", 1)])
+            await db.item_comments.create_index([("parent_comment_id", 1)])
+            await db.item_comments.create_index([("workspace_id", 1)])
+            await db.wiki_page_versions.create_index([("page_id", 1), ("created_at", -1)])
+            logger.info("Workspace items/comments/wiki indexes created")
+        except Exception as wi_e:
+            logger.warning("Workspace items index creation warning: %s", wi_e)
 
         # ── AUTH-002: Backfill email_verified for existing users ───────────
         try:
