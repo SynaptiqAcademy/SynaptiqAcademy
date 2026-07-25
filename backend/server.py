@@ -462,6 +462,10 @@ app.include_router(ara_router.router)
 from routers import workspace_items as workspace_items_router
 app.include_router(workspace_items_router.router)
 
+# Workspace redesign — generic polymorphic comments (Phase 3)
+from routers import comments as comments_router
+app.include_router(comments_router.router)
+
 # Phase 7 — Public platform status endpoint
 from routers.platform_status import router as platform_status_router
 app.include_router(platform_status_router)
