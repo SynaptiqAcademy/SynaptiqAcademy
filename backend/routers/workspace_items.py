@@ -34,6 +34,7 @@ from models import WorkspaceItemCreate, WorkspaceItemUpdate, WORKSPACE_ITEM_TYPE
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 from routers.workspaces import _assert_member, _assert_admin, _now, _ser
+from services.dependency_graph import detect_cycle
 
 log = logging.getLogger("synaptiq.workspace_items")
 router = APIRouter(prefix="/api", tags=["workspace-items"])
@@ -56,29 +57,8 @@ async def _get_workspace_or_404(db, workspace_id: str) -> dict:
     return ws
 
 
-def detect_cycle(item_id: str, dependency_ids: list[str], all_deps: dict[str, list[str]]) -> bool:
-    """DFS cycle detection: would adding `dependency_ids` to `item_id` create
-    a circular dependency chain? `all_deps` maps id -> its current dependency
-    list (excluding item_id's own, since we're testing the proposed new set).
-    """
-    graph = dict(all_deps)
-    graph[item_id] = dependency_ids
-    visiting, visited = set(), set()
-
-    def visit(node: str) -> bool:
-        if node in visiting:
-            return True  # cycle
-        if node in visited:
-            return False
-        visiting.add(node)
-        for dep in graph.get(node, []) or []:
-            if visit(dep):
-                return True
-        visiting.discard(node)
-        visited.add(node)
-        return False
-
-    return visit(item_id)
+# detect_cycle now lives in services/dependency_graph.py (shared with the
+# Gantt task-dependency validation in routers/projects.py).
 
 
 @router.post("/workspaces/{workspace_id}/items")

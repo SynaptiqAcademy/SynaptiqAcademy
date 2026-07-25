@@ -185,6 +185,11 @@ export const TID = {
   kanbanNewTitle: (status) => `kanban-new-title-${status}`,
   kanbanNewSubmit: (status) => `kanban-new-submit-${status}`,
   kanbanProjectPicker: "kanban-project-picker",
+  // Gantt (workspace timeline)
+  gantt: "workspace-gantt",
+  ganttBar: (id) => `gantt-bar-${id}`,
+  ganttZoom: (view) => `gantt-zoom-${view}`,
+  ganttToday: "gantt-today-marker",
   // Manuscript review workflow
   manuscriptReviewsTab: "manuscript-reviews-tab",
   manuscriptReviewAssignBtn: "manuscript-review-assign-btn",

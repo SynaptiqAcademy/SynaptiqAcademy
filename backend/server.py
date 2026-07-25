@@ -1316,6 +1316,10 @@ async def startup():
             # Tasks compound for kanban + filtering
             await db.tasks.create_index([("project_id", 1), ("status", 1)])
             await db.tasks.create_index([("project_id", 1), ("created_at", -1)])
+            # Gantt (Workspace redesign Phase 7): hierarchy + dependency lookups
+            await db.tasks.create_index([("project_id", 1), ("parent_task_id", 1)])
+            await db.tasks.create_index([("project_id", 1), ("start_date", 1)])
+            await db.tasks.create_index([("depends_on", 1)])
             # Milestones sort
             await db.milestones.create_index([("project_id", 1), ("due_date", 1)])
             # ORCID uniqueness — prevents two accounts sharing the same verified ORCID

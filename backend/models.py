@@ -285,6 +285,14 @@ class TaskCreate(BaseModel):
     due_date: Optional[str] = None
     priority: str = "medium"
     status: str = "todo"
+    # Gantt/timeline fields (Workspace redesign Phase 7) — all optional so
+    # existing Kanban-only callers are unaffected.
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    progress: Optional[int] = Field(default=0, ge=0, le=100)
+    depends_on: Optional[List[str]] = None       # other task ids in the same project
+    parent_task_id: Optional[str] = None
+    is_milestone: Optional[bool] = False
 
 
 class TaskUpdate(BaseModel):
@@ -293,6 +301,12 @@ class TaskUpdate(BaseModel):
     due_date: Optional[str] = None
     priority: Optional[str] = None
     status: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    progress: Optional[int] = Field(default=None, ge=0, le=100)
+    depends_on: Optional[List[str]] = None
+    parent_task_id: Optional[str] = None
+    is_milestone: Optional[bool] = None
 
 
 class MilestoneCreate(BaseModel):

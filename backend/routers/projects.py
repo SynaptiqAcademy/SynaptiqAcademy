@@ -8,6 +8,7 @@ from auth_utils import get_current_user
 from db import get_db
 from models import ProjectCreate, ProjectUpdate, TaskCreate, TaskUpdate, MilestoneCreate, LiteratureCreate
 from services.permissions import assert_quota
+from services.dependency_graph import detect_cycle
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -237,6 +238,24 @@ async def list_tasks(project_id: str, user: dict = Depends(get_current_user)):
     return [_ser(d) for d in docs]
 
 
+async def _project_task_ids(db, project_id: str) -> set:
+    docs = await db.tasks.find({"project_id": project_id}, {"_id": 1}).to_list(2000)
+    return {str(d["_id"]) for d in docs}
+
+
+async def _dep_map(db, project_id: str, field: str, exclude_id: Optional[str] = None) -> dict:
+    """id -> current value of `field` (a list) for every other task in the project."""
+    docs = await db.tasks.find({"project_id": project_id}, {field: 1}).to_list(2000)
+    out = {}
+    for d in docs:
+        tid = str(d["_id"])
+        if tid == exclude_id:
+            continue
+        val = d.get(field) or []
+        out[tid] = val if isinstance(val, list) else [val]
+    return out
+
+
 @router.post("/{project_id}/tasks")
 async def create_task(project_id: str, payload: TaskCreate, user: dict = Depends(get_current_user)):
     db = get_db()
@@ -244,6 +263,21 @@ async def create_task(project_id: str, payload: TaskCreate, user: dict = Depends
 
     await _assert_project_member(db, project_id, user["id"])
     doc = payload.model_dump()
+
+    if doc.get("start_date") and doc.get("end_date") and doc["start_date"] > doc["end_date"]:
+        raise HTTPException(400, "start_date must be on or before end_date")
+
+    valid_ids = None
+    if doc.get("depends_on"):
+        valid_ids = await _project_task_ids(db, project_id)
+        unknown = [d for d in doc["depends_on"] if d not in valid_ids]
+        if unknown:
+            raise HTTPException(400, f"Unknown dependency task id(s): {unknown}")
+    if doc.get("parent_task_id"):
+        valid_ids = valid_ids if valid_ids is not None else await _project_task_ids(db, project_id)
+        if doc["parent_task_id"] not in valid_ids:
+            raise HTTPException(400, "Unknown parent_task_id")
+
     doc.update({"project_id": project_id, "created_by": user["id"], "created_at": _now()})
     result = await db.tasks.insert_one(doc)
     doc["_id"] = result.inserted_id
@@ -263,7 +297,37 @@ async def update_task(task_id: str, payload: TaskUpdate, user: dict = Depends(ge
     if not task:
         raise HTTPException(status_code=404, detail="Not found")
     await _assert_project_member(db, task["project_id"], user["id"])
+    project_id = task["project_id"]
     update = {k: v for k, v in payload.model_dump(exclude_unset=True).items() if v is not None}
+
+    start = update.get("start_date", task.get("start_date"))
+    end = update.get("end_date", task.get("end_date"))
+    if start and end and start > end:
+        raise HTTPException(400, "start_date must be on or before end_date")
+
+    if "depends_on" in update:
+        deps = update["depends_on"] or []
+        if task_id in deps:
+            raise HTTPException(400, "A task cannot depend on itself")
+        valid_ids = await _project_task_ids(db, project_id)
+        unknown = [d for d in deps if d not in valid_ids]
+        if unknown:
+            raise HTTPException(400, f"Unknown dependency task id(s): {unknown}")
+        all_deps = await _dep_map(db, project_id, "depends_on", exclude_id=task_id)
+        if detect_cycle(task_id, deps, all_deps):
+            raise HTTPException(400, "That dependency would create a circular reference")
+
+    if "parent_task_id" in update and update["parent_task_id"]:
+        parent_id = update["parent_task_id"]
+        if parent_id == task_id:
+            raise HTTPException(400, "A task cannot be its own parent")
+        valid_ids = await _project_task_ids(db, project_id)
+        if parent_id not in valid_ids:
+            raise HTTPException(400, "Unknown parent_task_id")
+        all_parents = await _dep_map(db, project_id, "parent_task_id", exclude_id=task_id)
+        if detect_cycle(task_id, [parent_id], all_parents):
+            raise HTTPException(400, "That parent would create a circular task hierarchy")
+
     if update:
         await db.tasks.update_one({"_id": oid}, {"$set": update})
     doc = await db.tasks.find_one({"_id": oid})
