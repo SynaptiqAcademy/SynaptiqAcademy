@@ -7,6 +7,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { userTypeLabel } from "../lib/userTypes";
 import WorkspaceKanban from "../components/researchOS/WorkspaceKanban";
 import WorkspaceGantt from "../components/researchOS/WorkspaceGantt";
+import PresenceBar from "../components/researchOS/PresenceBar";
+import { useWorkspacePresence } from "../hooks/useWorkspacePresence";
 import WikiPanel from "../components/wiki/WikiPanel";
 import DeadlinesWidget from "../components/ai/DeadlinesWidget";
 import AssistantLauncher from "../components/ai/AssistantLauncher";
@@ -198,6 +200,8 @@ export default function WorkspaceDetail() {
   const [dash, setDash] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [tab, setTab] = useState("overview");
+  const [wikiTyping, setWikiTyping] = useState(false);
+  const { peers: presencePeers } = useWorkspacePresence(id, tab, tab === "wiki" && wikiTyping);
   const [note, setNote] = useState("");
   const [showInvite, setShowInvite] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
@@ -360,6 +364,7 @@ export default function WorkspaceDetail() {
               <Badge variant="default" size="sm" data-testid={TID.workspaceYourRole}>
                 <ShieldCheck size={11} strokeWidth={1.5} /> Your role: {myRole}
               </Badge>
+              <PresenceBar peers={presencePeers} />
             </div>
             <h1 className="text-[1.4rem] font-semibold text-slate-900 tracking-tight mt-2 leading-snug">{ws.name}</h1>
             {ws.description && <p className="text-[13px] text-slate-500 mt-2 max-w-3xl leading-relaxed">{ws.description}</p>}
@@ -537,7 +542,7 @@ export default function WorkspaceDetail() {
       )}
 
       {tab === "wiki" && (
-        <WikiPanel workspaceId={id} members={ws?.members_info || []} />
+        <WikiPanel workspaceId={id} members={ws?.members_info || []} onTypingChange={setWikiTyping} />
       )}
 
       {tab === "team" && (

@@ -70,10 +70,11 @@ function PresenceBadge({ status }) {
  * installed. Tables, checklists, images/embeds/PDF previews are not
  * implemented yet (no extension installed for them) — a disclosed gap.
  */
-export default function WikiEditor({ pageId, content, onSave, editable = true, autosaveMs = 1500 }) {
+export default function WikiEditor({ pageId, content, onSave, onTypingChange, editable = true, autosaveMs = 1500 }) {
   const { user } = useAuth();
   const { ydoc, awareness, status } = useWikiCollab(pageId, user);
   const saveTimer = useRef(null);
+  const typingTimer = useRef(null);
 
   const editor = useEditor({
     extensions: [
@@ -88,6 +89,11 @@ export default function WikiEditor({ pageId, content, onSave, editable = true, a
     ],
     editable,
     onUpdate: ({ editor }) => {
+      if (onTypingChange) {
+        onTypingChange(true);
+        if (typingTimer.current) clearTimeout(typingTimer.current);
+        typingTimer.current = setTimeout(() => onTypingChange(false), 2000);
+      }
       if (!onSave) return;
       const json = editor.getJSON();
       if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -106,7 +112,10 @@ export default function WikiEditor({ pageId, content, onSave, editable = true, a
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
 
-  useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current); }, []);
+  useEffect(() => () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    if (typingTimer.current) clearTimeout(typingTimer.current);
+  }, []);
 
   if (!editor) return null;
 

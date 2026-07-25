@@ -22,7 +22,7 @@ function fmtDate(iso) {
  * search, and comments — everything persisted through the real
  * /api/workspaces/{id}/items + /api/wiki/* endpoints, nothing local-only.
  */
-export default function WikiPanel({ workspaceId, members = [] }) {
+export default function WikiPanel({ workspaceId, members = [], onTypingChange }) {
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeId, setActiveId] = useState(null);
@@ -217,7 +217,7 @@ export default function WikiPanel({ workspaceId, members = [] }) {
               </div>
             </div>
 
-            <WikiEditor key={active.id} pageId={active.id} content={active.content} onSave={saveContent} />
+            <WikiEditor key={active.id} pageId={active.id} content={active.content} onSave={saveContent} onTypingChange={onTypingChange} />
           </div>
         )}
       </div>

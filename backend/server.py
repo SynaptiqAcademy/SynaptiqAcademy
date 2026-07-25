@@ -474,6 +474,10 @@ app.include_router(wiki_router.router)
 from routers import wiki_collab as wiki_collab_router
 app.include_router(wiki_collab_router.router)
 
+# Workspace redesign — live presence (Phase 9)
+from routers import presence as presence_router
+app.include_router(presence_router.router)
+
 # Phase 7 — Public platform status endpoint
 from routers.platform_status import router as platform_status_router
 app.include_router(platform_status_router)
@@ -1671,6 +1675,19 @@ async def start_zero_trust_platform():
         await init_zero_trust(app, db)
     except Exception as exc:
         logger.warning("Zero Trust platform startup error (non-fatal): %s", exc)
+
+
+@app.on_event("startup")
+async def start_presence_sweep():
+    """Background sweep for the workspace presence WebSocket (Phase 9) —
+    purges connections that went silent past STALE_AFTER without a clean
+    close (crashed tab, dropped network) so stale "online" users don't
+    linger in the presence list."""
+    try:
+        from routers.presence import presence_sweep_loop
+        asyncio.create_task(presence_sweep_loop())
+    except Exception as exc:
+        logger.warning("Presence sweep failed to start (non-fatal): %s", exc)
 
 
 @app.on_event("startup")
