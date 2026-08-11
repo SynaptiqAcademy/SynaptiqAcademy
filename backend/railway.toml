@@ -18,6 +18,6 @@ buildCommand = "pip install -r requirements.txt"
 [deploy]
 startCommand = "gunicorn server:app -k uvicorn.workers.UvicornWorker --workers ${WORKERS:-2} --bind 0.0.0.0:$PORT --timeout 120 --max-requests 1000 --max-requests-jitter 100 --access-logfile - --error-logfile -"
 healthcheckPath = "/api/health/live"
-healthcheckTimeout = 100
+healthcheckTimeout = 240
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
