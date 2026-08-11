@@ -6,11 +6,14 @@ Error requests (4xx/5xx) are also logged individually for incident review.
 """
 from __future__ import annotations
 
+import logging
 import time
 from datetime import datetime, timezone, timedelta
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
+
+logger = logging.getLogger("synaptiq.api_monitor")
 
 _SKIP_PREFIXES = (
     "/api/admin/x/api-monitor",  # avoid recursive self-logging
@@ -45,7 +48,22 @@ class APIMonitorMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         t0 = time.time()
-        response = await call_next(request)
+        # Always produce a Response ourselves on exception rather than letting
+        # it escape uncaught: Starlette's BaseHTTPMiddleware.call_next() can
+        # turn an exception that propagates past this point into an opaque
+        # "RuntimeError: No response returned." for the next middleware out
+        # in the stack, destroying the real error. Logging it fully here and
+        # returning an explicit 500 keeps every outer layer working with a
+        # real Response while still preserving the actual exception in logs.
+        try:
+            response = await call_next(request)
+        except Exception:
+            logger.exception(
+                "APIMonitorMiddleware: unhandled exception in request pipeline — %s %s",
+                request.method, path,
+            )
+            from starlette.responses import JSONResponse
+            return JSONResponse(status_code=500, content={"detail": "Internal server error"})
         duration_ms = round((time.time() - t0) * 1000, 2)
 
         method      = request.method

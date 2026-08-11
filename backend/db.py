@@ -1,9 +1,7 @@
 import os
 import re
-import ssl
 import time
 import logging
-import platform
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import (
     ConfigurationError, ServerSelectionTimeoutError, OperationFailure,
@@ -76,28 +74,16 @@ def db_down_reason() -> str:
 
 
 def classify_mongo_error(exc: Exception) -> str:
-    """Turn a raw pymongo connectivity exception into an actionable diagnostic.
+    """Return the real exception type and message — no pattern-based guessing.
 
     Shared by get_db()'s constructor-time handling and any call site that
-    wraps a live query (login, register, health checks, background jobs) —
-    the same failure (e.g. Atlas TLS/IP-allowlist rejection) can surface at
-    either point depending on whether the client had already connected once.
+    wraps a live query (login, register, health checks, background jobs).
+    Full tracebacks are logged separately via exc_info=True at the actual
+    catch site; this is just the short-form status string used by the
+    circuit breaker and health check, so it must reflect what MongoDB
+    actually said, not a hypothesis about what it might mean.
     """
-    err = str(exc)
-    if "TLSV1_ALERT_INTERNAL_ERROR" in err or "tlsv1 alert internal error" in err.lower():
-        return (
-            "MongoDB Atlas TLS rejected — this is almost certainly an IP allowlist issue. "
-            "Go to: Atlas UI → Network Access → IP Access List → Add IP Address. "
-            "Add the server's current public IP (or 0.0.0.0/0 for development)."
-        )
-    if "no nameservers" in err.lower() or "nameserver" in err.lower():
-        return "MongoDB DNS failure: could not resolve the Atlas SRV record. Check DNS/network egress."
-    if isinstance(exc, ServerSelectionTimeoutError):
-        return (
-            "MongoDB server selection timed out. Check: (1) Atlas Network Access IP allowlist, "
-            "(2) firewall rules, (3) the cluster is not paused."
-        )
-    return f"MongoDB connectivity error: {type(exc).__name__}: {err[:200]}"
+    return f"{type(exc).__name__}: {exc}"
 
 # ── Env var resolution ────────────────────────────────────────────────────────
 # Primary:  MONGODB_URI  /  MONGODB_DB_NAME  (Atlas standard)
@@ -271,70 +257,20 @@ def get_db():
             _db = _client[db_name]
             _db_proxy = None  # reset proxy whenever motor db is (re)initialised
             logger.info("MongoDB client initialised — database: %s", db_name)
-        except ConfigurationError as exc:
-            err = str(exc)
-            if "no nameservers" in err or "nameserver" in err.lower():
-                logger.error(
-                    "MongoDB DNS failure: could not resolve SRV record for %s. "
-                    "Ensure DNS is reachable or use a plain mongodb:// URI. Detail: %s",
-                    uri_redacted, err[:200],
-                )
-            elif "ssl" in err.lower() or "tls" in err.lower():
-                logger.error(
-                    "MongoDB TLS configuration error connecting to %s. "
-                    "Python %s / OpenSSL %s may be incompatible with Atlas TLS policy. "
-                    "Try upgrading pymongo>=4.9 or use Python 3.12. Detail: %s",
-                    uri_redacted,
-                    platform.python_version(),
-                    ssl.OPENSSL_VERSION,
-                    err[:200],
-                )
-            else:
-                logger.error(
-                    "MongoDB configuration error — host=%s detail=%s",
-                    uri_redacted, err[:200],
-                )
+        except ConfigurationError:
+            # Real exception type + full message + traceback — no guessing
+            # about DNS/TLS/version causes here; let the actual error speak.
+            logger.error("MongoDB configuration error — host=%s", uri_redacted, exc_info=True)
             raise
         except ServerSelectionTimeoutError as exc:
-            err = str(exc)
-            if "TLSV1_ALERT_INTERNAL_ERROR" in err or "tlsv1 alert internal error" in err.lower():
-                # Atlas (and other MongoDB TLS proxies) sends TLS internal_error (alert 80)
-                # for connections from IP addresses not in the Network Access IP allowlist.
-                # This is NOT a Python/OpenSSL/PyMongo version problem — standard TLS
-                # to other servers (google.com, mongodb.com) works fine.
-                import socket as _sock
-                try:
-                    public_ip = _sock.gethostbyname(_sock.gethostname())
-                except Exception:
-                    public_ip = "unknown"
-                logger.error(
-                    "MongoDB Atlas TLS rejected — this is almost certainly an IP allowlist issue. "
-                    "Go to: Atlas UI → Network Access → IP Access List → Add IP Address. "
-                    "Add your current public IP or 0.0.0.0/0 for development. "
-                    "Host=%s. Detail: %s",
-                    uri_redacted, err[:300],
-                )
-            else:
-                logger.error(
-                    "MongoDB server selection timeout — host=%s. "
-                    "Check: (1) Atlas Network Access IP allowlist, "
-                    "(2) firewall rules, (3) cluster is not paused. Detail: %s",
-                    uri_redacted, err[:300],
-                )
+            logger.error("MongoDB server selection failed — host=%s", uri_redacted, exc_info=True)
             mark_db_down(exc)
             raise
-        except OperationFailure as exc:
-            logger.error(
-                "MongoDB authentication failed — host=%s. "
-                "Verify credentials in MONGODB_URI. Detail: %s",
-                uri_redacted, str(exc)[:200],
-            )
+        except OperationFailure:
+            logger.error("MongoDB operation failed during client init — host=%s", uri_redacted, exc_info=True)
             raise
-        except Exception as exc:
-            logger.error(
-                "MongoDB client init failed — host=%s error=%s: %s",
-                uri_redacted, type(exc).__name__, str(exc)[:200],
-            )
+        except Exception:
+            logger.error("MongoDB client init failed — host=%s", uri_redacted, exc_info=True)
             raise
 
     if _db_proxy is None:

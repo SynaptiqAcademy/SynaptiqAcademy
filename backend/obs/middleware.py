@@ -97,6 +97,13 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
             asyncio.ensure_future(tracer.start_trace(ctx, path=path, method=request.method))
 
         # ── Execute request ───────────────────────────────────────────────────
+        # AUTH-BUG: this used to re-raise on exception. Starlette's
+        # BaseHTTPMiddleware.call_next() can turn an exception that escapes
+        # here into a generic "RuntimeError: No response returned." for the
+        # *next* middleware out in the stack (CORS), which destroys the real
+        # error. Always producing a Response ourselves — even a 500 — means
+        # every layer above us gets a real, valid Response instead of that
+        # opaque failure, while the real exception is still fully logged here.
         t0 = time.monotonic()
         status_code = 500
         error_msg   = None
@@ -106,7 +113,12 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
         except Exception as exc:
             error_msg   = str(exc)
             status_code = 500
-            raise
+            logger.exception(
+                "ObservabilityMiddleware: unhandled exception in request pipeline — %s %s",
+                request.method, request.url.path,
+            )
+            from starlette.responses import JSONResponse
+            response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
         finally:
             duration_ms = (time.monotonic() - t0) * 1000
             ok          = status_code < 400

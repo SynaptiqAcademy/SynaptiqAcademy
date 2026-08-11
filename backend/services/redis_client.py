@@ -40,10 +40,21 @@ _RETRY_COOLDOWN_SECONDS = float(os.environ.get("REDIS_RETRY_COOLDOWN_SECONDS", "
 _last_cold_retry: float = 0.0
 
 
+def _is_production() -> bool:
+    return os.environ.get("APP_ENV", "development").lower() in ("prod", "production")
+
+
 def _resolve_url(raw: str) -> str:
     """Return a usable Redis URL from *raw*, substituting localhost when the
-    original hostname (e.g. a Docker service name) cannot be resolved.
-    Returns empty string if Redis is definitively unavailable."""
+    original hostname (e.g. a Docker service name) cannot be resolved —
+    but ONLY outside production. In production, an unresolvable hostname
+    means REDIS_URL is misconfigured for this deployment (e.g. it still
+    points at a Docker Compose service name instead of the real Redis
+    service for this environment); substituting localhost there would
+    never work — there's no Redis listening on the container's own
+    loopback — and it would silently mask the real misconfiguration
+    instead of surfacing it. Returns empty string if Redis is definitively
+    unavailable."""
     if not raw:
         return ""
     try:
@@ -63,10 +74,20 @@ def _resolve_url(raw: str) -> str:
         finally:
             socket.setdefaulttimeout(old)
 
-        # Hostname unresolvable — try localhost with same port/credentials
+        if _is_production():
+            logger.error(
+                "REDIS_URL hostname %r does not resolve in this environment — "
+                "running without Redis (degraded mode). This almost always means "
+                "REDIS_URL is set to the wrong value for this deployment (e.g. a "
+                "local/Docker hostname instead of this environment's real Redis "
+                "service). Check the REDIS_URL environment variable.",
+                hostname,
+            )
+            return ""
+
+        # Non-production convenience only: try localhost with same port/credentials
         localhost_url = raw.replace(hostname, "localhost", 1)
         try:
-            socket.setdefaulttimeout(old)
             socket.setdefaulttimeout(1)
             socket.getaddrinfo("localhost", port)
             logger.info(

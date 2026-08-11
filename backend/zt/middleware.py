@@ -72,7 +72,22 @@ class ZeroTrustMiddleware(BaseHTTPMiddleware):
         asyncio.ensure_future(self._track(identity, request))
 
         # ── 4. Call downstream ────────────────────────────────────────────────
-        response = await call_next(request)
+        # Always produce a Response ourselves on exception rather than letting
+        # it escape uncaught: Starlette's BaseHTTPMiddleware.call_next() can
+        # turn an exception that propagates past this point into an opaque
+        # "RuntimeError: No response returned." for the next middleware out
+        # in the stack, destroying the real error. Logging it fully here and
+        # returning an explicit 500 keeps every outer layer working with a
+        # real Response while still preserving the actual exception in logs.
+        try:
+            response = await call_next(request)
+        except Exception:
+            logger.exception(
+                "ZeroTrustMiddleware: unhandled exception in request pipeline — %s %s",
+                request.method, path,
+            )
+            from starlette.responses import JSONResponse
+            return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
         # ── 5. Security response headers ──────────────────────────────────────
         response.headers["X-ZT-Identity-Type"] = identity.identity_type
