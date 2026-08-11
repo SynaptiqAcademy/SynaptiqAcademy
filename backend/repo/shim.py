@@ -35,9 +35,21 @@ from .security_context import SecurityContext
 log = logging.getLogger(__name__)
 
 # Collections that are append-only audit / log tables — skip audit recursion
+#
+# Also exempt: high-frequency internal/operational collections whose writes
+# don't represent a business-data change worth auditing. api_stats alone is
+# written on every single HTTP request (middleware/api_monitor.py), and the
+# worker_* collections get heartbeat/lock/status writes every few seconds
+# per running worker. Left un-exempted, these generated ~718k audit_log
+# documents (99.98% of the collection) in under 30 days and filled the
+# Atlas free-tier storage quota, blocking all writes cluster-wide —
+# including real logins and registrations.
 _AUDIT_EXEMPT = frozenset({
     "audit_log", "data_audit", "error_logs", "api_error_log", "email_log",
     "security_events", "session_events", "ai_usage_logs", "billing_events",
+    "api_stats", "obs_logs", "obs_traces",
+    "worker_registry", "worker_schedules", "worker_locks", "worker_jobs",
+    "worker_schedule_locks", "worker_dlq",
 })
 
 
