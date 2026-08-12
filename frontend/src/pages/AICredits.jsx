@@ -15,8 +15,8 @@ import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import {
-  Coins, TrendingUp, ArrowRight, Sparkles, Activity, CreditCard,
-  ChevronRight, Package, BarChart2, Clock, ExternalLink, Info,
+  Coins, TrendingUp, Sparkles, Activity, CreditCard,
+  ChevronRight, Package, BarChart2, ExternalLink, Info,
   BookMarked, Target, FlaskConical, PenLine, AlignLeft, Microscope,
   Users, Bot,
 } from "lucide-react";
@@ -256,33 +256,6 @@ export default function AICredits() {
             )}
           </>
         )}
-
-        {/* ── Subscription vs credits explainer ─────────────────────── */}
-        <Card padding="lg" className="bg-slate-50">
-          <div className="overline mb-3">Two separate economies</div>
-          <div className="grid sm:grid-cols-2 gap-5">
-            <div>
-              <div className="text-sm font-medium text-slate-900 mb-1">Subscription → Collaboration</div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Plans unlock network features, team access, workspace limits, messaging, and institution tools.
-                Collaboration is free from credits.
-              </p>
-              <Link to="/pricing" className="mt-2 inline-flex items-center gap-1 text-xs text-[#0F2847] border-b border-[#0F2847] hover:opacity-70">
-                View plans <ArrowRight size={10} strokeWidth={1.5} />
-              </Link>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-slate-900 mb-1">Credits → AI Tools</div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                AI tools consume Research Credits. Your plan includes a monthly allowance.
-                Additional credits can be purchased as packs that never expire.
-              </p>
-              <Link to="/ai-suite" className="mt-2 inline-flex items-center gap-1 text-xs text-[#0F2847] border-b border-[#0F2847] hover:opacity-70">
-                Browse AI tools <ArrowRight size={10} strokeWidth={1.5} />
-              </Link>
-            </div>
-          </div>
-        </Card>
 
       </div>
     </ResearchLayout>

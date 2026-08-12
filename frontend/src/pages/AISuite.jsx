@@ -17,13 +17,11 @@ import { useAuth } from "../contexts/AuthContext";
 import {
   BrainCircuit, BookMarked, Target, FlaskConical, BarChart2, Microscope,
   PenLine, AlignLeft, Sparkles, Users, TrendingUp, Coins, Activity,
-  ChevronRight, ArrowRight, Bot, Cpu, Lightbulb, Clock, Info,
+  ChevronRight, ArrowRight, Bot, Cpu, Lightbulb, Clock,
 } from "lucide-react";
 import { Spinner } from "@/components/ds/LoadingState";
 import { Card } from "@/components/ds/Card";
 import { Badge } from "@/components/ds/Badge";
-import { Tag } from "@/components/ds/Tag";
-import { Alert } from "@/components/ds/Alert";
 import { StatCard } from "@/components/ds/StatCard";
 import { ResearchLayout } from "@/layouts";
 import { AI_NAV_ITEMS } from "@/lib/navItems";
@@ -229,16 +227,6 @@ const CATEGORIES = [
   },
 ];
 
-// ─── Recommended workflow stages ─────────────────────────────────────────────
-const WORKFLOW_STEPS = [
-  { label: "Build Profile",         to: "/profile-setup",   done: true,  color: "#059669" },
-  { label: "Join Community",        to: "/network",          done: true,  color: "#059669" },
-  { label: "Create Team",           to: "/teams",            done: true,  color: "#059669" },
-  { label: "Open Workspace",        to: "/workspaces",       done: true,  color: "#059669" },
-  { label: "Start Document",        to: "/manuscripts",      done: true,  color: "#059669" },
-  { label: "AI Enhancement",        to: "/ai-suite",         done: false, color: "#0F2847", current: true },
-];
-
 // ─── Tool card ────────────────────────────────────────────────────────────────
 function ToolCard({ tool }) {
   const Icon = tool.icon;
@@ -332,66 +320,19 @@ export default function AISuite() {
     >
       <div className="space-y-10">
 
-        {/* ── Educational header ───────────────────────────────────────── */}
-        <div className="grid lg:grid-cols-3 gap-5">
-          <Card padding="lg" className="lg:col-span-2">
-            <div className="overline flex items-center gap-2 mb-3">
-              <Info size={12} strokeWidth={1.5} className="text-[#0F2847]" />
-              How AI Suite works
-            </div>
-            <h2 className="font-serif text-2xl text-slate-900 mb-3">
-              Your research is ready for AI enhancement
-            </h2>
-            <p className="text-sm text-slate-600 leading-relaxed mb-5 max-w-2xl">
-              AI Suite is a professional assistant layer — it improves, validates, and accelerates research that already exists.
-              Every tool works best when applied to real work: a manuscript in progress, an active workspace, or a specific research question.
-              AI never generates complete papers from scratch.
-            </p>
-            {/* Workflow arrow strip */}
-            <div className="flex items-center gap-1 flex-wrap">
-              {WORKFLOW_STEPS.map((step, i) => (
-                <React.Fragment key={step.label}>
-                  <Link to={step.to} style={{ textDecoration: "none" }}>
-                    <Tag
-                      variant={step.current || step.done ? "active" : "default"}
-                      color={step.current ? "#0F2847" : step.done ? "#059669" : undefined}
-                    >
-                      {step.label}
-                    </Tag>
-                  </Link>
-                  {i < WORKFLOW_STEPS.length - 1 && (
-                    <ArrowRight size={10} strokeWidth={1.5} className="text-slate-300 shrink-0" />
-                  )}
-                </React.Fragment>
-              ))}
-            </div>
-          </Card>
-
-          {/* Credit widget */}
-          <div>
-            <CreditWidget balance={balance} loading={loading} />
-            {totalUsed30d > 0 && (
-              <StatCard
-                className="mt-3"
-                label="Last 30 days"
-                value={totalUsed30d}
-                sub="credits consumed — view analytics"
-                to="/ai-usage"
-              />
-            )}
-          </div>
+        {/* ── Credit widget ────────────────────────────────────────────── */}
+        <div className="max-w-sm">
+          <CreditWidget balance={balance} loading={loading} />
+          {totalUsed30d > 0 && (
+            <StatCard
+              className="mt-3"
+              label="Last 30 days"
+              value={totalUsed30d}
+              sub="credits consumed — view analytics"
+              to="/ai-usage"
+            />
+          )}
         </div>
-
-        {/* ── Quick-launch from workspace recommendation ────────────────── */}
-        <Alert variant="warning" icon={Sparkles} title="Launch AI directly from your Workspace">
-          <p className="leading-relaxed">
-            Open any workspace, go to the <strong>AI Enhancement</strong> tab, and get tool recommendations
-            matched to your document's current stage.
-          </p>
-          <Link to="/workspaces" className="mt-2 inline-flex items-center gap-1 text-xs border-b border-current hover:opacity-70">
-            Go to Workspaces <ArrowRight size={10} strokeWidth={1.5} />
-          </Link>
-        </Alert>
 
         {/* ── Tool categories ───────────────────────────────────────────── */}
         {CATEGORIES.map((cat) => {
@@ -415,29 +356,6 @@ export default function AISuite() {
             </section>
           );
         })}
-
-        {/* ── Quick navigation ──────────────────────────────────────────── */}
-        <section>
-          <div className="overline mb-3">Quick access</div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {[
-              { to: "/ai-credits",  label: "AI Credits",       icon: Coins,     desc: "Balance, packages, purchase" },
-              { to: "/ai-usage",    label: "AI Analytics",     icon: Activity,  desc: "Usage trends, most used tools" },
-              { to: "/copilot",     label: "Research Copilot", icon: Sparkles,  desc: "Multi-agent AI orchestration" },
-              { to: "/workspaces",  label: "Research Workspaces", icon: FlaskConical, desc: "Launch AI from your documents" },
-            ].map(({ to, label, icon: Icon, desc }) => (
-              <Card key={to} to={to} padding="md" className="group hover:border-[#0F2847]">
-                <div className="flex items-start gap-3">
-                  <Icon size={15} strokeWidth={1.5} className="text-[#0F2847] mt-0.5 shrink-0" />
-                  <div>
-                    <div className="text-sm font-medium text-slate-900 group-hover:text-[#0F2847] transition-colors">{label}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">{desc}</div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </section>
 
       </div>
     </ResearchLayout>
