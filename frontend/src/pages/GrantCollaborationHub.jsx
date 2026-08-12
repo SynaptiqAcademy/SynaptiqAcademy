@@ -375,40 +375,6 @@ export default function GrantCollaborationHub() {
   const statusKeys = Object.keys(statusCounts);
   const maxStatusCount = Math.max(1, ...Object.values(statusCounts));
 
-  const statsMeta = (
-    <div className="flex items-center gap-6">
-      <div className="flex items-center gap-2">
-        <div className="w-7 h-7 bg-slate-100 rounded flex items-center justify-center">
-          <Globe size={14} className="text-slate-500" />
-        </div>
-        <div>
-          <p className="text-lg font-semibold text-slate-900 leading-none">{total}</p>
-          <p className="text-xs text-slate-500 mt-0.5">Active collaborations</p>
-        </div>
-      </div>
-      <div className="w-px h-8 bg-slate-200" />
-      <div className="flex items-center gap-2">
-        <div className="w-7 h-7 bg-slate-100 rounded flex items-center justify-center">
-          <Briefcase size={14} className="text-slate-500" />
-        </div>
-        <div>
-          <p className="text-lg font-semibold text-slate-900 leading-none">{myCollabs.length}</p>
-          <p className="text-xs text-slate-500 mt-0.5">My collaborations</p>
-        </div>
-      </div>
-      <div className="w-px h-8 bg-slate-200" />
-      <div className="flex items-center gap-2">
-        <div className="w-7 h-7 bg-slate-100 rounded flex items-center justify-center">
-          <Mail size={14} className="text-slate-500" />
-        </div>
-        <div>
-          <p className="text-lg font-semibold text-slate-900 leading-none">{myInvitations.length}</p>
-          <p className="text-xs text-slate-500 mt-0.5">Pending invitations</p>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <ResearchLayout
       title="Grant Collaboration Hub"
@@ -418,8 +384,21 @@ export default function GrantCollaborationHub() {
           <Plus size={15} /> New Collaboration
         </Button>
       }
-      meta={statsMeta}
     >
+      {/* ── Stats strip ───────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 max-w-md mb-8">
+        {[
+          { label: "Active Collaborations", value: total },
+          { label: "My Collaborations",     value: myCollabs.length },
+          { label: "Pending Invitations",   value: myInvitations.length },
+        ].map(({ label, value }) => (
+          <div key={label} className="text-center">
+            <div className="font-serif text-3xl text-slate-900">{value}</div>
+            <div className="overline mt-1 text-xs">{label}</div>
+          </div>
+        ))}
+      </div>
+
       {/* Tab bar */}
       <div className="bg-white border-b border-slate-200 -mx-6 px-6 mb-6">
         <NavTabs

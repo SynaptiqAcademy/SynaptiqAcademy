@@ -7,7 +7,7 @@ import {
   Plus, Building2, Mail, Check, X, Users2, FlaskConical,
   Microscope, FileText, DollarSign, GraduationCap, Presentation, BookOpen,
   ChevronRight, Search, ArrowRight, BrainCircuit, Layers,
-  Globe, Lock, Shield, Activity, Sparkles, Target,
+  Globe, Lock, Shield, Sparkles, Target,
   FolderOpen, Zap, BookMarked, Users, AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ import { Button } from "../components/ds/Button";
 import { Input } from "../components/ds/Input";
 import { Textarea } from "../components/ds/Textarea";
 import { FormSelect } from "../components/ds/FormSelect";
-import { ACCENT, NAVY, WARM, BRD } from "@/lib/tokens";
+import { ACCENT, NAVY, WARM } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SkeletonPage } from "../components/ds/LoadingState";
 import { EmptyState } from "../components/ds/EmptyState";
@@ -168,23 +168,6 @@ export default function Workspaces() {
 
   const firstName = user?.full_name?.split(" ")[0] || "Researcher";
 
-  const statsMeta = stats && stats.total > 0 ? (
-    <div style={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-      {[
-        { label: "Total Workspaces", value: stats.total,  icon: Layers },
-        { label: "My Workspaces",    value: stats.owned,  icon: Shield },
-        { label: "Collaborative",    value: stats.collab, icon: Users2 },
-        { label: "Active",           value: stats.active, icon: Activity },
-      ].map(({ label, value, icon: Icon }) => (
-        <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", border: `1px solid ${BRD}`, background: "#F8FAFC" }}>
-          <Icon size={11} strokeWidth={1.5} style={{ color: "#94A3B8" }} />
-          <span style={{ fontSize: 11, color: "#64748B" }}>{label}:</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: NAVY, fontFamily: "monospace" }}>{value}</span>
-        </div>
-      ))}
-    </div>
-  ) : null;
-
   return (
     <ResearchLayout
       title="Research Workspaces"
@@ -201,8 +184,23 @@ export default function Workspaces() {
           </Button>
         </div>
       }
-      meta={statsMeta}
     >
+      {/* ── Stats strip ───────────────────────────────────────────────────── */}
+      {stats && stats.total > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mb-8">
+          {[
+            { label: "Total Workspaces", value: stats.total },
+            { label: "My Workspaces",    value: stats.owned },
+            { label: "Collaborative",    value: stats.collab },
+            { label: "Active",           value: stats.active },
+          ].map(({ label, value }) => (
+            <div key={label} className="text-center">
+              <div className="font-serif text-3xl text-slate-900">{value}</div>
+              <div className="overline mt-1 text-xs">{label}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── PENDING INVITATIONS ───────────────────────────────────────────── */}
       {invitations.length > 0 && (

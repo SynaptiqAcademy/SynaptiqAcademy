@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
@@ -6,7 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { Avatar } from "@/components/ds/Avatar";
 import { userTypeLabel } from "../lib/userTypes";
 import { toast } from "sonner";
-import { ACCENT, NAVY, WARM, BRD } from "@/lib/tokens";
+import { NAVY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SkeletonCard } from "@/components/ds/LoadingState";
 import EmptyState from "@/components/ds/EmptyState";
@@ -14,14 +14,13 @@ import { Card } from "@/components/ds/Card";
 import { Badge } from "@/components/ds/Badge";
 import { Tag } from "@/components/ds/Tag";
 import { Button } from "@/components/ds/Button";
-import { SearchBar } from "@/components/ds/SearchBar";
+import { Input } from "@/components/ds/Input";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { Alert } from "@/components/ds/Alert";
 import {
-  Search, Plus, Handshake, Users, Check, X, ArrowRight,
-  BrainCircuit, Calendar, FolderOpen, MessageSquare, Send,
-  Activity,
-  AlertCircle, Clock, Sparkles, ChevronRight,
+  Search, X, Plus, Handshake, Check, ArrowRight,
+  BrainCircuit, MessageSquare,
+  AlertCircle, ChevronRight,
 } from "lucide-react";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
@@ -68,12 +67,15 @@ function fmtDate(d) {
 export default function Collaborations() {
   const { user }  = useAuth();
   const navigate  = useNavigate();
+  const explorerRef = useRef(null);
 
   // Open marketplace
   const [items, setItems]     = useState([]);
   const [q, setQ]             = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [type, setType]       = useState("");
   const [area, setArea]       = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Hub data
@@ -82,14 +84,20 @@ export default function Collaborations() {
   const [metrics, setMetrics]   = useState(null);
   const [hubLoading, setHubLoading] = useState(true);
 
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q), 400);
+    return () => clearTimeout(t);
+  }, [q]);
+
   // Fetch open collaborations (marketplace)
   const fetchOpen = async () => {
     setLoading(true);
     try {
       const params = {};
-      if (q)    params.q             = q;
-      if (type) params.collab_type   = type;
-      if (area) params.research_area = area;
+      if (debouncedQ) params.q             = debouncedQ;
+      if (type)       params.collab_type   = type;
+      if (area)       params.research_area = area;
       const { data } = await api.get("/collaborations", { params });
       setItems(data || []);
     } catch {
@@ -116,9 +124,12 @@ export default function Collaborations() {
   };
 
   useEffect(() => {
-    fetchOpen();
     fetchHub();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    fetchOpen();
+  }, [debouncedQ, type, area]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAccept = async (reqId) => {
     try {
@@ -140,37 +151,20 @@ export default function Collaborations() {
     }
   };
 
-  const firstName = user?.full_name?.split(" ")[0] || "Researcher";
   const activeCount = mine.active?.length || 0;
   const pendingCount = requests.length;
   const totalProjects = metrics?.total_projects ?? null;
   const acceptedCount = metrics?.requests_accepted ?? null;
-
-  const statsMeta = (
-    <div style={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-      {[
-        { label: "Active Collaborations", value: hubLoading ? "…" : activeCount,   icon: Users,      highlight: false },
-        { label: "Pending Invitations",   value: hubLoading ? "…" : pendingCount,  icon: Clock,      highlight: pendingCount > 0 },
-        { label: "Accepted Requests",     value: hubLoading ? "…" : acceptedCount, icon: Check,      highlight: false },
-        { label: "Research Projects",     value: hubLoading ? "…" : totalProjects, icon: FolderOpen, highlight: false },
-      ].map(({ label, value, icon: Icon, highlight }) => (
-        <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", border: `1px solid ${highlight ? "#FECDD3" : BRD}`, background: highlight ? "#FFF1F2" : "#F8FAFC" }}>
-          <Icon size={11} strokeWidth={1.5} style={{ color: highlight ? "#E11D48" : "#94A3B8" }} />
-          <span style={{ fontSize: 11, color: "#64748B" }}>{label}:</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: highlight ? "#E11D48" : NAVY, fontFamily: "monospace" }}>{value ?? "—"}</span>
-        </div>
-      ))}
-    </div>
-  );
+  const hasFilters = !!(type || area);
 
   return (
     <ResearchLayout
-      title="Collaboration Hub"
+      title="Collaborations"
       subtitle="Build your research network. Collaborate globally. Publish together."
       actions={
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <Button as={Link} to="/collaborations/my" variant="ghost" size="sm">
-            <FolderOpen size={12} strokeWidth={1.5} /> My Collaborations
+        <>
+          <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} size="sm">
+            <Search size={13} strokeWidth={2} /> Find Collaborations
           </Button>
           <Button as={Link} to="/collaboration-intelligence" variant="ghost" size="sm">
             <BrainCircuit size={12} strokeWidth={1.5} /> Find Researchers
@@ -182,17 +176,30 @@ export default function Collaborations() {
           >
             <Plus size={13} strokeWidth={2} /> Post Collaboration
           </Button>
-        </div>
+        </>
       }
-      meta={statsMeta}
     >
+      {/* ── Stats strip ───────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mb-8">
+        {[
+          { label: "Active",   value: hubLoading ? "—" : activeCount },
+          { label: "Pending",  value: hubLoading ? "—" : pendingCount },
+          { label: "Accepted", value: hubLoading ? "—" : (acceptedCount ?? "—") },
+          { label: "Projects", value: hubLoading ? "—" : (totalProjects ?? "—") },
+        ].map(({ label, value }) => (
+          <div key={label} className="text-center">
+            <div className="font-serif text-3xl text-slate-900">{value}</div>
+            <div className="overline mt-1 text-xs">{label}</div>
+          </div>
+        ))}
+      </div>
 
       {/* ── PRIORITY INVITATIONS ───────────────────────────────────────────── */}
       {requests.length > 0 && (
         <Alert
           variant="warning"
           icon={AlertCircle}
-          style={{ marginBottom: 0, borderRadius: 0 }}
+          style={{ marginBottom: 24 }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -226,209 +233,123 @@ export default function Collaborations() {
         </Alert>
       )}
 
-      {/* ── MAIN CONTENT GRID ──────────────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 28, marginTop: 28, alignItems: "start" }}>
+      {/* ── My Active Collaborations (if any) ───────────────────────────────── */}
+      {!hubLoading && activeCount > 0 && (
+        <section style={{ marginBottom: 32 }}>
+          <div className="overline mb-4">My Active Collaborations</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {mine.active.slice(0, 3).map((c) => (
+              <ActiveCollabCard key={c.id} c={c} />
+            ))}
+          </div>
+        </section>
+      )}
 
-        {/* ── LEFT COLUMN ─────────────────────────────────────────────────── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+      {/* ── Open Collaborations explorer ────────────────────────────────────── */}
+      <div ref={explorerRef} style={{ marginTop: 32 }}>
+        <h2 style={{ fontFamily: "Georgia, serif", fontSize: 24, color: NAVY, fontWeight: 400, marginBottom: 14 }}>
+          Open Collaborations
+        </h2>
 
-          {/* My Active Collaborations (if any) */}
-          {!hubLoading && activeCount > 0 && (
-            <section>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, paddingBottom: 12, borderBottom: `1px solid ${BORDER}` }}>
-                <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 3 }}>My Workspace</div>
-                  <h2 style={{ fontSize: 17, fontWeight: 700, color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>Active Collaborations</h2>
-                </div>
-                <Link to="/collaborations/my" style={{ fontSize: 12, color: NAVY, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
-                  View all <ChevronRight size={12} strokeWidth={2} />
-                </Link>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {mine.active.slice(0, 3).map((c) => (
-                  <ActiveCollabCard key={c.id} c={c} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Marketplace Header + Search */}
-          <section>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, paddingBottom: 12, borderBottom: `1px solid ${BORDER}` }}>
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 3 }}>Open Marketplace</div>
-                <h2 style={{ fontSize: 17, fontWeight: 700, color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>Open Collaborations</h2>
-              </div>
-              <Button size="sm" onClick={() => navigate("/collaborations/new")}>
-                <Plus size={12} strokeWidth={2} />
-                Post opportunity
-              </Button>
-            </div>
-
-            {/* Search + Filters */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 8, marginBottom: 16 }}>
-              <SearchBar
-                data-testid={TID.collabSearch}
-                value={q}
-                onChange={setQ}
-                onKeyDown={(e) => { if (e.key === "Enter") fetchOpen(); }}
-                placeholder="Search title, description…"
-              />
-              <FormSelect value={type} onChange={(e) => setType(e.target.value)}>
-                <option value="">All types</option>
-                {TYPES.map((t) => <option key={t}>{t}</option>)}
-              </FormSelect>
-              <FormSelect value={area} onChange={(e) => setArea(e.target.value)}>
-                <option value="">All areas</option>
-                {AREAS.map((a) => <option key={a}>{a}</option>)}
-              </FormSelect>
-              <Button variant="subtle" onClick={fetchOpen}>
-                Search
-              </Button>
-            </div>
-
-            {/* Collaborations List */}
-            <div data-testid={TID.collabList} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {loading && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {[1, 2, 3].map((i) => <SkeletonCard key={i} rows={3} />)}
-                </div>
+        {/* Search + filter toggle */}
+        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+          <div style={{ flex: 1 }}>
+            <Input
+              data-testid={TID.collabSearch}
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search title, description…"
+              prefix={<Search size={14} strokeWidth={1.5} />}
+              suffix={q && (
+                <button
+                  type="button"
+                  onClick={() => setQ("")}
+                  aria-label="Clear search"
+                  style={{ color: "#94A3B8", display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", pointerEvents: "auto" }}
+                >
+                  <X size={13} strokeWidth={1.5} />
+                </button>
               )}
-              {!loading && items.length === 0 && (
-                <EmptyState
-                  icon={<Handshake />}
-                  title={q || type || area ? "No matches for your filters" : "No open collaborations yet"}
-                  description={
-                    q || type || area
-                      ? "Try removing a filter or clearing the search to see all open opportunities."
-                      : "Post the first open collaboration — describe your project, the skills you need, and the team you're building."
-                  }
-                  action={
-                    (q || type || area) ? (
-                      <Button variant="outline" size="sm" onClick={() => { setQ(""); setType(""); setArea(""); }}>
-                        Clear filters
-                      </Button>
-                    ) : (
-                      <Button data-testid={TID.collabCreateBtn} onClick={() => navigate("/collaborations/new")}>
-                        <Plus size={13} strokeWidth={2} />
-                        Post a collaboration
-                      </Button>
-                    )
-                  }
-                  size="md"
-                  dashed={true}
-                />
-              )}
-              {items.map((c) => (
-                <CollabCard key={c.id} c={c} />
-              ))}
-            </div>
-          </section>
+            />
+          </div>
+          <Button
+            variant={showFilters ? "primary" : "outline"}
+            onClick={() => setShowFilters((v) => !v)}
+          >
+            Filters{hasFilters ? ` (${[type, area].filter(Boolean).length})` : ""}
+          </Button>
         </div>
 
-        {/* ── RIGHT SIDEBAR ───────────────────────────────────────────────── */}
-        <aside style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-
-          {/* Metrics panel */}
-          {metrics && (
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#64748B", marginBottom: 12, paddingBottom: 10, borderBottom: `1px solid ${BORDER}` }}>
-                Your Activity
+        {showFilters && (
+          <div style={{ marginBottom: 16, background: "white", border: "1px solid #E4E8EF", padding: "16px 14px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.1em" }}>Filters</span>
+              {hasFilters && (
+                <Button variant="link" onClick={() => { setType(""); setArea(""); }} style={{ fontSize: 10, color: "#94A3B8", textDecoration: "underline" }}>Clear</Button>
+              )}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Type</div>
+                <FormSelect size="sm" value={type} onChange={(e) => setType(e.target.value)}>
+                  <option value="">All types</option>
+                  {TYPES.map((t) => <option key={t}>{t}</option>)}
+                </FormSelect>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                {[
-                  { label: "Requests sent",    value: metrics.requests_sent,     icon: Send      },
-                  { label: "Received",         value: metrics.requests_received,  icon: Users     },
-                  { label: "Accepted",         value: metrics.requests_accepted,  icon: Check     },
-                  { label: "Projects",         value: metrics.total_projects,     icon: FolderOpen },
-                ].map(({ label, value, icon: Icon }) => (
-                  <Card key={label} variant="ghost" padding="sm" style={{ background: WARM, border: `1px solid ${BORDER}` }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}>
-                      <Icon size={11} strokeWidth={1.5} style={{ color: "#94A3B8" }} />
-                      <span style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>{label}</span>
-                    </div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: "#0f172a", fontFamily: "monospace" }}>{value ?? 0}</div>
-                  </Card>
-                ))}
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Area</div>
+                <FormSelect size="sm" value={area} onChange={(e) => setArea(e.target.value)}>
+                  <option value="">All areas</option>
+                  {AREAS.map((a) => <option key={a}>{a}</option>)}
+                </FormSelect>
               </div>
             </div>
-          )}
-
-          {/* Pending requests shortcut (only when there's something to act on) */}
-          {pendingCount > 0 && (
-            <Card
-              to="/collaboration-requests"
-              variant="ghost"
-              padding="sm"
-              style={{ display: "flex", alignItems: "center", gap: 10, background: WARM, border: `1px solid ${BORDER}` }}
-            >
-              <div style={{ width: 30, height: 30, background: "white", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Send size={13} strokeWidth={1.5} style={{ color: NAVY }} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", display: "flex", alignItems: "center", gap: 6 }}>
-                  Collaboration Requests
-                  <Badge color={ACCENT} size="sm">{pendingCount}</Badge>
-                </div>
-                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>Pending invitations to review</div>
-              </div>
-              <ArrowRight size={11} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} />
-            </Card>
-          )}
-
-          {/* My Collaborations Panel */}
-          {!hubLoading && (mine.pending?.length > 0 || mine.completed?.length > 0) && (
-            <div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, paddingBottom: 10, borderBottom: `1px solid ${BORDER}` }}>
-                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#64748B" }}>My Status</span>
-                <Link to="/collaborations/my" style={{ fontSize: 11, color: NAVY, textDecoration: "none" }}>View all</Link>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {mine.pending?.slice(0, 2).map((c) => (
-                  <Card
-                    key={c.id}
-                    to={`/collaborations/${c.id}`}
-                    padding="sm"
-                    style={{ background: "#FFFBEB" }}
-                  >
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#D97706", marginBottom: 4 }}>Application pending</div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
-                    <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2 }}>{c.research_area}</div>
-                  </Card>
-                ))}
-                {mine.completed?.slice(0, 2).map((c) => (
-                  <Card
-                    key={c.id}
-                    to={`/collaborations/${c.id}`}
-                    padding="sm"
-                    style={{ background: WARM }}
-                  >
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#10B981", marginBottom: 4 }}>Completed</div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
-                    <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2 }}>{c.research_area}</div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Network CTA */}
-          <div style={{ background: NAVY, padding: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
-              <BrainCircuit size={13} strokeWidth={1.5} style={{ color: "rgba(255,255,255,0.55)" }} />
-              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>AI Powered</span>
-            </div>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: "white", margin: "0 0 6px" }}>Find your ideal collaborators</h3>
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.55, margin: "0 0 14px" }}>
-              Collaboration Intelligence analyses your research profile and surfaces the best co-author matches.
-            </p>
-            <Button as={Link} to="/collaboration-intelligence" size="sm" style={{ background: ACCENT }}>
-              <Sparkles size={12} strokeWidth={1.5} />
-              Match me with researchers
-            </Button>
           </div>
+        )}
 
-        </aside>
+        {/* Count */}
+        {!loading && (
+          <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 12, fontFamily: "monospace" }}>
+            {items.length} open collaboration{items.length !== 1 ? "s" : ""}
+          </div>
+        )}
+
+        {/* Collaborations List */}
+        <div data-testid={TID.collabList} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {loading && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[1, 2, 3].map((i) => <SkeletonCard key={i} rows={3} />)}
+            </div>
+          )}
+          {!loading && items.length === 0 && (
+            <EmptyState
+              icon={<Handshake />}
+              title={q || hasFilters ? "No matches for your filters" : "No open collaborations yet"}
+              description={
+                q || hasFilters
+                  ? "Try removing a filter or clearing the search to see all open opportunities."
+                  : "Post the first open collaboration — describe your project, the skills you need, and the team you're building."
+              }
+              action={
+                (q || hasFilters) ? (
+                  <Button variant="outline" size="sm" onClick={() => { setQ(""); setType(""); setArea(""); }}>
+                    Clear filters
+                  </Button>
+                ) : (
+                  <Button data-testid={TID.collabCreateBtn} onClick={() => navigate("/collaborations/new")}>
+                    <Plus size={13} strokeWidth={2} />
+                    Post a collaboration
+                  </Button>
+                )
+              }
+              size="md"
+              dashed={true}
+            />
+          )}
+          {items.map((c) => (
+            <CollabCard key={c.id} c={c} />
+          ))}
+        </div>
       </div>
     </ResearchLayout>
   );

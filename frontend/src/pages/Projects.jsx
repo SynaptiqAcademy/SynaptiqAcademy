@@ -13,13 +13,12 @@ import { Textarea } from "../components/ds/Textarea";
 import { Card } from "../components/ds/Card";
 import { Badge } from "../components/ds/Badge";
 import { Tag } from "../components/ds/Tag";
-import { ACCENT, NAVY, WARM, BRD } from "@/lib/tokens";
+import { NAVY, WARM } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import {
   Plus, FolderOpen, Users, ChevronRight, Search,
   Globe, Lock, Target,
   BarChart2, ArrowRight, BrainCircuit,
-  TrendingUp,
 } from "lucide-react";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
@@ -152,23 +151,6 @@ export default function Projects() {
 
   const firstName = user?.full_name?.split(" ")[0] || "Researcher";
 
-  const statsMeta = stats && stats.total > 0 ? (
-    <div style={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-      {[
-        { label: "Total Projects",  value: stats.total,    icon: FolderOpen },
-        { label: "My Projects",     value: stats.owned,    icon: Target },
-        { label: "Collaborations",  value: stats.collab,   icon: Users },
-        { label: "Advanced Stage",  value: stats.advanced, icon: TrendingUp },
-      ].map(({ label, value, icon: Icon }) => (
-        <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", border: `1px solid ${BRD}`, background: "#F8FAFC" }}>
-          <Icon size={11} strokeWidth={1.5} style={{ color: "#94A3B8" }} />
-          <span style={{ fontSize: 11, color: "#64748B" }}>{label}:</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: NAVY, fontFamily: "monospace" }}>{value}</span>
-        </div>
-      ))}
-    </div>
-  ) : null;
-
   return (
     <ResearchLayout
       title="Research Projects"
@@ -190,8 +172,23 @@ export default function Projects() {
           </Button>
         </div>
       }
-      meta={statsMeta}
     >
+      {/* ── Stats strip ───────────────────────────────────────────────────── */}
+      {stats && stats.total > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mb-8">
+          {[
+            { label: "Total Projects", value: stats.total },
+            { label: "My Projects",    value: stats.owned },
+            { label: "Collaborations", value: stats.collab },
+            { label: "Advanced Stage", value: stats.advanced },
+          ].map(({ label, value }) => (
+            <div key={label} className="text-center">
+              <div className="font-serif text-3xl text-slate-900">{value}</div>
+              <div className="overline mt-1 text-xs">{label}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── CREATE FORM ──────────────────────────────────────────────────── */}
       {showNew && (
