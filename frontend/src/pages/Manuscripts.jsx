@@ -8,7 +8,7 @@ import { ResearchLayout } from "@/layouts";
 import {
   FileText, Plus, ChevronRight, Search, X,
   BookMarked, Microscope, Send, CheckCircle2, XCircle,
-  AlertCircle, RotateCcw, ArrowRight, FolderOpen,
+  AlertCircle, RotateCcw, FolderOpen,
   Layers, Archive, Coins,
 } from "lucide-react";
 import { EmptyState } from "@/components/ds/EmptyState";
@@ -450,29 +450,6 @@ export default function Manuscripts() {
           />
         )}
 
-        {/* ── Lifecycle footer ──────────────────────────────────────────── */}
-        {items.length > 0 && (
-          <div style={{ marginTop: 48, paddingTop: 24, borderTop: `1px solid ${BRD}`, display: "flex", gap: 16, flexWrap: "wrap" }}>
-            {[
-              { to: "/manuscript-review", label: "AI Manuscript Review", icon: Microscope },
-              { to: "/reviews",           label: "My Review Requests",   icon: BookMarked },
-              { to: "/publication-hub",   label: "Publication Hub",      icon: Layers },
-              { to: "/repository",        label: "Repository",           icon: Archive },
-              { to: "/literature-review", label: "Literature Review",    icon: BookMarked },
-            ].map(({ to, label, icon: Icon }) => (
-              <Link
-                key={to}
-                to={to}
-                className="rl-action"
-                style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none" }}
-              >
-                <Icon size={12} strokeWidth={1.5} />
-                {label}
-                <ArrowRight size={10} strokeWidth={1.5} />
-              </Link>
-            ))}
-          </div>
-        )}
       </div>
     </ResearchLayout>
   );

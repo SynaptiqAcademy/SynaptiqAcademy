@@ -7,8 +7,8 @@ import { BRD, BRDH, NAVY, WARM } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import {
   Archive, Plus, FileText, Database, FileCheck2, BookOpen,
-  ExternalLink, Search, X, ChevronRight, ArrowRight,
-  Layers, ClipboardCheck, Coins, FolderOpen, Tag,
+  ExternalLink, Search, X, ChevronRight,
+  FolderOpen, Tag,
   File, Image, Code, Microscope,
 } from "lucide-react";
 import { EmptyState } from "@/components/ds/EmptyState";
@@ -357,22 +357,6 @@ export default function Repository() {
           </div>
         )}
 
-        {/* Lifecycle footer */}
-        {items !== null && items.length > 0 && (
-          <div style={{ marginTop: 48, paddingTop: 24, borderTop: `1px solid ${BRD}`, display: "flex", gap: 16, flexWrap: "wrap" }}>
-            {[
-              { to: "/manuscripts",        label: "Manuscripts",      icon: FileText },
-              { to: "/publication-hub",    label: "Publication Hub",  icon: Layers },
-              { to: "/reviews",            label: "Peer Reviews",     icon: ClipboardCheck },
-              { to: "/grant-applications", label: "Applications",     icon: Coins },
-            ].map(({ to, label, icon: Icon }) => (
-              <Link key={to} to={to} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none" }}>
-                <Icon size={12} strokeWidth={1.5} /> {label}
-                <ArrowRight size={10} strokeWidth={1.5} />
-              </Link>
-            ))}
-          </div>
-        )}
       </div>
     </ResearchLayout>
   );

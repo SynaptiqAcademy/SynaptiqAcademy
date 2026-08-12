@@ -8,7 +8,7 @@ import { ResearchLayout } from "@/layouts";
 import {
   ClipboardCheck, ChevronRight, Check, X, Send,
   CheckCircle2, AlertCircle, XCircle, Clock,
-  ArrowRight, Layers, FileText, Archive, Coins, Microscope,
+  FileText, Archive,
 } from "lucide-react";
 import { EmptyState } from "@/components/ds/EmptyState";
 import { SkeletonCard } from "@/components/ds/LoadingState";
@@ -325,28 +325,6 @@ export default function Reviews() {
           </div>
         )}
 
-        {/* ── Lifecycle footer ──────────────────────────────────────────── */}
-        {loaded && (
-          <div style={{ marginTop: 48, paddingTop: 24, borderTop: `1px solid ${BRD}`, display: "flex", gap: 16, flexWrap: "wrap" }}>
-            {[
-              { to: "/manuscripts",        label: "My Manuscripts",   icon: FileText },
-              { to: "/manuscript-review",  label: "AI Manuscript Review", icon: Microscope },
-              { to: "/publication-hub",    label: "Publication Hub",  icon: Layers },
-              { to: "/repository",         label: "Repository",       icon: Archive },
-              { to: "/grant-applications", label: "Applications",     icon: Coins },
-            ].map(({ to, label, icon: Icon }) => (
-              <Link
-                key={to}
-                to={to}
-                style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none" }}
-              >
-                <Icon size={12} strokeWidth={1.5} />
-                {label}
-                <ArrowRight size={10} strokeWidth={1.5} />
-              </Link>
-            ))}
-          </div>
-        )}
       </div>
     </ResearchLayout>
   );

@@ -7,9 +7,9 @@ import { BRD, BRDH, NAVY, WARM } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import {
   FileText, Send, Inbox, CheckCircle2, BookOpen,
-  CalendarDays, Search, Lock, ChevronRight, ArrowRight,
+  CalendarDays, Search, Lock, ChevronRight,
   Plus, ExternalLink, AlertCircle, XCircle, RotateCcw,
-  ClipboardCheck, Archive, Coins, Layers,
+  Archive, Layers,
 } from "lucide-react";
 import { EmptyState } from "@/components/ds/EmptyState";
 import { SkeletonPage } from "@/components/ds/LoadingState";
@@ -475,23 +475,6 @@ export default function PublicationHub() {
 
         {/* ── ORCID publications ────────────────────────────────────────── */}
         <OrcidSection />
-
-        {/* ── Lifecycle footer ──────────────────────────────────────────── */}
-        <div style={{ marginTop: 48, paddingTop: 24, borderTop: `1px solid ${BRD}`, display: "flex", gap: 16, flexWrap: "wrap" }}>
-          {[
-            { to: "/manuscripts",        label: "Manuscripts",          icon: FileText },
-            { to: "/reviews",            label: "Peer Reviews",         icon: ClipboardCheck },
-            { to: "/repository",         label: "Repository",           icon: Archive },
-            { to: "/grant-applications", label: "Applications",         icon: Coins },
-            { to: "/journals",           label: "Browse Journals",      icon: BookOpen },
-            { to: "/conferences",        label: "Browse Conferences",   icon: CalendarDays },
-          ].map(({ to, label, icon: Icon }) => (
-            <Link key={to} to={to} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none" }}>
-              <Icon size={12} strokeWidth={1.5} /> {label}
-              <ArrowRight size={10} strokeWidth={1.5} />
-            </Link>
-          ))}
-        </div>
       </div>
 
       {pickerFor && (

@@ -6,8 +6,8 @@ import { BRD, BRDH, NAVY, WARM } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import {
   Coins, Plus, Target, Users, Clock, BarChart2,
-  ChevronRight, ArrowRight, CheckCircle2, XCircle,
-  AlertCircle, FileText, Archive, Layers, ClipboardCheck,
+  ChevronRight, CheckCircle2, XCircle,
+  AlertCircle, Archive, ClipboardCheck,
   Calendar, TrendingUp,
 } from "lucide-react";
 import { EmptyState } from "@/components/ds/EmptyState";
@@ -290,23 +290,6 @@ export default function GrantApplications() {
               />
             )}
 
-            {/* Lifecycle footer */}
-            {apps.length > 0 && (
-              <div style={{ marginTop: 48, paddingTop: 24, borderTop: `1px solid ${BRD}`, display: "flex", gap: 16, flexWrap: "wrap" }}>
-                {[
-                  { to: "/grants",             label: "Browse Grants",    icon: Coins },
-                  { to: "/funding",            label: "Funding Sources",  icon: Target },
-                  { to: "/manuscripts",        label: "Manuscripts",      icon: FileText },
-                  { to: "/publication-hub",    label: "Publication Hub",  icon: Layers },
-                  { to: "/repository",         label: "Repository",       icon: Archive },
-                ].map(({ to, label, icon: Icon }) => (
-                  <Link key={to} to={to} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none" }}>
-                    <Icon size={12} strokeWidth={1.5} /> {label}
-                    <ArrowRight size={10} strokeWidth={1.5} />
-                  </Link>
-                ))}
-              </div>
-            )}
           </>
         )}
       </div>
