@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
-import { AnalyticsLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { EMERALD } from "@/lib/tokens";
@@ -11,6 +11,20 @@ import {
   GraduationCap, DollarSign, Activity, Target, Calendar,
   Star, Zap, ArrowUpRight, Info, Camera, ChevronRight,
 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { StatCard } from "@/components/ds/StatCard";
+import { Input } from "@/components/ds/Input";
+import { ErrorState } from "@/components/ds/ErrorState";
+import { EmptyState as DsEmptyState } from "@/components/ds/EmptyState";
+import { SkeletonCard as DsSkeletonCard } from "@/components/ds/LoadingState";
+import { ProgressBar as DsProgressBar } from "@/components/ds/Progress";
+import { BarChart as DsBarChart } from "@/components/ds/Chart";
+import { NavTabs } from "@/components/ds/NavTabs";
+import { DataTable } from "@/components/ds/DataTable";
+import { Callout } from "@/components/ds/Alert";
 
 // ── Research Intelligence Nav ─────────────────────────────────────────────────
 
@@ -96,33 +110,16 @@ function Skeleton({ h = "h-4", w = "w-full", className = "" }) {
 }
 
 function SkeletonCard({ rows = 3 }) {
-  return (
-    <div className="border border-slate-200 bg-white p-5 animate-pulse space-y-3">
-      <Skeleton h="h-3" w="w-1/3" />
-      <Skeleton h="h-8" w="w-1/2" />
-      {Array.from({ length: rows - 2 }).map((_, i) => (
-        <Skeleton key={i} h="h-3" />
-      ))}
-    </div>
-  );
+  return <DsSkeletonCard rows={rows} />;
 }
 
 // ── Error card ────────────────────────────────────────────────────────────────
 
 function ErrorCard({ message, onRetry }) {
   return (
-    <div className="border border-red-200 bg-red-50 p-6 text-center">
-      <AlertCircle size={22} strokeWidth={1.5} className="text-red-400 mx-auto mb-2" />
-      <p className="text-red-700 text-sm mb-3">{message || "Failed to load data."}</p>
-      {onRetry && (
-        <button
-          onClick={onRetry}
-          className="text-xs border border-red-300 text-red-700 px-3 py-1.5 hover:bg-red-100 transition-colors"
-        >
-          Retry
-        </button>
-      )}
-    </div>
+    <Card padding="xl" className="text-center">
+      <ErrorState message={message || "Failed to load data."} onRetry={onRetry} />
+    </Card>
   );
 }
 
@@ -130,50 +127,33 @@ function ErrorCard({ message, onRetry }) {
 
 function EmptyState({ icon: Icon = AlertCircle, message, sub }) {
   return (
-    <div className="border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
-      <Icon size={28} strokeWidth={1.5} className="text-slate-300 mx-auto mb-3" />
-      <p className="text-slate-600 text-sm font-medium">{message}</p>
-      {sub && <p className="text-slate-400 text-xs mt-1 max-w-sm mx-auto">{sub}</p>}
-    </div>
+    <DsEmptyState
+      icon={<Icon />}
+      title={message}
+      description={sub}
+      size="lg"
+      dashed
+    />
   );
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
-
-function Toast({ message, type = "success", onClose }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 3500);
-    return () => clearTimeout(t);
-  }, [onClose]);
-
-  const colors =
-    type === "success"
-      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-      : "bg-red-50 border-red-200 text-red-800";
-
-  return (
-    <div className={`fixed bottom-6 right-6 z-50 border px-4 py-3 text-sm shadow-lg max-w-xs ${colors}`}>
-      <div className="flex items-center gap-2">
-        {type === "success" ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-        <span>{message}</span>
-        <button onClick={onClose} className="ml-auto opacity-60 hover:opacity-100 text-lg leading-none">&times;</button>
-      </div>
-    </div>
-  );
-}
+// Toast notifications use sonner's `toast` directly (see showToast() below) —
+// there is deliberately no local toast component; ds/ removed its own for the
+// same reason (a second, unmounted toast system is pure dead code).
 
 // ── KPI Card ──────────────────────────────────────────────────────────────────
 
 function KpiCard({ label, value, sub, highlight, loading, ringColor, ringPct, icon: Icon }) {
   if (loading) return <SkeletonCard rows={3} />;
 
-  return (
-    <div className={`border bg-white p-5 ${highlight ? "border-[#0F2847]" : "border-slate-200"}`}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</div>
-        {Icon && <Icon size={14} strokeWidth={1.5} className="text-slate-400" />}
-      </div>
-      {ringColor ? (
+  if (ringColor) {
+    return (
+      <Card padding="lg" style={highlight ? { borderColor: "#0F2847" } : undefined}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</div>
+          {Icon && <Icon size={14} strokeWidth={1.5} className="text-slate-400" />}
+        </div>
         <div className="flex items-center gap-4">
           <SisRing score={typeof value === "number" ? value : 0} size={56} stroke={5} />
           <div>
@@ -181,15 +161,18 @@ function KpiCard({ label, value, sub, highlight, loading, ringColor, ringPct, ic
             <div className="text-xs text-slate-500">{sub}</div>
           </div>
         </div>
-      ) : (
-        <>
-          <div className={`font-serif text-4xl mt-1 tracking-tight ${highlight ? "text-[#0F2847]" : "text-slate-900"}`}>
-            {value ?? "—"}
-          </div>
-          {sub && <div className="text-xs text-slate-500 mt-1">{sub}</div>}
-        </>
-      )}
-    </div>
+      </Card>
+    );
+  }
+
+  return (
+    <StatCard
+      label={label}
+      value={value ?? "—"}
+      sub={sub}
+      highlight={highlight}
+      icon={Icon ? <Icon size={14} strokeWidth={1.5} /> : undefined}
+    />
   );
 }
 
@@ -241,18 +224,18 @@ function ProgressBar({ value = 0, max = 100, color = "#0F2847", height = "h-2", 
 // ── Status Badge ──────────────────────────────────────────────────────────────
 
 function StatusBadge({ label, color = "slate" }) {
-  const palette = {
-    green:  "bg-emerald-50 text-emerald-700 border-emerald-200",
-    blue:   "bg-blue-50 text-blue-700 border-blue-200",
-    amber:  "bg-amber-50 text-amber-700 border-amber-200",
-    red:    "bg-red-50 text-red-700 border-red-200",
-    slate:  "bg-slate-100 text-slate-600 border-slate-200",
-    purple: "bg-purple-50 text-purple-700 border-purple-200",
+  const variants = {
+    green:  "success",
+    blue:   "info",
+    amber:  "warning",
+    red:    "danger",
+    slate:  "neutral",
+    purple: "purple",
   };
   return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 text-xs border ${palette[color] || palette.slate}`}>
+    <Badge variant={variants[color] || "neutral"} size="sm">
       {label}
-    </span>
+    </Badge>
   );
 }
 
@@ -263,18 +246,14 @@ function HBarChart({ items = [], valueKey = "value", labelKey = "label", color =
   return (
     <div className="space-y-2">
       {items.map((item, idx) => (
-        <div key={idx}>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-slate-700 truncate max-w-[60%]">{item[labelKey]}</span>
-            <span className="text-xs text-slate-500">{fmtNum(item[valueKey])}</span>
-          </div>
-          <div className="h-2 bg-slate-100 w-full overflow-hidden">
-            <div
-              className="h-full transition-all duration-700"
-              style={{ width: `${pct(item[valueKey] || 0, max)}%`, backgroundColor: color }}
-            />
-          </div>
-        </div>
+        <DsProgressBar
+          key={idx}
+          label={item[labelKey]}
+          value={item[valueKey] || 0}
+          max={max}
+          valueLabel={fmtNum(item[valueKey])}
+          size="sm"
+        />
       ))}
     </div>
   );
@@ -283,23 +262,13 @@ function HBarChart({ items = [], valueKey = "value", labelKey = "label", color =
 // ── Vertical Bar Chart (div-based) ────────────────────────────────────────────
 
 function VBarChart({ items = [], valueKey = "value", labelKey = "label", color = "#0891B2", height = 120 }) {
-  const max = Math.max(...items.map((i) => i[valueKey] || 0), 1);
   return (
-    <div className="flex items-end gap-1" style={{ height }}>
-      {items.map((item, idx) => {
-        const h = Math.max(4, pct(item[valueKey] || 0, max));
-        return (
-          <div key={idx} className="flex-1 flex flex-col items-center gap-1">
-            <div
-              className="w-full transition-all duration-700 min-h-[4px]"
-              style={{ height: `${h}%`, backgroundColor: color }}
-              title={`${item[labelKey]}: ${item[valueKey]}`}
-            />
-            <div className="text-[9px] text-slate-400 truncate w-full text-center">{item[labelKey]}</div>
-          </div>
-        );
-      })}
-    </div>
+    <DsBarChart
+      data={items.map((i) => ({ label: i[labelKey], value: i[valueKey] || 0 }))}
+      height={height}
+      color={color}
+      showLabels
+    />
   );
 }
 
@@ -310,7 +279,7 @@ function SisComponentCard({ name, score, max_score, details = [], color, idx }) 
   const p = pct(score || 0, max_score || 1000);
 
   return (
-    <div className="border border-slate-200 bg-white">
+    <Card padding="none">
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full p-4 text-left hover:bg-slate-50 transition-colors"
@@ -326,6 +295,9 @@ function SisComponentCard({ name, score, max_score, details = [], color, idx }) 
             {open ? <ChevronUp size={14} className="text-slate-400" /> : <ChevronDown size={14} className="text-slate-400" />}
           </div>
         </div>
+        {/* ds ProgressBar has no per-instance color override (only auto colorByValue),
+            but each SIS component needs its own distinct hue from COMPONENT_COLORS, so
+            this stays hand-rolled. */}
         <div className="h-2 bg-slate-100 w-full overflow-hidden">
           <div className="h-full transition-all duration-700" style={{ width: `${p}%`, backgroundColor: color }} />
         </div>
@@ -344,7 +316,7 @@ function SisComponentCard({ name, score, max_score, details = [], color, idx }) 
           </ul>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -403,7 +375,7 @@ function ForecastCard({ metric }) {
   const delta = forecast != null && current != null ? forecast - current : null;
 
   return (
-    <div className="border border-slate-200 bg-white p-5">
+    <Card padding="lg">
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-semibold text-slate-900">{name}</div>
         <div className={`flex items-center gap-1 text-xs font-medium ${trendColor}`}>
@@ -434,7 +406,7 @@ function ForecastCard({ metric }) {
       {history.length > 1 && (
         <VBarChart items={history.map((h) => ({ label: h.label || "", value: h.value || 0 }))} height={60} />
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -474,7 +446,6 @@ export default function ImpactDashboard() {
 
   // UI state
   const [refreshing, setRefreshing] = useState(false);
-  const [toast, setToast] = useState(null);
   const [savingSnapshot, setSavingSnapshot] = useState(false);
   const [snapshotName, setSnapshotName] = useState("");
   const [showSnapshotInput, setShowSnapshotInput] = useState(false);
@@ -587,7 +558,8 @@ export default function ImpactDashboard() {
   };
 
   const showToast = (message, type) => {
-    setToast({ message, type, id: Date.now() });
+    if (type === "error") toast.error(message);
+    else toast.success(message);
   };
 
   // ── Derived data ──────────────────────────────────────────────────────────
@@ -643,89 +615,63 @@ export default function ImpactDashboard() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   const tabBar = (
-    <div className="flex items-end gap-0 overflow-x-auto">
-      {TABS.map((tab) => {
-        const Icon = tab.icon;
-        const active = activeTab === tab.id;
-        return (
-          <button
-            key={tab.id}
-            onClick={() => handleTabChange(tab.id)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${
-              active
-                ? "border-[#0F2847] text-[#0F2847]"
-                : "border-transparent text-slate-600 hover:text-[#0F2847] hover:border-slate-300"
-            }`}
-          >
-            <Icon size={12} strokeWidth={1.5} />
-            {tab.label}
-          </button>
-        );
-      })}
+    <div className="overflow-x-auto">
+      <NavTabs
+        variant="underline"
+        size="sm"
+        active={activeTab}
+        onChange={handleTabChange}
+        tabs={TABS}
+      />
     </div>
   );
 
   return (
-    <AnalyticsLayout
+    <ResearchLayout
       title="Impact Dashboard"
       subtitle="Synaptiq Impact Score, publications, citations, benchmarks & forecasts"
       nav={<><IntelNav current="/impact-dashboard" />{tabBar}</>}
       actions={
         <>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="inline-flex items-center gap-1.5 border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 hover:border-[#0F2847] hover:text-[#0F2847] disabled:opacity-40 transition-colors"
-          >
+          <Button onClick={handleRefresh} disabled={refreshing} variant="outline" size="sm">
             <RefreshCw size={12} strokeWidth={1.5} className={refreshing ? "animate-spin" : ""} />
             {refreshing ? "Refreshing…" : "Refresh"}
-          </button>
-          <button
-            onClick={() => handleExport("csv")}
-            className="inline-flex items-center gap-1.5 border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-          >
+          </Button>
+          <Button onClick={() => handleExport("csv")} variant="outline" size="sm">
             <Download size={12} strokeWidth={1.5} />
             Export CSV
-          </button>
-          <button
-            onClick={() => handleExport("json")}
-            className="inline-flex items-center gap-1.5 border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-          >
+          </Button>
+          <Button onClick={() => handleExport("json")} variant="outline" size="sm">
             <Download size={12} strokeWidth={1.5} />
             Export JSON
-          </button>
+          </Button>
           {!showSnapshotInput ? (
-            <button
-              onClick={() => setShowSnapshotInput(true)}
-              className="inline-flex items-center gap-1.5 bg-[#0F2847] text-white px-3 py-2 text-xs hover:opacity-90 transition-opacity"
-            >
+            <Button onClick={() => setShowSnapshotInput(true)} variant="primary" size="sm">
               <Camera size={12} strokeWidth={1.5} />
               Save Snapshot
-            </button>
+            </Button>
           ) : (
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 type="text"
                 value={snapshotName}
                 onChange={(e) => setSnapshotName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSaveSnapshot()}
                 placeholder="Snapshot name…"
-                className="border border-slate-300 px-2 py-1.5 text-xs focus:outline-none focus:border-[#0F2847] w-36"
+                size="sm"
+                wrapperClassName="w-36"
                 autoFocus
               />
-              <button
-                onClick={handleSaveSnapshot}
-                disabled={savingSnapshot}
-                className="bg-[#0F2847] text-white px-3 py-1.5 text-xs hover:opacity-90 disabled:opacity-50"
-              >
+              <Button onClick={handleSaveSnapshot} disabled={savingSnapshot} loading={savingSnapshot} variant="primary" size="sm">
                 {savingSnapshot ? "Saving…" : "Save"}
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => { setShowSnapshotInput(false); setSnapshotName(""); }}
-                className="text-slate-400 hover:text-slate-600 text-xs px-1"
+                variant="ghost"
+                size="sm"
               >
                 &times;
-              </button>
+              </Button>
             </div>
           )}
         </>
@@ -745,7 +691,7 @@ export default function ImpactDashboard() {
             {/* KPI Cards */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {/* SIS Score */}
-              <div className={`border bg-white p-5 lg:col-span-1 ${!mainLoading && sisScore.total >= 7500 ? "border-amber-300" : "border-[#0F2847]"}`}>
+              <Card padding="lg" className="lg:col-span-1" style={{ borderColor: !mainLoading && sisScore.total >= 7500 ? "#FCD34D" : "#0F2847" }}>
                 <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">Synaptiq Impact Score</div>
                 {mainLoading ? (
                   <Skeleton h="h-16" />
@@ -766,7 +712,7 @@ export default function ImpactDashboard() {
                     </div>
                   </div>
                 )}
-              </div>
+              </Card>
 
               <KpiCard label="H-Index" value={mainLoading ? null : fmt(pubMetrics.h_index)} icon={Award}
                 sub="Hirsch index" loading={mainLoading} />
@@ -782,7 +728,7 @@ export default function ImpactDashboard() {
 
             {/* Impact Score Composition */}
             {!mainLoading && components.length > 0 && (
-              <div className="border border-slate-200 bg-white p-6">
+              <Card padding="xl">
                 <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-4">Impact Score Composition</div>
                 <div className="relative h-6 bg-slate-100 w-full overflow-hidden flex">
                   {components.map((comp, idx) => {
@@ -806,13 +752,13 @@ export default function ImpactDashboard() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </Card>
             )}
 
             {/* 3-column summary cards */}
             <div className="grid lg:grid-cols-3 gap-5">
               {/* Research Output */}
-              <div className="border border-slate-200 bg-white p-5">
+              <Card padding="lg">
                 <div className="flex items-center gap-2 mb-4">
                   <BookOpen size={14} strokeWidth={1.5} className="text-slate-500" />
                   <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Research Output</div>
@@ -827,10 +773,10 @@ export default function ImpactDashboard() {
                     <div className="flex justify-between border-t border-slate-100 pt-2 mt-2"><span className="text-slate-700 font-medium">Total</span><span className="font-semibold">{fmtNum(pubMetrics.total || publications.length)}</span></div>
                   </div>
                 )}
-              </div>
+              </Card>
 
               {/* Collaboration */}
-              <div className="border border-slate-200 bg-white p-5">
+              <Card padding="lg">
                 <div className="flex items-center gap-2 mb-4">
                   <Users size={14} strokeWidth={1.5} className="text-slate-500" />
                   <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Collaboration</div>
@@ -845,10 +791,10 @@ export default function ImpactDashboard() {
                     <div className="flex justify-between"><span className="text-slate-600">Cross-institutional</span><span className="font-medium">{fmtNum(collab.cross_institutional)}</span></div>
                   </div>
                 )}
-              </div>
+              </Card>
 
               {/* Platform Reputation */}
-              <div className="border border-slate-200 bg-white p-5">
+              <Card padding="lg">
                 <div className="flex items-center gap-2 mb-4">
                   <Star size={14} strokeWidth={1.5} className="text-slate-500" />
                   <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Platform Reputation</div>
@@ -863,7 +809,7 @@ export default function ImpactDashboard() {
                     <div className="flex justify-between"><span className="text-slate-600">Rank</span><span className="font-medium">{fmt(reputation.rank)}</span></div>
                   </div>
                 )}
-              </div>
+              </Card>
             </div>
           </div>
         )}
@@ -886,49 +832,40 @@ export default function ImpactDashboard() {
                 sub="Sync your ORCID to import publications and track your academic output."
               />
             ) : (
-              <div className="border border-slate-200 bg-white overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-200 bg-slate-50">
-                        <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Title</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Status</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Year</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Type</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Citations</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {publications.map((pub, idx) => {
-                        const status = pub.status || pub.pub_status || "unknown";
-                        const statusColor = status === "published" ? "green" : status === "submitted" ? "blue" : "slate";
-                        return (
-                          <tr key={pub.id || idx} className="hover:bg-slate-50 transition-colors">
-                            <td className="px-4 py-3 max-w-xs">
-                              <p className="font-medium text-slate-900 line-clamp-2">{fmt(pub.title)}</p>
-                              {pub.venue && <p className="text-xs text-slate-400 mt-0.5">{pub.venue}</p>}
-                            </td>
-                            <td className="px-4 py-3">
-                              <StatusBadge label={status} color={statusColor} />
-                            </td>
-                            <td className="px-4 py-3 text-slate-600">{fmt(pub.year)}</td>
-                            <td className="px-4 py-3 text-slate-600 capitalize">{fmt(pub.type || pub.pub_type)}</td>
-                            <td className="px-4 py-3 font-medium text-slate-900">{fmtNum(pub.citations)}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <DataTable
+                columns={[
+                  { key: "title",     label: "Title" },
+                  { key: "status",    label: "Status" },
+                  { key: "year",      label: "Year" },
+                  { key: "type",      label: "Type" },
+                  { key: "citations", label: "Citations" },
+                ]}
+                rows={publications.map((pub, idx) => {
+                  const status = pub.status || pub.pub_status || "unknown";
+                  const statusColor = status === "published" ? "green" : status === "submitted" ? "blue" : "slate";
+                  return {
+                    id: pub.id || idx,
+                    title: (
+                      <div className="max-w-xs">
+                        <p className="font-medium text-slate-900 line-clamp-2">{fmt(pub.title)}</p>
+                        {pub.venue && <p className="text-xs text-slate-400 mt-0.5">{pub.venue}</p>}
+                      </div>
+                    ),
+                    status: <StatusBadge label={status} color={statusColor} />,
+                    year: fmt(pub.year),
+                    type: <span className="capitalize">{fmt(pub.type || pub.pub_type)}</span>,
+                    citations: <span className="font-medium text-slate-900">{fmtNum(pub.citations)}</span>,
+                  };
+                })}
+              />
             )}
 
             {/* Publication type distribution */}
             {pubTypeItems.length > 0 && (
-              <div className="border border-slate-200 bg-white p-5">
+              <Card padding="lg">
                 <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-4">Publication Type Distribution</div>
                 <HBarChart items={pubTypeItems} />
-              </div>
+              </Card>
             )}
           </div>
         )}
@@ -956,12 +893,12 @@ export default function ImpactDashboard() {
             ) : (
               <>
                 {/* Monthly bar chart */}
-                <div className="border border-slate-200 bg-white p-5">
+                <Card padding="lg">
                   <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-4">
                     Citations Over Time (Last 12 Months)
                   </div>
                   <VBarChart items={citationMonthly} height={160} color="#0891B2" />
-                </div>
+                </Card>
 
                 {/* Key metrics */}
                 <div className="grid sm:grid-cols-3 gap-4">
@@ -989,16 +926,16 @@ export default function ImpactDashboard() {
                         : "—",
                     },
                   ].map(({ label, value }) => (
-                    <div key={label} className="border border-slate-200 bg-white p-5">
+                    <Card key={label} padding="lg">
                       <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">{label}</div>
                       <div className="font-serif text-3xl text-slate-900">{value}</div>
-                    </div>
+                    </Card>
                   ))}
                 </div>
 
                 {/* Citation distribution by publication */}
                 {publications.length > 0 && (
-                  <div className="border border-slate-200 bg-white p-5">
+                  <Card padding="lg">
                     <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-4">
                       Citations by Publication
                     </div>
@@ -1009,7 +946,7 @@ export default function ImpactDashboard() {
                         .slice(0, 10)
                         .map((p) => ({ label: p.title?.slice(0, 50) + (p.title?.length > 50 ? "…" : "") || "Untitled", value: p.citations || 0 }))}
                     />
-                  </div>
+                  </Card>
                 )}
               </>
             )}
@@ -1023,7 +960,7 @@ export default function ImpactDashboard() {
           <div className="space-y-6">
 
             {/* Total score header */}
-            <div className="border border-[#0F2847] bg-white p-6">
+            <Card padding="xl" style={{ borderColor: "#0F2847" }}>
               <div className="flex items-center gap-6">
                 <div className="relative flex-shrink-0">
                   <SisRing score={sisScore.total || 0} size={100} stroke={8} />
@@ -1039,7 +976,7 @@ export default function ImpactDashboard() {
                   {sisScore.label && <div className="text-xs text-slate-500 mt-1">{sisScore.label}</div>}
                 </div>
               </div>
-            </div>
+            </Card>
 
             {tabLoading["impact_score"] ? (
               <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}</div>
@@ -1085,10 +1022,10 @@ export default function ImpactDashboard() {
                 { label: "International", value: fmtNum(collab.international) },
                 { label: "Cross-institutional", value: fmtNum(collab.cross_institutional) },
               ].map(({ label, value }) => (
-                <div key={label} className="border border-slate-200 bg-white p-5">
+                <Card key={label} padding="lg">
                   <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">{label}</div>
                   <div className="font-serif text-3xl text-slate-900">{mainLoading ? "—" : value}</div>
-                </div>
+                </Card>
               ))}
             </div>
 
@@ -1105,7 +1042,7 @@ export default function ImpactDashboard() {
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {(collab.list || []).map((c, idx) => (
-                  <div key={c.id || idx} className="border border-slate-200 bg-white p-5">
+                  <Card key={c.id || idx} padding="lg">
                     <div className="font-medium text-slate-900 mb-1 line-clamp-1">{fmt(c.title)}</div>
                     <div className="flex items-center gap-2 flex-wrap mb-2">
                       {c.type && <StatusBadge label={c.type} color="blue" />}
@@ -1115,7 +1052,7 @@ export default function ImpactDashboard() {
                       {c.member_count != null && <div>{c.member_count} members</div>}
                       {c.research_area && <div>{c.research_area}</div>}
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             )}
@@ -1133,10 +1070,10 @@ export default function ImpactDashboard() {
                 { label: "Funded", value: fmtNum(grants.funded) },
                 { label: "Success Rate", value: grants.success_rate != null ? `${grants.success_rate}%` : "—" },
               ].map(({ label, value }) => (
-                <div key={label} className="border border-slate-200 bg-white p-5">
+                <Card key={label} padding="lg">
                   <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">{label}</div>
                   <div className="font-serif text-3xl text-slate-900">{mainLoading ? "—" : value}</div>
-                </div>
+                </Card>
               ))}
             </div>
 
@@ -1149,38 +1086,31 @@ export default function ImpactDashboard() {
                 sub="Apply for grants to track your funding activity and success rate."
               />
             ) : (
-              <div className="border border-slate-200 bg-white overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-200 bg-slate-50">
-                        <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Grant</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Status</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Amount</th>
-                        <th className="text-left px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">Applied</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {(grants.applications || []).map((g, idx) => {
-                        const status = g.status || "pending";
-                        const sc = status === "funded" || status === "approved" ? "green" :
-                                   status === "rejected" ? "red" : "amber";
-                        return (
-                          <tr key={g.id || idx} className="hover:bg-slate-50 transition-colors">
-                            <td className="px-4 py-3">
-                              <p className="font-medium text-slate-900 line-clamp-1">{fmt(g.title)}</p>
-                              {g.funder && <p className="text-xs text-slate-400 mt-0.5">{g.funder}</p>}
-                            </td>
-                            <td className="px-4 py-3"><StatusBadge label={status} color={sc} /></td>
-                            <td className="px-4 py-3 text-slate-600">{g.amount ? `€${fmtNum(g.amount)}` : "—"}</td>
-                            <td className="px-4 py-3 text-slate-500">{formatDate(g.applied_at || g.created_at)}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <DataTable
+                columns={[
+                  { key: "grant",   label: "Grant" },
+                  { key: "status",  label: "Status" },
+                  { key: "amount",  label: "Amount" },
+                  { key: "applied", label: "Applied" },
+                ]}
+                rows={(grants.applications || []).map((g, idx) => {
+                  const status = g.status || "pending";
+                  const sc = status === "funded" || status === "approved" ? "green" :
+                             status === "rejected" ? "red" : "amber";
+                  return {
+                    id: g.id || idx,
+                    grant: (
+                      <div>
+                        <p className="font-medium text-slate-900 line-clamp-1">{fmt(g.title)}</p>
+                        {g.funder && <p className="text-xs text-slate-400 mt-0.5">{g.funder}</p>}
+                      </div>
+                    ),
+                    status: <StatusBadge label={status} color={sc} />,
+                    amount: g.amount ? `€${fmtNum(g.amount)}` : "—",
+                    applied: formatDate(g.applied_at || g.created_at),
+                  };
+                })}
+              />
             )}
           </div>
         )}
@@ -1197,10 +1127,10 @@ export default function ImpactDashboard() {
                 { label: "Total Students", value: fmtNum(teaching.students) },
                 { label: "Teaching Score", value: fmtNum(teaching.contribution_score) },
               ].map(({ label, value }) => (
-                <div key={label} className="border border-slate-200 bg-white p-5">
+                <Card key={label} padding="lg">
                   <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">{label}</div>
                   <div className="font-serif text-3xl text-slate-900">{mainLoading ? "—" : value}</div>
-                </div>
+                </Card>
               ))}
             </div>
 
@@ -1213,14 +1143,14 @@ export default function ImpactDashboard() {
                 sub="Publish teaching content to track your teaching impact and reach more students."
               />
             ) : (
-              <div className="border border-slate-200 bg-white p-5">
+              <Card padding="lg">
                 <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-4">Teaching Contribution</div>
                 <div className="space-y-3">
                   <ProgressBar label="Lessons Published" value={teaching.lessons_published || 0} max={50} color="#7C3AED" />
                   <ProgressBar label="Courses" value={teaching.courses || 0} max={10} color="#0891B2" />
                   <ProgressBar label="Teaching Score" value={teaching.contribution_score || 0} max={1000} color="#059669" />
                 </div>
-              </div>
+              </Card>
             )}
           </div>
         )}
@@ -1256,7 +1186,7 @@ export default function ImpactDashboard() {
                   const groupMax = Math.max(myScore, groupAvg, 1);
 
                   return (
-                    <div key={idx} className="border border-slate-200 bg-white p-5">
+                    <Card key={idx} padding="lg">
                       <div className="flex items-start justify-between gap-4 mb-4">
                         <div>
                           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{bm.peer_group || bm.group_type}</div>
@@ -1314,7 +1244,7 @@ export default function ImpactDashboard() {
                           </ul>
                         </div>
                       )}
-                    </div>
+                    </Card>
                   );
                 })}
               </div>
@@ -1343,7 +1273,7 @@ export default function ImpactDashboard() {
                 sub="Complete activities on the platform — publish manuscripts, start collaborations, earn badges — to build your timeline."
               />
             ) : (
-              <div className="border border-slate-200 bg-white p-5">
+              <Card padding="lg">
                 {timelineYears.map((year) => (
                   <div key={year}>
                     <div className="text-xs font-bold text-slate-400 uppercase tracking-widest py-2 mb-1 border-b border-slate-100">
@@ -1354,7 +1284,7 @@ export default function ImpactDashboard() {
                     ))}
                   </div>
                 ))}
-              </div>
+              </Card>
             )}
           </div>
         )}
@@ -1364,12 +1294,9 @@ export default function ImpactDashboard() {
         ══════════════════════════════════════════════════════════════ */}
         {activeTab === "forecasts" && (
           <div className="space-y-6">
-            <div className="flex items-start gap-2 border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800">
-              <Info size={12} className="shrink-0 mt-0.5 text-amber-600" />
-              <span>
-                Forecasts are based on your historical activity patterns. Add more data points for improved accuracy.
-              </span>
-            </div>
+            <Callout variant="warning">
+              Forecasts are based on your historical activity patterns. Add more data points for improved accuracy.
+            </Callout>
 
             {tabLoading["forecasts"] ? (
               <div className="grid sm:grid-cols-3 gap-4">
@@ -1414,24 +1341,15 @@ export default function ImpactDashboard() {
               { to: "/reputation",          label: "Reputation Score"     },
               { to: "/verification",        label: "Verification Center"  },
             ].map(({ to, label }) => (
-              <Link key={to} to={to} className="border border-slate-200 bg-white p-4 hover:border-[#0F2847] transition-colors group block">
+              <Card key={to} to={to} padding="md" className="group">
                 <div className="text-xs font-medium text-slate-700 group-hover:text-[#0F2847] transition-colors flex items-center justify-between">
                   {label} <ChevronRight size={12} className="text-slate-300 group-hover:text-[#0F2847]" />
                 </div>
-              </Link>
+              </Card>
             ))}
           </div>
         </section>
 
-      {/* ── Toast ─────────────────────────────────────────────────────── */}
-      {toast && (
-        <Toast
-          key={toast.id}
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
-    </AnalyticsLayout>
+    </ResearchLayout>
   );
 }

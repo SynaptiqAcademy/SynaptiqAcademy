@@ -1,10 +1,11 @@
 /* eslint-disable */
 import React, { useState, useCallback, useEffect } from "react";
-import { RefreshCw, AlertTriangle, TrendingUp, Zap } from "lucide-react";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { RefreshCw, TrendingUp, Zap } from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import api from "@/lib/api";
-import { NAVY } from "@/lib/tokens";
+import { EMERALD, AMBER, CRIMSON, INFO, BRD_SOFT, TEXT_MUTED, WHITE, BRD } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
+import { Button, Card, StatCard, StatGrid, DataTable, FormSelect } from "@/components/ds";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -19,11 +20,7 @@ function useX(path, params = {}) {
   return { data, loading, refetch: load };
 }
 
-const ALERT_SEVERITY = {
-  high:   "border-l-red-500 bg-red-900/20 text-red-300",
-  medium: "border-l-yellow-500 bg-yellow-900/20 text-yellow-300",
-  low:    "border-l-blue-500 bg-blue-900/20 text-blue-300",
-};
+const ALERT_ACCENT = { high: CRIMSON, medium: AMBER, low: INFO };
 
 export default function AdminApiMonitor() {
   const [days, setDays] = useState(7);
@@ -34,153 +31,127 @@ export default function AdminApiMonitor() {
   const d = ov || {};
   const al = alerts?.alerts || [];
 
-  const healthColor = d.health_score >= 90 ? "text-green-400" : d.health_score >= 70 ? "text-yellow-400" : "text-red-400";
+  const healthColor = d.health_score >= 90 ? EMERALD : d.health_score >= 70 ? AMBER : CRIMSON;
+
+  const topEndpointColumns = [
+    {
+      key: "endpoint", label: "Endpoint", maxWidth: 220, wrap: false,
+      render: (v, row) => (
+        <span className="font-mono text-[11px]">
+          <span className="text-slate-400 mr-1">{row.method}</span>{v}
+        </span>
+      ),
+    },
+    { key: "requests", label: "Requests", align: "right" },
+    {
+      key: "errors", label: "Errors", align: "right",
+      render: (v, row) => <span style={{ color: row.error_rate > 5 ? CRIMSON : undefined }}>{v}</span>,
+    },
+    { key: "avg_ms", label: "Avg ms", align: "right" },
+  ];
+
+  const slowestColumns = [
+    {
+      key: "endpoint", label: "Endpoint", maxWidth: 220, wrap: false,
+      render: (v, row) => (
+        <span className="font-mono text-[11px]">
+          <span className="text-slate-400 mr-1">{row.method}</span>{v}
+        </span>
+      ),
+    },
+    {
+      key: "avg_ms", label: "Avg ms", align: "right",
+      render: (v) => <span style={{ color: v > 500 ? CRIMSON : v > 200 ? AMBER : EMERALD }}>{v}</span>,
+    },
+    { key: "max_ms", label: "Max ms", align: "right" },
+  ];
 
   return (
     <AdministrationLayout
       title="API Monitoring & Observability Center"
       subtitle="Per-endpoint stats, latency, error rates, and health scoring"
       actions={
-        <div className="flex gap-2">
-          <select value={days} onChange={e => setDays(Number(e.target.value))}
-            className="text-xs bg-[#0F2847] border border-[#1a3050] text-slate-300 px-2 py-1.5">
+        <div className="flex gap-2 items-center">
+          <FormSelect value={days} onChange={e => setDays(Number(e.target.value))} size="sm" wrapperClassName="w-28">
             {[1, 7, 14, 30, 90].map(d => <option key={d} value={d}>Last {d}d</option>)}
-          </select>
-          <button onClick={refetchAll} className="p-1.5 bg-[#0F2847] border border-[#1a3050] text-slate-400 hover:text-white">
+          </FormSelect>
+          <Button variant="ghost" size="icon" onClick={refetchAll} aria-label="Refresh">
             <RefreshCw size={14} className={(ovL || alL) ? "animate-spin" : ""} />
-          </button>
+          </Button>
         </div>
       }
     >
 
       {/* KPI row */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="bg-[#0F2847] border border-[#1a3050] p-4">
-          <div className={`text-3xl font-bold ${healthColor}`}>{d.health_score ?? "—"}</div>
-          <div className="text-xs text-slate-400">Health Score</div>
-        </div>
-        <div className="bg-[#0F2847] border border-[#1a3050] p-4">
-          <div className="text-xl font-bold text-white">{(d.total_requests || 0).toLocaleString()}</div>
-          <div className="text-xs text-slate-400">Total Requests</div>
-        </div>
-        <div className="bg-[#0F2847] border border-[#1a3050] p-4">
-          <div className="text-xl font-bold text-green-400">{d.success_rate_pct ?? 0}%</div>
-          <div className="text-xs text-slate-400">Success Rate</div>
-        </div>
-        <div className="bg-[#0F2847] border border-[#1a3050] p-4">
-          <div className={`text-xl font-bold ${d.error_rate_pct > 5 ? "text-red-400" : "text-yellow-400"}`}>{d.error_rate_pct ?? 0}%</div>
-          <div className="text-xs text-slate-400">Error Rate</div>
-        </div>
-        <div className="bg-[#0F2847] border border-[#1a3050] p-4">
-          <div className={`text-xl font-bold ${d.avg_response_ms > 500 ? "text-red-400" : d.avg_response_ms > 200 ? "text-yellow-400" : "text-green-400"}`}>{d.avg_response_ms ?? 0}ms</div>
-          <div className="text-xs text-slate-400">Avg Latency</div>
-        </div>
-        <div className="bg-[#0F2847] border border-[#1a3050] p-4">
-          <div className={`text-xl font-bold ${al.length > 0 ? "text-red-400" : "text-green-400"}`}>{al.length}</div>
-          <div className="text-xs text-slate-400">Active Alerts</div>
-        </div>
-      </div>
+      <StatGrid cols={6}>
+        <StatCard label="Health Score" value={d.health_score ?? "—"} />
+        <StatCard label="Total Requests" value={(d.total_requests || 0).toLocaleString()} />
+        <StatCard label="Success Rate" value={`${d.success_rate_pct ?? 0}%`} />
+        <StatCard label="Error Rate" value={`${d.error_rate_pct ?? 0}%`} />
+        <StatCard label="Avg Latency" value={`${d.avg_response_ms ?? 0}ms`} />
+        <StatCard label="Active Alerts" value={al.length} />
+      </StatGrid>
 
       {/* Alerts */}
       {al.length > 0 && (
         <div className="space-y-2">
           <div className="text-xs font-semibold uppercase tracking-widest text-slate-500">Active Alerts</div>
           {al.map((a, i) => (
-            <div key={i} className={`border-l-2 p-3 text-xs ${ALERT_SEVERITY[a.severity] || ALERT_SEVERITY.low}`}>
-              <span className="font-medium uppercase text-[10px] mr-2">{a.type}</span>
-              {a.message}
-            </div>
+            <Card key={i} padding="sm" accent={ALERT_ACCENT[a.severity] || ALERT_ACCENT.low} className="text-xs">
+              <span className="font-medium uppercase text-[10px] mr-2 text-slate-500">{a.type}</span>
+              <span className="text-slate-700">{a.message}</span>
+            </Card>
           ))}
         </div>
       )}
 
-      {/* Traffic trend */}
+      {/* Traffic trend — kept as recharts (multi-series area chart with tooltip
+          and legend); ds/Chart's LineChart has no tooltip/legend support, so
+          this custom chart-drawing logic stays, only its chrome (surrounding
+          card, colors, axis ticks) is restyled for the light theme. */}
       {(d.daily_trend || []).length > 0 && (
-        <div className="bg-[#0F2847] border border-[#1a3050] p-4">
+        <Card padding="lg">
           <div className="text-xs text-slate-500 font-medium mb-3">Daily Traffic Trend</div>
           <ResponsiveContainer width="100%" height={180}>
             <AreaChart data={d.daily_trend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1a3050" />
-              <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 10 }} tickFormatter={v => v.slice(5)} />
-              <YAxis tick={{ fill: "#64748b", fontSize: 10 }} />
-              <Tooltip contentStyle={{ background: "#0B1C35", border: "1px solid #1a3050", fontSize: 11 }} />
-              <Legend wrapperStyle={{ fontSize: 11, color: "#94a3b8" }} />
-              <Area type="monotone" dataKey="requests" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.15} strokeWidth={1.5} name="Requests" />
-              <Area type="monotone" dataKey="errors" stroke="#ef4444" fill="#ef4444" fillOpacity={0.15} strokeWidth={1.5} name="Errors" />
+              <CartesianGrid strokeDasharray="3 3" stroke={BRD_SOFT} />
+              <XAxis dataKey="date" tick={{ fill: TEXT_MUTED, fontSize: 10 }} tickFormatter={v => v.slice(5)} />
+              <YAxis tick={{ fill: TEXT_MUTED, fontSize: 10 }} />
+              <Tooltip contentStyle={{ background: WHITE, border: `1px solid ${BRD}`, fontSize: 11 }} />
+              <Legend wrapperStyle={{ fontSize: 11, color: TEXT_MUTED }} />
+              <Area type="monotone" dataKey="requests" stroke={INFO} fill={INFO} fillOpacity={0.12} strokeWidth={1.5} name="Requests" />
+              <Area type="monotone" dataKey="errors" stroke={CRIMSON} fill={CRIMSON} fillOpacity={0.12} strokeWidth={1.5} name="Errors" />
             </AreaChart>
           </ResponsiveContainer>
-        </div>
+        </Card>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Top endpoints */}
-        <div className="bg-[#0F2847] border border-[#1a3050]">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1a3050]">
-            <TrendingUp size={14} className="text-blue-400" />
-            <span className="text-sm font-semibold text-white">Top Endpoints by Volume</span>
+        <Card padding="none">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100">
+            <TrendingUp size={14} style={{ color: INFO }} />
+            <span className="text-sm font-semibold text-slate-800">Top Endpoints by Volume</span>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-slate-300">
-              <thead className="text-slate-500 border-b border-[#1a3050]">
-                <tr>
-                  <th className="text-left px-3 py-2 font-medium">Endpoint</th>
-                  <th className="text-right px-3 py-2 font-medium">Requests</th>
-                  <th className="text-right px-3 py-2 font-medium">Errors</th>
-                  <th className="text-right px-3 py-2 font-medium">Avg ms</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(d.top_endpoints || []).slice(0, 12).map((ep, i) => (
-                  <tr key={i} className="border-t border-[#1a3050] hover:bg-[#1a3050]/30">
-                    <td className="px-3 py-1.5 font-mono text-[10px] text-slate-300 max-w-[200px] truncate">
-                      <span className="text-slate-500 mr-1">{ep.method}</span>{ep.endpoint}
-                    </td>
-                    <td className="px-3 py-1.5 text-right text-white">{ep.requests}</td>
-                    <td className="px-3 py-1.5 text-right">
-                      <span className={ep.error_rate > 5 ? "text-red-400" : "text-slate-400"}>{ep.errors}</span>
-                    </td>
-                    <td className="px-3 py-1.5 text-right text-slate-400">{ep.avg_ms}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          <DataTable columns={topEndpointColumns} rows={(d.top_endpoints || []).slice(0, 12)} />
+        </Card>
 
         {/* Slowest endpoints */}
-        <div className="bg-[#0F2847] border border-[#1a3050]">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1a3050]">
-            <Zap size={14} className="text-yellow-400" />
-            <span className="text-sm font-semibold text-white">Slowest Endpoints</span>
+        <Card padding="none">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100">
+            <Zap size={14} style={{ color: AMBER }} />
+            <span className="text-sm font-semibold text-slate-800">Slowest Endpoints</span>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-slate-300">
-              <thead className="text-slate-500 border-b border-[#1a3050]">
-                <tr>
-                  <th className="text-left px-3 py-2 font-medium">Endpoint</th>
-                  <th className="text-right px-3 py-2 font-medium">Avg ms</th>
-                  <th className="text-right px-3 py-2 font-medium">Max ms</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(d.slowest_endpoints || []).map((ep, i) => (
-                  <tr key={i} className="border-t border-[#1a3050] hover:bg-[#1a3050]/30">
-                    <td className="px-3 py-1.5 font-mono text-[10px] text-slate-300 max-w-[220px] truncate">
-                      <span className="text-slate-500 mr-1">{ep.method}</span>{ep.endpoint}
-                    </td>
-                    <td className="px-3 py-1.5 text-right">
-                      <span className={ep.avg_ms > 500 ? "text-red-400" : ep.avg_ms > 200 ? "text-yellow-400" : "text-green-400"}>{ep.avg_ms}</span>
-                    </td>
-                    <td className="px-3 py-1.5 text-right text-slate-400">{ep.max_ms}</td>
-                  </tr>
-                ))}
-                {(d.slowest_endpoints || []).length === 0 && (
-                  <tr><td colSpan={3} className="px-3 py-6 text-center text-slate-500">No data yet — collect more traffic first</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          <DataTable
+            columns={slowestColumns}
+            rows={d.slowest_endpoints || []}
+            emptyNode={
+              <div className="px-3 py-6 text-center text-slate-400 text-xs">
+                No data yet — collect more traffic first
+              </div>
+            }
+          />
+        </Card>
       </div>
     </AdministrationLayout>
   );

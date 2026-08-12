@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
+import { toast } from "sonner";
 import { EMERALD, NAVY, WARM } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import {
@@ -10,6 +11,10 @@ import {
   Download, AlertCircle, CheckCircle2, Clock, Activity, Building2,
   ChevronRight, RefreshCw, X, Check, Mail,
 } from "lucide-react";
+import {
+  Card, StatCard, StatGrid, Badge, ErrorState, EmptyState, Button,
+  Input, Textarea, FormSelect,
+} from "@/components/ds";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -49,82 +54,6 @@ function iisLabel(score) {
   return "Emerging";
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-
-function Skeleton({ h = "h-4", w = "w-full", className = "" }) {
-  return <div className={`${h} ${w} bg-slate-200 animate-pulse ${className}`} />;
-}
-
-// ── Toast ─────────────────────────────────────────────────────────────────────
-
-function Toast({ message, type = "success", onClose }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 3500);
-    return () => clearTimeout(t);
-  }, [onClose]);
-
-  const colors =
-    type === "success"
-      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-      : "bg-red-50 border-red-200 text-red-800";
-
-  return (
-    <div className={`fixed bottom-6 right-6 z-50 border px-4 py-3 text-sm shadow-lg max-w-xs ${colors}`}>
-      <div className="flex items-center gap-2">
-        {type === "success" ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-        <span>{message}</span>
-        <button onClick={onClose} className="ml-auto opacity-60 hover:opacity-100 text-lg leading-none">&times;</button>
-      </div>
-    </div>
-  );
-}
-
-// ── Error card ────────────────────────────────────────────────────────────────
-
-function ErrorCard({ message, onRetry }) {
-  return (
-    <div className="border border-red-200 bg-red-50 p-6 text-center">
-      <AlertCircle size={20} strokeWidth={1.5} className="text-red-400 mx-auto mb-2" />
-      <p className="text-red-700 text-sm mb-3">{message || "Failed to load data."}</p>
-      {onRetry && (
-        <button
-          onClick={onRetry}
-          className="text-xs border border-red-300 text-red-700 px-3 py-1.5 hover:bg-red-100 transition-colors"
-        >
-          Retry
-        </button>
-      )}
-    </div>
-  );
-}
-
-// ── Empty state ───────────────────────────────────────────────────────────────
-
-function EmptyState({ icon: Icon = AlertCircle, message, sub }) {
-  return (
-    <div className="border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-      <Icon size={24} strokeWidth={1.5} className="text-slate-300 mx-auto mb-2" />
-      <p className="text-slate-600 text-sm font-medium">{message}</p>
-      {sub && <p className="text-slate-400 text-xs mt-1 max-w-sm mx-auto">{sub}</p>}
-    </div>
-  );
-}
-
-// ── KPI card ──────────────────────────────────────────────────────────────────
-
-function KpiCard({ label, value, sub, icon: Icon, highlight }) {
-  return (
-    <div className={`border bg-white p-5 ${highlight ? "border-[#0F2847]" : "border-slate-200"}`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</span>
-        {Icon && <Icon size={13} strokeWidth={1.5} className="text-slate-400" />}
-      </div>
-      <div className="font-serif text-3xl text-slate-900">{value}</div>
-      {sub && <div className="text-xs text-slate-500 mt-1">{sub}</div>}
-    </div>
-  );
-}
-
 // ── Progress bar ──────────────────────────────────────────────────────────────
 
 function ProgressBar({ label, value = 0, max = 1000, color = "#0F2847" }) {
@@ -149,20 +78,10 @@ function ProgressBar({ label, value = 0, max = 1000, color = "#0F2847" }) {
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 
+const STATUS_VARIANT = { green: "success", blue: "info", amber: "warning", red: "danger", slate: "neutral", purple: "purple" };
+
 function StatusBadge({ label, color = "slate" }) {
-  const palette = {
-    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    blue: "bg-blue-50 text-blue-700 border-blue-200",
-    amber: "bg-amber-50 text-amber-700 border-amber-200",
-    red: "bg-red-50 text-red-700 border-red-200",
-    slate: "bg-slate-100 text-slate-600 border-slate-200",
-    purple: "bg-purple-50 text-purple-700 border-purple-200",
-  };
-  return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 text-xs border ${palette[color] || palette.slate}`}>
-      {label}
-    </span>
-  );
+  return <Badge size="sm" variant={STATUS_VARIANT[color] || "neutral"}>{label}</Badge>;
 }
 
 // ── Verification level name ───────────────────────────────────────────────────
@@ -205,8 +124,6 @@ export default function InstitutionAdminConsole() {
   const [overviewError, setOverviewError] = useState(null);
   const [accessDenied, setAccessDenied] = useState(false);
 
-  const [toast, setToast] = useState(null);
-
   // Members
   const [pendingMembers, setPendingMembers] = useState([]);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -245,7 +162,10 @@ export default function InstitutionAdminConsole() {
   const [grantLoading, setGrantLoading] = useState(false);
   const [grantLoaded, setGrantLoaded] = useState(false);
 
-  const showToast = (message, type = "success") => setToast({ message, type });
+  const showToast = (message, type = "success") => {
+    if (type === "error") toast.error(message);
+    else toast.success(message);
+  };
 
   // ── On mount: fetch overview ───────────────────────────────────────────────
 
@@ -475,13 +395,13 @@ export default function InstitutionAdminConsole() {
   if (accessDenied) {
     return (
       <div className="min-h-screen bg-[#F4F6FA] flex items-center justify-center p-6">
-        <div className="border border-red-200 bg-white p-8 text-center max-w-md">
+        <Card padding="xl" className="text-center max-w-md">
           <AlertCircle size={32} strokeWidth={1.5} className="text-red-400 mx-auto mb-4" />
           <h2 className="text-lg font-semibold text-slate-900 mb-2">Access Denied</h2>
           <p className="text-sm text-slate-500">
             You do not have admin access to this institution. Redirecting...
           </p>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -500,7 +420,7 @@ export default function InstitutionAdminConsole() {
       );
     }
     if (overviewError) {
-      return <ErrorCard message={overviewError} onRetry={() => window.location.reload()} />;
+      return <ErrorState message={overviewError} onRetry={() => window.location.reload()} />;
     }
     if (!overview) return null;
 
@@ -509,14 +429,14 @@ export default function InstitutionAdminConsole() {
 
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <KpiCard label="Members" value={fmtNum(kpis.member_count)} icon={Users} />
-          <KpiCard label="Pending Invites" value={fmtNum(kpis.pending_invites)} icon={Mail} />
-          <KpiCard label="Publications" value={fmtNum(kpis.total_publications)} icon={BookOpen} />
-          <KpiCard label="Grants" value={fmtNum(kpis.total_grants)} icon={DollarSign} />
-        </div>
+        <StatGrid cols={4}>
+          <StatCard label="Members" value={fmtNum(kpis.member_count)} icon={<Users />} />
+          <StatCard label="Pending Invites" value={fmtNum(kpis.pending_invites)} icon={<Mail />} />
+          <StatCard label="Publications" value={fmtNum(kpis.total_publications)} icon={<BookOpen />} />
+          <StatCard label="Grants" value={fmtNum(kpis.total_grants)} icon={<DollarSign />} />
+        </StatGrid>
         {kpis.iis_score != null && (
-          <div className="border border-slate-200 bg-white p-4 flex items-center gap-4">
+          <Card padding="md" className="flex items-center gap-4">
             <BarChart2 size={16} strokeWidth={1.5} className="text-slate-400 flex-shrink-0" />
             <div className="flex-1">
               <div className="text-xs text-slate-500 mb-1">Institution Impact Score</div>
@@ -527,10 +447,10 @@ export default function InstitutionAdminConsole() {
                 <StatusBadge label={iisLabel(kpis.iis_score)} color="blue" />
               </div>
             </div>
-          </div>
+          </Card>
         )}
         {timeline.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">Recent Activity</h3>
             <div className="space-y-3">
               {timeline.slice(0, 10).map((ev, idx) => (
@@ -543,7 +463,7 @@ export default function InstitutionAdminConsole() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
       </div>
     );
@@ -553,12 +473,12 @@ export default function InstitutionAdminConsole() {
     return (
       <div className="space-y-6">
         {/* Pending members */}
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <h3 className="text-sm font-semibold text-slate-900 mb-4">Pending Member Requests</h3>
           {membersLoading ? (
             <div className="space-y-2 animate-pulse">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-12 bg-slate-200" />)}</div>
           ) : pendingMembers.length === 0 ? (
-            <EmptyState icon={Users} message="No pending member requests." />
+            <EmptyState icon={<Users />} title="No pending member requests." />
           ) : (
             <div className="space-y-2">
               {pendingMembers.map((m) => (
@@ -568,64 +488,57 @@ export default function InstitutionAdminConsole() {
                     <div className="text-xs text-slate-500">{m.email}</div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button
+                      size="sm"
                       onClick={() => handleMemberAction(m._id || m.user_id, "approve")}
-                      className="flex items-center gap-1 px-3 py-1.5 text-xs bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                      className="!bg-emerald-50 !border-emerald-200 !text-emerald-700 hover:!bg-emerald-100"
+                      variant="ghost"
                     >
                       <Check size={11} strokeWidth={2} />
                       Approve
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       onClick={() => handleMemberAction(m._id || m.user_id, "reject")}
-                      className="flex items-center gap-1 px-3 py-1.5 text-xs bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 transition-colors"
+                      className="!bg-red-50 !border-red-200 !text-red-700 hover:!bg-red-100"
                     >
                       <X size={11} strokeWidth={2} />
                       Reject
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Bulk invite */}
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <h3 className="text-sm font-semibold text-slate-900 mb-4">Bulk Invite</h3>
           <div className="space-y-3">
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">
-                Email addresses (comma-separated)
-              </label>
-              <textarea
-                rows={4}
-                placeholder="user1@example.com, user2@example.com, ..."
-                value={bulkInviteEmails}
-                onChange={(e) => setBulkInviteEmails(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 text-sm focus:outline-none focus:border-[#0F2847] resize-none"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">Role</label>
-              <select
-                value={bulkInviteRole}
-                onChange={(e) => setBulkInviteRole(e.target.value)}
-                className="px-3 py-2 border border-slate-200 text-sm focus:outline-none focus:border-[#0F2847]"
-              >
-                <option value="member">Member</option>
-                <option value="researcher">Researcher</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <button
-              onClick={handleBulkInvite}
-              disabled={bulkInviteLoading || !bulkInviteEmails.trim()}
-              className="px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            <Textarea
+              label="Email addresses (comma-separated)"
+              rows={4}
+              placeholder="user1@example.com, user2@example.com, ..."
+              value={bulkInviteEmails}
+              onChange={(e) => setBulkInviteEmails(e.target.value)}
+            />
+            <FormSelect
+              label="Role"
+              value={bulkInviteRole}
+              onChange={(e) => setBulkInviteRole(e.target.value)}
+              wrapperClassName="w-auto"
             >
+              <option value="member">Member</option>
+              <option value="researcher">Researcher</option>
+              <option value="admin">Admin</option>
+            </FormSelect>
+            <Button onClick={handleBulkInvite} disabled={bulkInviteLoading || !bulkInviteEmails.trim()} loading={bulkInviteLoading}>
               {bulkInviteLoading ? "Sending..." : "Send Invites"}
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -636,7 +549,7 @@ export default function InstitutionAdminConsole() {
     }
     const stats = pubStats || {};
     return (
-      <div className="border border-slate-200 bg-white p-5">
+      <Card padding="lg">
         <h3 className="text-sm font-semibold text-slate-900 mb-4">Publication Statistics</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {[
@@ -655,7 +568,7 @@ export default function InstitutionAdminConsole() {
         <p className="text-xs text-slate-400 mt-4">
           Publication data is read-only. Manage publications through member profiles.
         </p>
-      </div>
+      </Card>
     );
   }
 
@@ -665,7 +578,7 @@ export default function InstitutionAdminConsole() {
     }
     const stats = grantStats || {};
     return (
-      <div className="border border-slate-200 bg-white p-5">
+      <Card padding="lg">
         <h3 className="text-sm font-semibold text-slate-900 mb-4">Grant Statistics</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {[
@@ -684,7 +597,7 @@ export default function InstitutionAdminConsole() {
         <p className="text-xs text-slate-400 mt-4">
           Grant data is read-only. Grant applications are managed by individual researchers.
         </p>
-      </div>
+      </Card>
     );
   }
 
@@ -699,7 +612,7 @@ export default function InstitutionAdminConsole() {
 
     return (
       <div className="space-y-5">
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <div className="flex items-center justify-between mb-6">
             <div>
               <div className="text-xs text-slate-500 mb-1">Institution Impact Score</div>
@@ -708,14 +621,10 @@ export default function InstitutionAdminConsole() {
               </div>
               <div className="text-xs font-medium mt-0.5 text-slate-500">{iisLabel(score)}</div>
             </div>
-            <button
-              onClick={handleImpactRefresh}
-              disabled={impactRefreshing}
-              className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
-            >
-              <RefreshCw size={13} strokeWidth={1.5} className={impactRefreshing ? "animate-spin" : ""} />
+            <Button variant="ghost" onClick={handleImpactRefresh} disabled={impactRefreshing} loading={impactRefreshing}>
+              {!impactRefreshing && <RefreshCw size={13} strokeWidth={1.5} />}
               {impactRefreshing ? "Refreshing..." : "Refresh Score"}
-            </button>
+            </Button>
           </div>
 
           {componentKeys.length > 0 && (
@@ -736,7 +645,7 @@ export default function InstitutionAdminConsole() {
               })}
             </div>
           )}
-        </div>
+        </Card>
       </div>
     );
   }
@@ -756,49 +665,45 @@ export default function InstitutionAdminConsole() {
     ];
 
     return (
-      <div className="border border-slate-200 bg-white p-5">
+      <Card padding="lg">
         <h3 className="text-sm font-semibold text-slate-900 mb-6">Institution Settings</h3>
         <div className="space-y-4 max-w-lg">
           {fields.map(({ key, label, type, options }) => (
-            <div key={key}>
-              <label className="text-xs text-slate-500 block mb-1">{label}</label>
-              {type === "textarea" ? (
-                <textarea
-                  rows={3}
-                  value={settingsForm[key] || ""}
-                  onChange={(e) => setSettingsForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-200 text-sm focus:outline-none focus:border-[#0F2847] resize-none"
-                />
-              ) : type === "select" ? (
-                <select
-                  value={settingsForm[key] || ""}
-                  onChange={(e) => setSettingsForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-200 text-sm focus:outline-none focus:border-[#0F2847]"
-                >
-                  <option value="">Select...</option>
-                  {options.map((o) => (
-                    <option key={o} value={o}>{o.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type={type}
-                  value={settingsForm[key] || ""}
-                  onChange={(e) => setSettingsForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-200 text-sm focus:outline-none focus:border-[#0F2847]"
-                />
-              )}
-            </div>
+            type === "textarea" ? (
+              <Textarea
+                key={key}
+                label={label}
+                rows={3}
+                value={settingsForm[key] || ""}
+                onChange={(e) => setSettingsForm((prev) => ({ ...prev, [key]: e.target.value }))}
+              />
+            ) : type === "select" ? (
+              <FormSelect
+                key={key}
+                label={label}
+                value={settingsForm[key] || ""}
+                onChange={(e) => setSettingsForm((prev) => ({ ...prev, [key]: e.target.value }))}
+              >
+                <option value="">Select...</option>
+                {options.map((o) => (
+                  <option key={o} value={o}>{o.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</option>
+                ))}
+              </FormSelect>
+            ) : (
+              <Input
+                key={key}
+                label={label}
+                type={type}
+                value={settingsForm[key] || ""}
+                onChange={(e) => setSettingsForm((prev) => ({ ...prev, [key]: e.target.value }))}
+              />
+            )
           ))}
-          <button
-            onClick={handleSettingsSave}
-            disabled={settingsSaving}
-            className="px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors disabled:opacity-50"
-          >
+          <Button onClick={handleSettingsSave} disabled={settingsSaving} loading={settingsSaving}>
             {settingsSaving ? "Saving..." : "Save Settings"}
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
     );
   }
 
@@ -813,7 +718,7 @@ export default function InstitutionAdminConsole() {
 
     return (
       <div className="space-y-5">
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <h3 className="text-sm font-semibold text-slate-900 mb-4">Current Verification Status</h3>
           <div className="flex items-center gap-3">
             <ShieldCheck size={20} strokeWidth={1.5} className="text-slate-400" />
@@ -829,10 +734,10 @@ export default function InstitutionAdminConsole() {
             </div>
             <StatusBadge label={levelInfo.name} color={levelInfo.color} />
           </div>
-        </div>
+        </Card>
 
         {pendingRequests.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">Pending Requests</h3>
             <div className="space-y-2">
               {pendingRequests.map((r, idx) => (
@@ -846,44 +751,34 @@ export default function InstitutionAdminConsole() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
         {currentLevel < 3 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">Request Higher Verification</h3>
             <div className="space-y-4 max-w-lg">
-              <div>
-                <label className="text-xs text-slate-500 block mb-1">Requested Level</label>
-                <select
-                  value={verifForm.requested_level}
-                  onChange={(e) => setVerifForm((prev) => ({ ...prev, requested_level: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-200 text-sm focus:outline-none focus:border-[#0F2847]"
-                >
-                  {[1, 2, 3].filter((l) => l > currentLevel).map((l) => (
-                    <option key={l} value={l}>Level {l} — {VERIFICATION_LEVELS[l]?.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-slate-500 block mb-1">Evidence URLs (one per line)</label>
-                <textarea
-                  rows={4}
-                  placeholder="https://example.com/accreditation&#10;https://example.com/certificate"
-                  value={verifForm.evidence_urls}
-                  onChange={(e) => setVerifForm((prev) => ({ ...prev, evidence_urls: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-200 text-sm focus:outline-none focus:border-[#0F2847] resize-none"
-                />
-              </div>
-              <button
-                onClick={handleVerifRequest}
-                disabled={verifSubmitting}
-                className="px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors disabled:opacity-50"
+              <FormSelect
+                label="Requested Level"
+                value={verifForm.requested_level}
+                onChange={(e) => setVerifForm((prev) => ({ ...prev, requested_level: e.target.value }))}
               >
+                {[1, 2, 3].filter((l) => l > currentLevel).map((l) => (
+                  <option key={l} value={l}>Level {l} — {VERIFICATION_LEVELS[l]?.name}</option>
+                ))}
+              </FormSelect>
+              <Textarea
+                label="Evidence URLs (one per line)"
+                rows={4}
+                placeholder={"https://example.com/accreditation\nhttps://example.com/certificate"}
+                value={verifForm.evidence_urls}
+                onChange={(e) => setVerifForm((prev) => ({ ...prev, evidence_urls: e.target.value }))}
+              />
+              <Button onClick={handleVerifRequest} disabled={verifSubmitting} loading={verifSubmitting}>
                 {verifSubmitting ? "Submitting..." : "Submit Request"}
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         )}
       </div>
     );
@@ -891,19 +786,16 @@ export default function InstitutionAdminConsole() {
 
   function ExportSection() {
     return (
-      <div className="border border-slate-200 bg-white p-5">
+      <Card padding="lg">
         <h3 className="text-sm font-semibold text-slate-900 mb-2">Export Institution Data</h3>
         <p className="text-sm text-slate-500 mb-6">
           Download a complete JSON export of your institution data including members, publications, grants, and impact scores.
         </p>
-        <button
-          onClick={handleExport}
-          className="flex items-center gap-2 px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors"
-        >
+        <Button onClick={handleExport}>
           <Download size={14} strokeWidth={1.5} />
           Download Export
-        </button>
-      </div>
+        </Button>
+      </Card>
     );
   }
 
@@ -927,7 +819,9 @@ export default function InstitutionAdminConsole() {
       subtitle="Manage your institution settings, members, and data."
     >
       <div className="flex gap-6">
-          {/* Sidebar nav */}
+          {/* Sidebar nav — kept hand-rolled: ds NavTabs is a horizontal tab bar
+              only; there's no vertical sidebar-nav pattern in ds/ for this
+              admin-console-style persistent left menu. */}
           <aside className="w-52 flex-shrink-0">
             <nav className="space-y-0.5">
               {NAV_ITEMS.map(({ key, label, icon: Icon }) => (
@@ -952,14 +846,6 @@ export default function InstitutionAdminConsole() {
             <SectionContent />
           </main>
         </div>
-
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
     </AdministrationLayout>
   );
 }

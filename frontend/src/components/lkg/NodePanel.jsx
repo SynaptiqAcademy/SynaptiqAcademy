@@ -96,7 +96,7 @@ export default function NodePanel({ node, onClose, onNavigate }) {
           </div>
           <h2 className="font-semibold text-slate-800 text-sm leading-snug line-clamp-3">{node.label}</h2>
         </div>
-        <button onClick={onClose} className="text-slate-400 hover:text-slate-600 mt-0.5 flex-shrink-0">
+        <button onClick={onClose} aria-label="Close" className="text-slate-400 hover:text-slate-600 mt-0.5 flex-shrink-0">
           <X size={16} />
         </button>
       </div>

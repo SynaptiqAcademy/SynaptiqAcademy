@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from "recharts";
+import { ResponsiveContainer, Cell, PieChart, Pie, Tooltip } from "recharts";
 import api from "@/lib/api";
 import { SkeletonPage } from "@/components/ds/LoadingState";
 import { ErrorState } from "@/components/ds/ErrorState";
+import { Card, StatCard, StatGrid, DataTable, H2 } from "@/components/ds";
 import { AdministrationLayout } from "@/layouts";
 
 const PLAN_COLORS = { free: "#94a3b8", researcher: "#3b82f6", pro_researcher: "#6366f1", institution: "#a855f7" };
@@ -30,6 +31,21 @@ export default function AdminAnalytics() {
   const engagement = data.engagement_overview || {};
   const featureAdoption = data.feature_adoption || {};
 
+  const featureColumns = [
+    {
+      key: "feature",
+      label: "Feature",
+      render: (v) => <span className="capitalize text-slate-700">{v.replace(/_/g, " ")}</span>,
+    },
+    {
+      key: "usage",
+      label: "Usage",
+      align: "right",
+      render: (v) => <span className="font-medium text-slate-900">{typeof v === "number" ? v.toLocaleString() : String(v)}</span>,
+    },
+  ];
+  const featureRows = Object.entries(featureAdoption).map(([key, value]) => ({ feature: key, usage: value }));
+
   return (
     <AdministrationLayout
       title="Platform Analytics"
@@ -37,8 +53,8 @@ export default function AdminAnalytics() {
     >
       {/* Plan Distribution */}
       {planChartData.length > 0 && (
-        <div className="bg-white border border-slate-200 p-5">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Plan Distribution</h2>
+        <Card padding="lg">
+          <H2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Plan Distribution</H2>
           <div className="flex gap-8 items-center">
             <ResponsiveContainer width={200} height={200}>
               <PieChart>
@@ -60,45 +76,31 @@ export default function AdminAnalytics() {
               ))}
             </div>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Engagement */}
       {Object.keys(engagement).length > 0 && (
-        <div className="bg-white border border-slate-200 p-5">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Engagement Overview</h2>
-          <div className="grid grid-cols-3 gap-4">
+        <Card padding="lg" className="mt-4">
+          <H2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Engagement Overview</H2>
+          <StatGrid cols={3}>
             {Object.entries(engagement).filter(([k]) => k !== "plan_distribution").map(([key, value]) => (
-              <div key={key} className="bg-slate-50 border border-slate-200 px-4 py-3 text-center">
-                <div className="font-serif text-2xl text-slate-900">{typeof value === "number" ? value.toLocaleString() : String(value)}</div>
-                <div className="text-xs text-slate-500 mt-0.5">{key.replace(/_/g, " ")}</div>
-              </div>
+              <StatCard
+                key={key}
+                label={key.replace(/_/g, " ")}
+                value={typeof value === "number" ? value.toLocaleString() : String(value)}
+              />
             ))}
-          </div>
-        </div>
+          </StatGrid>
+        </Card>
       )}
 
       {/* Feature Adoption */}
       {Object.keys(featureAdoption).length > 0 && (
-        <div className="bg-white border border-slate-200 p-5">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Feature Adoption</h2>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="text-left py-2 text-xs font-semibold uppercase tracking-widest text-slate-500">Feature</th>
-                <th className="text-right py-2 text-xs font-semibold uppercase tracking-widest text-slate-500">Usage</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(featureAdoption).map(([key, value]) => (
-                <tr key={key} className="border-b border-slate-100">
-                  <td className="py-2.5 text-slate-700 capitalize">{key.replace(/_/g, " ")}</td>
-                  <td className="py-2.5 text-right font-medium text-slate-900">{typeof value === "number" ? value.toLocaleString() : String(value)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Card padding="lg" className="mt-4">
+          <H2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Feature Adoption</H2>
+          <DataTable columns={featureColumns} rows={featureRows} />
+        </Card>
       )}
     </AdministrationLayout>
   );

@@ -97,7 +97,7 @@ export function Drawer({ open, onClose, title, width = 440, footer, children }) 
               display: "flex", alignItems: "center", justifyContent: "center",
               width: 30, height: 30, borderRadius: RADIUS_MD, border: `1px solid ${BRD}`,
               background: "transparent", cursor: "pointer", color: TEXT_MUTED,
-              flexShrink: 0, marginLeft: 16, transition: "background 100ms",
+              flexShrink: 0, marginLeft: 16, transition: "background 120ms",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.background = SURF2)}
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}

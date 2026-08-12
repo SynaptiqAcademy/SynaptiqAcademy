@@ -41,7 +41,7 @@ function GoalCard({ goal, onDelete, onUpdateStatus }) {
             </span>
           </div>
         </div>
-        <button onClick={() => onDelete(goal._id)} className="text-slate-300 hover:text-red-400 ml-2 flex-shrink-0">
+        <button onClick={() => onDelete(goal._id)} aria-label={`Delete goal: ${goal.title}`} className="text-slate-300 hover:text-red-400 ml-2 flex-shrink-0">
           <Trash2 size={13} />
         </button>
       </div>

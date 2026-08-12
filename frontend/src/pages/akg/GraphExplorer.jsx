@@ -161,9 +161,9 @@ export default function GraphExplorer() {
           <option value={2}>Depth 2</option>
           <option value={3}>Depth 3</option>
         </FormSelect>
-        <Button variant="ghost" size="icon" onClick={() => zoom(1)}><ZoomIn size={16} /></Button>
-        <Button variant="ghost" size="icon" onClick={() => zoom(-1)}><ZoomOut size={16} /></Button>
-        <Button variant="ghost" size="icon" onClick={() => setTransform({ x: 0, y: 0, scale: 1 })}><Maximize2 size={16} /></Button>
+        <Button variant="ghost" size="icon" onClick={() => zoom(1)} aria-label="Zoom in"><ZoomIn size={16} /></Button>
+        <Button variant="ghost" size="icon" onClick={() => zoom(-1)} aria-label="Zoom out"><ZoomOut size={16} /></Button>
+        <Button variant="ghost" size="icon" onClick={() => setTransform({ x: 0, y: 0, scale: 1 })} aria-label="Reset zoom"><Maximize2 size={16} /></Button>
       </div>
 
       <div style={{ display: "flex", gap: 16 }}>

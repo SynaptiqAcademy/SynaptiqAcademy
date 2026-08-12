@@ -17,19 +17,51 @@ const DropdownCtx = createContext(null);
 export function Dropdown({ trigger, children, align = "left", width = 180, style }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const menuRef = useRef(null);
+  const triggerRef = useRef(null);
 
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     };
-    const keyHandler = (e) => { if (e.key === "Escape") setOpen(false); };
     document.addEventListener("mousedown", handler);
-    document.addEventListener("keydown", keyHandler);
-    return () => {
-      document.removeEventListener("mousedown", handler);
-      document.removeEventListener("keydown", keyHandler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  // Menu items get focus once the menu mounts, then arrow keys move a
+  // roving focus among them per the ARIA APG menu-button pattern — without
+  // this, keyboard/screen-reader users can open a menu but can't operate it.
+  useEffect(() => {
+    if (!open) return;
+    const items = () => Array.from(menuRef.current?.querySelectorAll('[role="menuitem"]:not(:disabled)') || []);
+    items()[0]?.focus();
+
+    const keyHandler = (e) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+        return;
+      }
+      const list = items();
+      if (!list.length) return;
+      const idx = list.indexOf(document.activeElement);
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        list[(idx + 1) % list.length]?.focus();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        list[(idx - 1 + list.length) % list.length]?.focus();
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        list[0]?.focus();
+      } else if (e.key === "End") {
+        e.preventDefault();
+        list[list.length - 1]?.focus();
+      }
     };
+    document.addEventListener("keydown", keyHandler);
+    return () => document.removeEventListener("keydown", keyHandler);
   }, [open]);
 
   const close = () => setOpen(false);
@@ -39,11 +71,22 @@ export function Dropdown({ trigger, children, align = "left", width = 180, style
     <DropdownCtx.Provider value={{ close }}>
       <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
         {React.isValidElement(trigger)
-          ? React.cloneElement(trigger, { onClick: toggle })
+          ? React.cloneElement(trigger, {
+              onClick: toggle,
+              ref: (node) => {
+                triggerRef.current = node;
+                const { ref: origRef } = trigger;
+                if (typeof origRef === "function") origRef(node);
+                else if (origRef) origRef.current = node;
+              },
+              "aria-haspopup": "menu",
+              "aria-expanded": open,
+            })
           : trigger}
 
         {open && (
           <div
+            ref={menuRef}
             role="menu"
             style={{
               position: "absolute",
@@ -99,7 +142,7 @@ export function DropdownItem({ children, icon: Icon, onClick, shortcut, destruct
         color: disabled ? TEXT_MUTED : color,
         fontSize: "0.875rem", fontWeight: 400,
         textAlign: "left",
-        transition: "background 80ms",
+        transition: "background 120ms",
         opacity: disabled ? 0.5 : 1,
         ...style,
       }}

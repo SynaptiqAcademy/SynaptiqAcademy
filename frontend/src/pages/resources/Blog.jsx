@@ -753,6 +753,7 @@ export default function Blog() {
                   size="icon"
                   variant="ghost"
                   onClick={() => setSearch("")}
+                  aria-label="Clear search"
                   style={{
                     color: "#94a3b8"
                   }}><X size={14} /></Button>}

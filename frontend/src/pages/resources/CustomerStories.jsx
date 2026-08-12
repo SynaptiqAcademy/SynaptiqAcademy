@@ -490,6 +490,7 @@ export default function CustomerStories() {
                 size="icon"
                 variant="ghost"
                 onClick={() => setSearch("")}
+                aria-label="Clear search"
                 style={{
                   color: "#94a3b8"
                 }}><X size={12} /></Button>}

@@ -59,6 +59,9 @@ export function SkeletonCard({ rows = 3, className = "" }) {
       <StyleInjector />
       <div
         className={className}
+        role="status"
+        aria-live="polite"
+        aria-label="Loading"
         style={{
           border: `1px solid ${BRD}`,
           borderRadius: RADIUS_MD,
@@ -100,7 +103,7 @@ export function SkeletonTable({ rows = 5, cols = 4, className = "" }) {
   return (
     <>
       <StyleInjector />
-      <div className={className} style={{ border: `1px solid ${BRD}`, borderRadius: RADIUS_MD, overflow: "hidden" }}>
+      <div className={className} role="status" aria-label="Loading" style={{ border: `1px solid ${BRD}`, borderRadius: RADIUS_MD, overflow: "hidden" }}>
         {/* Header */}
         <div
           style={{
@@ -152,7 +155,7 @@ export function SkeletonPage({ cards = 3, className = "" }) {
   return (
     <>
       <StyleInjector />
-      <div className={className} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div className={className} role="status" aria-label="Loading" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         {/* Header skeleton */}
         <div
           style={{
@@ -189,6 +192,7 @@ export function Spinner({ size = 20, color = NAVY, className = "" }) {
         viewBox="0 0 24 24"
         fill="none"
         style={{ animation: "sq-spin 700ms linear infinite", display: "inline-block" }}
+        role="status"
         aria-label="Loading"
       >
         <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2.5" strokeOpacity="0.2" />
@@ -203,6 +207,8 @@ export function LoadingOverlay({ text = "Loading…" }) {
     <>
       <StyleInjector />
       <div
+        role="status"
+        aria-label={text || "Loading"}
         style={{
           display: "flex",
           flexDirection: "column",

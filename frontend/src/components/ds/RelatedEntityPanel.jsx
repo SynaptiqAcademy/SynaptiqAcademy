@@ -42,7 +42,7 @@ export function RelatedEntityPanel({ title = "Related", items = [], cols = 3 }) 
                 borderRight: (i + 1) % cols !== 0 ? `1px solid ${BRDX}` : "none",
                 borderBottom: i < items.length - cols ? `1px solid ${BRDX}` : "none",
                 cursor: item.to ? "pointer" : "default",
-                transition: "background 100ms",
+                transition: "background 120ms",
               }}
               onMouseEnter={item.to ? (e) => (e.currentTarget.style.background = NAVY_06) : undefined}
               onMouseLeave={item.to ? (e) => (e.currentTarget.style.background = "transparent") : undefined}

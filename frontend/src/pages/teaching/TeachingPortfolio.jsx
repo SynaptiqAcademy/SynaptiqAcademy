@@ -14,7 +14,6 @@ import { Input } from "@/components/ds/Input";
 import { Textarea } from "@/components/ds/Textarea";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { Checkbox } from "@/components/ds/Form";
-import { NAVY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 
 const SUBJECTS   = ["Mathematics","Economics","Management","Computer Science","Medicine","Engineering","Psychology","Education","Sciences","Humanities","Law","Business","Other"];
@@ -59,10 +58,10 @@ function PortfolioCard({ item, onEdit, onDelete, onToggleFeatured }) {
             className={item.featured ? "text-amber-500" : "text-slate-300 hover:text-amber-400"}>
             <Star size={13} strokeWidth={1.5} fill={item.featured ? "currentColor" : "none"} />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => onEdit(item)} className="text-slate-400 hover:text-slate-700">
+          <Button variant="ghost" size="icon" onClick={() => onEdit(item)} aria-label="Edit item" className="text-slate-400 hover:text-slate-700">
             <Edit2 size={12} strokeWidth={1.5} />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => onDelete(item)} className="text-slate-300 hover:text-red-400">
+          <Button variant="ghost" size="icon" onClick={() => onDelete(item)} aria-label="Delete item" className="text-slate-300 hover:text-red-400">
             <Trash2 size={12} strokeWidth={1.5} />
           </Button>
         </div>

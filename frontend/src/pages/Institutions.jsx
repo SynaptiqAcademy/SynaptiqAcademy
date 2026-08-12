@@ -12,7 +12,7 @@ import {
   Building2, Search, Plus, MapPin, Users, GraduationCap, FlaskConical,
   Landmark, Briefcase,
 } from "lucide-react";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 
 const TYPES = [
   { v: "university",         label: "University",          Icon: GraduationCap },
@@ -44,7 +44,7 @@ export default function Institutions() {
   useEffect(() => { const t = setTimeout(load, q ? 300 : 0); return () => clearTimeout(t); }, [q, load]);
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Institutional research"
       subtitle="Universities, research institutes, and government agencies. Join your home institution, govern your roster, and aggregate the research output of every researcher under one roof."
       actions={
@@ -85,7 +85,7 @@ export default function Institutions() {
 
       {creating && <CreateModal onClose={() => setCreating(false)} onCreated={load} />}
     </div>
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }
 
@@ -163,7 +163,7 @@ function CreateModal({ onClose, onCreated }) {
           value={name} onChange={(e) => setName(e.target.value)}
           placeholder="ETH Zurich / Max Planck / NIH …"
         />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <FormSelect label="Type" data-testid="create-inst-type" value={type} onChange={(e) => setType(e.target.value)}>
             {TYPES.map((t) => <option key={t.v} value={t.v}>{t.label}</option>)}
           </FormSelect>

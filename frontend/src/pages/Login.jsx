@@ -107,9 +107,9 @@ export default function Login() {
             autoComplete="current-password"
           />
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: -4 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px 16px", marginTop: -4 }}>
             <AuthCheckbox checked={remember} onChange={function(e) { setRemember(e.target.checked); }}>
-              Remember me
+              <span style={{ whiteSpace: "nowrap" }}>Remember me</span>
             </AuthCheckbox>
             <Link
               to="/forgot-password"

@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, ArrowRight } from "lucide-react";
 import { NAVY, WARM, BRD, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Button, H4, Body } from "@/components/ds";
 
@@ -18,7 +18,7 @@ const STEPS = [
 export default function PublicationRoadmap() {
   const navigate = useNavigate();
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
       title="Publication Roadmap"
       subtitle="AI-guided publication strategy and submission tracking."
       navItems={SIE_NAV_ITEMS}
@@ -68,6 +68,6 @@ export default function PublicationRoadmap() {
           Generate Research Roadmap <ArrowRight size={14} />
         </Button>
       </Card>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

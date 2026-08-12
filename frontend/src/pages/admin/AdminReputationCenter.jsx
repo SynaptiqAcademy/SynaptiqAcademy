@@ -6,6 +6,10 @@ import { toast } from "sonner";
 import { getResearchLevel } from "@/hooks/useReputation";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
+import {
+  Card, Button, Alert, NavTabs, StatCard, StatGrid,
+  DataTable, ProgressBar, SkeletonLine,
+} from "@/components/ds";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -14,6 +18,12 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+// NOTE: LevelPill keeps its own hand-rolled span rather than wrapping in
+// ds/Badge — getResearchLevel()'s `tone` return value is itself a full
+// background/border/text utility bundle, and layering it on top of Badge's
+// own variant classes (same utility slots, equal Tailwind specificity) would
+// make the resulting color non-deterministic. Same exception applied in
+// AdminReputation.jsx.
 function LevelPill({ score }) {
   const lvl = getResearchLevel(score || 0);
   return (
@@ -23,11 +33,10 @@ function LevelPill({ score }) {
   );
 }
 
-function SkeletonBlock({ className = "" }) {
-  return <div className={`animate-pulse bg-slate-200 rounded ${className}`} />;
-}
-
 // ── Bar for level distribution ────────────────────────────────────────────────
+// NOTE: kept as a hand-rolled bar list (not ds/Chart's recharts-based
+// BarChart) — each row needs a custom per-level color keyed off level number,
+// which ds/BarChart's single-series data shape doesn't express.
 
 const LEVEL_COLORS = [
   "bg-slate-400",
@@ -177,194 +186,135 @@ export default function AdminReputationCenter() {
 
   // ── Tab: Platform Stats ───────────────────────────────────────────────────
 
+  const badgeColumns = [
+    { key: "badge_label", label: "Badge", render: (_, b) => <span className="font-medium text-slate-800">{b.badge_label || b.badge_code}</span> },
+    { key: "badge_code", label: "Code", render: (v) => <span className="text-xs font-mono text-slate-500">{v}</span> },
+    { key: "count", label: "Count Awarded", align: "right", render: (v) => <span className="font-bold text-[#0F2847]">{(v || 0).toLocaleString()}</span> },
+  ];
+
   const renderStats = () => {
     const isLoading = loading.stats;
     return (
       <div className="space-y-6">
         {/* Integrity notice */}
-        <div className="bg-amber-50 border border-amber-200 rounded-md p-4 flex gap-3 items-start">
-          <span className="text-amber-600 text-lg flex-shrink-0 mt-0.5">⚠</span>
-          <p className="text-sm text-amber-800">
-            <strong>Integrity notice:</strong> Reputation scores cannot be manually modified.
-            All values derive from verified platform activity. Score manipulation is not supported.
-          </p>
-        </div>
+        <Alert variant="warning" title="Integrity notice">
+          Reputation scores cannot be manually modified. All values derive from verified platform
+          activity. Score manipulation is not supported.
+        </Alert>
 
         {/* KPI cards */}
-        {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[1,2,3,4].map(i => <SkeletonBlock key={i} className="h-24 rounded-md" />)}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: "Users with Scores", value: stats?.total_users_with_scores?.toLocaleString() ?? "—" },
-              { label: "Total Events",       value: stats?.total_events?.toLocaleString() ?? "—" },
-              { label: "Average Score",      value: stats?.avg_score != null ? stats.avg_score.toFixed(1) : "—" },
-              { label: "Level Distribution", value: stats?.level_distribution?.length ?? "—", sub: "levels tracked" },
-            ].map(({ label, value, sub }) => (
-              <div key={label} className="bg-white border border-slate-200 rounded-md p-4 text-center">
-                <div className="text-2xl font-bold text-slate-900">{value}</div>
-                <div className="text-xs font-medium text-slate-500 mt-1">{label}</div>
-                {sub && <div className="text-xs text-slate-400 mt-0.5">{sub}</div>}
-              </div>
-            ))}
-          </div>
-        )}
+        <StatGrid cols={4}>
+          <StatCard label="Users with Scores" value={isLoading ? "…" : (stats?.total_users_with_scores?.toLocaleString() ?? "—")} />
+          <StatCard label="Total Events" value={isLoading ? "…" : (stats?.total_events?.toLocaleString() ?? "—")} />
+          <StatCard label="Average Score" value={isLoading ? "…" : (stats?.avg_score != null ? stats.avg_score.toFixed(1) : "—")} />
+          <StatCard label="Level Distribution" value={isLoading ? "…" : (stats?.level_distribution?.length ?? "—")} sub="levels tracked" />
+        </StatGrid>
 
         {/* Level distribution chart */}
-        <div className="bg-white border border-slate-200 rounded-md p-6">
+        <Card padding="lg">
           <h3 className="font-semibold text-slate-900 mb-4">Level Distribution</h3>
           {isLoading
-            ? <SkeletonBlock className="h-48 rounded-md" />
+            ? <SkeletonLine height={192} />
             : <LevelDistributionChart distribution={stats?.level_distribution} />
           }
-        </div>
+        </Card>
 
         {/* Badge distribution table */}
-        <div className="bg-white border border-slate-200 rounded-md p-6">
+        <Card padding="lg">
           <h3 className="font-semibold text-slate-900 mb-4">Badge Distribution</h3>
-          {isLoading ? (
-            <SkeletonBlock className="h-40 rounded-md" />
-          ) : badgeDist.length === 0 ? (
-            <p className="text-slate-400 text-sm text-center py-6">No badge data available.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200">
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Badge</th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Code</th>
-                    <th className="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Count Awarded</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {badgeDist.map((b) => (
-                    <tr key={b.badge_code} className="hover:bg-slate-50">
-                      <td className="px-3 py-2 font-medium text-slate-800">{b.badge_label || b.badge_code}</td>
-                      <td className="px-3 py-2 text-xs text-slate-500 font-mono">{b.badge_code}</td>
-                      <td className="px-3 py-2 text-right font-bold text-[#0F2847]">{(b.count || 0).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+          <DataTable
+            columns={badgeColumns}
+            rows={badgeDist}
+            loading={isLoading}
+            emptyNode={<p className="text-slate-400 text-sm text-center py-6">No badge data available.</p>}
+          />
+        </Card>
 
         {/* Recompute action */}
-        <div className="bg-white border border-slate-200 rounded-md p-6 flex items-center justify-between gap-4 flex-wrap">
+        <Card padding="lg" className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h3 className="font-semibold text-slate-900">Recompute Global Rankings</h3>
             <p className="text-sm text-slate-500 mt-1">
               Trigger a fresh ranking computation across all users. This may take a few minutes.
             </p>
           </div>
-          <button
-            onClick={handleComputeRankings}
-            disabled={computing}
-            className="flex-shrink-0 px-5 py-2.5 bg-[#0F2847] text-white text-sm font-semibold rounded-lg hover:bg-[#0F2847]/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-          >
+          <Button variant="primary" onClick={handleComputeRankings} disabled={computing} loading={computing}>
             {computing ? "Computing…" : "Recompute Rankings"}
-          </button>
-        </div>
+          </Button>
+        </Card>
       </div>
     );
   };
 
   // ── Tab: Top Researchers ──────────────────────────────────────────────────
 
+  const topColumns = [
+    { key: "_rank", label: "Rank", render: (_, u) => <span className="font-bold text-slate-500">#{topUsers.indexOf(u) + 1}</span> },
+    { key: "full_name", label: "Name", render: (v) => <span className="font-medium text-slate-900">{v || "—"}</span> },
+    { key: "email", label: "Email", render: (v) => <span className="text-xs text-slate-500">{v || "—"}</span> },
+    { key: "overall_score", label: "Score", align: "right", render: (v) => <span className="font-bold text-[#0F2847]">{(v || 0).toLocaleString()}</span> },
+    { key: "_level", label: "Level", align: "center", render: (_, u) => <LevelPill score={u.overall_score} /> },
+    { key: "institution", label: "Institution", render: (v) => <span className="text-xs text-slate-600">{v || "—"}</span> },
+    { key: "country", label: "Country", render: (v) => <span className="text-xs text-slate-600">{v || "—"}</span> },
+    {
+      key: "_actions", label: "Actions", align: "center",
+      render: (_, u) => (
+        <Button variant="link" size="sm" onClick={() => navigate(`/admin/users/${u.user_id}`)}>
+          View Profile
+        </Button>
+      ),
+    },
+  ];
+
   const renderTop = () => {
     const isLoading = loading.top;
     return (
-      <div className="bg-white border border-slate-200 rounded-md overflow-hidden">
+      <Card padding="none">
         <div className="p-4 border-b border-slate-200 flex items-center justify-between">
           <h3 className="font-semibold text-slate-900">Top 50 Researchers</h3>
-          <button onClick={fetchTop} className="text-xs text-slate-400 hover:text-slate-700 transition-colors">
-            ↻ Refresh
-          </button>
+          <Button variant="link" size="sm" onClick={fetchTop}>↻ Refresh</Button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide w-12">Rank</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Name</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Email</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Score</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Level</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Institution</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Country</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {isLoading
-                ? Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={i}>
-                      {[1,2,3,4,5,6,7,8].map((j) => (
-                        <td key={j} className="px-4 py-3">
-                          <SkeletonBlock className="h-4 w-full" />
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                : topUsers.length === 0
-                  ? (
-                    <tr>
-                      <td colSpan={8} className="text-center text-slate-400 py-12">No data available.</td>
-                    </tr>
-                  )
-                  : topUsers.map((u, idx) => (
-                    <tr key={u.user_id || idx} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-3 text-sm font-bold text-slate-500">#{idx + 1}</td>
-                      <td className="px-4 py-3 font-medium text-slate-900">{u.full_name || "—"}</td>
-                      <td className="px-4 py-3 text-slate-500 text-xs">{u.email || "—"}</td>
-                      <td className="px-4 py-3 text-right font-bold text-[#0F2847]">
-                        {(u.overall_score || 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <LevelPill score={u.overall_score} />
-                      </td>
-                      <td className="px-4 py-3 text-slate-600 text-xs">{u.institution || "—"}</td>
-                      <td className="px-4 py-3 text-slate-600 text-xs">{u.country || "—"}</td>
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => navigate(`/admin/users/${u.user_id}`)}
-                          className="text-xs text-[#0F2847] font-medium hover:underline"
-                        >
-                          View Profile
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
+        <DataTable
+          columns={topColumns}
+          rows={topUsers}
+          loading={isLoading}
+          emptyNode={<div className="text-center text-slate-400 py-12">No data available.</div>}
+        />
+      </Card>
     );
   };
 
   // ── Tab: Fraud Alerts ─────────────────────────────────────────────────────
+
+  const fraudColumns = [
+    { key: "full_name", label: "User", render: (_, a) => <span className="font-medium text-slate-900">{a.full_name || a.user_id || "—"}</span> },
+    { key: "email", label: "Email", render: (v) => <span className="text-xs text-slate-500">{v || "—"}</span> },
+    { key: "total_events_7d", label: "Events (7d)", align: "right", render: (v) => <span className="font-bold text-red-600">{v ?? "—"}</span> },
+    {
+      key: "flag_reason", label: "Flag Reason",
+      render: (v) => <span className="text-xs text-red-700 bg-red-50 border border-red-100 px-2 py-1 rounded-lg">{v || "Unusual activity"}</span>,
+    },
+    {
+      key: "_actions", label: "Actions", align: "center",
+      render: (_, a) => (
+        <Button variant="link" size="sm" onClick={() => navigate(`/admin/users/${a.user_id}`)}>
+          View Profile
+        </Button>
+      ),
+    },
+  ];
 
   const renderFraud = () => {
     const isLoading = loading.fraud;
     return (
       <div className="space-y-4">
         {/* Note */}
-        <div className="bg-red-50 border border-red-200 rounded-md p-4 flex gap-3 items-start">
-          <span className="text-red-600 text-lg flex-shrink-0 mt-0.5">🚨</span>
-          <div>
-            <p className="text-sm font-semibold text-red-800 mb-1">Fraud Detection Alerts</p>
-            <p className="text-sm text-red-700">
-              Users flagged for unusual activity patterns. Review their profiles for further investigation.
-              Reputation scores cannot be manually adjusted — all values reflect verified activity.
-            </p>
-          </div>
-        </div>
+        <Alert variant="error" title="Fraud Detection Alerts">
+          Users flagged for unusual activity patterns. Review their profiles for further investigation.
+          Reputation scores cannot be manually adjusted — all values reflect verified activity.
+        </Alert>
 
-        <div className="bg-white border border-slate-200 rounded-md overflow-hidden">
+        <Card padding="none">
           <div className="p-4 border-b border-slate-200 flex items-center justify-between">
             <h3 className="font-semibold text-slate-900">
               Flagged Users
@@ -374,155 +324,69 @@ export default function AdminReputationCenter() {
                 </span>
               )}
             </h3>
-            <button onClick={fetchFraud} className="text-xs text-slate-400 hover:text-slate-700 transition-colors">
-              ↻ Refresh
-            </button>
+            <Button variant="link" size="sm" onClick={fetchFraud}>↻ Refresh</Button>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">User</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Email</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Events (7d)</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Flag Reason</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {isLoading
-                  ? Array.from({ length: 5 }).map((_, i) => (
-                      <tr key={i}>
-                        {[1,2,3,4,5].map((j) => (
-                          <td key={j} className="px-4 py-3">
-                            <SkeletonBlock className="h-4 w-full" />
-                          </td>
-                        ))}
-                      </tr>
-                    ))
-                  : fraudAlerts.length === 0
-                    ? (
-                      <tr>
-                        <td colSpan={5} className="text-center text-slate-400 py-12">
-                          No fraud alerts at this time.
-                        </td>
-                      </tr>
-                    )
-                    : fraudAlerts.map((alert, idx) => (
-                      <tr key={alert.user_id || idx} className="hover:bg-red-50/30 transition-colors">
-                        <td className="px-4 py-3 font-medium text-slate-900">
-                          {alert.full_name || alert.user_id || "—"}
-                        </td>
-                        <td className="px-4 py-3 text-slate-500 text-xs">{alert.email || "—"}</td>
-                        <td className="px-4 py-3 text-right">
-                          <span className="font-bold text-red-600">{alert.total_events_7d ?? "—"}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="text-xs text-red-700 bg-red-50 border border-red-100 px-2 py-1 rounded-lg">
-                            {alert.flag_reason || "Unusual activity"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <button
-                            onClick={() => navigate(`/admin/users/${alert.user_id}`)}
-                            className="text-xs text-[#0F2847] font-medium hover:underline"
-                          >
-                            View Profile
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
+          <DataTable
+            columns={fraudColumns}
+            rows={fraudAlerts}
+            loading={isLoading}
+            emptyNode={<div className="text-center text-slate-400 py-12">No fraud alerts at this time.</div>}
+          />
+        </Card>
       </div>
     );
   };
 
   // ── Tab: Fastest Growing ──────────────────────────────────────────────────
 
+  const fastestColumns = [
+    { key: "_rank", label: "#", render: (_, u) => <span className="font-bold text-slate-500">#{fastest.indexOf(u) + 1}</span> },
+    { key: "full_name", label: "Name", render: (v) => <span className="font-medium text-slate-900">{v || "—"}</span> },
+    { key: "email", label: "Email", render: (v) => <span className="text-xs text-slate-500">{v || "—"}</span> },
+    { key: "overall_score", label: "Current Score", align: "right", render: (v) => <span className="font-bold text-[#0F2847]">{(v || 0).toLocaleString()}</span> },
+    {
+      key: "points_gained_30d", label: "+Points (30d)", align: "right",
+      render: (_, u) => <span className="font-bold text-emerald-600">+{(u.points_gained_30d || u.points_30d || 0).toLocaleString()}</span>,
+    },
+    { key: "_level", label: "Level", align: "center", render: (_, u) => <LevelPill score={u.overall_score} /> },
+    { key: "institution", label: "Institution", render: (v) => <span className="text-xs text-slate-600">{v || "—"}</span> },
+    {
+      key: "_actions", label: "Actions", align: "center",
+      render: (_, u) => (
+        <Button variant="link" size="sm" onClick={() => navigate(`/admin/users/${u.user_id}`)}>
+          View Profile
+        </Button>
+      ),
+    },
+  ];
+
   const renderFastest = () => {
     const isLoading = loading.fastest;
     return (
-      <div className="bg-white border border-slate-200 rounded-md overflow-hidden">
+      <Card padding="none">
         <div className="p-4 border-b border-slate-200 flex items-center justify-between">
           <div>
             <h3 className="font-semibold text-slate-900">Fastest Growing Researchers</h3>
             <p className="text-xs text-slate-500 mt-0.5">Top 20 by points gained in the last 30 days</p>
           </div>
-          <button onClick={fetchFastest} className="text-xs text-slate-400 hover:text-slate-700 transition-colors">
-            ↻ Refresh
-          </button>
+          <Button variant="link" size="sm" onClick={fetchFastest}>↻ Refresh</Button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide w-12">#</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Name</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Email</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Current Score</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">+Points (30d)</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Level</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Institution</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {isLoading
-                ? Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={i}>
-                      {[1,2,3,4,5,6,7,8].map((j) => (
-                        <td key={j} className="px-4 py-3">
-                          <SkeletonBlock className="h-4 w-full" />
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                : fastest.length === 0
-                  ? (
-                    <tr>
-                      <td colSpan={8} className="text-center text-slate-400 py-12">No data available.</td>
-                    </tr>
-                  )
-                  : fastest.map((u, idx) => (
-                    <tr key={u.user_id || idx} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-3 text-sm font-bold text-slate-500">#{idx + 1}</td>
-                      <td className="px-4 py-3 font-medium text-slate-900">{u.full_name || "—"}</td>
-                      <td className="px-4 py-3 text-slate-500 text-xs">{u.email || "—"}</td>
-                      <td className="px-4 py-3 text-right font-bold text-[#0F2847]">
-                        {(u.overall_score || 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="font-bold text-emerald-600">
-                          +{(u.points_gained_30d || u.points_30d || 0).toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <LevelPill score={u.overall_score} />
-                      </td>
-                      <td className="px-4 py-3 text-slate-600 text-xs">{u.institution || "—"}</td>
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => navigate(`/admin/users/${u.user_id}`)}
-                          className="text-xs text-[#0F2847] font-medium hover:underline"
-                        >
-                          View Profile
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
+        <DataTable
+          columns={fastestColumns}
+          rows={fastest}
+          loading={isLoading}
+          emptyNode={<div className="text-center text-slate-400 py-12">No data available.</div>}
+        />
+      </Card>
     );
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
+
+  const navTabs = TABS.map((t) => ({
+    ...t,
+    count: t.id === "fraud" && fraudAlerts.length > 0 ? fraudAlerts.length : undefined,
+  }));
 
   return (
     <AdministrationLayout
@@ -535,26 +399,13 @@ export default function AdminReputationCenter() {
       }
     >
         {/* Tabs */}
-        <div className="flex gap-1 bg-white border border-slate-200 rounded-md p-1 mb-6 overflow-x-auto">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-shrink-0 py-2 px-4 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                activeTab === tab.id
-                  ? "bg-[#0F2847] text-white"
-                  : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              {tab.label}
-              {tab.id === "fraud" && fraudAlerts.length > 0 && (
-                <span className="ml-2 text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">
-                  {fraudAlerts.length}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+        <NavTabs
+          tabs={navTabs}
+          active={activeTab}
+          onChange={setActiveTab}
+          variant="segment"
+          className="mb-6"
+        />
 
         {/* Tab content */}
         <div>

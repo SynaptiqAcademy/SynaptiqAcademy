@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown, Minus, Building2, Users, RefreshCw } from "lucide-react";
 import { NAVY, WARM, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Button, Badge, ProgressBar, EmptyState, LoadingOverlay } from "@/components/ds";
 
 const API = (p) => `/api/akg${p}`;
@@ -34,7 +34,7 @@ export default function TrendDiscovery() {
   const maxCollab = Math.max(...collabTrend.map(m => m.collaborations), 1);
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Trend Discovery"
       subtitle="Emerging topics, growth signals, and declining research areas — powered by the knowledge graph."
       actions={
@@ -133,6 +133,6 @@ export default function TrendDiscovery() {
           )}
         </Card>
       </div>
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

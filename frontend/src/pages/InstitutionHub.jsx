@@ -6,9 +6,12 @@ import { NAVY, WARM } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import {
   Search, Globe, Building2, Users, BookOpen, ShieldCheck,
-  ChevronLeft, ChevronRight, AlertCircle, BarChart2, Trophy,
-  TrendingUp,
+  Trophy, TrendingUp,
 } from "lucide-react";
+import {
+  Card, NavTabs, Input, FormSelect, Button, Badge, ErrorState, EmptyState,
+  SkeletonCard, Pagination,
+} from "@/components/ds";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -41,71 +44,24 @@ function iisLabel(score) {
   return "Emerging";
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-
-function Skeleton({ h = "h-4", w = "w-full", className = "" }) {
-  return <div className={`${h} ${w} bg-slate-200 animate-pulse ${className}`} />;
-}
-
-function CardSkeleton() {
-  return (
-    <div className="border border-slate-200 bg-white p-5 animate-pulse space-y-3">
-      <Skeleton h="h-3" w="w-1/3" />
-      <Skeleton h="h-5" w="w-2/3" />
-      <Skeleton h="h-3" />
-      <Skeleton h="h-3" w="w-1/2" />
-    </div>
-  );
-}
-
-// ── Error card ────────────────────────────────────────────────────────────────
-
-function ErrorCard({ message, onRetry }) {
-  return (
-    <div className="border border-red-200 bg-red-50 p-6 text-center col-span-full">
-      <AlertCircle size={22} strokeWidth={1.5} className="text-red-400 mx-auto mb-2" />
-      <p className="text-red-700 text-sm mb-3">{message || "Failed to load data."}</p>
-      {onRetry && (
-        <button
-          onClick={onRetry}
-          className="text-xs border border-red-300 text-red-700 px-3 py-1.5 hover:bg-red-100 transition-colors"
-        >
-          Retry
-        </button>
-      )}
-    </div>
-  );
-}
-
-// ── Empty state ───────────────────────────────────────────────────────────────
-
-function EmptyState({ icon: Icon = Building2, message, sub }) {
-  return (
-    <div className="border border-dashed border-slate-300 bg-slate-50 p-10 text-center col-span-full">
-      <Icon size={28} strokeWidth={1.5} className="text-slate-300 mx-auto mb-3" />
-      <p className="text-slate-600 text-sm font-medium">{message}</p>
-      {sub && <p className="text-slate-400 text-xs mt-1 max-w-sm mx-auto">{sub}</p>}
-    </div>
-  );
-}
-
 // ── Type badge ────────────────────────────────────────────────────────────────
 
+const TYPE_COLOR = {
+  university: "#1D4ED8",
+  research_center: "#7C3AED",
+  laboratory: "#047857",
+  hospital: "#BE123C",
+  government: "#B45309",
+  ngo: "#0F766E",
+};
+
 function TypeBadge({ type }) {
-  const map = {
-    university: "bg-blue-50 text-blue-700 border-blue-200",
-    research_center: "bg-purple-50 text-purple-700 border-purple-200",
-    laboratory: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    hospital: "bg-rose-50 text-rose-700 border-rose-200",
-    government: "bg-amber-50 text-amber-700 border-amber-200",
-    ngo: "bg-teal-50 text-teal-700 border-teal-200",
-  };
-  const cls = map[type] || "bg-slate-100 text-slate-600 border-slate-200";
+  const color = TYPE_COLOR[type];
   const label = type ? type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "Unknown";
   return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 text-xs border ${cls}`}>
+    <Badge size="sm" variant="neutral" color={color}>
       {label}
-    </span>
+    </Badge>
   );
 }
 
@@ -113,7 +69,7 @@ function TypeBadge({ type }) {
 
 function InstitutionCard({ inst }) {
   return (
-    <div className="border border-slate-200 bg-white p-5 flex flex-col gap-3 hover:border-[#0F2847] transition-colors">
+    <Card padding="lg" className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold text-slate-900 truncate">{fmt(inst.name)}</h3>
@@ -150,7 +106,7 @@ function InstitutionCard({ inst }) {
       >
         View Profile
       </Link>
-    </div>
+    </Card>
   );
 }
 
@@ -286,26 +242,16 @@ export default function InstitutionHub() {
       subtitle="Discover universities, research centers, and laboratories"
     >
       {/* Tab bar */}
-      <div className="border-b border-slate-200 bg-white sticky top-0 z-10">
-          <nav className="flex gap-0">
-            {[
-              { key: "discover", label: "Discover", icon: Search },
-              { key: "leaderboards", label: "Leaderboards", icon: Trophy },
-            ].map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === key
-                    ? "border-[#0F2847] text-[#0F2847]"
-                    : "border-transparent text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                <Icon size={14} strokeWidth={1.5} />
-                {label}
-              </button>
-            ))}
-          </nav>
+      <div className="bg-white sticky top-0 z-10 mb-6">
+        <NavTabs
+          variant="underline"
+          active={activeTab}
+          onChange={setActiveTab}
+          tabs={[
+            { id: "discover", label: "Discover", icon: Search },
+            { id: "leaderboards", label: "Leaderboards", icon: Trophy },
+          ]}
+        />
       </div>
 
         {/* ── Discover tab ── */}
@@ -313,39 +259,32 @@ export default function InstitutionHub() {
           <div>
             {/* Filter row */}
             <div className="flex flex-wrap items-center gap-3 mb-6">
-              <div className="relative flex-1 min-w-52">
-                <Search size={14} strokeWidth={1.5} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search institutions..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  className="w-full pl-9 pr-3 py-2 border border-slate-200 bg-white text-sm focus:outline-none focus:border-[#0F2847]"
-                />
-              </div>
-              <input
+              <Input
+                type="text"
+                placeholder="Search institutions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                prefix={<Search size={14} strokeWidth={1.5} />}
+                wrapperClassName="flex-1 min-w-52"
+              />
+              <Input
                 type="text"
                 placeholder="Country..."
                 value={countryFilter}
                 onChange={(e) => handleFilterChange("country", e.target.value)}
-                className="px-3 py-2 border border-slate-200 bg-white text-sm focus:outline-none focus:border-[#0F2847] w-36"
+                wrapperClassName="w-36"
               />
-              <select
+              <FormSelect
                 value={typeFilter}
                 onChange={(e) => handleFilterChange("type", e.target.value)}
-                className="px-3 py-2 border border-slate-200 bg-white text-sm focus:outline-none focus:border-[#0F2847]"
+                wrapperClassName="w-auto"
               >
                 {INSTITUTION_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
-              </select>
-              <button
-                onClick={handleSearch}
-                className="px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors"
-              >
-                Search
-              </button>
+              </FormSelect>
+              <Button onClick={handleSearch}>Search</Button>
             </div>
 
             {/* Results count */}
@@ -358,14 +297,17 @@ export default function InstitutionHub() {
             {/* Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {loading ? (
-                Array.from({ length: 9 }).map((_, i) => <CardSkeleton key={i} />)
+                Array.from({ length: 9 }).map((_, i) => <SkeletonCard key={i} rows={3} />)
               ) : error ? (
-                <ErrorCard message={error} onRetry={() => fetchDirectory()} />
+                <div className="col-span-full"><ErrorState message={error} onRetry={() => fetchDirectory()} /></div>
               ) : institutions.length === 0 ? (
-                <EmptyState
-                  message="No institutions found"
-                  sub="Try adjusting your search filters or clearing the country field."
-                />
+                <div className="col-span-full">
+                  <EmptyState
+                    icon={<Building2 />}
+                    title="No institutions found"
+                    description="Try adjusting your search filters or clearing the country field."
+                  />
+                </div>
               ) : (
                 institutions.map((inst) => (
                   <InstitutionCard key={inst._id || inst.institution_id} inst={inst} />
@@ -375,24 +317,8 @@ export default function InstitutionHub() {
 
             {/* Pagination */}
             {!loading && !error && totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-8">
-                <button
-                  onClick={() => goPage(page - 1)}
-                  disabled={page <= 1}
-                  className="p-2 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronLeft size={14} strokeWidth={1.5} />
-                </button>
-                <span className="text-sm text-slate-600 px-2">
-                  Page {page} of {totalPages}
-                </span>
-                <button
-                  onClick={() => goPage(page + 1)}
-                  disabled={page >= totalPages}
-                  className="p-2 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronRight size={14} strokeWidth={1.5} />
-                </button>
+              <div className="mt-8">
+                <Pagination page={page} totalPages={totalPages} onPage={goPage} />
               </div>
             )}
           </div>
@@ -404,28 +330,23 @@ export default function InstitutionHub() {
             {lbLoading ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {[0, 1].map((i) => (
-                  <div key={i} className="border border-slate-200 bg-white p-5 animate-pulse space-y-3">
-                    <Skeleton h="h-4" w="w-1/2" />
-                    {Array.from({ length: 8 }).map((_, j) => (
-                      <Skeleton key={j} h="h-10" />
-                    ))}
-                  </div>
+                  <SkeletonCard key={i} rows={8} />
                 ))}
               </div>
             ) : lbError ? (
-              <ErrorCard message={lbError} onRetry={fetchLeaderboard} />
+              <ErrorState message={lbError} onRetry={fetchLeaderboard} />
             ) : !leaderboard ? (
-              <EmptyState message="No leaderboard data available." />
+              <EmptyState title="No leaderboard data available." />
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Institution leaderboard */}
-                <div className="border border-slate-200 bg-white p-5">
+                <Card padding="lg">
                   <div className="flex items-center gap-2 mb-4">
                     <Building2 size={14} strokeWidth={1.5} className="text-slate-400" />
                     <h2 className="text-sm font-semibold text-slate-900">Top Institutions by Impact Score</h2>
                   </div>
                   {(leaderboard.institutions || []).length === 0 ? (
-                    <EmptyState message="No institutions ranked yet." />
+                    <EmptyState title="No institutions ranked yet." />
                   ) : (
                     <div>
                       {(leaderboard.institutions || []).map((inst, idx) => (
@@ -441,16 +362,16 @@ export default function InstitutionHub() {
                       ))}
                     </div>
                   )}
-                </div>
+                </Card>
 
                 {/* Researcher leaderboard */}
-                <div className="border border-slate-200 bg-white p-5">
+                <Card padding="lg">
                   <div className="flex items-center gap-2 mb-4">
                     <TrendingUp size={14} strokeWidth={1.5} className="text-slate-400" />
                     <h2 className="text-sm font-semibold text-slate-900">Top Researchers Globally</h2>
                   </div>
                   {(leaderboard.researchers || []).length === 0 ? (
-                    <EmptyState message="No researcher rankings available." />
+                    <EmptyState title="No researcher rankings available." />
                   ) : (
                     <div>
                       {(leaderboard.researchers || []).map((r, idx) => (
@@ -467,7 +388,7 @@ export default function InstitutionHub() {
                       ))}
                     </div>
                   )}
-                </div>
+                </Card>
               </div>
             )}
           </div>

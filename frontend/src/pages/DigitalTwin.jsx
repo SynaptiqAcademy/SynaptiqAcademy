@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
 import {
   User, Brain, Target, Activity, Network, Lightbulb, Heart,
-  Clock, Settings, RefreshCw, Database, ChevronDown, ChevronUp,
+  Clock, Settings, RefreshCw,
   AlertCircle, CheckCircle, Info, Eye, EyeOff, Zap
 } from "lucide-react";
 import ResearchHealth  from "../components/twin/ResearchHealth";
@@ -12,6 +13,14 @@ import {
   getMyTwin, syncTwin, getProfile, getWorkingStyle, getHealth,
   getTimeline, getRecommendations, listGoals, updatePrivacy, resetPreferences,
 } from "../services/twinEngine";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { Button } from "@/components/ds/Button";
+import { Switch } from "@/components/ds/Form";
+import { List, ListItem } from "@/components/ds/List";
+import { StatCard } from "@/components/ds/StatCard";
+import { EvidencePanel } from "@/components/ds/AIComponents";
+import { Spinner } from "@/components/ds/LoadingState";
 
 // ── Tabs ─────────────────────────────────────────────────────────────────────
 
@@ -29,55 +38,53 @@ const TABS = [
 
 // ── Helper components ────────────────────────────────────────────────────────
 
-const CONF_STYLE = {
-  high:         { color: "#047857", bg: "#F0FDF4", label: "Strong evidence" },
-  medium:       { color: "#B45309", bg: "#FFFBEB", label: "Partial evidence" },
-  low:          { color: "#6B7280", bg: "#F9FAFB", label: "Limited evidence" },
-  insufficient: { color: "#6B7280", bg: "#F9FAFB", label: "Insufficient data" },
+const CONF_VARIANT = {
+  high:         "success",
+  medium:       "warning",
+  low:          "neutral",
+  insufficient: "neutral",
+};
+
+const CONF_LABEL = {
+  high:         "Strong evidence",
+  medium:       "Partial evidence",
+  low:          "Limited evidence",
+  insufficient: "Insufficient data",
 };
 
 function ConfBadge({ confidence }) {
-  const s = CONF_STYLE[confidence] || CONF_STYLE.low;
   return (
-    <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold" style={{ color: s.color, background: s.bg }}>
-      {s.label}
-    </span>
+    <Badge variant={CONF_VARIANT[confidence] || "neutral"} size="sm">
+      {CONF_LABEL[confidence] || CONF_LABEL.low}
+    </Badge>
   );
 }
 
+// Evidence sources, mapped onto ds/AIComponents' EvidencePanel (collapsible
+// evidence list). Twin evidence entries are { source, detail } rather than
+// EvidencePanel's full { title, source, type, url, year, verified } shape,
+// so `detail` is passed as the item title and the rest are simply omitted
+// (EvidencePanel renders fine with just title+source). The free-text
+// `policy_note` footnote has no slot in EvidencePanel, so it's kept as a
+// plain paragraph directly below.
 function EvidenceBlock({ evidence = [], policy_note }) {
-  const [open, setOpen] = useState(false);
   if (!evidence.length && !policy_note) return null;
   return (
-    <div className="mt-2 border-t border-slate-100 pt-2">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-600"
-      >
-        <Database size={9} />
-        Evidence sources
-        {open ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
-      </button>
-      {open && (
-        <div className="mt-1.5 space-y-1">
-          {evidence.map((ev, i) => (
-            <p key={i} className="text-[10px] text-slate-500">
-              <span className="font-medium">{ev.source}:</span> {ev.detail}
-            </p>
-          ))}
-          {policy_note && <p className="text-[9px] text-slate-400 italic">{policy_note}</p>}
-        </div>
+    <div className="mt-2">
+      {evidence.length > 0 && (
+        <EvidencePanel evidence={evidence.map(ev => ({ title: ev.detail, source: ev.source }))} />
       )}
+      {policy_note && <p className="text-[9px] text-slate-400 italic mt-1">{policy_note}</p>}
     </div>
   );
 }
 
 function Section({ title, children, className = "" }) {
   return (
-    <div className={`bg-white rounded-xl border border-slate-200 p-5 ${className}`}>
+    <Card padding="lg" className={className}>
       {title && <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4">{title}</h3>}
       {children}
-    </div>
+    </Card>
   );
 }
 
@@ -100,10 +107,7 @@ function OverviewTab({ twin, profile, ws, recs }) {
             { label: "ORCID Pubs",     value: activity.orcid_publications ?? 0 },
             { label: "Teaching",       value: activity.teaching_lessons ?? 0 },
           ].map(({ label, value }) => (
-            <div key={label} className="text-center p-3 bg-slate-50 rounded-lg">
-              <p className="text-xl font-bold text-slate-800">{value}</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">{label}</p>
-            </div>
+            <StatCard key={label} label={label} value={value} />
           ))}
         </div>
         {activity.last_computed && (
@@ -154,11 +158,11 @@ function OverviewTab({ twin, profile, ws, recs }) {
         ) : (
           <div className="space-y-2">
             {recs.recommendations.slice(0, 3).map((r, i) => (
-              <div key={i} className="p-2.5 rounded-lg border border-slate-100">
+              <Card key={i} padding="sm">
                 <p className="text-[12px] font-medium text-slate-700">{r.title}</p>
                 <p className="text-[10px] text-slate-400 mt-0.5">{r.why}</p>
                 <ConfBadge confidence={r.confidence} />
-              </div>
+              </Card>
             ))}
           </div>
         )}
@@ -174,7 +178,7 @@ function IdentityTab({ profile }) {
   return (
     <div className="space-y-4">
       <Section title="Research Identity">
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Career Stage</p>
             <p className="text-[13px] font-semibold text-slate-700 capitalize">{p.career_stage?.replace(/_/g, " ") || "Unknown"}</p>
@@ -217,9 +221,9 @@ function IdentityTab({ profile }) {
         ) : (
           <div className="flex flex-wrap gap-2">
             {p.emerging_interests.map((d, i) => (
-              <span key={i} className="text-[11px] px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded-full capitalize">
+              <Badge key={i} variant="warning" className="capitalize">
                 {d.domain}
-              </span>
+              </Badge>
             ))}
           </div>
         )}
@@ -242,13 +246,13 @@ function ExpertiseTab({ profile }) {
         ) : (
           <div className="space-y-2">
             {methods.map((m, i) => (
-              <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-50">
+              <Card key={i} padding="sm" className="flex items-center gap-3 bg-slate-50">
                 <div className="flex-1">
                   <p className="text-[12px] font-medium text-slate-700 capitalize">{m.method}</p>
                   <p className="text-[10px] text-slate-400">{m.evidence?.[0]?.detail || ""}</p>
                 </div>
                 <ConfBadge confidence={m.confidence} />
-              </div>
+              </Card>
             ))}
           </div>
         )}
@@ -263,9 +267,9 @@ function ExpertiseTab({ profile }) {
         ) : (
           <div className="flex flex-wrap gap-2">
             {p.publication_themes.map((t, i) => (
-              <span key={i} className="text-[11px] px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full capitalize">
+              <Badge key={i} variant="info" className="capitalize">
                 {t.domain}
-              </span>
+              </Badge>
             ))}
           </div>
         )}
@@ -315,7 +319,11 @@ function ActivityTab({ twin }) {
 // ── Recommendations tab ───────────────────────────────────────────────────────
 
 function RecommendationsTab({ recs, loading }) {
-  if (loading) return <div className="text-center py-12 text-[11px] text-slate-400">Generating…</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center gap-2 py-12 text-[11px] text-slate-400">
+      <Spinner size={14} /> Generating…
+    </div>
+  );
   if (!recs) return null;
   if (recs.disabled) return (
     <div className="text-center py-12 text-[11px] text-slate-500">
@@ -327,7 +335,7 @@ function RecommendationsTab({ recs, loading }) {
     <div className="space-y-3">
       <p className="text-[11px] text-slate-500">{recs.policy_note}</p>
       {(recs.recommendations || []).map((r, i) => (
-        <div key={i} className={`border rounded-xl p-4 ${r.urgent ? "border-orange-200 bg-orange-50/30" : "border-slate-200"}`}>
+        <Card key={i} padding="lg" className={r.urgent ? "bg-orange-50/30" : ""} style={r.urgent ? { borderColor: "#FDBA74" } : undefined}>
           <div className="flex items-start justify-between gap-2 mb-2">
             <p className="text-[13px] font-semibold text-slate-800">{r.title}</p>
             <ConfBadge confidence={r.confidence} />
@@ -335,7 +343,7 @@ function RecommendationsTab({ recs, loading }) {
           <p className="text-[11px] text-slate-600 mb-2">{r.why}</p>
           <EvidenceBlock evidence={r.evidence} />
           <p className="text-[10px] text-slate-400 mt-2">{r.confidence_basis}</p>
-        </div>
+        </Card>
       ))}
       {(!recs.recommendations?.length) && (
         <p className="text-center text-[11px] text-slate-400 py-8">No recommendations yet. Sync your twin to generate personalized guidance.</p>
@@ -377,30 +385,18 @@ function SettingsTab({ twin, onRefresh }) {
     <div className="space-y-4">
       <Section title="Privacy Settings">
         <div className="space-y-4">
-          <label className="flex items-center justify-between cursor-pointer">
-            <div>
-              <p className="text-[12px] font-medium text-slate-700">Personalization enabled</p>
-              <p className="text-[10px] text-slate-400">Allow the Twin to learn from your activity and generate recommendations</p>
-            </div>
-            <input
-              type="checkbox"
-              checked={privacy.personalization_enabled ?? true}
-              onChange={e => handlePrivacy("personalization_enabled", e.target.checked)}
-              className="w-4 h-4 accent-blue-600"
-            />
-          </label>
-          <label className="flex items-center justify-between cursor-pointer">
-            <div>
-              <p className="text-[12px] font-medium text-slate-700">Share with institution</p>
-              <p className="text-[10px] text-slate-400">Allow institution administrators to view your Twin data (disabled by default)</p>
-            </div>
-            <input
-              type="checkbox"
-              checked={privacy.share_with_institution ?? false}
-              onChange={e => handlePrivacy("share_with_institution", e.target.checked)}
-              className="w-4 h-4 accent-blue-600"
-            />
-          </label>
+          <Switch
+            checked={privacy.personalization_enabled ?? true}
+            onChange={val => handlePrivacy("personalization_enabled", val)}
+            label="Personalization enabled"
+            hint="Allow the Twin to learn from your activity and generate recommendations"
+          />
+          <Switch
+            checked={privacy.share_with_institution ?? false}
+            onChange={val => handlePrivacy("share_with_institution", val)}
+            label="Share with institution"
+            hint="Allow institution administrators to view your Twin data (disabled by default)"
+          />
           {msg && <p className="text-[11px] text-blue-600">{msg}</p>}
         </div>
       </Section>
@@ -410,13 +406,9 @@ function SettingsTab({ twin, onRefresh }) {
           <div>
             <p className="text-[12px] font-medium text-slate-700 mb-1">Reset learned preferences</p>
             <p className="text-[10px] text-slate-400 mb-2">Clears working style observations, AI interaction patterns, and user corrections. The twin can relearn from your activity.</p>
-            <button
-              onClick={handleReset}
-              disabled={resetting}
-              className="px-3 py-1.5 bg-red-50 text-red-600 text-[11px] font-medium rounded-lg border border-red-200 hover:bg-red-100 transition-colors disabled:opacity-50"
-            >
+            <Button onClick={handleReset} disabled={resetting} variant="danger" size="sm">
               {resetting ? "Resetting…" : "Reset preferences"}
-            </button>
+            </Button>
           </div>
           <div className="pt-3 border-t border-slate-100">
             <p className="text-[10px] text-slate-400">
@@ -551,49 +543,41 @@ export default function DigitalTwin() {
   const isLoading = Object.values(loading).some(Boolean);
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="Digital Research Twin"
       subtitle="Your evolving academic intelligence layer — derived from verified platform activity only"
       actions={
         <div className="flex items-center gap-3">
           {syncMsg && <p className="text-[11px] text-blue-600">{syncMsg}</p>}
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-[11px] font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-          >
+          <Button onClick={handleSync} disabled={syncing} variant="primary" size="sm">
             <RefreshCw size={12} className={syncing ? "animate-spin" : ""} />
             {syncing ? "Syncing…" : "Sync Twin"}
-          </button>
+          </Button>
         </div>
       }
     >
       <div className="flex flex-1 overflow-hidden" style={{ margin: "-24px", height: "calc(100% + 48px)" }}>
         {/* Sidebar tabs */}
         <nav className="w-52 bg-white border-r border-slate-200 flex-shrink-0 overflow-y-auto">
-          <div className="py-2">
+          <List border={false} divided={false} className="py-2">
             {TABS.map(t => (
-              <button
+              <ListItem
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
-                className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-[12px] font-medium transition-colors ${
-                  activeTab === t.id
-                    ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600"
-                    : "text-slate-600 hover:bg-slate-50"
-                }`}
-              >
-                <t.icon size={14} />
-                {t.label}
-              </button>
+                selected={activeTab === t.id}
+                leading={<t.icon size={14} />}
+                title={t.label}
+              />
             ))}
-          </div>
+          </List>
         </nav>
 
         {/* Main content */}
         <main className="flex-1 overflow-y-auto p-6">
           {isLoading && (
             <div className="flex items-center justify-center py-12">
-              <div className="w-5 h-5 rounded-full border-2 border-blue-400 border-t-transparent animate-spin" />
+              <Spinner size={20} />
             </div>
           )}
 
@@ -612,6 +596,6 @@ export default function DigitalTwin() {
           )}
         </main>
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

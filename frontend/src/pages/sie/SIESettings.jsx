@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings, Brain, ArrowRight, Zap, Target } from "lucide-react";
 import { ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, H4, BodySmall } from "@/components/ds";
 
@@ -16,7 +16,7 @@ const SETTINGS_SECTIONS = [
 export default function SIESettings() {
   const navigate = useNavigate();
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
       title="SIE Settings"
       subtitle="Configure your Synaptiq Intelligence Engine preferences."
       navItems={SIE_NAV_ITEMS}
@@ -46,6 +46,6 @@ export default function SIESettings() {
           It does not duplicate any functionality; it intelligently connects them.
         </BodySmall>
       </Card>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Brain, RefreshCw, X, ArrowRight, Loader } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Tag, Button, EmptyState, LoadingOverlay } from "@/components/ds";
 
 const CAT_COLOR = {
@@ -29,7 +29,7 @@ function RecCard({ rec, onDismiss }) {
           {rec.description && <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginTop: 4, lineHeight: 1.5 }}>{rec.description}</div>}
         </div>
         <div style={{ display: "flex", gap: 6, flexShrink: 0, flexDirection: "column" }}>
-          <Button variant="subtle" size="sm" onClick={() => onDismiss(rec.id)}>
+          <Button variant="subtle" size="sm" onClick={() => onDismiss(rec.id)} aria-label="Dismiss recommendation">
             <X size={12} />
           </Button>
         </div>
@@ -77,7 +77,7 @@ export default function NetworkRecommendations() {
   const visible = recs.filter(r => !r.dismissed);
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="AI Recommendations"
       subtitle="Personalised recommendations based on your research profile. Every recommendation is explained."
       icon={<Brain size={22} color={NAVY} />}
@@ -120,6 +120,6 @@ export default function NetworkRecommendations() {
           {visible.map((rec, i) => <RecCard key={rec.id || i} rec={rec} onDismiss={handleDismiss} />)}
         </div>
       )}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

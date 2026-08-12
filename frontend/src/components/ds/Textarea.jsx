@@ -3,8 +3,11 @@ import React from "react";
 /**
  * Textarea — canonical multiline input.
  * Replaces local TEXTAREA string constants.
+ *
+ * Forwards its ref to the underlying <textarea> (e.g. for auto-grow logic
+ * driven by direct DOM measurement, or imperative `.focus()`).
  */
-export function Textarea({
+export const Textarea = React.forwardRef(function Textarea({
   label,
   hint,
   error,
@@ -14,8 +17,10 @@ export function Textarea({
   wrapperClassName = "",
   id,
   ...props
-}) {
+}, ref) {
   const inputId = id || (label ? `ta-${label.toLowerCase().replace(/\s+/g, "-")}` : undefined);
+  const errorId = error && inputId ? `${inputId}-error` : undefined;
+  const hintId = hint && !error && inputId ? `${inputId}-hint` : undefined;
 
   const classes = [
     "w-full px-3 py-2.5 border rounded-input bg-white text-[13px] text-slate-900 placeholder:text-slate-400",
@@ -32,11 +37,19 @@ export function Textarea({
   return (
     <div className={`sq-form-group ${wrapperClassName}`}>
       {label && <label htmlFor={inputId} className="sq-form-label">{label}</label>}
-      <textarea id={inputId} rows={rows} className={classes} {...props} />
-      {error   && <p className="sq-form-error">{error}</p>}
-      {hint && !error && <p className="sq-form-hint">{hint}</p>}
+      <textarea
+        ref={ref}
+        id={inputId}
+        rows={rows}
+        className={classes}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={errorId || hintId || undefined}
+        {...props}
+      />
+      {error   && <p id={errorId} className="sq-form-error" role="alert">{error}</p>}
+      {hint && !error && <p id={hintId} className="sq-form-hint">{hint}</p>}
     </div>
   );
-}
+});
 
 export default Textarea;

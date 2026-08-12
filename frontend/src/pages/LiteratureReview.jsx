@@ -8,7 +8,16 @@ import {
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { NAVY, WARM } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { Tag as DsTag } from "@/components/ds/Tag";
+import { Input } from "@/components/ds/Input";
+import { Textarea } from "@/components/ds/Textarea";
+import { FormSelect } from "@/components/ds/FormSelect";
+import { InlineError, Callout } from "@/components/ds/Alert";
 
 // ─────────────────────── shared primitives ───────────────────────────────────
 
@@ -22,11 +31,7 @@ function SectionHeader({ icon: Icon, label, color = "#0F2847" }) {
 }
 
 function Tag({ children, className = "" }) {
-  return (
-    <span className={`inline-block border border-slate-200 text-slate-600 text-xs px-2 py-0.5 ${className}`}>
-      {children}
-    </span>
-  );
+  return <DsTag size="sm" className={className}>{children}</DsTag>;
 }
 
 function BulletList({ items }) {
@@ -47,7 +52,7 @@ function ExpandCard({ title, subtitle, badge, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
   const Chev = open ? ChevronUp : ChevronDown;
   return (
-    <div className="border border-slate-200 bg-white">
+    <Card padding="none">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-start justify-between gap-4 px-5 py-4 text-left hover:bg-slate-50 transition-colors"
@@ -57,11 +62,7 @@ function ExpandCard({ title, subtitle, badge, children, defaultOpen = false }) {
           {subtitle && <div className="text-sm text-slate-500 mt-0.5">{subtitle}</div>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {badge && (
-            <span className="text-xs border border-slate-200 px-2 py-0.5 text-slate-500 font-mono">
-              {badge}
-            </span>
-          )}
+          {badge && <Badge variant="outline" size="sm" className="font-mono">{badge}</Badge>}
           <Chev size={15} strokeWidth={1.5} className="text-slate-400" />
         </div>
       </button>
@@ -70,7 +71,7 @@ function ExpandCard({ title, subtitle, badge, children, defaultOpen = false }) {
           {children}
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -86,29 +87,26 @@ function CopyButton({ text }) {
     } catch {/* ignore */}
   };
   return (
-    <button
-      onClick={copy}
-      className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 border border-slate-200 px-3 py-1.5 transition-colors"
-    >
+    <Button onClick={copy} variant="outline" size="sm">
       {copied ? <Check size={12} strokeWidth={2} /> : <Copy size={12} strokeWidth={1.5} />}
       {copied ? "Copied" : "Copy text"}
-    </button>
+    </Button>
   );
 }
 
 // ─────────────────────────── prevalence badge ─────────────────────────────────
 
 const PREVALENCE_CFG = {
-  common:     { label: "Common",     cls: "bg-red-50 text-red-700 border-red-200" },
-  occasional: { label: "Occasional", cls: "bg-amber-50 text-amber-700 border-amber-200" },
-  notable:    { label: "Notable",    cls: "bg-blue-50 text-blue-700 border-blue-200" },
+  common:     { label: "Common",     variant: "danger"  },
+  occasional: { label: "Occasional", variant: "warning" },
+  notable:    { label: "Notable",    variant: "info"    },
 };
 function PrevalenceBadge({ value }) {
   const cfg = PREVALENCE_CFG[value] || PREVALENCE_CFG.notable;
   return (
-    <span className={`inline-block border text-[10px] px-2 py-0.5 font-medium uppercase tracking-wider ${cfg.cls}`}>
+    <Badge variant={cfg.variant} size="sm" className="uppercase tracking-wider">
       {cfg.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -117,7 +115,7 @@ function PrevalenceBadge({ value }) {
 function GateView() {
   return (
     <div className="space-y-6">
-      <div className="border border-slate-200 bg-white p-16 flex flex-col items-center text-center gap-5">
+      <Card padding="xl" className="!p-16 flex flex-col items-center text-center gap-5">
         <Lock size={28} strokeWidth={1} className="text-slate-300" />
         <div>
           <div className="overline text-[#0F2847] mb-2">Pro Researcher plan required</div>
@@ -127,13 +125,10 @@ function GateView() {
             covering themes, debates, theoretical foundations, and future research directions.
           </p>
         </div>
-        <Link
-          to="/pricing"
-          className="inline-block bg-[#0F2847] text-white text-sm px-6 py-2.5 hover:opacity-90 transition-opacity"
-        >
+        <Button as={Link} to="/pricing" variant="primary">
           View Plans
-        </Link>
-      </div>
+        </Button>
+      </Card>
     </div>
   );
 }
@@ -199,56 +194,41 @@ function InputView({ onResult, gated }) {
           className="lg:col-span-2 space-y-4"
         >
           {/* Required fields */}
-          <div className="border border-slate-200 bg-white p-5 space-y-4">
+          <Card padding="lg" className="space-y-4">
             <div className="overline text-[10px] text-slate-400 mb-1">Required</div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Research Topic
-              </label>
-              <input
-                data-testid={TID.literatureReviewTopic}
-                value={form.topic}
-                onChange={set("topic")}
-                placeholder="e.g. Machine learning in clinical decision support systems"
-                className="w-full border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
-                required
-              />
-            </div>
+            <Input
+              label="Research Topic"
+              data-testid={TID.literatureReviewTopic}
+              value={form.topic}
+              onChange={set("topic")}
+              placeholder="e.g. Machine learning in clinical decision support systems"
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Research Question
-              </label>
-              <textarea
-                data-testid={TID.literatureReviewQuestion}
-                value={form.research_question}
-                onChange={set("research_question")}
-                rows={3}
-                placeholder="e.g. What are the key barriers to clinical adoption of ML-based diagnostic tools, and how have researchers proposed overcoming them?"
-                className="w-full border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847] resize-none"
-                required
-              />
-            </div>
+            <Textarea
+              label="Research Question"
+              data-testid={TID.literatureReviewQuestion}
+              value={form.research_question}
+              onChange={set("research_question")}
+              rows={3}
+              placeholder="e.g. What are the key barriers to clinical adoption of ML-based diagnostic tools, and how have researchers proposed overcoming them?"
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Keywords
-                <span className="font-normal text-slate-500 ml-1">(comma-separated)</span>
-              </label>
-              <input
-                data-testid={TID.literatureReviewKeywords}
-                value={form.keywords}
-                onChange={set("keywords")}
-                placeholder="e.g. clinical decision support, machine learning, interoperability, EHR integration"
-                className="w-full border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
-                required
-              />
-            </div>
-          </div>
+            <Input
+              label="Keywords"
+              hint="Comma-separated"
+              data-testid={TID.literatureReviewKeywords}
+              value={form.keywords}
+              onChange={set("keywords")}
+              placeholder="e.g. clinical decision support, machine learning, interoperability, EHR integration"
+              required
+            />
+          </Card>
 
           {/* Optional fields */}
-          <div className="border border-slate-200 bg-white">
+          <Card padding="none">
             <button
               type="button"
               onClick={() => setShowOptional((o) => !o)}
@@ -263,88 +243,66 @@ function InputView({ onResult, gated }) {
 
             {showOptional && (
               <div className="border-t border-slate-100 px-5 pb-5 pt-4 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Discipline</label>
-                  <select
-                    value={form.discipline}
-                    onChange={set("discipline")}
-                    className="w-full border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
-                  >
-                    {DISCIPLINES.map((d) => (
-                      <option key={d} value={d}>{d || "Select discipline…"}</option>
-                    ))}
-                  </select>
-                </div>
+                <FormSelect label="Discipline" value={form.discipline} onChange={set("discipline")}>
+                  {DISCIPLINES.map((d) => (
+                    <option key={d} value={d}>{d || "Select discipline…"}</option>
+                  ))}
+                </FormSelect>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Methodology Preference
-                  </label>
-                  <input
-                    value={form.methodology_preference}
-                    onChange={set("methodology_preference")}
-                    placeholder="e.g. qualitative, mixed-methods, systematic review, RCT-focused"
-                    className="w-full border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
+                <Input
+                  label="Methodology Preference"
+                  value={form.methodology_preference}
+                  onChange={set("methodology_preference")}
+                  placeholder="e.g. qualitative, mixed-methods, systematic review, RCT-focused"
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Input
+                    label="Year from"
+                    type="number"
+                    value={form.year_from}
+                    onChange={set("year_from")}
+                    placeholder="2000"
+                    min="1900" max="2100"
                   />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Year from</label>
-                    <input
-                      type="number"
-                      value={form.year_from}
-                      onChange={set("year_from")}
-                      placeholder="2000"
-                      min="1900" max="2100"
-                      className="w-full border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Year to</label>
-                    <input
-                      type="number"
-                      value={form.year_to}
-                      onChange={set("year_to")}
-                      placeholder="2024"
-                      min="1900" max="2100"
-                      className="w-full border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
-                    />
-                  </div>
+                  <Input
+                    label="Year to"
+                    type="number"
+                    value={form.year_to}
+                    onChange={set("year_to")}
+                    placeholder="2024"
+                    min="1900" max="2100"
+                  />
                 </div>
               </div>
             )}
-          </div>
+          </Card>
 
-          {error && (
-            <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
+          {error && <InlineError>{error}</InlineError>}
 
-          <button
+          <Button
             type="submit"
             data-testid={TID.literatureReviewSubmitBtn}
             disabled={!valid || running}
-            className="w-full bg-[#0F2847] text-white py-3 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            loading={running}
+            variant="primary"
+            size="lg"
+            className="w-full"
           >
             {running ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Generating literature review — this may take up to 90 seconds…
-              </>
+              "Generating literature review — this may take up to 90 seconds…"
             ) : (
               <>
                 <BookOpen size={15} strokeWidth={1.5} />
                 Generate Literature Review · 20 Credits
               </>
             )}
-          </button>
+          </Button>
         </form>
 
         {/* Info panel */}
         <div className="space-y-4">
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline mb-3">Output includes</div>
             <ul className="space-y-2 text-sm text-slate-600">
               {[
@@ -365,20 +323,17 @@ function InputView({ onResult, gated }) {
                 </li>
               ))}
             </ul>
-          </div>
-          <div className="border border-slate-200 bg-white p-5">
+          </Card>
+          <Card padding="lg">
             <div className="overline mb-2">Credit cost</div>
             <div className="font-serif text-3xl text-slate-900">20</div>
             <div className="text-xs text-slate-500 mt-1">Research Credits per review</div>
-          </div>
-          <div className="border border-amber-100 bg-amber-50 p-4">
-            <div className="overline text-[10px] text-amber-700 mb-1">Knowledge basis</div>
-            <p className="text-xs text-amber-800 leading-relaxed">
-              This review is synthesised from Claude's training knowledge — not live database
-              retrieval. Author names and works cited are based on what Claude genuinely knows;
-              verify specific citations before submitting to a journal.
-            </p>
-          </div>
+          </Card>
+          <Callout variant="warning" title="Knowledge basis">
+            This review is synthesised from Claude's training knowledge — not live database
+            retrieval. Author names and works cited are based on what Claude genuinely knows;
+            verify specific citations before submitting to a journal.
+          </Callout>
         </div>
       </div>
     </div>
@@ -390,7 +345,7 @@ function InputView({ onResult, gated }) {
 function ExecutiveSummary({ data }) {
   if (!data) return null;
   return (
-    <div className="border border-slate-200 bg-white p-6 space-y-4">
+    <Card padding="xl" className="space-y-4">
       <SectionHeader icon={BookOpen} label="Executive Summary" />
       <p className="text-slate-700 leading-relaxed">{data.overview}</p>
       {data.scope_assessment && (
@@ -405,7 +360,7 @@ function ExecutiveSummary({ data }) {
           <p className="text-sm text-slate-600 leading-relaxed">{data.review_confidence}</p>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -522,7 +477,7 @@ function MethodologicalTrends({ data }) {
   return (
     <section>
       <SectionHeader icon={FlaskConical} label="Methodological Trends" />
-      <div className="border border-slate-200 bg-white p-5 space-y-5">
+      <Card padding="lg" className="space-y-5">
         {data.synthesis && (
           <p className="text-sm text-slate-700 leading-relaxed">{data.synthesis}</p>
         )}
@@ -540,7 +495,7 @@ function MethodologicalTrends({ data }) {
             ) : null
           )}
         </div>
-      </div>
+      </Card>
     </section>
   );
 }
@@ -586,7 +541,7 @@ function ResearchLimitations({ items }) {
   return (
     <section>
       <SectionHeader icon={AlertTriangle} label="Research Limitations in Existing Literature" />
-      <div className="border border-slate-200 bg-white divide-y divide-slate-100">
+      <Card padding="none" className="divide-y divide-slate-100">
         {items.map((l, i) => (
           <div key={i} className="px-5 py-4">
             <div className="flex items-start justify-between gap-3">
@@ -598,7 +553,7 @@ function ResearchLimitations({ items }) {
             )}
           </div>
         ))}
-      </div>
+      </Card>
     </section>
   );
 }
@@ -648,12 +603,12 @@ function FutureResearch({ items }) {
           <ExpandCard key={i} title={r.opportunity}>
             <div className="space-y-3">
               {r.suggested_research_question && (
-                <div className="border border-[#0F2847] bg-slate-50 px-4 py-3">
+                <Card padding="none" variant="ghost" className="!bg-slate-50 border border-[#0F2847] px-4 py-3">
                   <div className="overline text-[10px] text-[#0F2847] mb-1">Research Question</div>
                   <p className="text-sm text-slate-700 italic leading-relaxed">
                     "{r.suggested_research_question}"
                   </p>
-                </div>
+                </Card>
               )}
               {r.suggested_methodology && (
                 <div>
@@ -683,7 +638,7 @@ function LiteratureDraft({ text }) {
         <SectionHeader icon={BookOpen} label="Literature Review Draft" />
         <CopyButton text={text} />
       </div>
-      <div className="border border-[#0F2847] bg-white p-6">
+      <Card padding="xl" style={{ borderColor: "#0F2847" }}>
         <div className="text-sm text-slate-700 leading-[1.85] whitespace-pre-wrap font-serif">
           {text}
         </div>
@@ -693,7 +648,7 @@ function LiteratureDraft({ text }) {
             and supplement with live database searches before journal submission.
           </p>
         </div>
-      </div>
+      </Card>
     </section>
   );
 }
@@ -733,13 +688,10 @@ function ResultView({ review, onNew }) {
               {(review.keywords || []).map((k, i) => <Tag key={i}>{k}</Tag>)}
             </div>
           </div>
-          <button
-            onClick={onNew}
-            className="shrink-0 flex items-center gap-2 border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-          >
+          <Button onClick={onNew} variant="outline" size="sm" className="shrink-0">
             <RotateCcw size={13} strokeWidth={1.5} />
             New Review
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -761,9 +713,11 @@ function ResultView({ review, onNew }) {
 
 function HistoryItem({ review, active, onSelect }) {
   return (
-    <button
+    <Card
       onClick={() => onSelect(review)}
-      className={`w-full text-left px-4 py-3 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors ${active ? "bg-slate-50" : ""}`}
+      variant="ghost"
+      padding="none"
+      className={`w-full text-left px-4 py-3 border-b border-slate-100 last:border-0 hover:bg-slate-50 ${active ? "bg-slate-50" : ""}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
@@ -777,7 +731,7 @@ function HistoryItem({ review, active, onSelect }) {
           {new Date(review.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
         </div>
       </div>
-    </button>
+    </Card>
   );
 }
 
@@ -812,7 +766,8 @@ export default function LiteratureReview() {
   };
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="Literature Review"
       subtitle="AI-powered literature intelligence — synthesise research, map themes, and identify key findings."
     >
@@ -832,7 +787,7 @@ export default function LiteratureReview() {
         {history.length > 0 && !gated && (
           <section>
             <div className="overline mb-3">Review History</div>
-            <div className="border border-slate-200 bg-white divide-y divide-slate-100">
+            <Card padding="none" className="divide-y divide-slate-100">
               {history.map((h) => (
                 <HistoryItem
                   key={h.id}
@@ -841,10 +796,10 @@ export default function LiteratureReview() {
                   onSelect={openHistoryItem}
                 />
               ))}
-            </div>
+            </Card>
           </section>
         )}
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

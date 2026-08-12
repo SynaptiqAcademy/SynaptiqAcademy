@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { CheckSquare, Plus, Check, X, Pencil } from "lucide-react";
 import { NAVY, BRD, ACCENT, EMERALD, WHITE, TEXT_SECONDARY } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Button, Modal, Input, FormSelect, NavTabs, EmptyState, Spinner } from "@/components/ds";
 
@@ -37,7 +37,7 @@ function MissionCard({ mission, onComplete, onUpdate }) {
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {/* Completion toggle: circular check control — no ds/ primitive for
             this shape, left hand-rolled */}
-        <button onClick={() => onComplete(mission.id)} style={{
+        <button onClick={() => onComplete(mission.id)} aria-label={mission.status === "completed" ? `Mark ${mission.title} incomplete` : `Mark ${mission.title} complete`} style={{
           width: 22, height: 22, borderRadius: "50%",
           background: mission.status === "completed" ? EMERALD : "transparent",
           border: `2px solid ${color}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
@@ -63,6 +63,7 @@ function MissionCard({ mission, onComplete, onUpdate }) {
             size="icon"
             variant="ghost"
             onClick={() => setEditing(v => !v)}
+            aria-label={`Edit progress for ${mission.title}`}
             style={{
               padding: 3,
               color: TEXT_SECONDARY
@@ -80,7 +81,7 @@ function MissionCard({ mission, onComplete, onUpdate }) {
             <span style={{ fontSize: 12, color: TEXT_SECONDARY }}>Progress ({progress}%)</span>
             <input type="range" min={0} max={100} value={progress} onChange={e => setProgress(Number(e.target.value))} style={{ flex: 1 }} />
             <Button onClick={save} size="sm" style={{ background: ACCENT }}>Save</Button>
-            <Button size="icon" variant="ghost" onClick={() => setEditing(false)}><X size={13} color={TEXT_SECONDARY} /></Button>
+            <Button size="icon" variant="ghost" onClick={() => setEditing(false)} aria-label="Cancel"><X size={13} color={TEXT_SECONDARY} /></Button>
           </div>
         </div>
       )}
@@ -189,7 +190,7 @@ export default function ResearchMissions() {
   const completed = missions.filter(m => m.status === "completed").length;
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
       title="Research Missions"
       subtitle={`${pending} pending · ${completed} completed`}
       navItems={SIE_NAV_ITEMS}
@@ -231,6 +232,6 @@ export default function ResearchMissions() {
       )}
 
       {showNew && <NewMissionModal onClose={() => setShowNew(false)} onCreate={m => setMissions(ms => [m, ...ms])} />}
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

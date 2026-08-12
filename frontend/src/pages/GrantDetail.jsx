@@ -8,6 +8,7 @@ import { Badge } from "@/components/ds/Badge";
 import { Button } from "@/components/ds/Button";
 import { Card } from "@/components/ds/Card";
 import { Tag, TagGroup } from "@/components/ds/Tag";
+import { ResearchLayout } from "@/layouts";
 
 const fmtAmount = (fa) => {
   if (!fa || !fa.amount) return null;
@@ -68,56 +69,60 @@ export default function GrantDetail() {
     }
   };
 
-  if (!g) return <div className="p-6"><SkeletonCard rows={4} /></div>;
-  if (g.error) return <div className="text-sm text-slate-500">Grant not found. <Link to="/grants" className="underline">Back</Link></div>;
+  if (!g) return <ResearchLayout title="Grant"><SkeletonCard rows={4} /></ResearchLayout>;
+  if (g.error) return (
+    <ResearchLayout title="Grant not found">
+      <div className="text-sm text-slate-500">Grant not found. <Link to="/grants" className="underline">Back</Link></div>
+    </ResearchLayout>
+  );
 
   const hasApplication = !!g.user_application;
 
+  const headerActions = (
+    <>
+      <Button
+        onClick={toggleSave}
+        variant="outline"
+        size="sm"
+      >
+        {saved ? <BookmarkCheck size={12} strokeWidth={1.5} /> : <Bookmark size={12} strokeWidth={1.5} />}
+        {saved ? "Saved" : "Save"}
+      </Button>
+
+      <Button
+        onClick={startApplication}
+        disabled={applying}
+        variant={hasApplication ? "outline" : "primary"}
+        size="sm"
+        className={hasApplication ? "!border-emerald-600 !text-emerald-700 hover:!bg-emerald-50" : ""}
+      >
+        {hasApplication ? (
+          <><CheckCircle2 size={12} strokeWidth={1.5} /> Open application ({g.user_application.status})</>
+        ) : (
+          <><FilePlus size={12} strokeWidth={1.5} /> {applying ? "Creating…" : "Start application"}</>
+        )}
+      </Button>
+    </>
+  );
+
   return (
+    <ResearchLayout title={g.title} subtitle={g.sponsor} actions={headerActions}>
     <div className="space-y-8">
       <Link to="/grants" className="text-sm text-slate-500 hover:text-slate-900">← All grants</Link>
 
-      <header className="border-b border-slate-200 pb-6">
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <Coins size={16} strokeWidth={1.5} className="text-[#0F2847]" />
-          {g.funding_type && (
-            <Badge variant="default">{g.funding_type}</Badge>
-          )}
-          {fmtAmount(g.funding_amount) && (
-            <Badge variant="success">{fmtAmount(g.funding_amount)}</Badge>
-          )}
-          {g.source && (
-            <Badge variant="neutral">Source: {g.source}</Badge>
-          )}
-        </div>
-        <h1 className="font-serif text-5xl text-slate-900 mt-2 leading-tight">{g.title}</h1>
-        <div className="mt-2 text-sm text-slate-500">{g.sponsor}</div>
-
-        <div className="mt-4 flex items-center gap-3 flex-wrap">
-          <Button
-            onClick={toggleSave}
-            variant="outline"
-            size="sm"
-          >
-            {saved ? <BookmarkCheck size={12} strokeWidth={1.5} /> : <Bookmark size={12} strokeWidth={1.5} />}
-            {saved ? "Saved" : "Save"}
-          </Button>
-
-          <Button
-            onClick={startApplication}
-            disabled={applying}
-            variant={hasApplication ? "outline" : "primary"}
-            size="sm"
-            className={hasApplication ? "!border-emerald-600 !text-emerald-700 hover:!bg-emerald-50" : ""}
-          >
-            {hasApplication ? (
-              <><CheckCircle2 size={12} strokeWidth={1.5} /> Open application ({g.user_application.status})</>
-            ) : (
-              <><FilePlus size={12} strokeWidth={1.5} /> {applying ? "Creating…" : "Start application"}</>
-            )}
-          </Button>
-        </div>
-      </header>
+      {/* Meta bar */}
+      <div className="flex items-center gap-2 flex-wrap pb-6 border-b border-slate-200">
+        <Coins size={16} strokeWidth={1.5} className="text-[#0F2847]" />
+        {g.funding_type && (
+          <Badge variant="default">{g.funding_type}</Badge>
+        )}
+        {fmtAmount(g.funding_amount) && (
+          <Badge variant="success">{fmtAmount(g.funding_amount)}</Badge>
+        )}
+        {g.source && (
+          <Badge variant="neutral">Source: {g.source}</Badge>
+        )}
+      </div>
 
       <div className="grid lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8">
@@ -193,5 +198,6 @@ export default function GrantDetail() {
         </aside>
       </div>
     </div>
+    </ResearchLayout>
   );
 }

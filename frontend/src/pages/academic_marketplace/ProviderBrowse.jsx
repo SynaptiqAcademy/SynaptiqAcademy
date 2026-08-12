@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Star, ShieldCheck, Users } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Grid, Badge, Tag, TagGroup, SearchBar, FormSelect, Button, EmptyState, LoadingOverlay } from "@/components/ds";
 
 const API = "/api/acad-market";
@@ -44,7 +44,7 @@ export default function ProviderBrowse() {
   };
 
   return (
-    <DiscoveryLayout title="Find Experts" subtitle={`${total} verified academic professionals`}>
+    <ResearchLayout title="Find Experts" subtitle={`${total} verified academic professionals`}>
 
         <div className="flex gap-3 mb-6 flex-wrap items-center">
           <SearchBar
@@ -126,6 +126,6 @@ export default function ProviderBrowse() {
             </Button>
           </div>
         )}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

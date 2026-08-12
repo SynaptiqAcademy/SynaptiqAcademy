@@ -10,7 +10,15 @@ import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { NAVY, WARM } from "@/lib/tokens";
 import { ErrorState } from "@/components/ds/ErrorState";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { Tag as DsTag } from "@/components/ds/Tag";
+import { Input } from "@/components/ds/Input";
+import { Textarea } from "@/components/ds/Textarea";
+import { InlineError } from "@/components/ds/Alert";
 
 
 
@@ -26,11 +34,7 @@ function SectionHeader({ icon: Icon, label, color = "#0F2847" }) {
 }
 
 function Tag({ children, className = "" }) {
-  return (
-    <span className={`inline-block border border-slate-200 text-slate-600 text-xs px-2 py-0.5 ${className}`}>
-      {children}
-    </span>
-  );
+  return <DsTag size="sm" className={className}>{children}</DsTag>;
 }
 
 function BulletList({ items }) {
@@ -61,7 +65,7 @@ function ExpandCard({ title, subtitle, badge, badgeColor, children, defaultOpen 
   const [open, setOpen] = useState(defaultOpen);
   const Chev = open ? ChevronUp : ChevronDown;
   return (
-    <div className="border border-slate-200 bg-white">
+    <Card padding="none">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-start justify-between gap-4 px-5 py-4 text-left hover:bg-slate-50 transition-colors"
@@ -72,15 +76,9 @@ function ExpandCard({ title, subtitle, badge, badgeColor, children, defaultOpen 
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {badge && (
-            <span
-              className="text-xs px-2 py-0.5 border font-mono"
-              style={badgeColor
-                ? { borderColor: badgeColor, color: badgeColor }
-                : { borderColor: "#e2e8f0", color: "#64748b" }
-              }
-            >
+            <Badge color={badgeColor || "#64748b"} size="sm" className="font-mono">
               {badge}
-            </span>
+            </Badge>
           )}
           <Chev size={15} strokeWidth={1.5} className="text-slate-400" />
         </div>
@@ -90,7 +88,7 @@ function ExpandCard({ title, subtitle, badge, badgeColor, children, defaultOpen 
           {children}
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -144,10 +142,9 @@ function DesignBadge({ type }) {
   };
   const cfg = map[type?.toLowerCase()] || { color: "#64748b", label: type || "Unknown" };
   return (
-    <span className="text-xs px-3 py-1 border font-mono"
-      style={{ borderColor: cfg.color, color: cfg.color }}>
+    <Badge color={cfg.color} className="font-mono">
       {cfg.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -161,10 +158,7 @@ function PriorityIcon({ level }) {
 
 function GateView() {
   return (
-    <div className="min-h-screen bg-[#F4F6FA]">
-      <div style={{ background: "#F4F6FA", padding: "13px 32px", borderBottom: "1px solid rgba(15,23,42,0.08)" }}>
-      </div>
-      <div className="flex items-center justify-center p-8" style={{ minHeight: "calc(100vh - 50px)" }}>
+    <div className="flex items-center justify-center py-16">
       <div className="max-w-md w-full text-center space-y-6">
         <div className="w-14 h-14 border-2 border-slate-900 flex items-center justify-center mx-auto">
           <Lock size={22} strokeWidth={1.5} />
@@ -176,7 +170,7 @@ function GateView() {
             Transform any research idea into a defensible, publishable study design.
           </p>
         </div>
-        <div className="border border-slate-200 bg-white p-4 text-left space-y-2">
+        <Card padding="md" className="text-left space-y-2">
           <div className="text-xs overline text-slate-500 mb-3">Included in this advisory</div>
           {[
             "Methodology recommendation with justification",
@@ -192,15 +186,11 @@ function GateView() {
               {f}
             </div>
           ))}
-        </div>
-        <Link
-          to="/pricing"
-          className="inline-block w-full bg-[#0F2847] text-white text-sm font-medium py-3 px-6 hover:bg-[#1a3a5c] transition-colors"
-        >
+        </Card>
+        <Button as={Link} to="/pricing" variant="primary" size="lg" className="w-full">
           Upgrade to Pro Researcher
-        </Link>
+        </Button>
         <p className="text-xs text-slate-500">10 credits per advisory · Refunded if advisory fails</p>
-      </div>
       </div>
     </div>
   );
@@ -261,70 +251,48 @@ function InputView({ onResult }) {
   if (isGated) return <GateView />;
 
   return (
-    <div className="min-h-screen bg-[#F4F6FA]">
-      <div style={{ background: "#F4F6FA", padding: "13px 32px", borderBottom: "1px solid rgba(15,23,42,0.08)" }}>
-      </div>
-      <div className="max-w-2xl mx-auto py-12 px-6">
+    <div>
+      <div className="max-w-2xl mx-auto">
         {/* header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 border-2 border-[#0F2847] flex items-center justify-center">
-              <FlaskConical size={18} strokeWidth={1.5} className="text-[#0F2847]" />
-            </div>
-            <div>
-              <h1 className="font-serif text-2xl text-slate-900">AI Research Design Advisor</h1>
-              <p className="text-xs text-slate-500 mt-0.5">Pro Researcher · 10 credits per advisory</p>
-            </div>
-          </div>
-          <p className="text-slate-600 text-sm leading-relaxed">
-            Transform your research idea into a methodologically defensible study design —
-            including framework, hypotheses, sampling strategy, analysis plan, and a
-            prioritised improvement roadmap.
-          </p>
+          <p className="text-xs text-slate-500">Pro Researcher · 10 credits per advisory</p>
         </div>
 
         {/* form */}
         <form onSubmit={submit} data-testid={TID.researchDesignForm} className="space-y-5">
           {/* topic */}
-          <div>
-            <label className="overline block mb-1.5">Research Topic *</label>
-            <input
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="e.g. Digital health interventions for Type 2 diabetes self-management"
-              className="w-full border border-slate-300 px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-              maxLength={300}
-              data-testid={TID.researchDesignTopic}
-            />
-          </div>
+          <Input
+            label="Research Topic *"
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            placeholder="e.g. Digital health interventions for Type 2 diabetes self-management"
+            maxLength={300}
+            data-testid={TID.researchDesignTopic}
+          />
 
           {/* research question */}
-          <div>
-            <label className="overline block mb-1.5">Research Question *</label>
-            <textarea
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="e.g. To what extent do smartphone-based self-monitoring apps improve glycaemic control in adults with Type 2 diabetes compared to standard care over 12 months?"
-              rows={3}
-              className="w-full border border-slate-300 px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors resize-none"
-              maxLength={1000}
-              data-testid={TID.researchDesignQuestion}
-            />
-          </div>
+          <Textarea
+            label="Research Question *"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="e.g. To what extent do smartphone-based self-monitoring apps improve glycaemic control in adults with Type 2 diabetes compared to standard care over 12 months?"
+            rows={3}
+            resize={false}
+            maxLength={1000}
+            data-testid={TID.researchDesignQuestion}
+          />
 
           {/* research objective */}
-          <div>
-            <label className="overline block mb-1.5">Research Objective *</label>
-            <textarea
-              value={objective}
-              onChange={(e) => setObjective(e.target.value)}
-              placeholder="e.g. To evaluate the effectiveness of a smartphone-based self-monitoring intervention on HbA1c levels, medication adherence, and quality of life in adults with Type 2 diabetes over a 12-month period."
-              rows={3}
-              className="w-full border border-slate-300 px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors resize-none"
-              maxLength={1000}
-              data-testid={TID.researchDesignObjective}
-            />
-          </div>
+          <Textarea
+            label="Research Objective *"
+            value={objective}
+            onChange={(e) => setObjective(e.target.value)}
+            placeholder="e.g. To evaluate the effectiveness of a smartphone-based self-monitoring intervention on HbA1c levels, medication adherence, and quality of life in adults with Type 2 diabetes over a 12-month period."
+            rows={3}
+            resize={false}
+            maxLength={1000}
+            data-testid={TID.researchDesignObjective}
+          />
 
           {/* optional section toggle */}
           <button
@@ -337,93 +305,71 @@ function InputView({ onResult }) {
           </button>
 
           {showOptional && (
-            <div className="border border-slate-200 bg-white p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="overline block mb-1.5">Discipline</label>
-                  <input
-                    value={discipline}
-                    onChange={(e) => setDiscipline(e.target.value)}
-                    placeholder="e.g. Public Health"
-                    className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-                    maxLength={100}
-                  />
-                </div>
-                <div>
-                  <label className="overline block mb-1.5">Target Journal Type</label>
-                  <input
-                    value={journalType}
-                    onChange={(e) => setJournalType(e.target.value)}
-                    placeholder="e.g. High-impact clinical"
-                    className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-                    maxLength={200}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="overline block mb-1.5">Preferred Methodology</label>
-                <input
-                  value={methodology}
-                  onChange={(e) => setMethodology(e.target.value)}
-                  placeholder="e.g. RCT, mixed methods, systematic review"
-                  className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
+            <Card padding="lg" className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label="Discipline"
+                  value={discipline}
+                  onChange={(e) => setDiscipline(e.target.value)}
+                  placeholder="e.g. Public Health"
+                  maxLength={100}
+                />
+                <Input
+                  label="Target Journal Type"
+                  value={journalType}
+                  onChange={(e) => setJournalType(e.target.value)}
+                  placeholder="e.g. High-impact clinical"
                   maxLength={200}
                 />
               </div>
-              <div>
-                <label className="overline block mb-1.5">Target Population</label>
-                <input
-                  value={population}
-                  onChange={(e) => setPopulation(e.target.value)}
-                  placeholder="e.g. Adults aged 40–70 with diagnosed Type 2 diabetes"
-                  className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-                  maxLength={300}
+              <Input
+                label="Preferred Methodology"
+                value={methodology}
+                onChange={(e) => setMethodology(e.target.value)}
+                placeholder="e.g. RCT, mixed methods, systematic review"
+                maxLength={200}
+              />
+              <Input
+                label="Target Population"
+                value={population}
+                onChange={(e) => setPopulation(e.target.value)}
+                placeholder="e.g. Adults aged 40–70 with diagnosed Type 2 diabetes"
+                maxLength={300}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label="Expected Sample Size"
+                  value={sampleSize}
+                  onChange={(e) => setSampleSize(e.target.value)}
+                  placeholder="e.g. 200 participants"
+                  maxLength={100}
+                />
+                <Input
+                  label="Available Data Sources"
+                  value={dataSources}
+                  onChange={(e) => setDataSources(e.target.value)}
+                  placeholder="e.g. Hospital EHR, patient surveys"
+                  maxLength={500}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="overline block mb-1.5">Expected Sample Size</label>
-                  <input
-                    value={sampleSize}
-                    onChange={(e) => setSampleSize(e.target.value)}
-                    placeholder="e.g. 200 participants"
-                    className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-                    maxLength={100}
-                  />
-                </div>
-                <div>
-                  <label className="overline block mb-1.5">Available Data Sources</label>
-                  <input
-                    value={dataSources}
-                    onChange={(e) => setDataSources(e.target.value)}
-                    placeholder="e.g. Hospital EHR, patient surveys"
-                    className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-                    maxLength={500}
-                  />
-                </div>
-              </div>
-            </div>
+            </Card>
           )}
 
           {error && !isGated && (
             <ErrorState message={error.message} type="generic" />
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={loading}
+            loading={loading}
             data-testid={TID.researchDesignSubmitBtn}
-            className="w-full bg-[#0F2847] text-white text-sm font-medium py-3 px-6 hover:bg-[#1a3a5c] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            variant="primary"
+            size="lg"
+            className="w-full"
           >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <RotateCcw size={14} className="animate-spin" />
-                Designing your study… (up to 3 min)
-              </span>
-            ) : (
-              "Design My Study — 10 Credits"
-            )}
-          </button>
+            {loading ? "Designing your study… (up to 3 min)" : "Design My Study — 10 Credits"}
+          </Button>
         </form>
       </div>
     </div>
@@ -437,11 +383,11 @@ function VariableTable({ items, columns }) {
   return (
     <div className="space-y-3">
       {items.map((item, i) => (
-        <div key={i} className="border border-slate-100 bg-slate-50 p-4 space-y-2">
+        <Card key={i} padding="md" variant="ghost" className="!bg-slate-50 border border-slate-100 space-y-2">
           {columns.map(([key, label]) => item[key] ? (
             <LabelValue key={key} label={label} value={item[key]} />
           ) : null)}
-        </div>
+        </Card>
       ))}
     </div>
   );
@@ -454,11 +400,11 @@ function ValiditySection({ threats, label, color }) {
       <div className="text-xs overline mb-2" style={{ color }}>{label}</div>
       <div className="space-y-3">
         {threats.map((t, i) => (
-          <div key={i} className="border border-slate-100 bg-slate-50 p-4 space-y-2">
+          <Card key={i} padding="md" variant="ghost" className="!bg-slate-50 border border-slate-100 space-y-2">
             <div className="font-medium text-sm text-slate-900">{t.threat}</div>
             <LabelValue label="Risk" value={t.description} />
             <LabelValue label="Mitigation" value={t.mitigation} />
-          </div>
+          </Card>
         ))}
       </div>
     </div>
@@ -478,7 +424,7 @@ function ImprovementList({ items, level }) {
       <div className="text-xs overline mb-2" style={{ color: cfg.color }}>{cfg.label}</div>
       <div className="space-y-2">
         {items.map((item, i) => (
-          <div key={i} className={`border ${cfg.border} ${cfg.bg} p-4 space-y-1.5`}>
+          <Card key={i} padding="md" variant="ghost" className={`${cfg.border} ${cfg.bg} space-y-1.5`}>
             <div className="flex items-start gap-2">
               <PriorityIcon level={level} />
               <div className="font-medium text-sm text-slate-900">{item.action}</div>
@@ -486,7 +432,7 @@ function ImprovementList({ items, level }) {
             {item.reason && (
               <p className="text-xs text-slate-500 leading-relaxed ml-5">{item.reason}</p>
             )}
-          </div>
+          </Card>
         ))}
       </div>
     </div>
@@ -511,69 +457,62 @@ function ResultView({ data, onReset }) {
   const potColor = (pubReady.score >= 80) ? "#16a34a" : (pubReady.score >= 60) ? "#d97706" : "#dc2626";
 
   return (
-    <div className="min-h-screen bg-[#F4F6FA]" data-testid={TID.researchDesignResult}>
-      <div style={{ background: "#F4F6FA", padding: "13px 32px", borderBottom: "1px solid rgba(15,23,42,0.08)" }}>
-      </div>
-      {/* sticky header */}
-      <div className="border-b border-slate-200 bg-white sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+    <div data-testid={TID.researchDesignResult}>
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* meta bar */}
+        <div className="flex items-center justify-between gap-4 pb-6 border-b border-slate-200 flex-wrap">
           <div className="min-w-0">
-            <h1 className="font-serif text-lg text-slate-900 truncate">{data.topic}</h1>
+            <div className="text-sm font-semibold text-slate-900 truncate">{data.topic}</div>
             <p className="text-xs text-slate-500 mt-0.5 truncate">{data.research_question}</p>
           </div>
-          <button
-            onClick={onReset}
-            className="shrink-0 flex items-center gap-1.5 text-sm text-slate-600 border border-slate-300 px-3 py-1.5 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-          >
+          <Button onClick={onReset} variant="outline" size="sm" className="shrink-0">
             <RotateCcw size={13} />
             New Advisory
-          </button>
+          </Button>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
 
         {/* design recommendation + publication score */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2 border border-slate-200 bg-white p-6 space-y-4">
+          <Card padding="xl" className="md:col-span-2 space-y-4">
             <SectionHeader icon={Target} label="Research Design Recommendation" />
             <div className="flex flex-wrap gap-2">
               <DesignBadge type={design.recommended_design} />
               {design.design_type && (
-                <span className="text-xs border border-slate-200 px-2 py-1 text-slate-600 font-mono">
+                <Badge variant="outline" size="sm" className="font-mono">
                   {design.design_type}
-                </span>
+                </Badge>
               )}
             </div>
             {design.justification && (
               <p className="text-sm text-slate-700 leading-relaxed">{design.justification}</p>
             )}
             {design.alternative_considered && (
-              <div className="border border-slate-100 bg-slate-50 p-3">
+              <Card padding="sm" variant="ghost" className="!bg-slate-50 border border-slate-100">
                 <div className="text-xs overline text-slate-500 mb-1">Alternative Considered</div>
                 <p className="text-sm text-slate-600">{design.alternative_considered}</p>
-              </div>
+              </Card>
             )}
             {design.feasibility_note && (
-              <div className="border border-amber-100 bg-amber-50 p-3">
+              <Card padding="sm" variant="ghost" className="!bg-amber-50 border border-amber-100">
                 <div className="text-xs overline text-amber-700 mb-1">Feasibility Note</div>
                 <p className="text-sm text-amber-800">{design.feasibility_note}</p>
-              </div>
+              </Card>
             )}
-          </div>
+          </Card>
 
           {/* publication readiness */}
-          <div className="border border-slate-200 bg-white p-6 flex flex-col items-center justify-center text-center gap-3">
+          <Card padding="xl" className="flex flex-col items-center justify-center text-center gap-3">
             <div className="overline text-slate-500">Publication Readiness</div>
             <ScoreRing score={pubReady.score || 0} />
             {pubReady.recommended_target_journals && (
               <p className="text-xs text-slate-500 leading-snug">{pubReady.recommended_target_journals}</p>
             )}
-          </div>
+          </Card>
         </div>
 
         {/* objectives assessment */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={ClipboardList} label="Research Objectives Assessment" color="#2563eb" />
           <div className="grid grid-cols-3 gap-4 mb-5">
             <ScoreBar label="Clarity" score={objAssess.clarity_score || 0} />
@@ -585,16 +524,16 @@ function ResultView({ data, onReset }) {
               <p className="text-sm text-slate-700 leading-relaxed">{objAssess.overall_assessment}</p>
             )}
             {objAssess.refined_objective && (
-              <div className="border border-[#0F2847] bg-slate-50 p-4">
+              <Card padding="md" variant="ghost" className="!bg-slate-50 border border-[#0F2847]">
                 <div className="text-xs overline text-[#0F2847] mb-1">Refined Objective</div>
                 <p className="text-sm text-slate-700 leading-relaxed italic">{objAssess.refined_objective}</p>
-              </div>
+              </Card>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* research framework */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={Layers} label="Research Framework" color="#7c3aed" />
           <div className="space-y-4">
             <LabelValue label="Conceptual Model" value={framework.conceptual_model} />
@@ -607,30 +546,30 @@ function ResultView({ data, onReset }) {
                 <div className="text-xs overline text-slate-500 mb-2">Key Constructs</div>
                 <div className="space-y-2">
                   {framework.key_constructs.map((c, i) => (
-                    <div key={i} className="border border-slate-100 bg-slate-50 p-3 flex gap-3">
-                      <span className="text-xs border border-slate-300 px-1.5 py-0.5 font-mono text-slate-500 shrink-0 h-fit capitalize">
+                    <Card key={i} padding="sm" variant="ghost" className="!bg-slate-50 border border-slate-100 flex gap-3">
+                      <Badge variant="outline" size="sm" className="font-mono shrink-0 h-fit capitalize">
                         {c.role}
-                      </span>
+                      </Badge>
                       <div>
                         <div className="text-sm font-medium text-slate-900">{c.construct}</div>
                         {c.definition && <div className="text-xs text-slate-500 mt-0.5">{c.definition}</div>}
                       </div>
-                    </div>
+                    </Card>
                   ))}
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* hypotheses */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={Lightbulb} label="Hypothesis Development" color="#16a34a" />
           {hypoSection.hypotheses_appropriate === false ? (
-            <div className="border border-amber-100 bg-amber-50 p-4">
+            <Card padding="md" variant="ghost" className="!bg-amber-50 border border-amber-100">
               <div className="text-xs overline text-amber-700 mb-1">Hypotheses Not Applicable</div>
               <p className="text-sm text-amber-800">{hypoSection.hypotheses_not_appropriate_reason}</p>
-            </div>
+            </Card>
           ) : (
             <div className="space-y-3">
               {(hypoSection.hypotheses || []).map((h, i) => (
@@ -649,10 +588,10 @@ function ResultView({ data, onReset }) {
               ))}
             </div>
           )}
-        </div>
+        </Card>
 
         {/* variables */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={Database} label="Variables" color="#0F2847" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -691,10 +630,10 @@ function ResultView({ data, onReset }) {
               )}
             </div>
           )}
-        </div>
+        </Card>
 
         {/* sampling */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={Users} label="Sampling Strategy" color="#7c3aed" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
@@ -720,10 +659,10 @@ function ResultView({ data, onReset }) {
               )}
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* data collection */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={ClipboardList} label="Data Collection Strategy" color="#2563eb" />
           <div className="space-y-4">
             <LabelValue label="Primary Method" value={dataCol.primary_method} />
@@ -737,12 +676,12 @@ function ResultView({ data, onReset }) {
                 <div className="text-xs overline text-slate-500 mb-2">Instruments</div>
                 <div className="space-y-3">
                   {dataCol.instruments.map((inst, i) => (
-                    <div key={i} className="border border-slate-100 bg-slate-50 p-4 space-y-2">
+                    <Card key={i} padding="md" variant="ghost" className="!bg-slate-50 border border-slate-100 space-y-2">
                       <div className="font-medium text-sm text-slate-900">{inst.instrument}</div>
                       <LabelValue label="Purpose" value={inst.purpose} />
                       <LabelValue label="Validation" value={inst.validation_note} />
                       <LabelValue label="Duration" value={inst.estimated_duration} />
-                    </div>
+                    </Card>
                   ))}
                 </div>
               </div>
@@ -754,10 +693,10 @@ function ResultView({ data, onReset }) {
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* analysis plan */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={BarChart2} label="Data Analysis Plan" color="#0F2847" />
           <div className="space-y-4">
             <LabelValue label="Primary Analysis Method" value={analysis.primary_analysis_method} />
@@ -787,28 +726,27 @@ function ResultView({ data, onReset }) {
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* validity threats */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={Shield} label="Threats to Validity" color="#dc2626" />
           <div className="space-y-6">
             <ValiditySection threats={validity.internal_validity} label="Internal Validity" color="#dc2626" />
             <ValiditySection threats={validity.external_validity} label="External Validity" color="#d97706" />
             <ValiditySection threats={validity.construct_validity} label="Construct Validity" color="#7c3aed" />
           </div>
-        </div>
+        </Card>
 
         {/* ethics */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={BookOpen} label="Ethical Considerations" color="#16a34a" />
           <div className="space-y-4">
             {ethics.irb_required != null && (
-              <div className={`inline-flex items-center gap-2 text-xs border px-3 py-1 font-mono
-                ${ethics.irb_required ? "border-red-200 text-red-700 bg-red-50" : "border-slate-200 text-slate-600"}`}>
+              <Badge variant={ethics.irb_required ? "danger" : "outline"} className="font-mono">
                 {ethics.irb_required ? <XCircle size={12} /> : <CheckCircle2 size={12} />}
                 IRB / Ethics approval {ethics.irb_required ? "required" : "may not be required — verify locally"}
-              </div>
+              </Badge>
             )}
             <LabelValue label="Consent Approach" value={ethics.consent_approach} />
             <LabelValue label="Data Privacy" value={ethics.data_privacy} />
@@ -818,10 +756,10 @@ function ResultView({ data, onReset }) {
                 <div className="text-xs overline text-slate-500 mb-2">Key Ethical Risks</div>
                 <div className="space-y-2">
                   {ethics.key_ethical_risks.map((risk, i) => (
-                    <div key={i} className="border border-slate-100 bg-slate-50 p-3 space-y-1">
+                    <Card key={i} padding="sm" variant="ghost" className="!bg-slate-50 border border-slate-100 space-y-1">
                       <div className="text-sm font-medium text-slate-900">{risk.risk}</div>
                       {risk.mitigation && <p className="text-xs text-slate-500">{risk.mitigation}</p>}
-                    </div>
+                    </Card>
                   ))}
                 </div>
               </div>
@@ -830,10 +768,10 @@ function ResultView({ data, onReset }) {
               <LabelValue label="Additional Considerations" value={ethics.additional_considerations} />
             )}
           </div>
-        </div>
+        </Card>
 
         {/* publication readiness detail */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={TrendingUp} label="Publication Readiness Assessment" color={potColor} />
           <div className="space-y-4">
             {pubReady.assessment && (
@@ -854,20 +792,20 @@ function ResultView({ data, onReset }) {
               )}
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* improvement plan */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={ListChecks} label="Research Design Improvement Plan" color="#0F2847" />
           <div className="space-y-6">
             <ImprovementList items={improvement.high_priority} level="high" />
             <ImprovementList items={improvement.medium_priority} level="medium" />
             <ImprovementList items={improvement.low_priority} level="low" />
           </div>
-        </div>
+        </Card>
 
         {/* footer */}
-        <div className="border border-slate-100 bg-white px-6 py-4 flex items-center justify-between text-xs text-slate-400">
+        <Card padding="none" className="px-6 py-4 flex items-center justify-between text-xs text-slate-400">
           <div className="flex items-center gap-3">
             <Clock size={11} />
             <span>Analysed {new Date(data.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
@@ -877,7 +815,7 @@ function ResultView({ data, onReset }) {
             <AlertTriangle size={11} />
             <span>Consult your institution's IRB before commencing data collection</span>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
 
@@ -888,17 +826,18 @@ function ResultView({ data, onReset }) {
 
 function HistoryItem({ item, onSelect }) {
   return (
-    <button
+    <Card
       onClick={() => onSelect(item.id)}
       data-testid={TID.researchDesignHistoryItem(item.id)}
-      className="w-full text-left border border-slate-200 bg-white hover:border-[#0F2847] transition-colors p-4 space-y-2"
+      padding="md"
+      className="w-full text-left space-y-2"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="font-serif text-sm text-slate-900 line-clamp-1">{item.topic}</div>
         {item.publication_score != null && (
-          <span className="shrink-0 text-xs font-mono border border-slate-200 px-1.5 py-0.5 text-slate-500">
+          <Badge variant="outline" size="sm" className="shrink-0 font-mono">
             {item.publication_score}/100
-          </span>
+          </Badge>
         )}
       </div>
       <p className="text-xs text-slate-500 line-clamp-2">{item.research_question}</p>
@@ -906,7 +845,7 @@ function HistoryItem({ item, onSelect }) {
         <Clock size={10} />
         {new Date(item.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
       </div>
-    </button>
+    </Card>
   );
 }
 
@@ -946,6 +885,11 @@ export default function ResearchDesignAdvisor() {
 
   if (view === "result" && result) {
     return (
+      <ResearchLayout
+        navItems={AI_NAV_ITEMS}
+        title="Research Design Advisor"
+        subtitle="AI-powered guidance on research methodology, design, and study planning."
+      >
       <div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden" }}>
         <div className="flex-1 overflow-y-auto">
           <ResultView data={result} onReset={handleReset} />
@@ -963,11 +907,13 @@ export default function ResearchDesignAdvisor() {
           </aside>
         )}
       </div>
+      </ResearchLayout>
     );
   }
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="Research Design Advisor"
       subtitle="AI-powered guidance on research methodology, design, and study planning."
     >
@@ -988,7 +934,7 @@ export default function ResearchDesignAdvisor() {
         </aside>
       )}
     </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
 
   );
 }

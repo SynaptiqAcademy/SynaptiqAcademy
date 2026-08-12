@@ -10,6 +10,7 @@ import {
   UserCheck, BarChart3, Layers, GraduationCap, Activity, Clock,
   FileText, Briefcase, FlaskConical, ArrowLeft, Eye, Heart
 } from "lucide-react";
+import { Card, Tag, TagGroup, Badge, StatCard, StatGrid, NavTabs, ProgressBar as DsProgressBar } from "@/components/ds";
 
 export default function ResearcherProfile() {
   const { slug } = useParams();
@@ -119,21 +120,21 @@ export default function ResearcherProfile() {
           {(profile.research_interests || []).length > 0 && (
             <section>
               <h3 className="text-sm font-semibold text-slate-900 mb-3 uppercase tracking-wide">Research Focus</h3>
-              <div className="flex flex-wrap gap-2">
+              <TagGroup gap={8}>
                 {profile.research_interests.map((area, i) => (
-                  <span key={i} className="px-3 py-1.5 bg-slate-50 border border-slate-200 text-sm text-slate-700 rounded-full">{area}</span>
+                  <Tag key={i}>{area}</Tag>
                 ))}
-              </div>
+              </TagGroup>
             </section>
           )}
           {(profile.keywords || []).length > 0 && (
             <section>
               <h3 className="text-sm font-semibold text-slate-900 mb-3 uppercase tracking-wide">Keywords</h3>
-              <div className="flex flex-wrap gap-2">
+              <TagGroup gap={8}>
                 {profile.keywords.map((kw, i) => (
-                  <span key={i} className="px-2.5 py-1 bg-white border border-slate-200 text-xs text-slate-600 rounded">{kw}</span>
+                  <Tag key={i} size="sm">{kw}</Tag>
                 ))}
-              </div>
+              </TagGroup>
             </section>
           )}
           {(profile.showcase || []).length > 0 && (
@@ -141,13 +142,13 @@ export default function ResearcherProfile() {
               <h3 className="text-sm font-semibold text-slate-900 mb-3 uppercase tracking-wide">Featured Work</h3>
               <div className="space-y-2">
                 {profile.showcase.map((item, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 border border-slate-100 rounded-lg hover:border-slate-200 transition-colors">
+                  <Card key={i} padding="sm" className="flex items-center gap-3">
                     <Star size={14} className="text-amber-400 shrink-0" />
                     <div>
                       <div className="text-sm font-medium text-slate-900">{item.title || item.custom_label || item.item_type}</div>
                       <div className="text-xs text-slate-400 capitalize">{item.item_type}</div>
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </section>
@@ -157,7 +158,7 @@ export default function ResearcherProfile() {
           )}
         </div>
         <div className="space-y-4">
-          <div className="p-4 border border-slate-100 rounded-lg">
+          <Card padding="md">
             <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Quick Stats</h3>
             {[
               { label: "Publications", value: profile.stats?.publications || 0, icon: BookOpen },
@@ -174,13 +175,13 @@ export default function ResearcherProfile() {
                 <span className="font-mono text-sm text-slate-900">{value.toLocaleString()}</span>
               </div>
             ))}
-          </div>
+          </Card>
           {(profile.impact?.sis_total || 0) > 0 && (
-            <div className="p-4 border border-[#0F2847]/10 bg-[#0F2847]/5 rounded-lg text-center">
+            <Card padding="md" className="!border-[#0F2847]/10 !bg-[#0F2847]/5 text-center">
               <div className="text-xs text-[#0F2847]/60 uppercase tracking-wide mb-1">Synaptiq Impact Score</div>
               <div className="font-serif text-3xl text-[#0F2847]">{profile.impact.sis_total.toLocaleString()}</div>
               <div className="text-xs text-[#0F2847]/40 mt-0.5">out of 10,000</div>
-            </div>
+            </Card>
           )}
         </div>
       </div>
@@ -199,7 +200,7 @@ export default function ResearcherProfile() {
           ) : (
             <div className="space-y-3">
               {pubs.map((p, i) => (
-                <div key={i} className="p-4 border border-slate-100 rounded-lg hover:border-slate-200 transition-colors">
+                <Card key={i} padding="md">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <h4 className="text-sm font-medium text-slate-900">{p.title}</h4>
@@ -216,7 +217,7 @@ export default function ResearcherProfile() {
                       </div>
                     )}
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           )}
@@ -229,20 +230,16 @@ export default function ResearcherProfile() {
       const impact = data || {};
       return (
         <div className="max-w-2xl">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          <StatGrid cols={4} className="mb-8">
             {[
               { label: "Impact Score", value: impact.sis_total || 0, suffix: "/ 10K" },
               { label: "H-index", value: impact.h_index || 0 },
               { label: "i10-index", value: impact.i10_index || 0 },
               { label: "Total Citations", value: impact.total_citations || 0 },
             ].map(({ label, value, suffix }) => (
-              <div key={label} className="text-center p-4 border border-slate-100 rounded-lg">
-                <div className="font-serif text-2xl text-slate-900">{value.toLocaleString()}</div>
-                {suffix && <div className="text-xs text-slate-400">{suffix}</div>}
-                <div className="text-xs text-slate-500 mt-1">{label}</div>
-              </div>
+              <StatCard key={label} label={label} value={value.toLocaleString()} sub={suffix} />
             ))}
-          </div>
+          </StatGrid>
           {impact.components && (
             <div>
               <h3 className="text-sm font-semibold text-slate-900 mb-4">Score Breakdown</h3>
@@ -258,17 +255,13 @@ export default function ResearcherProfile() {
                     orcid_score: 1000
                   };
                   const max = maxMap[key] || 1000;
-                  const pct = Math.min(100, Math.round(((val || 0) / max) * 100));
                   return (
-                    <div key={key}>
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="text-slate-600 capitalize">{key.replace(/_/g, " ")}</span>
-                        <span className="font-mono text-slate-900">{val || 0} / {max}</span>
-                      </div>
-                      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#0F2847] rounded-full" style={{ width: `${pct}%` }} />
-                      </div>
-                    </div>
+                    <DsProgressBar
+                      key={key}
+                      label={key.replace(/_/g, " ")}
+                      value={val || 0}
+                      max={max}
+                    />
                   );
                 })}
               </div>
@@ -292,13 +285,13 @@ export default function ResearcherProfile() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {projects.map((p, i) => (
-                <div key={i} className="p-4 border border-slate-100 rounded-lg">
+                <Card key={i} padding="md">
                   <div className="flex items-start justify-between gap-2">
                     <h4 className="text-sm font-medium text-slate-900">{p.title}</h4>
-                    <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${p.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>{p.status}</span>
+                    <Badge size="sm" variant={p.status === "active" ? "success" : "neutral"} className="shrink-0">{p.status}</Badge>
                   </div>
                   {p.description && <p className="mt-2 text-xs text-slate-500 line-clamp-2">{p.description}</p>}
-                </div>
+                </Card>
               ))}
             </div>
           )}
@@ -317,7 +310,7 @@ export default function ResearcherProfile() {
           ) : (
             <div className="space-y-3">
               {grants.map((g, i) => (
-                <div key={i} className="p-4 border border-slate-100 rounded-lg">
+                <Card key={i} padding="md">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <h4 className="text-sm font-medium text-slate-900">{g.grant_title || "Untitled Grant"}</h4>
@@ -327,15 +320,15 @@ export default function ResearcherProfile() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        g.status === "approved" ? "bg-emerald-50 text-emerald-700"
-                        : g.status === "rejected" ? "bg-red-50 text-red-700"
-                        : "bg-amber-50 text-amber-700"
-                      }`}>{g.status}</span>
+                      <Badge size="sm" variant={
+                        g.status === "approved" ? "success"
+                        : g.status === "rejected" ? "danger"
+                        : "warning"
+                      }>{g.status}</Badge>
                       {g.amount_requested > 0 && <div className="mt-1 text-xs font-mono text-slate-500">${g.amount_requested.toLocaleString()}</div>}
                     </div>
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           )}
@@ -354,13 +347,13 @@ export default function ResearcherProfile() {
           ) : (
             <div className="space-y-3">
               {collab.recent.map((c, i) => (
-                <div key={i} className="flex items-center justify-between p-4 border border-slate-100 rounded-lg">
+                <Card key={i} padding="md" className="flex items-center justify-between">
                   <div>
                     <h4 className="text-sm font-medium text-slate-900">{c.title}</h4>
                     {c.created_at && <div className="text-xs text-slate-400 mt-0.5">{c.created_at.slice(0, 10)}</div>}
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${c.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>{c.status}</span>
-                </div>
+                  <Badge size="sm" variant={c.status === "active" ? "success" : "neutral"}>{c.status}</Badge>
+                </Card>
               ))}
             </div>
           )}
@@ -373,24 +366,18 @@ export default function ResearcherProfile() {
       const teaching = data || {};
       return (
         <div className="max-w-lg">
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="text-center p-4 border border-slate-100 rounded-lg">
-              <div className="font-serif text-3xl text-slate-900">{teaching.total_lessons || 0}</div>
-              <div className="text-xs text-slate-400 mt-1">Teaching Lessons</div>
-            </div>
-            <div className="text-center p-4 border border-slate-100 rounded-lg">
-              <div className="font-serif text-3xl text-slate-900">{(teaching.teaching_areas || []).length}</div>
-              <div className="text-xs text-slate-400 mt-1">Subject Areas</div>
-            </div>
-          </div>
+          <StatGrid cols={2} className="mb-6">
+            <StatCard label="Teaching Lessons" value={teaching.total_lessons || 0} />
+            <StatCard label="Subject Areas" value={(teaching.teaching_areas || []).length} />
+          </StatGrid>
           {(teaching.teaching_areas || []).length > 0 && (
             <div>
               <h3 className="text-sm font-semibold text-slate-900 mb-3">Teaching Areas</h3>
-              <div className="flex flex-wrap gap-2">
+              <TagGroup gap={8}>
                 {teaching.teaching_areas.map((a, i) => (
-                  <span key={i} className="px-2.5 py-1 bg-slate-50 border border-slate-200 text-xs text-slate-600 rounded-full">{a}</span>
+                  <Tag key={i} size="sm">{a}</Tag>
                 ))}
-              </div>
+              </TagGroup>
             </div>
           )}
           {!teaching.total_lessons && <div className="py-12 text-center text-sm text-slate-400">No teaching data visible</div>}
@@ -403,25 +390,25 @@ export default function ResearcherProfile() {
       const rep = data || {};
       return (
         <div className="max-w-lg">
-          <div className="p-6 border border-slate-100 rounded-lg mb-6 text-center">
+          <Card padding="lg" className="mb-6 text-center">
             <div className="text-xs text-slate-400 uppercase tracking-wide mb-2">Research Level</div>
             <div className="font-serif text-2xl text-slate-900">{rep.level_name || "New Researcher"}</div>
             <div className="mt-3 font-mono text-3xl text-[#0F2847]">{rep.overall_score || 0}</div>
             <div className="text-xs text-slate-400">Reputation Score</div>
             {rep.global_rank && <div className="mt-2 text-xs text-slate-500">Global Rank #{rep.global_rank}</div>}
-          </div>
+          </Card>
           {(rep.badges || []).length > 0 && (
             <div>
               <h3 className="text-sm font-semibold text-slate-900 mb-3">Earned Badges</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {rep.badges.map((b, i) => (
-                  <div key={i} className="flex items-center gap-2 p-3 border border-slate-100 rounded-lg">
+                  <Card key={i} padding="sm" className="flex items-center gap-2">
                     <Award size={16} className="text-amber-500 shrink-0" />
                     <div>
                       <div className="text-xs font-medium text-slate-900">{b.badge_name || b.name}</div>
                       <div className="text-[10px] text-slate-400">{b.description || ""}</div>
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -647,9 +634,12 @@ export default function ResearcherProfile() {
 
       {/* Tab bar */}
       <div className="border-b border-slate-100 sticky top-14 z-10 bg-white">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex items-center gap-1 overflow-x-auto">
-            {[
+        <div className="max-w-6xl mx-auto px-6 overflow-x-auto">
+          <NavTabs
+            variant="underline"
+            active={activeTab}
+            onChange={handleTabChange}
+            tabs={[
               { id: "overview", label: "Overview", icon: Activity },
               { id: "publications", label: "Publications", icon: BookOpen },
               { id: "impact", label: "Impact", icon: TrendingUp },
@@ -659,21 +649,8 @@ export default function ResearcherProfile() {
               { id: "teaching", label: "Teaching", icon: GraduationCap },
               { id: "reputation", label: "Reputation", icon: Star },
               { id: "timeline", label: "Timeline", icon: Clock },
-            ].map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => handleTabChange(id)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-sm whitespace-nowrap border-b-2 transition-colors ${
-                  activeTab === id
-                    ? "border-[#0F2847] text-[#0F2847] font-medium"
-                    : "border-transparent text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                <Icon size={13} strokeWidth={1.5} />
-                {label}
-              </button>
-            ))}
-          </div>
+            ]}
+          />
         </div>
       </div>
 

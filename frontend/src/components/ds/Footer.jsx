@@ -43,7 +43,7 @@ function FooterLink({ to, children }) {
   return (
     <Link
       to={to}
-      style={{ color: hov ? "inherit" : TEXT_MUTED, textDecoration: "none", transition: "color 100ms" }}
+      style={{ color: hov ? "inherit" : TEXT_MUTED, textDecoration: "none", transition: "color 120ms" }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
     >

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Sparkles, RefreshCw, X, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Badge, Tag, Button, Spinner, EmptyState, TypeSectionLabel } from "@/components/ds";
 
@@ -50,6 +50,7 @@ function RecCard({ rec, onDismiss }) {
               size="icon"
               variant="ghost"
               onClick={() => onDismiss(rec.id)}
+              aria-label={`Dismiss ${rec.title}`}
               style={{
                 padding: 2
               }}>
@@ -106,7 +107,7 @@ export default function Recommendations() {
   };
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
       title="AI Recommendations"
       subtitle={`${recs.length} active recommendations personalised to your research profile.`}
       navItems={SIE_NAV_ITEMS}
@@ -147,6 +148,6 @@ export default function Recommendations() {
           {recs.map(r => <RecCard key={r.id} rec={r} onDismiss={dismiss} />)}
         </div>
       )}
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

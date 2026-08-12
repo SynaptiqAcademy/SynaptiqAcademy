@@ -116,3 +116,26 @@ export const transform = {
   press:    "translateY(1px) scale(0.98)",
   none:     "translateY(0)",
 };
+
+// ── Named context tokens ───────────────────────────────────────────────────────
+// The single lookup table for "what duration/curve does X use" — every
+// component should reach for MOTION.<context> instead of writing its own
+// ms value, so the whole app shares one motion language. Every value here
+// is composed from the primitives above, never a new number invented here.
+export const MOTION = {
+  fast:    duration.fast,    // hover, small state flips — 120ms
+  normal:  duration.base,    // default transitions — 150ms
+  slow:    duration.slow,    // complex layout shifts — 350ms
+
+  hover:   { duration: duration.fast, ease: ease.default },
+  press:   { duration: duration.instant, ease: ease.default, transform: transform.press },
+
+  page:    { duration: duration.smooth, ease: ease.out },
+  modal:   { duration: duration.smooth, ease: ease.spring },
+  drawer:  { duration: duration.enter, exitDuration: duration.exit, ease: ease.out },
+  toast:   { duration: duration.smooth, ease: ease.spring, exitDuration: duration.exit },
+  loading: { duration: duration.slow, ease: ease.inOut },       // skeleton/spinner pulse cycle
+  skeleton:{ duration: 1800, ease: ease.inOut },                 // matches sq-pulse's 1.8s cycle
+  success: { duration: duration.smooth, ease: ease.spring },
+  error:   { duration: duration.fast, ease: ease.default },
+};

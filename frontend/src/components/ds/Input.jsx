@@ -3,8 +3,13 @@ import React from "react";
 /**
  * Input — canonical text input.
  * Replaces local INPUT string constants across page files.
+ *
+ * Forwards its ref to the underlying <input> element, so callers needing
+ * imperative access (e.g. `.focus()` on mount, after a clear action, or
+ * `.scrollIntoView()`) can pass a ref directly instead of falling back to a
+ * hand-rolled input.
  */
-export function Input({
+export const Input = React.forwardRef(function Input({
   label,
   hint,
   error,
@@ -15,8 +20,10 @@ export function Input({
   wrapperClassName = "",
   id,
   ...props
-}) {
+}, ref) {
   const inputId = id || (label ? `input-${label.toLowerCase().replace(/\s+/g, "-")}` : undefined);
+  const errorId = error && inputId ? `${inputId}-error` : undefined;
+  const hintId = hint && !error && inputId ? `${inputId}-hint` : undefined;
   const heightClass = size === "sm" ? "h-7 text-[12px] px-2.5" : "h-9 text-[13px] px-3";
   const paddingLeft  = prefix ? (size === "sm" ? "pl-7"  : "pl-9")  : "";
   const paddingRight = suffix ? (size === "sm" ? "pr-7"  : "pr-9")  : "";
@@ -40,15 +47,22 @@ export function Input({
         {prefix && (
           <div className="absolute left-0 pl-2.5 pointer-events-none text-slate-400">{prefix}</div>
         )}
-        <input id={inputId} className={classes} {...props} />
+        <input
+          ref={ref}
+          id={inputId}
+          className={classes}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={errorId || hintId || undefined}
+          {...props}
+        />
         {suffix && (
           <div className="absolute right-0 pr-2.5 pointer-events-none text-slate-400">{suffix}</div>
         )}
       </div>
-      {error   && <p className="sq-form-error">{error}</p>}
-      {hint && !error && <p className="sq-form-hint">{hint}</p>}
+      {error   && <p id={errorId} className="sq-form-error" role="alert">{error}</p>}
+      {hint && !error && <p id={hintId} className="sq-form-hint">{hint}</p>}
     </div>
   );
-}
+});
 
 export default Input;

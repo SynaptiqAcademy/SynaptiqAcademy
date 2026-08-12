@@ -1,32 +1,26 @@
 /* eslint-disable */
 import React, { useState, useEffect, useCallback } from "react";
-import { ShieldCheck, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
+import { ShieldCheck, ChevronDown, ChevronUp } from "lucide-react";
 import api from "@/lib/api";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
+import { Input, Button, Badge, EmptyState, Alert, Pagination, SkeletonTable } from "@/components/ds";
 
 const LIMIT = 50;
+
+const ACTION_BADGE_VARIANT = {
+  auth: "info",
+  admin: "danger",
+  user: "success",
+};
 
 function ActionBadge({ action }) {
   if (!action) return null;
   const prefix = action.split(".")[0];
-  const styles = {
-    auth: "bg-blue-50 text-blue-700",
-    admin: "bg-rose-50 text-rose-700",
-    user: "bg-green-50 text-green-700",
-  };
   return (
-    <span className={`inline-block px-2 py-0.5 text-xs font-mono font-medium ${styles[prefix] || "bg-slate-100 text-slate-700"}`}>
+    <Badge variant={ACTION_BADGE_VARIANT[prefix] || "neutral"} className="font-mono">
       {action}
-    </span>
-  );
-}
-
-function Skeleton() {
-  return (
-    <div className="space-y-2 p-4">
-      {[...Array(8)].map((_, i) => <div key={i} className="h-10 animate-pulse bg-gray-200" />)}
-    </div>
+    </Badge>
   );
 }
 
@@ -73,27 +67,36 @@ export default function AdminAudit() {
   return (
     <AdministrationLayout title="Audit Center" subtitle="Complete record of all platform events">
       {/* Filters */}
-      <div className="flex gap-3 mb-4 flex-wrap">
-        <input
+      <div className="flex gap-3 mb-4 flex-wrap items-start">
+        <Input
           type="text"
           placeholder="Filter by action (e.g. auth.login)"
           value={filterAction}
           onChange={(e) => { setFilterAction(e.target.value); setPage(1); }}
-          className="px-3 py-2 text-sm border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-[#0F2847] w-64"
+          wrapperClassName="w-64"
         />
-        <input type="date" value={filterFrom} onChange={(e) => { setFilterFrom(e.target.value); setPage(1); }}
-          className="px-3 py-2 text-sm border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-[#0F2847]" />
-        <input type="date" value={filterTo} onChange={(e) => { setFilterTo(e.target.value); setPage(1); }}
-          className="px-3 py-2 text-sm border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-[#0F2847]" />
+        <Input
+          type="date"
+          value={filterFrom}
+          onChange={(e) => { setFilterFrom(e.target.value); setPage(1); }}
+        />
+        <Input
+          type="date"
+          value={filterTo}
+          onChange={(e) => { setFilterTo(e.target.value); setPage(1); }}
+        />
         {(filterAction || filterFrom || filterTo) && (
-          <button onClick={() => { setFilterAction(""); setFilterFrom(""); setFilterTo(""); setPage(1); }}
-            className="px-3 py-2 text-xs text-slate-600 border border-slate-300 hover:bg-slate-50">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setFilterAction(""); setFilterFrom(""); setFilterTo(""); setPage(1); }}
+          >
             Clear filters
-          </button>
+          </Button>
         )}
       </div>
 
-      {error && <div className="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-2 text-sm">{error}</div>}
+      {error && <Alert variant="error" className="mb-4">{error}</Alert>}
 
       {!loading && (
         <p className="text-xs text-slate-500 mb-3">{total > 0 ? `${total.toLocaleString()} events total` : "No events found"}</p>
@@ -101,13 +104,13 @@ export default function AdminAudit() {
 
       <div className="bg-white border border-slate-200 overflow-hidden">
         {loading ? (
-          <Skeleton />
+          <SkeletonTable rows={8} cols={6} />
         ) : items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-slate-400">
-            <ShieldCheck size={36} className="mb-3 opacity-40" />
-            <p className="text-sm">No audit events found</p>
-          </div>
+          <EmptyState icon={<ShieldCheck />} title="No audit events found" />
         ) : (
+          /* Kept as a raw <table> (not ds/DataTable): rows expand in-place to show a
+             JSON detail row, a feature DataTable's per-cell `render` API has no way
+             to express (it renders exactly one <tr> per row, no inserted detail row). */
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
@@ -130,7 +133,7 @@ export default function AdminAudit() {
                     <td className="px-4 py-2.5 text-xs text-slate-400">{ev.ip || "—"}</td>
                     <td className="px-4 py-2.5">
                       {ev.extra && Object.keys(ev.extra).length > 0 && (
-                        <button onClick={() => toggleRow(i)} className="text-slate-400 hover:text-slate-700">
+                        <button onClick={() => toggleRow(i)} aria-label={expandedRows.has(i) ? "Collapse details" : "Expand details"} className="text-slate-400 hover:text-slate-700">
                           {expandedRows.has(i) ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                         </button>
                       )}
@@ -153,17 +156,7 @@ export default function AdminAudit() {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-            className="flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900 disabled:opacity-40">
-            <ChevronLeft size={14} /> Previous
-          </button>
-          <span className="text-xs text-slate-500">Page {page} of {totalPages}</span>
-          <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-            className="flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900 disabled:opacity-40">
-            Next <ChevronRight size={14} />
-          </button>
-        </div>
+        <Pagination page={page} totalPages={totalPages} onPage={setPage} className="mt-4" />
       )}
     </AdministrationLayout>
   );

@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FileText, Lock, RotateCcw, Clock, Copy, Check, Tag } from "lucide-react";
+import { FileText, Lock, RotateCcw, Clock, Copy, Check, Tag as TagIcon } from "lucide-react";
 import api from "../lib/api";
 import { WARM } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
-import { Button } from "@/components/ds";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
+import { Button, Card, Input, Textarea, Tag, TagGroup, EmptyState } from "@/components/ds";
 
 
 
@@ -17,11 +18,10 @@ function CopyButton({ text }) {
     catch {/* ignore */}
   };
   return (
-    <button onClick={copy}
-      className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 border border-slate-200 px-3 py-1.5 transition-colors">
+    <Button onClick={copy} variant="ghost" size="sm">
       {copied ? <Check size={12} strokeWidth={2} /> : <Copy size={12} strokeWidth={1.5} />}
       {copied ? "Copied" : "Copy text"}
-    </button>
+    </Button>
   );
 }
 
@@ -29,23 +29,18 @@ function CopyButton({ text }) {
 
 function GateView() {
   return (
-    <div className="space-y-6">
-      <div className="border border-slate-200 bg-white p-16 flex flex-col items-center text-center gap-5">
-        <Lock size={28} strokeWidth={1} className="text-slate-300" />
-        <div>
+    <EmptyState
+      icon={<Lock />}
+      title={
+        <>
           <div className="overline text-[#0F2847] mb-2">Researcher plan required</div>
-          <h2 className="font-serif text-2xl text-slate-900">AI Abstract Generator is a Researcher feature</h2>
-          <p className="text-slate-500 text-sm mt-3 max-w-sm mx-auto">
-            Upgrade to Researcher to generate publication-quality abstracts from your paper content
-            — keywords, key contribution, and multiple academic styles included.
-          </p>
-        </div>
-        <Link to="/pricing"
-          className="inline-block bg-[#0F2847] text-white text-sm px-6 py-2.5 hover:opacity-90 transition-opacity">
-          View Plans
-        </Link>
-      </div>
-    </div>
+          AI Abstract Generator is a Researcher feature
+        </>
+      }
+      description="Upgrade to Researcher to generate publication-quality abstracts from your paper content — keywords, key contribution, and multiple academic styles included."
+      action={<Button as={Link} to="/pricing">View Plans</Button>}
+      size="lg"
+    />
   );
 }
 
@@ -94,45 +89,48 @@ function InputView({ onResult, gated }) {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <form onSubmit={submit} className="lg:col-span-2 space-y-4">
-          <div className="border border-slate-200 bg-white p-5 space-y-4">
+          <Card padding="lg" className="space-y-4">
             <div className="overline text-[10px] text-slate-400 mb-1">Required</div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Paper Title</label>
-              <input value={form.title} onChange={set("title")} required
-                placeholder="e.g. Attention mechanisms in transformer-based language models"
-                className="w-full border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847]" />
-            </div>
+            <Input
+              label="Paper Title"
+              value={form.title} onChange={set("title")} required
+              placeholder="e.g. Attention mechanisms in transformer-based language models"
+            />
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Paper Content
-                <span className="font-normal text-slate-500 ml-1">(paste sections, methods, results, or full text)</span>
-              </label>
-              <textarea value={form.content} onChange={set("content")} required rows={10}
+              <Textarea
+                label={
+                  <>
+                    Paper Content
+                    <span className="font-normal text-slate-500 ml-1">(paste sections, methods, results, or full text)</span>
+                  </>
+                }
+                value={form.content} onChange={set("content")} required rows={10}
                 placeholder="Paste your introduction, methods, results and discussion here — the more context you provide, the more accurate the abstract."
-                className="w-full border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847] resize-y" />
+              />
               <div className="text-[10px] text-slate-400 mt-1 font-mono">
                 {form.content.length} / 20,000 characters
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="border border-slate-200 bg-white p-5 space-y-4">
+          <Card padding="lg" className="space-y-4">
             <div className="overline text-[10px] text-slate-400 mb-1">Options</div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Abstract Style</label>
               <div className="grid grid-cols-2 gap-2">
                 {STYLES.map((s) => (
-                  <button key={s.value} type="button"
+                  <Card key={s.value}
+                    as="button"
+                    type="button"
                     onClick={() => setForm((f) => ({ ...f, style: s.value }))}
-                    className={`text-left border p-3 transition-colors ${
-                      form.style === s.value ? "border-[#0F2847] bg-[#0F2847]/5" : "border-slate-200 hover:border-slate-400"
-                    }`}>
+                    padding="sm"
+                    className={`text-left ${form.style === s.value ? "!border-[#0F2847] !bg-[#0F2847]/5" : ""}`}>
                     <div className="text-sm font-medium text-slate-900">{s.label}</div>
                     <div className="text-[10px] text-slate-500 mt-0.5">{s.desc}</div>
-                  </button>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -148,7 +146,7 @@ function InputView({ onResult, gated }) {
                 <span>100</span><span>250</span><span>400</span>
               </div>
             </div>
-          </div>
+          </Card>
 
           {error && (
             <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
@@ -166,7 +164,7 @@ function InputView({ onResult, gated }) {
 
         {/* Info panel */}
         <div className="space-y-4">
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline mb-3">Output includes</div>
             <ul className="space-y-2 text-sm text-slate-600">
               {["Complete abstract text", "5–8 subject keywords", "Key contribution sentence", "Word count"].map((item) => (
@@ -176,19 +174,19 @@ function InputView({ onResult, gated }) {
                 </li>
               ))}
             </ul>
-          </div>
-          <div className="border border-slate-200 bg-white p-5">
+          </Card>
+          <Card padding="lg">
             <div className="overline mb-2">Credit cost</div>
             <div className="font-serif text-3xl text-slate-900">5</div>
             <div className="text-xs text-slate-500 mt-1">Research Credits per abstract</div>
-          </div>
-          <div className="border border-amber-100 bg-amber-50 p-4">
+          </Card>
+          <Card padding="md" className="!border-amber-100 !bg-amber-50">
             <div className="overline text-[10px] text-amber-700 mb-1">Accuracy note</div>
             <p className="text-xs text-amber-800 leading-relaxed">
               The abstract is synthesised from the content you provide. Always review before
               submitting — verify that all claims accurately reflect your paper's findings.
             </p>
-          </div>
+          </Card>
         </div>
       </div>
     </div>
@@ -220,42 +218,39 @@ function ResultView({ result, onNew }) {
               )}
             </div>
           </div>
-          <button onClick={onNew}
-            className="shrink-0 flex items-center gap-2 border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+          <Button onClick={onNew} variant="ghost" className="shrink-0">
             <RotateCcw size={13} strokeWidth={1.5} /> New Abstract
-          </button>
+          </Button>
         </div>
       </header>
 
       {/* Abstract text */}
-      <div className="border border-[#0F2847] bg-white p-6">
+      <Card padding="lg" className="!border-[#0F2847]">
         <div className="flex items-center justify-between mb-4">
           <div className="overline text-[#0F2847]">Abstract</div>
           <CopyButton text={r.abstract || ""} />
         </div>
         <p className="text-slate-800 leading-[1.85] font-serif">{r.abstract}</p>
-      </div>
+      </Card>
 
       {/* Key contribution */}
       {r.key_contribution && (
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <div className="overline text-[10px] text-slate-400 mb-2">Key Contribution</div>
           <p className="text-sm text-slate-700 leading-relaxed italic">"{r.key_contribution}"</p>
-        </div>
+        </Card>
       )}
 
       {/* Keywords */}
       {r.keywords?.length > 0 && (
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <div className="overline text-[10px] text-slate-400 mb-3">Keywords</div>
-          <div className="flex flex-wrap gap-2">
+          <TagGroup gap={8}>
             {r.keywords.map((k, i) => (
-              <span key={i} className="inline-flex items-center gap-1 border border-slate-200 text-slate-600 text-xs px-2.5 py-1">
-                <Tag size={10} strokeWidth={1.5} /> {k}
-              </span>
+              <Tag key={i}><TagIcon size={10} strokeWidth={1.5} /> {k}</Tag>
             ))}
-          </div>
-        </div>
+          </TagGroup>
+        </Card>
       )}
     </div>
   );
@@ -279,6 +274,9 @@ function HistoryItem({ item, active, onSelect }) {
     </button>
   );
 }
+// Note: HistoryItem's button is kept as a raw <button> — it's a full-width list
+// row (title + meta + date, active-state background) whose layout doesn't map
+// onto Button's centered inline-flex sizing presets without losing the row layout.
 
 // ─────────────────────────── main page ───────────────────────────────────────
 
@@ -311,7 +309,8 @@ export default function AbstractGenerator() {
   };
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="Abstract Generator"
       subtitle="Generate publication-quality abstracts from your paper content."
     >
@@ -325,14 +324,14 @@ export default function AbstractGenerator() {
         {history.length > 0 && !gated && (
           <section>
             <div className="overline mb-3">Generation History</div>
-            <div className="border border-slate-200 bg-white divide-y divide-slate-100">
+            <Card padding="none" className="divide-y divide-slate-100">
               {history.map((h) => (
                 <HistoryItem key={h.id} item={h} active={result?.id === h.id} onSelect={openHistoryItem} />
               ))}
-            </div>
+            </Card>
           </section>
         )}
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

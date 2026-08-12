@@ -1,7 +1,7 @@
 /* eslint-disable */
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import api from "../lib/api";
 import { toast } from "sonner";
 import { TEAM_TYPES } from "./Teams";
@@ -9,6 +9,12 @@ import { NAVY, WARM, ACCENT } from "@/lib/tokens";
 import {
   ArrowLeft, Plus, X, Users, Globe, Lock,
 } from "lucide-react";
+import { Card } from "@/components/ds/Card";
+import { Tag } from "@/components/ds/Tag";
+import { Button } from "@/components/ds/Button";
+import { Input } from "@/components/ds/Input";
+import { Textarea } from "@/components/ds/Textarea";
+import { FormSelect } from "@/components/ds/FormSelect";
 
 const BORDER = "#E4E8EF";
 
@@ -20,11 +26,6 @@ const DISCIPLINES = [
   "Public Health", "Sociology", "Statistics", "Other",
 ];
 
-const inputStyle = {
-  width: "100%", padding: "9px 12px", border: `1px solid ${BORDER}`,
-  fontSize: 13, color: "#374151", outline: "none", boxSizing: "border-box",
-  background: "white",
-};
 const labelStyle = {
   display: "block", fontSize: 11, fontWeight: 700, letterSpacing: "0.07em",
   textTransform: "uppercase", color: "#64748B", marginBottom: 6,
@@ -81,15 +82,12 @@ export default function CreateTeam() {
   const TypeIcon = selectedType.icon;
 
   return (
-    <DiscoveryLayout title="Create a Team" subtitle="Start a new research collaboration team.">
+    <ResearchLayout title="Create a Team" subtitle="Start a new research collaboration team.">
 
       {/* Back */}
-      <button
-        onClick={() => navigate("/teams")}
-        style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 28 }}
-      >
+      <Button variant="link" size="sm" onClick={() => navigate("/teams")} className="mb-7">
         <ArrowLeft size={12} strokeWidth={2} /> Back to Teams
-      </button>
+      </Button>
 
       <form onSubmit={handleSubmit}>
 
@@ -102,113 +100,92 @@ export default function CreateTeam() {
               const active = type === t.value;
               const Icon = t.icon;
               return (
-                <button
+                <Card
                   key={t.value}
-                  type="button"
+                  padding="sm"
                   onClick={() => setType(t.value)}
-                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 8px", border: `2px solid ${active ? t.color : BORDER}`, background: active ? t.color + "10" : "white", cursor: "pointer", transition: "all 0.15s", textAlign: "center" }}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, border: `2px solid ${active ? t.color : BORDER}`, background: active ? t.color + "10" : "white", textAlign: "center" }}
                 >
                   <div style={{ width: 30, height: 30, background: t.color + (active ? "22" : "12"), display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Icon size={14} strokeWidth={1.5} style={{ color: t.color }} />
                   </div>
                   <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, color: active ? t.color : "#64748B", lineHeight: 1.2 }}>{t.label}</span>
-                </button>
+                </Card>
               );
             })}
           </div>
         </section>
 
         {/* Basic info */}
-        <section style={{ background: "white", border: `1px solid ${BORDER}`, padding: 24, marginBottom: 20 }}>
+        <Card padding="lg" className="mb-5">
           <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", marginBottom: 20, paddingBottom: 14, borderBottom: `1px solid ${BORDER}`, letterSpacing: "-0.01em" }}>Team Details</div>
 
           <div style={{ marginBottom: 18 }}>
-            <label style={labelStyle}>Team Name *</label>
-            <input
+            <Input
+              label="Team Name *"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={`e.g. ${selectedType.label} on Machine Learning in Healthcare`}
-              style={inputStyle}
-              onFocus={(e) => e.currentTarget.style.borderColor = NAVY + "70"}
-              onBlur={(e) => e.currentTarget.style.borderColor = BORDER}
               required
             />
           </div>
 
           <div style={{ marginBottom: 18 }}>
-            <label style={labelStyle}>Description</label>
-            <textarea
+            <Textarea
+              label="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What is this team working on? What are the goals?"
               rows={4}
-              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
-              onFocus={(e) => e.currentTarget.style.borderColor = NAVY + "70"}
-              onBlur={(e) => e.currentTarget.style.borderColor = BORDER}
             />
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 18 }}>
-            <div>
-              <label style={labelStyle}>Research Discipline</label>
-              <select
-                value={discipline}
-                onChange={(e) => setDiscipline(e.target.value)}
-                style={{ ...inputStyle, cursor: "pointer" }}
-                onFocus={(e) => e.currentTarget.style.borderColor = NAVY + "70"}
-                onBlur={(e) => e.currentTarget.style.borderColor = BORDER}
-              >
-                <option value="">Select discipline</option>
-                {DISCIPLINES.map((d) => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>Institution (optional)</label>
-              <input
-                value={institution}
-                onChange={(e) => setInstitution(e.target.value)}
-                placeholder="e.g. MIT, Oxford…"
-                style={inputStyle}
-                onFocus={(e) => e.currentTarget.style.borderColor = NAVY + "70"}
-                onBlur={(e) => e.currentTarget.style.borderColor = BORDER}
-              />
-            </div>
+            <FormSelect
+              label="Research Discipline"
+              value={discipline}
+              onChange={(e) => setDiscipline(e.target.value)}
+            >
+              <option value="">Select discipline</option>
+              {DISCIPLINES.map((d) => <option key={d} value={d}>{d}</option>)}
+            </FormSelect>
+            <Input
+              label="Institution (optional)"
+              value={institution}
+              onChange={(e) => setInstitution(e.target.value)}
+              placeholder="e.g. MIT, Oxford…"
+            />
           </div>
 
           {/* Keywords */}
           <div style={{ marginBottom: 18 }}>
             <label style={labelStyle}>Keywords</label>
             <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-              <input
+              <Input
+                wrapperClassName="flex-1"
                 value={keywordInput}
                 onChange={(e) => setKeywordInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addKeyword(); } }}
                 placeholder="Add a keyword and press Enter"
-                style={{ ...inputStyle, flex: 1 }}
-                onFocus={(e) => e.currentTarget.style.borderColor = NAVY + "70"}
-                onBlur={(e) => e.currentTarget.style.borderColor = BORDER}
               />
-              <button type="button" onClick={addKeyword} style={{ padding: "9px 14px", background: WARM, border: `1px solid ${BORDER}`, color: NAVY, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
+              <Button type="button" variant="subtle" onClick={addKeyword} aria-label="Add keyword">
                 <Plus size={13} strokeWidth={2} />
-              </button>
+              </Button>
             </div>
             {keywords.length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                 {keywords.map((kw) => (
-                  <span key={kw} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, background: WARM, border: `1px solid ${BORDER}`, padding: "3px 9px", color: "#374151" }}>
+                  <Tag key={kw} onRemove={() => setKeywords((prev) => prev.filter((k) => k !== kw))}>
                     {kw}
-                    <button type="button" onClick={() => setKeywords((prev) => prev.filter((k) => k !== kw))} style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8", padding: 0, lineHeight: 1, display: "flex" }}>
-                      <X size={10} strokeWidth={2} />
-                    </button>
-                  </span>
+                  </Tag>
                 ))}
               </div>
             )}
           </div>
-        </section>
+        </Card>
 
         {/* Settings */}
-        <section style={{ background: "white", border: `1px solid ${BORDER}`, padding: 24, marginBottom: 28 }}>
+        <Card padding="lg" className="mb-7">
           <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", marginBottom: 20, paddingBottom: 14, borderBottom: `1px solid ${BORDER}`, letterSpacing: "-0.01em" }}>Settings</div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
@@ -222,16 +199,16 @@ export default function CreateTeam() {
                   const active = visibility === v.value;
                   const Icon = v.icon;
                   return (
-                    <button
+                    <Card
                       key={v.value}
-                      type="button"
+                      padding="sm"
                       onClick={() => setVisibility(v.value)}
-                      style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "12px 8px", border: `2px solid ${active ? NAVY : BORDER}`, background: active ? WARM : "white", cursor: "pointer" }}
+                      style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, border: `2px solid ${active ? NAVY : BORDER}`, background: active ? WARM : "white" }}
                     >
                       <Icon size={16} strokeWidth={1.5} style={{ color: active ? NAVY : "#94A3B8" }} />
                       <span style={{ fontSize: 12, fontWeight: active ? 700 : 500, color: active ? NAVY : "#64748B" }}>{v.label}</span>
                       <span style={{ fontSize: 10, color: "#94A3B8" }}>{v.sub}</span>
-                    </button>
+                    </Card>
                   );
                 })}
               </div>
@@ -240,42 +217,38 @@ export default function CreateTeam() {
             <div>
               <label style={labelStyle}>Max Members</label>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <input
+                <Input
                   type="number"
                   min={2}
                   max={500}
                   value={maxMembers}
                   onChange={(e) => setMaxMembers(Number(e.target.value) || 10)}
-                  style={{ ...inputStyle, width: 80 }}
-                  onFocus={(e) => e.currentTarget.style.borderColor = NAVY + "70"}
-                  onBlur={(e) => e.currentTarget.style.borderColor = BORDER}
+                  className="w-20"
                 />
                 <span style={{ fontSize: 12, color: "#94A3B8" }}>members</span>
               </div>
             </div>
           </div>
-        </section>
+        </Card>
 
         {/* Submit */}
         <div style={{ display: "flex", gap: 10 }}>
-          <button
+          <Button
             type="submit"
             disabled={busy || !name.trim()}
-            style={{ display: "inline-flex", alignItems: "center", gap: 8, background: busy || !name.trim() ? "#94A3B8" : NAVY, color: "white", border: "none", padding: "11px 28px", fontSize: 14, fontWeight: 700, cursor: busy || !name.trim() ? "not-allowed" : "pointer", letterSpacing: "-0.01em" }}
+            loading={busy}
           >
-            {busy ? "Creating…" : <>
-              <div style={{ width: 18, height: 18, background: selectedType.color + "40", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                <TypeIcon size={10} strokeWidth={2} style={{ color: "white" }} />
-              </div>
-              Create Team
-            </>}
-          </button>
-          <button type="button" onClick={() => navigate("/teams")} style={{ fontSize: 13, color: "#64748B", background: "white", border: `1px solid ${BORDER}`, padding: "11px 20px", cursor: "pointer" }}>
+            <div style={{ width: 18, height: 18, background: selectedType.color + "40", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+              <TypeIcon size={10} strokeWidth={2} style={{ color: "white" }} />
+            </div>
+            Create Team
+          </Button>
+          <Button type="button" variant="ghost" onClick={() => navigate("/teams")}>
             Cancel
-          </button>
+          </Button>
         </div>
 
       </form>
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

@@ -1,6 +1,6 @@
 /* eslint-disable */
 import React, { useCallback, useEffect, useState } from "react";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
@@ -11,11 +11,7 @@ import {
   Building2, Target, ArrowRight, BrainCircuit, MapPin,
   Activity, BookOpen, FlaskConical, Star,
 } from "lucide-react";
-import { Avatar } from "@/components/ds/Avatar";
-import { USER_TYPE_OPTIONS, userTypeLabel } from "../lib/userTypes";
-import { SkeletonCard } from "@/components/ds/LoadingState";
-import EmptyState from "@/components/ds/EmptyState";
-import { Spinner } from "@/components/ds/LoadingState";
+import { Avatar, SkeletonCard, EmptyState, Spinner, Button, Input, FormSelect, Tag } from "@/components/ds";
 import { useAuth } from "../contexts/AuthContext";
 import { getDashboardMode } from "../lib/dashboardConfig";
 import ReputationLevel from "../components/reputation/ReputationLevel";
@@ -413,7 +409,7 @@ export default function Network() {
   const firstName = user?.full_name?.split(" ")[0] || "Researcher";
 
   return (
-    <DiscoveryLayout title={header.title} subtitle={header.sub}>
+    <ResearchLayout title={header.title} subtitle={header.sub}>
     <div>
       {/* ── COMMAND HEADER ───────────────────────────────────────────────── */}
       <div style={{ background: NAVY, margin: "-24px -24px 0", padding: "36px 28px 28px" }}>
@@ -431,23 +427,22 @@ export default function Network() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             {savedIds.size > 0 && (
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setActiveTab("saved")}
-                style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid rgba(255,255,255,0.18)", color: "rgba(255,255,255,0.7)", padding: "7px 14px", fontSize: 12, fontWeight: 500, background: "transparent", cursor: "pointer" }}
+                style={{ border: "1px solid rgba(255,255,255,0.18)", color: "rgba(255,255,255,0.7)", background: "transparent" }}
               >
                 <BookmarkCheck size={12} strokeWidth={1.5} />
                 Saved ({savedIds.size})
-              </button>
+              </Button>
             )}
-            <button
+            <Button
               onClick={() => setActiveTab("discover")}
-              style={{ display: "inline-flex", alignItems: "center", gap: 6, background: ACCENT, color: "white", border: "none", padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-              onMouseEnter={(e) => e.currentTarget.style.background = "#a01a42"}
-              onMouseLeave={(e) => e.currentTarget.style.background = ACCENT}
+              style={{ background: ACCENT }}
             >
               <Sparkles size={13} strokeWidth={1.5} />
               Discover Researchers
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -674,7 +669,7 @@ export default function Network() {
                   icon={<GraduationCap />}
                   title="Complete your profile to unlock the community"
                   description="Synaptiq matches researchers based on your research areas, methodology and institution. Add these to your profile to unlock curated recommendations."
-                  action={<Link to="/profile-setup" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: NAVY, color: "white", padding: "9px 20px", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Complete your profile<ArrowRight size={12} strokeWidth={2} /></Link>}
+                  action={<Button as={Link} to="/profile-setup">Complete your profile<ArrowRight size={12} strokeWidth={2} /></Button>}
                   size="md"
                   dashed={true}
                 />
@@ -696,15 +691,9 @@ export default function Network() {
                 const opt = USER_TYPE_OPTIONS.find((o) => o.value === t);
                 if (!opt) return null;
                 return (
-                  <button
-                    key={t}
-                    onClick={() => { setUserType(t); load(true); }}
-                    style={{ fontSize: 11, border: `1px solid ${BORDER}`, padding: "4px 12px", color: "#475569", background: "white", cursor: "pointer" }}
-                    onMouseEnter={(e) => e.currentTarget.style.borderColor = NAVY + "60"}
-                    onMouseLeave={(e) => e.currentTarget.style.borderColor = BORDER}
-                  >
+                  <Tag key={t} onClick={() => { setUserType(t); load(true); }}>
                     {opt.label}
-                  </button>
+                  </Tag>
                 );
               })}
             </div>
@@ -712,28 +701,21 @@ export default function Network() {
 
           {/* Main search bar */}
           <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-            <div style={{ position: "relative", flex: 1 }}>
-              <Search size={13} strokeWidth={1.5} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#94A3B8" }} />
-              <input
-                data-testid={TID.networkSearch}
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") load(true); }}
-                placeholder="Name, institution, research area, keyword, ORCID…"
-                style={{ width: "100%", paddingLeft: 34, paddingRight: 12, paddingTop: 9, paddingBottom: 9, border: `1px solid ${BORDER}`, fontSize: 13, color: "#374151", outline: "none", boxSizing: "border-box" }}
-                onFocus={(e) => e.currentTarget.style.borderColor = NAVY + "70"}
-                onBlur={(e) => e.currentTarget.style.borderColor = BORDER}
-              />
-            </div>
-            <button
-              onClick={() => load(true)}
-              style={{ background: NAVY, color: "white", border: "none", padding: "9px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}
-            >
+            <Input
+              data-testid={TID.networkSearch}
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") load(true); }}
+              placeholder="Name, institution, research area, keyword, ORCID…"
+              prefix={<Search size={13} strokeWidth={1.5} />}
+              wrapperClassName="flex-1"
+            />
+            <Button onClick={() => load(true)} className="shrink-0">
               Search
-            </button>
-            <button
+            </Button>
+            <Button
+              variant={showAdvanced ? "outline" : "ghost"}
               onClick={() => setShowAdvanced((v) => !v)}
-              style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, border: `1px solid ${showAdvanced ? NAVY : BORDER}`, padding: "9px 14px", color: showAdvanced ? NAVY : "#64748B", background: showAdvanced ? WARM : "white", cursor: "pointer" }}
             >
               <Filter size={12} strokeWidth={1.5} />
               Filters
@@ -741,7 +723,7 @@ export default function Network() {
                 <span style={{ fontSize: 10, fontFamily: "monospace", background: NAVY, color: "white", padding: "1px 5px", fontWeight: 700 }}>{activeFilterCount}</span>
               )}
               {showAdvanced ? <ChevronUp size={11} strokeWidth={1.5} /> : <ChevronDown size={11} strokeWidth={1.5} />}
-            </button>
+            </Button>
           </div>
 
           {/* Advanced filter panel */}
@@ -749,13 +731,13 @@ export default function Network() {
             <div style={{ border: `1px solid ${BORDER}`, background: WARM, padding: 20, marginBottom: 20 }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 14 }}>
                 {[
-                  { label: "Research area", el: <select value={area} onChange={(e) => setArea(e.target.value)} style={selStyle}><option value="">Any area</option>{AREAS.map((a) => <option key={a}>{a}</option>)}</select> },
-                  { label: "Country", el: <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. United Kingdom" style={inpStyle} /> },
-                  { label: "Researcher type", el: <select value={userType} onChange={(e) => setUserType(e.target.value)} style={selStyle}>{USER_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select> },
-                  { label: "Availability", el: <select value={avail} onChange={(e) => setAvail(e.target.value)} style={selStyle}><option value="">Any</option>{AVAIL.filter(Boolean).map((a) => <option key={a}>{a}</option>)}</select> },
-                  { label: "Methodology", el: <select value={method} onChange={(e) => setMethod(e.target.value)} style={selStyle}><option value="">Any method</option>{COMMON_METHODS.map((m) => <option key={m}>{m}</option>)}</select> },
-                  { label: "Software / tool", el: <select value={softwareSkill} onChange={(e) => setSoftwareSkill(e.target.value)} style={selStyle}><option value="">Any tool</option>{COMMON_SKILLS.map((s) => <option key={s}>{s}</option>)}</select> },
-                  { label: "Min h-index", el: <input type="number" min={0} max={200} value={minHIndex || ""} onChange={(e) => setMinHIndex(Number(e.target.value) || 0)} placeholder="0" style={inpStyle} /> },
+                  { label: "Research area", el: <FormSelect size="sm" value={area} onChange={(e) => setArea(e.target.value)}><option value="">Any area</option>{AREAS.map((a) => <option key={a}>{a}</option>)}</FormSelect> },
+                  { label: "Country", el: <Input size="sm" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. United Kingdom" /> },
+                  { label: "Researcher type", el: <FormSelect size="sm" value={userType} onChange={(e) => setUserType(e.target.value)}>{USER_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</FormSelect> },
+                  { label: "Availability", el: <FormSelect size="sm" value={avail} onChange={(e) => setAvail(e.target.value)}><option value="">Any</option>{AVAIL.filter(Boolean).map((a) => <option key={a}>{a}</option>)}</FormSelect> },
+                  { label: "Methodology", el: <FormSelect size="sm" value={method} onChange={(e) => setMethod(e.target.value)}><option value="">Any method</option>{COMMON_METHODS.map((m) => <option key={m}>{m}</option>)}</FormSelect> },
+                  { label: "Software / tool", el: <FormSelect size="sm" value={softwareSkill} onChange={(e) => setSoftwareSkill(e.target.value)}><option value="">Any tool</option>{COMMON_SKILLS.map((s) => <option key={s}>{s}</option>)}</FormSelect> },
+                  { label: "Min h-index", el: <Input size="sm" type="number" min={0} max={200} value={minHIndex || ""} onChange={(e) => setMinHIndex(Number(e.target.value) || 0)} placeholder="0" /> },
                 ].map(({ label, el }) => (
                   <div key={label}>
                     <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 5 }}>{label}</div>
@@ -774,25 +756,26 @@ export default function Network() {
                   { label: "Available for consulting",state: forConsulting,  set: setForConsulting },
                   { label: "Available for supervision",state:forSupervision, set: setForSupervision },
                 ].map(({ label, state, set }) => (
-                  <button
+                  <Button
                     key={label}
+                    size="sm"
+                    variant={state ? "outline" : "ghost"}
                     onClick={() => set((v) => !v)}
-                    style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, border: `1px solid ${state ? NAVY : BORDER}`, padding: "5px 12px", background: state ? WARM : "white", color: state ? NAVY : "#64748B", cursor: "pointer", transition: "all 0.15s", fontWeight: state ? 600 : 400 }}
                   >
                     {state && <CheckCircle size={10} strokeWidth={2} />}
                     {label}
-                  </button>
+                  </Button>
                 ))}
               </div>
 
               <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => load(true)} style={{ fontSize: 12, background: NAVY, color: "white", border: "none", padding: "7px 16px", cursor: "pointer", fontWeight: 600 }}>
+                <Button size="sm" onClick={() => load(true)}>
                   Apply filters
-                </button>
+                </Button>
                 {activeFilterCount > 0 && (
-                  <button onClick={() => { clearFilters(); }} style={{ fontSize: 12, color: "#64748B", border: `1px solid ${BORDER}`, background: "white", padding: "7px 14px", cursor: "pointer" }}>
+                  <Button size="sm" variant="ghost" onClick={() => { clearFilters(); }}>
                     Clear all ({activeFilterCount})
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -813,12 +796,9 @@ export default function Network() {
                 forCollab && { key: "collab", label: "Open to collaborate", clear: () => setForCollab(false) },
                 forReviewing && { key: "review", label: "Available for reviewing", clear: () => setForReviewing(false) },
               ].filter(Boolean).map((f) => (
-                <span key={f.key} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, background: WARM, border: `1px solid ${BORDER}`, padding: "3px 8px", color: "#374151" }}>
+                <Tag key={f.key} size="sm" onRemove={f.clear}>
                   {f.label}
-                  <button onClick={f.clear} style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8", padding: 0, lineHeight: 1 }}>
-                    <X size={10} strokeWidth={2} />
-                  </button>
-                </span>
+                </Tag>
               ))}
             </div>
           )}
@@ -855,12 +835,9 @@ export default function Network() {
           {/* Load more */}
           {nextCursor && !loading && (
             <div style={{ display: "flex", justifyContent: "center", marginTop: 28 }}>
-              <button
-                onClick={() => load(false)}
-                style={{ fontSize: 13, color: NAVY, border: `1px solid ${NAVY}40`, padding: "10px 28px", background: "white", cursor: "pointer" }}
-              >
+              <Button variant="ghost" onClick={() => load(false)}>
                 Load more researchers
-              </button>
+              </Button>
             </div>
           )}
           {loading && users.length > 0 && (
@@ -910,7 +887,7 @@ export default function Network() {
                   icon={<GraduationCap />}
                   title="Complete your profile for recommendations"
                   description="Synaptiq matches researchers based on your research areas, methodology and institution. Add these to your profile to unlock curated recommendations."
-                  action={<Link to="/academic-passport" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: NAVY, color: "white", padding: "9px 20px", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Complete your profile<ArrowRight size={12} strokeWidth={2} /></Link>}
+                  action={<Button as={Link} to="/academic-passport">Complete your profile<ArrowRight size={12} strokeWidth={2} /></Button>}
                   size="md"
                   dashed={true}
                 />
@@ -928,7 +905,7 @@ export default function Network() {
               icon={<Bookmark />}
               title="No saved researchers yet"
               description="Save researchers to build your personal academic shortlist. Use the bookmark icon on any researcher card."
-              action={<button onClick={() => setActiveTab("search")} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: NAVY, color: "white", border: "none", padding: "9px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Browse researchers<ArrowRight size={12} strokeWidth={2} /></button>}
+              action={<Button onClick={() => setActiveTab("search")}>Browse researchers<ArrowRight size={12} strokeWidth={2} /></Button>}
               size="md"
               dashed={true}
             />
@@ -968,19 +945,9 @@ export default function Network() {
       )}
 
     </div>
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }
-
-// ─── Filter input styles ──────────────────────────────────────────────────────
-const selStyle = {
-  width: "100%", padding: "7px 10px", border: `1px solid ${BORDER}`,
-  background: "white", fontSize: 12, color: "#374151", outline: "none",
-};
-const inpStyle = {
-  width: "100%", padding: "7px 10px", border: `1px solid ${BORDER}`,
-  fontSize: 12, color: "#374151", outline: "none", boxSizing: "border-box",
-};
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
 function NetworkEmptyState({ hasFilters, onClear }) {
@@ -995,21 +962,15 @@ function NetworkEmptyState({ hasFilters, onClear }) {
       }
       action={
         hasFilters ? (
-          <button
-            onClick={onClear}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, background: NAVY, color: "white", border: "none", padding: "9px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-          >
+          <Button onClick={onClear}>
             <X size={12} strokeWidth={2} />
             Clear filters
-          </button>
+          </Button>
         ) : (
-          <Link
-            to="/academic-passport"
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, background: NAVY, color: "white", padding: "9px 20px", fontSize: 13, fontWeight: 600, textDecoration: "none" }}
-          >
+          <Button as={Link} to="/academic-passport">
             Complete your profile
             <ArrowRight size={12} strokeWidth={2} />
-          </Link>
+          </Button>
         )
       }
       size="md"

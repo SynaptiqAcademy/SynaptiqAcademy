@@ -9,7 +9,8 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
 import {
   Sparkles, TrendingUp, Activity, BarChart2, Users, FileText,
   BadgeDollarSign, GraduationCap, Building2, Briefcase, Zap,
@@ -20,6 +21,12 @@ import {
 } from "../services/proactiveEngine";
 import RecommendationCard from "../components/proactive/RecommendationCard";
 import { NAVY, ACCENT, WARM } from "@/lib/tokens";
+import { Button } from "@/components/ds/Button";
+import { Tag } from "@/components/ds/Tag";
+import { EmptyState } from "@/components/ds/EmptyState";
+import { SkeletonCard } from "@/components/ds/LoadingState";
+import { MiniBar } from "@/components/ds/Chart";
+import { List, ListItem } from "@/components/ds/List";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -96,18 +103,15 @@ export default function RecommendationCenter() {
   };
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="AI Advisor"
       subtitle="Evidence-based recommendations from your verified platform data. Every suggestion includes its source and reasoning."
       actions={
-        <button
-          onClick={refresh}
-          disabled={refreshing}
-          className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 border border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-300 transition-colors"
-        >
+        <Button onClick={refresh} disabled={refreshing} variant="ghost" size="sm">
           <RefreshCw size={11} strokeWidth={1.5} className={refreshing ? "animate-spin" : ""} />
           Refresh
-        </button>
+        </Button>
       }
     >
       <div className="grid gap-7 items-start lg:grid-cols-[1fr_300px]">
@@ -125,19 +129,15 @@ export default function RecommendationCenter() {
             {CATEGORIES.map(({ id, label, icon: Icon }) => {
               const active = category === id;
               return (
-                <button
+                <Tag
                   key={String(id)}
                   onClick={() => setCategory(id)}
-                  className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 border transition-all duration-100"
-                  style={{
-                    background:   active ? NAVY : "white",
-                    color:        active ? "white" : "#475569",
-                    borderColor:  active ? NAVY   : BORDER,
-                  }}
+                  variant={active ? "active" : "default"}
+                  color={active ? NAVY : undefined}
                 >
                   <Icon size={10} strokeWidth={1.5} />
                   {label}
-                </button>
+                </Tag>
               );
             })}
           </div>
@@ -146,27 +146,20 @@ export default function RecommendationCenter() {
           {loading ? (
             <div className="flex flex-col gap-3">
               {[1, 2, 3].map(i => (
-                <div key={i} className="h-28 bg-slate-100 animate-pulse" />
+                <SkeletonCard key={i} rows={2} />
               ))}
             </div>
           ) : recs.length === 0 ? (
-            <div className="text-center py-16 border border-dashed border-slate-200">
-              <Sparkles size={28} strokeWidth={1} className="text-slate-200 mx-auto mb-3" />
-              <p className="text-[14px] font-medium text-slate-500 m-0">
-                {category ? `No ${category} recommendations right now` : "All caught up!"}
-              </p>
-              <p className="text-[12px] text-slate-400 mt-1 m-0">
-                Complete your profile and add manuscripts to unlock more recommendations.
-              </p>
-              {category && (
-                <button
-                  onClick={() => setCategory(null)}
-                  className="mt-3 text-[12px] font-medium text-slate-500 hover:text-slate-800 transition-colors underline"
-                >
+            <EmptyState
+              icon={<Sparkles />}
+              title={category ? `No ${category} recommendations right now` : "All caught up!"}
+              description="Complete your profile and add manuscripts to unlock more recommendations."
+              action={category && (
+                <Button onClick={() => setCategory(null)} variant="link" size="sm">
                   Show all categories
-                </button>
+                </Button>
               )}
-            </div>
+            />
           ) : (
             <div className="flex flex-col gap-3">
               {recs.map(rec => (
@@ -215,15 +208,12 @@ export default function RecommendationCenter() {
                       <span title={sub.basis}>{sub.label}</span>
                       <span className="font-mono">{sub.score}/{sub.max}</span>
                     </div>
-                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${Math.round((sub.score / sub.max) * 100)}%`,
-                          background: sub.score >= sub.max * 0.7 ? "#047857" : NAVY,
-                        }}
-                      />
-                    </div>
+                    <MiniBar
+                      value={sub.score}
+                      max={sub.max}
+                      color={sub.score >= sub.max * 0.7 ? "#047857" : NAVY}
+                      height={6}
+                    />
                   </div>
                 ))}
               </div>
@@ -282,32 +272,26 @@ export default function RecommendationCenter() {
           )}
 
           {/* Quick links */}
-          <div>
-            <div className="flex flex-col gap-1.5">
-              {[
-                { label: "Manuscripts",        to: "/manuscripts",        icon: FileText },
-                { label: "Grant Discovery",    to: "/grants",             icon: BadgeDollarSign },
-                { label: "Collaboration AI",   to: "/collaboration-intelligence", icon: Users },
-                { label: "Research Impact",    to: "/research-impact",    icon: TrendingUp },
-                { label: "Citation Monitoring",to: "/citation-monitoring", icon: Activity },
-              ].map(({ label, to, icon: Icon }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  className="flex items-center justify-between py-1.5 px-0 text-[12px] text-slate-500 hover:text-slate-900 no-underline transition-colors"
-                  style={{ borderBottom: `1px solid ${BORDER}` }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon size={11} strokeWidth={1.5} style={{ color: NAVY }} />
-                    {label}
-                  </div>
-                  <ChevronRight size={10} strokeWidth={2} className="text-slate-300" />
-                </Link>
-              ))}
-            </div>
-          </div>
+          <List border={false} divided>
+            {[
+              { label: "Manuscripts",        to: "/manuscripts",        icon: FileText },
+              { label: "Grant Discovery",    to: "/grants",             icon: BadgeDollarSign },
+              { label: "Collaboration AI",   to: "/collaboration-intelligence", icon: Users },
+              { label: "Research Impact",    to: "/research-impact",    icon: TrendingUp },
+              { label: "Citation Monitoring",to: "/citation-monitoring", icon: Activity },
+            ].map(({ label, to, icon: Icon }) => (
+              <ListItem
+                key={to}
+                to={to}
+                compact
+                leading={<Icon size={11} strokeWidth={1.5} style={{ color: NAVY }} />}
+                title={label}
+                trailing={<ChevronRight size={10} strokeWidth={2} className="text-slate-300" />}
+              />
+            ))}
+          </List>
         </aside>
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

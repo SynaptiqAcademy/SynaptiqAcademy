@@ -40,6 +40,9 @@ export function AppearanceSection({ prefs, setPref }) {
       </PreferenceCard>
 
       <PreferenceCard icon={Droplet} title="Accent Color" description="Previewed on this Settings page today">
+        {/* Exception: a circular color-swatch picker has no ds/ equivalent
+            (Button/Tag don't support an arbitrary-color circle swatch) —
+            kept as a native <button> with aria-pressed for the selected state. */}
         <div style={{ display: "flex", gap: 10 }}>
           {ACCENTS.map((a) => (
             <button

@@ -99,7 +99,7 @@ export default function WorkflowLauncher({ open, onClose }) {
                 >
                   {cat}
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {grouped[cat].map((action) => {
                     const Icon = action.icon;
                     return (

@@ -97,7 +97,7 @@ export function Tooltip({ content, children, placement = "top", delay = 400 }) {
             whiteSpace: "nowrap",
             zIndex: Z.tooltip,
             maxWidth: 240,
-            animation: "sq-fade-in 100ms ease",
+            animation: "sq-fade-in 120ms ease",
           }}
         >
           {content}

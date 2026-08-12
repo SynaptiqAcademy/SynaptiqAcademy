@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { Search } from "lucide-react";
 import { NAVY, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Input, EmptyState, LoadingOverlay, Pagination } from "@/components/ds";
 
 function ProjectCard({ project }) {
@@ -44,7 +44,7 @@ export default function ProjectsDiscovery() {
   const handleSearch = e => { e.preventDefault(); setPage(1); search(filters, 1); };
 
   return (
-    <DiscoveryLayout title="Research Projects">
+    <ResearchLayout title="Research Projects">
 
       <form onSubmit={handleSearch} style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         <Input
@@ -89,6 +89,6 @@ export default function ProjectsDiscovery() {
           />
         </div>
       )}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

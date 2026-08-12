@@ -56,6 +56,7 @@ import { Badge } from "@/components/ds/Badge";
 import { ProgressBar, ProgressRing } from "@/components/ds/Progress";
 import { Alert, Banner } from "@/components/ds/Alert";
 import { PageLayout } from "@/components/ds/PageLayout";
+import { List, ListItem } from "@/components/ds/List";
 import {
   NAVY, NAVY_08, EMERALD, WHITE, BRD, SURF2,
   TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, TEXT_DISABLED, TYPE,
@@ -233,6 +234,10 @@ function KeywordInput({ values, onChange, placeholder }) {
           {kw}
         </Tag>
       ))}
+      {/* Exception: inline borderless text input inside a tag/chip container —
+          ds/Input always renders its own bordered box, which doesn't fit an
+          input living inline among Tag pills inside one shared border. No
+          ds/ TagInput component exists yet, so this stays hand-rolled. */}
       <input
         type="text"
         value={draft}
@@ -266,7 +271,7 @@ function CompletionRow({ label, earned, hint }) {
 function SectionPersonal({ form, onChange }) {
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input label="First Name" value={form.first_name} onChange={(e) => onChange("first_name", e.target.value)} placeholder="Jane" />
         <Input label="Last Name" value={form.last_name} onChange={(e) => onChange("last_name", e.target.value)} placeholder="Smith" />
       </div>
@@ -493,36 +498,33 @@ const COUNTRIES = [
 
 function ProfileSectionNav({ sections, active, onSelect, sectionStatus }) {
   return (
-    <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <List border={false} radius={0} style={{ background: "transparent" }}>
       {sections.map((s) => {
         const Icon = s.icon;
         const done = sectionStatus[s.id];
         const isActive = s.id === active;
         return (
-          <button
+          <ListItem
             key={s.id}
-            type="button"
+            compact
+            selected={isActive}
             onClick={() => onSelect(s.id)}
+            leading={<Icon size={14} style={{ flexShrink: 0, color: isActive ? NAVY : TEXT_MUTED }} />}
+            trailing={done
+              ? <CheckCircle2 size={13} style={{ color: EMERALD, flexShrink: 0 }} />
+              : <Circle size={13} style={{ color: TEXT_DISABLED, flexShrink: 0 }} />}
             style={{
-              display: "flex", alignItems: "center", gap: 9, width: "100%", padding: "8px 10px",
-              border: "none", borderRadius: 7, cursor: "pointer", textAlign: "left",
+              borderBottom: "none", borderRadius: 7,
               background: isActive ? NAVY_08 : "transparent",
               color: isActive ? NAVY : TEXT_MUTED,
               fontWeight: isActive ? 600 : 400,
-              transition: "background 100ms",
             }}
-            onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = SURF2; }}
-            onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
           >
-            <Icon size={14} style={{ flexShrink: 0, color: isActive ? NAVY : TEXT_MUTED }} />
             <span style={{ flex: 1, fontSize: 12.5 }}>{s.label}</span>
-            {done
-              ? <CheckCircle2 size={13} style={{ color: EMERALD, flexShrink: 0 }} />
-              : <Circle size={13} style={{ color: TEXT_DISABLED, flexShrink: 0 }} />}
-          </button>
+          </ListItem>
         );
       })}
-    </nav>
+    </List>
   );
 }
 

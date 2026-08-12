@@ -86,6 +86,10 @@ export function DataTable({
                   <th
                     key={col.key}
                     onClick={() => handleSort(col)}
+                    tabIndex={col.sortable ? 0 : undefined}
+                    role={col.sortable ? "button" : undefined}
+                    aria-sort={col.sortable ? (sorted ? (sortDir === "asc" ? "ascending" : "descending") : "none") : undefined}
+                    onKeyDown={col.sortable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort(col); } } : undefined}
                     style={{
                       padding: "10px 14px",
                       textAlign: col.align || "left",
@@ -154,11 +158,14 @@ export function DataTable({
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                   onMouseEnter={() => setHoveredRow(ri)}
                   onMouseLeave={() => setHoveredRow(null)}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  role={onRowClick ? "button" : undefined}
+                  onKeyDown={onRowClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onRowClick(row); } } : undefined}
                   style={{
                     borderBottom: ri < rows.length - 1 ? `1px solid ${BRD_SOFT}` : "none",
                     background: isSelected ? NAVY_04 : isHovered ? WARM : WHITE,
                     cursor: onRowClick ? "pointer" : "default",
-                    transition: "background 100ms",
+                    transition: "background 120ms",
                   }}
                 >
                   {selectable && (
@@ -237,22 +244,30 @@ export function Pagination({ page, totalPages, onPage, className = "" }) {
   });
 
   return (
-    <div
+    <nav
+      aria-label="Pagination"
       className={className}
       style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "center" }}
     >
       <button
         onClick={() => onPage(page - 1)}
         disabled={page <= 1}
+        aria-label="Previous page"
         style={{ ...btnStyle(false), opacity: page <= 1 ? 0.4 : 1 }}
       >
         ‹
       </button>
       {pages.map((p, i) =>
         p === "…" ? (
-          <span key={`ellipsis-${i}`} style={{ padding: "0 4px", color: TEXT_MUTED }}>…</span>
+          <span key={`ellipsis-${i}`} aria-hidden="true" style={{ padding: "0 4px", color: TEXT_MUTED }}>…</span>
         ) : (
-          <button key={p} onClick={() => onPage(p)} style={btnStyle(p === page)}>
+          <button
+            key={p}
+            onClick={() => onPage(p)}
+            aria-label={`Page ${p}`}
+            aria-current={p === page ? "page" : undefined}
+            style={btnStyle(p === page)}
+          >
             {p}
           </button>
         )
@@ -260,11 +275,12 @@ export function Pagination({ page, totalPages, onPage, className = "" }) {
       <button
         onClick={() => onPage(page + 1)}
         disabled={page >= totalPages}
+        aria-label="Next page"
         style={{ ...btnStyle(false), opacity: page >= totalPages ? 0.4 : 1 }}
       >
         ›
       </button>
-    </div>
+    </nav>
   );
 }
 

@@ -41,6 +41,11 @@ import { useAuth } from "../contexts/AuthContext";
 import { Avatar } from "@/components/ds/Avatar";
 import { ErrorState } from "@/components/ds/ErrorState";
 import { Spinner } from "@/components/ds/LoadingState";
+import { SearchBar, FilterChip } from "@/components/ds/SearchBar";
+import { List, ListItem } from "@/components/ds/List";
+import { Dropdown, DropdownItem } from "@/components/ds/Dropdown";
+import { Input } from "@/components/ds/Input";
+import { Modal } from "@/components/ds/Modal";
 import { toast } from "sonner";
 import {
   Send, Paperclip, Share2, Search, X, FileText, File, BookOpen,
@@ -231,17 +236,12 @@ function SideNav({ conversations, filter, setFilter, search, setSearch, activeId
         <p style={{ fontSize: "0.68rem", color: MUTED, margin: "0 0 12px", lineHeight: 1.4 }}>
           People and teams you work with.
         </p>
-        <div style={{ position: "relative" }}>
-          <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: MUTED }} />
-          <input
-            data-testid={TID.convSearch}
+        <div data-testid={TID.convSearch}>
+          <SearchBar
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={setSearch}
             placeholder="Search conversations…"
-            aria-label="Search conversations"
-            style={{ width: "100%", padding: "7px 10px 7px 30px", border: `1px solid ${HAIR}`, borderRadius: 8, fontSize: "0.8rem", color: INK, outline: "none", background: WHITE, boxSizing: "border-box" }}
-            onFocus={e => e.target.style.borderColor = ACCENT}
-            onBlur={e => e.target.style.borderColor = HAIR}
+            size="sm"
           />
         </div>
       </div>
@@ -312,17 +312,23 @@ function NavSectionLabel({ children }) {
   return <div style={{ fontSize: "0.63rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: DISABLED, padding: "10px 10px 5px" }}>{children}</div>;
 }
 function NavRow({ label, icon: Icon, active, count, onClick }) {
-  const [hov, setHov] = useState(false);
   return (
-    <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "6px 10px", borderRadius: 8, border: "none", cursor: "pointer",
-        background: active ? WHITE : hov ? "rgba(28,35,51,0.03)" : "transparent", boxShadow: active ? "0 1px 3px rgba(15,23,42,0.06)" : "none" }}>
-      {Icon && <Icon size={13} strokeWidth={1.75} style={{ color: active ? ACCENT : MUTED, flexShrink: 0 }} />}
-      <span style={{ fontSize: "0.8rem", fontWeight: active ? 600 : 500, color: active ? INK : "#4A5468", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
-      {count != null && count > 0 && (
+    <ListItem
+      compact
+      selected={active}
+      onClick={onClick}
+      leading={Icon ? <Icon size={13} strokeWidth={1.75} style={{ color: active ? ACCENT : MUTED, flexShrink: 0 }} /> : undefined}
+      trailing={count != null && count > 0 ? (
         <span style={{ fontSize: "0.63rem", fontWeight: 700, minWidth: 16, textAlign: "center", color: active ? WHITE : MUTED, background: active ? ACCENT : "rgba(28,35,51,0.07)", borderRadius: 99, padding: "1px 5px" }}>{count}</span>
-      )}
-    </button>
+      ) : undefined}
+      style={{
+        borderBottom: "none", borderRadius: 8,
+        background: active ? WHITE : "transparent",
+        boxShadow: active ? "0 1px 3px rgba(15,23,42,0.06)" : "none",
+      }}
+    >
+      <span style={{ fontSize: "0.8rem", fontWeight: active ? 600 : 500, color: active ? INK : "#4A5468", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
+    </ListItem>
   );
 }
 
@@ -385,7 +391,6 @@ function RowIconBtn({ icon: Icon, onClick, title, active }) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function Toolbar({ conv, isPinned, onTogglePin, onShare, onExport, onLeave, onOpenShortcuts, threadQuery, setThreadQuery }) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const isDirect = conv.type === "direct" && conv.other_user;
   const Icon = TYPE_ICON[conv.type] || Users;
@@ -409,16 +414,15 @@ function Toolbar({ conv, isPinned, onTogglePin, onShare, onExport, onLeave, onOp
       </div>
 
       {searchOpen && (
-        <div style={{ position: "relative" }}>
-          <input
-            autoFocus
-            value={threadQuery}
-            onChange={e => setThreadQuery(e.target.value)}
-            onKeyDown={e => e.key === "Escape" && (setSearchOpen(false), setThreadQuery(""))}
-            placeholder="Search in conversation…"
-            style={{ width: 220, padding: "6px 10px", border: `1px solid ${HAIR}`, borderRadius: 8, fontSize: "0.78rem", outline: "none" }}
-          />
-        </div>
+        <Input
+          autoFocus
+          value={threadQuery}
+          onChange={e => setThreadQuery(e.target.value)}
+          onKeyDown={e => e.key === "Escape" && (setSearchOpen(false), setThreadQuery(""))}
+          placeholder="Search in conversation…"
+          size="sm"
+          style={{ width: 220 }}
+        />
       )}
 
       <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
@@ -437,33 +441,32 @@ function Toolbar({ conv, isPinned, onTogglePin, onShare, onExport, onLeave, onOp
         </Link>
         <ToolIconBtn icon={Share2} title="Share a resource" onClick={onShare} />
 
-        <div style={{ position: "relative" }}>
-          <ToolIconBtn icon={MoreHorizontal} title="More" onClick={() => setMenuOpen(o => !o)} />
-          {menuOpen && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-              <div style={{ position: "absolute", right: 0, top: "calc(100% + 6px)", background: WHITE, border: `1px solid ${HAIR}`, borderRadius: 10, boxShadow: "0 8px 28px rgba(15,23,42,0.12)", zIndex: 20, minWidth: 190, padding: 5 }}>
-                <MenuItem icon={Download} label="Export conversation" onClick={() => { onExport(); setMenuOpen(false); }} />
-                <MenuItem icon={Keyboard} label="Keyboard shortcuts" onClick={() => { onOpenShortcuts(); setMenuOpen(false); }} />
-                <div style={{ height: 1, background: HAIR, margin: "4px 6px" }} />
-                <MenuItem icon={LogOut} label="Leave conversation" danger onClick={() => { onLeave(); setMenuOpen(false); }} />
-              </div>
-            </>
-          )}
-        </div>
+        <Dropdown align="right" width={190} trigger={<ToolIconBtn icon={MoreHorizontal} title="More" />}>
+          <DropdownItem icon={Download} onClick={onExport}>Export conversation</DropdownItem>
+          <DropdownItem icon={Keyboard} onClick={onOpenShortcuts}>Keyboard shortcuts</DropdownItem>
+          <div style={{ height: 1, background: HAIR, margin: "4px 6px" }} />
+          <DropdownItem icon={LogOut} destructive onClick={onLeave}>Leave conversation</DropdownItem>
+        </Dropdown>
       </div>
     </div>
   );
 }
 
 function ToolIconBtn({ icon: Icon, title, onClick, active }) {
-  const [hov, setHov] = useState(false);
   return (
-    <button onClick={onClick} title={title} aria-label={title} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, border: "none", cursor: "pointer",
-        background: active ? `${ACCENT}14` : hov ? RAIL_BG : "transparent", color: active ? ACCENT : MUTED }}>
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      style={{
+        width: 30, height: 30, borderRadius: 8, border: "none",
+        background: active ? `${ACCENT}14` : "transparent", color: active ? ACCENT : MUTED,
+      }}
+    >
       <Icon size={14} fill={active && Icon === Star ? "currentColor" : "none"} />
-    </button>
+    </Button>
   );
 }
 
@@ -794,13 +797,18 @@ function AIPanel({ conv, messages, currentUserId, onLeave, onExport }) {
             { label: "Find researchers", to: "/network", icon: Users },
             { label: "Schedule a meeting", to: "/meetings", icon: Video },
             { label: "Export this conversation", onClick: onExport, icon: Download },
-          ].map(({ label, to, icon: Ic, onClick }) => {
-            const content = <><Ic size={12} style={{ flexShrink: 0 }} />{label}</>;
-            const style = { display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", fontSize: "0.76rem", color: "#4A5468", textDecoration: "none", borderRadius: 7, cursor: "pointer", background: "none", border: "none", width: "100%", textAlign: "left" };
-            return to
-              ? <Link key={label} to={to} style={style} onMouseEnter={e => e.currentTarget.style.background = RAIL_BG} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>{content}</Link>
-              : <button key={label} onClick={onClick} style={style} onMouseEnter={e => e.currentTarget.style.background = RAIL_BG} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>{content}</button>;
-          })}
+          ].map(({ label, to, icon: Ic, onClick }) => (
+            <ListItem
+              key={label}
+              compact
+              to={to}
+              onClick={onClick}
+              leading={<Ic size={12} style={{ flexShrink: 0 }} />}
+              style={{ borderBottom: "none", borderRadius: 7, fontSize: "0.76rem", color: "#4A5468", padding: "7px 8px" }}
+            >
+              {label}
+            </ListItem>
+          ))}
         </div>
       </div>
 
@@ -849,47 +857,30 @@ function SharePicker({ onClose, onPick }) {
   const E = ENDPOINTS[tab];
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.4)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={onClose}>
-      <div style={{ background: WHITE, borderRadius: 16, width: "100%", maxWidth: 640, maxHeight: "80vh", display: "flex", flexDirection: "column", boxShadow: "0 24px 64px rgba(15,23,42,0.2)" }} onClick={e => e.stopPropagation()}>
-        <div style={{ padding: "20px 24px", borderBottom: `1px solid ${HAIR}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <SectionLabel>Share to conversation</SectionLabel>
-            <h2 style={{ fontSize: "1.05rem", fontWeight: 700, color: INK, margin: "4px 0 0", letterSpacing: "-0.02em" }}>Pick an academic resource</h2>
-          </div>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={onClose}
-            aria-label="Close"
-            style={{
-              color: MUTED
-            }}><X size={18} /></Button>
-        </div>
-        <div style={{ padding: "12px 24px", borderBottom: `1px solid ${HAIR}`, display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {Object.keys(ENDPOINTS).map(k => (
-            <button key={k} data-testid={TID.shareTab(k)} onClick={() => setTab(k)}
-              style={{ fontSize: "0.76rem", fontWeight: 600, padding: "5px 12px", borderRadius: 99, border: `1px solid ${tab === k ? ACCENT : HAIR}`, background: tab === k ? ACCENT : WHITE, color: tab === k ? WHITE : "#4A5468", cursor: "pointer", textTransform: "capitalize" }}>
-              {k}
-            </button>
-          ))}
-        </div>
-        <div style={{ padding: "10px 24px", borderBottom: `1px solid ${HAIR}` }}>
-          <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === "Enter" && doSearch()} placeholder="Search…"
-            style={{ width: "100%", padding: "8px 12px", border: `1px solid ${HAIR}`, borderRadius: 8, fontSize: "0.84rem", outline: "none", boxSizing: "border-box" }} />
-        </div>
-        <div style={{ overflowY: "auto", flex: 1, padding: 16, display: "flex", flexDirection: "column", gap: 6 }}>
-          {items.length === 0 && <div style={{ fontSize: "0.82rem", color: MUTED, padding: "0 8px" }}>No results.</div>}
-          {items.map(x => (
-            <button key={x.id} onClick={() => onPick({ type: tab, id: x.id, title: E.title(x), subtitle: E.sub(x) })}
-              style={{ display: "block", width: "100%", textAlign: "left", border: `1px solid ${HAIR}`, borderRadius: 10, padding: "12px 14px", background: WHITE, cursor: "pointer" }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = ACCENT} onMouseLeave={e => e.currentTarget.style.borderColor = HAIR}>
-              <div style={{ fontSize: "0.84rem", fontWeight: 650, color: INK, marginBottom: 2 }}>{E.title(x)}</div>
-              <div style={{ fontSize: "0.74rem", color: MUTED }}>{E.sub(x)}</div>
-            </button>
-          ))}
-        </div>
+    <Modal open onClose={onClose} closeOnOverlay title="Pick an academic resource" description="Share to conversation" size="md">
+      <div style={{ padding: "12px 24px", borderBottom: `1px solid ${HAIR}`, display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {Object.keys(ENDPOINTS).map(k => (
+          <span key={k} data-testid={TID.shareTab(k)}>
+            <FilterChip label={k.charAt(0).toUpperCase() + k.slice(1)} active={tab === k} onClick={() => setTab(k)} />
+          </span>
+        ))}
       </div>
-    </div>
+      <div style={{ padding: "10px 24px", borderBottom: `1px solid ${HAIR}` }}>
+        <Input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === "Enter" && doSearch()} placeholder="Search…" />
+      </div>
+      <div style={{ overflowY: "auto", flex: 1, padding: 16, display: "flex", flexDirection: "column", gap: 6 }}>
+        {items.length === 0 && <div style={{ fontSize: "0.82rem", color: MUTED, padding: "0 8px" }}>No results.</div>}
+        {items.map(x => (
+          <ListItem
+            key={x.id}
+            onClick={() => onPick({ type: tab, id: x.id, title: E.title(x), subtitle: E.sub(x) })}
+            title={E.title(x)}
+            subtitle={E.sub(x)}
+            style={{ border: `1px solid ${HAIR}`, borderRadius: 10, padding: "12px 14px" }}
+          />
+        ))}
+      </div>
+    </Modal>
   );
 }
 
@@ -1022,10 +1013,16 @@ function Composer({
       )}
       <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
         <div style={{ display: "flex", gap: 3 }}>
-          <button data-testid={TID.attachBtn} onClick={onUploadClick} title="Attach file" style={composerIconStyle}><Paperclip size={15} /></button>
+          <Button data-testid={TID.attachBtn} onClick={onUploadClick} title="Attach file" variant="ghost" size="icon" style={composerIconStyle}><Paperclip size={15} /></Button>
           <input ref={fileInputRef} type="file" accept={ALLOWED_MIME.join(",")} style={{ display: "none" }} onChange={onFileChange} />
         </div>
         <div style={{ flex: 1, position: "relative" }}>
+          {/* Exception: auto-growing textarea driven by direct DOM style
+              manipulation via textareaRef (height reset on send/cancel/edit
+              elsewhere in this file) — ds/Textarea is a plain function
+              component (no forwardRef), so it can't carry this ref through
+              to the real <textarea> node. Kept hand-rolled to preserve the
+              auto-grow behavior exactly. */}
           <textarea
             ref={textareaRef}
             data-testid={TID.messageInput}
@@ -1040,11 +1037,10 @@ function Composer({
             onBlur={e => e.currentTarget.style.borderColor = HAIR}
           />
         </div>
-        <button data-testid={TID.messageSendBtn} onClick={onSend} disabled={sending}
-          style={{ display: "flex", alignItems: "center", gap: 6, background: NAVY, color: WHITE, border: "none", borderRadius: 12, padding: "10px 18px", fontSize: "0.86rem", fontWeight: 650, cursor: sending ? "not-allowed" : "pointer", opacity: sending ? 0.6 : 1, flexShrink: 0 }}>
-          <Send size={14} />
+        <Button data-testid={TID.messageSendBtn} onClick={onSend} loading={sending} style={{ borderRadius: 12, padding: "10px 18px" }}>
+          {!sending && <Send size={14} />}
           {editingMessage ? "Save" : "Send"}
-        </button>
+        </Button>
       </div>
       <div style={{ fontSize: "0.66rem", color: DISABLED, marginTop: 5, paddingLeft: 2 }}>Enter to send · Shift+Enter for new line · drag files to attach</div>
     </div>

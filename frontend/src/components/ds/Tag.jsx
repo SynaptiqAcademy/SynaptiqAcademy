@@ -16,6 +16,7 @@ export function Tag({
   onClick,
   className = "",
   style,
+  ...props
 }) {
   const sizes = {
     sm: { height: 20, px: "6px", fontSize: "0.67rem", gap: 4, radius: RADIUS_XS },
@@ -44,7 +45,7 @@ export function Tag({
     userSelect: "none",
     whiteSpace: "nowrap",
     lineHeight: 1,
-    transition: "border-color 100ms, background 100ms",
+    transition: "border-color 120ms, background 120ms",
     ...(color ? {
       background: `${color}18`,
       border: `1px solid ${color}40`,
@@ -61,6 +62,7 @@ export function Tag({
       role={isClickable ? "button" : undefined}
       tabIndex={isClickable ? 0 : undefined}
       onKeyDown={isClickable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(e); } } : undefined}
+      {...props}
     >
       {children}
       {onRemove && (

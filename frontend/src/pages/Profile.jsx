@@ -5,11 +5,21 @@ import { TID } from "../lib/testIds";
 import { useAuth } from "../contexts/AuthContext";
 import { ProfileLayout } from "@/layouts";
 import { Avatar } from "@/components/ds/Avatar";
+import { Button } from "@/components/ds/Button";
+import { Input } from "@/components/ds/Input";
+import { Card } from "@/components/ds/Card";
+import { List, ListItem } from "@/components/ds/List";
+import { FormSelect } from "@/components/ds/FormSelect";
+import { Tag as DsTag } from "@/components/ds/Tag";
+import { Alert } from "@/components/ds/Alert";
+import { Textarea } from "@/components/ds/Textarea";
+import { Checkbox } from "@/components/ds/Form";
+import { Badge } from "@/components/ds/Badge";
 import {
   MessageSquare, UserPlus, ExternalLink, Edit, Sparkles,
   BarChart2, CheckCircle2, Circle, Copy, Share2, Download,
   BookOpen, Briefcase, GraduationCap, DollarSign, User,
-  RefreshCw, Loader2, Plus, X,
+  RefreshCw, Plus,
   MapPin, Building2, Link2, Search, FileText, Users2,
   ArrowRight, BrainCircuit, Layers, FolderOpen, Microscope,
   Award, Star, Globe2, FlaskConical, Tag, ChevronDown, Users,
@@ -232,48 +242,37 @@ export default function Profile() {
     </>
   );
 
-  const heroBtnBase = {
-    display: "inline-flex", alignItems: "center", gap: 6,
-    padding: "7px 14px", fontSize: 12, fontWeight: 600,
-    cursor: "pointer", border: "1px solid #E4E8EF",
-    background: "white", color: "#0F2847",
-  };
-
   const profileActions = isMe ? (
     <>
-      <button
-        data-testid={TID.profileEditBtn}
-        onClick={() => setEditing(true)}
-        style={{ ...heroBtnBase, background: "#0F2847", color: "white", border: "none" }}
-      >
+      <Button data-testid={TID.profileEditBtn} onClick={() => setEditing(true)} size="sm">
         <Edit size={12} strokeWidth={1.5} /> Edit Profile
-      </button>
-      <button onClick={() => {
-        const profileUrl = `${window.location.origin}/profile/${profile.id}`;
-        if (navigator.share) {
-          navigator.share({ title: profile.full_name, url: profileUrl }).catch(() => {});
-        } else {
-          navigator.clipboard.writeText(profileUrl).then(() => toast.success("Profile URL copied"));
-        }
-      }} style={heroBtnBase}>
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          const profileUrl = `${window.location.origin}/profile/${profile.id}`;
+          if (navigator.share) {
+            navigator.share({ title: profile.full_name, url: profileUrl }).catch(() => {});
+          } else {
+            navigator.clipboard.writeText(profileUrl).then(() => toast.success("Profile URL copied"));
+          }
+        }}
+      >
         <Share2 size={12} strokeWidth={1.5} /> Share
-      </button>
+      </Button>
     </>
   ) : (
     <>
-      <button
-        data-testid={TID.profileMessageBtn}
-        onClick={() => navigate(`/messages/${profile.id}`)}
-        style={{ ...heroBtnBase, background: "#0F2847", color: "white", border: "none" }}
-      >
+      <Button data-testid={TID.profileMessageBtn} onClick={() => navigate(`/messages/${profile.id}`)} size="sm">
         <MessageSquare size={12} strokeWidth={1.5} /> Message
-      </button>
-      <button data-testid={TID.profileConnectBtn} onClick={connect} style={heroBtnBase}>
+      </Button>
+      <Button variant="outline" size="sm" data-testid={TID.profileConnectBtn} onClick={connect}>
         <UserPlus size={12} strokeWidth={1.5} /> Connect
-      </button>
-      <button data-testid="profile-invite-btn" onClick={() => setInviting(true)} style={heroBtnBase}>
+      </Button>
+      <Button variant="outline" size="sm" data-testid="profile-invite-btn" onClick={() => setInviting(true)}>
         <Sparkles size={12} strokeWidth={1.5} /> Invite
-      </button>
+      </Button>
     </>
   );
 
@@ -719,9 +718,9 @@ function AboutSection({ profile, isMe }) {
             {profile.research_areas.map((area, i) => {
               const c = AREA_PALETTE[i % AREA_PALETTE.length];
               return (
-                <span key={area} style={{ fontSize: 12, padding: "4px 11px", background: c + "12", color: c, border: `1px solid ${c}35`, fontWeight: 500 }}>
+                <Badge key={area} color={c}>
                   {area}
-                </span>
+                </Badge>
               );
             })}
           </div>
@@ -734,9 +733,9 @@ function AboutSection({ profile, isMe }) {
           <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Keywords</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
             {profile.research_keywords.map((k) => (
-              <span key={k} style={{ fontSize: 11, padding: "3px 9px", background: NAVY + "08", color: NAVY, border: `1px solid ${NAVY}25` }}>
+              <Badge key={k} variant="default" size="sm">
                 {k}
-              </span>
+              </Badge>
             ))}
           </div>
         </div>
@@ -748,9 +747,9 @@ function AboutSection({ profile, isMe }) {
           <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Interests</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
             {profile.research_interests.map((r) => (
-              <span key={r} style={{ fontSize: 11, padding: "3px 9px", background: "#F8FAFC", color: "#475569", border: `1px solid ${BORDER}` }}>
+              <Badge key={r} variant="neutral" size="sm">
                 {r}
-              </span>
+              </Badge>
             ))}
           </div>
         </div>
@@ -782,7 +781,7 @@ function AboutSection({ profile, isMe }) {
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Can contribute</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                   {profile.can_contribute.map((c) => (
-                    <span key={c} style={{ fontSize: 11, padding: "3px 9px", background: "#EFF6FF", color: NAVY, border: `1px solid ${BORDER}` }}>{c}</span>
+                    <Badge key={c} variant="default" size="sm">{c}</Badge>
                   ))}
                 </div>
               </div>
@@ -794,7 +793,7 @@ function AboutSection({ profile, isMe }) {
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Looking for</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                   {profile.looking_for.map((c) => (
-                    <span key={c} style={{ fontSize: 11, padding: "3px 9px", background: "#FFFBEB", color: "#92400E", border: `1px solid #FDE68A` }}>{c}</span>
+                    <Badge key={c} variant="warning" size="sm">{c}</Badge>
                   ))}
                 </div>
               </div>
@@ -814,9 +813,9 @@ function AboutSection({ profile, isMe }) {
 
 function OpenBadge({ label }) {
   return (
-    <span style={{ fontSize: 11, padding: "3px 10px", background: "#F0FDF4", color: "#059669", border: "1px solid #A7F3D0", display: "flex", alignItems: "center", gap: 4, fontWeight: 500 }}>
+    <Badge variant="success" size="sm" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
       <CheckCircle2 size={9} strokeWidth={2} /> {label}
-    </span>
+    </Badge>
   );
 }
 
@@ -839,31 +838,22 @@ function PublicationsSection({ pubs, loading, isMe, query, onQuery, onRefresh })
   };
 
   const sectionActions = isMe && (
-    <button
-      onClick={importOrcid}
-      disabled={importingOrcid}
-      style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 500, color: "#64748B", background: "white", border: `1px solid ${BORDER}`, padding: "5px 11px", cursor: "pointer" }}
-    >
-      {importingOrcid ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} strokeWidth={1.5} />}
-      Sync ORCID
-    </button>
+    <Button variant="outline" size="sm" onClick={importOrcid} loading={importingOrcid}>
+      {!importingOrcid && <RefreshCw size={11} strokeWidth={1.5} />} Sync ORCID
+    </Button>
   );
 
   return (
     <Section id="publications" title="Publications" icon={BookOpen} color="#0891B2" actions={sectionActions}>
       {/* Search */}
-      <div style={{ position: "relative", marginBottom: 16 }}>
-        <Search size={12} strokeWidth={1.5} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#94A3B8" }} />
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => onQuery(e.target.value)}
-          placeholder="Search publications by title, journal, keyword…"
-          style={{ width: "100%", paddingLeft: 30, paddingRight: 12, paddingTop: 8, paddingBottom: 8, border: `1px solid ${BORDER}`, fontSize: 12, color: "#374151", outline: "none", boxSizing: "border-box" }}
-          onFocus={(e) => e.currentTarget.style.borderColor = NAVY + "60"}
-          onBlur={(e)  => e.currentTarget.style.borderColor = BORDER}
-        />
-      </div>
+      <Input
+        type="search"
+        value={query}
+        onChange={(e) => onQuery(e.target.value)}
+        placeholder="Search publications by title, journal, keyword…"
+        prefix={<Search size={12} strokeWidth={1.5} />}
+        wrapperClassName="mb-4"
+      />
 
       {loading && <SkeletonCard rows={3} />}
 
@@ -1326,31 +1316,32 @@ function QuickActionsWidget({ profile }) {
   ];
 
   return (
-    <div style={{ border: `1px solid ${BORDER}`, background: "white" }}>
+    <Card padding="none">
       <div style={{ padding: "14px 16px 10px", borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}>Quick Actions</div>
       </div>
-      <div style={{ padding: "8px 10px", display: "flex", flexDirection: "column", gap: 2 }}>
-        <button
+      <List border={false} radius={0} style={{ padding: "8px 10px", background: "transparent" }}>
+        <ListItem
+          compact
           onClick={share}
-          style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 8px", fontSize: 11, color: "#374151", background: WARM, border: `1px solid ${BORDER}`, cursor: "pointer", textAlign: "left", marginBottom: 4 }}
+          leading={<Share2 size={11} strokeWidth={1.5} />}
+          style={{ borderBottom: "none", background: WARM, marginBottom: 4, fontSize: 11 }}
         >
-          <Share2 size={11} strokeWidth={1.5} /> Share Profile
-        </button>
+          Share Profile
+        </ListItem>
         {links.map(({ label, to, icon: Icon }) => (
-          <Link
+          <ListItem
             key={to}
+            compact
             to={to}
-            style={{ display: "flex", alignItems: "center", gap: 7, padding: "6px 8px", fontSize: 11, color: "#64748B", textDecoration: "none", border: "1px solid transparent", transition: "all 0.12s" }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.background = WARM; e.currentTarget.style.color = NAVY; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#64748B"; }}
+            leading={<Icon size={11} strokeWidth={1.5} />}
+            style={{ borderBottom: "none", fontSize: 11 }}
           >
-            <Icon size={11} strokeWidth={1.5} />
             {label}
-          </Link>
+          </ListItem>
         ))}
-      </div>
-    </div>
+      </List>
+    </Card>
   );
 }
 
@@ -1451,16 +1442,14 @@ function EditProfile({ profile, onClose }) {
 
       {/* ORCID read-only notice */}
       {orcidId && (
-        <div className="border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 flex items-center gap-2">
-          <CheckCircle2 size={12} strokeWidth={1.5} />
-          ORCID {orcidId} connected.{" "}
-          <Link to="/settings" className="underline">Manage in Settings</Link>.
-        </div>
+        <Alert variant="success" icon={CheckCircle2}>
+          ORCID {orcidId} connected. <Link to="/settings" className="underline">Manage in Settings</Link>.
+        </Alert>
       )}
       {!orcidId && (
-        <div className="border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 flex items-center gap-2">
+        <Alert variant="warning">
           Connect your ORCID in <Link to="/settings" className="underline">Settings</Link> to automatically import publications, education, and employment.
-        </div>
+        </Alert>
       )}
 
       {/* Identity */}
@@ -1494,15 +1483,14 @@ function EditProfile({ profile, onClose }) {
           <FieldInput label="Avatar URL" value={f.avatar_url} onChange={(v) => update("avatar_url", v)} placeholder="https://" />
         </div>
         <div className="mt-5">
-          <label className="overline block mb-2">Biography</label>
-          <textarea
+          <Textarea
+            label="Biography"
             rows={4}
             value={f.biography}
             onChange={(e) => update("biography", e.target.value)}
             placeholder="Describe your research background, interests, and goals…"
-            className="w-full px-3 py-2 border border-slate-300 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
+            hint={`${f.biography.length} chars`}
           />
-          <div className="text-xs text-slate-400 mt-1">{f.biography.length} chars</div>
         </div>
       </section>
 
@@ -1527,23 +1515,17 @@ function EditProfile({ profile, onClose }) {
           <label className="overline block mb-2">Research keywords</label>
           <div className="flex flex-wrap gap-1.5 mb-2 min-h-[2rem]">
             {f.research_keywords.map((kw) => (
-              <span key={kw} className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-[#0F2847]/5 border border-[#0F2847]/20 text-[#0F2847]">
-                {kw}
-                <button type="button" onClick={() => removeKeyword(kw)} className="hover:text-red-600">
-                  <X size={10} strokeWidth={2} />
-                </button>
-              </span>
+              <DsTag key={kw} variant="active" onRemove={() => removeKeyword(kw)}>{kw}</DsTag>
             ))}
           </div>
-          <input
+          <Input
             type="text"
             value={keywordInput}
             onChange={(e) => setKeywordInput(e.target.value)}
             onKeyDown={addKeyword}
             placeholder="Type keyword and press Enter…"
-            className="w-full px-3 py-2 border border-slate-300 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
+            hint="Press Enter or comma to add each keyword"
           />
-          <div className="text-[10px] text-slate-400 mt-1">Press Enter or comma to add each keyword</div>
         </div>
 
         <ChipBlock
@@ -1605,14 +1587,14 @@ function EditProfile({ profile, onClose }) {
       <section className="border-t border-slate-200 pt-8">
         <h2 className="overline mb-4">Collaboration &amp; availability</h2>
         <div className="mb-5">
-          <label className="overline block mb-2">Status</label>
-          <select
+          <FormSelect
+            label="Status"
             value={f.availability}
             onChange={(e) => update("availability", e.target.value)}
-            className="px-3 py-2 border border-slate-300 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
+            wrapperClassName="max-w-xs"
           >
             {AVAILABILITY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
-          </select>
+          </FormSelect>
         </div>
         <div className="mb-5">
           <div className="overline mb-3">Open to</div>
@@ -1623,15 +1605,12 @@ function EditProfile({ profile, onClose }) {
               { key: "available_for_reviewing",     label: "Peer Review" },
               { key: "available_for_consulting",    label: "Consulting" },
             ].map(({ key, label }) => (
-              <label key={key} className="flex items-center gap-3 cursor-pointer text-sm">
-                <input
-                  type="checkbox"
-                  checked={f[key]}
-                  onChange={(e) => update(key, e.target.checked)}
-                  className="accent-[#0F2847]"
-                />
-                <span className="text-slate-700">{label}</span>
-              </label>
+              <Checkbox
+                key={key}
+                checked={f[key]}
+                onChange={(e) => update(key, e.target.checked)}
+                label={label}
+              />
             ))}
           </div>
         </div>
@@ -1653,22 +1632,18 @@ function EditProfile({ profile, onClose }) {
 
       {/* Actions */}
       <div className="flex gap-3 pt-4 border-t border-slate-200 sticky bottom-0 bg-white py-4">
-        <button
-          onClick={save}
-          disabled={saving}
-          className="bg-[#0F2847] text-white px-6 py-3 text-sm hover:bg-slate-800 disabled:opacity-50"
-        >
+        <Button onClick={save} loading={saving}>
           {saving ? "Saving…" : "Save changes"}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
           onClick={() => {
             if (dirty && !window.confirm("Discard unsaved changes?")) return;
             onClose();
           }}
-          className="border border-slate-300 px-6 py-3 text-sm hover:bg-slate-50"
         >
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -1678,34 +1653,24 @@ function EditProfile({ profile, onClose }) {
 
 function FieldInput({ label, value, onChange, type = "text", placeholder }) {
   return (
-    <div>
-      <label className="overline block mb-2">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full px-3 py-2 border border-slate-300 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
-      />
-    </div>
+    <Input
+      label={label}
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+    />
   );
 }
 
 function FieldSelect({ label, value, onChange, options }) {
   return (
-    <div>
-      <label className="overline block mb-2">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 border border-slate-300 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
-      >
-        <option value="">Select…</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
-    </div>
+    <FormSelect label={label} value={value} onChange={(e) => onChange(e.target.value)}>
+      <option value="">Select…</option>
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>{o.label}</option>
+      ))}
+    </FormSelect>
   );
 }
 
@@ -1721,43 +1686,29 @@ function ChipBlock({ label, options, selected, onToggle, allowCustom, onCustomAd
       {label && <label className="overline block mb-2" dangerouslySetInnerHTML={{ __html: label }} />}
       <div className="flex flex-wrap gap-2">
         {options.map((o) => (
-          <button
-            key={o}
-            type="button"
-            onClick={() => onToggle(o)}
-            className={`px-3 py-1.5 text-xs border ${
-              selected.includes(o)
-                ? "bg-[#0F2847] text-white border-[#0F2847]"
-                : "bg-white text-slate-700 border-slate-300 hover:border-slate-500"
-            }`}
-          >
+          <DsTag key={o} variant={selected.includes(o) ? "active" : "default"} onClick={() => onToggle(o)}>
             {o}
-          </button>
+          </DsTag>
         ))}
         {/* Show custom items not in options list */}
         {selected.filter((s) => !options.includes(s)).map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => onToggle(s)}
-            className="px-3 py-1.5 text-xs border bg-[#0F2847] text-white border-[#0F2847]"
-          >
+          <DsTag key={s} variant="active" onClick={() => onToggle(s)}>
             {s}
-          </button>
+          </DsTag>
         ))}
       </div>
       {allowCustom && (
         <form onSubmit={addCustom} className="flex gap-2 mt-2">
-          <input
+          <Input
             type="text"
             value={customInput}
             onChange={(e) => setCustomInput(e.target.value)}
             placeholder="Add custom…"
-            className="px-2 py-1 text-xs border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
+            size="sm"
           />
-          <button type="submit" className="px-2 py-1 text-xs border border-slate-300 hover:bg-slate-50">
+          <Button type="submit" variant="outline" size="icon" aria-label="Add">
             <Plus size={10} strokeWidth={2} />
-          </button>
+          </Button>
         </form>
       )}
     </div>

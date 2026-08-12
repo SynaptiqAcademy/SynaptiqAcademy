@@ -3,8 +3,9 @@ import api from "../lib/api";
 import { NAVY, WARM } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import {
-  Trophy, Building2, Users, Globe, AlertCircle, TrendingUp,
+  Building2, Users, Globe, TrendingUp,
 } from "lucide-react";
+import { Card, NavTabs, ErrorState, EmptyState, DataTable, SkeletonTable } from "@/components/ds";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -35,43 +36,6 @@ function iisLabel(score) {
   if (score >= 5000) return "Premier";
   if (score >= 2500) return "Established";
   return "Emerging";
-}
-
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-
-function Skeleton({ h = "h-4", w = "w-full", className = "" }) {
-  return <div className={`${h} ${w} bg-slate-200 animate-pulse ${className}`} />;
-}
-
-// ── Error card ────────────────────────────────────────────────────────────────
-
-function ErrorCard({ message, onRetry }) {
-  return (
-    <div className="border border-red-200 bg-red-50 p-6 text-center">
-      <AlertCircle size={22} strokeWidth={1.5} className="text-red-400 mx-auto mb-2" />
-      <p className="text-red-700 text-sm mb-3">{message || "Failed to load data."}</p>
-      {onRetry && (
-        <button
-          onClick={onRetry}
-          className="text-xs border border-red-300 text-red-700 px-3 py-1.5 hover:bg-red-100 transition-colors"
-        >
-          Retry
-        </button>
-      )}
-    </div>
-  );
-}
-
-// ── Empty state ───────────────────────────────────────────────────────────────
-
-function EmptyState({ icon: Icon = AlertCircle, message, sub }) {
-  return (
-    <div className="border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
-      <Icon size={28} strokeWidth={1.5} className="text-slate-300 mx-auto mb-3" />
-      <p className="text-slate-600 text-sm font-medium">{message}</p>
-      {sub && <p className="text-slate-400 text-xs mt-1 max-w-sm mx-auto">{sub}</p>}
-    </div>
-  );
 }
 
 // ── Rank medal ────────────────────────────────────────────────────────────────
@@ -211,45 +175,51 @@ export default function InstitutionLeaderboards() {
   const maxSis = Math.max(...researchers.map((r) => r.sis_score || r.impact_score || 0), 1);
   const maxAvgIis = Math.max(...countries.map((c) => c.avg_iis || 0), 1);
 
+  const rankedCountries = countries.map((c, i) => ({ ...c, rank: i + 1 }));
+
+  const countryColumns = [
+    { key: "rank", label: "Rank", width: 48, render: (v) => <RankMedal rank={v} /> },
+    { key: "country", label: "Country", render: (v) => <span className="text-sm font-medium text-slate-900">{v}</span> },
+    { key: "institutions", label: "Institutions", render: (v) => fmtNum(v) },
+    { key: "researchers", label: "Researchers", render: (v) => fmtNum(v) },
+    {
+      key: "avg_iis", label: "Avg IIS",
+      render: (v) => (
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs font-semibold" style={{ color: iisColor(v) }}>{fmtNum(v)}</span>
+          <div className="flex-1 h-1.5 bg-slate-100 overflow-hidden min-w-12 max-w-24">
+            <div className="h-full transition-all duration-700" style={{ width: `${pct(v, maxAvgIis)}%`, backgroundColor: iisColor(v) }} />
+          </div>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <InstitutionLayout
       title="Leaderboards"
       subtitle="Global rankings for institutions, researchers, and countries on the Synaptiq platform."
     >
       {/* Tab bar */}
-      <div className="border-b border-slate-200 bg-white sticky top-0 z-10">
-          <nav className="flex gap-0">
-            {TABS.map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === key
-                    ? "border-[#0F2847] text-[#0F2847]"
-                    : "border-transparent text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                <Icon size={14} strokeWidth={1.5} />
-                {label}
-              </button>
-            ))}
-          </nav>
+      <div className="bg-white sticky top-0 z-10 mb-6">
+        <NavTabs
+          variant="underline"
+          active={activeTab}
+          onChange={setActiveTab}
+          tabs={TABS.map((t) => ({ id: t.key, label: t.label, icon: t.icon }))}
+        />
       </div>
 
         {loading ? (
-          <div className="space-y-3 animate-pulse">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="h-14 bg-slate-200" />
-            ))}
-          </div>
+          <SkeletonTable rows={10} cols={4} />
         ) : error ? (
-          <ErrorCard message={error} onRetry={fetchLeaderboard} />
+          <ErrorState message={error} onRetry={fetchLeaderboard} />
         ) : (
           <>
             {/* ── Institutions tab ── */}
             {activeTab === "institutions" && (
               <div className="space-y-6">
-                <div className="border border-slate-200 bg-white p-5">
+                <Card padding="lg">
                   <div className="flex items-center gap-2 mb-1">
                     <Building2 size={14} strokeWidth={1.5} className="text-slate-400" />
                     <h2 className="text-sm font-semibold text-slate-900">Top Institutions by Impact Score</h2>
@@ -258,7 +228,7 @@ export default function InstitutionLeaderboards() {
                     Ranked by Institution Impact Score (IIS), a composite of publication volume, citations, grant success, and member reputation.
                   </p>
                   {institutions.length === 0 ? (
-                    <EmptyState icon={Building2} message="No institutions ranked yet." />
+                    <EmptyState icon={<Building2 />} title="No institutions ranked yet." />
                   ) : (
                     <>
                       <div>
@@ -299,14 +269,14 @@ export default function InstitutionLeaderboards() {
                       )}
                     </>
                   )}
-                </div>
+                </Card>
               </div>
             )}
 
             {/* ── Researchers tab ── */}
             {activeTab === "researchers" && (
               <div className="space-y-6">
-                <div className="border border-slate-200 bg-white p-5">
+                <Card padding="lg">
                   <div className="flex items-center gap-2 mb-1">
                     <TrendingUp size={14} strokeWidth={1.5} className="text-slate-400" />
                     <h2 className="text-sm font-semibold text-slate-900">Top Researchers Globally</h2>
@@ -315,7 +285,7 @@ export default function InstitutionLeaderboards() {
                     Ranked by Scholar Impact Score (SIS) reflecting publications, citations, h-index, collaborations, and teaching.
                   </p>
                   {researchers.length === 0 ? (
-                    <EmptyState icon={Users} message="No researcher rankings available." />
+                    <EmptyState icon={<Users />} title="No researcher rankings available." />
                   ) : (
                     <>
                       <div>
@@ -357,14 +327,14 @@ export default function InstitutionLeaderboards() {
                       )}
                     </>
                   )}
-                </div>
+                </Card>
               </div>
             )}
 
             {/* ── Countries tab ── */}
             {activeTab === "countries" && (
               <div className="space-y-6">
-                <div className="border border-slate-200 bg-white p-5">
+                <Card padding="lg">
                   <div className="flex items-center gap-2 mb-1">
                     <Globe size={14} strokeWidth={1.5} className="text-slate-400" />
                     <h2 className="text-sm font-semibold text-slate-900">Country Rankings</h2>
@@ -373,59 +343,10 @@ export default function InstitutionLeaderboards() {
                     Countries aggregated by average Institution Impact Score. Hover bars for scores.
                   </p>
                   {countries.length === 0 ? (
-                    <EmptyState icon={Globe} message="No country data available." />
+                    <EmptyState icon={<Globe />} title="No country data available." />
                   ) : (
                     <>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50">
-                              <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600 w-12">Rank</th>
-                              <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Country</th>
-                              <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Institutions</th>
-                              <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Researchers</th>
-                              <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Avg IIS</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {countries.map((c, idx) => (
-                              <tr key={c.country} className="border-b border-slate-100 hover:bg-slate-50">
-                                <td className="px-4 py-2.5">
-                                  <RankMedal rank={idx + 1} />
-                                </td>
-                                <td className="px-4 py-2.5">
-                                  <span className="text-sm font-medium text-slate-900">{c.country}</span>
-                                </td>
-                                <td className="px-4 py-2.5 text-xs text-slate-600">
-                                  {fmtNum(c.institutions)}
-                                </td>
-                                <td className="px-4 py-2.5 text-xs text-slate-600">
-                                  {fmtNum(c.researchers)}
-                                </td>
-                                <td className="px-4 py-2.5">
-                                  <div className="flex items-center gap-2">
-                                    <span
-                                      className="font-mono text-xs font-semibold"
-                                      style={{ color: iisColor(c.avg_iis) }}
-                                    >
-                                      {fmtNum(c.avg_iis)}
-                                    </span>
-                                    <div className="flex-1 h-1.5 bg-slate-100 overflow-hidden min-w-12 max-w-24">
-                                      <div
-                                        className="h-full transition-all duration-700"
-                                        style={{
-                                          width: `${pct(c.avg_iis, maxAvgIis)}%`,
-                                          backgroundColor: iisColor(c.avg_iis),
-                                        }}
-                                      />
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                      <DataTable columns={countryColumns} rows={rankedCountries} />
 
                       {countries.length > 3 && (
                         <div className="mt-8 pt-6 border-t border-slate-100">
@@ -443,7 +364,7 @@ export default function InstitutionLeaderboards() {
                       )}
                     </>
                   )}
-                </div>
+                </Card>
               </div>
             )}
           </>

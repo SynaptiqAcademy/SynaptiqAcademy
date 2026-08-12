@@ -170,7 +170,7 @@ function MFAEnrollment({ onComplete }) {
               <code className="bg-slate-100 px-3 py-1.5 rounded-lg text-xs font-mono tracking-widest select-all">
                 {showSecret ? enrollData?.secret : "•".repeat(32)}
               </code>
-              <button onClick={() => setShowSecret(v => !v)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setShowSecret(v => !v)} aria-label={showSecret ? "Hide secret" : "Show secret"} className="text-slate-400 hover:text-slate-600">
                 {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
@@ -418,7 +418,7 @@ export default function AdminMFACenter() {
       <Card className="bg-slate-50" padding="md">
         <div className="text-sm text-slate-600">
           <div className="font-medium text-slate-700 mb-2">Compatible Authenticator Apps</div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {["Google Authenticator", "Microsoft Authenticator", "Authy"].map(app => (
               <div key={app} className="flex items-center gap-1.5 text-xs">
                 <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />

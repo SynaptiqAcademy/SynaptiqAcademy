@@ -8,7 +8,6 @@ import {
 import api from "../../lib/api";
 import { toast } from "sonner";
 import { useAuth } from "../../contexts/AuthContext";
-import { NAVY } from "@/lib/tokens";
 import { EmptyState } from "../../components/ds/EmptyState";
 import { Spinner, SkeletonPage } from "../../components/ds/LoadingState";
 import { Button } from "@/components/ds/Button";
@@ -20,6 +19,7 @@ import { Textarea } from "@/components/ds/Textarea";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { NavTabs } from "@/components/ds/NavTabs";
 import { List, ListItem } from "@/components/ds/List";
+import { ResearchLayout } from "@/layouts";
 
 // ─── Role display helpers ─────────────────────────────────────────────────────
 
@@ -122,7 +122,7 @@ function CommentThread({ comments, onPost, canComment, currentUserId, onDelete }
                 {new Date(c.created_at).toLocaleDateString()}
               </span>
               {c.author_id === currentUserId && (
-                <Button variant="ghost" size="icon" onClick={() => onDelete(c.id)} className="text-slate-300 hover:text-red-400">
+                <Button variant="ghost" size="icon" onClick={() => onDelete(c.id)} aria-label="Delete comment" className="text-slate-300 hover:text-red-400">
                   <X size={11} strokeWidth={1.5} />
                 </Button>
               )}
@@ -140,7 +140,7 @@ function CommentThread({ comments, onPost, canComment, currentUserId, onDelete }
             placeholder="Add a comment…"
             wrapperClassName="flex-1"
           />
-          <Button onClick={handlePost} disabled={!text.trim() || posting}>
+          <Button onClick={handlePost} disabled={!text.trim() || posting} aria-label="Post comment">
             <Send size={13} strokeWidth={1.5} />
           </Button>
         </div>
@@ -490,44 +490,46 @@ export default function TeachingWorkspaceDetail() {
     "What formative assessment techniques would you recommend?",
   ];
 
+  const headerActions = (
+    <>
+      <RoleBadge role={myRole} />
+      <Badge variant={workspace.status === "active" ? "success" : "neutral"} size="sm" className="shrink-0">
+        {workspace.status}
+      </Badge>
+    </>
+  );
+
   return (
-    <div className="space-y-0">
-
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="border-b border-slate-200 pb-4">
-        <Link to="/teaching/workspaces" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#0F2847] mb-3">
-          <ArrowLeft size={12} strokeWidth={1.5} /> Teaching Workspaces
-        </Link>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-serif text-2xl text-slate-900">{workspace.title}</h1>
-              <RoleBadge role={myRole} />
-            </div>
-            <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 flex-wrap">
-              {workspace.course_code && <span className="font-mono">{workspace.course_code}</span>}
-              {workspace.subject && <><span className="text-slate-300">·</span><span>{workspace.subject}</span></>}
-              {workspace.level && <><span className="text-slate-300">·</span><span>{workspace.level}</span></>}
-              {workspace.semester && <><span className="text-slate-300">·</span><span>{workspace.semester}</span></>}
-              <span className="text-slate-300">·</span>
-              <span className="flex items-center gap-1">
-                <Users size={10} strokeWidth={1.5} />{members.length} member{members.length !== 1 ? "s" : ""}
-              </span>
-            </div>
-          </div>
-          <Badge variant={workspace.status === "active" ? "success" : "neutral"} size="sm" className="shrink-0">
-            {workspace.status}
-          </Badge>
-        </div>
-
-        {/* Tab bar */}
+    <ResearchLayout
+      title={workspace.title}
+      actions={headerActions}
+      nav={
         <NavTabs
-          className="mt-5 overflow-x-auto scrollbar-none"
+          className="overflow-x-auto scrollbar-none"
           tabs={TABS.filter(({ id }) => id !== "settings" || canSettings).map(({ id, label, icon }) => ({ id, label, icon }))}
           active={tab}
           onChange={setTab}
         />
-      </header>
+      }
+    >
+    <div className="space-y-0">
+
+      {/* ── Meta bar ──────────────────────────────────────────────────────── */}
+      <div className="border-b border-slate-200 pb-4">
+        <Link to="/teaching/workspaces" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#0F2847] mb-3">
+          <ArrowLeft size={12} strokeWidth={1.5} /> Teaching Workspaces
+        </Link>
+        <div className="flex items-center gap-2 text-xs text-slate-500 flex-wrap">
+          {workspace.course_code && <span className="font-mono">{workspace.course_code}</span>}
+          {workspace.subject && <><span className="text-slate-300">·</span><span>{workspace.subject}</span></>}
+          {workspace.level && <><span className="text-slate-300">·</span><span>{workspace.level}</span></>}
+          {workspace.semester && <><span className="text-slate-300">·</span><span>{workspace.semester}</span></>}
+          <span className="text-slate-300">·</span>
+          <span className="flex items-center gap-1">
+            <Users size={10} strokeWidth={1.5} />{members.length} member{members.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+      </div>
 
       {/* ── Overview tab ──────────────────────────────────────────────────── */}
       {tab === "overview" && (
@@ -943,6 +945,7 @@ export default function TeachingWorkspaceDetail() {
                     onClick={sendMessage}
                     disabled={!input.trim() || sending}
                     size="icon"
+                    aria-label="Send"
                     className="self-stretch h-auto"
                   >
                     <Send size={15} strokeWidth={1.5} />
@@ -1025,5 +1028,6 @@ export default function TeachingWorkspaceDetail() {
         </div>
       )}
     </div>
+    </ResearchLayout>
   );
 }

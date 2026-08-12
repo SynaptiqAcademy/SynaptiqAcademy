@@ -11,34 +11,15 @@ import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import {
   Building2, Users, FolderOpen, Lock, Plus, Search, ChevronRight,
-  Loader2, BookOpen, Coins, X, Award, Layers,
+  Award, Layers,
 } from "lucide-react";
 import { TID } from "../lib/testIds";
 import { useDepartments, useDeptMutations } from "../hooks/useDepartments";
-import { NAVY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
-
-// ─────────────────────────── primitives ──────────────────────────────────────
-
-function Kpi({ label, value, icon: Icon }) {
-  return (
-    <div className="border border-slate-200 bg-white p-4">
-      <div className="overline flex items-center gap-1.5">
-        <Icon size={11} strokeWidth={1.5} className="text-[#0F2847]" />
-        {label}
-      </div>
-      <div className="font-serif text-3xl text-slate-900 mt-1">{value ?? "—"}</div>
-    </div>
-  );
-}
-
-function ResearchAreaTag({ label }) {
-  return (
-    <span className="text-[10px] font-mono border border-[#0F2847]/30 bg-[#0F2847]/5 text-[#0F2847] px-1.5 py-0.5">
-      {label}
-    </span>
-  );
-}
+import {
+  StatCard, StatGrid, Tag, TagGroup, Card, Modal, Input, Textarea, Button,
+  Spinner, ErrorState, EmptyState,
+} from "@/components/ds";
 
 // ─────────────────────────── no-institution state ─────────────────────────────
 
@@ -49,22 +30,13 @@ function NoInstitutionWall() {
         <div className="overline">Institution</div>
         <h1 className="font-serif text-5xl text-slate-900 mt-2">Departments</h1>
       </header>
-      <div className="border border-slate-200 bg-white p-16 flex flex-col items-center text-center gap-5">
-        <Building2 size={28} strokeWidth={1} className="text-slate-300" />
-        <div>
-          <div className="overline text-[#0F2847] mb-2">Institution membership required</div>
-          <h2 className="font-serif text-2xl text-slate-900">You're not part of an institution yet</h2>
-          <p className="text-slate-500 text-sm mt-3 max-w-sm mx-auto">
-            Join your university or research institute to access Department Management, faculty directories, and research output analytics.
-          </p>
-        </div>
-        <Link
-          to="/institutions"
-          className="inline-block bg-[#0F2847] text-white text-sm px-6 py-2.5 hover:opacity-90 transition-opacity"
-        >
-          Find Your Institution
-        </Link>
-      </div>
+      <EmptyState
+        icon={<Building2 />}
+        size="lg"
+        title="You're not part of an institution yet"
+        description="Join your university or research institute to access Department Management, faculty directories, and research output analytics."
+        action={<Button as={Link} to="/institutions">Find Your Institution</Button>}
+      />
     </div>
   );
 }
@@ -77,22 +49,13 @@ function UpgradeWall({ institutionName }) {
         <h1 className="font-serif text-5xl text-slate-900 mt-2">Departments</h1>
         {institutionName && <p className="text-slate-500 mt-2 text-sm">{institutionName}</p>}
       </header>
-      <div className="border border-slate-200 bg-white p-16 flex flex-col items-center text-center gap-5">
-        <Lock size={28} strokeWidth={1} className="text-slate-300" />
-        <div>
-          <div className="overline text-[#0F2847] mb-2">Institution plan required</div>
-          <h2 className="font-serif text-2xl text-slate-900">Department Management is a premium feature</h2>
-          <p className="text-slate-500 text-sm mt-3 max-w-md mx-auto">
-            Ask your institution admin to upgrade to the Institution plan to unlock Department Management, faculty directories, publication statistics, and research ranking dashboards.
-          </p>
-        </div>
-        <Link
-          to="/pricing"
-          className="inline-block bg-[#0F2847] text-white text-sm px-6 py-2.5 hover:opacity-90 transition-opacity"
-        >
-          View Plans
-        </Link>
-      </div>
+      <EmptyState
+        icon={<Lock />}
+        size="lg"
+        title="Department Management is a premium feature"
+        description="Ask your institution admin to upgrade to the Institution plan to unlock Department Management, faculty directories, publication statistics, and research ranking dashboards."
+        action={<Button as={Link} to="/pricing">View Plans</Button>}
+      />
     </div>
   );
 }
@@ -128,80 +91,63 @@ function CreateDepartmentModal({ institutionId, onClose, onCreated }) {
   }, [form, institutionId, createDepartment, onCreated, onClose]);
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900/50 flex items-center justify-center px-4"
-      onClick={onClose} data-testid={TID.deptCreateModal}>
-      <div className="bg-white w-full max-w-lg border border-slate-200"
-        onClick={(e) => e.stopPropagation()}>
-        <div className="border-b border-slate-200 px-5 py-4 flex items-center justify-between">
-          <h3 className="font-serif text-xl text-slate-900">New Department</h3>
-          <button onClick={onClose}><X size={16} strokeWidth={1.5} /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {error && (
-            <div className="text-xs text-red-700 border border-red-100 bg-red-50 p-3">{
-              typeof error === "string" ? error : JSON.stringify(error)
-            }</div>
-          )}
-          <div>
-            <label className="text-xs font-medium text-slate-700 block mb-1">
-              Department Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              required
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              placeholder="e.g. Department of Computer Science"
-              className="w-full border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-[#0F2847]"
-              data-testid={TID.deptNameInput}
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-slate-700 block mb-1">Description</label>
-            <textarea
-              rows={3}
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              placeholder="Brief description of the department's research focus"
-              className="w-full border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-[#0F2847] resize-none"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-slate-700 block mb-1">
-              Research Areas <span className="text-slate-400">(comma-separated)</span>
-            </label>
-            <input
-              value={form.research_areas}
-              onChange={(e) => setForm((f) => ({ ...f, research_areas: e.target.value }))}
-              placeholder="Machine Learning, Computer Vision, NLP"
-              className="w-full border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-[#0F2847]"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-slate-700 block mb-1">
-              Department Head <span className="text-slate-400">(user ID, optional)</span>
-            </label>
-            <input
-              value={form.head_id}
-              onChange={(e) => setForm((f) => ({ ...f, head_id: e.target.value }))}
-              placeholder="Leave blank to assign later"
-              className="w-full border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-[#0F2847]"
-            />
-          </div>
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose}
-              className="text-xs text-slate-600 px-3 py-2 border border-slate-200 hover:border-slate-400">
-              Cancel
-            </button>
-            <button type="submit" disabled={busy || !form.name.trim()}
-              className="text-xs bg-[#0F2847] text-white px-4 py-2 hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5"
-              data-testid={TID.deptCreateSubmit}>
-              {busy && <Loader2 size={11} className="animate-spin" />}
-              Create Department
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <Modal
+      open
+      onClose={onClose}
+      closeOnOverlay
+      title="New Department"
+      data-testid={TID.deptCreateModal}
+      footer={
+        <>
+          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+          <Button
+            type="submit"
+            form="create-dept-form"
+            size="sm"
+            disabled={busy || !form.name.trim()}
+            loading={busy}
+            data-testid={TID.deptCreateSubmit}
+          >
+            Create Department
+          </Button>
+        </>
+      }
+    >
+      <form id="create-dept-form" onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="text-xs text-red-700 border border-red-100 bg-red-50 p-3">{
+            typeof error === "string" ? error : JSON.stringify(error)
+          }</div>
+        )}
+        <Input
+          required
+          label="Department Name *"
+          value={form.name}
+          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+          placeholder="e.g. Department of Computer Science"
+          data-testid={TID.deptNameInput}
+        />
+        <Textarea
+          label="Description"
+          rows={3}
+          value={form.description}
+          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+          placeholder="Brief description of the department's research focus"
+        />
+        <Input
+          label="Research Areas (comma-separated)"
+          value={form.research_areas}
+          onChange={(e) => setForm((f) => ({ ...f, research_areas: e.target.value }))}
+          placeholder="Machine Learning, Computer Vision, NLP"
+        />
+        <Input
+          label="Department Head (user ID, optional)"
+          value={form.head_id}
+          onChange={(e) => setForm((f) => ({ ...f, head_id: e.target.value }))}
+          placeholder="Leave blank to assign later"
+        />
+      </form>
+    </Modal>
   );
 }
 
@@ -209,11 +155,7 @@ function CreateDepartmentModal({ institutionId, onClose, onCreated }) {
 
 function DeptCard({ dept }) {
   return (
-    <Link
-      to={`/institution/departments/${dept.id}`}
-      data-testid={TID.deptCard(dept.id)}
-      className="block border border-slate-200 bg-white p-5 hover:border-[#0F2847] transition-colors"
-    >
+    <Card to={`/institution/departments/${dept.id}`} data-testid={TID.deptCard(dept.id)} padding="lg">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
           <h3 className="font-serif text-lg text-slate-900 leading-tight">{dept.name}</h3>
@@ -227,14 +169,14 @@ function DeptCard({ dept }) {
         <p className="text-sm text-slate-600 line-clamp-2 mb-3">{dept.description}</p>
       )}
       {(dept.research_areas || []).length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-3">
+        <TagGroup gap={4} className="mb-3">
           {dept.research_areas.slice(0, 4).map((a) => (
-            <ResearchAreaTag key={a} label={a} />
+            <Tag key={a} size="sm">{a}</Tag>
           ))}
           {dept.research_areas.length > 4 && (
             <span className="text-[10px] text-slate-400">+{dept.research_areas.length - 4} more</span>
           )}
-        </div>
+        </TagGroup>
       )}
       <div className="flex items-center gap-4 text-xs text-slate-500 border-t border-slate-100 pt-3 mt-1">
         <span className="inline-flex items-center gap-1">
@@ -244,7 +186,7 @@ function DeptCard({ dept }) {
           <FolderOpen size={10} strokeWidth={1.5} /> {dept.project_count} project{dept.project_count !== 1 ? "s" : ""}
         </span>
       </div>
-    </Link>
+    </Card>
   );
 }
 
@@ -287,13 +229,9 @@ export default function Departments() {
       title="Departments"
       subtitle="Manage academic departments, faculty, research outputs, and funding for your institution."
       actions={isAdmin && (
-        <button
-          onClick={() => setShowCreate(true)}
-          data-testid={TID.deptCreateBtn}
-          className="shrink-0 flex items-center gap-1.5 text-xs bg-[#0F2847] text-white px-4 py-2.5 hover:opacity-90 transition-opacity"
-        >
+        <Button onClick={() => setShowCreate(true)} data-testid={TID.deptCreateBtn}>
           <Plus size={12} /> New Department
-        </button>
+        </Button>
       )}
     >
     <div className="space-y-8" data-testid={TID.departmentsPage}>
@@ -301,60 +239,50 @@ export default function Departments() {
       {/* Summary KPIs */}
       {!loading && depts.length > 0 && (
         <section>
-          <div className="grid sm:grid-cols-3 gap-4">
-            <Kpi label="Departments"        value={depts.length}   icon={Layers} />
-            <Kpi label="Total Faculty"      value={totalMembers}   icon={Users} />
-            <Kpi label="Linked Projects"    value={totalProjects}  icon={FolderOpen} />
-          </div>
+          <StatGrid cols={3}>
+            <StatCard label="Departments"        value={depts.length}   icon={<Layers />} />
+            <StatCard label="Total Faculty"      value={totalMembers}   icon={<Users />} />
+            <StatCard label="Linked Projects"    value={totalProjects}  icon={<FolderOpen />} />
+          </StatGrid>
         </section>
       )}
 
       {/* Search */}
       <section>
-        <div className="relative max-w-sm">
-          <Search size={13} strokeWidth={1.5}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search departments…"
-            className="w-full pl-9 pr-3 py-2 border border-slate-200 text-sm focus:outline-none focus:border-[#0F2847]"
-            data-testid={TID.deptSearch}
-          />
-        </div>
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search departments…"
+          prefix={<Search size={13} strokeWidth={1.5} />}
+          wrapperClassName="max-w-sm"
+          data-testid={TID.deptSearch}
+        />
       </section>
 
       {/* Department grid */}
       <section data-testid={TID.deptGrid}>
         {loading && (
-          <div className="text-sm text-slate-500 font-mono py-12 text-center flex items-center justify-center gap-2">
-            <Loader2 size={14} className="animate-spin" /> Loading departments…
-          </div>
+          <div className="py-12 flex justify-center"><Spinner size={16} /></div>
         )}
 
         {!loading && error && !is402 && (
-          <div className="border border-red-100 bg-red-50 p-5 text-sm text-red-700">
-            Failed to load departments:{" "}
-            {typeof error === "object" ? (error?.message || JSON.stringify(error)) : error}
-          </div>
+          <ErrorState
+            message="Failed to load departments"
+            detail={typeof error === "object" ? (error?.message || JSON.stringify(error)) : error}
+          />
         )}
 
         {!loading && !error && depts.length === 0 && (
-          <div className="border border-dashed border-slate-200 bg-white p-14 text-center"
-            data-testid={TID.deptEmpty}>
-            <Layers size={24} strokeWidth={1} className="text-slate-300 mx-auto mb-3" />
-            <p className="text-sm text-slate-500">
-              {query ? "No departments match your search." : "No departments yet."}
-            </p>
-            {!query && isAdmin && (
-              <button
-                onClick={() => setShowCreate(true)}
-                className="mt-4 text-xs text-[#0F2847] underline underline-offset-2"
-              >
+          <EmptyState
+            data-testid={TID.deptEmpty}
+            icon={<Layers />}
+            title={query ? "No departments match your search." : "No departments yet."}
+            action={!query && isAdmin && (
+              <Button variant="link" onClick={() => setShowCreate(true)}>
                 Create the first department
-              </button>
+              </Button>
             )}
-          </div>
+          />
         )}
 
         {!loading && depts.length > 0 && (

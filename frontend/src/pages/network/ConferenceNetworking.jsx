@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { Plus, MapPin, Clock, Users, CheckCircle } from "lucide-react";
 import { NAVY, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Input, Textarea, FormSelect, FormRow, Checkbox, Modal, NavTabs, EmptyState, LoadingOverlay } from "@/components/ds";
 
 const TYPE_COLOR = {
@@ -177,12 +177,10 @@ export default function ConferenceNetworking() {
   const handleUnregister = async id => { await axios.post(`/api/network/events/${id}/unregister`); fetchEvents(); fetchMyEvents(); };
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Events & Conferences"
       actions={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={15} />Create Event</Button>}
-    >
-
-      <div style={{ marginBottom: 16 }}>
+      nav={
         <NavTabs
           variant="pill"
           tabs={[
@@ -192,7 +190,8 @@ export default function ConferenceNetworking() {
           active={tab}
           onChange={setTab}
         />
-      </div>
+      }
+    >
 
       {tab === "upcoming" && (
         <>
@@ -232,6 +231,6 @@ export default function ConferenceNetworking() {
       )}
 
       {showCreate && <CreateEventModal onClose={() => setShowCreate(false)} onCreate={() => { fetchEvents(); fetchMyEvents(); }} />}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

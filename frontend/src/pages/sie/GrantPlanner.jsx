@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Trophy, ArrowRight } from "lucide-react";
 import { NAVY, WARM, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Button, Callout, H4 } from "@/components/ds";
 
@@ -24,7 +24,7 @@ const TIPS = [
 export default function GrantPlanner() {
   const navigate = useNavigate();
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
       title="Grant Planner"
       subtitle="Plan and track your grant applications and funding strategy."
       navItems={SIE_NAV_ITEMS}
@@ -64,6 +64,6 @@ export default function GrantPlanner() {
           Set a Grant Goal <ArrowRight size={13} />
         </Button>
       </Card>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

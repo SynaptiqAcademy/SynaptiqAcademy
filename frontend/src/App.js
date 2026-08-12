@@ -60,6 +60,7 @@ const Journals = lazy(() => import("@/pages/Journals"));
 const JournalDetail = lazy(() => import("@/pages/JournalDetail"));
 const Conferences = lazy(() => import("@/pages/Conferences"));
 const ConferenceDetail = lazy(() => import("@/pages/ConferenceDetail"));
+const ConferenceTeam = lazy(() => import("@/pages/ConferenceTeam"));
 const Funding = lazy(() => import("@/pages/Funding"));
 const FundingDetail = lazy(() => import("@/pages/FundingDetail"));
 const Grants = lazy(() => import("@/pages/Grants"));
@@ -471,6 +472,7 @@ function App() {
               <Route path="/journals/:id" element={<Protected><JournalDetail /></Protected>} />
               <Route path="/conferences" element={<Protected><Conferences /></Protected>} />
               <Route path="/conferences/:id" element={<Protected><ConferenceDetail /></Protected>} />
+              <Route path="/conference-teams/:teamId" element={<Protected><ConferenceTeam /></Protected>} />
               <Route path="/funding" element={<Protected><Funding /></Protected>} />
               <Route path="/funding/:id" element={<Protected><FundingDetail /></Protected>} />
               <Route path="/grants" element={<Protected><Grants /></Protected>} />

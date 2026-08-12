@@ -18,6 +18,8 @@ export function FormSelect({
   ...props
 }) {
   const inputId = id || (label ? `sel-${label.toLowerCase().replace(/\s+/g, "-")}` : undefined);
+  const errorId = error && inputId ? `${inputId}-error` : undefined;
+  const hintId = hint && !error && inputId ? `${inputId}-hint` : undefined;
   const heightClass = size === "sm" ? "h-7 text-[12px]" : "h-9 text-[13px]";
 
   const classes = [
@@ -36,7 +38,13 @@ export function FormSelect({
     <div className={`sq-form-group ${wrapperClassName}`}>
       {label && <label htmlFor={inputId} className="sq-form-label">{label}</label>}
       <div className="relative">
-        <select id={inputId} className={classes} {...props}>
+        <select
+          id={inputId}
+          className={classes}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={errorId || hintId || undefined}
+          {...props}
+        >
           {children}
         </select>
         <ChevronDown
@@ -45,8 +53,8 @@ export function FormSelect({
           className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
         />
       </div>
-      {error   && <p className="sq-form-error">{error}</p>}
-      {hint && !error && <p className="sq-form-hint">{hint}</p>}
+      {error   && <p id={errorId} className="sq-form-error" role="alert">{error}</p>}
+      {hint && !error && <p id={hintId} className="sq-form-hint">{hint}</p>}
     </div>
   );
 }

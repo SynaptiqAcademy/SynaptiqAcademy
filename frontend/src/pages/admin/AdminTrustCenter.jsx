@@ -2,18 +2,9 @@ import React, { useEffect, useState } from "react";
 import { ShieldCheck, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { NAVY, WARM, BRD, EMERALD, ACCENT, TEXT_SECONDARY, WHITE } from "../../lib/tokens";
 import { AdministrationLayout } from "@/layouts";
+import { Card, Button, StatCard, StatGrid, StatusDot } from "@/components/ds";
 
 const API = "/api/trust";
-
-function StatCard({ label, value, color = NAVY, sub }) {
-  return (
-    <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 10, padding: "18px 20px" }}>
-      <div style={{ fontSize: 28, fontWeight: 800, color }}>{value ?? "—"}</div>
-      <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, marginTop: 2 }}>{label}</div>
-      {sub && <div style={{ fontSize: 11, color: TEXT_SECONDARY, marginTop: 2 }}>{sub}</div>}
-    </div>
-  );
-}
 
 export default function AdminTrustCenter() {
   const [stats, setStats] = useState(null);
@@ -63,22 +54,22 @@ export default function AdminTrustCenter() {
         {loadingStats ? (
           <div style={{ color: TEXT_SECONDARY, marginBottom: 20 }}>Loading stats…</div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
+          <StatGrid cols={4} className="mb-6">
             <StatCard label="Total Users" value={stats?.total_users} />
             <StatCard label="Verifications" value={stats?.verifications_total}
               sub={`${stats?.verifications_verified} verified (${stats?.verification_rate}%)`} />
-            <StatCard label="Pending Reviews" value={stats?.requests_pending} color="#D97706" />
-            <StatCard label="Badges Awarded" value={stats?.badges_awarded} color="#7C3AED" />
-            <StatCard label="Passports" value={stats?.passports_generated} color={EMERALD} />
+            <StatCard label="Pending Reviews" value={stats?.requests_pending} />
+            <StatCard label="Badges Awarded" value={stats?.badges_awarded} />
+            <StatCard label="Passports" value={stats?.passports_generated} />
             <StatCard label="Audit Events" value={stats?.audit_events} />
             <StatCard label="Total Requests" value={stats?.requests_total} />
-            <StatCard label="Verification Rate" value={`${stats?.verification_rate || 0}%`} color={EMERALD} />
-          </div>
+            <StatCard label="Verification Rate" value={`${stats?.verification_rate || 0}%`} />
+          </StatGrid>
         )}
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
           {/* Pending requests */}
-          <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20 }}>
+          <Card padding="lg">
             <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, marginBottom: 16,
               display: "flex", alignItems: "center", gap: 6 }}>
               <Clock size={15} color="#D97706" /> Pending Reviews ({pending.length})
@@ -92,7 +83,7 @@ export default function AdminTrustCenter() {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {pending.map(req => (
-                  <div key={req._id} style={{ border: `1px solid ${BRD}`, borderRadius: 8, padding: 14 }}>
+                  <Card key={req._id} padding="sm">
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                       <span style={{ fontSize: 12, fontWeight: 600, color: NAVY }}>{req.label}</span>
                       <span style={{ fontSize: 11, color: TEXT_SECONDARY }}>
@@ -105,41 +96,35 @@ export default function AdminTrustCenter() {
                       </p>
                     )}
                     <div style={{ display: "flex", gap: 8 }}>
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => review(req._id, "approve")}
                         disabled={!!reviewLoading[req._id]}
-                        style={{
-                          flex: 1, padding: "5px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600,
-                          background: EMERALD + "14", color: EMERALD,
-                          border: `1px solid ${EMERALD}28`, cursor: "pointer",
-                          opacity: reviewLoading[req._id] ? 0.5 : 1,
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
-                        }}>
+                        className="flex-1 !bg-emerald-50 !text-emerald-700 !border-emerald-200"
+                      >
                         <CheckCircle2 size={11} />
                         {reviewLoading[req._id] === "approve" ? "…" : "Approve"}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => review(req._id, "reject")}
                         disabled={!!reviewLoading[req._id]}
-                        style={{
-                          flex: 1, padding: "5px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600,
-                          background: ACCENT + "14", color: ACCENT,
-                          border: `1px solid ${ACCENT}28`, cursor: "pointer",
-                          opacity: reviewLoading[req._id] ? 0.5 : 1,
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
-                        }}>
+                        className="flex-1 !bg-red-50 !text-red-700 !border-red-200"
+                      >
                         <XCircle size={11} />
                         {reviewLoading[req._id] === "reject" ? "…" : "Reject"}
-                      </button>
+                      </Button>
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             )}
-          </div>
+          </Card>
 
           {/* Audit log */}
-          <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20 }}>
+          <Card padding="lg">
             <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, marginBottom: 16 }}>
               Recent Audit Events
             </div>
@@ -154,8 +139,9 @@ export default function AdminTrustCenter() {
                   padding: "8px 0",
                   borderBottom: i < auditLog.length - 1 ? `1px solid ${BRD}` : "none",
                 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: 3.5, background: NAVY,
-                    flexShrink: 0, marginTop: 5 }} />
+                  <div style={{ marginTop: 5 }}>
+                    <StatusDot color={NAVY} size={7} />
+                  </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: NAVY }}>
                       {e.event?.replace(/_/g, " ")}
@@ -170,7 +156,7 @@ export default function AdminTrustCenter() {
                 </div>
               ))
             )}
-          </div>
+          </Card>
         </div>
     </AdministrationLayout>
   );

@@ -185,6 +185,7 @@ export default function AIExecutiveAssistant() {
               size="icon"
               onClick={() => send(input)}
               disabled={loading || !input.trim()}
+              aria-label="Send"
             >
               <Send size={18} />
             </Button>

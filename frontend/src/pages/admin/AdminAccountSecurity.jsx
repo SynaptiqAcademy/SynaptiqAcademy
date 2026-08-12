@@ -8,6 +8,7 @@ import {
 import api from "@/lib/api";
 import { NAVY, WARM, BRD } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
+import { NavTabs, Card, Badge, Button, Alert, DataTable, StatCard, StatGrid } from "@/components/ds";
 
 // ── tiny shared fetch hook ────────────────────────────────────────────────────
 function useAdminFetch(path, deps = []) {
@@ -32,19 +33,17 @@ function useAdminFetch(path, deps = []) {
 }
 
 // ── colour helpers ────────────────────────────────────────────────────────────
-const ROLE_COLOURS = {
-  super_admin:        "bg-red-100 text-red-700 border border-red-300",
-  admin:              "bg-orange-100 text-orange-700 border border-orange-300",
-  institution_admin:  "bg-amber-100 text-amber-700 border border-amber-300",
-  moderator:          "bg-blue-100 text-blue-700 border border-blue-300",
-  verified_professor: "bg-purple-100 text-purple-700 border border-purple-300",
-  verified_researcher:"bg-indigo-100 text-indigo-700 border border-indigo-300",
-  user:               "bg-slate-100 text-slate-600 border border-slate-300",
+const ROLE_VARIANT = {
+  super_admin:         "danger",
+  admin:               "danger",
+  institution_admin:   "warning",
+  moderator:           "info",
+  verified_professor:  "purple",
+  verified_researcher: "purple",
+  user:                "neutral",
 };
 const rolePill = (role) => (
-  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ROLE_COLOURS[role] || "bg-slate-100 text-slate-600"}`}>
-    {role}
-  </span>
+  <Badge variant={ROLE_VARIANT[role] || "neutral"}>{role}</Badge>
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -60,22 +59,17 @@ function ProtectedStatus() {
   if (!data)   return null;
 
   return (
-    <div className={`rounded-md border p-5 ${data.healthy ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"}`}>
+    <Alert variant={data.healthy ? "success" : "error"} icon={data.healthy ? CheckCircle2 : XCircle}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          {data.healthy ? (
-            <CheckCircle2 className="w-5 h-5 text-green-600" />
-          ) : (
-            <XCircle className="w-5 h-5 text-red-600" />
-          )}
           <span className="font-semibold text-slate-800">
             {data.exists ? data.email : "Protected account not found"}
           </span>
           {data.exists && rolePill(data.role)}
         </div>
-        <button onClick={fetch} className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1">
+        <Button variant="link" size="sm" onClick={fetch}>
           <RefreshCw className="w-3 h-3" /> Refresh
-        </button>
+        </Button>
       </div>
 
       {data.exists && (
@@ -115,7 +109,7 @@ function ProtectedStatus() {
           ))}
         </div>
       )}
-    </div>
+    </Alert>
   );
 }
 
@@ -135,6 +129,9 @@ function RoleHierarchy() {
         <div key={row.role} className="flex items-center gap-3">
           <div className="w-8 text-right text-xs font-mono text-slate-400">L{Math.round(row.level / 10)}</div>
           <div className="flex-1 flex items-center gap-2">
+            {/* Kept as a raw gradient bar (not ds/ProgressBar): the red→blue
+                gradient fill encoding hierarchy level has no equivalent in
+                ProgressBar's single-color fill API. */}
             <div
               className="h-2 rounded-full bg-gradient-to-r from-red-400 to-blue-400"
               style={{ width: `${row.level}%`, opacity: 0.6 + row.level / 300 }}
@@ -142,12 +139,8 @@ function RoleHierarchy() {
           </div>
           {rolePill(row.role)}
           <div className="w-16 text-right text-xs text-slate-500">{row.count.toLocaleString()} users</div>
-          {row.role === "super_admin" && (
-            <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">DB-only</span>
-          )}
-          {row.api_grantable && (
-            <span className="text-xs bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">API</span>
-          )}
+          {row.role === "super_admin" && <Badge variant="danger" size="sm">DB-only</Badge>}
+          {row.api_grantable && <Badge variant="neutral" size="sm">API</Badge>}
         </div>
       ))}
       <div className="text-xs text-slate-400 mt-1">Total platform users: {data.total_users?.toLocaleString()}</div>
@@ -166,93 +159,80 @@ function PrivilegeAudit() {
   if (error)   return <div className="text-sm text-red-500">{error}</div>;
   if (!data)   return null;
 
+  const accountColumns = [
+    {
+      key: "email", label: "Email",
+      render: (v, row) => (
+        <span className="flex items-center gap-1.5 font-mono text-xs">
+          {v}
+          {row.is_protected && <Lock className="w-3 h-3 text-green-600" title="Protected" />}
+        </span>
+      ),
+    },
+    { key: "role", label: "Role", render: (v) => rolePill(v) },
+    {
+      key: "status", label: "Status",
+      render: (v) => <span className={`text-xs ${v === "active" ? "text-green-600" : "text-red-600"}`}>{v}</span>,
+    },
+    {
+      key: "email_verified", label: "Verified", align: "center",
+      render: (v) => v
+        ? <CheckCircle2 className="w-4 h-4 text-green-500 inline" />
+        : <XCircle className="w-4 h-4 text-slate-300 inline" />,
+    },
+    { key: "created_at", label: "Created", render: (v) => <span className="text-xs text-slate-500">{v}</span> },
+    {
+      key: "flags", label: "Flags",
+      render: (_, row) => (
+        <div className="flex gap-1 flex-wrap">
+          {row.is_protected && <Badge variant="success" size="sm">protected</Badge>}
+          {row.in_env_list && <Badge variant="info" size="sm">env-list</Badge>}
+          {row.role === "super_admin" && !row.is_protected && <Badge variant="danger" size="sm">ROGUE</Badge>}
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-4">
       {/* Risk banner */}
       {data.risk_count > 0 && (
-        <div className="rounded-md border border-red-300 bg-red-50 p-4 flex items-start gap-3">
-          <ShieldAlert className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <div className="font-semibold text-red-800 mb-1">{data.risk_count} security risk{data.risk_count > 1 ? "s" : ""} detected</div>
-            {data.risks.map((r, i) => (
-              <div key={i} className="text-sm text-red-700">{r.message}</div>
-            ))}
-          </div>
-        </div>
+        <Alert variant="error" icon={ShieldAlert} title={`${data.risk_count} security risk${data.risk_count > 1 ? "s" : ""} detected`}>
+          {data.risks.map((r, i) => (
+            <div key={i}>{r.message}</div>
+          ))}
+        </Alert>
       )}
 
       {/* Stats bar */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-slate-50 rounded-lg p-3 text-center">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Card padding="sm" className="text-center" style={{ background: "#f8fafc" }}>
           <div className="text-2xl font-bold text-slate-700">{data.total_elevated}</div>
           <div className="text-xs text-slate-500">Elevated accounts</div>
-        </div>
-        <div className={`rounded-lg p-3 text-center ${data.rogue_count > 0 ? "bg-red-50" : "bg-green-50"}`}>
+        </Card>
+        <Card padding="sm" className="text-center" style={{ background: data.rogue_count > 0 ? "#fef2f2" : "#f0fdf4" }}>
           <div className={`text-2xl font-bold ${data.rogue_count > 0 ? "text-red-700" : "text-green-700"}`}>{data.rogue_count}</div>
           <div className={`text-xs ${data.rogue_count > 0 ? "text-red-500" : "text-green-500"}`}>Rogue super-admins</div>
-        </div>
-        <div className={`rounded-lg p-3 text-center ${data.protected_account_exists ? "bg-green-50" : "bg-red-50"}`}>
+        </Card>
+        <Card padding="sm" className="text-center" style={{ background: data.protected_account_exists ? "#f0fdf4" : "#fef2f2" }}>
           <div className={`text-2xl font-bold ${data.protected_account_exists ? "text-green-700" : "text-red-700"}`}>
             {data.protected_account_exists ? "✓" : "✗"}
           </div>
           <div className={`text-xs ${data.protected_account_exists ? "text-green-500" : "text-red-500"}`}>Protected account</div>
-        </div>
+        </Card>
       </div>
 
       {/* Account table */}
-      <div className="overflow-x-auto rounded-md border border-slate-200">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th className="text-left p-3 text-xs text-slate-500 font-medium">Email</th>
-              <th className="text-left p-3 text-xs text-slate-500 font-medium">Role</th>
-              <th className="text-left p-3 text-xs text-slate-500 font-medium">Status</th>
-              <th className="text-left p-3 text-xs text-slate-500 font-medium">Verified</th>
-              <th className="text-left p-3 text-xs text-slate-500 font-medium">Created</th>
-              <th className="text-left p-3 text-xs text-slate-500 font-medium">Flags</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {(data.accounts || []).map((acc) => (
-              <tr key={acc.id} className={acc.is_protected ? "bg-green-50/40" : ""}>
-                <td className="p-3 font-mono text-xs">
-                  <span className="flex items-center gap-1.5">
-                    {acc.email}
-                    {acc.is_protected && <Lock className="w-3 h-3 text-green-600" title="Protected" />}
-                  </span>
-                </td>
-                <td className="p-3">{rolePill(acc.role)}</td>
-                <td className="p-3">
-                  <span className={`text-xs ${acc.status === "active" ? "text-green-600" : "text-red-600"}`}>
-                    {acc.status}
-                  </span>
-                </td>
-                <td className="p-3 text-center">
-                  {acc.email_verified ? (
-                    <CheckCircle2 className="w-4 h-4 text-green-500 inline" />
-                  ) : (
-                    <XCircle className="w-4 h-4 text-slate-300 inline" />
-                  )}
-                </td>
-                <td className="p-3 text-xs text-slate-500">{acc.created_at}</td>
-                <td className="p-3">
-                  <div className="flex gap-1 flex-wrap">
-                    {acc.is_protected && <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">protected</span>}
-                    {acc.in_env_list  && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">env-list</span>}
-                    {acc.role === "super_admin" && !acc.is_protected && (
-                      <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">ROGUE</span>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Note: the original per-row green tint for protected accounts (a subtle
+          background highlight on the whole <tr>) isn't representable through
+          DataTable's per-cell `render` API (no row-level style hook) — the
+          Lock icon + "protected" badge in the Email/Flags columns still
+          communicate the same status. */}
+      <DataTable columns={accountColumns} rows={data.accounts || []} />
 
       <div className="text-xs text-slate-400">
         Audited at {data.audited_at ? new Date(data.audited_at).toLocaleString() : "—"}
-        <button onClick={fetch} className="ml-3 text-indigo-500 hover:underline">Refresh</button>
+        <Button variant="link" size="sm" onClick={fetch} className="ml-3">Refresh</Button>
       </div>
     </div>
   );
@@ -300,83 +280,69 @@ function LockdownPanel() {
       </p>
 
       <div className="flex gap-3">
-        <button
-          onClick={runDry}
-          disabled={loading}
-          className="px-4 py-2 bg-slate-100 text-slate-700 text-sm rounded-lg hover:bg-slate-200 flex items-center gap-2 disabled:opacity-50"
-        >
+        <Button variant="subtle" onClick={runDry} disabled={loading}>
           <Eye className="w-4 h-4" /> Dry-run preview
-        </button>
-        <button
-          onClick={() => setConfirm(true)}
-          disabled={loading}
-          className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 flex items-center gap-2 disabled:opacity-50"
-        >
+        </Button>
+        <Button variant="danger" onClick={() => setConfirm(true)} disabled={loading}>
           <Zap className="w-4 h-4" /> Apply lockdown
-        </button>
+        </Button>
       </div>
 
+      {/* Kept as inline content (not ds/Dialog): this confirmation flows
+          in-page below the buttons rather than blocking the page behind a
+          modal backdrop — swapping in Dialog would change that interaction,
+          not just its styling. */}
       {confirm && (
-        <div className="rounded-md border border-red-300 bg-red-50 p-4">
-          <div className="font-semibold text-red-800 mb-2">Confirm lockdown</div>
-          <p className="text-sm text-red-700 mb-3">
+        <Alert variant="error" title="Confirm lockdown">
+          <p className="mb-3">
             This will demote ALL super_admin accounts except admin@synaptiq.academy to the "user" role.
             This action is audit-logged and irreversible via the API.
           </p>
           <div className="flex gap-2">
-            <button
-              onClick={runApply}
-              disabled={loading}
-              className="px-4 py-2 bg-red-700 text-white text-sm rounded-lg hover:bg-red-800 disabled:opacity-50"
-            >
-              {loading ? "Applying…" : "Yes, apply lockdown"}
-            </button>
-            <button
-              onClick={() => setConfirm(false)}
-              className="px-4 py-2 bg-white text-slate-700 text-sm rounded-lg border border-slate-200 hover:bg-slate-50"
-            >
+            <Button variant="danger" size="sm" onClick={runApply} loading={loading}>
+              Yes, apply lockdown
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setConfirm(false)}>
               Cancel
-            </button>
+            </Button>
           </div>
-        </div>
+        </Alert>
       )}
 
       {dryResult && (
-        <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm">
-          <div className="font-medium text-slate-700 mb-2">Dry-run result</div>
+        <Alert variant={dryResult.error ? "error" : "neutral"} title="Dry-run result">
           {dryResult.error ? (
-            <div className="text-red-600">{dryResult.error}</div>
+            <div>{dryResult.error}</div>
           ) : (
             <>
-              <div className="text-slate-600">Accounts that would be demoted: <strong>{dryResult.demoted_count}</strong></div>
+              <div>Accounts that would be demoted: <strong>{dryResult.demoted_count}</strong></div>
               {dryResult.demoted_accounts?.map((a, i) => (
-                <div key={i} className="font-mono text-xs text-slate-500 ml-2">{a.email} → user</div>
+                <div key={i} className="font-mono text-xs ml-2">{a.email} → user</div>
               ))}
               {dryResult.demoted_count === 0 && (
                 <div className="text-green-700 mt-1">Platform is already locked down. No changes needed.</div>
               )}
             </>
           )}
-        </div>
+        </Alert>
       )}
 
       {applyResult && (
-        <div className={`rounded-md border p-4 text-sm ${applyResult.error ? "border-red-300 bg-red-50" : "border-green-300 bg-green-50"}`}>
+        <Alert variant={applyResult.error ? "error" : "success"} title={applyResult.error ? undefined : "Lockdown applied successfully"}>
           {applyResult.error ? (
-            <div className="text-red-700">{applyResult.error}</div>
+            <div>{applyResult.error}</div>
           ) : (
             <>
-              <div className="font-medium text-green-800 mb-1">Lockdown applied successfully</div>
-              <div className="text-green-700">{applyResult.demoted_count} account(s) demoted.</div>
+              <div>{applyResult.demoted_count} account(s) demoted.</div>
               {applyResult.demoted_accounts?.map((a, i) => (
-                <div key={i} className="font-mono text-xs text-green-600 ml-2">{a.email} → user</div>
+                <div key={i} className="font-mono text-xs ml-2">{a.email} → user</div>
               ))}
-              <div className="text-green-700 mt-1">
+              <div className="mt-1">
                 Protected account status: <strong>{applyResult.protected_status}</strong>
               </div>
             </>
           )}
-        </div>
+        </Alert>
       )}
     </div>
   );
@@ -401,20 +367,11 @@ export default function AdminAccountSecurity() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 border-b border-slate-200">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium capitalize rounded-t-lg border-b-2 transition-colors
-              ${tab === t
-                ? "border-indigo-600 text-indigo-700 bg-indigo-50"
-                : "border-transparent text-slate-500 hover:text-slate-700"}`}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+      <NavTabs
+        tabs={TABS.map((t) => ({ id: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))}
+        active={tab}
+        onChange={setTab}
+      />
 
       {/* Tab content */}
       <div className="space-y-6">
@@ -436,13 +393,13 @@ export default function AdminAccountSecurity() {
                   { label: "Hierarchy enforcement",    desc: "Admins cannot modify users at equal or higher authority level." },
                   { label: "Seed-time auto-upgrade",   desc: "On restart, the protected account is automatically corrected to super_admin if tampered with." },
                 ].map((c) => (
-                  <div key={c.label} className="flex gap-3 bg-white border border-slate-200 rounded-md p-3">
+                  <Card key={c.label} padding="sm" className="flex gap-3">
                     <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
                     <div>
                       <div className="text-sm font-medium text-slate-800">{c.label}</div>
                       <div className="text-xs text-slate-500">{c.desc}</div>
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </section>
@@ -466,14 +423,14 @@ export default function AdminAccountSecurity() {
         {tab === "hierarchy" && (
           <section>
             <h2 className="text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wide">Role Hierarchy</h2>
-            <div className="bg-white border border-slate-200 rounded-md p-5">
+            <Card padding="lg">
               <RoleHierarchy />
-            </div>
-            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-md p-4 text-sm text-amber-800">
+            </Card>
+            <Alert variant="warning" className="mt-4">
               <strong>API grant restrictions:</strong> The <code className="bg-amber-100 px-1 rounded">super_admin</code> role
               cannot be granted via any API endpoint. It can only be assigned through the database seed script or direct
               database intervention. All other roles in the hierarchy are API-grantable by sufficiently privileged admins.
-            </div>
+            </Alert>
           </section>
         )}
       </div>

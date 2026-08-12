@@ -5,6 +5,8 @@ import { Avatar } from "@/components/ds/Avatar";
 import { NAVY } from "@/lib/tokens";
 import { NavTabs } from "@/components/ds/NavTabs";
 import EmptyState from "@/components/ds/EmptyState";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
 import { FolderOpen } from "lucide-react";
 import { ResearchLayout } from "@/layouts";
 
@@ -40,11 +42,7 @@ export default function MyCollaborations() {
           <EmptyState icon={<FolderOpen />} title="Nothing here yet" size="md" dashed={true} />
         )}
         {list.map((c) => (
-          <Link
-            to={`/collaborations/${c.id}`}
-            key={c.id}
-            className="block border border-slate-200 bg-white p-6 hover:border-[#0F2847]"
-          >
+          <Card to={`/collaborations/${c.id}`} key={c.id} padding="lg">
             <div className="flex items-start gap-6">
               <div className="flex-1 min-w-0">
                 <div className="overline text-[#0F2847]">{c.collab_type}</div>
@@ -54,11 +52,11 @@ export default function MyCollaborations() {
               <div className="text-right text-xs">
                 <div className="font-mono text-slate-500">{c.research_area}</div>
                 {c.application_status && (
-                  <div className="mt-1 inline-block px-2 py-0.5 bg-amber-50 text-amber-700">Application: {c.application_status}</div>
+                  <Badge variant="warning" size="sm" className="mt-1">Application: {c.application_status}</Badge>
                 )}
               </div>
             </div>
-          </Link>
+          </Card>
         ))}
       </div>
     </ResearchLayout>

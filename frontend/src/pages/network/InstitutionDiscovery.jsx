@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { Building2, Search } from "lucide-react";
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Button, Input, FormSelect, EmptyState, LoadingOverlay, Pagination } from "@/components/ds";
 
 function InstCard({ inst }) {
@@ -55,7 +55,7 @@ export default function InstitutionDiscovery() {
   const handleSearch = e => { e.preventDefault(); setPage(1); search(filters, 1); };
 
   return (
-    <DiscoveryLayout title="Find Institutions">
+    <ResearchLayout title="Find Institutions">
 
       <form onSubmit={handleSearch} style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         <Input
@@ -105,6 +105,6 @@ export default function InstitutionDiscovery() {
           />
         </div>
       )}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

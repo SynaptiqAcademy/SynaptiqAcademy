@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
 import {
   Shield, Star, Award, CheckCircle, Circle, RefreshCw,
   ArrowUp, ArrowDown, FileText, ChevronRight,
@@ -10,6 +11,10 @@ import {
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { WARM } from "@/lib/tokens";
+import {
+  Card, Button, NavTabs, EmptyState, Badge, Input, FormSelect, Textarea,
+  Alert, Callout, List, ListItem, SkeletonCard as DsSkeletonCard,
+} from "@/components/ds";
 
 // ── Research Intelligence Nav ─────────────────────────────────────────────────
 
@@ -194,18 +199,6 @@ function SectionHeader({ label, action }) {
   );
 }
 
-function SkeletonCard({ rows = 3 }) {
-  return (
-    <div className="border border-slate-200 bg-white p-5 animate-pulse space-y-3">
-      <div className="h-3 w-1/3 bg-slate-200" />
-      <div className="h-8 w-1/2 bg-slate-200" />
-      {Array.from({ length: rows - 2 }).map((_, i) => (
-        <div key={i} className="h-3 w-full bg-slate-200" />
-      ))}
-    </div>
-  );
-}
-
 // ── Quick actions ─────────────────────────────────────────────────────────────
 
 function QuickActions() {
@@ -221,10 +214,10 @@ function QuickActions() {
       <SectionHeader label="Continue in Research Intelligence" />
       <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
         {actions.map(({ to, label, icon: Icon }) => (
-          <Link key={to} to={to} className="border border-slate-200 bg-white p-4 hover:border-[#0F2847] transition-colors group block">
+          <Card key={to} to={to} padding="md" className="group">
             <Icon size={14} strokeWidth={1.5} className="text-slate-300 group-hover:text-[#0F2847] mb-2 transition-colors" />
             <div className="text-xs font-medium text-slate-700 group-hover:text-[#0F2847] transition-colors">{label}</div>
-          </Link>
+          </Card>
         ))}
       </div>
     </section>
@@ -341,18 +334,19 @@ export default function VerificationCenter() {
 
   if (loading) {
     return (
-      <AIWorkspaceLayout
+      <ResearchLayout
+        navItems={AI_NAV_ITEMS}
         title="Verification Center"
         subtitle="Your academic identity, trust score, and verification status"
       >
         <div className="space-y-5">
-          <SkeletonCard rows={5} />
+          <DsSkeletonCard rows={5} />
           <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3">
             {Array.from({ length: 9 }).map((_, i) => <div key={i} className="border border-slate-200 bg-slate-100 h-20 animate-pulse" />)}
           </div>
-          {[1, 2].map((i) => <SkeletonCard key={i} rows={4} />)}
+          {[1, 2].map((i) => <DsSkeletonCard key={i} rows={4} />)}
         </div>
-      </AIWorkspaceLayout>
+      </ResearchLayout>
     );
   }
 
@@ -370,23 +364,21 @@ export default function VerificationCenter() {
       <section>
         <SectionHeader label={`Verification Badges${badges.length > 0 ? ` (${badges.length})` : ""}`} />
         {badges.length === 0 ? (
-          <div className="border border-dashed border-slate-200 bg-white p-12 text-center">
-            <Award className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <div className="overline text-slate-500 mb-2">No badges yet</div>
-            <p className="text-sm text-slate-500 max-w-sm mx-auto">
-              Complete verification steps below to earn badges that confirm your academic identity.
-            </p>
-          </div>
+          <EmptyState
+            icon={<Award />}
+            title="No badges yet"
+            description="Complete verification steps below to earn badges that confirm your academic identity."
+          />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
             {badges.map((badge, i) => (
-              <div key={badge._id || i} className="border border-slate-200 bg-white p-4 flex flex-col items-center gap-2 text-center hover:border-[#0F2847] transition-colors">
+              <Card key={badge._id || i} padding="md" className="flex flex-col items-center gap-2 text-center">
                 <div className="w-10 h-10 border border-slate-200 flex items-center justify-center text-[#0F2847]">
                   <BadgeIcon type={badge.badge_type} />
                 </div>
                 <span className="text-xs font-semibold text-slate-800 leading-tight">{formatLabel(badge.badge_type || "Badge")}</span>
                 {badge.awarded_at && <span className="text-[10px] text-slate-400 font-mono">{formatDate(badge.awarded_at)}</span>}
-              </div>
+              </Card>
             ))}
           </div>
         )}
@@ -394,13 +386,12 @@ export default function VerificationCenter() {
 
       <section>
         <SectionHeader label="What's Next" />
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <p className="text-sm text-slate-500 mb-5">Steps to advance your verification level</p>
           {level === 8 ? (
-            <div className="flex items-center gap-3 border border-amber-200 bg-amber-50 p-5">
-              <Award className="w-6 h-6 text-amber-600 flex-shrink-0" />
-              <p className="text-amber-800 font-semibold text-sm">Maximum verification achieved — Distinguished Scholar</p>
-            </div>
+            <Alert variant="warning" icon={Award}>
+              Maximum verification achieved — Distinguished Scholar
+            </Alert>
           ) : (
             <div className="space-y-3">
               {roadmapSteps.map((step, i) => {
@@ -413,13 +404,13 @@ export default function VerificationCenter() {
                     <p className="flex-1 text-sm text-slate-700">{step.text}</p>
                     {step.cta && (
                       step.tab ? (
-                        <button onClick={() => switchTab(step.tab)} className="flex items-center gap-1 text-xs font-semibold text-[#0F2847] hover:underline flex-shrink-0">
+                        <Button variant="link" onClick={() => switchTab(step.tab)} className="flex-shrink-0">
                           {step.cta} <ChevronRight className="w-3.5 h-3.5" />
-                        </button>
+                        </Button>
                       ) : (
-                        <Link to={step.href} className="flex items-center gap-1 text-xs font-semibold text-[#0F2847] hover:underline flex-shrink-0">
+                        <Button as={Link} to={step.href} variant="link" className="flex-shrink-0">
                           {step.cta} <ChevronRight className="w-3.5 h-3.5" />
-                        </Link>
+                        </Button>
                       )
                     )}
                   </div>
@@ -427,49 +418,41 @@ export default function VerificationCenter() {
               })}
             </div>
           )}
-        </div>
+        </Card>
       </section>
 
       <section>
         <SectionHeader label="ORCID Verification" />
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <p className="text-xs text-slate-500 mb-5">
             Link your ORCID iD to verify your researcher identity and connect your publications automatically.
           </p>
           {profile?.orcid_verified ? (
-            <div className="flex items-center gap-3 border border-emerald-200 bg-emerald-50 px-5 py-4">
-              <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-              <span className="text-emerald-700 font-semibold text-sm">ORCID Connected</span>
-              {profile?.orcid_id && <span className="text-emerald-600 text-sm font-mono ml-1">({profile.orcid_id})</span>}
-            </div>
+            <Alert variant="success" icon={CheckCircle}>
+              ORCID Connected
+              {profile?.orcid_id && <span className="font-mono ml-1">({profile.orcid_id})</span>}
+            </Alert>
           ) : (
             <form onSubmit={submitOrcid} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">ORCID iD</label>
-                <input
-                  type="text"
-                  value={orcidForm.orcid}
-                  onChange={(e) => setOrcidForm((f) => ({ ...f, orcid: e.target.value }))}
-                  placeholder="0000-0000-0000-0000"
-                  className="w-full border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847] focus:border-[#0F2847] font-mono"
-                  required
-                />
-                <p className="text-xs text-slate-400 mt-1">Format: 0000-0000-0000-0000</p>
-              </div>
-              <button
-                type="submit"
-                disabled={orcidForm.submitting}
-                className="flex items-center gap-2 bg-[#0F2847] text-white px-5 py-2.5 text-sm font-medium hover:bg-[#0F2847]/90 disabled:opacity-50 transition"
-              >
-                {orcidForm.submitting && <Loader className="w-4 h-4 animate-spin" />}
+              <Input
+                label="ORCID iD"
+                type="text"
+                value={orcidForm.orcid}
+                onChange={(e) => setOrcidForm((f) => ({ ...f, orcid: e.target.value }))}
+                placeholder="0000-0000-0000-0000"
+                className="font-mono"
+                hint="Format: 0000-0000-0000-0000"
+                required
+              />
+              <Button type="submit" disabled={orcidForm.submitting} loading={orcidForm.submitting}>
                 {orcidForm.submitting ? "Submitting…" : "Connect ORCID"}
-              </button>
+              </Button>
               {orcidForm.msg && (
                 <p className="text-sm text-slate-600 bg-slate-50 border border-slate-200 px-4 py-2.5">{orcidForm.msg}</p>
               )}
             </form>
           )}
-        </div>
+        </Card>
       </section>
 
     </div>
@@ -480,15 +463,15 @@ export default function VerificationCenter() {
   const renderTrust = () => (
     <div className="space-y-6">
       {!breakdown ? (
-        <div className="border border-slate-200 bg-white p-10 flex flex-col items-center gap-3">
+        <Card padding="xl" className="flex flex-col items-center gap-3">
           <Loader className="w-7 h-7 animate-spin text-[#0F2847]" />
           <p className="text-slate-500 text-sm">Loading trust breakdown…</p>
-        </div>
+        </Card>
       ) : (
         <>
           <section>
             <SectionHeader label="Score Breakdown" />
-            <div className="border border-slate-200 bg-white p-5 space-y-4">
+            <Card padding="lg" className="space-y-4">
               {SCORE_COMPONENTS.map(({ key, label, max }) => {
                 const components = breakdown?.components || {};
                 const earned = components[key] ?? 0;
@@ -513,19 +496,19 @@ export default function VerificationCenter() {
                   </div>
                 );
               })}
-            </div>
+            </Card>
           </section>
 
           {breakdown?.next_level_requirements && (
             <section>
               <SectionHeader label="Next Level Requirements" />
-              <div className="border border-blue-200 bg-blue-50 p-5">
+              <Callout variant="info">
                 {typeof breakdown.next_level_requirements === "string" ? (
-                  <p className="text-sm text-blue-700">{breakdown.next_level_requirements}</p>
+                  <p>{breakdown.next_level_requirements}</p>
                 ) : Array.isArray(breakdown.next_level_requirements) ? (
                   <ul className="space-y-2">
                     {breakdown.next_level_requirements.map((req, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-blue-700">
+                      <li key={i} className="flex items-start gap-2">
                         <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" /> {req}
                       </li>
                     ))}
@@ -533,14 +516,14 @@ export default function VerificationCenter() {
                 ) : (
                   <div className="space-y-2">
                     {Object.entries(breakdown.next_level_requirements).map(([k, v]) => (
-                      <div key={k} className="flex items-center gap-2 text-sm text-blue-700">
+                      <div key={k} className="flex items-center gap-2">
                         <ChevronRight className="w-4 h-4 flex-shrink-0" />
                         <span className="font-semibold">{formatLabel(k)}:</span> {String(v)}
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
+              </Callout>
             </section>
           )}
 
@@ -549,10 +532,10 @@ export default function VerificationCenter() {
               <SectionHeader label="Score Distribution by Tier" />
               <div className="grid sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 {Object.entries(breakdown.tier_distribution).map(([tier, pts]) => (
-                  <div key={tier} className="border border-slate-200 bg-white p-4 text-center">
+                  <Card key={tier} padding="md" className="text-center">
                     <div className="font-serif text-3xl text-[#0F2847]">{pts}</div>
                     <div className="overline mt-1">{formatLabel(tier)}</div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </section>
@@ -568,77 +551,65 @@ export default function VerificationCenter() {
     <div className="space-y-6">
       <section>
         <SectionHeader label="Submit Evidence" />
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <p className="text-xs text-slate-500 mb-5">
             Provide documentation to support your verification. Evidence is reviewed by the platform team.
           </p>
           <form onSubmit={submitEvidence} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">Evidence Type</label>
-              <select
-                value={evidenceForm.evidence_type}
-                onChange={(e) => setEvidenceForm((f) => ({ ...f, evidence_type: e.target.value }))}
-                className="w-full border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847] focus:border-[#0F2847] bg-white"
-              >
-                {EVIDENCE_TYPES.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">
-                Description <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                value={evidenceForm.description}
-                onChange={(e) => setEvidenceForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="Describe the evidence you are submitting and why it supports your verification…"
-                rows={4}
-                required
-                className="w-full border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847] focus:border-[#0F2847] resize-none"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={evidenceForm.submitting}
-              className="flex items-center gap-2 bg-[#0F2847] text-white px-5 py-2.5 text-sm font-medium hover:bg-[#0F2847]/90 disabled:opacity-50 transition"
+            <FormSelect
+              label="Evidence Type"
+              value={evidenceForm.evidence_type}
+              onChange={(e) => setEvidenceForm((f) => ({ ...f, evidence_type: e.target.value }))}
             >
-              {evidenceForm.submitting && <Loader className="w-4 h-4 animate-spin" />}
+              {EVIDENCE_TYPES.map(({ value, label }) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </FormSelect>
+            <Textarea
+              label="Description *"
+              value={evidenceForm.description}
+              onChange={(e) => setEvidenceForm((f) => ({ ...f, description: e.target.value }))}
+              placeholder="Describe the evidence you are submitting and why it supports your verification…"
+              rows={4}
+              required
+            />
+            <Button type="submit" disabled={evidenceForm.submitting} loading={evidenceForm.submitting}>
               {evidenceForm.submitting ? "Submitting…" : "Submit Evidence"}
-            </button>
+            </Button>
             {evidenceForm.msg && (
-              <p className={`text-sm px-4 py-2.5 border ${
+              <Alert variant={
                 evidenceForm.msg.toLowerCase().includes("fail") || evidenceForm.msg.toLowerCase().includes("error")
-                  ? "bg-red-50 border-red-200 text-red-700"
-                  : "bg-emerald-50 border-emerald-200 text-emerald-700"
-              }`}>
+                  ? "error" : "success"
+              }>
                 {evidenceForm.msg}
-              </p>
+              </Alert>
             )}
           </form>
-        </div>
+        </Card>
       </section>
 
       <section>
         <SectionHeader label="Submitted Evidence" />
         {evidence.length === 0 ? (
-          <div className="border border-dashed border-slate-200 bg-white p-10 text-center">
-            <FileText className="w-9 h-9 text-slate-300 mx-auto mb-3" />
-            <div className="overline text-slate-500 mb-2">No evidence submitted</div>
-            <p className="text-sm text-slate-500">Submit documents above to strengthen your verification profile.</p>
-          </div>
+          <EmptyState
+            icon={<FileText />}
+            title="No evidence submitted"
+            description="Submit documents above to strengthen your verification profile."
+          />
         ) : (
           <div className="space-y-3">
             {evidence.map((item, i) => {
-              const statusCfg = {
-                pending:  { cls: "bg-amber-100 text-amber-700",     label: "Pending"  },
-                approved: { cls: "bg-emerald-100 text-emerald-700", label: "Approved" },
-                rejected: { cls: "bg-red-100 text-red-700",         label: "Rejected" },
-              };
-              const status = statusCfg[item.status] || statusCfg.pending;
+              const statusVariant = {
+                pending:  "warning",
+                approved: "success",
+                rejected: "danger",
+              }[item.status] || "warning";
+              const statusLabel = {
+                pending: "Pending", approved: "Approved", rejected: "Rejected",
+              }[item.status] || "Pending";
               return (
-                <div key={item._id || i} className="border border-slate-200 bg-white p-5 flex items-start gap-4">
-                  <span className={`text-xs font-semibold px-2 py-1 flex-shrink-0 ${status.cls}`}>{status.label}</span>
+                <Card key={item._id || i} padding="lg" className="flex items-start gap-4">
+                  <Badge variant={statusVariant} className="flex-shrink-0">{statusLabel}</Badge>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
                       {formatLabel(item.evidence_type || "Evidence")}
@@ -648,7 +619,7 @@ export default function VerificationCenter() {
                   <div className="flex-shrink-0 text-xs text-slate-400 font-mono whitespace-nowrap">
                     {formatDate(item.submitted_at || item.created_at)}
                   </div>
-                </div>
+                </Card>
               );
             })}
           </div>
@@ -663,35 +634,34 @@ export default function VerificationCenter() {
     <div>
       <SectionHeader label="Verification History" />
       {history.length === 0 ? (
-        <div className="border border-dashed border-slate-200 bg-white p-10 text-center">
-          <Clock className="w-9 h-9 text-slate-300 mx-auto mb-3" />
-          <div className="overline text-slate-500 mb-2">No history yet</div>
-          <p className="text-sm text-slate-500">Click &ldquo;Recompute Status&rdquo; above to start tracking your verification history.</p>
-        </div>
+        <EmptyState
+          icon={<Clock />}
+          title="No history yet"
+          description={'Click "Recompute Status" above to start tracking your verification history.'}
+        />
       ) : (
-        <div className="border border-slate-200 bg-white divide-y divide-slate-100">
+        <List>
           {history.map((event, i) => {
             const iconBg = historyIconBg(event.event_type);
             return (
-              <div key={event._id || i} className="flex items-start gap-4 p-5">
-                <div className={`w-8 h-8 flex items-center justify-center flex-shrink-0 ${iconBg}`}>
-                  <HistoryIcon type={event.event_type} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800">{formatLabel(event.event_type || "Event")}</p>
-                  {event.details && (
-                    <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">
-                      {typeof event.details === "string" ? event.details : JSON.stringify(event.details)}
-                    </p>
-                  )}
-                </div>
-                <div className="flex-shrink-0 text-xs text-slate-400 font-mono whitespace-nowrap">
-                  {formatDate(event.created_at || event.timestamp)}
-                </div>
-              </div>
+              <ListItem
+                key={event._id || i}
+                leading={
+                  <div className={`w-8 h-8 flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+                    <HistoryIcon type={event.event_type} />
+                  </div>
+                }
+                title={formatLabel(event.event_type || "Event")}
+                subtitle={event.details && (typeof event.details === "string" ? event.details : JSON.stringify(event.details))}
+                trailing={
+                  <div className="text-xs text-slate-400 font-mono whitespace-nowrap">
+                    {formatDate(event.created_at || event.timestamp)}
+                  </div>
+                }
+              />
             );
           })}
-        </div>
+        </List>
       )}
     </div>
   );
@@ -699,24 +669,21 @@ export default function VerificationCenter() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="Verification Center"
       subtitle="Your academic identity, trust score, and verification status — evidence-based credentials for the research community."
       actions={
-        <button
-          onClick={recompute}
-          disabled={computing}
-          style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: computing ? "#94A3B8" : "#fff", padding: "9px 16px", background: computing ? "#E2E8F0" : "#0F2847", border: "none", cursor: computing ? "not-allowed" : "pointer", fontWeight: 500 }}
-        >
-          {computing ? <Loader className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+        <Button onClick={recompute} disabled={computing} loading={computing}>
+          {!computing && <RefreshCw className="w-4 h-4" />}
           {computing ? "Recomputing…" : "Recompute Status"}
-        </button>
+        </Button>
       }
     >
       <div className="space-y-10">
 
         {/* ── Trust Score Hero ── */}
-        <div className="border border-[#0F2847] bg-white p-6">
+        <Card padding="lg" className="border-[#0F2847]">
           <div className="flex flex-col md:flex-row md:items-center gap-8">
             <div className="flex-shrink-0 text-center md:text-left">
               <div className="overline text-[#0F2847] mb-2">Trust Score</div>
@@ -725,10 +692,10 @@ export default function VerificationCenter() {
             </div>
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-4">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 border text-sm font-semibold" style={{ borderColor: accent, color: accent, background: `${accent}12` }}>
+                <Badge size="md" color={accent} className="text-sm font-semibold">
                   <Shield className="w-3.5 h-3.5" />
                   Level {level} — {levelName}
-                </span>
+                </Badge>
               </div>
               <div className="h-2 bg-slate-100 overflow-hidden">
                 <div
@@ -741,7 +708,7 @@ export default function VerificationCenter() {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* ── Verification Status Flags ── */}
         <section>
@@ -750,10 +717,11 @@ export default function VerificationCenter() {
             {STATUS_FLAGS.map(({ key, label }) => {
               const verified = profile?.[key] === true;
               return (
-                <div
+                <Card
                   key={key}
-                  className={`border p-3 flex flex-col items-center gap-2 text-center transition-all ${
-                    verified ? "border-emerald-300 bg-emerald-50" : "border-slate-200 bg-white"
+                  padding="sm"
+                  className={`flex flex-col items-center gap-2 text-center transition-all ${
+                    verified ? "border-emerald-300 bg-emerald-50" : ""
                   }`}
                 >
                   {verified
@@ -763,35 +731,24 @@ export default function VerificationCenter() {
                   <span className={`text-[10px] font-semibold uppercase tracking-wide ${verified ? "text-emerald-700" : "text-slate-400"}`}>
                     {verified ? "✓" : "—"}
                   </span>
-                </div>
+                </Card>
               );
             })}
           </div>
         </section>
 
         {/* ── Tab Bar ── */}
-        <div className="border-b border-slate-200">
-          <div className="flex gap-0">
-            {[
-              { id: "overview", label: "Overview"    },
-              { id: "trust",    label: "Trust Score" },
-              { id: "evidence", label: "Evidence"    },
-              { id: "history",  label: "History"     },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => switchTab(tab.id)}
-                className={`px-6 py-3 text-sm font-medium border-b-2 transition -mb-px ${
-                  activeTab === tab.id
-                    ? "border-[#0F2847] text-[#0F2847]"
-                    : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <NavTabs
+          variant="underline"
+          active={activeTab}
+          onChange={switchTab}
+          tabs={[
+            { id: "overview", label: "Overview"    },
+            { id: "trust",    label: "Trust Score" },
+            { id: "evidence", label: "Evidence"    },
+            { id: "history",  label: "History"     },
+          ]}
+        />
 
         {/* ── Tab Content ── */}
         <div>
@@ -805,6 +762,6 @@ export default function VerificationCenter() {
         <QuickActions />
 
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

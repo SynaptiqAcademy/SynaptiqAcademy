@@ -5,12 +5,16 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { toast } from "sonner";
-import { Mail, Check, X, Loader2, ArrowRight, Send, Inbox, RotateCcw, Eye, Clock, Ban } from "lucide-react";
+import { Mail, Check, X, ArrowRight, Send, Inbox, RotateCcw, Eye, Clock, Ban } from "lucide-react";
 import { NAVY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Spinner } from "@/components/ds/LoadingState";
 import EmptyState from "@/components/ds/EmptyState";
 import { NavTabs } from "@/components/ds/NavTabs";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { Button } from "@/components/ds/Button";
+import { Textarea } from "@/components/ds/Textarea";
 
 const KIND_LABELS = {
   collaboration:              "Research Collaboration",
@@ -27,16 +31,13 @@ const KIND_LABELS = {
 
 function StatusChip({ status }) {
   const map = {
-    pending:   "border-amber-300 bg-amber-50 text-amber-800",
-    accepted:  "border-emerald-300 bg-emerald-50 text-emerald-800",
-    declined:  "border-red-200 bg-red-50 text-red-700",
-    withdrawn: "border-slate-200 bg-slate-50 text-slate-600",
-    expired:   "border-orange-200 bg-orange-50 text-orange-700",
+    pending:   "warning",
+    accepted:  "success",
+    declined:  "danger",
+    withdrawn: "neutral",
+    expired:   "warning",
   };
-  const cls = map[status] || map.pending;
-  return (
-    <span className={`overline border px-1.5 py-0.5 ${cls}`}>{status}</span>
-  );
+  return <Badge variant={map[status] || "warning"} size="sm">{status}</Badge>;
 }
 
 function InvitationRow({ inv, tab, onDecide, onWithdraw }) {
@@ -71,7 +72,7 @@ function InvitationRow({ inv, tab, onDecide, onWithdraw }) {
   };
 
   return (
-    <div className="border border-slate-200 bg-white" data-testid={`inv-row-${inv.id}`}>
+    <Card padding="none" data-testid={`inv-row-${inv.id}`}>
       <div className="p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
@@ -118,35 +119,39 @@ function InvitationRow({ inv, tab, onDecide, onWithdraw }) {
           <div className="flex flex-col gap-1 shrink-0">
             {isReceived && isPending && !decliningOpen && (
               <>
-                <button
+                <Button
+                  size="sm"
                   data-testid={`inv-accept-${inv.id}`}
                   onClick={() => handleDecide("accepted")}
                   disabled={acting}
-                  className="text-xs bg-[#0F2847] text-white px-3 py-1.5 hover:bg-slate-800 inline-flex items-center gap-1.5 disabled:opacity-50"
+                  loading={acting}
                 >
-                  {acting ? <Loader2 size={10} className="animate-spin" /> : <Check size={11} strokeWidth={1.5} />}
+                  <Check size={11} strokeWidth={1.5} />
                   Accept
-                </button>
-                <button
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
                   data-testid={`inv-decline-${inv.id}`}
                   onClick={() => { setDecliningOpen(true); setTimeout(() => declineRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50); }}
                   disabled={acting}
-                  className="text-xs border border-red-200 text-red-700 px-3 py-1.5 hover:bg-red-50 inline-flex items-center gap-1.5 disabled:opacity-50"
+                  className="border-red-200 text-red-700 hover:bg-red-50"
                 >
                   <X size={11} strokeWidth={1.5} />
                   Decline
-                </button>
+                </Button>
               </>
             )}
             {!isReceived && isPending && !withdrawConfirm && (
-              <button
+              <Button
+                size="sm"
+                variant="ghost"
                 onClick={() => setWithdrawConfirm(true)}
                 disabled={acting}
-                className="text-xs border border-slate-200 text-slate-600 px-3 py-1.5 hover:border-slate-400 inline-flex items-center gap-1.5 disabled:opacity-50"
               >
                 <RotateCcw size={11} strokeWidth={1.5} />
                 Withdraw
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -156,28 +161,29 @@ function InvitationRow({ inv, tab, onDecide, onWithdraw }) {
       {decliningOpen && (
         <div className="mx-4 mb-4 border border-rose-200 bg-rose-50 p-3 space-y-2" ref={declineRef}>
           <p className="text-xs text-rose-700 font-medium">Decline this invitation?</p>
-          <textarea
+          <Textarea
             rows={2}
             value={declineReason}
             onChange={(e) => setDeclineReason(e.target.value)}
             placeholder="Optional: share a reason with the sender"
-            className="w-full text-xs px-2 py-1.5 border border-rose-200 bg-white resize-none focus:outline-none focus:ring-1 focus:ring-rose-400"
           />
           <div className="flex gap-2">
-            <button
+            <Button
+              size="sm"
+              variant="danger"
               onClick={() => handleDecide("declined", declineReason.trim() ? { decline_reason: declineReason.trim() } : {})}
               disabled={acting}
-              className="text-xs bg-rose-600 text-white px-3 py-1.5 hover:bg-rose-700 disabled:opacity-50"
+              loading={acting}
             >
-              {acting ? <Loader2 size={10} className="animate-spin inline mr-1" /> : null}
               Confirm decline
-            </button>
-            <button
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
               onClick={() => { setDecliningOpen(false); setDeclineReason(""); }}
-              className="text-xs text-slate-600 px-3 py-1.5 border border-slate-200 hover:border-slate-400"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -187,24 +193,22 @@ function InvitationRow({ inv, tab, onDecide, onWithdraw }) {
         <div className="mx-4 mb-4 border border-amber-200 bg-amber-50 p-3 space-y-2">
           <p className="text-xs text-amber-700 font-medium">Withdraw this invitation? The recipient will be notified.</p>
           <div className="flex gap-2">
-            <button
+            <Button
+              size="sm"
               onClick={handleWithdraw}
               disabled={acting}
-              className="text-xs bg-amber-600 text-white px-3 py-1.5 hover:bg-amber-700 disabled:opacity-50"
+              loading={acting}
+              className="bg-amber-600 hover:bg-amber-700"
             >
-              {acting ? <Loader2 size={10} className="animate-spin inline mr-1" /> : null}
               Yes, withdraw
-            </button>
-            <button
-              onClick={() => setWithdrawConfirm(false)}
-              className="text-xs text-slate-600 px-3 py-1.5 border border-slate-200 hover:border-slate-400"
-            >
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setWithdrawConfirm(false)}>
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -253,9 +257,7 @@ export default function Invitations() {
       title="Invitations"
       subtitle="Manage collaboration invitations you've sent or received."
       icon={<Mail size={16} strokeWidth={1.5} />}
-    >
-      <div className="space-y-8">
-      <div data-testid="invitations-tabs">
+      nav={
         <NavTabs
           tabs={[
             { id: "received", label: "Received", count: tab === "received" ? pendingCount : undefined },
@@ -265,8 +267,9 @@ export default function Invitations() {
           onChange={setTab}
           variant="underline"
         />
-      </div>
-
+      }
+    >
+      <div className="space-y-8">
       {items === null && (
         <div className="flex items-center gap-2 py-4">
           <Spinner size={14} />

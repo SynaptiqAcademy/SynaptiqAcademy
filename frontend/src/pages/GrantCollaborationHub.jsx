@@ -3,41 +3,51 @@ import { useNavigate, Link } from "react-router-dom";
 import {
   Plus, Search, Users, Mail, BarChart2, ChevronLeft, ChevronRight,
   X, CheckCircle, XCircle, Loader2, Globe, Calendar, DollarSign,
-  Briefcase, ArrowRight, Building2, Tag, Eye, EyeOff
+  Briefcase, ArrowRight, Building2, Eye, EyeOff
 } from "lucide-react";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { ACCENT, NAVY, WARM } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
+import { Badge } from "@/components/ds/Badge";
+import { Tag, TagGroup } from "@/components/ds/Tag";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Input } from "@/components/ds/Input";
+import { Textarea } from "@/components/ds/Textarea";
+import { FormSelect } from "@/components/ds/FormSelect";
+import { RadioGroup } from "@/components/ds/Form";
+import { Modal } from "@/components/ds/Modal";
+import { NavTabs } from "@/components/ds/NavTabs";
+import { EmptyState } from "@/components/ds/EmptyState";
+import { StatCard, StatGrid } from "@/components/ds/StatCard";
+import { ProgressBar } from "@/components/ds/Progress";
+import { Spinner } from "@/components/ds/LoadingState";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
-const STATUS_COLORS = {
-  open:   "bg-emerald-100 text-emerald-700 border border-emerald-200",
-  active: "bg-blue-100 text-blue-700 border border-blue-200",
-  full:   "bg-amber-100 text-amber-700 border border-amber-200",
-  closed: "bg-slate-100 text-slate-600 border border-slate-200",
+const STATUS_BADGE_VARIANT = {
+  open:   "success",
+  active: "info",
+  full:   "warning",
+  closed: "neutral",
 };
 
 function StatusBadge({ status }) {
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[status] || STATUS_COLORS.closed}`}>
+    <Badge variant={STATUS_BADGE_VARIANT[status] || "neutral"}>
       {status ? status.charAt(0).toUpperCase() + status.slice(1) : "Unknown"}
-    </span>
+    </Badge>
   );
 }
 
 function Chip({ label, color = "slate" }) {
   const map = {
-    slate:  "bg-slate-100 text-slate-700",
-    indigo: "bg-indigo-100 text-indigo-700",
-    purple: "bg-purple-100 text-purple-700",
+    slate:  undefined,
+    indigo: "#4F46E5",
+    purple: "#9333EA",
   };
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${map[color] || map.slate}`}>
-      {label}
-    </span>
-  );
+  return <Tag size="sm" color={map[color]}>{label}</Tag>;
 }
 
 function CollabCard({ collab, isMyCollab, onExpressInterest, myUserId }) {
@@ -46,14 +56,12 @@ function CollabCard({ collab, isMyCollab, onExpressInterest, myUserId }) {
   const openPositions = (collab.positions || []).filter(p => p.status === "open").length;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-5 flex flex-col gap-3 hover:shadow-sm transition-shadow">
+    <Card padding="lg" className="flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 flex-wrap">
           <StatusBadge status={collab.status} />
           {collab.visibility === "private" && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500 border border-slate-200">
-              <EyeOff size={10} /> Private
-            </span>
+            <Badge variant="neutral"><EyeOff size={10} /> Private</Badge>
           )}
         </div>
         {collab.deadline && (
@@ -73,10 +81,10 @@ function CollabCard({ collab, isMyCollab, onExpressInterest, myUserId }) {
       </div>
 
       {collab.research_areas?.length > 0 && (
-        <div className="flex flex-wrap gap-1">
+        <TagGroup gap={4}>
           {collab.research_areas.slice(0, 4).map((a, i) => <Chip key={i} label={a} color="indigo" />)}
           {collab.research_areas.length > 4 && <Chip label={`+${collab.research_areas.length - 4}`} />}
-        </div>
+        </TagGroup>
       )}
 
       {collab.countries_required?.length > 0 && (
@@ -95,29 +103,20 @@ function CollabCard({ collab, isMyCollab, onExpressInterest, myUserId }) {
       </div>
 
       <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-        <Link
-          to={`/grant-hub/${collab._id}`}
-          className="px-3 py-1.5 bg-[#0F2847] text-white text-xs font-medium hover:bg-[#0a1f38] transition-colors rounded flex items-center gap-1"
-        >
+        <Button as={Link} to={`/grant-hub/${collab._id}`} size="sm">
           View Workspace <ArrowRight size={11} />
-        </Link>
+        </Button>
         {isMyCollab ? (
-          <Link
-            to={`/grant-hub/${collab._id}`}
-            className="px-3 py-1.5 border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors rounded"
-          >
+          <Button as={Link} to={`/grant-hub/${collab._id}`} variant="ghost" size="sm">
             Manage
-          </Link>
+          </Button>
         ) : !isMember && collab.status === "open" ? (
-          <button
-            onClick={() => onExpressInterest(collab._id)}
-            className="px-3 py-1.5 border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors rounded"
-          >
+          <Button onClick={() => onExpressInterest(collab._id)} variant="ghost" size="sm">
             Express Interest
-          </button>
+          </Button>
         ) : null}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -130,15 +129,13 @@ function CreateModal({ open, onClose, onCreate }) {
   const [creating, setCreating] = useState(false);
   const [err, setErr] = useState("");
 
-  if (!open) return null;
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e?.preventDefault?.();
     if (!form.title.trim()) { setErr("Title is required."); return; }
     setErr("");
     setCreating(true);
@@ -164,85 +161,89 @@ function CreateModal({ open, onClose, onCreate }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h2 className="font-serif text-lg font-semibold text-slate-900">New Grant Collaboration</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 transition-colors">
-            <X size={18} />
-          </button>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="New Grant Collaboration"
+      size="md"
+      footer={
+        <>
+          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button type="submit" form="create-collab-form" loading={creating}>
+            {creating ? "Creating..." : "Create Collaboration"}
+          </Button>
+        </>
+      }
+    >
+      <form id="create-collab-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {err && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">{err}</div>}
+
+        <Input
+          label={<>Title <span className="text-red-500">*</span></>}
+          name="title" value={form.title} onChange={handleChange}
+          placeholder="e.g. EU Horizon Climate Consortium"
+        />
+
+        <Textarea
+          label="Description"
+          name="description" value={form.description} onChange={handleChange} rows={3}
+          placeholder="Describe the collaboration goals, scope, and requirements..."
+        />
+
+        <div>
+          <Input
+            label="Link to Existing Grant"
+            name="grant_id" value={form.grant_id} onChange={handleChange}
+            placeholder="Grant ID (optional)"
+          />
+          <p className="text-xs text-slate-400 mt-1">Link to an existing grant from your Grants page</p>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
-          {err && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">{err}</div>}
 
-          <div>
-            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Title <span className="text-red-500">*</span></label>
-            <input name="title" value={form.title} onChange={handleChange} placeholder="e.g. EU Horizon Climate Consortium" className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Input
+            label="Funding Source"
+            name="funding_source" value={form.funding_source} onChange={handleChange}
+            placeholder="e.g. EU Horizon, NSF"
+          />
+          <Input
+            label="Deadline"
+            type="date" name="deadline" value={form.deadline} onChange={handleChange}
+          />
+        </div>
 
-          <div>
-            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Description</label>
-            <textarea name="description" value={form.description} onChange={handleChange} rows={3} placeholder="Describe the collaboration goals, scope, and requirements..." className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 resize-none" />
-          </div>
+        <Input
+          label="Research Areas"
+          name="research_areas" value={form.research_areas} onChange={handleChange}
+          placeholder="AI, Healthcare, Climate Science (comma-separated)"
+        />
 
-          <div>
-            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Link to Existing Grant</label>
-            <input name="grant_id" value={form.grant_id} onChange={handleChange} placeholder="Grant ID (optional)" className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-            <p className="text-xs text-slate-400 mt-1">Link to an existing grant from your Grants page</p>
-          </div>
+        <Input
+          label="Countries Required"
+          name="countries_required" value={form.countries_required} onChange={handleChange}
+          placeholder="Germany, France, Spain (comma-separated)"
+        />
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Funding Source</label>
-              <input name="funding_source" value={form.funding_source} onChange={handleChange} placeholder="e.g. EU Horizon, NSF" className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Deadline</label>
-              <input type="date" name="deadline" value={form.deadline} onChange={handleChange} className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-            </div>
-          </div>
+        <Input
+          label="Total Budget (€)"
+          type="number" name="budget_total" value={form.budget_total} onChange={handleChange}
+          placeholder="0" min="0"
+        />
 
-          <div>
-            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Research Areas</label>
-            <input name="research_areas" value={form.research_areas} onChange={handleChange} placeholder="AI, Healthcare, Climate Science (comma-separated)" className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-          </div>
-
-          <div>
-            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Countries Required</label>
-            <input name="countries_required" value={form.countries_required} onChange={handleChange} placeholder="Germany, France, Spain (comma-separated)" className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-          </div>
-
-          <div>
-            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Total Budget (€)</label>
-            <input type="number" name="budget_total" value={form.budget_total} onChange={handleChange} placeholder="0" min="0" className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-          </div>
-
-          <div>
-            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-2">Visibility</label>
-            <div className="flex gap-4">
-              {["public", "private"].map(v => (
-                <label key={v} className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="visibility" value={v} checked={form.visibility === v} onChange={handleChange} className="accent-[#0F2847]" />
-                  <span className="text-sm text-slate-700 capitalize flex items-center gap-1">
-                    {v === "private" ? <EyeOff size={13} /> : <Eye size={13} />} {v}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
-            <button type="button" onClick={onClose} className="px-4 py-2 border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors rounded">
-              Cancel
-            </button>
-            <button type="submit" disabled={creating} className="px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors rounded flex items-center gap-2 disabled:opacity-60">
-              {creating ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-              {creating ? "Creating..." : "Create Collaboration"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div>
+          <label className="block text-xs text-slate-500 uppercase tracking-wide mb-2">Visibility</label>
+          <RadioGroup
+            name="visibility"
+            value={form.visibility}
+            onChange={(v) => setForm(prev => ({ ...prev, visibility: v }))}
+            style={{ flexDirection: "row", gap: 24 }}
+            options={[
+              { value: "public", label: <span className="flex items-center gap-1"><Eye size={13} /> public</span> },
+              { value: "private", label: <span className="flex items-center gap-1"><EyeOff size={13} /> private</span> },
+            ]}
+          />
+        </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -413,43 +414,26 @@ export default function GrantCollaborationHub() {
       title="Grant Collaboration Hub"
       subtitle="Discover funding teams · Build consortia · Win grants together"
       actions={
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors rounded shrink-0"
-        >
+        <Button onClick={() => setShowCreateModal(true)} className="shrink-0">
           <Plus size={15} /> New Collaboration
-        </button>
+        </Button>
       }
       meta={statsMeta}
     >
       {/* Tab bar */}
       <div className="bg-white border-b border-slate-200 -mx-6 px-6 mb-6">
-          <div className="flex items-center gap-1 -mb-px">
-            {TABS.map(({ key, label, icon: Icon, badge }) => (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-sm transition-colors border-b-2 ${
-                  activeTab === key
-                    ? "border-[#0F2847] text-[#0F2847] font-medium"
-                    : "border-transparent text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                <Icon size={14} />
-                {label}
-                {badge > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 bg-[#8A1538] text-white text-xs rounded-full leading-none">{badge}</span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+        <NavTabs
+          tabs={TABS.map(({ key, label, icon, badge }) => ({ id: key, label, icon, count: badge > 0 ? badge : null }))}
+          active={activeTab}
+          onChange={setActiveTab}
+        />
+      </div>
 
       {/* Body */}
       <div className="max-w-6xl mx-auto px-6 py-6">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 size={24} className="animate-spin text-slate-400" />
+            <Spinner size={24} />
           </div>
         ) : error ? (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">{error}</div>
@@ -459,69 +443,53 @@ export default function GrantCollaborationHub() {
             {activeTab === "marketplace" && (
               <div className="space-y-5">
                 {/* Filter row */}
-                <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-wrap items-end gap-3">
-                  <div className="flex-1 min-w-[140px]">
-                    <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Research Area</label>
-                    <input
-                      value={filters.research_area}
-                      onChange={e => setFilters(f => ({ ...f, research_area: e.target.value }))}
-                      placeholder="e.g. AI, Climate"
-                      className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-[120px]">
-                    <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Country</label>
-                    <input
-                      value={filters.country}
-                      onChange={e => setFilters(f => ({ ...f, country: e.target.value }))}
-                      placeholder="e.g. Germany"
-                      className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-[120px]">
-                    <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Funding Source</label>
-                    <input
-                      value={filters.funding_source}
-                      onChange={e => setFilters(f => ({ ...f, funding_source: e.target.value }))}
-                      placeholder="e.g. EU Horizon"
-                      className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20"
-                    />
-                  </div>
-                  <div className="min-w-[120px]">
-                    <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Status</label>
-                    <select
-                      value={filters.status}
-                      onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
-                      className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 bg-white"
-                    >
-                      <option value="">All</option>
-                      <option value="open">Open</option>
-                      <option value="active">Active</option>
-                      <option value="full">Full</option>
-                      <option value="closed">Closed</option>
-                    </select>
-                  </div>
-                  <button
-                    onClick={handleSearch}
-                    className="flex items-center gap-2 px-4 py-1.5 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors rounded"
+                <Card padding="md" className="flex flex-wrap items-end gap-3">
+                  <Input
+                    label="Research Area"
+                    value={filters.research_area}
+                    onChange={e => setFilters(f => ({ ...f, research_area: e.target.value }))}
+                    placeholder="e.g. AI, Climate"
+                    wrapperClassName="flex-1 min-w-[140px]"
+                  />
+                  <Input
+                    label="Country"
+                    value={filters.country}
+                    onChange={e => setFilters(f => ({ ...f, country: e.target.value }))}
+                    placeholder="e.g. Germany"
+                    wrapperClassName="flex-1 min-w-[120px]"
+                  />
+                  <Input
+                    label="Funding Source"
+                    value={filters.funding_source}
+                    onChange={e => setFilters(f => ({ ...f, funding_source: e.target.value }))}
+                    placeholder="e.g. EU Horizon"
+                    wrapperClassName="flex-1 min-w-[120px]"
+                  />
+                  <FormSelect
+                    label="Status"
+                    value={filters.status}
+                    onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
+                    wrapperClassName="min-w-[120px]"
                   >
+                    <option value="">All</option>
+                    <option value="open">Open</option>
+                    <option value="active">Active</option>
+                    <option value="full">Full</option>
+                    <option value="closed">Closed</option>
+                  </FormSelect>
+                  <Button onClick={handleSearch}>
                     <Search size={14} /> Search
-                  </button>
-                </div>
+                  </Button>
+                </Card>
 
                 {/* Cards grid */}
                 {collaborations.length === 0 ? (
-                  <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
-                    <Globe size={32} className="text-slate-300 mx-auto mb-3" />
-                    <p className="font-medium text-slate-700">No open collaborations yet</p>
-                    <p className="text-sm text-slate-500 mt-1">Be the first to create one and start building your consortium.</p>
-                    <button
-                      onClick={() => setShowCreateModal(true)}
-                      className="mt-4 px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors rounded"
-                    >
-                      Create Collaboration
-                    </button>
-                  </div>
+                  <EmptyState
+                    icon={<Globe />}
+                    title="No open collaborations yet"
+                    description="Be the first to create one and start building your consortium."
+                    action={<Button onClick={() => setShowCreateModal(true)}>Create Collaboration</Button>}
+                  />
                 ) : (
                   <>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -542,20 +510,22 @@ export default function GrantCollaborationHub() {
                         Page {page} of {totalPages} ({total} total)
                       </p>
                       <div className="flex items-center gap-2">
-                        <button
+                        <Button
                           onClick={() => handlePageChange(page - 1)}
                           disabled={page === 1}
-                          className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 transition-colors rounded disabled:opacity-40"
+                          variant="ghost"
+                          size="sm"
                         >
                           <ChevronLeft size={14} /> Prev
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => handlePageChange(page + 1)}
                           disabled={page >= totalPages}
-                          className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 transition-colors rounded disabled:opacity-40"
+                          variant="ghost"
+                          size="sm"
                         >
                           Next <ChevronRight size={14} />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </>
@@ -574,16 +544,12 @@ export default function GrantCollaborationHub() {
                     </h2>
                   </div>
                   {myLead.length === 0 ? (
-                    <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
-                      <Briefcase size={28} className="text-slate-300 mx-auto mb-2" />
-                      <p className="text-sm font-medium text-slate-600">You're not leading any collaboration yet</p>
-                      <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="mt-3 px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors rounded"
-                      >
-                        + New Collaboration
-                      </button>
-                    </div>
+                    <EmptyState
+                      icon={<Briefcase />}
+                      title="You're not leading any collaboration yet"
+                      size="sm"
+                      action={<Button onClick={() => setShowCreateModal(true)} size="sm">+ New Collaboration</Button>}
+                    />
                   ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                       {myLead.map(c => (
@@ -599,11 +565,12 @@ export default function GrantCollaborationHub() {
                     <span className="w-2 h-2 rounded-full bg-blue-500" /> Participating ({myParticipating.length})
                   </h2>
                   {myParticipating.length === 0 ? (
-                    <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
-                      <Users size={28} className="text-slate-300 mx-auto mb-2" />
-                      <p className="text-sm font-medium text-slate-600">You haven't joined any collaboration yet</p>
-                      <p className="text-xs text-slate-400 mt-1">Browse the Marketplace to find open teams</p>
-                    </div>
+                    <EmptyState
+                      icon={<Users />}
+                      title="You haven't joined any collaboration yet"
+                      description="Browse the Marketplace to find open teams"
+                      size="sm"
+                    />
                   ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                       {myParticipating.map(c => (
@@ -620,15 +587,15 @@ export default function GrantCollaborationHub() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-sm font-semibold text-slate-900">Pending Invitations ({myInvitations.length})</h2>
-                  <button onClick={fetchMyInvitations} className="text-xs text-[#0F2847] hover:underline">Refresh</button>
+                  <Button onClick={fetchMyInvitations} variant="link" size="sm">Refresh</Button>
                 </div>
 
                 {myInvitations.length === 0 ? (
-                  <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
-                    <Mail size={32} className="text-slate-300 mx-auto mb-3" />
-                    <p className="font-medium text-slate-700">No pending invitations</p>
-                    <p className="text-sm text-slate-500 mt-1">When researchers invite you to their grant teams, they'll appear here.</p>
-                  </div>
+                  <EmptyState
+                    icon={<Mail />}
+                    title="No pending invitations"
+                    description="When researchers invite you to their grant teams, they'll appear here."
+                  />
                 ) : (
                   <div className="bg-white border border-slate-200 rounded-lg divide-y divide-slate-100">
                     {myInvitations.map(inv => (
@@ -636,7 +603,7 @@ export default function GrantCollaborationHub() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-medium text-slate-900 text-sm">{inv.collaboration_title || inv.collab?.title || "Untitled Collaboration"}</p>
-                            {inv.role && <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">{inv.role}</span>}
+                            {inv.role && <Badge variant="info">{inv.role}</Badge>}
                           </div>
                           {inv.invited_by_name && (
                             <p className="text-xs text-slate-500 mt-0.5">Invited by {inv.invited_by_name}</p>
@@ -649,21 +616,22 @@ export default function GrantCollaborationHub() {
                           )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <button
+                          <Button
                             onClick={() => handleInvitationRespond(inv._id, "accepted")}
-                            disabled={respondingId === inv._id}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 transition-colors rounded disabled:opacity-50"
+                            loading={respondingId === inv._id}
+                            size="sm"
+                            className="!bg-emerald-600 hover:!bg-emerald-700"
                           >
-                            {respondingId === inv._id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle size={12} />}
-                            Accept
-                          </button>
-                          <button
+                            {respondingId !== inv._id && <CheckCircle size={12} />} Accept
+                          </Button>
+                          <Button
                             onClick={() => handleInvitationRespond(inv._id, "rejected")}
                             disabled={respondingId === inv._id}
-                            className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors rounded disabled:opacity-50"
+                            variant="ghost"
+                            size="sm"
                           >
                             <XCircle size={12} /> Reject
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -678,64 +646,50 @@ export default function GrantCollaborationHub() {
                 <h2 className="text-sm font-semibold text-slate-900">My Grant Hub Analytics</h2>
 
                 {!analytics ? (
-                  <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
-                    <BarChart2 size={28} className="text-slate-300 mx-auto mb-2" />
-                    <p className="text-sm text-slate-500">No analytics data yet. Start collaborating to see your stats.</p>
-                  </div>
+                  <EmptyState
+                    icon={<BarChart2 />}
+                    title="No analytics data yet. Start collaborating to see your stats."
+                    size="sm"
+                  />
                 ) : (
                   <>
                     {/* Summary cards */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      {[
-                        { label: "Total Collaborations", value: analytics.total_collaborations ?? myCollabs.length },
-                        { label: "Invitations Sent", value: analytics.invitations_sent ?? 0 },
-                        { label: "Invitations Accepted", value: analytics.invitations_accepted ?? 0 },
-                        { label: "Positions Filled", value: analytics.positions_filled ?? 0 },
-                      ].map(({ label, value }) => (
-                        <div key={label} className="bg-white border border-slate-200 rounded-lg p-4">
-                          <p className="text-2xl font-bold text-slate-900">{value}</p>
-                          <p className="text-xs text-slate-500 mt-1 uppercase tracking-wide">{label}</p>
-                        </div>
-                      ))}
-                    </div>
+                    <StatGrid cols={4}>
+                      <StatCard label="Total Collaborations" value={analytics.total_collaborations ?? myCollabs.length} />
+                      <StatCard label="Invitations Sent" value={analytics.invitations_sent ?? 0} />
+                      <StatCard label="Invitations Accepted" value={analytics.invitations_accepted ?? 0} />
+                      <StatCard label="Positions Filled" value={analytics.positions_filled ?? 0} />
+                    </StatGrid>
 
                     {/* Acceptance rate */}
                     {analytics.invitations_sent > 0 && (
-                      <div className="bg-white border border-slate-200 rounded-lg p-5">
+                      <Card padding="lg">
                         <p className="text-sm font-semibold text-slate-900 mb-3">Invitation Acceptance Rate</p>
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 bg-slate-100 rounded-full h-3">
-                            <div
-                              className="h-3 bg-emerald-500 rounded-full"
-                              style={{ width: `${Math.round(((analytics.invitations_accepted || 0) / analytics.invitations_sent) * 100)}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-semibold text-slate-700 w-12 text-right">
-                            {Math.round(((analytics.invitations_accepted || 0) / analytics.invitations_sent) * 100)}%
-                          </span>
-                        </div>
-                      </div>
+                        <ProgressBar
+                          value={analytics.invitations_accepted || 0}
+                          max={analytics.invitations_sent}
+                          valueLabel={`${Math.round(((analytics.invitations_accepted || 0) / analytics.invitations_sent) * 100)}%`}
+                          showValue
+                        />
+                      </Card>
                     )}
 
                     {/* Status distribution */}
                     {statusKeys.length > 0 && (
-                      <div className="bg-white border border-slate-200 rounded-lg p-5">
+                      <Card padding="lg">
                         <p className="text-sm font-semibold text-slate-900 mb-4">Collaborations by Status</p>
                         <div className="space-y-3">
                           {statusKeys.map(s => (
                             <div key={s} className="flex items-center gap-3">
                               <span className="w-16 text-xs text-slate-500 capitalize">{s}</span>
-                              <div className="flex-1 bg-slate-100 rounded-full h-2.5">
-                                <div
-                                  className="h-2.5 rounded-full bg-[#0F2847]"
-                                  style={{ width: `${(statusCounts[s] / maxStatusCount) * 100}%` }}
-                                />
+                              <div className="flex-1">
+                                <ProgressBar value={statusCounts[s]} max={maxStatusCount} size="sm" showValue={false} />
                               </div>
                               <span className="w-6 text-xs font-medium text-slate-700 text-right">{statusCounts[s]}</span>
                             </div>
                           ))}
                         </div>
-                      </div>
+                      </Card>
                     )}
                   </>
                 )}

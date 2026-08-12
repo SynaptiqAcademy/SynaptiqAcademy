@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { AnalyticsLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -13,6 +13,12 @@ import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { NAVY, WARM } from "@/lib/tokens";
 import { Spinner } from "@/components/ds/LoadingState";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { StatCard } from "@/components/ds/StatCard";
+import { DataTable } from "@/components/ds/DataTable";
+import { Callout } from "@/components/ds/Alert";
 
 // ─────────────────────────── research intelligence nav ───────────────────────
 
@@ -46,20 +52,10 @@ function IntelNav({ current }) {
 
 // ─────────────────────── shared primitives ───────────────────────────────────
 
-function Stat({ label, value, sub }) {
-  return (
-    <div className="border border-slate-200 bg-white p-6">
-      <div className="overline">{label}</div>
-      <div className="font-serif text-5xl text-slate-900 mt-3 tracking-tight">{value}</div>
-      {sub && <div className="text-xs text-slate-500 mt-2">{sub}</div>}
-    </div>
-  );
-}
-
 function ScoreBar({ label, value, max = 100, color = "#0F2847" }) {
   const pct = Math.min(100, (value / max) * 100);
   return (
-    <div className="border border-slate-200 bg-white p-6">
+    <Card padding="xl">
       <div className="flex items-baseline justify-between">
         <div className="overline">{label}</div>
         <div className="font-serif text-3xl text-slate-900">{value}</div>
@@ -67,7 +63,7 @@ function ScoreBar({ label, value, max = 100, color = "#0F2847" }) {
       <div className="mt-3 h-1 bg-slate-100 relative">
         <div className="absolute inset-y-0 left-0" style={{ width: `${pct}%`, background: color }} />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -84,24 +80,15 @@ function SectionHeader({ label, icon: Icon, action }) {
 }
 
 function DataNote({ children }) {
-  return (
-    <div className="flex items-start gap-2 border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800">
-      <Info size={12} className="shrink-0 mt-0.5 text-amber-600" />
-      <span>{children}</span>
-    </div>
-  );
+  return <Callout variant="warning">{children}</Callout>;
 }
 
 // ─────────────────────── gate view ───────────────────────────────────────────
 
 function GateView() {
   return (
-    <div className="space-y-6">
-      <header className="border-b border-slate-200 pb-6">
-        <div className="overline">Research Impact</div>
-        <h1 className="font-serif text-5xl text-slate-900 mt-2">Citation Monitoring</h1>
-      </header>
-      <div className="border border-slate-200 bg-white p-16 flex flex-col items-center text-center gap-5">
+    <ResearchLayout title="Citation Monitoring" subtitle="Research Impact">
+      <Card padding="xl" className="!p-16 flex flex-col items-center text-center gap-5">
         <Lock size={28} strokeWidth={1} className="text-slate-300" />
         <div>
           <div className="overline text-[#0F2847] mb-2">Pro Researcher plan required</div>
@@ -111,14 +98,11 @@ function GateView() {
             and export detailed reports.
           </p>
         </div>
-        <Link
-          to="/pricing"
-          className="inline-block bg-[#0F2847] text-white text-sm px-6 py-2.5 hover:opacity-90 transition-opacity"
-        >
+        <Button as={Link} to="/pricing" variant="primary">
           View Plans
-        </Link>
-      </div>
-    </div>
+        </Button>
+      </Card>
+    </ResearchLayout>
   );
 }
 
@@ -126,7 +110,7 @@ function GateView() {
 
 function NoDataPrompt({ onSync, syncing }) {
   return (
-    <div className="border border-slate-200 bg-white p-12 flex flex-col items-center text-center gap-5">
+    <Card padding="xl" className="!p-12 flex flex-col items-center text-center gap-5">
       <BookOpen size={32} strokeWidth={1} className="text-slate-300" />
       <div>
         <h2 className="font-serif text-xl text-slate-900">No citation data yet</h2>
@@ -136,22 +120,15 @@ function NoDataPrompt({ onSync, syncing }) {
         </p>
       </div>
       <div className="flex gap-3">
-        <button
-          onClick={onSync}
-          disabled={syncing}
-          className="flex items-center gap-2 bg-[#0F2847] text-white text-sm px-5 py-2 hover:opacity-90 disabled:opacity-50 transition-opacity"
-        >
+        <Button onClick={onSync} disabled={syncing} variant="primary" size="sm">
           <RefreshCw size={13} className={syncing ? "animate-spin" : ""} />
           {syncing ? "Syncing…" : "Sync OpenAlex"}
-        </button>
-        <Link
-          to="/academic-passport"
-          className="flex items-center gap-2 border border-slate-300 text-slate-600 text-sm px-5 py-2 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-        >
+        </Button>
+        <Button as={Link} to="/academic-passport" variant="outline" size="sm">
           ORCID Settings
-        </Link>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -190,13 +167,12 @@ function AlertCard({ pub, type }) {
   }[type] || "#64748b";
 
   return (
-    <div className="border border-slate-100 bg-slate-50 p-4 space-y-1.5">
+    <Card padding="none" variant="ghost" className="bg-slate-50 p-4 space-y-1.5">
       <div className="flex items-start justify-between gap-2">
         <div className="text-sm font-medium text-slate-900 line-clamp-2 flex-1">{pub.title}</div>
-        <span className="shrink-0 text-xs border px-1.5 py-0.5 font-mono"
-          style={{ borderColor: badgeColor, color: badgeColor }}>
+        <Badge color={badgeColor} size="sm" className="shrink-0 font-mono">
           {badgeText}
-        </span>
+        </Badge>
       </div>
       <div className="flex items-center gap-3 text-xs text-slate-500">
         {pub.year && <span>{pub.year}</span>}
@@ -208,7 +184,7 @@ function AlertCard({ pub, type }) {
           </a>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -297,7 +273,7 @@ export default function CitationMonitoring() {
   const timelineMax = Math.max(...timeline.map((t) => t.total_citations), 1);
 
   return (
-    <AnalyticsLayout
+    <ResearchLayout
       data-testid={TID.citationMonitoringDashboard}
       title="Citation Monitoring"
       subtitle={
@@ -323,14 +299,12 @@ export default function CitationMonitoring() {
       nav={<IntelNav current="/citation-monitoring" />}
       actions={
         <>
-          <button onClick={handleSync} disabled={syncing} data-testid={TID.citationMonitoringSyncBtn}
-            style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", padding: "8px 14px", border: "1px solid rgba(15,23,42,0.08)", background: "#fff", cursor: "pointer", opacity: syncing ? 0.5 : 1 }}>
+          <Button onClick={handleSync} disabled={syncing} data-testid={TID.citationMonitoringSyncBtn} variant="outline" size="sm">
             <RefreshCw size={12} strokeWidth={1.5} className={syncing ? "animate-spin" : ""} />{syncing ? "Syncing…" : "Sync OpenAlex"}
-          </button>
-          <button onClick={handleExport} disabled={exporting || !hasData} data-testid={TID.citationMonitoringExportBtn}
-            style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#fff", padding: "8px 14px", background: "#0F2847", border: "none", cursor: "pointer", opacity: (exporting || !hasData) ? 0.5 : 1 }}>
+          </Button>
+          <Button onClick={handleExport} disabled={exporting || !hasData} data-testid={TID.citationMonitoringExportBtn} variant="primary" size="sm">
             <Download size={12} strokeWidth={1.5} />{exporting ? "Exporting…" : "Export CSV"}
-          </button>
+          </Button>
         </>
       }
     >
@@ -343,10 +317,10 @@ export default function CitationMonitoring() {
           <section>
             <SectionHeader label="Citation Dashboard" icon={BarChart} />
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              <Stat label="Total Citations" value={summary.total_citations.toLocaleString()} />
-              <Stat label="h-index" value={summary.h_index} />
-              <Stat label="i10-index" value={summary.i10_index} />
-              <Stat label="Works Count" value={summary.works_count} sub={`${summary.enriched_count} enriched with OpenAlex`} />
+              <StatCard label="Total Citations" value={summary.total_citations.toLocaleString()} />
+              <StatCard label="h-index" value={summary.h_index} />
+              <StatCard label="i10-index" value={summary.i10_index} />
+              <StatCard label="Works Count" value={summary.works_count} sub={`${summary.enriched_count} enriched with OpenAlex`} />
             </div>
           </section>
 
@@ -354,11 +328,11 @@ export default function CitationMonitoring() {
           <section>
             <SectionHeader label="Research Impact Score" icon={Award} />
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              <div className="lg:col-span-1 border border-slate-200 bg-white p-6 flex flex-col items-center justify-center text-center">
+              <Card padding="xl" className="lg:col-span-1 flex flex-col items-center justify-center text-center">
                 <div className="overline mb-2">Composite Score</div>
                 <div className="font-serif text-6xl text-slate-900 tracking-tight">{impact.score}</div>
                 <div className="text-xs text-slate-400 mt-1">/ 100</div>
-              </div>
+              </Card>
               <div className="lg:col-span-3 grid sm:grid-cols-2 gap-5">
                 <ScoreBar label="Citation Impact"  value={impact.components?.citation_impact || 0} />
                 <ScoreBar label="H-Index Score"    value={impact.components?.h_index_score   || 0} />
@@ -378,7 +352,7 @@ export default function CitationMonitoring() {
           {timeline.length > 0 && (
             <section>
               <SectionHeader label="Citation Timeline by Publication Year" icon={TrendingUp} />
-              <div className="border border-slate-200 bg-white p-6">
+              <Card padding="xl">
                 <p className="text-xs text-slate-500 mb-4">
                   Total citations accumulated by publications from each year.
                   Each bar represents citations received by papers published that year, as of your last OpenAlex sync.
@@ -401,29 +375,24 @@ export default function CitationMonitoring() {
                 </ResponsiveContainer>
 
                 {/* yearly table */}
-                <div className="mt-6 overflow-x-auto">
-                  <table className="w-full text-sm border-collapse">
-                    <thead>
-                      <tr className="border-b border-slate-200">
-                        <th className="text-left py-2 overline font-normal text-slate-500">Year</th>
-                        <th className="text-right py-2 overline font-normal text-slate-500">Publications</th>
-                        <th className="text-right py-2 overline font-normal text-slate-500">Total Citations</th>
-                        <th className="text-right py-2 overline font-normal text-slate-500">Avg per Paper</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[...timeline].reverse().map((row) => (
-                        <tr key={row.year} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="py-2.5 font-mono text-slate-900">{row.year}</td>
-                          <td className="py-2.5 text-right text-slate-700">{row.publications}</td>
-                          <td className="py-2.5 text-right font-medium text-slate-900">{row.total_citations.toLocaleString()}</td>
-                          <td className="py-2.5 text-right text-slate-600">{row.avg_citations}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="mt-6">
+                  <DataTable
+                    columns={[
+                      { key: "year",       label: "Year" },
+                      { key: "pubs",       label: "Publications",     align: "right" },
+                      { key: "total",      label: "Total Citations",  align: "right" },
+                      { key: "avg",        label: "Avg per Paper",    align: "right" },
+                    ]}
+                    rows={[...timeline].reverse().map((row) => ({
+                      id: row.year,
+                      year: <span className="font-mono">{row.year}</span>,
+                      pubs: row.publications,
+                      total: <span className="font-medium text-slate-900">{row.total_citations.toLocaleString()}</span>,
+                      avg: row.avg_citations,
+                    }))}
+                  />
                 </div>
-              </div>
+              </Card>
             </section>
           )}
 
@@ -437,61 +406,51 @@ export default function CitationMonitoring() {
                   <span className="text-xs text-slate-400 font-mono">{publications.length} publications · sorted by citations</span>
                 }
               />
-              <div className="border border-slate-200 bg-white overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50">
-                      <th className="text-left px-4 py-3 overline font-normal text-slate-500">Title</th>
-                      <th className="text-right px-4 py-3 overline font-normal text-slate-500 whitespace-nowrap">Year</th>
-                      <th className="text-right px-4 py-3 overline font-normal text-slate-500 whitespace-nowrap">Citations</th>
-                      <th className="text-right px-4 py-3 overline font-normal text-slate-500 whitespace-nowrap">Type</th>
-                      <th className="px-4 py-3 overline font-normal text-slate-500 whitespace-nowrap">DOI</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {publications.map((pub) => (
-                      <tr
-                        key={pub.id}
-                        data-testid={TID.citationMonitoringPubRow(pub.id)}
-                        className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
-                      >
-                        <td className="px-4 py-3 text-slate-800 max-w-xs">
-                          <div className="line-clamp-2">{pub.title}</div>
-                          {pub.journal && (
-                            <div className="text-xs text-slate-400 mt-0.5 truncate">{pub.journal}</div>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono text-slate-600">{pub.year || "—"}</td>
-                        <td className="px-4 py-3 text-right">
-                          <span className={`font-serif text-lg ${pub.citations > 0 ? "text-slate-900" : "text-slate-300"}`}>
-                            {pub.citations.toLocaleString()}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <span className="text-xs border border-slate-200 text-slate-500 px-1.5 py-0.5 font-mono whitespace-nowrap">
-                            {(pub.type || "article").replace(/_/g, " ")}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          {pub.doi ? (
-                            <a
-                              href={`https://doi.org/${pub.doi}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-0.5 text-xs text-slate-500 hover:text-[#0F2847] transition-colors"
-                            >
-                              {pub.doi.substring(0, 20)}{pub.doi.length > 20 ? "…" : ""}
-                              <ExternalLink size={10} />
-                            </a>
-                          ) : (
-                            <span className="text-xs text-slate-300">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable
+                columns={[
+                  { key: "title",     label: "Title" },
+                  { key: "year",      label: "Year",      align: "right" },
+                  { key: "citations", label: "Citations", align: "right" },
+                  { key: "type",      label: "Type",      align: "right" },
+                  { key: "doi",       label: "DOI" },
+                ]}
+                rows={publications.map((pub) => ({
+                  id: pub.id,
+                  "data-testid": TID.citationMonitoringPubRow(pub.id),
+                  title: (
+                    <div className="max-w-xs">
+                      <div className="line-clamp-2">{pub.title}</div>
+                      {pub.journal && (
+                        <div className="text-xs text-slate-400 mt-0.5 truncate">{pub.journal}</div>
+                      )}
+                    </div>
+                  ),
+                  year: <span className="font-mono">{pub.year || "—"}</span>,
+                  citations: (
+                    <span className={`font-serif text-lg ${pub.citations > 0 ? "text-slate-900" : "text-slate-300"}`}>
+                      {pub.citations.toLocaleString()}
+                    </span>
+                  ),
+                  type: (
+                    <Badge variant="outline" size="sm" className="font-mono whitespace-nowrap">
+                      {(pub.type || "article").replace(/_/g, " ")}
+                    </Badge>
+                  ),
+                  doi: pub.doi ? (
+                    <a
+                      href={`https://doi.org/${pub.doi}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-0.5 text-xs text-slate-500 hover:text-[#0F2847] transition-colors"
+                    >
+                      {pub.doi.substring(0, 20)}{pub.doi.length > 20 ? "…" : ""}
+                      <ExternalLink size={10} />
+                    </a>
+                  ) : (
+                    <span className="text-xs text-slate-300">—</span>
+                  ),
+                }))}
+              />
             </section>
           )}
 
@@ -502,7 +461,7 @@ export default function CitationMonitoring() {
               <div className="grid lg:grid-cols-3 gap-5">
                 {/* high impact */}
                 {alerts.high_impact?.length > 0 && (
-                  <div className="border border-slate-200 bg-white p-5 space-y-3">
+                  <Card padding="lg" className="space-y-3">
                     <div className="flex items-center gap-2 mb-3">
                       <TrendingUp size={13} strokeWidth={1.5} className="text-[#16a34a]" />
                       <div className="overline text-[#16a34a]">High Impact Publications</div>
@@ -510,12 +469,12 @@ export default function CitationMonitoring() {
                     {alerts.high_impact.map((pub) => (
                       <AlertCard key={pub.id} pub={pub} type="high_impact" />
                     ))}
-                  </div>
+                  </Card>
                 )}
 
                 {/* high velocity */}
                 {alerts.high_velocity?.length > 0 && (
-                  <div className="border border-slate-200 bg-white p-5 space-y-3">
+                  <Card padding="lg" className="space-y-3">
                     <div className="flex items-center gap-2 mb-3">
                       <Zap size={13} strokeWidth={1.5} className="text-[#d97706]" />
                       <div className="overline text-[#d97706]">Fast-Growing Citations</div>
@@ -523,12 +482,12 @@ export default function CitationMonitoring() {
                     {alerts.high_velocity.map((pub) => (
                       <AlertCard key={pub.id} pub={pub} type="high_velocity" />
                     ))}
-                  </div>
+                  </Card>
                 )}
 
                 {/* recently enriched */}
                 {alerts.recently_enriched?.length > 0 && (
-                  <div className="border border-slate-200 bg-white p-5 space-y-3">
+                  <Card padding="lg" className="space-y-3">
                     <div className="flex items-center gap-2 mb-3">
                       <RefreshCw size={13} strokeWidth={1.5} className="text-[#2563eb]" />
                       <div className="overline text-[#2563eb]">Recently Synced</div>
@@ -536,13 +495,13 @@ export default function CitationMonitoring() {
                     {alerts.recently_enriched.map((pub) => (
                       <AlertCard key={pub.id} pub={pub} type="recently_enriched" />
                     ))}
-                  </div>
+                  </Card>
                 )}
               </div>
 
               {/* uncited */}
               {alerts.uncited_enriched?.length > 0 && (
-                <div className="mt-4 border border-slate-200 bg-white p-5">
+                <Card padding="lg" className="mt-4">
                   <div className="flex items-center gap-2 mb-3">
                     <AlertTriangle size={13} strokeWidth={1.5} className="text-slate-400" />
                     <div className="overline text-slate-500">Tracked but Uncited</div>
@@ -556,7 +515,7 @@ export default function CitationMonitoring() {
                     These publications have been confirmed on OpenAlex but have no recorded citations yet.
                     Consider sharing, submitting to preprint servers, or promoting through collaborative networks.
                   </p>
-                </div>
+                </Card>
               )}
             </section>
           )}
@@ -564,7 +523,7 @@ export default function CitationMonitoring() {
           {/* ─── author impact summary ────────────────────────────────────── */}
           <section>
             <SectionHeader label="Author Impact Summary" icon={Award} />
-            <div className="border border-slate-200 bg-white p-6">
+            <Card padding="xl">
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="space-y-1">
                   <div className="overline text-slate-500">Researcher</div>
@@ -599,14 +558,14 @@ export default function CitationMonitoring() {
                   </div>
                 </div>
               </div>
-            </div>
+            </Card>
           </section>
 
           {/* ─── institution comparison ───────────────────────────────────── */}
           {instCmp && (
             <section>
               <SectionHeader label="Institution Comparison" icon={Building2} />
-              <div className="border border-slate-200 bg-white p-6 space-y-6">
+              <Card padding="xl" className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-serif text-lg text-slate-900">{instCmp.institution_name || "Your Institution"}</div>
@@ -649,7 +608,7 @@ export default function CitationMonitoring() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Card>
             </section>
           )}
 
@@ -669,17 +628,17 @@ export default function CitationMonitoring() {
                 { to: "/reputation",      label: "Reputation Score"   },
                 { to: "/verification",    label: "Verification"       },
               ].map(({ to, label }) => (
-                <Link key={to} to={to} className="border border-slate-200 bg-white p-4 hover:border-[#0F2847] transition-colors group block">
+                <Card key={to} to={to} padding="md" className="group">
                   <div className="text-xs font-medium text-slate-700 group-hover:text-[#0F2847] transition-colors flex items-center justify-between">
                     {label} <ChevronRight size={12} className="text-slate-300 group-hover:text-[#0F2847]" />
                   </div>
-                </Link>
+                </Card>
               ))}
             </div>
           </section>
         </>
       )}
     </div>
-    </AnalyticsLayout>
+    </ResearchLayout>
   );
 }

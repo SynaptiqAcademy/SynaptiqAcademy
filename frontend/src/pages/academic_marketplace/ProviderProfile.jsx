@@ -91,7 +91,7 @@ export default function ProviderProfile() {
             {portfolio.portfolio_items?.length > 0 && (
               <Card padding="lg" className="mb-5">
                 <H2 className="mb-4" style={{ fontSize: "1.125rem" }}>Portfolio</H2>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {portfolio.portfolio_items.map((item, i) => (
                     <div key={i} className="border border-hairline rounded-md p-4">
                       <div className="text-sm font-semibold text-navy-700 mb-1.5">{item.title}</div>

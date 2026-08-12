@@ -18,10 +18,11 @@ import { Link, useSearchParams } from "react-router-dom";
 import api from "../lib/api";
 import {
   Search, User, FileText, FolderOpen, Building2, Users, Coins,
-  BookOpen, Sparkles, ArrowRight, ChevronRight, X, Loader2,
+  BookOpen, Sparkles, ArrowRight, ChevronRight, X,
   GraduationCap, Globe, Target, BrainCircuit,
 } from "lucide-react";
 import { ResearchLayout } from "@/layouts";
+import { Spinner, ErrorState, EmptyState, Card, Callout } from "@/components/ds";
 
 // ─── Entity type → route resolver ────────────────────────────────────────────
 function resolveRoute(result) {
@@ -124,7 +125,7 @@ function ResultGroup({ type, results }) {
   const cfg = getConfig(type);
   const Icon = cfg.icon;
   return (
-    <section className="border border-slate-200 bg-white overflow-hidden">
+    <Card padding="none" className="overflow-hidden">
       <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
         <Icon size={13} strokeWidth={1.5} style={{ color: cfg.color }} />
         <span className="overline">{cfg.plural || cfg.label}</span>
@@ -140,7 +141,7 @@ function ResultGroup({ type, results }) {
           </div>
         )}
       </div>
-    </section>
+    </Card>
   );
 }
 
@@ -297,7 +298,9 @@ export default function GlobalSearch() {
       subtitle="Search across researchers, projects, teams, publications, grants, journals, and institutions."
       icon={Search}
     >
-      {/* Search input */}
+      {/* Search input — kept hand-rolled: ds Input isn't forwardRef'd, and this
+          field relies on imperative inputRef.current.focus() on mount and
+          after clearing, which would silently stop working through Input. */}
       <div className="relative mb-6">
         <Search
           size={16}
@@ -327,38 +330,41 @@ export default function GlobalSearch() {
 
       {/* Loading */}
       {loading && (
-        <div className="flex items-center gap-2 text-sm text-slate-500 py-8 justify-center">
-          <Loader2 size={16} className="animate-spin" />
+        <div className="flex items-center justify-center gap-2 text-sm text-slate-500 py-8">
+          <Spinner size={16} />
           Searching…
         </div>
       )}
 
       {/* Error */}
       {error && !loading && (
-        <div className="border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
+        <ErrorState message={error} />
       )}
 
       {/* Results */}
       {!loading && results !== null && !error && (
         <>
           {totalResults === 0 ? (
-            <div className="text-center py-16">
-              <Search size={28} strokeWidth={1.5} className="text-slate-200 mx-auto mb-3" />
-              <div className="text-slate-900 font-medium">No results for "{query}"</div>
-              <div className="text-sm text-slate-500 mt-1">Try a different search term or browse by category below.</div>
-              <div className="mt-6 flex flex-wrap justify-center gap-2">
-                {QUICK_LINKS.map(({ label, to, icon: Icon }) => (
-                  <Link
-                    key={to}
-                    to={to}
-                    className="inline-flex items-center gap-1.5 text-xs border border-slate-200 bg-white px-3 py-1.5 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-                  >
-                    <Icon size={11} strokeWidth={1.5} />
-                    {label}
-                  </Link>
-                ))}
-              </div>
-            </div>
+            <EmptyState
+              icon={<Search />}
+              size="lg"
+              title={`No results for "${query}"`}
+              description="Try a different search term or browse by category below."
+              action={
+                <div className="flex flex-wrap justify-center gap-2">
+                  {QUICK_LINKS.map(({ label, to, icon: Icon }) => (
+                    <Link
+                      key={to}
+                      to={to}
+                      className="inline-flex items-center gap-1.5 text-xs border border-slate-200 bg-white px-3 py-1.5 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
+                    >
+                      <Icon size={11} strokeWidth={1.5} />
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              }
+            />
           ) : (
             <>
               <div className="flex items-center justify-between mb-4">
@@ -386,24 +392,18 @@ export default function GlobalSearch() {
             <div className="overline mb-3">Browse by category</div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {QUICK_LINKS.map(({ label, to, icon: Icon }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  className="border border-slate-200 bg-white p-4 hover:border-[#0F2847] transition-colors group flex items-center gap-3"
-                >
+                <Card key={to} to={to} padding="md" className="flex items-center gap-3">
                   <Icon size={15} strokeWidth={1.5} className="text-[#0F2847] shrink-0" />
-                  <span className="text-sm text-slate-900 group-hover:text-[#0F2847] transition-colors">{label}</span>
-                  <ArrowRight size={12} strokeWidth={1.5} className="ml-auto text-slate-300 group-hover:text-[#0F2847] transition-colors" />
-                </Link>
+                  <span className="text-sm text-slate-900">{label}</span>
+                  <ArrowRight size={12} strokeWidth={1.5} className="ml-auto text-slate-300" />
+                </Card>
               ))}
             </div>
           </div>
-          <div className="border border-slate-200 bg-slate-50 p-4">
-            <div className="text-xs text-slate-500 font-mono">
-              Tip: Use <kbd className="bg-white border border-slate-200 px-1 py-0.5 text-[10px]">⌘K</kbd> to quickly navigate to any page in the platform.
-              Global Search finds actual research content — researchers, publications, projects, and more.
-            </div>
-          </div>
+          <Callout variant="neutral">
+            Tip: Use <kbd className="bg-white border border-slate-200 px-1 py-0.5 text-[10px]">⌘K</kbd> to quickly navigate to any page in the platform.
+            Global Search finds actual research content — researchers, publications, projects, and more.
+          </Callout>
         </div>
       )}
     </ResearchLayout>

@@ -13,6 +13,13 @@ import {
 } from "lucide-react";
 import { EmptyState } from "@/components/ds/EmptyState";
 import { SkeletonPage } from "@/components/ds/LoadingState";
+import { Badge } from "@/components/ds/Badge";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Input } from "@/components/ds/Input";
+import { Tag, TagGroup } from "@/components/ds/Tag";
+import { Modal } from "@/components/ds/Modal";
+import { StatCard, StatGrid } from "@/components/ds/StatCard";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const EMRL  = "#059669";
@@ -97,65 +104,57 @@ function VenuePicker({ manuscriptId, onPicked, onClose }) {
   };
 
   return (
-    <div
-      style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(15,23,42,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 16px" }}
-      onClick={onClose}
+    <Modal
+      open
+      onClose={onClose}
+      closeOnOverlay
+      title="Select Target Venue"
+      description="Publication Hub"
+      size="sm"
+      className="!max-w-[520px]"
     >
-      <div
-        data-testid="venue-picker-modal"
-        role="dialog" aria-modal="true"
-        onClick={(e) => e.stopPropagation()}
-        style={{ background: "#fff", width: "100%", maxWidth: 520, border: `1px solid ${BRD}`, boxShadow: "0 20px 60px rgba(15,23,42,0.2)" }}
-      >
-        <div style={{ padding: "20px 24px", borderBottom: `1px solid ${BRD}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 4 }}>Publication Hub</div>
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0F172A", margin: 0, fontFamily: "Georgia, serif" }}>Select Target Venue</h3>
-          </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8", fontSize: 13 }}>Close</button>
+      <div data-testid="venue-picker-modal">
+        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+          {[{k:"journal",label:"Journal",icon:BookOpen},{k:"conference",label:"Conference",icon:CalendarDays}].map(({k,label,icon:Icon}) => (
+            <Button
+              key={k}
+              onClick={() => { setKind(k); setResults([]); setQ(""); }}
+              variant={kind === k ? "primary" : "outline"}
+              className="flex-1"
+            >
+              <Icon size={12} strokeWidth={1.5} /> {label}
+            </Button>
+          ))}
         </div>
-        <div style={{ padding: "20px 24px" }}>
-          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-            {[{k:"journal",label:"Journal",icon:BookOpen},{k:"conference",label:"Conference",icon:CalendarDays}].map(({k,label,icon:Icon}) => (
-              <button
-                key={k}
-                onClick={() => { setKind(k); setResults([]); setQ(""); }}
-                style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", border: `1px solid ${kind===k ? NAVY : BRD}`, background: kind===k ? NAVY : "#fff", color: kind===k ? "#fff" : "#64748B", fontFamily: "inherit" }}
-              >
-                <Icon size={12} strokeWidth={1.5} /> {label}
-              </button>
-            ))}
-          </div>
-          <div style={{ position: "relative", marginBottom: 12 }}>
-            <Search size={13} strokeWidth={1.5} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#CBD5E1" }} />
-            <input
-              autoFocus value={q} onChange={(e) => setQ(e.target.value)}
-              placeholder={`Search ${kind}s…`}
-              style={{ width: "100%", boxSizing: "border-box", paddingLeft: 34, paddingRight: 12, paddingTop: 9, paddingBottom: 9, border: `1px solid ${BRD}`, fontSize: 13, outline: "none", fontFamily: "inherit", color: "#0F172A" }}
-            />
-          </div>
-          <div style={{ maxHeight: 280, overflowY: "auto", borderTop: q && results.length > 0 ? `1px solid ${BRD}` : "none" }}>
-            {q && results.length === 0 && <div style={{ fontSize: 13, color: "#94A3B8", padding: "12px 0" }}>No matches found.</div>}
-            {results.map((v) => (
-              <button
-                key={v.id}
-                disabled={busy}
-                onClick={() => pick(v)}
-                style={{ width: "100%", textAlign: "left", padding: "10px 4px", borderBottom: `1px solid ${BRD}`, background: "none", border: "none", borderBottom: `1px solid ${BRD}`, cursor: "pointer", fontFamily: "inherit" }}
-              >
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#0F172A" }}>{kind === "journal" ? v.title : v.name}</div>
-                <div style={{ fontSize: 10, fontFamily: "monospace", color: "#94A3B8", marginTop: 2 }}>
-                  {kind === "journal"
-                    ? [v.publisher, v.quartile ? v.quartile : null, v.open_access ? "Open Access" : null].filter(Boolean).join(" · ")
-                    : [v.acronym, v.submission_deadline ? `deadline ${v.submission_deadline}` : null].filter(Boolean).join(" · ")
-                  }
-                </div>
-              </button>
-            ))}
-          </div>
+        <Input
+          autoFocus
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={`Search ${kind}s…`}
+          prefix={<Search size={13} strokeWidth={1.5} />}
+          wrapperClassName="mb-3"
+        />
+        <div style={{ maxHeight: 280, overflowY: "auto", borderTop: q && results.length > 0 ? `1px solid ${BRD}` : "none" }}>
+          {q && results.length === 0 && <div style={{ fontSize: 13, color: "#94A3B8", padding: "12px 0" }}>No matches found.</div>}
+          {results.map((v) => (
+            <button
+              key={v.id}
+              disabled={busy}
+              onClick={() => pick(v)}
+              style={{ width: "100%", textAlign: "left", padding: "10px 4px", borderBottom: `1px solid ${BRD}`, background: "none", border: "none", borderBottom: `1px solid ${BRD}`, cursor: "pointer", fontFamily: "inherit" }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#0F172A" }}>{kind === "journal" ? v.title : v.name}</div>
+              <div style={{ fontSize: 10, fontFamily: "monospace", color: "#94A3B8", marginTop: 2 }}>
+                {kind === "journal"
+                  ? [v.publisher, v.quartile ? v.quartile : null, v.open_access ? "Open Access" : null].filter(Boolean).join(" · ")
+                  : [v.acronym, v.submission_deadline ? `deadline ${v.submission_deadline}` : null].filter(Boolean).join(" · ")
+                }
+              </div>
+            </button>
+          ))}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -168,10 +167,7 @@ function PipelineCard({ row, onAction }) {
   const venueText = s?.venue_snapshot ? (s.venue_snapshot.name || s.venue_snapshot.title || "") + (s.venue_snapshot.quartile ? ` · ${s.venue_snapshot.quartile}` : "") : null;
 
   return (
-    <div
-      data-testid={TID.pubhubManuscript(m.id)}
-      style={{ background: "#fff", border: `1px solid ${BRD}`, padding: "12px 14px" }}
-    >
+    <Card data-testid={TID.pubhubManuscript(m.id)} padding="sm">
       <Link to={`/manuscripts/${m.id}`} style={{ display: "block", textDecoration: "none" }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: "#0F172A", lineHeight: 1.4 }}>{m.title || "Untitled"}</div>
       </Link>
@@ -185,40 +181,38 @@ function PipelineCard({ row, onAction }) {
         </div>
       )}
       <div style={{ marginTop: 10, paddingTop: 8, borderTop: `1px solid ${BRD}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`, padding: "2px 6px" }}>
-          {cfg.label}
-        </span>
+        <Badge color={cfg.color}>{cfg.label}</Badge>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {!s && (
-            <button data-testid={TID.pubhubSelectVenueBtn(m.id)} onClick={() => onAction("pick", row)} style={{ fontSize: 11, color: NAVY, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0, textDecoration: "underline" }}>
+            <Button data-testid={TID.pubhubSelectVenueBtn(m.id)} onClick={() => onAction("pick", row)} variant="link" size="sm" className="!text-[#0F2847]">
               Select venue
-            </button>
+            </Button>
           )}
           {s && !["submitted","under_review","accepted","published","rejected"].includes(stage) && (
-            <button data-testid={TID.pubhubSubmitBtn(m.id)} onClick={() => onAction("submit", row)} style={{ fontSize: 11, color: EMRL, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0, textDecoration: "underline" }}>
+            <Button data-testid={TID.pubhubSubmitBtn(m.id)} onClick={() => onAction("submit", row)} variant="link" size="sm" className="!text-emerald-600">
               Mark submitted
-            </button>
+            </Button>
           )}
           {s && stage === "submitted" && (
-            <button onClick={() => onAction("under_review", row)} style={{ fontSize: 11, color: "#B45309", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0, textDecoration: "underline" }}>
+            <Button onClick={() => onAction("under_review", row)} variant="link" size="sm" className="!text-amber-700">
               Under review
-            </button>
+            </Button>
           )}
           {s && stage === "under_review" && (
             <>
-              <button onClick={() => onAction("accept", row)} style={{ fontSize: 11, color: EMRL, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0, textDecoration: "underline" }}>Accept</button>
-              <button onClick={() => onAction("reject", row)} style={{ fontSize: 11, color: "#DC2626", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0, textDecoration: "underline" }}>Reject</button>
-              <button onClick={() => onAction("revision", row)} style={{ fontSize: 11, color: "#7C3AED", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0, textDecoration: "underline" }}>Revision</button>
+              <Button onClick={() => onAction("accept", row)} variant="link" size="sm" className="!text-emerald-600">Accept</Button>
+              <Button onClick={() => onAction("reject", row)} variant="link" size="sm" className="!text-red-600">Reject</Button>
+              <Button onClick={() => onAction("revision", row)} variant="link" size="sm" className="!text-violet-600">Revision</Button>
             </>
           )}
           {s && stage === "accepted" && (
-            <button onClick={() => onAction("publish", row)} style={{ fontSize: 11, color: "#065F46", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0, textDecoration: "underline" }}>
+            <Button onClick={() => onAction("publish", row)} variant="link" size="sm" className="!text-emerald-800">
               Publish
-            </button>
+            </Button>
           )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -236,23 +230,21 @@ function OrcidSection() {
 
   if (!status.connected && pubs.length === 0) {
     return (
-      <section
-        data-testid="pubhub-orcid-cta"
-        style={{ background: "#fff", border: `1px solid ${BRD}`, padding: "48px 32px", textAlign: "center", marginTop: 40 }}
-      >
-        <div style={{ width: 48, height: 48, background: WARM, border: `1px solid ${BRD}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-          <BookOpen size={20} strokeWidth={1} style={{ color: NAVY }} />
-        </div>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: NAVY, marginBottom: 8 }}>ORCID — Academic Identity</div>
-        <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0F172A", margin: "0 0 8px", fontFamily: "Georgia, serif" }}>
-          Connect ORCID to import your publications
-        </h3>
-        <p style={{ fontSize: 13, color: "#64748B", margin: "0 auto 24px", maxWidth: 440, lineHeight: 1.7 }}>
-          Link your ORCID iD in your Academic Passport to auto-import publications, conference papers, and preprints — verified by ORCID, enriched by OpenAlex.
-        </p>
-        <Link to="/academic-passport" style={{ display: "inline-block", background: NAVY, color: "#fff", textDecoration: "none", padding: "10px 20px", fontSize: 13, fontWeight: 600 }}>
-          Connect ORCID in Academic Passport
-        </Link>
+      <section data-testid="pubhub-orcid-cta" style={{ marginTop: 40 }}>
+        <EmptyState
+          icon={<BookOpen />}
+          title={
+            <>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: NAVY, marginBottom: 8 }}>
+                ORCID — Academic Identity
+              </div>
+              Connect ORCID to import your publications
+            </>
+          }
+          description="Link your ORCID iD in your Academic Passport to auto-import publications, conference papers, and preprints — verified by ORCID, enriched by OpenAlex."
+          action={<Button as={Link} to="/academic-passport">Connect ORCID in Academic Passport</Button>}
+          size="lg"
+        />
       </section>
     );
   }
@@ -301,11 +293,11 @@ function OrcidSection() {
                     )}
                   </div>
                   {p.concepts?.length > 0 && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
+                    <TagGroup gap={4} className="mt-1.5">
                       {p.concepts.slice(0, 5).map((c, ci) => (
-                        <span key={ci} style={{ fontSize: 9, fontFamily: "monospace", border: `1px solid ${BRD}`, background: WARM, padding: "2px 6px", color: "#64748B" }}>{c}</span>
+                        <Tag key={ci} size="sm" className="font-mono">{c}</Tag>
                       ))}
-                    </div>
+                    </TagGroup>
                   )}
                 </div>
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
@@ -381,16 +373,21 @@ export default function PublicationHub() {
         title="Publication Hub"
         nav={<LifecycleNav current="/publication-hub" />}
       >
-        <div style={{ background: "#fff", border: `1px solid ${BRD}`, padding: "64px 32px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 16, maxWidth: 520 }}>
-          <Lock size={28} strokeWidth={1} style={{ color: "#CBD5E1" }} />
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: NAVY }}>Researcher Plan Required</div>
-          <h2 style={{ fontSize: 22, fontWeight: 700, color: "#0F172A", margin: 0, fontFamily: "Georgia, serif" }}>Publication Tracking is a paid feature</h2>
-          <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.7 }}>
-            Upgrade to Researcher to manage your manuscript submission pipeline, track review stages, and link to journals and conferences.
-          </p>
-          <Link to="/pricing" style={{ display: "inline-block", background: NAVY, color: "#fff", textDecoration: "none", padding: "10px 24px", fontSize: 13, fontWeight: 600, marginTop: 8 }}>
-            View Plans
-          </Link>
+        <div style={{ maxWidth: 520 }}>
+          <EmptyState
+            icon={<Lock />}
+            title={
+              <>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: NAVY, marginBottom: 8 }}>
+                  Researcher Plan Required
+                </div>
+                Publication Tracking is a paid feature
+              </>
+            }
+            description="Upgrade to Researcher to manage your manuscript submission pipeline, track review stages, and link to journals and conferences."
+            action={<Button as={Link} to="/pricing">View Plans</Button>}
+            size="lg"
+          />
         </div>
       </ResearchLayout>
     );
@@ -404,12 +401,12 @@ export default function PublicationHub() {
 
   const pubHubActions = (
     <div style={{ display: "flex", gap: 8 }}>
-      <Link to="/manuscripts" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none", padding: "8px 14px", border: `1px solid ${BRD}`, background: "#fff" }}>
+      <Button as={Link} to="/manuscripts" variant="ghost" size="sm">
         <FileText size={12} strokeWidth={1.5} /> Manuscripts
-      </Link>
-      <Link to="/journals" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none", padding: "8px 14px", border: `1px solid ${BRD}`, background: "#fff" }}>
+      </Button>
+      <Button as={Link} to="/journals" variant="ghost" size="sm">
         <BookOpen size={12} strokeWidth={1.5} /> Browse Journals
-      </Link>
+      </Button>
     </div>
   );
 
@@ -422,25 +419,13 @@ export default function PublicationHub() {
     >
       <div style={{ paddingBottom: 64 }}>
         {/* ── Summary stats ─────────────────────────────────────────────── */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 32 }}>
-          {[
-            { label: "Total",        value: sum.total,        icon: FileText,     accent: null },
-            { label: "Active",       value: sum.active,       icon: Send,         accent: "#4338CA" },
-            { label: "Under Review", value: sum.under_review, icon: Inbox,        accent: "#B45309" },
-            { label: "Accepted",     value: sum.accepted,     icon: CheckCircle2, accent: EMRL },
-            { label: "Published",    value: sum.published,    icon: BookOpen,     accent: "#065F46" },
-          ].map(({ label, value, icon: Icon, accent }) => (
-            <div key={label} style={{ background: "#fff", border: `1px solid ${BRD}`, padding: "16px 20px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94A3B8" }}>{label}</span>
-                <Icon size={13} strokeWidth={1.5} style={{ color: accent || "#CBD5E1" }} />
-              </div>
-              <span style={{ fontSize: 26, fontWeight: 700, color: "#0F172A", fontFamily: "Georgia, serif", letterSpacing: "-0.02em", lineHeight: 1 }}>
-                {value || 0}
-              </span>
-            </div>
-          ))}
-        </div>
+        <StatGrid cols={5} className="mb-8">
+          <StatCard label="Total" value={sum.total || 0} icon={<FileText />} />
+          <StatCard label="Active" value={sum.active || 0} icon={<Send />} />
+          <StatCard label="Under Review" value={sum.under_review || 0} icon={<Inbox />} />
+          <StatCard label="Accepted" value={sum.accepted || 0} icon={<CheckCircle2 />} />
+          <StatCard label="Published" value={sum.published || 0} icon={<BookOpen />} />
+        </StatGrid>
 
         {/* ── Pipeline kanban ───────────────────────────────────────────── */}
         {sum.total === 0 ? (
@@ -450,12 +435,12 @@ export default function PublicationHub() {
             description="Create a manuscript and link it to a target journal or conference to begin tracking its publication journey."
             action={
               <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-                <Link to="/manuscripts" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: NAVY, color: "#fff", textDecoration: "none", padding: "10px 18px", fontSize: 13, fontWeight: 600 }}>
+                <Button as={Link} to="/manuscripts">
                   <FileText size={13} strokeWidth={1.5} /> Manuscripts
-                </Link>
-                <Link to="/journals" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#fff", color: NAVY, textDecoration: "none", padding: "10px 18px", fontSize: 13, fontWeight: 600, border: `1px solid ${BRD}` }}>
+                </Button>
+                <Button as={Link} to="/journals" variant="outline">
                   Browse Journals
-                </Link>
+                </Button>
               </div>
             }
             size="lg"

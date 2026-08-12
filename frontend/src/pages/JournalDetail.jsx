@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../lib/api";
 import { ExternalLink, BookOpen, Globe, FileText } from "lucide-react";
-import { NAVY } from "@/lib/tokens";
 import { SkeletonCard } from "@/components/ds/LoadingState";
+import { Badge } from "@/components/ds/Badge";
+import { Card } from "@/components/ds/Card";
+import { Tag, TagGroup } from "@/components/ds/Tag";
+import { ResearchLayout } from "@/layouts";
 
 function Metric({ label, value, sub }) {
   return (
@@ -19,11 +22,7 @@ function Metric({ label, value, sub }) {
 
 function ProvenanceBadge({ source }) {
   const labels = { openalex: "OpenAlex", doaj: "DOAJ", crossref: "Crossref", seed: "Curated seed" };
-  return (
-    <span className="overline border border-slate-200 bg-slate-50 text-slate-600 px-2 py-0.5">
-      Data: {labels[source] || source}
-    </span>
-  );
+  return <Badge variant="neutral">Data: {labels[source] || source}</Badge>;
 }
 
 export default function JournalDetail() {
@@ -32,59 +31,64 @@ export default function JournalDetail() {
 
   useEffect(() => { api.get(`/journals/${id}`).then((r) => setJ(r.data)).catch(() => setJ({error: true})); }, [id]);
 
-  if (!j) return <div className="p-6"><SkeletonCard rows={4} /></div>;
-  if (j.error) return <div className="text-sm text-slate-500">Journal not found. <Link to="/journals" className="underline">Back to discovery</Link></div>;
+  if (!j) return <ResearchLayout title="Journal"><SkeletonCard rows={4} /></ResearchLayout>;
+  if (j.error) return (
+    <ResearchLayout title="Journal not found">
+      <div className="text-sm text-slate-500">Journal not found. <Link to="/journals" className="underline">Back to discovery</Link></div>
+    </ResearchLayout>
+  );
 
   const xid = j.external_ids || {};
   const oaLabel = j.open_access ? (j.oa_status || "Open access") : "Subscription / hybrid";
 
   return (
-    <div className="space-y-8">
-      <Link to="/journals" className="text-sm text-slate-500 hover:text-slate-900">← All journals</Link>
+    <ResearchLayout title={j.title}>
+      <div className="space-y-8">
+        <Link to="/journals" className="text-sm text-slate-500 hover:text-slate-900">← All journals</Link>
 
-      <header className="border-b border-slate-200 pb-6">
-        <div className="flex items-center gap-2 mb-2">
+        {/* Meta bar */}
+        <div className="flex items-center gap-2 flex-wrap pb-6 border-b border-slate-200">
           <BookOpen size={16} strokeWidth={1.5} className="text-[#0F2847]" />
           <div className="overline text-[#0F2847]">{j.publisher || "Publisher unknown"}</div>
           <ProvenanceBadge source={j.source} />
           {j.quartile && (
-            <span className="overline border border-[#0F2847]/20 bg-[#0F2847]/5 text-[#0F2847] px-2 py-0.5">{j.quartile}</span>
+            <Badge variant="default">{j.quartile}</Badge>
           )}
           {j.open_access && (
-            <span className="overline border border-emerald-300 bg-emerald-50 text-emerald-700 px-2 py-0.5">{oaLabel}</span>
+            <Badge variant="success">{oaLabel}</Badge>
+          )}
+          {(xid.issn_l || (xid.issns && xid.issns.length > 0) || j.country) && (
+            <div className="w-full mt-2 text-sm text-slate-500 flex flex-wrap gap-3">
+              {xid.issn_l && <span>ISSN-L: <span className="font-mono text-slate-700">{xid.issn_l}</span></span>}
+              {xid.issns && xid.issns.length > 0 && (
+                <span>ISSN: <span className="font-mono text-slate-700">{xid.issns.join(", ")}</span></span>
+              )}
+              {j.country && <span><Globe size={11} className="inline" /> {j.country}</span>}
+            </div>
           )}
         </div>
-        <h1 className="font-serif text-5xl text-slate-900 mt-2 leading-tight">{j.title}</h1>
-        <div className="mt-3 text-sm text-slate-500 flex flex-wrap gap-3">
-          {xid.issn_l && <span>ISSN-L: <span className="font-mono text-slate-700">{xid.issn_l}</span></span>}
-          {xid.issns && xid.issns.length > 0 && (
-            <span>ISSN: <span className="font-mono text-slate-700">{xid.issns.join(", ")}</span></span>
-          )}
-          {j.country && <span><Globe size={11} className="inline" /> {j.country}</span>}
-        </div>
-      </header>
 
       <div className="grid lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8">
           <section>
             <h2 className="overline mb-3">Subject coverage</h2>
             {(j.subjects && j.subjects.length > 0) ? (
-              <div className="flex flex-wrap gap-2">
+              <TagGroup gap={8}>
                 {j.subjects.map((s, i) => (
-                  <span key={i} className="text-sm px-3 py-1 border border-slate-300 text-slate-700">{s}</span>
+                  <Tag key={i}>{s}</Tag>
                 ))}
-              </div>
+              </TagGroup>
             ) : <div className="text-sm text-slate-500">No subjects indexed for this journal yet.</div>}
           </section>
 
           {j.scope_keywords && j.scope_keywords.length > 0 && (
             <section className="border-t border-slate-200 pt-6">
               <h2 className="overline mb-3">Topics covered</h2>
-              <div className="flex flex-wrap gap-2">
+              <TagGroup gap={6}>
                 {j.scope_keywords.map((t, i) => (
-                  <span key={i} className="text-xs font-mono px-2 py-1 bg-slate-100 text-slate-700">{t}</span>
+                  <Tag key={i} size="sm" className="font-mono">{t}</Tag>
                 ))}
-              </div>
+              </TagGroup>
             </section>
           )}
 
@@ -126,14 +130,14 @@ export default function JournalDetail() {
         </div>
 
         <aside className="lg:col-span-4 space-y-6">
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="lg">
             <div className="overline mb-4">Impact metrics</div>
             <Metric label="Works published" value={(j.works_count || 0).toLocaleString()} />
             <Metric label="Total citations" value={(j.cited_by_count || 0).toLocaleString()} />
             <Metric label="h-index" value={j.h_index || "—"} />
             <Metric label="2-year citedness" value={j.mean_citedness_2yr?.toFixed(2) ?? "—"} sub="OpenAlex" />
             <Metric label="Popularity score" value={j.popularity_score?.toFixed(1) ?? "—"} sub="synthetic" />
-          </div>
+          </Card>
           {j.quartile_source === "openalex_estimate" && (
             <div className="text-[11px] text-slate-500 leading-relaxed">
               Quartile is an OpenAlex-derived estimate from 2-year mean citedness. Scimago / JCR back-fills available where licensing permits.
@@ -141,6 +145,7 @@ export default function JournalDetail() {
           )}
         </aside>
       </div>
-    </div>
+      </div>
+    </ResearchLayout>
   );
 }

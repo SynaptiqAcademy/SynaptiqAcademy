@@ -102,7 +102,7 @@ function SaveSearchModal({ kind, query, filters, name, setName, freq, setFreq, o
             <div className="overline">Discovery</div>
             <h3 className="font-serif text-xl text-slate-900">Save this {kind} search</h3>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900"><X size={16} strokeWidth={1.5} /></button>
+          <button onClick={onClose} aria-label="Close" className="text-slate-400 hover:text-slate-900"><X size={16} strokeWidth={1.5} /></button>
         </div>
         <div className="p-5 space-y-4">
           <div>
@@ -215,7 +215,7 @@ function ManageSearchesDrawer({ kind, onClose, onMutated }) {
             <div className="overline">Saved {kind} searches</div>
             <h3 className="font-serif text-xl text-slate-900 mt-0.5">Your watchlist</h3>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900"><X size={16} strokeWidth={1.5} /></button>
+          <button onClick={onClose} aria-label="Close" className="text-slate-400 hover:text-slate-900"><X size={16} strokeWidth={1.5} /></button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-slate-50/40">
           {items === null && <div className="text-sm text-slate-500 font-mono">Loading…</div>}
@@ -346,7 +346,7 @@ function PreviewModal({ data, onClose }) {
             <div className="overline">Preview · {search.kind}</div>
             <div className="font-serif text-lg text-slate-900">{search.name}</div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900"><X size={14} strokeWidth={1.5} /></button>
+          <button onClick={onClose} aria-label="Close" className="text-slate-400 hover:text-slate-900"><X size={14} strokeWidth={1.5} /></button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2 bg-slate-50/40">
           {loading && <div className="text-sm text-slate-500 font-mono">Loading…</div>}

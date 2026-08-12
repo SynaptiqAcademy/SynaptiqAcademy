@@ -174,9 +174,9 @@ function Design({ project, onSave, saving }) {
       <TextBlock label="Sampling strategy"  value={f.sampling}         onChange={(v) => setF({ ...f, sampling: v })} />
       <TextBlock label="Analysis methods"   value={f.analysis_methods} onChange={(v) => setF({ ...f, analysis_methods: v })} />
       <TextBlock label="Ethical considerations" value={f.ethics}       onChange={(v) => setF({ ...f, ethics: v })} />
-      <button onClick={() => onSave(f)} disabled={saving} className="inline-flex items-center gap-2 bg-[#0F2847] text-white px-4 h-9 text-xs font-medium hover:bg-[#1a3d65] disabled:opacity-40 transition-colors">
-        {saving ? "Saving…" : "Save research design"}
-      </button>
+      <Button onClick={() => onSave(f)} disabled={saving} loading={saving}>
+        Save research design
+      </Button>
     </div>
   );
 }
@@ -206,7 +206,7 @@ function Literature({ projectId }) {
           <EmptyState title="No literature added yet." size="sm" dashed={true} />
         )}
         {items.map((l) => (
-          <div key={l.id} className="border border-slate-200 bg-white p-4 hover:border-[#0F2847]/40 transition-colors">
+          <Card key={l.id} padding="md">
             <div className="text-[11px] font-mono text-[#0F2847] mb-1.5">
               {l.source_type}{l.year ? ` · ${l.year}` : ""}
             </div>
@@ -218,27 +218,27 @@ function Literature({ projectId }) {
                 View source ↗
               </a>
             )}
-          </div>
+          </Card>
         ))}
       </div>
-      <div className="lg:col-span-5 border border-slate-200 bg-white p-5 h-fit">
+      <Card padding="lg" className="lg:col-span-5 h-fit">
         <div className="overline text-slate-500 mb-3">Add source</div>
         <div className="space-y-2">
-          <input className="h-9 w-full px-3 border border-slate-200 bg-white text-[13px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors" placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-          <input className="h-9 w-full px-3 border border-slate-200 bg-white text-[13px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors" placeholder="Authors" value={form.authors} onChange={(e) => setForm({ ...form, authors: e.target.value })} />
-          <div className="grid grid-cols-2 gap-2">
-            <input className="h-9 px-3 border border-slate-200 bg-white text-[13px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors" placeholder="Year" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} />
-            <select className="h-9 px-3 border border-slate-200 bg-white text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors" value={form.source_type} onChange={(e) => setForm({ ...form, source_type: e.target.value })}>
+          <Input placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+          <Input placeholder="Authors" value={form.authors} onChange={(e) => setForm({ ...form, authors: e.target.value })} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Input placeholder="Year" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} />
+            <FormSelect value={form.source_type} onChange={(e) => setForm({ ...form, source_type: e.target.value })}>
               <option>Paper</option><option>Book</option><option>Report</option>
-            </select>
+            </FormSelect>
           </div>
-          <input className="h-9 w-full px-3 border border-slate-200 bg-white text-[13px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors" placeholder="URL (optional)" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} />
-          <textarea rows={3} className="w-full px-3 py-2.5 border border-slate-200 bg-white text-[13px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] resize-y transition-colors" placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-          <button onClick={add} disabled={adding || !form.title.trim()} className="inline-flex items-center gap-2 bg-[#0F2847] text-white px-4 h-9 text-xs font-medium hover:bg-[#1a3d65] disabled:opacity-40 transition-colors">
+          <Input placeholder="URL (optional)" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} />
+          <Textarea rows={3} placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+          <Button onClick={add} disabled={adding || !form.title.trim()} loading={adding}>
             <Plus size={12} strokeWidth={1.5} /> Add to literature
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -290,15 +290,8 @@ function Tasks({ projectId, members }) {
           {tasks.map((t) => {
             const assignee = members.find((m) => m.id === t.assignee_id);
             return (
-              <div key={t.id} className="flex items-center gap-3 border border-slate-200 bg-white px-3 py-2.5 hover:border-slate-300 transition-colors">
-                <button
-                  onClick={() => toggleStatus(t)}
-                  className={`w-4 h-4 border-2 flex items-center justify-center shrink-0 transition-colors ${
-                    t.status === "done" ? "bg-[#0F2847] border-[#0F2847]" : "border-slate-300 hover:border-[#0F2847]"
-                  }`}
-                >
-                  {t.status === "done" && <Check size={10} strokeWidth={2.5} className="text-white" />}
-                </button>
+              <Card key={t.id} padding="sm" className="flex items-center gap-3">
+                <Checkbox checked={t.status === "done"} onChange={() => toggleStatus(t)} />
                 <div className="flex-1 min-w-0">
                   <div className={`text-[13px] ${t.status === "done" ? "line-through text-slate-400" : "text-slate-900"}`}>
                     {t.title}
@@ -309,32 +302,28 @@ function Tasks({ projectId, members }) {
                     {t.due_date && <span className="text-[11px] font-mono text-slate-400">Due {t.due_date}</span>}
                   </div>
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>
 
-        <div className="mt-5 border border-slate-200 bg-white p-4">
+        <Card padding="md" className="mt-5">
           <div className="overline text-slate-500 mb-3">New task</div>
           <div className="grid sm:grid-cols-5 gap-2">
-            <input placeholder="Title" value={tForm.title} onChange={(e) => setTForm({ ...tForm, title: e.target.value })}
-              className="sm:col-span-2 h-9 px-3 border border-slate-200 bg-white text-[13px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors" />
-            <select value={tForm.assignee_id} onChange={(e) => setTForm({ ...tForm, assignee_id: e.target.value })}
-              className="h-9 px-3 border border-slate-200 bg-white text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors">
+            <Input wrapperClassName="sm:col-span-2" placeholder="Title" value={tForm.title} onChange={(e) => setTForm({ ...tForm, title: e.target.value })} />
+            <FormSelect value={tForm.assignee_id} onChange={(e) => setTForm({ ...tForm, assignee_id: e.target.value })}>
               <option value="">Assignee</option>
               {members.map((m) => <option key={m.id} value={m.id}>{m.full_name}</option>)}
-            </select>
-            <input type="date" value={tForm.due_date} onChange={(e) => setTForm({ ...tForm, due_date: e.target.value })}
-              className="h-9 px-3 border border-slate-200 bg-white text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors" />
-            <select value={tForm.priority} onChange={(e) => setTForm({ ...tForm, priority: e.target.value })}
-              className="h-9 px-3 border border-slate-200 bg-white text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors">
+            </FormSelect>
+            <Input type="date" value={tForm.due_date} onChange={(e) => setTForm({ ...tForm, due_date: e.target.value })} />
+            <FormSelect value={tForm.priority} onChange={(e) => setTForm({ ...tForm, priority: e.target.value })}>
               <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
-            </select>
+            </FormSelect>
           </div>
-          <button onClick={addTask} disabled={!tForm.title.trim()} className="mt-3 inline-flex items-center gap-2 bg-[#0F2847] text-white px-4 h-8 text-xs font-medium hover:bg-[#1a3d65] disabled:opacity-40 transition-colors">
+          <Button size="sm" className="mt-3" onClick={addTask} disabled={!tForm.title.trim()}>
             Add task
-          </button>
-        </div>
+          </Button>
+        </Card>
       </div>
 
       <div className="lg:col-span-5">
@@ -346,28 +335,25 @@ function Tasks({ projectId, members }) {
             <EmptyState title="No milestones yet." size="sm" dashed={true} />
           )}
           {milestones.map((m) => (
-            <div key={m.id} className="border-l-2 border-[#0F2847] pl-3 py-2">
+            <Card key={m.id} variant="ghost" padding="sm" accent={NAVY} className="rounded-none">
               <div className="text-[13px] font-semibold text-slate-900">{m.title}</div>
               {m.due_date && <div className="text-[11px] font-mono text-slate-400 mt-0.5">{m.due_date}</div>}
               {m.description && <div className="text-[13px] text-slate-600 mt-1 leading-relaxed">{m.description}</div>}
-            </div>
+            </Card>
           ))}
         </div>
 
-        <div className="mt-5 border border-slate-200 bg-white p-4">
+        <Card padding="md" className="mt-5">
           <div className="overline text-slate-500 mb-3">New milestone</div>
           <div className="space-y-2">
-            <input placeholder="Title" value={mForm.title} onChange={(e) => setMForm({ ...mForm, title: e.target.value })}
-              className="h-9 w-full px-3 border border-slate-200 bg-white text-[13px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors" />
-            <input type="date" value={mForm.due_date} onChange={(e) => setMForm({ ...mForm, due_date: e.target.value })}
-              className="h-9 w-full px-3 border border-slate-200 bg-white text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors" />
-            <textarea rows={2} placeholder="Description" value={mForm.description} onChange={(e) => setMForm({ ...mForm, description: e.target.value })}
-              className="w-full px-3 py-2.5 border border-slate-200 bg-white text-[13px] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] resize-y transition-colors" />
+            <Input placeholder="Title" value={mForm.title} onChange={(e) => setMForm({ ...mForm, title: e.target.value })} />
+            <Input type="date" value={mForm.due_date} onChange={(e) => setMForm({ ...mForm, due_date: e.target.value })} />
+            <Textarea rows={2} placeholder="Description" value={mForm.description} onChange={(e) => setMForm({ ...mForm, description: e.target.value })} />
           </div>
-          <button onClick={addMilestone} disabled={!mForm.title.trim()} className="mt-3 inline-flex items-center gap-2 bg-[#0F2847] text-white px-4 h-8 text-xs font-medium hover:bg-[#1a3d65] disabled:opacity-40 transition-colors">
+          <Button size="sm" className="mt-3" onClick={addMilestone} disabled={!mForm.title.trim()}>
             Add milestone
-          </button>
-        </div>
+          </Button>
+        </Card>
       </div>
     </div>
   );
@@ -415,11 +401,7 @@ function Team({ members, projectId }) {
     <div className="space-y-6">
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {members.map((m) => (
-          <Link
-            to={`/profile/${m.id}`}
-            key={m.id}
-            className="group border border-slate-200 bg-white p-5 hover:border-[#0F2847]/40 transition-colors"
-          >
+          <Card to={`/profile/${m.id}`} key={m.id} padding="lg" className="group">
             <div className="flex items-center gap-3">
               <Avatar url={m.avatar_url} name={m.full_name} size={44} />
               <div className="min-w-0">
@@ -432,28 +414,24 @@ function Team({ members, projectId }) {
             </div>
             {rolesMap[m.id] && (
               <div className="mt-3 pt-3 border-t border-slate-100">
-                <span className={`text-[10px] border px-2 py-0.5 font-mono ${ROLE_COLORS[rolesMap[m.id]] || "border-slate-300 text-slate-500"}`}>
+                <Badge variant="outline" size="sm" className={ROLE_COLORS[rolesMap[m.id]] || ""}>
                   {rolesMap[m.id]}
-                </span>
+                </Badge>
               </div>
             )}
-          </Link>
+          </Card>
         ))}
       </div>
 
       {!intelLoaded ? (
-        <button
-          onClick={loadIntelligence}
-          disabled={loadingIntel}
-          className="flex items-center gap-2 text-[13px] text-slate-600 border border-slate-200 px-4 py-2 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors disabled:opacity-50"
-        >
+        <Button variant="ghost" onClick={loadIntelligence} disabled={loadingIntel} loading={loadingIntel}>
           <Award size={13} strokeWidth={1.5} />
           {loadingIntel ? "Analysing team…" : "Analyse Team Intelligence"}
-        </button>
+        </Button>
       ) : (
         <div className="space-y-5">
           {(roles || []).length > 0 && (
-            <div className="border border-slate-200 bg-white p-5">
+            <Card padding="lg">
               <div className="flex items-center gap-2 mb-4">
                 <Award size={13} strokeWidth={1.5} className="text-[#0F2847]" />
                 <div className="overline text-[#0F2847]">Recommended Roles</div>
@@ -464,18 +442,18 @@ function Team({ members, projectId }) {
                     <Avatar url={r.avatar_url} name={r.full_name} size={32} />
                     <div className="min-w-0 flex-1">
                       <div className="text-[13px] font-medium text-slate-900 truncate">{r.full_name}</div>
-                      <div className={`text-[10px] border px-1.5 py-0.5 mt-0.5 inline-block font-mono ${ROLE_COLORS[r.recommended_role] || "border-slate-300 text-slate-500"}`}>
+                      <Badge variant="outline" size="sm" className={`mt-0.5 ${ROLE_COLORS[r.recommended_role] || ""}`}>
                         {r.recommended_role}
-                      </div>
+                      </Badge>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
           {analysis && (
-            <div className="border border-slate-200 bg-white p-5">
+            <Card padding="lg">
               <div className="flex items-center gap-2 mb-4">
                 <AlertTriangle size={13} strokeWidth={1.5} className="text-amber-600" />
                 <div className="overline text-amber-700">Missing Expertise</div>
@@ -493,13 +471,13 @@ function Team({ members, projectId }) {
                       <div className="text-[11px] text-slate-500 mb-2 font-mono uppercase tracking-wider">Current Expertise</div>
                       <div className="flex flex-wrap gap-1.5">
                         {(analysis.covered_expertise || []).map((e) => (
-                          <span key={e} className="text-[11px] border border-green-300 text-green-700 bg-green-50 px-2 py-0.5">✓ {e}</span>
+                          <Badge key={e} variant="success" size="sm">✓ {e}</Badge>
                         ))}
                       </div>
                     </div>
                   )}
                   {(analysis.suggestions || []).map((s) => (
-                    <div key={s.expertise} className="border border-amber-200 bg-amber-50 p-4 space-y-3">
+                    <Card key={s.expertise} variant="ghost" padding="md" className="border border-amber-200 bg-amber-50 space-y-3">
                       <div className="flex items-center gap-2">
                         <AlertTriangle size={12} strokeWidth={1.5} className="text-amber-600 shrink-0" />
                         <span className="text-[13px] font-medium text-amber-900">Missing: {s.expertise}</span>
@@ -509,10 +487,11 @@ function Team({ members, projectId }) {
                           <div className="text-[11px] text-amber-700 mb-2 font-mono uppercase tracking-wider">Suggested researchers</div>
                           <div className="space-y-1.5">
                             {(s.researchers || []).map((r) => (
-                              <Link
+                              <Card
                                 key={r.id}
                                 to={`/profile/${r.id}`}
-                                className="flex items-center gap-2.5 bg-white border border-amber-100 px-3 py-2 hover:border-[#0F2847]/40 transition-colors"
+                                padding="sm"
+                                className="flex items-center gap-2.5 border-amber-100"
                               >
                                 <Avatar url={r.avatar_url} name={r.full_name} size={28} />
                                 <div className="min-w-0 flex-1">
@@ -520,7 +499,7 @@ function Team({ members, projectId }) {
                                   <div className="text-[11px] text-slate-500">{r.institution}</div>
                                 </div>
                                 <Search size={11} strokeWidth={1.5} className="ml-auto text-slate-400 shrink-0" />
-                              </Link>
+                              </Card>
                             ))}
                           </div>
                         </div>
@@ -532,11 +511,11 @@ function Team({ members, projectId }) {
                         <Users size={11} strokeWidth={1.5} />
                         Find {s.expertise} expert via Collaboration Intelligence
                       </Link>
-                    </div>
+                    </Card>
                   ))}
                 </div>
               )}
-            </div>
+            </Card>
           )}
         </div>
       )}

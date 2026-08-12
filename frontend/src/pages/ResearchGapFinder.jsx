@@ -12,7 +12,16 @@ import { useGapOpportunities } from "../hooks/useCitations";
 import { TID } from "../lib/testIds";
 import { NAVY, WARM } from "@/lib/tokens";
 import { Spinner } from "@/components/ds/LoadingState";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { Tag as DsTag } from "@/components/ds/Tag";
+import { Input } from "@/components/ds/Input";
+import { Textarea } from "@/components/ds/Textarea";
+import { InlineError, Callout } from "@/components/ds/Alert";
+import { Modal } from "@/components/ds/Modal";
 
 
 
@@ -28,11 +37,7 @@ function SectionHeader({ icon: Icon, label, color = "#0F2847" }) {
 }
 
 function Tag({ children, className = "" }) {
-  return (
-    <span className={`inline-block border border-slate-200 text-slate-600 text-xs px-2 py-0.5 ${className}`}>
-      {children}
-    </span>
-  );
+  return <DsTag size="sm" className={className}>{children}</DsTag>;
 }
 
 function BulletList({ items }) {
@@ -53,7 +58,7 @@ function ExpandCard({ title, subtitle, badge, badgeColor, children, defaultOpen 
   const [open, setOpen] = useState(defaultOpen);
   const Chev = open ? ChevronUp : ChevronDown;
   return (
-    <div className="border border-slate-200 bg-white">
+    <Card padding="none">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-start justify-between gap-4 px-5 py-4 text-left hover:bg-slate-50 transition-colors"
@@ -64,15 +69,9 @@ function ExpandCard({ title, subtitle, badge, badgeColor, children, defaultOpen 
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {badge && (
-            <span
-              className="text-xs px-2 py-0.5 font-mono border"
-              style={badgeColor
-                ? { borderColor: badgeColor, color: badgeColor }
-                : { borderColor: "#e2e8f0", color: "#64748b" }
-              }
-            >
+            <Badge color={badgeColor || "#64748b"} size="sm" className="font-mono">
               {badge}
-            </span>
+            </Badge>
           )}
           <Chev size={15} strokeWidth={1.5} className="text-slate-400" />
         </div>
@@ -82,7 +81,7 @@ function ExpandCard({ title, subtitle, badge, badgeColor, children, defaultOpen 
           {children}
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -96,13 +95,10 @@ function CopyButton({ text }) {
     } catch {}
   };
   return (
-    <button
-      onClick={copy}
-      className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#0F2847] transition-colors"
-    >
+    <Button onClick={copy} variant="link" className="text-xs !text-slate-500 hover:!text-[#0F2847]">
       {copied ? <Check size={12} /> : <Copy size={12} />}
       {copied ? "Copied" : "Copy"}
-    </button>
+    </Button>
   );
 }
 
@@ -116,10 +112,9 @@ function OpportunityBadge({ level }) {
   };
   const cfg = map[level?.toLowerCase()] || map.low;
   return (
-    <span className="text-xs px-2 py-0.5 border font-mono"
-      style={{ borderColor: cfg.color, color: cfg.color }}>
+    <Badge color={cfg.color} size="sm" className="font-mono">
       {cfg.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -131,10 +126,9 @@ function PubPotentialBadge({ level }) {
   };
   const cfg = map[level?.toLowerCase()] || map.low;
   return (
-    <span className="text-xs px-2 py-0.5 border font-mono capitalize"
-      style={{ borderColor: cfg.color, color: cfg.color }}>
+    <Badge color={cfg.color} size="sm" className="font-mono capitalize">
       {level}
-    </span>
+    </Badge>
   );
 }
 
@@ -147,10 +141,9 @@ function MaturityBadge({ level }) {
   };
   const cfg = map[level?.toLowerCase()] || { color: "#64748b" };
   return (
-    <span className="text-xs px-2 py-0.5 border font-mono capitalize"
-      style={{ borderColor: cfg.color, color: cfg.color }}>
+    <Badge color={cfg.color} size="sm" className="font-mono capitalize">
       {level}
-    </span>
+    </Badge>
   );
 }
 
@@ -181,10 +174,7 @@ function ScoreRing({ score }) {
 
 function GateView() {
   return (
-    <div className="min-h-screen bg-[#F4F6FA]">
-      <div style={{ background: "#F4F6FA", padding: "13px 32px", borderBottom: "1px solid rgba(15,23,42,0.08)" }}>
-      </div>
-      <div className="flex items-center justify-center p-8" style={{ minHeight: "calc(100vh - 50px)" }}>
+    <div className="flex items-center justify-center py-16">
       <div className="max-w-md w-full text-center space-y-6">
         <div className="w-14 h-14 border-2 border-slate-900 flex items-center justify-center mx-auto">
           <Lock size={22} strokeWidth={1.5} />
@@ -196,7 +186,7 @@ function GateView() {
             Uncover underexplored areas, contradictions, and publishable opportunities in any field.
           </p>
         </div>
-        <div className="border border-slate-200 bg-white p-4 text-left space-y-2">
+        <Card padding="md" className="text-left space-y-2">
           <div className="text-xs overline text-slate-500 mb-3">Included in this analysis</div>
           {[
             "Highly and underexplored research areas",
@@ -210,15 +200,11 @@ function GateView() {
               {f}
             </div>
           ))}
-        </div>
-        <Link
-          to="/pricing"
-          className="inline-block w-full bg-[#0F2847] text-white text-sm font-medium py-3 px-6 hover:bg-[#1a3a5c] transition-colors"
-        >
+        </Card>
+        <Button as={Link} to="/pricing" variant="primary" size="lg" className="w-full">
           Upgrade to Pro Researcher
-        </Link>
+        </Button>
         <p className="text-xs text-slate-500">10 credits per analysis · Refunded if analysis fails</p>
-      </div>
       </div>
     </div>
   );
@@ -250,10 +236,9 @@ function KeywordInput({ keywords, setKeywords }) {
   return (
     <div className="border border-slate-300 bg-white min-h-[42px] flex flex-wrap gap-1.5 p-2 focus-within:border-[#0F2847] transition-colors">
       {keywords.map((kw) => (
-        <span key={kw} className="flex items-center gap-1 bg-[#0F2847] text-white text-xs px-2 py-1">
+        <DsTag key={kw} variant="colored" color="#0F2847" onRemove={() => remove(kw)}>
           {kw}
-          <button type="button" onClick={() => remove(kw)} className="opacity-60 hover:opacity-100 ml-0.5">×</button>
-        </span>
+        </DsTag>
       ))}
       <input
         value={input}
@@ -321,65 +306,43 @@ function InputView({ onResult }) {
   if (isGated) return <GateView />;
 
   return (
-    <div className="min-h-screen bg-[#F4F6FA]">
-      <div style={{ background: "#F4F6FA", padding: "13px 32px", borderBottom: "1px solid rgba(15,23,42,0.08)" }}>
-      </div>
-      <div className="max-w-2xl mx-auto py-12 px-6">
+    <div>
+      <div className="max-w-2xl mx-auto">
         {/* header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 border-2 border-[#0F2847] flex items-center justify-center">
-              <Target size={18} strokeWidth={1.5} className="text-[#0F2847]" />
-            </div>
-            <div>
-              <h1 className="font-serif text-2xl text-slate-900">AI Research Gap Finder</h1>
-              <p className="text-xs text-slate-500 mt-0.5">Pro Researcher · 10 credits per analysis</p>
-            </div>
-          </div>
-          <p className="text-slate-600 text-sm leading-relaxed">
-            Identify over-researched areas, under-studied territories, contradictions, and genuinely
-            publishable opportunities in any academic field.
-          </p>
+          <p className="text-xs text-slate-500 mb-3">Pro Researcher · 10 credits per analysis</p>
 
           {/* disclaimer */}
-          <div className="mt-4 border border-amber-200 bg-amber-50 p-3 flex gap-2.5">
-            <AlertTriangle size={14} className="text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-800 leading-relaxed">
-              Claude identifies gaps based on training data (cut-off August 2025). Results reflect
-              patterns in the literature, not a live database search. Always verify with PubMed,
-              Scopus, or Web of Science before submitting a manuscript.
-            </p>
-          </div>
+          <Callout variant="warning">
+            Claude identifies gaps based on training data (cut-off August 2025). Results reflect
+            patterns in the literature, not a live database search. Always verify with PubMed,
+            Scopus, or Web of Science before submitting a manuscript.
+          </Callout>
         </div>
 
         {/* form */}
         <form onSubmit={submit} data-testid={TID.researchGapForm} className="space-y-5">
           {/* topic */}
-          <div>
-            <label className="overline block mb-1.5">Research Topic *</label>
-            <input
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="e.g. mRNA vaccine efficacy in immunocompromised adults"
-              className="w-full border border-slate-300 px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-              maxLength={300}
-              data-testid={TID.researchGapTopic}
-            />
-          </div>
+          <Input
+            label="Research Topic *"
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            placeholder="e.g. mRNA vaccine efficacy in immunocompromised adults"
+            maxLength={300}
+            data-testid={TID.researchGapTopic}
+          />
 
           {/* research question */}
-          <div>
-            <label className="overline block mb-1.5">Research Question *</label>
-            <textarea
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="e.g. What methodological approaches have been underused in assessing long-term mRNA vaccine durability in solid-organ transplant recipients?"
-              rows={3}
-              className="w-full border border-slate-300 px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors resize-none"
-              maxLength={1000}
-              data-testid={TID.researchGapQuestion}
-            />
-          </div>
+          <Textarea
+            label="Research Question *"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="e.g. What methodological approaches have been underused in assessing long-term mRNA vaccine durability in solid-organ transplant recipients?"
+            rows={3}
+            resize={false}
+            maxLength={1000}
+            data-testid={TID.researchGapQuestion}
+          />
 
           {/* keywords */}
           <div>
@@ -399,88 +362,66 @@ function InputView({ onResult }) {
           </button>
 
           {showOptional && (
-            <div className="border border-slate-200 bg-white p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="overline block mb-1.5">Discipline</label>
-                  <input
-                    value={discipline}
-                    onChange={(e) => setDiscipline(e.target.value)}
-                    placeholder="e.g. Immunology"
-                    className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-                    maxLength={100}
-                  />
-                </div>
-                <div>
-                  <label className="overline block mb-1.5">Target Journal Type</label>
-                  <input
-                    value={journalType}
-                    onChange={(e) => setJournalType(e.target.value)}
-                    placeholder="e.g. High-impact clinical"
-                    className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-                    maxLength={200}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="overline block mb-1.5">Methodology Preference</label>
-                <input
-                  value={methodology}
-                  onChange={(e) => setMethodology(e.target.value)}
-                  placeholder="e.g. Systematic review, RCT, longitudinal cohort"
-                  className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
+            <Card padding="lg" className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label="Discipline"
+                  value={discipline}
+                  onChange={(e) => setDiscipline(e.target.value)}
+                  placeholder="e.g. Immunology"
+                  maxLength={100}
+                />
+                <Input
+                  label="Target Journal Type"
+                  value={journalType}
+                  onChange={(e) => setJournalType(e.target.value)}
+                  placeholder="e.g. High-impact clinical"
                   maxLength={200}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="overline block mb-1.5">Year From</label>
-                  <input
-                    type="number"
-                    value={yearFrom}
-                    onChange={(e) => setYearFrom(e.target.value)}
-                    placeholder="e.g. 2010"
-                    min={1900} max={2100}
-                    className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="overline block mb-1.5">Year To</label>
-                  <input
-                    type="number"
-                    value={yearTo}
-                    onChange={(e) => setYearTo(e.target.value)}
-                    placeholder="e.g. 2025"
-                    min={1900} max={2100}
-                    className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-                  />
-                </div>
+              <Input
+                label="Methodology Preference"
+                value={methodology}
+                onChange={(e) => setMethodology(e.target.value)}
+                placeholder="e.g. Systematic review, RCT, longitudinal cohort"
+                maxLength={200}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label="Year From"
+                  type="number"
+                  value={yearFrom}
+                  onChange={(e) => setYearFrom(e.target.value)}
+                  placeholder="e.g. 2010"
+                  min={1900} max={2100}
+                />
+                <Input
+                  label="Year To"
+                  type="number"
+                  value={yearTo}
+                  onChange={(e) => setYearTo(e.target.value)}
+                  placeholder="e.g. 2025"
+                  min={1900} max={2100}
+                />
               </div>
-            </div>
+            </Card>
           )}
 
           {error && !isGated && (
-            <div className="border border-red-200 bg-red-50 p-3 flex gap-2.5">
-              <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">{error.message}</p>
-            </div>
+            <InlineError>{error.message}</InlineError>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={loading}
+            loading={loading}
             data-testid={TID.researchGapSubmitBtn}
-            className="w-full bg-[#0F2847] text-white text-sm font-medium py-3 px-6 hover:bg-[#1a3a5c] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            variant="primary"
+            size="lg"
+            className="w-full"
           >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <RotateCcw size={14} className="animate-spin" />
-                Analysing research landscape… (up to 3 min)
-              </span>
-            ) : (
-              "Find Research Gaps — 10 Credits"
-            )}
-          </button>
+            {loading ? "Analysing research landscape… (up to 3 min)" : "Find Research Gaps — 10 Credits"}
+          </Button>
         </form>
       </div>
     </div>
@@ -504,9 +445,9 @@ function PairList({ items, keyA, keyB, labelA, labelB, extra }) {
   return (
     <div className="space-y-4">
       {items.map((item, i) => (
-        <div key={i} className="border border-slate-100 bg-slate-50 p-4 space-y-2">
+        <Card key={i} padding="md" variant="ghost" className="!bg-slate-50 border border-slate-100 space-y-2">
           {Object.entries(item).map(([k, v]) => v ? <LabelValue key={k} label={k.replace(/_/g, " ")} value={String(v)} /> : null)}
-        </div>
+        </Card>
       ))}
     </div>
   );
@@ -570,88 +511,67 @@ function GapToProjectModal({ data, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-slate-200 shadow-lg">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200 sticky top-0 bg-white z-10">
-          <div>
-            <div className="font-serif text-lg text-slate-900">Create Research Project</div>
-            <div className="text-xs text-slate-500 mt-0.5">Pre-filled from your gap analysis · edit before saving</div>
-          </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700">
-            <X size={18} strokeWidth={1.5} />
-          </button>
-        </div>
-        <div className="px-6 py-6 space-y-5">
-          {error && (
-            <div className="border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
-          )}
-          <div>
-            <label className="block overline text-slate-500 mb-2">Project Title *</label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-[#0F2847]"
-            />
-          </div>
-          <div>
-            <label className="block overline text-slate-500 mb-2">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="w-full border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-[#0F2847] resize-none"
-            />
-          </div>
-          <div>
-            <label className="block overline text-slate-500 mb-2">Research Gap Summary</label>
-            <textarea
-              value={researchGap}
-              onChange={(e) => setResearchGap(e.target.value)}
-              rows={3}
-              className="w-full border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-[#0F2847] resize-none"
-            />
-          </div>
-          <div>
-            <label className="block overline text-slate-500 mb-2">Objectives (one per line)</label>
-            <textarea
-              value={objectives}
-              onChange={(e) => setObjectives(e.target.value)}
-              rows={4}
-              className="w-full border border-slate-300 px-3 py-2 text-xs focus:outline-none focus:border-[#0F2847] resize-none font-mono"
-            />
-          </div>
-          <div>
-            <label className="block overline text-slate-500 mb-2">Suggested Hypotheses (one per line)</label>
-            <textarea
-              value={hypotheses}
-              onChange={(e) => setHypotheses(e.target.value)}
-              rows={4}
-              className="w-full border border-slate-300 px-3 py-2 text-xs focus:outline-none focus:border-[#0F2847] resize-none font-mono"
-            />
-          </div>
-          <div>
-            <label className="block overline text-slate-500 mb-2">Methodology Recommendation</label>
-            <input
-              value={methodology}
-              onChange={(e) => setMethodology(e.target.value)}
-              className="w-full border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-[#0F2847]"
-            />
-          </div>
-        </div>
-        <div className="flex items-center justify-between gap-4 px-6 py-4 border-t border-slate-200 sticky bottom-0 bg-white">
-          <button onClick={onClose} className="text-sm text-slate-500 hover:text-slate-700">Cancel</button>
-          <button
-            onClick={handleCreate}
-            disabled={saving}
-            className="flex items-center gap-2 border border-[#0F2847] bg-[#0F2847] text-white px-5 py-2.5 text-sm font-medium hover:bg-slate-800 disabled:opacity-50"
-          >
+    <Modal
+      open
+      onClose={onClose}
+      title="Create Research Project"
+      description="Pre-filled from your gap analysis · edit before saving"
+      size="lg"
+      footer={
+        <div className="flex items-center justify-between gap-4 w-full">
+          <Button onClick={onClose} variant="ghost">Cancel</Button>
+          <Button onClick={handleCreate} disabled={saving} loading={saving} variant="primary">
             {saving ? "Creating…" : (
               <><FolderPlus size={14} strokeWidth={1.5} /> Create Project</>
             )}
-          </button>
+          </Button>
         </div>
+      }
+    >
+      <div className="space-y-5">
+        {error && <InlineError>{error}</InlineError>}
+        <Input
+          label="Project Title *"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <Textarea
+          label="Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+          resize={false}
+        />
+        <Textarea
+          label="Research Gap Summary"
+          value={researchGap}
+          onChange={(e) => setResearchGap(e.target.value)}
+          rows={3}
+          resize={false}
+        />
+        <Textarea
+          label="Objectives (one per line)"
+          value={objectives}
+          onChange={(e) => setObjectives(e.target.value)}
+          rows={4}
+          resize={false}
+          className="font-mono"
+        />
+        <Textarea
+          label="Suggested Hypotheses (one per line)"
+          value={hypotheses}
+          onChange={(e) => setHypotheses(e.target.value)}
+          rows={4}
+          resize={false}
+          className="font-mono"
+        />
+        <Input
+          label="Methodology Recommendation"
+          value={methodology}
+          onChange={(e) => setMethodology(e.target.value)}
+        />
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -681,10 +601,10 @@ function CitationOpportunityAnalysis({ topic, keywords }) {
 
   if (loading) {
     return (
-      <div className="border border-slate-200 bg-white p-6">
+      <Card padding="xl">
         <SectionHeader icon={Activity} label="Citation Opportunity Analysis" color="#0891b2" />
         <div className="py-4 flex justify-center"><Spinner size={16} /></div>
-      </div>
+      </Card>
     );
   }
 
@@ -701,7 +621,7 @@ function CitationOpportunityAnalysis({ topic, keywords }) {
   const overallColor = overallScore >= 70 ? "#16a34a" : overallScore >= 45 ? "#d97706" : "#64748b";
 
   return (
-    <div className="border border-[#0891b2]/20 bg-white p-6">
+    <Card padding="xl" className="border-[#0891b2]/20">
       <SectionHeader icon={Activity} label="Citation Opportunity Analysis" color="#0891b2" />
       <p className="text-xs text-slate-500 mb-5">
         Based on your research area's actual citation patterns in SYNAPTIQ (OpenAlex-backed).
@@ -731,7 +651,7 @@ function CitationOpportunityAnalysis({ topic, keywords }) {
               <div className="text-xs overline text-slate-500 mb-2">Topics Receiving Citations</div>
               <div className="flex flex-wrap gap-1.5">
                 {receivingCit.map((t) => (
-                  <span key={t} className="text-xs border border-cyan-200 text-cyan-700 px-2 py-0.5">{t}</span>
+                  <Badge key={t} variant="info" size="sm">{t}</Badge>
                 ))}
               </div>
             </div>
@@ -742,7 +662,7 @@ function CitationOpportunityAnalysis({ topic, keywords }) {
               <div className="text-xs overline text-slate-500 mb-2">Growing Velocity Topics</div>
               <div className="flex flex-wrap gap-1.5">
                 {growingVel.map((t) => (
-                  <span key={t} className="text-xs border border-green-200 text-green-700 px-2 py-0.5">{t}</span>
+                  <Badge key={t} variant="success" size="sm">{t}</Badge>
                 ))}
               </div>
             </div>
@@ -772,7 +692,7 @@ function CitationOpportunityAnalysis({ topic, keywords }) {
           </Link>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -799,59 +719,47 @@ function ResultView({ data, onReset }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F6FA]" data-testid={TID.researchGapResult}>
+    <div data-testid={TID.researchGapResult}>
       {showProjectModal && (
         <GapToProjectModal data={data} onClose={() => setShowProjectModal(false)} />
       )}
-      <div style={{ background: "#F4F6FA", padding: "13px 32px", borderBottom: "1px solid rgba(15,23,42,0.08)" }}>
-      </div>
-      {/* header */}
-      <div className="border-b border-slate-200 bg-white sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* meta bar */}
+        <div className="flex items-center justify-between gap-4 pb-6 border-b border-slate-200 flex-wrap">
           <div className="min-w-0">
-            <h1 className="font-serif text-lg text-slate-900 truncate">{data.topic}</h1>
+            <div className="text-sm font-semibold text-slate-900 truncate">{data.topic}</div>
             <p className="text-xs text-slate-500 mt-0.5 truncate">{data.research_question}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            <button
-              onClick={handleFindCollaborators}
-              className="flex items-center gap-1.5 text-sm text-slate-600 border border-slate-300 px-3 py-1.5 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-            >
+            <Button onClick={handleFindCollaborators} variant="outline" size="sm">
               <Users size={13} strokeWidth={1.5} />
               Find Collaborators
-            </button>
-            <button
-              onClick={() => setShowProjectModal(true)}
-              className="flex items-center gap-1.5 text-sm bg-[#0F2847] text-white border border-[#0F2847] px-3 py-1.5 hover:bg-slate-800 transition-colors"
-            >
+            </Button>
+            <Button onClick={() => setShowProjectModal(true)} variant="primary" size="sm">
               <FolderPlus size={13} strokeWidth={1.5} />
               Create Project
-            </button>
-            <button
-              onClick={onReset}
-              className="flex items-center gap-1.5 text-sm text-slate-500 border border-slate-200 px-3 py-1.5 hover:border-slate-400 transition-colors"
-            >
+            </Button>
+            <Button onClick={onReset} variant="outline" size="sm">
               <RotateCcw size={13} />
               New Analysis
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
 
         {/* meta + publication score */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* overview card */}
-          <div className="md:col-span-2 border border-slate-200 bg-white p-6 space-y-4">
+          <Card padding="xl" className="md:col-span-2 space-y-4">
             <SectionHeader icon={BookOpen} label="Topic Overview" />
             <p className="text-sm text-slate-700 leading-relaxed">{overview.summary}</p>
             <div className="flex flex-wrap gap-3 pt-1">
               {overview.maturity_level && <MaturityBadge level={overview.maturity_level} />}
               {overview.research_volume && (
-                <span className="text-xs border border-slate-200 text-slate-500 px-2 py-0.5 font-mono capitalize">
+                <Badge variant="outline" size="sm" className="font-mono capitalize">
                   {overview.research_volume}
-                </span>
+                </Badge>
               )}
             </div>
             {overview.key_disciplines_involved?.length > 0 && (
@@ -862,24 +770,24 @@ function ResultView({ data, onReset }) {
               </div>
             )}
             {overview.knowledge_basis_note && (
-              <div className="border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800 leading-relaxed">
+              <Callout variant="warning">
                 <strong>Note:</strong> {overview.knowledge_basis_note}
-              </div>
+              </Callout>
             )}
-          </div>
+          </Card>
 
           {/* publication score card */}
-          <div className="border border-slate-200 bg-white p-6 flex flex-col items-center justify-center text-center gap-3">
+          <Card padding="xl" className="flex flex-col items-center justify-center text-center gap-3">
             <div className="overline text-slate-500">Publication Potential</div>
             <ScoreRing score={pubPot.score || 0} />
             {pubPot.timing_advantage && (
               <p className="text-xs text-slate-500 leading-snug">{pubPot.timing_advantage}</p>
             )}
-          </div>
+          </Card>
         </div>
 
         {/* current state */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={BarChart2} label="Current State of Research" color="#2563eb" />
           {current.synthesis && (
             <p className="text-sm text-slate-700 leading-relaxed mb-5">{current.synthesis}</p>
@@ -896,12 +804,12 @@ function ResultView({ data, onReset }) {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
 
         {/* studied vs underexplored */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* highly studied */}
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="xl">
             <SectionHeader icon={XCircle} label="Highly Studied Areas" color="#dc2626" />
             <div className="space-y-3">
               {(g.highly_studied_areas || []).map((item, i) => (
@@ -915,10 +823,10 @@ function ResultView({ data, onReset }) {
                 </ExpandCard>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* underexplored */}
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="xl">
             <SectionHeader icon={CheckCircle2} label="Underexplored Areas" color="#16a34a" />
             <div className="space-y-3">
               {(g.underexplored_areas || []).map((item, i) => (
@@ -933,32 +841,32 @@ function ResultView({ data, onReset }) {
                 </ExpandCard>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* contradictions */}
         {g.contradictory_findings?.length > 0 && (
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="xl">
             <SectionHeader icon={MinusCircle} label="Contradictory Findings" color="#7c3aed" />
             <div className="space-y-3">
               {g.contradictory_findings.map((item, i) => (
                 <ExpandCard key={i} title={item.topic}>
-                  <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div className="border border-slate-200 p-3 bg-red-50">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+                    <Card padding="sm" variant="ghost" className="!bg-red-50 border border-slate-200">
                       <div className="text-xs overline text-red-700 mb-1">Position A</div>
                       <p className="text-sm text-slate-700">{item.position_a}</p>
-                    </div>
-                    <div className="border border-slate-200 p-3 bg-blue-50">
+                    </Card>
+                    <Card padding="sm" variant="ghost" className="!bg-blue-50 border border-slate-200">
                       <div className="text-xs overline text-blue-700 mb-1">Position B</div>
                       <p className="text-sm text-slate-700">{item.position_b}</p>
-                    </div>
+                    </Card>
                   </div>
                   <LabelValue label="Source of disagreement" value={item.source_of_disagreement} />
                   <div className="mt-2"><LabelValue label="Resolution opportunity" value={item.resolution_opportunity} /></div>
                 </ExpandCard>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
         {/* four gap columns */}
@@ -973,7 +881,7 @@ function ResultView({ data, onReset }) {
             { key: "data_gaps", label: "Data Gaps", icon: Database, color: "#d97706",
               fields: [["gap","Gap"], ["what_is_missing","What Is Missing"], ["potential_impact_if_addressed","Potential Impact"]] },
           ].map(({ key, label, icon, color, fields }) => (
-            <div key={key} className="border border-slate-200 bg-white p-6">
+            <Card key={key} padding="xl">
               <SectionHeader icon={icon} label={label} color={color} />
               <div className="space-y-3">
                 {(g[key] || []).map((item, i) => (
@@ -984,13 +892,13 @@ function ResultView({ data, onReset }) {
                   </ExpandCard>
                 ))}
               </div>
-            </div>
+            </Card>
           ))}
         </div>
 
         {/* emerging opportunities */}
         {g.emerging_opportunities?.length > 0 && (
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="xl">
             <SectionHeader icon={Zap} label="Emerging Opportunities" color="#d97706" />
             <div className="space-y-3">
               {g.emerging_opportunities.map((item, i) => (
@@ -1001,11 +909,11 @@ function ResultView({ data, onReset }) {
                 </ExpandCard>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
         {/* publication potential detail */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={TrendingUp} label="Publication Potential Assessment" color={potColor} />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-4">
@@ -1013,10 +921,10 @@ function ResultView({ data, onReset }) {
                 <p className="text-sm text-slate-700 leading-relaxed">{pubPot.assessment}</p>
               )}
               {pubPot.strongest_angle && (
-                <div className="border border-[#0F2847] bg-slate-50 p-4">
+                <Card padding="md" variant="ghost" className="!bg-slate-50 border border-[#0F2847]">
                   <div className="text-xs overline text-[#0F2847] mb-1">Strongest Publishable Angle</div>
                   <p className="text-sm text-slate-700 leading-relaxed">{pubPot.strongest_angle}</p>
-                </div>
+                </Card>
               )}
             </div>
             <div className="space-y-3">
@@ -1030,13 +938,13 @@ function ResultView({ data, onReset }) {
               )}
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* citation opportunity analysis */}
         <CitationOpportunityAnalysis topic={data.topic} keywords={data.keywords} />
 
         {/* publishable research questions */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={Lightbulb} label="Publishable Research Questions" color="#16a34a" />
           <p className="text-sm text-slate-500 mb-5">
             Ranked from highest to lowest publication potential. Each question is specific enough
@@ -1060,10 +968,10 @@ function ResultView({ data, onReset }) {
               </ExpandCard>
             ))}
           </div>
-        </div>
+        </Card>
 
         {/* metadata footer */}
-        <div className="border border-slate-100 bg-white px-6 py-4 flex items-center justify-between text-xs text-slate-400">
+        <Card padding="none" className="px-6 py-4 flex items-center justify-between text-xs text-slate-400">
           <div className="flex items-center gap-3">
             <Clock size={11} />
             <span>Analysed {new Date(data.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
@@ -1073,7 +981,7 @@ function ResultView({ data, onReset }) {
             <AlertTriangle size={11} />
             <span>Verify results with a live literature database</span>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
 
@@ -1084,17 +992,18 @@ function ResultView({ data, onReset }) {
 
 function HistoryItem({ item, onSelect }) {
   return (
-    <button
+    <Card
       onClick={() => onSelect(item.id)}
       data-testid={TID.researchGapHistoryItem(item.id)}
-      className="w-full text-left border border-slate-200 bg-white hover:border-[#0F2847] transition-colors p-4 space-y-2"
+      padding="md"
+      className="w-full text-left space-y-2"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="font-serif text-sm text-slate-900 line-clamp-1">{item.topic}</div>
         {item.publication_score != null && (
-          <span className="shrink-0 text-xs font-mono border border-slate-200 px-1.5 py-0.5 text-slate-500">
+          <Badge variant="outline" size="sm" className="shrink-0 font-mono">
             {item.publication_score}/100
-          </span>
+          </Badge>
         )}
       </div>
       <p className="text-xs text-slate-500 line-clamp-2">{item.research_question}</p>
@@ -1108,7 +1017,7 @@ function HistoryItem({ item, onSelect }) {
         <Clock size={10} />
         {new Date(item.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
       </div>
-    </button>
+    </Card>
   );
 }
 
@@ -1148,6 +1057,11 @@ export default function ResearchGapFinder() {
 
   if (view === "result" && result) {
     return (
+      <ResearchLayout
+        navItems={AI_NAV_ITEMS}
+        title="Research Gap Finder"
+        subtitle="Identify unexplored research opportunities and map the frontier of knowledge in your field."
+      >
       <div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden" }}>
         <div className="flex-1 overflow-y-auto">
           <ResultView data={result} onReset={handleReset} />
@@ -1165,11 +1079,13 @@ export default function ResearchGapFinder() {
           </aside>
         )}
       </div>
+      </ResearchLayout>
     );
   }
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="Research Gap Finder"
       subtitle="Identify unexplored research opportunities and map the frontier of knowledge in your field."
     >
@@ -1192,7 +1108,7 @@ export default function ResearchGapFinder() {
         </aside>
       )}
     </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
 
   );
 }

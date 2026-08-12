@@ -3,13 +3,17 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { AnalyticsLayout } from "@/layouts";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
+import { toast } from "sonner";
 import { ACCENT, EMERALD, NAVY } from "@/lib/tokens";
 import {
   Users, FileText, BookOpen, TrendingUp, Award, FolderOpen, Target,
   BarChart3, RefreshCw, AlertCircle, CheckCircle2, ChevronLeft,
   Building2, Globe, Zap, Activity, DollarSign, Star, Clock,
-  ArrowUpRight, Settings, Download, PlusCircle,
+  ArrowUpRight, Settings, Download, PlusCircle, Trophy,
 } from "lucide-react";
+import {
+  Card as DsCard, StatCard, Button, NavTabs, Badge, Input, FormSelect,
+} from "@/components/ds";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -92,30 +96,6 @@ function TabSkeleton() {
   );
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
-
-function Toast({ message, type = "success", onClose }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 3500);
-    return () => clearTimeout(t);
-  }, [onClose]);
-
-  const colors =
-    type === "success"
-      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-      : "bg-red-50 border-red-200 text-red-800";
-
-  return (
-    <div className={`fixed bottom-6 right-6 z-50 border px-4 py-3 text-sm shadow-lg rounded-lg max-w-xs ${colors}`}>
-      <div className="flex items-center gap-2">
-        {type === "success" ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-        <span>{message}</span>
-        <button onClick={onClose} className="ml-auto opacity-60 hover:opacity-100 text-lg leading-none">&times;</button>
-      </div>
-    </div>
-  );
-}
-
 // ── Section heading ───────────────────────────────────────────────────────────
 
 function SectionHeading({ title, subtitle }) {
@@ -129,24 +109,16 @@ function SectionHeading({ title, subtitle }) {
 
 // ── KPI Card ──────────────────────────────────────────────────────────────────
 
+// Thin adapter over the design system's StatCard so call sites below
+// (`<KpiCard label=... icon={SomeIcon} accent=... suffix=... />`) don't need to change.
 function KpiCard({ label, value, icon: Icon, accent = "#0F2847", suffix = "" }) {
+  const displayValue = value != null ? `${fmtNum(value)}${suffix || ""}` : "—";
   return (
-    <div className="bg-white border border-slate-200 rounded-md p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">{label}</p>
-          <p className="text-2xl font-bold text-slate-900">
-            {value != null ? fmtNum(value) : "—"}
-            {suffix && <span className="text-base font-semibold text-slate-600 ml-0.5">{suffix}</span>}
-          </p>
-        </div>
-        {Icon && (
-          <div className="p-2 rounded-lg" style={{ backgroundColor: accent + "18" }}>
-            <Icon size={18} style={{ color: accent }} />
-          </div>
-        )}
-      </div>
-    </div>
+    <StatCard
+      label={label}
+      value={displayValue}
+      icon={Icon ? <Icon style={{ color: accent }} /> : undefined}
+    />
   );
 }
 
@@ -848,9 +820,7 @@ function BenchmarksTab({ tabData }) {
               <SectionHeading title="Strengths" />
               <div className="flex flex-wrap gap-2">
                 {strengths.map((s, i) => (
-                  <span key={i} className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    {s}
-                  </span>
+                  <Badge key={i} variant="success">{s}</Badge>
                 ))}
               </div>
             </div>
@@ -860,9 +830,7 @@ function BenchmarksTab({ tabData }) {
               <SectionHeading title="Areas for Improvement" />
               <div className="flex flex-wrap gap-2">
                 {improvements.map((s, i) => (
-                  <span key={i} className="px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                    {s}
-                  </span>
+                  <Badge key={i} variant="warning">{s}</Badge>
                 ))}
               </div>
             </div>
@@ -877,7 +845,6 @@ function BenchmarksTab({ tabData }) {
 
 function ForecastsTab({ id, tabData, user, onReload }) {
   const [generating, setGenerating] = useState(false);
-  const [toast, setToast] = useState(null);
   const forecasts = tabData?.forecasts ?? {};
 
   const forecastKeys = [
@@ -890,10 +857,10 @@ function ForecastsTab({ id, tabData, user, onReload }) {
     setGenerating(true);
     try {
       await api.post(`/institution-analytics/${id}/forecasts/generate`);
-      setToast({ message: "Forecast generation initiated", type: "success" });
+      toast.success("Forecast generation initiated");
       await onReload();
     } catch (e) {
-      setToast({ message: e?.response?.data?.error ?? "Generation failed", type: "error" });
+      toast.error(e?.response?.data?.error ?? "Generation failed");
     } finally {
       setGenerating(false);
     }
@@ -901,8 +868,6 @@ function ForecastsTab({ id, tabData, user, onReload }) {
 
   return (
     <div className="space-y-8">
-      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
-
       {forecastKeys.map(({ key, label, color }) => {
         const fc = forecasts[key];
         if (!fc) return null;
@@ -969,15 +934,10 @@ function ForecastsTab({ id, tabData, user, onReload }) {
       )}
 
       <div className="flex justify-end">
-        <button
-          onClick={handleGenerate}
-          disabled={generating}
-          className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-lg disabled:opacity-60 transition-opacity"
-          style={{ backgroundColor: "#0F2847" }}
-        >
-          <Zap size={15} />
+        <Button onClick={handleGenerate} disabled={generating} loading={generating}>
+          {!generating && <Zap size={15} />}
           {generating ? "Generating…" : "Generate New Forecast"}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -986,23 +946,22 @@ function ForecastsTab({ id, tabData, user, onReload }) {
 // ── REPORTS TAB ───────────────────────────────────────────────────────────────
 
 function ReportsTab({ id, tabData, onReload }) {
-  const [toast, setToast] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [form, setForm] = useState({ report_type: "executive", title: "" });
   const reports = tabData?.reports ?? [];
 
-  const typeColors = {
-    executive: "bg-blue-100 text-blue-700 border-blue-200",
-    research: "bg-purple-100 text-purple-700 border-purple-200",
-    funding: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    accreditation: "bg-amber-100 text-amber-700 border-amber-200",
+  const typeVariant = {
+    executive: "info",
+    research: "purple",
+    funding: "success",
+    accreditation: "warning",
   };
 
-  const statusColors = {
-    ready: "bg-emerald-100 text-emerald-700",
-    generating: "bg-amber-100 text-amber-700",
-    failed: "bg-red-100 text-red-700",
-    pending: "bg-slate-100 text-slate-600",
+  const statusVariant = {
+    ready: "success",
+    generating: "warning",
+    failed: "danger",
+    pending: "neutral",
   };
 
   async function handleGenerate(e) {
@@ -1011,11 +970,11 @@ function ReportsTab({ id, tabData, onReload }) {
     setGenerating(true);
     try {
       await api.post(`/institution-analytics/${id}/reports/generate`, form);
-      setToast({ message: "Report generation started", type: "success" });
+      toast.success("Report generation started");
       setForm(f => ({ ...f, title: "" }));
       await onReload();
     } catch (err) {
-      setToast({ message: err?.response?.data?.error ?? "Failed to generate report", type: "error" });
+      toast.error(err?.response?.data?.error ?? "Failed to generate report");
     } finally {
       setGenerating(false);
     }
@@ -1023,8 +982,6 @@ function ReportsTab({ id, tabData, onReload }) {
 
   return (
     <div className="space-y-8">
-      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
-
       {/* Report List */}
       <div className="bg-white border border-slate-200 rounded-md overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100">
@@ -1038,22 +995,24 @@ function ReportsTab({ id, tabData, onReload }) {
               <div key={i} className="px-6 py-4 flex items-center gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${typeColors[r.report_type] ?? "bg-slate-100 text-slate-600 border-slate-200"}`}>
+                    <Badge size="sm" variant={typeVariant[r.report_type] ?? "neutral"}>
                       {fmt(r.report_type)}
-                    </span>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${statusColors[r.status] ?? "bg-slate-100 text-slate-600"}`}>
+                    </Badge>
+                    <Badge size="sm" variant={statusVariant[r.status] ?? "neutral"}>
                       {fmt(r.status)}
-                    </span>
+                    </Badge>
                   </div>
                   <p className="font-medium text-slate-800 mt-1 truncate">{fmt(r.title)}</p>
                   <p className="text-xs text-slate-500 mt-0.5">{formatDate(r.created_at)}</p>
                 </div>
-                <button
-                  onClick={() => setToast({ message: "Export coming soon", type: "success" })}
-                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors shrink-0"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toast.success("Export coming soon")}
+                  className="shrink-0"
                 >
                   <Download size={13} /> Download
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -1064,38 +1023,31 @@ function ReportsTab({ id, tabData, onReload }) {
       <div className="bg-white border border-slate-200 rounded-md p-6">
         <SectionHeading title="Generate New Report" subtitle="Create a structured institutional report" />
         <form onSubmit={handleGenerate} className="space-y-4 max-w-lg">
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">Report Type</label>
-            <select
-              value={form.report_type}
-              onChange={e => setForm(f => ({ ...f, report_type: e.target.value }))}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="executive">Executive Summary</option>
-              <option value="research">Research Output</option>
-              <option value="funding">Funding & Grants</option>
-              <option value="accreditation">Accreditation Report</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">Report Title</label>
-            <input
-              type="text"
-              value={form.title}
-              onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-              placeholder="e.g. Annual Research Performance Review 2026"
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <button
+          <FormSelect
+            label="Report Type"
+            value={form.report_type}
+            onChange={e => setForm(f => ({ ...f, report_type: e.target.value }))}
+          >
+            <option value="executive">Executive Summary</option>
+            <option value="research">Research Output</option>
+            <option value="funding">Funding & Grants</option>
+            <option value="accreditation">Accreditation Report</option>
+          </FormSelect>
+          <Input
+            label="Report Title"
+            type="text"
+            value={form.title}
+            onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+            placeholder="e.g. Annual Research Performance Review 2026"
+          />
+          <Button
             type="submit"
             disabled={generating || !form.title.trim()}
-            className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-lg disabled:opacity-60 transition-opacity"
-            style={{ backgroundColor: "#0F2847" }}
+            loading={generating}
           >
-            <PlusCircle size={15} />
+            {!generating && <PlusCircle size={15} />}
             {generating ? "Generating…" : "Generate Report"}
-          </button>
+          </Button>
         </form>
       </div>
     </div>
@@ -1115,54 +1067,31 @@ function SettingsTab({ id }) {
               <p className="text-sm font-medium text-slate-800">Analytics Center</p>
               <p className="text-xs text-slate-500 mt-0.5">Institution ID: {id}</p>
             </div>
-            <Link
-              to={`/institution-hub/${id}`}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
-            >
+            <Button as={Link} to={`/institution-hub/${id}`} variant="ghost" size="sm">
               <Building2 size={13} /> Institution Hub
-            </Link>
+            </Button>
           </div>
           <div className="py-3 border-b border-slate-100 flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-800">Admin Console</p>
               <p className="text-xs text-slate-500 mt-0.5">Manage members, settings, and permissions</p>
             </div>
-            <Link
-              to={`/institution-admin/${id}`}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
-            >
+            <Button as={Link} to={`/institution-admin/${id}`} variant="ghost" size="sm">
               <Settings size={13} /> Admin Console
-            </Link>
+            </Button>
           </div>
           <div className="py-3 flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-800">Leaderboards</p>
               <p className="text-xs text-slate-500 mt-0.5">View institutional rankings and comparisons</p>
             </div>
-            <Link
-              to={`/institution-leaderboards/${id}`}
-              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-1.5"
-            >
+            <Button as={Link} to={`/institution-leaderboards/${id}`} variant="ghost" size="sm">
               <Trophy size={13} /> Leaderboards
-            </Link>
+            </Button>
           </div>
         </div>
       </div>
     </div>
-  );
-}
-
-// We need Trophy in the import — adding it via a helper since it's not imported
-function Trophy({ size = 16, className = "" }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-      <path d="M4 22h16" />
-      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-    </svg>
   );
 }
 
@@ -1193,7 +1122,6 @@ export default function InstitutionAnalyticsCenter() {
   const [tabData, setTabData] = useState({});
   const [tabLoading, setTabLoading] = useState({});
   const [refreshing, setRefreshing] = useState(false);
-  const [toast, setToast] = useState(null);
   const loadedTabs = useRef(new Set());
 
   // ── Load KPIs on mount ──────────────────────────────────────────────────────
@@ -1312,9 +1240,9 @@ export default function InstitutionAnalyticsCenter() {
       // Also force-reload current tab
       loadedTabs.current.delete(activeTab);
       await loadTab(activeTab, true);
-      setToast({ message: "KPIs refreshed successfully", type: "success" });
+      toast.success("KPIs refreshed successfully");
     } catch (e) {
-      setToast({ message: e?.response?.data?.error ?? "Refresh failed", type: "error" });
+      toast.error(e?.response?.data?.error ?? "Refresh failed");
     } finally {
       setRefreshing(false);
     }
@@ -1349,13 +1277,9 @@ export default function InstitutionAnalyticsCenter() {
           <AlertCircle className="mx-auto text-red-500 mb-3" size={32} />
           <h2 className="font-semibold text-slate-800 mb-1">Unable to Load Analytics</h2>
           <p className="text-sm text-slate-500">{kpiError}</p>
-          <button
-            onClick={() => { setKpiError(null); setLoading(true); loadKpis(); }}
-            className="mt-4 px-4 py-2 text-sm font-semibold text-white rounded-lg"
-            style={{ backgroundColor: "#0F2847" }}
-          >
+          <Button onClick={() => { setKpiError(null); setLoading(true); loadKpis(); }} className="mt-4">
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -1364,22 +1288,12 @@ export default function InstitutionAnalyticsCenter() {
   const isTabLoading = tabLoading[activeTab];
 
   const tabBar = (
-    <div className="flex gap-0 overflow-x-auto">
-      {TABS.map(tab => (
-        <button
-          key={tab.id}
-          onClick={() => activateTab(tab.id)}
-          className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-            activeTab === tab.id
-              ? "border-b-2 text-slate-900"
-              : "border-transparent text-slate-500 hover:text-slate-700"
-          }`}
-          style={activeTab === tab.id ? { borderColor: "#0F2847", color: "#0F2847" } : {}}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
+    <NavTabs
+      variant="underline"
+      active={activeTab}
+      onChange={activateTab}
+      tabs={TABS.map(t => ({ id: t.id, label: t.label }))}
+    />
   );
 
   return (
@@ -1388,25 +1302,17 @@ export default function InstitutionAnalyticsCenter() {
       subtitle={`Institution ID: ${id}`}
       actions={
         <>
-          <Link
-            to={`/institution-hub/${id}`}
-            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
-          >
+          <Button as={Link} to={`/institution-hub/${id}`} variant="link">
             <ChevronLeft size={15} /> Institution Hub
-          </Link>
-          <button
-            onClick={handleRefreshKpis}
-            disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-60 transition-colors"
-          >
-            <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+          </Button>
+          <Button variant="ghost" onClick={handleRefreshKpis} disabled={refreshing} loading={refreshing}>
+            {!refreshing && <RefreshCw size={14} />}
             {refreshing ? "Refreshing…" : "Refresh KPIs"}
-          </button>
+          </Button>
         </>
       }
       nav={tabBar}
     >
-      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       {isTabLoading ? (
         <TabSkeleton />
       ) : (

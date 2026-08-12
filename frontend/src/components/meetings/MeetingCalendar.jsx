@@ -55,8 +55,8 @@ export function MeetingCalendar({ meetings = [], onDayClick, month, onMonthChang
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Button size="sm" variant="ghost" onClick={() => onMonthChange?.(new Date())}>Today</Button>
-          <Button size="sm" variant="ghost" onClick={() => changeMonth(-1)}><ChevronLeft size={13} /></Button>
-          <Button size="sm" variant="ghost" onClick={() => changeMonth(1)}><ChevronRight size={13} /></Button>
+          <Button size="sm" variant="ghost" onClick={() => changeMonth(-1)} aria-label="Previous month"><ChevronLeft size={13} /></Button>
+          <Button size="sm" variant="ghost" onClick={() => changeMonth(1)} aria-label="Next month"><ChevronRight size={13} /></Button>
           <span style={{ fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY, marginLeft: 4 }}>
             {cursor.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
           </span>

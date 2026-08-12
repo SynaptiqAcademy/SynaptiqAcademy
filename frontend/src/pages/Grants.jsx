@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Button } from "@/components/ds";
-import { DiscoveryLayout } from "@/layouts";
-import { Link, NavLink } from "react-router-dom";
+import { Button, Input, FormSelect, Tag, TagGroup, EmptyState, Checkbox, NavTabs } from "@/components/ds";
+import { ResearchLayout } from "@/layouts";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { useAuth } from "../contexts/AuthContext";
@@ -12,7 +12,7 @@ import {
   Bookmark, BookmarkCheck, BadgeDollarSign, Coins, Globe, Calendar,
   Clock, Building2, BarChart2, TrendingUp, Sparkles, Lightbulb,
   Users, ExternalLink, FileText, Target, LayoutGrid, List,
-  AlertCircle, Timer, PenLine, Filter, Award, Trophy,
+  AlertCircle, Timer, Filter, Award, Trophy,
   CheckCircle, Zap, Plus,
 } from "lucide-react";
 
@@ -91,12 +91,13 @@ const CAREER_STAGES = [
 const TABS = [
   { to: "/journals",    label: "Journals",         testid: TID.discoveryTabJournals },
   { to: "/conferences", label: "Conferences",       testid: TID.discoveryTabConferences },
-  { to: "/grants",      label: "Grants & Funding",  testid: TID.discoveryTabGrants },
+  { to: "/grants",      label: "Grants",            testid: TID.discoveryTabGrants },
 ];
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function Grants() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const explorerRef = useRef(null);
 
   // Search + filter state
@@ -235,7 +236,27 @@ export default function Grants() {
     .slice(0, 8);
 
   return (
-    <DiscoveryLayout>
+    <ResearchLayout
+      title="Grants"
+      subtitle="Profile-matched grants, fellowships, scholarships and calls aggregated from OpenAIRE, NIH, NSF, ERC, Horizon Europe and 40+ international agencies."
+      actions={
+        <>
+          <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} size="sm">
+            Find Matching Grants
+          </Button>
+          <Button as={Link} to="/ai" variant="ghost" size="sm">
+            Prepare Application
+          </Button>
+        </>
+      }
+      nav={
+        <NavTabs
+          tabs={TABS.map((tab) => ({ id: tab.to, label: tab.label, "data-testid": tab.testid }))}
+          active="/grants"
+          onChange={(id) => navigate(id)}
+        />
+      }
+    >
       {/* Skeleton pulse animation */}
       <style>{`
         @keyframes sq-pulse {
@@ -244,41 +265,6 @@ export default function Grants() {
         }
         .sq-pulse { animation: sq-pulse 1.8s ease-in-out infinite; }
       `}</style>
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <HeroHeader
-        user={user}
-        onFindGrants={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })}
-      />
-      {/* ── Tabs ──────────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          margin: "0 -24px",
-          borderBottom: `1px solid ${BORDER}`,
-          background: "white",
-          display: "flex",
-          paddingLeft: 24,
-        }}
-      >
-        {TABS.map((tab) => (
-          <NavLink
-            key={tab.to}
-            to={tab.to}
-            data-testid={tab.testid}
-            style={({ isActive }) => ({
-              padding: "10px 20px",
-              fontSize: 13,
-              fontWeight: isActive ? 700 : 500,
-              color: isActive ? NAVY : "#64748B",
-              borderBottom: `2px solid ${isActive ? NAVY : "transparent"}`,
-              textDecoration: "none",
-              whiteSpace: "nowrap",
-              transition: "color 150ms, border-color 150ms",
-            })}
-          >
-            {tab.label}
-          </NavLink>
-        ))}
-      </div>
       {/* ── AI Match panel ────────────────────────────────────────────────── */}
       {(matchesLoading || (matches && matches.length > 0)) && (
         <MatchesPanel
@@ -321,57 +307,33 @@ export default function Grants() {
 
           {/* Search + sort + view toggle */}
           <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 12 }}>
-            <div style={{ flex: 1, position: "relative" }}>
-              <Search
-                size={14} strokeWidth={1.5}
-                style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#94A3B8", pointerEvents: "none" }}
-              />
-              <input
-                data-testid={TID.discoverySearch}
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search grants, fellowships, programmes, sponsors…"
-                style={{
-                  width: "100%",
-                  padding: "9px 36px 9px 36px",
-                  border: `1px solid ${BORDER}`,
-                  background: "white",
-                  fontSize: 13,
-                  color: "#1E293B",
-                  outline: "none",
-                  boxSizing: "border-box",
-                  transition: "border-color 150ms",
-                }}
-                onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-                onBlur={(e) => { e.target.style.borderColor = BORDER; }}
-              />
-              {q && (
+            <Input
+              data-testid={TID.discoverySearch}
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search grants, fellowships, programmes, sponsors…"
+              prefix={<Search size={14} strokeWidth={1.5} />}
+              suffix={q ? (
                 <button
                   onClick={() => setQ("")}
-                  style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "#94A3B8", cursor: "pointer", display: "flex", alignItems: "center" }}
+                  aria-label="Clear search"
+                  style={{ pointerEvents: "auto", cursor: "pointer", display: "flex", alignItems: "center", background: "none", border: "none" }}
                 >
                   <X size={13} strokeWidth={1.5} />
                 </button>
-              )}
-            </div>
+              ) : undefined}
+              wrapperClassName="flex-1"
+            />
 
-            <select
+            <FormSelect
               data-testid={TID.discoverySortSelect}
               value={sort}
               onChange={(e) => setSort(e.target.value)}
-              style={{
-                padding: "9px 12px",
-                border: `1px solid ${BORDER}`,
-                background: "white",
-                fontSize: 13,
-                color: "#374151",
-                cursor: "pointer",
-                flexShrink: 0,
-                outline: "none",
-              }}
+              wrapperClassName="flex-shrink-0"
+              style={{ width: 190 }}
             >
               {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
+            </FormSelect>
 
             {/* View toggle */}
             <div style={{ display: "flex", border: `1px solid ${BORDER}`, overflow: "hidden", flexShrink: 0 }}>
@@ -379,42 +341,32 @@ export default function Grants() {
                 { k: "grid",     Icon: LayoutGrid },
                 { k: "timeline", Icon: List       },
               ].map(({ k, Icon }) => (
-                <button
+                <Button
                   key={k}
+                  size="icon"
+                  variant="ghost"
                   onClick={() => setView(k)}
                   title={k === "grid" ? "Grid view" : "Timeline view"}
-                  style={{
-                    padding: "8px 10px",
-                    background: view === k ? NAVY : "white",
-                    color: view === k ? "white" : "#64748B",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    borderLeft: k === "timeline" ? `1px solid ${BORDER}` : "none",
-                    border: "none",
-                    outline: "none",
-                  }}
+                  className={`rounded-none border-none ${view === k ? "!bg-navy-700 !text-white" : "!bg-white !text-slate-600"}`}
+                  style={{ borderLeft: k === "timeline" ? `1px solid ${BORDER}` : "none" }}
                 >
                   <Icon size={14} strokeWidth={1.5} />
-                </button>
+                </Button>
               ))}
             </div>
           </div>
 
           {/* Filter chips */}
           {activeFilterCount > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+            <TagGroup gap={6} className="mb-3">
               {Object.entries(filters).map(([k, v]) => v && (
-                <FilterChip key={k} label={`${k.replace(/_/g, " ")}: ${v}`} onRemove={() => setFilter(k, "")} />
+                <Tag key={k} variant="active" onRemove={() => setFilter(k, "")}>{`${k.replace(/_/g, " ")}: ${v}`}</Tag>
               ))}
-              {openOnly && <FilterChip label="Open calls only" onRemove={() => setOpenOnly(false)} />}
-              <button
-                onClick={() => { setFilters({}); setOpenOnly(false); setQ(""); }}
-                style={{ fontSize: 11, color: "#94A3B8", cursor: "pointer", padding: "3px 8px", background: "none", border: "none", textDecoration: "underline" }}
-              >
+              {openOnly && <Tag variant="active" onRemove={() => setOpenOnly(false)}>Open calls only</Tag>}
+              <Button variant="link" size="sm" onClick={() => { setFilters({}); setOpenOnly(false); setQ(""); }}>
                 Clear all
-              </button>
-            </div>
+              </Button>
+            </TagGroup>
           )}
 
           {/* Results count */}
@@ -460,44 +412,32 @@ export default function Grants() {
             <GrantsEmptyState hasFilters={hasFilters} />
           )}
 
-          {/* Pagination */}
+          {/* Pagination — kept as Previous/Next (not ds Pagination's numbered-page
+              control) because e2e tests hook into distinct discoveryPagePrev/Next
+              testids and a "Page X of Y" label that the numbered component doesn't expose */}
           {!loading && !gated && total > PAGE_SIZE && (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 24, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
-              <button
+              <Button
                 data-testid={TID.discoveryPagePrev}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "7px 16px", fontSize: 13,
-                  border: `1px solid ${BORDER}`,
-                  background: page === 1 ? "#F8FAFC" : "white",
-                  color: page === 1 ? "#CBD5E1" : NAVY,
-                  cursor: page === 1 ? "not-allowed" : "pointer",
-                  outline: "none",
-                }}
+                variant="ghost"
+                size="sm"
               >
                 <ChevronLeft size={14} strokeWidth={1.5} /> Previous
-              </button>
+              </Button>
               <span style={{ fontSize: 12, color: "#94A3B8", fontFamily: "monospace" }}>
                 Page {page} of {Math.ceil(total / PAGE_SIZE)}
               </span>
-              <button
+              <Button
                 data-testid={TID.discoveryPageNext}
                 onClick={() => setPage((p) => p + 1)}
                 disabled={!hasMore}
-                style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "7px 16px", fontSize: 13,
-                  border: `1px solid ${BORDER}`,
-                  background: !hasMore ? "#F8FAFC" : "white",
-                  color: !hasMore ? "#CBD5E1" : NAVY,
-                  cursor: !hasMore ? "not-allowed" : "pointer",
-                  outline: "none",
-                }}
+                variant="ghost"
+                size="sm"
               >
                 Next <ChevronRight size={14} strokeWidth={1.5} />
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -512,122 +452,7 @@ export default function Grants() {
           onClose={() => setCompareList([])}
         />
       )}
-    </DiscoveryLayout>
-  );
-}
-
-// ── Hero header ───────────────────────────────────────────────────────────────
-function HeroHeader({ user, onFindGrants }) {
-  const userField = (user?.research_areas || []).slice(0, 2).join(", ") || "your research field";
-  const institution = user?.institution || "your institution";
-
-  return (
-    <div
-      style={{
-        margin: "-24px -24px 0",
-        background: `linear-gradient(145deg, ${NAVY} 0%, #163355 55%, ${NAVY} 100%)`,
-        padding: "48px 56px 0",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Grid overlay */}
-      <div style={{
-        position: "absolute", inset: 0, opacity: 0.035,
-        backgroundImage: "linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)",
-        backgroundSize: "40px 40px",
-      }} />
-
-      <div style={{ position: "relative" }}>
-        {/* Kicker */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#34D399" }} />
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)" }}>
-            Funding Intelligence Platform
-          </span>
-        </div>
-
-        {/* Title */}
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 46, fontWeight: 400, color: "white", lineHeight: 1.1, marginBottom: 16, maxWidth: 560 }}>
-          Research Funding<br />
-          <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 38 }}>Discovery &amp; Intelligence</span>
-        </h1>
-
-        <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.65, maxWidth: 500, marginBottom: 28 }}>
-          Profile-matched grants, fellowships, scholarships and calls aggregated from OpenAIRE,
-          NIH, NSF, ERC, Horizon Europe and 40+ international agencies.
-          Personalized for <strong style={{ color: "rgba(255,255,255,0.75)" }}>{userField}</strong> at&nbsp;
-          <strong style={{ color: "rgba(255,255,255,0.75)" }}>{institution}</strong>.
-        </p>
-
-        {/* CTAs */}
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 36 }}>
-          <button
-            onClick={onFindGrants}
-            style={{
-              padding: "10px 22px",
-              background: "white",
-              color: NAVY,
-              fontSize: 13,
-              fontWeight: 700,
-              border: "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              outline: "none",
-            }}
-          >
-            <BadgeDollarSign size={14} strokeWidth={2} />
-            Find Matching Grants
-          </button>
-          <Link
-            to="/ai"
-            style={{
-              padding: "10px 22px",
-              background: "transparent",
-              color: "rgba(255,255,255,0.8)",
-              fontSize: 13,
-              fontWeight: 600,
-              border: "1px solid rgba(255,255,255,0.2)",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              textDecoration: "none",
-            }}
-          >
-            <PenLine size={14} strokeWidth={1.5} />
-            Prepare Application
-          </Link>
-        </div>
-
-        {/* Stats strip */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: 0,
-            borderTop: "1px solid rgba(255,255,255,0.08)",
-            paddingTop: 20,
-          }}
-        >
-          {[
-            { icon: BadgeDollarSign, label: "Opportunities", val: "7,900+" },
-            { icon: Globe,           label: "Agencies",      val: "40+" },
-            { icon: Clock,           label: "Updated",       val: "Daily" },
-            { icon: Sparkles,        label: "AI Matched",    val: "Free" },
-          ].map(({ icon: Icon, label, val }) => (
-            <div key={label} style={{ padding: "12px 16px 12px 0", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
-                <Icon size={10} strokeWidth={1.5} style={{ color: "rgba(255,255,255,0.35)" }} />
-                <span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>{label}</span>
-              </div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: "white", fontFamily: "monospace" }}>{val}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    </ResearchLayout>
   );
 }
 
@@ -663,6 +488,7 @@ function MatchesPanel({ matches, loading, isSaved, toggleSave, compareList, togg
             size="icon"
             variant="ghost"
             onClick={() => setExpanded((v) => !v)}
+            aria-label={expanded ? "Collapse recommendations" : "Expand recommendations"}
             style={{
               color: "#94A3B8",
               display: "flex",
@@ -907,15 +733,11 @@ function FacetPanel({ facets, filters, setFilter, openOnly, setOpenOnly }) {
 
       {/* Open calls toggle */}
       <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: `1px solid ${BORDER}` }}>
-        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-          <input
-            type="checkbox"
-            checked={openOnly}
-            onChange={(e) => setOpenOnly(e.target.checked)}
-            style={{ accentColor: NAVY, width: 13, height: 13, cursor: "pointer" }}
-          />
-          <span style={{ fontSize: 12, fontWeight: 600, color: NAVY }}>Open calls only</span>
-        </label>
+        <Checkbox
+          checked={openOnly}
+          onChange={(e) => setOpenOnly(e.target.checked)}
+          label={<span style={{ fontSize: 12, fontWeight: 600, color: NAVY }}>Open calls only</span>}
+        />
       </div>
 
       {/* Career stage */}
@@ -1146,21 +968,6 @@ function GrantSkeleton() {
   );
 }
 
-// ── Filter chip ───────────────────────────────────────────────────────────────
-function FilterChip({ label, onRemove }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 8px", background: `${NAVY}0D`, border: `1px solid ${NAVY}20`, fontSize: 11, color: NAVY, fontWeight: 600 }}>
-      {label}
-      <button
-        onClick={onRemove}
-        style={{ display: "flex", alignItems: "center", color: "#94A3B8", cursor: "pointer", marginLeft: 2, background: "none", border: "none", outline: "none" }}
-      >
-        <X size={10} strokeWidth={2} />
-      </button>
-    </div>
-  );
-}
-
 // ── Timeline view ─────────────────────────────────────────────────────────────
 function TimelineView({ items, loading, isSaved, toggleSave, compareList, toggleCompare }) {
   if (loading) {
@@ -1282,14 +1089,14 @@ function TimelineCard({ g, isSaved, onSave, isCompared, onCompare }) {
         style={{ width: 76, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: 10, borderLeft: `1px solid ${BORDER}` }}
         onClick={(e) => e.preventDefault()}
       >
-        <button onClick={(e) => onSave(g, e)} style={{ color: isSaved ? ACCENT : "#CBD5E1", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, background: "none", border: "none", outline: "none" }}>
+        <Button variant="ghost" className="!flex-col !h-auto !p-0 !border-none" onClick={(e) => onSave(g, e)} style={{ color: isSaved ? ACCENT : "#CBD5E1" }}>
           {isSaved ? <BookmarkCheck size={14} strokeWidth={1.5} /> : <Bookmark size={14} strokeWidth={1.5} />}
           <span style={{ fontSize: 9, color: "#94A3B8" }}>{isSaved ? "Saved" : "Save"}</span>
-        </button>
-        <button onClick={(e) => onCompare(g, e)} style={{ color: isCompared ? NAVY : "#CBD5E1", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, background: "none", border: "none", outline: "none" }}>
+        </Button>
+        <Button variant="ghost" className="!flex-col !h-auto !p-0 !border-none" onClick={(e) => onCompare(g, e)} style={{ color: isCompared ? NAVY : "#CBD5E1" }}>
           <BarChart2 size={14} strokeWidth={1.5} />
           <span style={{ fontSize: 9, color: "#94A3B8" }}>Compare</span>
-        </button>
+        </Button>
       </div>
     </Link>
   );
@@ -1313,52 +1120,48 @@ function TimelineSkeleton() {
 
 // ── Empty state ───────────────────────────────────────────────────────────────
 function GrantsEmptyState({ hasFilters }) {
+  const tips = [
+    { icon: Lightbulb, text: "Update your research profile for AI matching" },
+    { icon: Globe,     text: "Remove country filter for broader results" },
+    { icon: Calendar,  text: "Uncheck \"Open calls only\" to see all calls" },
+    { icon: Target,    text: "Try searching by sponsor name, e.g. \"ERC\" or \"NIH\"" },
+  ];
   return (
-    <div style={{ textAlign: "center", padding: "60px 24px", border: `1px dashed ${BORDER}` }}>
-      <BadgeDollarSign size={44} strokeWidth={1} style={{ color: "#E2E8F0", margin: "0 auto 20px", display: "block" }} />
-      <h3 style={{ fontFamily: "Georgia, serif", fontSize: 22, color: "#1E293B", marginBottom: 8, fontWeight: 400 }}>
-        {hasFilters ? "No funding opportunities match your search" : "No grants indexed yet"}
-      </h3>
-      <p style={{ fontSize: 13, color: "#64748B", maxWidth: 420, margin: "0 auto 24px", lineHeight: 1.65 }}>
-        {hasFilters
-          ? "Try broadening your search or removing some filters. Synaptiq aggregates 7,900+ opportunities from OpenAIRE, NIH, NSF, and Horizon Europe."
-          : "Funding opportunities from 40+ international agencies are indexed daily. Check back soon."}
-      </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 300, margin: "0 auto", textAlign: "left" }}>
-        {[
-          { icon: Lightbulb, text: "Update your research profile for AI matching" },
-          { icon: Globe,     text: "Remove country filter for broader results" },
-          { icon: Calendar,  text: "Uncheck \"Open calls only\" to see all calls" },
-          { icon: Target,    text: "Try searching by sponsor name, e.g. \"ERC\" or \"NIH\"" },
-        ].map(({ icon: Icon, text }) => (
-          <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "#64748B" }}>
-            <Icon size={12} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0, marginTop: 2 }} />
-            {text}
-          </div>
-        ))}
-      </div>
-    </div>
+    <EmptyState
+      icon={<BadgeDollarSign />}
+      title={hasFilters ? "No funding opportunities match your search" : "No grants indexed yet"}
+      description={hasFilters
+        ? "Try broadening your search or removing some filters. Synaptiq aggregates 7,900+ opportunities from OpenAIRE, NIH, NSF, and Horizon Europe."
+        : "Funding opportunities from 40+ international agencies are indexed daily. Check back soon."}
+      action={
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 300, margin: "0 auto", textAlign: "left" }}>
+          {tips.map(({ icon: Icon, text }) => (
+            <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "#64748B" }}>
+              <Icon size={12} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0, marginTop: 2 }} />
+              {text}
+            </div>
+          ))}
+        </div>
+      }
+      size="lg"
+    />
   );
 }
 
 // ── Gated state ───────────────────────────────────────────────────────────────
 function GatedState() {
   return (
-    <div style={{ textAlign: "center", padding: "60px 24px", border: `1px dashed ${BORDER}` }}>
-      <Coins size={44} strokeWidth={1} style={{ color: "#E2E8F0", margin: "0 auto 20px", display: "block" }} />
-      <h3 style={{ fontFamily: "Georgia, serif", fontSize: 22, color: "#1E293B", marginBottom: 8, fontWeight: 400 }}>
-        Grant discovery limit reached
-      </h3>
-      <p style={{ fontSize: 13, color: "#64748B", maxWidth: 360, margin: "0 auto 24px", lineHeight: 1.65 }}>
-        You've reached your monthly grant discovery quota. Upgrade to access the full funding database of 7,900+ opportunities.
-      </p>
-      <Link
-        to="/settings/billing"
-        style={{ padding: "9px 22px", background: NAVY, color: "white", fontSize: 13, fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
-      >
-        View plans <ArrowRight size={13} strokeWidth={1.5} />
-      </Link>
-    </div>
+    <EmptyState
+      icon={<Coins />}
+      title="Grant discovery limit reached"
+      description="You've reached your monthly grant discovery quota. Upgrade to access the full funding database of 7,900+ opportunities."
+      action={
+        <Button as={Link} to="/settings/billing" variant="primary">
+          View plans <ArrowRight size={13} strokeWidth={1.5} />
+        </Button>
+      }
+      size="lg"
+    />
   );
 }
 

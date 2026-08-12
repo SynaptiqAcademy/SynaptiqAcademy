@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Target, Trash2, Pencil, ChevronDown, ChevronUp } from "lucide-react";
 import { NAVY, WARM, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Badge, Button, Modal, Input, FormSelect, NavTabs, EmptyState, Spinner } from "@/components/ds";
 
@@ -63,6 +63,7 @@ function GoalCard({ goal, onUpdate, onDelete }) {
             size="icon"
             variant="ghost"
             onClick={() => setEditing(v => !v)}
+            aria-label={`Edit progress for ${goal.title}`}
             style={{
               padding: 4,
               color: TEXT_SECONDARY
@@ -73,6 +74,7 @@ function GoalCard({ goal, onUpdate, onDelete }) {
             size="icon"
             variant="ghost"
             onClick={() => onDelete(goal.id)}
+            aria-label={`Delete ${goal.title}`}
             style={{
               padding: 4,
               color: "#dc2626"
@@ -83,6 +85,7 @@ function GoalCard({ goal, onUpdate, onDelete }) {
             size="icon"
             variant="ghost"
             onClick={() => setOpen(v => !v)}
+            aria-label={open ? `Collapse ${goal.title}` : `Expand ${goal.title}`}
             style={{
               padding: 4,
               color: TEXT_SECONDARY
@@ -224,7 +227,7 @@ export default function GoalManager() {
   const completed = goals.filter(g => g.status === "completed").length;
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
       title="Research Goals"
       subtitle="Set, track, and achieve your research goals with AI guidance."
       navItems={SIE_NAV_ITEMS}
@@ -258,6 +261,6 @@ export default function GoalManager() {
       )}
 
       {showNew && <NewGoalModal onClose={() => setShowNew(false)} onCreate={g => { setGoals(gs => [g, ...gs]); }} />}
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

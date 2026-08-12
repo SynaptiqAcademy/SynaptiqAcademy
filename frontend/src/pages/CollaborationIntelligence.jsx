@@ -10,7 +10,8 @@ import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { USER_TYPE_OPTIONS as USER_TYPE_FILTER_OPTIONS_BASE, PRIMARY_DOMAIN_OPTIONS, userTypeLabel } from "../lib/userTypes";
 import { WARM } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
 
 // ─────────────────────── ai nav ──────────────────────────────────────────────
 
@@ -99,7 +100,7 @@ function FilterPill({ label, value, onRemove }) {
   return (
     <div className="flex items-center gap-1.5 border border-slate-300 bg-slate-50 px-2 py-1">
       <span className="text-xs text-slate-600">{label}: <span className="font-medium">{value}</span></span>
-      <button onClick={onRemove} className="text-slate-400 hover:text-slate-700">
+      <button onClick={onRemove} aria-label={`Remove ${label} filter`} className="text-slate-400 hover:text-slate-700">
         <X size={11} strokeWidth={2} />
       </button>
     </div>
@@ -300,7 +301,7 @@ function SendRequestModal({ researcher, onClose }) {
       <div className="bg-white w-full max-w-md border border-slate-200 shadow-lg">
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
           <div className="font-serif text-base text-slate-900">Send Collaboration Request</div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700">
+          <button onClick={onClose} aria-label="Close" className="text-slate-400 hover:text-slate-700">
             <X size={16} strokeWidth={1.5} />
           </button>
         </div>
@@ -389,7 +390,7 @@ function StartProjectModal({ researcher, onClose }) {
       <div className="bg-white w-full max-w-md border border-slate-200 shadow-lg">
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
           <div className="font-serif text-base text-slate-900">Start Project Together</div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700">
+          <button onClick={onClose} aria-label="Close" className="text-slate-400 hover:text-slate-700">
             <X size={16} strokeWidth={1.5} />
           </button>
         </div>
@@ -879,7 +880,7 @@ export default function CollaborationIntelligence() {
     }
   };
 
-  if (gated) return <AIWorkspaceLayout title="Collaboration Intelligence"><GateView /></AIWorkspaceLayout>;
+  if (gated) return <ResearchLayout navItems={AI_NAV_ITEMS} title="Collaboration Intelligence"><GateView /></ResearchLayout>;
 
   // Client-side research_area filter (backend doesn't filter by array on GET)
   const visibleRecs = (recommendations || []).filter((r) => {
@@ -890,10 +891,42 @@ export default function CollaborationIntelligence() {
 
   const hasResults = visibleRecs.length > 0;
 
+  const headerActions = (
+    <>
+      <button
+        onClick={() => setShowFilters((f) => !f)}
+        className={`flex items-center gap-2 border px-3 py-2 text-sm transition-colors ${showFilters ? "border-[#0F2847] text-[#0F2847] bg-slate-50" : "border-slate-200 text-slate-600 hover:border-[#0F2847]"}`}
+      >
+        <Filter size={13} strokeWidth={1.5} />
+        Filters
+        {((filters.research_areas || []).length > 0 || filters.country || filters.user_type || filters.primary_domain || filters.min_score > 0) && (
+          <span className="w-4 h-4 bg-[#0F2847] text-white text-[9px] flex items-center justify-center font-mono">
+            {(filters.research_areas || []).length + (filters.country ? 1 : 0) + (filters.user_type ? 1 : 0) + (filters.primary_domain ? 1 : 0) + (filters.min_score > 0 ? 1 : 0)}
+          </span>
+        )}
+      </button>
+      <button
+        data-testid={TID.collaborationIntelGenerateBtn}
+        onClick={handleGenerate}
+        disabled={loading}
+        className="flex items-center gap-2 border border-[#0F2847] bg-[#0F2847] text-white px-4 py-2 text-sm font-medium hover:bg-slate-800 transition-colors disabled:opacity-50"
+      >
+        {loading ? (
+          <RotateCcw size={13} strokeWidth={1.5} className="animate-spin" />
+        ) : (
+          <Sparkles size={13} strokeWidth={1.5} />
+        )}
+        {loading ? "Generating…" : recommendations ? "Regenerate" : "Generate"}
+      </button>
+    </>
+  );
+
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="Collaboration Intelligence"
       subtitle="AI-powered researcher matchmaking — find collaborators aligned with your research profile."
+      actions={headerActions}
     >
     <div data-testid={TID.collaborationIntelDashboard} className="flex-1 flex min-h-0" style={{ margin: "-24px" }}>
       {/* Main content */}
@@ -913,39 +946,6 @@ export default function CollaborationIntelligence() {
               </div>
             </div>
           )}
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <div className="font-serif text-2xl text-slate-900 tracking-tight">Collaboration Intelligence</div>
-              <div className="overline text-slate-400 mt-1">AI-Powered Researcher Matchmaking</div>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowFilters((f) => !f)}
-                className={`flex items-center gap-2 border px-3 py-2 text-sm transition-colors ${showFilters ? "border-[#0F2847] text-[#0F2847] bg-slate-50" : "border-slate-200 text-slate-600 hover:border-[#0F2847]"}`}
-              >
-                <Filter size={13} strokeWidth={1.5} />
-                Filters
-                {((filters.research_areas || []).length > 0 || filters.country || filters.user_type || filters.primary_domain || filters.min_score > 0) && (
-                  <span className="w-4 h-4 bg-[#0F2847] text-white text-[9px] flex items-center justify-center font-mono">
-                    {(filters.research_areas || []).length + (filters.country ? 1 : 0) + (filters.user_type ? 1 : 0) + (filters.primary_domain ? 1 : 0) + (filters.min_score > 0 ? 1 : 0)}
-                  </span>
-                )}
-              </button>
-              <button
-                data-testid={TID.collaborationIntelGenerateBtn}
-                onClick={handleGenerate}
-                disabled={loading}
-                className="flex items-center gap-2 border border-[#0F2847] bg-[#0F2847] text-white px-4 py-2 text-sm font-medium hover:bg-slate-800 transition-colors disabled:opacity-50"
-              >
-                {loading ? (
-                  <RotateCcw size={13} strokeWidth={1.5} className="animate-spin" />
-                ) : (
-                  <Sparkles size={13} strokeWidth={1.5} />
-                )}
-                {loading ? "Generating…" : recommendations ? "Regenerate" : "Generate"}
-              </button>
-            </div>
-          </div>
 
           {/* Run meta */}
           {runMeta?.created_at && (
@@ -1087,7 +1087,7 @@ export default function CollaborationIntelligence() {
           )}
         </div>
       </aside>
-    </div>    </AIWorkspaceLayout>
+    </div>    </ResearchLayout>
 
   );
 }

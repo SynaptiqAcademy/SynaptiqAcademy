@@ -11,68 +11,76 @@ import {
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { ACCENT, EMERALD, NAVY, WARM } from "@/lib/tokens";
+import { Badge } from "@/components/ds/Badge";
+import { Tag } from "@/components/ds/Tag";
+import { Card } from "@/components/ds/Card";
+import { Button } from "@/components/ds/Button";
+import { Input } from "@/components/ds/Input";
+import { Textarea } from "@/components/ds/Textarea";
+import { FormSelect } from "@/components/ds/FormSelect";
+import { Spinner } from "@/components/ds/LoadingState";
+import { ErrorState } from "@/components/ds/ErrorState";
+import { EmptyState } from "@/components/ds/EmptyState";
+import { NavTabs } from "@/components/ds/NavTabs";
+import { Modal } from "@/components/ds/Modal";
+import { ProgressBar } from "@/components/ds/Progress";
+import { Checkbox } from "@/components/ds/Form";
+import { StatCard, StatGrid } from "@/components/ds/StatCard";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-const STATUS_COLORS = {
-  open:      "bg-emerald-100 text-emerald-700 border border-emerald-200",
-  active:    "bg-blue-100 text-blue-700 border border-blue-200",
-  full:      "bg-amber-100 text-amber-700 border border-amber-200",
-  closed:    "bg-slate-100 text-slate-600 border border-slate-200",
-  draft:     "bg-slate-100 text-slate-600 border border-slate-200",
-  review:    "bg-amber-100 text-amber-700 border border-amber-200",
-  approved:  "bg-emerald-100 text-emerald-700 border border-emerald-200",
-  filled:    "bg-blue-100 text-blue-700 border border-blue-200",
-  completed: "bg-emerald-100 text-emerald-700 border border-emerald-200",
-  pending:   "bg-amber-100 text-amber-700 border border-amber-200",
-  accepted:  "bg-emerald-100 text-emerald-700 border border-emerald-200",
-  rejected:  "bg-red-100 text-red-700 border border-red-200",
+// Hex equivalents (ds Badge's `color` prop) of the status→color mapping below
+const STATUS_HEX = {
+  open:      "#059669",
+  active:    "#2563EB",
+  full:      "#D97706",
+  closed:    "#64748B",
+  draft:     "#64748B",
+  review:    "#D97706",
+  approved:  "#059669",
+  filled:    "#2563EB",
+  completed: "#059669",
+  pending:   "#D97706",
+  accepted:  "#059669",
+  rejected:  "#DC2626",
 };
 
 function StatusBadge({ status }) {
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[status] || STATUS_COLORS.draft}`}>
+    <Badge color={STATUS_HEX[status] || STATUS_HEX.draft}>
       {status ? status.charAt(0).toUpperCase() + status.slice(1) : "Unknown"}
-    </span>
+    </Badge>
   );
 }
 
 function Chip({ label, color = "slate" }) {
   const map = {
-    slate:  "bg-slate-100 text-slate-700",
-    indigo: "bg-indigo-100 text-indigo-700",
-    purple: "bg-purple-100 text-purple-700",
-    amber:  "bg-amber-100 text-amber-700",
-    blue:   "bg-blue-100 text-blue-700",
-    emerald:"bg-emerald-100 text-emerald-700",
+    slate:  undefined,
+    indigo: "#4F46E5",
+    purple: "#9333EA",
+    amber:  "#D97706",
+    blue:   "#2563EB",
+    emerald:"#059669",
   };
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${map[color] || map.slate}`}>
-      {label}
-    </span>
-  );
+  return <Tag size="sm" color={map[color]}>{label}</Tag>;
 }
 
 function TabLoading() {
   return (
     <div className="p-8 flex items-center justify-center gap-2 text-slate-400">
-      <Loader2 size={16} className="animate-spin" />
+      <Spinner size={16} />
       <span className="text-sm">Loading...</span>
     </div>
   );
 }
 
 function TabError({ message }) {
-  return (
-    <div className="p-6 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
-      Failed to load: {message}
-    </div>
-  );
+  return <ErrorState message="Failed to load" detail={message} />;
 }
 
 function SectionCard({ title, children, action }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-lg">
+    <Card padding="none">
       {(title || action) && (
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
           {title && <h3 className="text-sm font-semibold text-slate-900">{title}</h3>}
@@ -80,7 +88,7 @@ function SectionCard({ title, children, action }) {
         </div>
       )}
       <div className="p-5">{children}</div>
-    </div>
+    </Card>
   );
 }
 
@@ -136,7 +144,7 @@ function OverviewTab({ data, collab }) {
         )}
 
         <SectionCard title="Key Details">
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
             {[
               { icon: Users, label: "Lead Researcher", value: collab?.lead_user_name || collab?.lead_user_id || "—" },
               { icon: DollarSign, label: "Total Budget", value: collab?.budget_total ? `€${collab.budget_total.toLocaleString()}` : "—" },
@@ -274,9 +282,9 @@ function TeamTab({ data, collabId, isLead, onRefresh }) {
                     <td className="py-2.5 pr-4 text-slate-400 text-xs">{m.joined_at ? new Date(m.joined_at).toLocaleDateString() : "—"}</td>
                     {isLead && (
                       <td className="py-2.5 text-right">
-                        <button onClick={() => handleRemove(m.user_id || m._id)} className="text-xs text-red-500 hover:text-red-700">
+                        <Button onClick={() => handleRemove(m.user_id || m._id)} variant="ghost" size="icon" aria-label="Remove team member" className="!text-red-500 hover:!text-red-700">
                           <Trash2 size={13} />
-                        </button>
+                        </Button>
                       </td>
                     )}
                   </tr>
@@ -291,40 +299,31 @@ function TeamTab({ data, collabId, isLead, onRefresh }) {
       <SectionCard title="Invite Member">
         <form onSubmit={handleInvite} className="space-y-3">
           {inviteErr && <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded p-2">{inviteErr}</div>}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">User ID *</label>
-              <input
-                value={inviteForm.user_id}
-                onChange={e => setInviteForm(f => ({ ...f, user_id: e.target.value }))}
-                placeholder="Researcher user ID"
-                className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Role</label>
-              <input
-                value={inviteForm.role}
-                onChange={e => setInviteForm(f => ({ ...f, role: e.target.value }))}
-                placeholder="e.g. Co-Investigator"
-                className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Personal Message</label>
-            <textarea
-              value={inviteForm.message}
-              onChange={e => setInviteForm(f => ({ ...f, message: e.target.value }))}
-              placeholder="Why would they be a great fit?"
-              rows={2}
-              className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 resize-none"
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              label="User ID *"
+              value={inviteForm.user_id}
+              onChange={e => setInviteForm(f => ({ ...f, user_id: e.target.value }))}
+              placeholder="Researcher user ID"
+            />
+            <Input
+              label="Role"
+              value={inviteForm.role}
+              onChange={e => setInviteForm(f => ({ ...f, role: e.target.value }))}
+              placeholder="e.g. Co-Investigator"
             />
           </div>
-          <button type="submit" disabled={inviting} className="flex items-center gap-2 px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors rounded disabled:opacity-60">
-            {inviting ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
+          <Textarea
+            label="Personal Message"
+            value={inviteForm.message}
+            onChange={e => setInviteForm(f => ({ ...f, message: e.target.value }))}
+            placeholder="Why would they be a great fit?"
+            rows={2}
+          />
+          <Button type="submit" loading={inviting} size="sm">
+            {!inviting && <Plus size={13} />}
             Send Invitation
-          </button>
+          </Button>
         </form>
       </SectionCard>
 
@@ -407,9 +406,9 @@ function ConsortiumTab({ data, collabId, isLead, onRefresh }) {
       <SectionCard
         title={`Partner Institutions (${partners.length})`}
         action={
-          <button onClick={handleValidate} disabled={validating} className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors rounded disabled:opacity-50">
-            {validating ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Validate Eligibility
-          </button>
+          <Button onClick={handleValidate} loading={validating} variant="ghost" size="sm">
+            {!validating && <Check size={12} />} Validate Eligibility
+          </Button>
         }
       >
         {partners.length === 0 ? (
@@ -435,7 +434,7 @@ function ConsortiumTab({ data, collabId, isLead, onRefresh }) {
                     <td className="py-2.5 pr-4"><StatusBadge status={p.status || "active"} /></td>
                     {isLead && (
                       <td className="py-2.5 text-right">
-                        <button onClick={() => handleRemovePartner(p._id)} className="text-xs text-red-500 hover:text-red-700"><Trash2 size={13} /></button>
+                        <Button onClick={() => handleRemovePartner(p._id)} variant="ghost" size="icon" aria-label="Remove partner" className="!text-red-500 hover:!text-red-700"><Trash2 size={13} /></Button>
                       </td>
                     )}
                   </tr>
@@ -470,23 +469,14 @@ function ConsortiumTab({ data, collabId, isLead, onRefresh }) {
         <SectionCard title="Add Partner Institution">
           <form onSubmit={handleAdd} className="space-y-3">
             {addErr && <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded p-2">{addErr}</div>}
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Institution ID *</label>
-                <input value={addForm.institution_id} onChange={e => setAddForm(f => ({ ...f, institution_id: e.target.value }))} placeholder="Institution ID" className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Role</label>
-                <input value={addForm.role} onChange={e => setAddForm(f => ({ ...f, role: e.target.value }))} placeholder="e.g. Partner" className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Budget Share %</label>
-                <input type="number" min="0" max="100" value={addForm.budget_share} onChange={e => setAddForm(f => ({ ...f, budget_share: e.target.value }))} placeholder="e.g. 25" className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Input label="Institution ID *" value={addForm.institution_id} onChange={e => setAddForm(f => ({ ...f, institution_id: e.target.value }))} placeholder="Institution ID" />
+              <Input label="Role" value={addForm.role} onChange={e => setAddForm(f => ({ ...f, role: e.target.value }))} placeholder="e.g. Partner" />
+              <Input label="Budget Share %" type="number" min="0" max="100" value={addForm.budget_share} onChange={e => setAddForm(f => ({ ...f, budget_share: e.target.value }))} placeholder="e.g. 25" />
             </div>
-            <button type="submit" disabled={adding} className="flex items-center gap-2 px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors rounded disabled:opacity-60">
-              {adding ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Add Partner
-            </button>
+            <Button type="submit" loading={adding} size="sm">
+              {!adding && <Plus size={13} />} Add Partner
+            </Button>
           </form>
         </SectionCard>
       )}
@@ -539,21 +529,18 @@ function PositionsTab({ data, collabId, isLead, onRefresh }) {
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-slate-900">Open Positions ({positions.filter(p => p.status === "open").length})</h3>
         {isLead && (
-          <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0F2847] text-white text-xs font-medium hover:bg-[#0a1f38] transition-colors rounded">
+          <Button onClick={() => setShowForm(!showForm)} size="sm">
             <Plus size={12} /> Create Position
-          </button>
+          </Button>
         )}
       </div>
 
       {positions.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
-          <Target size={28} className="text-slate-300 mx-auto mb-2" />
-          <p className="text-sm text-slate-500">No positions created yet.</p>
-        </div>
+        <EmptyState icon={<Target />} title="No positions created yet." size="sm" />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {positions.map((p, i) => (
-            <div key={p._id || i} className="bg-white border border-slate-200 rounded-lg p-4">
+            <Card key={p._id || i} padding="md">
               <div className="flex items-start justify-between gap-2 mb-2">
                 <h4 className="font-semibold text-sm text-slate-900">{p.role_title}</h4>
                 <StatusBadge status={p.status || "open"} />
@@ -569,11 +556,11 @@ function PositionsTab({ data, collabId, isLead, onRefresh }) {
                 {p.required_experience_years != null && <span>{p.required_experience_years}+ yrs exp</span>}
               </div>
               {isLead && p.status === "open" && (
-                <button onClick={() => handleFill(p._id)} className="text-xs text-emerald-600 hover:text-emerald-800 font-medium flex items-center gap-1">
+                <Button onClick={() => handleFill(p._id)} variant="link" size="sm" className="!text-emerald-600">
                   <Check size={12} /> Mark as Filled
-                </button>
+                </Button>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       )}
@@ -583,41 +570,20 @@ function PositionsTab({ data, collabId, isLead, onRefresh }) {
         <SectionCard title="Create Position">
           <form onSubmit={handleCreate} className="space-y-3">
             {createErr && <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded p-2">{createErr}</div>}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Role Title *</label>
-                <input value={form.role_title} onChange={e => setForm(f => ({ ...f, role_title: e.target.value }))} placeholder="e.g. Data Science Lead" className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Description</label>
-                <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 resize-none" />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Required Expertise (comma-separated)</label>
-                <input value={form.required_expertise} onChange={e => setForm(f => ({ ...f, required_expertise: e.target.value }))} placeholder="Python, Machine Learning, Bioinformatics" className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Min. Publications</label>
-                <input type="number" min="0" value={form.required_publications} onChange={e => setForm(f => ({ ...f, required_publications: e.target.value }))} className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Min. Experience (years)</label>
-                <input type="number" min="0" value={form.required_experience_years} onChange={e => setForm(f => ({ ...f, required_experience_years: e.target.value }))} className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Availability Required</label>
-                <input value={form.availability_required} onChange={e => setForm(f => ({ ...f, availability_required: e.target.value }))} placeholder="e.g. 50% FTE" className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Contribution Type</label>
-                <input value={form.contribution} onChange={e => setForm(f => ({ ...f, contribution: e.target.value }))} placeholder="e.g. WP lead, analysis" className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Input wrapperClassName="col-span-2" label="Role Title *" value={form.role_title} onChange={e => setForm(f => ({ ...f, role_title: e.target.value }))} placeholder="e.g. Data Science Lead" />
+              <Textarea wrapperClassName="col-span-2" label="Description" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} />
+              <Input wrapperClassName="col-span-2" label="Required Expertise (comma-separated)" value={form.required_expertise} onChange={e => setForm(f => ({ ...f, required_expertise: e.target.value }))} placeholder="Python, Machine Learning, Bioinformatics" />
+              <Input label="Min. Publications" type="number" min="0" value={form.required_publications} onChange={e => setForm(f => ({ ...f, required_publications: e.target.value }))} />
+              <Input label="Min. Experience (years)" type="number" min="0" value={form.required_experience_years} onChange={e => setForm(f => ({ ...f, required_experience_years: e.target.value }))} />
+              <Input label="Availability Required" value={form.availability_required} onChange={e => setForm(f => ({ ...f, availability_required: e.target.value }))} placeholder="e.g. 50% FTE" />
+              <Input label="Contribution Type" value={form.contribution} onChange={e => setForm(f => ({ ...f, contribution: e.target.value }))} placeholder="e.g. WP lead, analysis" />
             </div>
             <div className="flex gap-2">
-              <button type="submit" disabled={creating} className="flex items-center gap-2 px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors rounded disabled:opacity-60">
-                {creating ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Create Position
-              </button>
-              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors rounded">Cancel</button>
+              <Button type="submit" loading={creating} size="sm">
+                {!creating && <Plus size={13} />} Create Position
+              </Button>
+              <Button type="button" onClick={() => setShowForm(false)} variant="ghost" size="sm">Cancel</Button>
             </div>
           </form>
         </SectionCard>
@@ -667,24 +633,24 @@ function MatchesTab({ data, collabId, onRefresh }) {
           <h3 className="text-sm font-semibold text-slate-900">Matched Researchers</h3>
           <p className="text-xs text-slate-500 mt-0.5">AI-powered compatibility matching across research areas, publications, and expertise</p>
         </div>
-        <button onClick={handleRefresh} disabled={refreshing} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0F2847] text-white text-xs font-medium hover:bg-[#0a1f38] transition-colors rounded disabled:opacity-60">
-          {refreshing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />} Refresh Matches
-        </button>
+        <Button onClick={handleRefresh} loading={refreshing} size="sm">
+          {!refreshing && <RefreshCw size={12} />} Refresh Matches
+        </Button>
       </div>
 
       {matches.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-lg p-10 text-center">
-          <Users size={32} className="text-slate-300 mx-auto mb-3" />
-          <p className="font-medium text-slate-700">No matches yet</p>
-          <p className="text-sm text-slate-500 mt-1">Click "Refresh Matches" to find compatible researchers based on your collaboration profile.</p>
-        </div>
+        <EmptyState
+          icon={<Users />}
+          title="No matches yet"
+          description='Click "Refresh Matches" to find compatible researchers based on your collaboration profile.'
+        />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {matches.map((m, i) => {
             const score = m.compatibility_score || m.score || 0;
             const breakdown = m.score_breakdown || {};
             return (
-              <div key={m._id || m.user_id || i} className="bg-white border border-slate-200 rounded-lg p-4 space-y-3">
+              <Card key={m._id || m.user_id || i} padding="md" className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-slate-900 text-sm">{m.name || m.user_name || "Researcher"}</p>
@@ -708,21 +674,19 @@ function MatchesTab({ data, collabId, onRefresh }) {
 
                 {inlineInvite === (m.user_id || m._id) ? (
                   <div className="space-y-2 pt-2 border-t border-slate-100">
-                    <input value={inviteForm.role} onChange={e => setInviteForm(f => ({ ...f, role: e.target.value }))} placeholder="Role (optional)" className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none" />
-                    <textarea value={inviteForm.message} onChange={e => setInviteForm(f => ({ ...f, message: e.target.value }))} placeholder="Message..." rows={2} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none resize-none" />
+                    <Input size="sm" value={inviteForm.role} onChange={e => setInviteForm(f => ({ ...f, role: e.target.value }))} placeholder="Role (optional)" />
+                    <Textarea value={inviteForm.message} onChange={e => setInviteForm(f => ({ ...f, message: e.target.value }))} placeholder="Message..." rows={2} />
                     <div className="flex gap-2">
-                      <button onClick={() => handleInvite(m.user_id || m._id)} disabled={inviting} className="flex items-center gap-1 px-3 py-1.5 bg-[#0F2847] text-white text-xs font-medium rounded disabled:opacity-60">
-                        {inviting ? <Loader2 size={11} className="animate-spin" /> : null} Send Invite
-                      </button>
-                      <button onClick={() => setInlineInvite(null)} className="px-3 py-1.5 border border-slate-200 text-xs rounded text-slate-600">Cancel</button>
+                      <Button onClick={() => handleInvite(m.user_id || m._id)} loading={inviting} size="sm">Send Invite</Button>
+                      <Button onClick={() => setInlineInvite(null)} variant="ghost" size="sm">Cancel</Button>
                     </div>
                   </div>
                 ) : (
-                  <button onClick={() => setInlineInvite(m.user_id || m._id)} className="flex items-center gap-1 text-xs text-[#0F2847] font-medium hover:underline">
+                  <Button onClick={() => setInlineInvite(m.user_id || m._id)} variant="link" size="sm" className="!text-[#0F2847]">
                     <Plus size={12} /> Invite to Team
-                  </button>
+                  </Button>
                 )}
-              </div>
+              </Card>
             );
           })}
         </div>
@@ -767,17 +731,17 @@ function GapAnalysisTab({ data, collabId, onRefresh }) {
           <h3 className="text-sm font-semibold text-slate-900">Gap Analysis</h3>
           <p className="text-xs text-slate-500 mt-0.5">Identifies missing capabilities, countries, and roles needed to strengthen your consortium</p>
         </div>
-        <button onClick={handleRefresh} disabled={refreshing} className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors rounded disabled:opacity-50">
-          {refreshing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />} Refresh Analysis
-        </button>
+        <Button onClick={handleRefresh} loading={refreshing} variant="ghost" size="sm">
+          {!refreshing && <RefreshCw size={12} />} Refresh Analysis
+        </Button>
       </div>
 
       {!hasAnyGap && !gaps.ai_recommendations && !gaps.recommendations?.length ? (
-        <div className="bg-white border border-slate-200 rounded-lg p-10 text-center">
-          <CheckCircle size={32} className="text-emerald-500 mx-auto mb-3" />
-          <p className="font-medium text-emerald-700">No gaps detected — your team is well-formed!</p>
-          <p className="text-xs text-slate-500 mt-1">Run a refresh to re-evaluate after team changes.</p>
-        </div>
+        <EmptyState
+          icon={<CheckCircle />}
+          title="No gaps detected — your team is well-formed!"
+          description="Run a refresh to re-evaluate after team changes."
+        />
       ) : (
         <div className="space-y-4">
           {sections.map(({ key, label, color, icon: Icon }) => {
@@ -871,18 +835,12 @@ function ReadinessTab({ data }) {
         <SectionCard title="Score Breakdown by Dimension">
           <div className="space-y-3">
             {dimensions.map((dim, i) => (
-              <div key={i} className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-slate-700">{dim.name || dim.dimension}</span>
-                  <span className="text-xs text-slate-500">{dim.score}/{dim.max || 10}</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div
-                    className="h-2 rounded-full bg-[#0F2847] transition-all"
-                    style={{ width: `${((dim.score || 0) / (dim.max || 10)) * 100}%` }}
-                  />
-                </div>
-              </div>
+              <ProgressBar
+                key={i}
+                label={dim.name || dim.dimension}
+                value={dim.score || 0}
+                max={dim.max || 10}
+              />
             ))}
           </div>
         </SectionCard>
@@ -983,17 +941,18 @@ function WorkPackagesTab({ data, collabId, onRefresh }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-slate-900">Work Packages ({wps.length})</h3>
-        <button onClick={() => setShowWpForm(!showWpForm)} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0F2847] text-white text-xs font-medium hover:bg-[#0a1f38] transition-colors rounded">
+        <Button onClick={() => setShowWpForm(!showWpForm)} size="sm">
           <Plus size={12} /> Add Work Package
-        </button>
+        </Button>
       </div>
 
       {wps.length === 0 && !showWpForm ? (
-        <div className="bg-white border border-slate-200 rounded-lg p-10 text-center">
-          <Package size={28} className="text-slate-300 mx-auto mb-2" />
-          <p className="text-sm font-medium text-slate-600">No work packages yet</p>
-          <p className="text-xs text-slate-400 mt-1">Add your first work package to track progress and assign tasks.</p>
-        </div>
+        <EmptyState
+          icon={<Package />}
+          title="No work packages yet"
+          description="Add your first work package to track progress and assign tasks."
+          size="sm"
+        />
       ) : null}
 
       {/* Create WP form */}
@@ -1001,41 +960,20 @@ function WorkPackagesTab({ data, collabId, onRefresh }) {
         <SectionCard title="New Work Package">
           <form onSubmit={handleCreateWp} className="space-y-3">
             {wpErr && <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded p-2">{wpErr}</div>}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Title *</label>
-                <input value={wpForm.title} onChange={e => setWpForm(f => ({ ...f, title: e.target.value }))} placeholder="WP1: Data Collection & Analysis" className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Description</label>
-                <textarea value={wpForm.description} onChange={e => setWpForm(f => ({ ...f, description: e.target.value }))} rows={2} className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 resize-none" />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Lead User ID</label>
-                <input value={wpForm.lead_user_id} onChange={e => setWpForm(f => ({ ...f, lead_user_id: e.target.value }))} placeholder="User ID" className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Budget (€)</label>
-                <input type="number" min="0" value={wpForm.budget} onChange={e => setWpForm(f => ({ ...f, budget: e.target.value }))} className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Start Date</label>
-                <input type="date" value={wpForm.start_date} onChange={e => setWpForm(f => ({ ...f, start_date: e.target.value }))} className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">End Date</label>
-                <input type="date" value={wpForm.end_date} onChange={e => setWpForm(f => ({ ...f, end_date: e.target.value }))} className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Deliverables (one per line)</label>
-                <textarea value={wpForm.deliverables} onChange={e => setWpForm(f => ({ ...f, deliverables: e.target.value }))} rows={3} placeholder={"D1.1 Interim report\nD1.2 Dataset"} className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 resize-none" />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Input wrapperClassName="col-span-2" label="Title *" value={wpForm.title} onChange={e => setWpForm(f => ({ ...f, title: e.target.value }))} placeholder="WP1: Data Collection & Analysis" />
+              <Textarea wrapperClassName="col-span-2" label="Description" value={wpForm.description} onChange={e => setWpForm(f => ({ ...f, description: e.target.value }))} rows={2} />
+              <Input label="Lead User ID" value={wpForm.lead_user_id} onChange={e => setWpForm(f => ({ ...f, lead_user_id: e.target.value }))} placeholder="User ID" />
+              <Input label="Budget (€)" type="number" min="0" value={wpForm.budget} onChange={e => setWpForm(f => ({ ...f, budget: e.target.value }))} />
+              <Input label="Start Date" type="date" value={wpForm.start_date} onChange={e => setWpForm(f => ({ ...f, start_date: e.target.value }))} />
+              <Input label="End Date" type="date" value={wpForm.end_date} onChange={e => setWpForm(f => ({ ...f, end_date: e.target.value }))} />
+              <Textarea wrapperClassName="col-span-2" label="Deliverables (one per line)" value={wpForm.deliverables} onChange={e => setWpForm(f => ({ ...f, deliverables: e.target.value }))} rows={3} placeholder={"D1.1 Interim report\nD1.2 Dataset"} />
             </div>
             <div className="flex gap-2">
-              <button type="submit" disabled={creatingWp} className="flex items-center gap-2 px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors rounded disabled:opacity-60">
-                {creatingWp ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Create
-              </button>
-              <button type="button" onClick={() => setShowWpForm(false)} className="px-4 py-2 border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 transition-colors rounded">Cancel</button>
+              <Button type="submit" loading={creatingWp} size="sm">
+                {!creatingWp && <Plus size={13} />} Create
+              </Button>
+              <Button type="button" onClick={() => setShowWpForm(false)} variant="ghost" size="sm">Cancel</Button>
             </div>
           </form>
         </SectionCard>
@@ -1048,7 +986,7 @@ function WorkPackagesTab({ data, collabId, onRefresh }) {
         const tasks = wp.tasks || [];
         const tf = taskForms[wpId] || {};
         return (
-          <div key={wpId} className="bg-white border border-slate-200 rounded-lg">
+          <Card key={wpId} padding="none">
             <button
               className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-slate-50 transition-colors"
               onClick={() => toggleExpand(wpId)}
@@ -1076,13 +1014,11 @@ function WorkPackagesTab({ data, collabId, onRefresh }) {
                   <div className="space-y-2">
                     {tasks.map((task, j) => (
                       <div key={task._id || j} className="flex items-center gap-3 p-2.5 bg-slate-50 rounded">
-                        <button
-                          onClick={() => handleMarkTaskComplete(wpId, task._id)}
+                        <Checkbox
+                          checked={task.status === "completed"}
+                          onChange={() => handleMarkTaskComplete(wpId, task._id)}
                           disabled={task.status === "completed"}
-                          className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${task.status === "completed" ? "bg-emerald-500 border-emerald-500" : "border-slate-300 hover:border-[#0F2847]"}`}
-                        >
-                          {task.status === "completed" && <Check size={10} className="text-white" />}
-                        </button>
+                        />
                         <span className={`flex-1 text-sm ${task.status === "completed" ? "line-through text-slate-400" : "text-slate-700"}`}>{task.title}</span>
                         {task.assignee_name && <span className="text-xs text-slate-400">{task.assignee_name}</span>}
                         {task.due_date && <span className="text-xs text-slate-400">{new Date(task.due_date).toLocaleDateString()}</span>}
@@ -1095,36 +1031,35 @@ function WorkPackagesTab({ data, collabId, onRefresh }) {
 
                 {/* Add task inline */}
                 <div className="flex items-center gap-2 pt-2">
-                  <input
+                  <Input
                     value={tf.title || ""}
                     onChange={e => handleTaskFormChange(wpId, "title", e.target.value)}
                     placeholder="Add task..."
-                    className="flex-1 border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20"
                     onKeyDown={e => e.key === "Enter" && handleCreateTask(wpId)}
+                    wrapperClassName="flex-1"
                   />
-                  <input
+                  <Input
                     value={tf.assignee_user_id || ""}
                     onChange={e => handleTaskFormChange(wpId, "assignee_user_id", e.target.value)}
                     placeholder="Assignee ID"
-                    className="w-24 border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none"
+                    wrapperClassName="w-24"
                   />
-                  <input
+                  <Input
                     type="date"
                     value={tf.due_date || ""}
                     onChange={e => handleTaskFormChange(wpId, "due_date", e.target.value)}
-                    className="border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none"
                   />
-                  <button
+                  <Button
                     onClick={() => handleCreateTask(wpId)}
-                    disabled={creatingTask[wpId]}
-                    className="px-3 py-1.5 bg-[#0F2847] text-white text-xs font-medium rounded disabled:opacity-60"
+                    loading={creatingTask[wpId]}
+                    size="sm"
                   >
-                    {creatingTask[wpId] ? <Loader2 size={11} className="animate-spin" /> : "Add"}
-                  </button>
+                    Add
+                  </Button>
                 </div>
               </div>
             )}
-          </div>
+          </Card>
         );
       })}
     </div>
@@ -1188,33 +1123,30 @@ function ProposalTab({ data, collabId, onRefresh }) {
           <h3 className="text-sm font-semibold text-slate-900">Collaborative Proposal</h3>
           <p className="text-xs text-slate-500 mt-0.5">{sections.length} sections · {approved} approved</p>
         </div>
-        <button onClick={() => setShowAddForm(!showAddForm)} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0F2847] text-white text-xs font-medium hover:bg-[#0a1f38] transition-colors rounded">
+        <Button onClick={() => setShowAddForm(!showAddForm)} size="sm">
           <Plus size={12} /> Add Section
-        </button>
+        </Button>
       </div>
 
       {/* Progress bar */}
       {sections.length > 0 && (
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between text-xs text-slate-600 mb-2">
-            <span>Proposal Completion</span>
-            <span className="font-medium">{approved}/{sections.length} sections approved</span>
-          </div>
-          <div className="w-full bg-slate-100 rounded-full h-2.5">
-            <div
-              className="h-2.5 rounded-full bg-emerald-500 transition-all"
-              style={{ width: sections.length > 0 ? `${(approved / sections.length) * 100}%` : "0%" }}
-            />
-          </div>
-        </div>
+        <Card padding="md">
+          <ProgressBar
+            label="Proposal Completion"
+            value={approved}
+            max={sections.length}
+            valueLabel={`${approved}/${sections.length} sections approved`}
+          />
+        </Card>
       )}
 
       {sections.length === 0 && !showAddForm ? (
-        <div className="bg-white border border-slate-200 rounded-lg p-10 text-center">
-          <FileText size={28} className="text-slate-300 mx-auto mb-2" />
-          <p className="text-sm font-medium text-slate-600">Start your collaborative proposal</p>
-          <p className="text-xs text-slate-400 mt-1">Add the first section to begin drafting your grant proposal together.</p>
-        </div>
+        <EmptyState
+          icon={<FileText />}
+          title="Start your collaborative proposal"
+          description="Add the first section to begin drafting your grant proposal together."
+          size="sm"
+        />
       ) : null}
 
       {/* Add section form */}
@@ -1222,23 +1154,14 @@ function ProposalTab({ data, collabId, onRefresh }) {
         <SectionCard title="Add Proposal Section">
           <form onSubmit={handleAdd} className="space-y-3">
             {addErr && <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded p-2">{addErr}</div>}
-            <div>
-              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Section Title *</label>
-              <input value={addForm.section_title} onChange={e => setAddForm(f => ({ ...f, section_title: e.target.value }))} placeholder="e.g. Executive Summary, Methodology" className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Content</label>
-              <textarea value={addForm.content} onChange={e => setAddForm(f => ({ ...f, content: e.target.value }))} rows={4} className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 resize-none" />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-500 uppercase tracking-wide mb-1">Assigned To (User ID)</label>
-              <input value={addForm.assigned_to_user_id} onChange={e => setAddForm(f => ({ ...f, assigned_to_user_id: e.target.value }))} placeholder="User ID (optional)" className="w-full border border-slate-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20" />
-            </div>
+            <Input label="Section Title *" value={addForm.section_title} onChange={e => setAddForm(f => ({ ...f, section_title: e.target.value }))} placeholder="e.g. Executive Summary, Methodology" />
+            <Textarea label="Content" value={addForm.content} onChange={e => setAddForm(f => ({ ...f, content: e.target.value }))} rows={4} />
+            <Input label="Assigned To (User ID)" value={addForm.assigned_to_user_id} onChange={e => setAddForm(f => ({ ...f, assigned_to_user_id: e.target.value }))} placeholder="User ID (optional)" />
             <div className="flex gap-2">
-              <button type="submit" disabled={adding} className="flex items-center gap-2 px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors rounded disabled:opacity-60">
-                {adding ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />} Add Section
-              </button>
-              <button type="button" onClick={() => setShowAddForm(false)} className="px-4 py-2 border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 transition-colors rounded">Cancel</button>
+              <Button type="submit" loading={adding} size="sm">
+                {!adding && <Plus size={13} />} Add Section
+              </Button>
+              <Button type="button" onClick={() => setShowAddForm(false)} variant="ghost" size="sm">Cancel</Button>
             </div>
           </form>
         </SectionCard>
@@ -1247,7 +1170,7 @@ function ProposalTab({ data, collabId, onRefresh }) {
       {/* Sections list */}
       <div className="space-y-3">
         {sections.map((s, i) => (
-          <div key={s._id || i} className="bg-white border border-slate-200 rounded-lg p-5">
+          <Card key={s._id || i} padding="lg">
             <div className="flex items-start justify-between gap-3 mb-3">
               <div>
                 <h4 className="font-semibold text-slate-900 text-sm">{s.section_title || s.title}</h4>
@@ -1255,33 +1178,32 @@ function ProposalTab({ data, collabId, onRefresh }) {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <StatusBadge status={s.status || "draft"} />
-                <button onClick={() => editingId === s._id ? setEditingId(null) : startEdit(s)} className="text-xs text-slate-500 hover:text-slate-900 flex items-center gap-1">
+                <Button onClick={() => editingId === s._id ? setEditingId(null) : startEdit(s)} variant="link" size="sm" className="!text-slate-500">
                   <Edit2 size={12} /> {editingId === s._id ? "Cancel" : "Edit"}
-                </button>
+                </Button>
               </div>
             </div>
 
             {editingId === s._id ? (
               <div className="space-y-3">
-                <textarea
+                <Textarea
                   value={editForm.content}
                   onChange={e => setEditForm(f => ({ ...f, content: e.target.value }))}
                   rows={6}
-                  className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 resize-none"
                 />
                 <div className="flex items-center gap-3">
-                  <select
+                  <FormSelect
                     value={editForm.status}
                     onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))}
-                    className="border border-slate-200 rounded px-3 py-1.5 text-sm bg-white focus:outline-none"
+                    wrapperClassName="!mb-0"
                   >
                     <option value="draft">Draft</option>
                     <option value="review">In Review</option>
                     <option value="approved">Approved</option>
-                  </select>
-                  <button onClick={() => handleSave(s._id)} disabled={saving} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded hover:bg-emerald-700 disabled:opacity-60">
-                    {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save
-                  </button>
+                  </FormSelect>
+                  <Button onClick={() => handleSave(s._id)} loading={saving} size="sm" className="!bg-emerald-600 hover:!bg-emerald-700">
+                    {!saving && <Save size={12} />} Save
+                  </Button>
                 </div>
               </div>
             ) : (
@@ -1289,7 +1211,7 @@ function ProposalTab({ data, collabId, onRefresh }) {
                 {s.content ? (s.content.length > 200 ? s.content.slice(0, 200) + "…" : s.content) : <span className="italic text-slate-400">No content yet.</span>}
               </p>
             )}
-          </div>
+          </Card>
         ))}
       </div>
     </div>
@@ -1314,31 +1236,17 @@ function AnalyticsTab({ data, collab }) {
     <div className="space-y-5">
       <h3 className="text-sm font-semibold text-slate-900">Collaboration Analytics</h3>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: "Team Members", value: team.count ?? (collab?.members?.length ?? 0) },
-          { label: "Position Fill Rate", value: `${fillRate}%` },
-          { label: "Invitation Acceptance", value: `${acceptRate}%` },
-          { label: "WP Completion", value: `${wpCompletion}%` },
-        ].map(({ label, value }) => (
-          <div key={label} className="bg-white border border-slate-200 rounded-lg p-4">
-            <p className="text-2xl font-bold text-slate-900">{value}</p>
-            <p className="text-xs text-slate-500 mt-1 uppercase tracking-wide">{label}</p>
-          </div>
-        ))}
-      </div>
+      <StatGrid cols={4}>
+        <StatCard label="Team Members" value={team.count ?? (collab?.members?.length ?? 0)} />
+        <StatCard label="Position Fill Rate" value={`${fillRate}%`} />
+        <StatCard label="Invitation Acceptance" value={`${acceptRate}%`} />
+        <StatCard label="WP Completion" value={`${wpCompletion}%`} />
+      </StatGrid>
 
       {/* Position fill rate bar */}
       <SectionCard title="Position Fill Rate">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 bg-slate-100 rounded-full h-3">
-              <div className="h-3 rounded-full bg-emerald-500" style={{ width: `${fillRate}%` }} />
-            </div>
-            <span className="text-sm font-medium text-slate-700 w-12 text-right">{fillRate}%</span>
-          </div>
-          <p className="text-xs text-slate-500">{positions.filled ?? 0} of {positions.total ?? 0} positions filled</p>
-        </div>
+        <ProgressBar value={fillRate} max={100} />
+        <p className="text-xs text-slate-500 mt-1">{positions.filled ?? 0} of {positions.total ?? 0} positions filled</p>
       </SectionCard>
 
       {/* Partner countries */}
@@ -1354,28 +1262,14 @@ function AnalyticsTab({ data, collab }) {
 
       {/* Work package progress */}
       <SectionCard title="Work Package Progress">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 bg-slate-100 rounded-full h-3">
-              <div className="h-3 rounded-full bg-[#0F2847]" style={{ width: `${wpCompletion}%` }} />
-            </div>
-            <span className="text-sm font-medium text-slate-700 w-12 text-right">{wpCompletion}%</span>
-          </div>
-          <p className="text-xs text-slate-500">{workPackages.completed ?? 0} of {workPackages.total ?? 0} work packages completed</p>
-        </div>
+        <ProgressBar value={wpCompletion} max={100} />
+        <p className="text-xs text-slate-500 mt-1">{workPackages.completed ?? 0} of {workPackages.total ?? 0} work packages completed</p>
       </SectionCard>
 
       {/* Proposal progress */}
       <SectionCard title="Proposal Progress">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 bg-slate-100 rounded-full h-3">
-              <div className="h-3 rounded-full bg-emerald-500" style={{ width: `${proposalPct}%` }} />
-            </div>
-            <span className="text-sm font-medium text-slate-700 w-12 text-right">{proposalPct}%</span>
-          </div>
-          <p className="text-xs text-slate-500">{proposal.approved ?? 0} of {proposal.total ?? 0} sections approved</p>
-        </div>
+        <ProgressBar value={proposalPct} max={100} />
+        <p className="text-xs text-slate-500 mt-1">{proposal.approved ?? 0} of {proposal.total ?? 0} sections approved</p>
       </SectionCard>
     </div>
   );
@@ -1512,24 +1406,31 @@ export default function GrantOpportunityWorkspace() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F4F6FA] flex items-center justify-center">
-        <Loader2 size={28} className="animate-spin text-slate-400" />
-      </div>
+      <ResearchLayout title="Grant Workspace">
+        <div className="flex items-center justify-center py-24">
+          <Spinner size={28} />
+        </div>
+      </ResearchLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#F4F6FA] flex items-center justify-center p-6">
-        <div className="bg-white border border-red-200 rounded-lg p-6 max-w-md w-full text-center">
-          <XCircle size={28} className="text-red-500 mx-auto mb-2" />
-          <p className="font-medium text-slate-900 mb-1">Failed to load collaboration</p>
-          <p className="text-sm text-slate-500">{error}</p>
-          <Link to="/grant-collaboration-hub" className="mt-4 inline-flex items-center gap-1.5 text-sm text-[#0F2847] hover:underline">
-            <ArrowLeft size={14} /> Back to Hub
-          </Link>
-        </div>
-      </div>
+      <ResearchLayout title="Grant Workspace">
+        <Card padding="lg" className="max-w-md w-full text-center mx-auto">
+          <EmptyState
+            icon={<XCircle />}
+            title="Failed to load collaboration"
+            description={error}
+            action={
+              <Button as={Link} to="/grant-collaboration-hub" variant="link">
+                <ArrowLeft size={14} /> Back to Hub
+              </Button>
+            }
+            size="sm"
+          />
+        </Card>
+      </ResearchLayout>
     );
   }
 
@@ -1537,69 +1438,58 @@ export default function GrantOpportunityWorkspace() {
   const isTabLoading = tabLoading[activeTab];
   const hasTabError = currentTabData?._error;
 
+  const headerActions = (
+    <>
+      <Button onClick={handleRefreshMatches} variant="ghost" size="sm">
+        <RefreshCw size={12} /> Refresh Matches
+      </Button>
+      <Button onClick={handleShare} variant="ghost" size="sm">
+        <Share2 size={12} /> Share
+      </Button>
+      {isLead && collab?.status !== "closed" && (
+        <Button onClick={handleClose} loading={closing} variant="ghost" size="sm" className="!border-red-200 !text-red-600 hover:!bg-red-50">
+          {!closing && <X size={12} />} Close Collaboration
+        </Button>
+      )}
+    </>
+  );
+
   return (
-    <ResearchLayout>
-      <div className="bg-white border-b border-slate-200">
+    <ResearchLayout
+      title={collab?.title}
+      actions={headerActions}
+      nav={
+        <NavTabs
+          tabs={WORKSPACE_TABS.map(({ key, label, icon }) => ({ id: key, label, icon }))}
+          active={activeTab}
+          onChange={handleTabChange}
+        />
+      }
+    >
+      <div className="mb-6">
           {/* Back nav */}
           <Link to="/grant-collaboration-hub" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 transition-colors mb-3">
             <ArrowLeft size={13} /> Grant Collaboration Hub
           </Link>
 
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <h1 className="font-serif text-2xl font-semibold text-slate-900 leading-tight">{collab?.title}</h1>
-              <div className="flex items-center gap-3 mt-2 flex-wrap">
-                <StatusBadge status={collab?.status} />
-                {collab?.funding_source && (
-                  <span className="flex items-center gap-1 text-xs text-slate-500">
-                    <Briefcase size={12} /> {collab.funding_source}
-                  </span>
-                )}
-                {collab?.deadline && (
-                  <span className="flex items-center gap-1 text-xs text-slate-500">
-                    <Calendar size={12} /> {new Date(collab.deadline).toLocaleDateString()}
-                  </span>
-                )}
-              </div>
-              {collab?.research_areas?.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {collab.research_areas.map((a, i) => <Chip key={i} label={a} color="indigo" />)}
-                </div>
-              )}
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex items-center gap-2 shrink-0">
-              <button onClick={handleRefreshMatches} className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors rounded">
-                <RefreshCw size={12} /> Refresh Matches
-              </button>
-              <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors rounded">
-                <Share2 size={12} /> Share
-              </button>
-              {isLead && collab?.status !== "closed" && (
-                <button onClick={handleClose} disabled={closing} className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors rounded disabled:opacity-60">
-                  {closing ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />} Close Collaboration
-                </button>
-              )}
-            </div>
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            <StatusBadge status={collab?.status} />
+            {collab?.funding_source && (
+              <span className="flex items-center gap-1 text-xs text-slate-500">
+                <Briefcase size={12} /> {collab.funding_source}
+              </span>
+            )}
+            {collab?.deadline && (
+              <span className="flex items-center gap-1 text-xs text-slate-500">
+                <Calendar size={12} /> {new Date(collab.deadline).toLocaleDateString()}
+              </span>
+            )}
           </div>
-
-          {/* Tab bar */}
-          <div className="flex items-center gap-0 mt-4 overflow-x-auto scrollbar-none -mb-px">
-            {WORKSPACE_TABS.map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                onClick={() => handleTabChange(key)}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm whitespace-nowrap border-b-2 transition-colors ${
-                  activeTab === key
-                    ? "border-[#0F2847] text-[#0F2847] font-medium"
-                    : "border-transparent text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                <Icon size={13} /> {label}
-              </button>
-            ))}
-          </div>
+          {collab?.research_areas?.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {collab.research_areas.map((a, i) => <Chip key={i} label={a} color="indigo" />)}
+            </div>
+          )}
       </div>
 
       {/* Tab content */}

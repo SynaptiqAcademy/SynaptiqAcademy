@@ -3,7 +3,7 @@ import { Globe2, CalendarClock, Clock, Hash } from "lucide-react";
 import { SettingsGrid } from "./SettingsGrid";
 import { PreferenceCard } from "./PreferenceCard";
 import { PreferenceRow } from "./PreferenceRow";
-import { TEXT_MUTED } from "@/lib/tokens";
+import { Meta } from "@/components/ds/Typography";
 
 function formatPreviewDate(dateFormat) {
   const now = new Date();
@@ -23,7 +23,7 @@ function formatPreviewTime(timeFormat) {
 }
 
 function Preview({ children }) {
-  return <div style={{ fontSize: 11, color: TEXT_MUTED, fontFamily: "monospace" }}>Preview: {children}</div>;
+  return <Meta style={{ fontFamily: "monospace" }}>Preview: {children}</Meta>;
 }
 
 export function LanguageRegionSection({ prefs, setPref }) {

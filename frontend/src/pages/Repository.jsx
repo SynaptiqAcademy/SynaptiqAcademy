@@ -14,6 +14,13 @@ import {
 import { EmptyState } from "@/components/ds/EmptyState";
 import { SkeletonCard } from "@/components/ds/LoadingState";
 import { SearchBar, FilterChip } from "@/components/ds/SearchBar";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { Tag as DsTag } from "@/components/ds/Tag";
+import { Button } from "@/components/ds/Button";
+import { Input } from "@/components/ds/Input";
+import { Textarea } from "@/components/ds/Textarea";
+import { FormSelect } from "@/components/ds/FormSelect";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const EMRL  = "#059669";
@@ -65,39 +72,20 @@ function LifecycleNav({ current }) {
 
 // ─── Asset card ───────────────────────────────────────────────────────────────
 function AssetCard({ item }) {
-  const [hov, setHov] = useState(false);
   const type = getType(item.type);
 
   return (
-    <div
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        background: "#fff",
-        border: `1px solid ${hov ? BRDH : BRD}`,
-        padding: "20px",
-        display: "flex", flexDirection: "column",
-        boxShadow: hov ? "0 4px 20px rgba(15,23,42,0.09)" : "none",
-        transition: "border-color 150ms, box-shadow 150ms",
-        height: "100%", boxSizing: "border-box",
-      }}
-    >
+    <Card padding="lg" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Type icon + type badge */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
         <div style={{ width: 36, height: 36, background: type.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <type.icon size={16} strokeWidth={1.5} style={{ color: type.color }} />
         </div>
-        <span style={{
-          fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
-          color: type.color, background: type.bg, border: `1px solid ${type.color}20`,
-          padding: "2px 7px",
-        }}>
-          {item.type}
-        </span>
+        <Badge color={type.color} size="sm">{item.type}</Badge>
       </div>
 
       {/* Title */}
-      <h3 style={{ fontSize: 14, fontWeight: 600, color: hov ? NAVY : "#0F172A", margin: "0 0 6px", lineHeight: 1.4, transition: "color 150ms" }}>
+      <h3 style={{ fontSize: 14, fontWeight: 600, color: "#0F172A", margin: "0 0 6px", lineHeight: 1.4 }}>
         {item.title}
       </h3>
 
@@ -112,9 +100,7 @@ function AssetCard({ item }) {
       {(item.tags || []).length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 12 }}>
           {item.tags.map((t) => (
-            <span key={t} style={{ fontSize: 9, fontFamily: "monospace", background: WARM, border: `1px solid ${BRD}`, padding: "2px 6px", color: "#64748B" }}>
-              {t}
-            </span>
+            <DsTag key={t} size="sm">{t}</DsTag>
           ))}
         </div>
       )}
@@ -141,7 +127,7 @@ function AssetCard({ item }) {
           </a>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -149,8 +135,6 @@ function AssetCard({ item }) {
 function AddItemForm({ onCreated, onCancel }) {
   const [form, setForm] = useState({ title: "", type: "Document", description: "", url: "", tags: "" });
   const [busy, setBusy] = useState(false);
-  const titleRef = useRef(null);
-  useEffect(() => { titleRef.current?.focus(); }, []);
 
   const create = async () => {
     if (!form.title.trim()) return;
@@ -167,75 +151,56 @@ function AddItemForm({ onCreated, onCancel }) {
     finally { setBusy(false); }
   };
 
-  const inp = {
-    width: "100%", boxSizing: "border-box",
-    padding: "9px 12px", border: `1px solid ${BRD}`,
-    fontSize: 13, color: "#0F172A", background: "#fff",
-    outline: "none", fontFamily: "inherit",
-  };
-
   return (
-    <div style={{ background: "#fff", border: `1px solid ${BRD}`, padding: "24px 28px", maxWidth: 640, marginBottom: 28 }}>
+    <Card padding="xl" style={{ maxWidth: 640, marginBottom: 28 }}>
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 16 }}>
         Add to Repository
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <input
-          ref={titleRef}
+        <Input
+          autoFocus
           data-testid={TID.repositoryNewTitle}
           placeholder="Title *"
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
           onKeyDown={(e) => e.key === "Enter" && create()}
-          style={inp}
         />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} style={{ ...inp }}>
+          <FormSelect value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
             {TYPES.map((t) => <option key={t.key}>{t.key}</option>)}
-          </select>
-          <input
+          </FormSelect>
+          <Input
             placeholder="URL (optional)"
             value={form.url}
             onChange={(e) => setForm({ ...form, url: e.target.value })}
-            style={inp}
           />
         </div>
-        <input
+        <Input
           placeholder="Tags (comma-separated)"
           value={form.tags}
           onChange={(e) => setForm({ ...form, tags: e.target.value })}
-          style={inp}
         />
-        <textarea
+        <Textarea
           placeholder="Description"
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           rows={3}
-          style={{ ...inp, resize: "vertical", lineHeight: 1.6 }}
         />
       </div>
       <div style={{ marginTop: 18, display: "flex", gap: 10 }}>
-        <button
+        <Button
           data-testid={TID.repositoryNewSubmit}
           onClick={create}
           disabled={busy || !form.title.trim()}
-          style={{
-            background: busy || !form.title.trim() ? "#94A3B8" : NAVY,
-            color: "#fff", border: "none", padding: "9px 20px",
-            fontSize: 13, fontWeight: 600,
-            cursor: busy || !form.title.trim() ? "not-allowed" : "pointer",
-          }}
+          loading={busy}
         >
-          {busy ? "Adding…" : "Add to repository"}
-        </button>
-        <button
-          onClick={onCancel}
-          style={{ background: "transparent", color: "#64748B", border: `1px solid ${BRD}`, padding: "9px 16px", fontSize: 13, cursor: "pointer" }}
-        >
+          Add to repository
+        </Button>
+        <Button variant="ghost" onClick={onCancel}>
           Cancel
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -247,7 +212,7 @@ function TypeStats({ items }) {
       {TYPES.map(({ key, label, icon: Icon, color, bg }) => {
         const count = items.filter((i) => i.type === key).length;
         return (
-          <div key={key} style={{ background: "#fff", border: `1px solid ${BRD}`, padding: "14px 18px", display: "flex", alignItems: "center", gap: 12 }}>
+          <Card key={key} padding="md" style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 32, height: 32, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <Icon size={14} strokeWidth={1.5} style={{ color }} />
             </div>
@@ -255,7 +220,7 @@ function TypeStats({ items }) {
               <div style={{ fontSize: 20, fontWeight: 700, color: "#0F172A", fontFamily: "Georgia, serif", lineHeight: 1 }}>{count}</div>
               <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#94A3B8", marginTop: 2 }}>{label}</div>
             </div>
-          </div>
+          </Card>
         );
       })}
     </div>
@@ -289,16 +254,16 @@ export default function Repository() {
 
   const repoActions = (
     <div style={{ display: "flex", gap: 8 }}>
-      <Link to="/manuscripts" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none", padding: "8px 14px", border: `1px solid ${BRD}`, background: "#fff" }}>
+      <Button as={Link} to="/manuscripts" variant="ghost" size="sm">
         <FileText size={12} strokeWidth={1.5} /> Manuscripts
-      </Link>
-      <button
+      </Button>
+      <Button
         data-testid={TID.repositoryCreateBtn}
         onClick={() => setShowNew(!showNew)}
-        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "#fff", background: NAVY, border: "none", padding: "8px 16px", cursor: "pointer" }}
+        size="sm"
       >
         <Plus size={13} strokeWidth={1.5} /> Add Item
-      </button>
+      </Button>
     </div>
   );
 
@@ -333,12 +298,9 @@ export default function Repository() {
               size="sm"
             />
           </div>
-          <button
-            onClick={search}
-            style={{ padding: "8px 14px", fontSize: 12, fontWeight: 600, color: NAVY, background: "#fff", border: `1px solid ${BRD}`, cursor: "pointer", fontFamily: "inherit" }}
-          >
+          <Button variant="outline" size="sm" onClick={search}>
             Search
-          </button>
+          </Button>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             <FilterChip
               label="All"
@@ -369,9 +331,9 @@ export default function Repository() {
               icon={<Search />}
               title="No items match your search"
               action={
-                <button onClick={() => { setFilter(""); setQ(""); }} style={{ fontSize: 12, color: NAVY, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+                <Button variant="link" size="sm" onClick={() => { setFilter(""); setQ(""); }}>
                   Clear filters
-                </button>
+                </Button>
               }
               size="sm"
             />
@@ -381,13 +343,9 @@ export default function Repository() {
               title="Your repository is empty"
               description="Store documents, datasets, templates, and literature in one searchable archive shared across your team."
               action={
-                <button
-                  data-testid={TID.repositoryCreateBtn}
-                  onClick={() => setShowNew(true)}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 8, background: NAVY, color: "#fff", border: "none", padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-                >
+                <Button data-testid={TID.repositoryCreateBtn} onClick={() => setShowNew(true)}>
                   <Plus size={14} strokeWidth={1.5} /> Add your first item
-                </button>
+                </Button>
               }
               size="lg"
               dashed={false}

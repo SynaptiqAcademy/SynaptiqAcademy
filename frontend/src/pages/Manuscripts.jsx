@@ -14,6 +14,13 @@ import {
 import { EmptyState } from "@/components/ds/EmptyState";
 import { SkeletonPage } from "@/components/ds/LoadingState";
 import { SearchBar, FilterChip } from "@/components/ds/SearchBar";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { StatCard } from "@/components/ds/StatCard";
+import { Input } from "@/components/ds/Input";
+import { Textarea } from "@/components/ds/Textarea";
+import { FormSelect } from "@/components/ds/FormSelect";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const EMRL  = "#059669";
@@ -83,36 +90,13 @@ function LifecycleNav({ current }) {
   );
 }
 
-// ─── Stat card ────────────────────────────────────────────────────────────────
-function StatCard({ label, value, icon: Icon, accent }) {
-  return (
-    <div style={{
-      background: "#fff", border: `1px solid ${BRD}`, padding: "16px 20px",
-      display: "flex", flexDirection: "column", gap: 8,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94A3B8" }}>{label}</span>
-        <Icon size={13} strokeWidth={1.5} style={{ color: accent || "#CBD5E1" }} />
-      </div>
-      <span style={{ fontSize: 26, fontWeight: 700, color: "#0F172A", fontFamily: "Georgia, serif", letterSpacing: "-0.02em", lineHeight: 1 }}>
-        {value ?? 0}
-      </span>
-    </div>
-  );
-}
-
 // ─── Status badge ─────────────────────────────────────────────────────────────
-function Badge({ status }) {
-  const s = STATUS[status] || { label: status || "—", color: "#64748B", bg: "#F8FAFC", border: "#CBD5E1" };
+function StatusBadge({ status }) {
+  const s = STATUS[status] || { label: status || "—", color: "#64748B" };
   return (
-    <span style={{
-      fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
-      textTransform: "uppercase", padding: "3px 8px",
-      background: s.bg, color: s.color, border: `1px solid ${s.border}`,
-      whiteSpace: "nowrap",
-    }}>
+    <Badge color={s.color} size="sm" style={{ textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700, whiteSpace: "nowrap" }}>
       {s.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -146,18 +130,15 @@ function Skeleton() {
 function ManuscriptCard({ m }) {
   const [hov, setHov] = useState(false);
   return (
-    <Link
+    <Card
       to={`/manuscripts/${m.id}`}
       data-testid={TID.manuscriptCard(m.id)}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
+      padding="lg"
       style={{
-        display: "block", textDecoration: "none",
-        background: "#fff",
-        border: `1px solid ${hov ? BRDH : BRD}`,
+        borderColor: hov ? BRDH : BRD,
         boxShadow: hov ? "0 4px 20px rgba(15,23,42,0.09)" : "none",
-        padding: "20px 24px",
-        transition: "border-color 180ms, box-shadow 180ms",
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: 20, justifyContent: "space-between" }}>
@@ -199,11 +180,11 @@ function ManuscriptCard({ m }) {
           <PipelineStrip status={m.status} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
-          <Badge status={m.status} />
+          <StatusBadge status={m.status} />
           <ChevronRight size={14} strokeWidth={1.5} style={{ color: hov ? NAVY : "#E2E8F0", transition: "color 150ms" }} />
         </div>
       </div>
-    </Link>
+    </Card>
   );
 }
 
@@ -228,75 +209,55 @@ function NewManuscriptForm({ projects, workspaces, onCreated, onCancel }) {
     finally { setBusy(false); }
   };
 
-  const inp = {
-    width: "100%", boxSizing: "border-box",
-    padding: "9px 12px", border: `1px solid ${BRD}`,
-    fontSize: 13, color: "#0F172A", background: "#fff",
-    outline: "none", fontFamily: "inherit",
-  };
-  const sel = { ...inp };
-
   return (
-    <div style={{ background: "#fff", border: `1px solid ${BRD}`, padding: "24px 28px", maxWidth: 680 }}>
+    <Card padding="lg" style={{ maxWidth: 680 }}>
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 16 }}>
         New Manuscript
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <input
+        <Input
           ref={titleRef}
           data-testid={TID.manuscriptNewTitle}
           placeholder="Manuscript title *"
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
           onKeyDown={(e) => e.key === "Enter" && create()}
-          style={{ ...inp }}
         />
-        <textarea
+        <Textarea
           placeholder="Abstract (optional)"
           value={form.abstract}
           onChange={(e) => setForm({ ...form, abstract: e.target.value })}
           rows={3}
-          style={{ ...inp, resize: "vertical", lineHeight: 1.6 }}
         />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-          <select value={form.manuscript_type} onChange={(e) => setForm({ ...form, manuscript_type: e.target.value })} style={sel}>
+          <FormSelect value={form.manuscript_type} onChange={(e) => setForm({ ...form, manuscript_type: e.target.value })}>
             {MS_TYPES.map((t) => <option key={t}>{t}</option>)}
-          </select>
-          <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} style={sel}>
+          </FormSelect>
+          <FormSelect value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })}>
             <option value="">No project</option>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
-          </select>
-          <select value={form.workspace_id} onChange={(e) => setForm({ ...form, workspace_id: e.target.value })} style={sel}>
+          </FormSelect>
+          <FormSelect value={form.workspace_id} onChange={(e) => setForm({ ...form, workspace_id: e.target.value })}>
             <option value="">No workspace</option>
             {workspaces.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
-          </select>
+          </FormSelect>
         </div>
       </div>
       <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
-        <button
+        <Button
           data-testid={TID.manuscriptNewSubmit}
           onClick={create}
           disabled={busy || !form.title.trim()}
-          style={{
-            background: busy || !form.title.trim() ? "#94A3B8" : NAVY,
-            color: "#fff", border: "none", padding: "9px 20px",
-            fontSize: 13, fontWeight: 600, cursor: busy || !form.title.trim() ? "not-allowed" : "pointer",
-            transition: "background 150ms",
-          }}
+          loading={busy}
+          variant="primary"
         >
           {busy ? "Creating…" : "Create manuscript"}
-        </button>
-        <button
-          onClick={onCancel}
-          style={{
-            background: "transparent", color: "#64748B", border: `1px solid ${BRD}`,
-            padding: "9px 16px", fontSize: 13, cursor: "pointer",
-          }}
-        >
+        </Button>
+        <Button onClick={onCancel} variant="ghost">
           Cancel
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -350,19 +311,20 @@ export default function Manuscripts() {
 
   const actions = (
     <div style={{ display: "flex", gap: 8 }}>
-      <Link to="/manuscript-review" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none", padding: "8px 14px", border: `1px solid ${BRD}`, background: "#fff", whiteSpace: "nowrap" }}>
+      <Button as={Link} to="/manuscript-review" variant="outline" size="sm">
         <Microscope size={12} strokeWidth={1.5} /> AI Review
-      </Link>
-      <Link to="/publication-hub" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none", padding: "8px 14px", border: `1px solid ${BRD}`, background: "#fff", whiteSpace: "nowrap" }}>
+      </Button>
+      <Button as={Link} to="/publication-hub" variant="outline" size="sm">
         <Layers size={12} strokeWidth={1.5} /> Publication Hub
-      </Link>
-      <button
+      </Button>
+      <Button
         data-testid={TID.manuscriptCreateBtn}
         onClick={() => setShowNew(true)}
-        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "#fff", background: NAVY, border: "none", padding: "8px 16px", cursor: "pointer", whiteSpace: "nowrap" }}
+        variant="primary"
+        size="sm"
       >
         <Plus size={13} strokeWidth={1.5} /> New Manuscript
-      </button>
+      </Button>
     </div>
   );
 
@@ -381,11 +343,11 @@ export default function Manuscripts() {
       <div style={{ padding: "0 0 64px" }}>
         {/* ── Stats ─────────────────────────────────────────────────────── */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 28 }}>
-          <StatCard label="Total"     value={counts.total}     icon={FileText}     />
-          <StatCard label="Drafting"  value={counts.drafts}    icon={BookMarked}   />
-          <StatCard label="Active"    value={counts.active}    icon={Send}         accent="#B45309" />
-          <StatCard label="Accepted"  value={counts.accepted}  icon={CheckCircle2} accent={EMRL} />
-          <StatCard label="Published" value={counts.published} icon={CheckCircle2} accent={EMRL} />
+          <StatCard label="Total"     value={counts.total}     icon={<FileText size={13} strokeWidth={1.5} style={{ color: "#CBD5E1" }} />} />
+          <StatCard label="Drafting"  value={counts.drafts}    icon={<BookMarked size={13} strokeWidth={1.5} style={{ color: "#CBD5E1" }} />} />
+          <StatCard label="Active"    value={counts.active}    icon={<Send size={13} strokeWidth={1.5} style={{ color: "#B45309" }} />} />
+          <StatCard label="Accepted"  value={counts.accepted}  icon={<CheckCircle2 size={13} strokeWidth={1.5} style={{ color: EMRL }} />} />
+          <StatCard label="Published" value={counts.published} icon={<CheckCircle2 size={13} strokeWidth={1.5} style={{ color: EMRL }} />} />
         </div>
 
         {/* ── New manuscript form ────────────────────────────────────────── */}
@@ -467,13 +429,9 @@ export default function Manuscripts() {
             title="Start your first manuscript"
             description="Track papers from blank page to publication. Each manuscript has version history, co-author management, AI review tools, and journal matching."
             action={
-              <button
-                data-testid={TID.manuscriptCreateBtn}
-                onClick={() => setShowNew(true)}
-                style={{ display: "inline-flex", alignItems: "center", gap: 8, background: NAVY, color: "#fff", border: "none", padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-              >
+              <Button data-testid={TID.manuscriptCreateBtn} onClick={() => setShowNew(true)} variant="primary">
                 <Plus size={14} strokeWidth={1.5} /> Create your first manuscript
-              </button>
+              </Button>
             }
             size="lg"
             dashed={false}
@@ -484,9 +442,9 @@ export default function Manuscripts() {
             icon={<Search />}
             title="No manuscripts match your search"
             action={
-              <button onClick={() => { setQ(""); setFilterStatus(""); }} style={{ fontSize: 12, color: NAVY, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+              <Button onClick={() => { setQ(""); setFilterStatus(""); }} variant="link">
                 Clear filters
-              </button>
+              </Button>
             }
             size="sm"
           />

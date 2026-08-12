@@ -4,9 +4,13 @@ import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
-import { ACCENT, EMERALD, NAVY, WARM } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
-import { Avatar, Button } from "@/components/ds";
+import { EMERALD, NAVY, WARM } from "@/lib/tokens";
+import { ResearchLayout } from "@/layouts";
+import {
+  Avatar, Button, Card, Badge, Tag, Input, Textarea, FormSelect,
+  SearchBar, Modal, EmptyState as DsEmptyState, Alert, Checkbox, Radio,
+} from "@/components/ds";
+import { Pagination } from "@/components/ds/DataTable";
 import {
   Search, X, ChevronDown, ChevronLeft, ChevronRight, ArrowRight,
   CheckCircle, Award, Shield, Globe, Building2, MapPin, BookOpen,
@@ -194,7 +198,34 @@ export default function ReviewerMarketplace() {
   const availableCount = items.filter((r) => r.availability_status === "available").length;
 
   return (
-    <DiscoveryLayout title="Reviewer Marketplace" subtitle="Expert peer review matching for academic research">
+    <ResearchLayout
+      title="Reviewer Marketplace"
+      subtitle="Expert peer review matching for academic research"
+      actions={
+        <>
+          <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} size="sm">
+            <Search size={13} strokeWidth={2} /> Find Reviewer
+          </Button>
+          {myProfile?.reviewer_status === "active" ? (
+            <Badge size="sm" variant="success">
+              <CheckCircle size={12} strokeWidth={2} /> You are a reviewer
+            </Badge>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                api.get("/reviewer-marketplace/profile/me")
+                  .then((r) => { setMyProfile(r.data); toast.success("Your reviewer profile is active."); })
+                  .catch(() => toast.error("Could not activate reviewer profile."));
+              }}
+            >
+              <UserCheck size={13} strokeWidth={1.5} /> Become a Reviewer
+            </Button>
+          )}
+        </>
+      }
+    >
       <style>{`
         @keyframes sq-pulse {
           0%, 100% { opacity: 1; }
@@ -202,20 +233,20 @@ export default function ReviewerMarketplace() {
         }
         .sq-pulse { animation: sq-pulse 1.8s ease-in-out infinite; }
       `}</style>
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <HeroSection
-        user={user}
-        total={total}
-        availableCount={availableCount}
-        myProfile={myProfile}
-        onFindReviewer={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })}
-        onBecomeReviewer={() => {
-          api.get("/reviewer-marketplace/profile/me")
-            .then((r) => { setMyProfile(r.data); toast.success("Your reviewer profile is active."); })
-            .catch(() => toast.error("Could not activate reviewer profile."));
-        }}
-        onPostRequest={() => setShowCreate(true)}
-      />
+      {/* ── Stats strip ───────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mb-8">
+        {[
+          { label: "Reviewers",     value: total > 0 ? `${total}+` : "—" },
+          { label: "Available now", value: availableCount > 0 ? `${availableCount}` : "—" },
+          { label: "Countries",     value: "Global" },
+          { label: "Integrity",     value: "Guaranteed" },
+        ].map(({ label, value }) => (
+          <div key={label} className="text-center">
+            <div className="font-serif text-3xl text-slate-900">{value}</div>
+            <div className="overline mt-1 text-xs">{label}</div>
+          </div>
+        ))}
+      </div>
       {/* ── AI Recommendations ───────────────────────────────────────────── */}
       {(recsLoading || recs) && (
         <AiRecsPanel
@@ -241,41 +272,18 @@ export default function ReviewerMarketplace() {
         <div style={{ flex: 1, minWidth: 0 }}>
           {/* Search + sort bar */}
           <div style={{ display: "flex", gap: 10, marginBottom: 14, alignItems: "center" }}>
-            <div style={{ flex: 1, position: "relative" }}>
-              <Search size={14} strokeWidth={1.5} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#94A3B8", pointerEvents: "none" }} />
-              <input
+            <div style={{ flex: 1 }}>
+              <SearchBar
                 data-testid={TID.discoverySearch}
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={setQ}
                 placeholder="Search reviewers by name, institution, research area, method…"
-                style={{ width: "100%", padding: "9px 36px 9px 38px", border: `1px solid ${BORDER}`, background: "white", fontSize: 13, color: "#1E293B", outline: "none", boxSizing: "border-box" }}
-                onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-                onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
+                onClear={() => setQ("")}
               />
-              {q && (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => setQ("")}
-                  style={{
-                    position: "absolute",
-                    right: 10,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    color: "#94A3B8",
-                    display: "flex",
-                    alignItems: "center"
-                  }}>
-                  <X size={13} strokeWidth={1.5} />
-                </Button>
-              )}
             </div>
-            <button
-              onClick={() => setShowCreate(true)}
-              style={{ padding: "9px 16px", background: NAVY, color: "white", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, flexShrink: 0, outline: "none" }}
-            >
+            <Button onClick={() => setShowCreate(true)} className="shrink-0">
               <Plus size={13} strokeWidth={2} /> Post Request
-            </button>
+            </Button>
           </div>
 
           {/* Count */}
@@ -309,24 +317,8 @@ export default function ReviewerMarketplace() {
 
           {/* Pagination */}
           {!loading && !gated && pages > 1 && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 24, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
-              <button
-                data-testid={TID.discoveryPagePrev}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", fontSize: 13, border: `1px solid ${BORDER}`, background: page === 1 ? "#F8FAFC" : "white", color: page === 1 ? "#CBD5E1" : NAVY, cursor: page === 1 ? "not-allowed" : "pointer", outline: "none" }}
-              >
-                <ChevronLeft size={14} strokeWidth={1.5} /> Previous
-              </button>
-              <span style={{ fontSize: 12, color: "#94A3B8", fontFamily: "monospace" }}>Page {page} of {pages}</span>
-              <button
-                data-testid={TID.discoveryPageNext}
-                onClick={() => setPage((p) => Math.min(pages, p + 1))}
-                disabled={page === pages}
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", fontSize: 13, border: `1px solid ${BORDER}`, background: page === pages ? "#F8FAFC" : "white", color: page === pages ? "#CBD5E1" : NAVY, cursor: page === pages ? "not-allowed" : "pointer", outline: "none" }}
-              >
-                Next <ChevronRight size={14} strokeWidth={1.5} />
-              </button>
+            <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
+              <Pagination page={page} totalPages={pages} onPage={setPage} />
             </div>
           )}
         </div>
@@ -353,97 +345,7 @@ export default function ReviewerMarketplace() {
           }}
         />
       )}
-    </DiscoveryLayout>
-  );
-}
-
-// ── Hero ──────────────────────────────────────────────────────────────────────
-function HeroSection({ user, total, availableCount, myProfile, onFindReviewer, onBecomeReviewer, onPostRequest }) {
-  const userField = (user?.research_areas || []).slice(0, 2).join(", ") || "your research";
-  const isReviewer = myProfile?.reviewer_status === "active";
-
-  return (
-    <div
-      style={{
-        margin: "-24px -24px 0",
-        background: `linear-gradient(145deg, #0B1E38 0%, ${NAVY} 55%, #163355 100%)`,
-        padding: "48px 56px 0",
-        overflow: "hidden",
-        position: "relative",
-      }}
-    >
-      {/* Grid overlay */}
-      <div style={{ position: "absolute", inset: 0, opacity: 0.035, backgroundImage: "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
-      <div style={{ position: "absolute", top: -100, right: 60, width: 360, height: 360, background: "radial-gradient(circle, rgba(138,21,56,0.13) 0%, transparent 70%)", pointerEvents: "none" }} />
-
-      <div style={{ position: "relative" }}>
-        {/* Kicker */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-          <div style={{ width: 5, height: 5, borderRadius: "50%", background: EMERALD }} />
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>
-            Academic Peer Review Marketplace
-          </span>
-        </div>
-
-        {/* Headline */}
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 46, fontWeight: 400, color: "white", lineHeight: 1.08, marginBottom: 14, maxWidth: 560 }}>
-          Find the Right<br />
-          <span style={{ color: "rgba(255,255,255,0.58)", fontSize: 38 }}>Academic Reviewer</span>
-        </h1>
-
-        <p style={{ fontSize: 14, color: "rgba(255,255,255,0.46)", lineHeight: 1.7, maxWidth: 490, marginBottom: 30 }}>
-          Connect with verified academic reviewers matched to{" "}
-          <strong style={{ color: "rgba(255,255,255,0.73)" }}>{userField}</strong>.
-          Expert reviewers for manuscripts, grants, theses and conference papers.
-        </p>
-
-        {/* CTAs */}
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 36 }}>
-          <button
-            onClick={onFindReviewer}
-            style={{ padding: "10px 22px", background: "white", color: NAVY, fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, outline: "none" }}
-          >
-            <Search size={13} strokeWidth={2} /> Find Reviewer
-          </button>
-          {isReviewer ? (
-            <span style={{ padding: "10px 16px", background: "rgba(5,150,105,0.15)", color: "#34D399", fontSize: 12, fontWeight: 600, border: "1px solid rgba(52,211,153,0.25)", display: "flex", alignItems: "center", gap: 6 }}>
-              <CheckCircle size={12} strokeWidth={2} /> You are a reviewer
-            </span>
-          ) : (
-            <button
-              onClick={onBecomeReviewer}
-              style={{ padding: "10px 22px", background: "transparent", color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: 600, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, outline: "none" }}
-            >
-              <UserCheck size={13} strokeWidth={1.5} /> Become a Reviewer
-            </button>
-          )}
-          <button
-            onClick={onPostRequest}
-            style={{ padding: "10px 22px", background: "transparent", color: "rgba(255,255,255,0.6)", fontSize: 13, fontWeight: 600, border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, outline: "none" }}
-          >
-            <Plus size={13} strokeWidth={1.5} /> Post Review Request
-          </button>
-        </div>
-
-        {/* Stats bar */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0, borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 20 }}>
-          {[
-            { Icon: Users,        label: "Reviewers",     val: total > 0 ? `${total}+` : "—" },
-            { Icon: CheckCircle,  label: "Available now", val: availableCount > 0 ? `${availableCount}` : "—" },
-            { Icon: Globe,        label: "Countries",     val: "Global" },
-            { Icon: Shield,       label: "Integrity",     val: "Guaranteed" },
-          ].map(({ Icon, label, val }) => (
-            <div key={label} style={{ padding: "12px 16px 12px 0" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 3 }}>
-                <Icon size={9} strokeWidth={1.5} style={{ color: "rgba(255,255,255,0.3)" }} />
-                <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>{label}</span>
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "white", fontFamily: "monospace" }}>{val}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    </ResearchLayout>
   );
 }
 
@@ -463,6 +365,7 @@ function AiRecsPanel({ recs, loading, compareList, toggleCompare }) {
           size="icon"
           variant="ghost"
           onClick={() => setExpanded((v) => !v)}
+          aria-label={expanded ? "Collapse recommendations" : "Expand recommendations"}
           style={{
             color: "#94A3B8",
             display: "flex",
@@ -511,18 +414,17 @@ function OpenRequestsStrip({ requests, onPost }) {
           <span style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em" }}>Open Review Requests</span>
           <span style={{ fontSize: 10, color: "#CBD5E1" }}>Seeking reviewers now</span>
         </div>
-        <button onClick={onPost} style={{ fontSize: 11, fontWeight: 600, color: NAVY, cursor: "pointer", display: "flex", alignItems: "center", gap: 3, background: "none", border: "none", outline: "none", textDecoration: "underline" }}>
+        <Button variant="link" size="sm" onClick={onPost}>
           Post yours <ArrowRight size={10} strokeWidth={2} />
-        </button>
+        </Button>
       </div>
       <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
         {requests.map((req) => (
-          <Link
+          <Card
             key={req._id}
             to={`/review-workspace/${req._id}`}
-            style={{ display: "flex", flexDirection: "column", gap: 5, minWidth: 180, maxWidth: 220, flexShrink: 0, padding: "10px 12px", border: `1px solid ${BORDER}`, background: "white", textDecoration: "none", transition: "border-color 150ms" }}
-            onMouseEnter={(e) => e.currentTarget.style.borderColor = NAVY}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = BORDER}
+            padding="sm"
+            style={{ display: "flex", flexDirection: "column", gap: 5, minWidth: 180, maxWidth: 220, flexShrink: 0 }}
           >
             <span style={{ fontSize: 9, fontWeight: 700, color: TYPE_COLOR[req.review_type] || "#64748B", textTransform: "uppercase", letterSpacing: "0.07em" }}>
               {cap(req.review_type)}
@@ -536,7 +438,7 @@ function OpenRequestsStrip({ requests, onPost }) {
             {req.deadline && (
               <span style={{ fontSize: 9, color: "#94A3B8" }}>Due {fmtDate(req.deadline)}</span>
             )}
-          </Link>
+          </Card>
         ))}
       </div>
     </div>
@@ -559,12 +461,11 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
   const showScore = r.reviewer_score > 0;
 
   return (
-    <Link
+    <Card
       to={profileUrl(r)}
       data-testid={TID.discoverResearcherCard(r.user_id || r._id)}
-      style={{ display: "flex", flexDirection: "column", border: `1px solid ${BORDER}`, background: "white", textDecoration: "none", transition: "border-color 150ms, box-shadow 150ms, transform 150ms", overflow: "hidden" }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = NAVY; e.currentTarget.style.boxShadow = "0 4px 16px rgba(15,40,71,0.09)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "translateY(0)"; }}
+      padding="none"
+      style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}
     >
       {/* Availability top strip */}
       <div style={{ height: 2, background: avail.dot }} />
@@ -587,9 +488,9 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
               )}
             </div>
             {/* Level */}
-            <span style={{ fontSize: 9, fontWeight: 700, color: lvlStyle.color, background: lvlStyle.bg, padding: "2px 6px", display: "inline-block", marginTop: 2 }}>
+            <Badge color={lvlStyle.color} size="sm" style={{ marginTop: 2 }}>
               {lvlLabel}
-            </span>
+            </Badge>
           </div>
         </div>
 
@@ -613,7 +514,7 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
         {areas.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6 }}>
             {areas.map((a, i) => (
-              <span key={i} style={{ fontSize: 9, color: "#374151", background: WARM, border: `1px solid ${BORDER}`, padding: "2px 6px" }}>{a}</span>
+              <Tag key={i} size="sm">{a}</Tag>
             ))}
             {(r.research_areas || []).length > 3 && <span style={{ fontSize: 9, color: "#94A3B8" }}>+{r.research_areas.length - 3}</span>}
           </div>
@@ -623,7 +524,7 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
         {methods.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
             {methods.map((m, i) => (
-              <span key={i} style={{ fontSize: 9, color: "#7C3AED", background: "#F5F3FF", border: "1px solid #DDD6FE", padding: "2px 6px" }}>{m}</span>
+              <Badge key={i} variant="purple" size="sm">{m}</Badge>
             ))}
           </div>
         )}
@@ -669,29 +570,29 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
         style={{ borderTop: `1px solid ${BORDER}`, padding: "7px 16px", display: "flex", gap: 10, background: "#FAFBFC", alignItems: "center" }}
         onClick={(e) => e.preventDefault()}
       >
-        <Link
-          to={profileUrl(r)}
-          onClick={(e) => e.stopPropagation()}
-          style={{ fontSize: 10, fontWeight: 700, color: NAVY, display: "flex", alignItems: "center", gap: 3, textDecoration: "none" }}
-        >
+        <Button as={Link} to={profileUrl(r)} onClick={(e) => e.stopPropagation()} variant="link" size="sm" style={{ color: NAVY }}>
           View Profile <ArrowRight size={9} strokeWidth={2} />
-        </Link>
+        </Button>
         <span style={{ color: "#E2E8F0" }}>|</span>
-        <button
+        <Button
+          variant="link"
+          size="sm"
           onClick={(e) => onCompare(r, e)}
-          style={{ fontSize: 10, fontWeight: 600, color: isCompared ? NAVY : "#94A3B8", cursor: "pointer", display: "flex", alignItems: "center", gap: 3, background: "none", border: "none", outline: "none", padding: 0, textDecoration: isCompared ? "underline" : "none" }}
+          style={{ color: isCompared ? NAVY : "#94A3B8", textDecoration: isCompared ? "underline" : "none" }}
         >
           <BarChart2 size={10} strokeWidth={1.5} /> Compare
-        </button>
+        </Button>
         <span style={{ color: "#E2E8F0" }}>|</span>
-        <button
+        <Button
+          variant="link"
+          size="sm"
           onClick={(e) => { e.stopPropagation(); onInvite(); }}
-          style={{ fontSize: 10, fontWeight: 600, color: "#94A3B8", cursor: "pointer", display: "flex", alignItems: "center", gap: 3, background: "none", border: "none", outline: "none", padding: 0 }}
+          style={{ color: "#94A3B8" }}
         >
           <ClipboardCheck size={10} strokeWidth={1.5} /> Invite
-        </button>
+        </Button>
       </div>
-    </Link>
+    </Card>
   );
 }
 
@@ -716,11 +617,10 @@ function ReviewerCardCompact({ r, isCompared, onCompare, loading: cardLoading })
   const avail = AVAIL_CONFIG[r?.availability_status] || AVAIL_CONFIG.unavailable;
 
   return (
-    <Link
+    <Card
       to={profileUrl(r)}
-      style={{ display: "block", minWidth: 220, maxWidth: 260, flexShrink: 0, border: `1px solid ${BORDER}`, background: "white", padding: 14, textDecoration: "none", transition: "border-color 150ms" }}
-      onMouseEnter={(e) => e.currentTarget.style.borderColor = NAVY}
-      onMouseLeave={(e) => e.currentTarget.style.borderColor = BORDER}
+      padding="md"
+      style={{ minWidth: 220, maxWidth: 260, flexShrink: 0 }}
     >
       <div style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 8 }}>
         <div style={{ position: "relative", flexShrink: 0 }}>
@@ -739,7 +639,7 @@ function ReviewerCardCompact({ r, isCompared, onCompare, loading: cardLoading })
       {(r?.research_areas || []).slice(0, 2).length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginBottom: 6 }}>
           {(r.research_areas || []).slice(0, 2).map((a, i) => (
-            <span key={i} style={{ fontSize: 8, color: "#374151", background: WARM, border: `1px solid ${BORDER}`, padding: "1px 5px" }}>{a}</span>
+            <Tag key={i} size="sm">{a}</Tag>
           ))}
         </div>
       )}
@@ -752,7 +652,7 @@ function ReviewerCardCompact({ r, isCompared, onCompare, loading: cardLoading })
         <div style={{ width: 6, height: 6, borderRadius: "50%", background: avail.dot }} />
         <span style={{ fontSize: 9, color: avail.dot, fontWeight: 600 }}>{avail.text}</span>
       </div>
-    </Link>
+    </Card>
   );
 }
 
@@ -800,11 +700,11 @@ function FilterPanel({ filters, setFilter, onClear }) {
   ];
 
   return (
-    <div style={{ background: "white", border: `1px solid ${BORDER}`, padding: "16px 14px" }}>
+    <Card padding="md">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.1em" }}>Filters</span>
         {Object.values(filters).some(Boolean) && (
-          <button onClick={onClear} style={{ fontSize: 10, color: "#94A3B8", cursor: "pointer", background: "none", border: "none", outline: "none", textDecoration: "underline" }}>Clear</button>
+          <Button variant="link" size="sm" onClick={onClear}>Clear</Button>
         )}
       </div>
 
@@ -814,91 +714,83 @@ function FilterPanel({ filters, setFilter, onClear }) {
         {AVAIL_OPTIONS.map((o) => {
           const cfg = AVAIL_CONFIG[o.value];
           return (
-            <label key={o.value} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 7, cursor: "pointer" }}>
-              <input
-                type="radio"
-                name="availability_status"
-                checked={filters.availability_status === o.value}
-                onChange={() => setFilter("availability_status", filters.availability_status === o.value ? "" : o.value)}
-                style={{ accentColor: NAVY, width: 12, height: 12, flexShrink: 0 }}
-              />
-              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <div style={{ width: 7, height: 7, borderRadius: "50%", background: cfg.dot, flexShrink: 0 }} />
-                <span style={{ fontSize: 12, color: "#374151" }}>{o.label}</span>
-              </div>
-            </label>
+            <Radio
+              key={o.value}
+              name="availability_status"
+              checked={filters.availability_status === o.value}
+              onChange={() => setFilter("availability_status", filters.availability_status === o.value ? "" : o.value)}
+              style={{ marginBottom: 7 }}
+              label={
+                <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: cfg.dot, flexShrink: 0, display: "inline-block" }} />
+                  <span style={{ fontSize: 12, color: "#374151" }}>{o.label}</span>
+                </span>
+              }
+            />
           );
         })}
       </div>
 
       {/* Verified only */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
-        <label style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}>
-          <input
-            type="checkbox"
-            checked={!!filters.verified_reviewer}
-            onChange={(e) => setFilter("verified_reviewer", e.target.checked || "")}
-            style={{ accentColor: NAVY, width: 13, height: 13, flexShrink: 0 }}
-          />
-          <span style={{ fontSize: 12, color: "#374151", display: "flex", alignItems: "center", gap: 4 }}>
-            <Shield size={11} strokeWidth={1.5} style={{ color: EMERALD }} /> Verified reviewers only
-          </span>
-        </label>
+        <Checkbox
+          checked={!!filters.verified_reviewer}
+          onChange={(e) => setFilter("verified_reviewer", e.target.checked || "")}
+          label={
+            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <Shield size={11} strokeWidth={1.5} style={{ color: EMERALD }} /> Verified reviewers only
+            </span>
+          }
+        />
       </div>
 
       {/* Level */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Reviewer Level</div>
-        <select
+        <FormSelect
           data-testid={TID.discoverySortSelect}
+          size="sm"
           value={filters.reviewer_level || ""}
           onChange={(e) => setFilter("reviewer_level", e.target.value)}
-          style={{ width: "100%", padding: "6px 8px", border: `1px solid ${BORDER}`, fontSize: 12, color: "#374151", background: "white", outline: "none", boxSizing: "border-box" }}
         >
           <option value="">All levels</option>
           {LEVEL_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
+        </FormSelect>
       </div>
 
       {/* Research Area */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Area</div>
-        <input
+        <Input
+          size="sm"
           value={filters.research_area || ""}
           onChange={(e) => setFilter("research_area", e.target.value)}
           placeholder="e.g. Machine Learning"
-          style={{ width: "100%", padding: "6px 8px", border: `1px solid ${BORDER}`, fontSize: 12, color: "#374151", outline: "none", boxSizing: "border-box" }}
-          onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-          onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
         />
       </div>
 
       {/* Methodology */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Methodology</div>
-        <input
+        <Input
+          size="sm"
           value={filters.methods_expertise || ""}
           onChange={(e) => setFilter("methods_expertise", e.target.value)}
           placeholder="e.g. Systematic Review"
-          style={{ width: "100%", padding: "6px 8px", border: `1px solid ${BORDER}`, fontSize: 12, color: "#374151", outline: "none", boxSizing: "border-box" }}
-          onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-          onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
         />
       </div>
 
       {/* Country */}
       <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Country</div>
-        <input
+        <Input
+          size="sm"
           value={filters.country || ""}
           onChange={(e) => setFilter("country", e.target.value)}
           placeholder="e.g. United Kingdom"
-          style={{ width: "100%", padding: "6px 8px", border: `1px solid ${BORDER}`, fontSize: 12, color: "#374151", outline: "none", boxSizing: "border-box" }}
-          onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-          onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
         />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -914,23 +806,21 @@ function ReviewServicesStrip({ onPost }) {
             Post a review request and let AI match you with the most qualified reviewer for your work.
           </p>
         </div>
-        <button
-          onClick={onPost}
-          style={{ fontSize: 13, fontWeight: 700, color: NAVY, display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 18px", border: `1.5px solid ${NAVY}`, cursor: "pointer", alignSelf: "flex-start", background: "white", outline: "none", whiteSpace: "nowrap" }}
-        >
+        <Button variant="outline" onClick={onPost} className="self-start whitespace-nowrap">
           <Plus size={13} strokeWidth={2} /> Post Review Request
-        </button>
+        </Button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))", gap: 12 }}>
         {REVIEW_TYPES_LIST.map(({ value, label, icon: Icon }) => (
-          <div
+          <Card
             key={value}
-            style={{ display: "flex", flexDirection: "column", gap: 8, padding: 16, background: "white", border: `1px solid ${BORDER}` }}
+            padding="md"
+            style={{ display: "flex", flexDirection: "column", gap: 8 }}
           >
             <Icon size={18} strokeWidth={1.5} style={{ color: NAVY }} />
             <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{label}</div>
-          </div>
+          </Card>
         ))}
       </div>
     </div>
@@ -941,19 +831,18 @@ function ReviewServicesStrip({ onPost }) {
 function IntegrityNote() {
   return (
     <div style={{ margin: "0 -24px", background: `${NAVY}04`, borderTop: `1px solid ${BORDER}`, padding: "20px 56px" }}>
-      <div style={{ display: "flex", gap: 12, alignItems: "flex-start", maxWidth: 760 }}>
-        <Shield size={16} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0, marginTop: 2 }} />
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 4 }}>Academic Integrity & Ethics</div>
-          <p style={{ fontSize: 12, color: "#64748B", lineHeight: 1.6 }}>
-            Synaptiq Reviewer Marketplace facilitates connections between researchers and peer reviewers.
-            All review invitations include conflict-of-interest checks. Reviewers are selected for
-            academic expertise — not to guarantee specific outcomes. Synaptiq does not endorse
-            or guarantee journal acceptance. Reviews are conducted with full confidentiality
-            as agreed between parties.
-          </p>
-        </div>
-      </div>
+      <Alert
+        variant="neutral"
+        icon={Shield}
+        title="Academic Integrity & Ethics"
+        style={{ maxWidth: 760, background: "transparent", border: "none", padding: 0 }}
+      >
+        Synaptiq Reviewer Marketplace facilitates connections between researchers and peer reviewers.
+        All review invitations include conflict-of-interest checks. Reviewers are selected for
+        academic expertise — not to guarantee specific outcomes. Synaptiq does not endorse
+        or guarantee journal acceptance. Reviews are conducted with full confidentiality
+        as agreed between parties.
+      </Alert>
     </div>
   );
 }
@@ -961,46 +850,43 @@ function IntegrityNote() {
 // ── Empty state ────────────────────────────────────────────────────────────────
 function EmptyState() {
   return (
-    <div style={{ textAlign: "center", padding: "60px 24px", border: `1px dashed ${BORDER}` }}>
-      <Users size={44} strokeWidth={1} style={{ color: "#E2E8F0", margin: "0 auto 20px", display: "block" }} />
-      <h3 style={{ fontFamily: "Georgia, serif", fontSize: 22, color: "#1E293B", marginBottom: 8, fontWeight: 400 }}>
-        No reviewers match your filters
-      </h3>
-      <p style={{ fontSize: 13, color: "#64748B", maxWidth: 380, margin: "0 auto 24px", lineHeight: 1.65 }}>
-        Try removing a filter or broadening your search. Reviewers are listed from the Synaptiq community
-        who have indicated availability for peer review.
-      </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 7, maxWidth: 360, margin: "0 auto" }}>
-        {[
-          { Icon: CheckCircle, text: "Remove the availability filter to see all reviewers" },
-          { Icon: Globe,       text: "Remove the country filter for global results" },
-          { Icon: Lightbulb,   text: "Become a reviewer yourself and expand the community" },
-        ].map(({ Icon, text }) => (
-          <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "#64748B", textAlign: "left" }}>
-            <Icon size={12} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0, marginTop: 2 }} />
-            {text}
-          </div>
-        ))}
-      </div>
-    </div>
+    <DsEmptyState
+      icon={<Users strokeWidth={1} />}
+      title="No reviewers match your filters"
+      description="Try removing a filter or broadening your search. Reviewers are listed from the Synaptiq community who have indicated availability for peer review."
+      size="lg"
+      action={
+        <div style={{ display: "flex", flexDirection: "column", gap: 7, maxWidth: 360, margin: "0 auto" }}>
+          {[
+            { Icon: CheckCircle, text: "Remove the availability filter to see all reviewers" },
+            { Icon: Globe,       text: "Remove the country filter for global results" },
+            { Icon: Lightbulb,   text: "Become a reviewer yourself and expand the community" },
+          ].map(({ Icon, text }) => (
+            <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "#64748B", textAlign: "left" }}>
+              <Icon size={12} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0, marginTop: 2 }} />
+              {text}
+            </div>
+          ))}
+        </div>
+      }
+    />
   );
 }
 
 // ── Gated state ───────────────────────────────────────────────────────────────
 function GatedState() {
   return (
-    <div style={{ textAlign: "center", padding: "60px 24px", border: `1px dashed ${BORDER}` }}>
-      <Shield size={44} strokeWidth={1} style={{ color: "#E2E8F0", margin: "0 auto 20px", display: "block" }} />
-      <h3 style={{ fontFamily: "Georgia, serif", fontSize: 22, color: "#1E293B", marginBottom: 8, fontWeight: 400 }}>
-        Reviewer access limit reached
-      </h3>
-      <p style={{ fontSize: 13, color: "#64748B", maxWidth: 360, margin: "0 auto 24px", lineHeight: 1.65 }}>
-        Upgrade your plan to access the full reviewer marketplace and invite unlimited reviewers.
-      </p>
-      <Link to="/settings/billing" style={{ padding: "9px 22px", background: NAVY, color: "white", fontSize: 13, fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}>
-        View plans <ArrowRight size={13} strokeWidth={1.5} />
-      </Link>
-    </div>
+    <DsEmptyState
+      icon={<Shield strokeWidth={1} />}
+      title="Reviewer access limit reached"
+      description="Upgrade your plan to access the full reviewer marketplace and invite unlimited reviewers."
+      size="lg"
+      action={
+        <Button as={Link} to="/settings/billing">
+          View plans <ArrowRight size={13} strokeWidth={1.5} />
+        </Button>
+      }
+    />
   );
 }
 
@@ -1028,9 +914,9 @@ function ComparePanel({ reviewers, onRemove, onClose }) {
             Comparing {reviewers.length} reviewers
           </span>
         </div>
-        <button onClick={onClose} style={{ color: "rgba(255,255,255,0.45)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 12, background: "none", border: "none", outline: "none" }}>
+        <Button variant="link" size="sm" onClick={onClose} style={{ color: "rgba(255,255,255,0.45)" }}>
           <X size={13} strokeWidth={1.5} /> Close
-        </button>
+        </Button>
       </div>
 
       <div style={{ overflowX: "auto" }}>
@@ -1041,9 +927,9 @@ function ComparePanel({ reviewers, onRemove, onClose }) {
               {reviewers.map((r) => (
                 <th key={r.user_id} style={{ padding: "4px 14px", textAlign: "left", borderBottom: "1px solid rgba(255,255,255,0.08)", minWidth: 160 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "white", fontFamily: "Georgia, serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{r.full_name}</div>
-                  <button onClick={() => onRemove(r.user_id)} style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 2, background: "none", border: "none", outline: "none", padding: 0, marginTop: 2 }}>
+                  <Button variant="link" size="sm" onClick={() => onRemove(r.user_id)} style={{ color: "rgba(255,255,255,0.3)", marginTop: 2, fontSize: 9 }}>
                     <X size={7} strokeWidth={1.5} /> Remove
-                  </button>
+                  </Button>
                 </th>
               ))}
             </tr>
@@ -1111,159 +997,109 @@ function CreateRequestModal({ onClose, onCreated }) {
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: "white", width: "100%", maxWidth: 580, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(0,0,0,0.28)" }}>
-        {/* Modal header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px", borderBottom: `1px solid ${BORDER}` }}>
-          <div>
-            <h2 style={{ fontFamily: "Georgia, serif", fontSize: 18, color: NAVY, fontWeight: 400 }}>Post Review Request</h2>
-            <p style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>Describe what you need reviewed and let AI match you with qualified reviewers.</p>
-          </div>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={onClose}
-            style={{
-              color: "#94A3B8",
-              display: "flex"
-            }}>
-            <X size={18} strokeWidth={1.5} />
+    <Modal
+      open
+      onClose={onClose}
+      title="Post Review Request"
+      description="Describe what you need reviewed and let AI match you with qualified reviewers."
+      size="md"
+      footer={
+        <>
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
           </Button>
+          <Button type="submit" form="create-request-form" disabled={submitting} loading={submitting}>
+            Post & Find Reviewers
+          </Button>
+        </>
+      }
+    >
+      <form id="create-request-form" onSubmit={handleSubmit}>
+        {error && (
+          <Alert variant="error" style={{ marginBottom: 16 }}>{error}</Alert>
+        )}
+
+        {/* Title */}
+        <div style={{ marginBottom: 16 }}>
+          <Input
+            label="Title *"
+            value={form.title}
+            onChange={(e) => set("title", e.target.value)}
+            placeholder="e.g. Review of AI Ethics manuscript for IJHCS submission"
+          />
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={{ padding: 24 }}>
-          {error && (
-            <div style={{ padding: "10px 14px", background: "#FFF1F2", border: "1px solid #FECDD3", color: ACCENT, fontSize: 12, marginBottom: 16 }}>{error}</div>
-          )}
+        {/* Description */}
+        <div style={{ marginBottom: 16 }}>
+          <Textarea
+            label="Description"
+            rows={4}
+            value={form.description}
+            onChange={(e) => set("description", e.target.value)}
+            placeholder="Describe what you need reviewed, context, scope, specific feedback areas…"
+          />
+        </div>
 
-          {/* Title */}
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              Title <span style={{ color: ACCENT }}>*</span>
-            </label>
-            <input
-              value={form.title}
-              onChange={(e) => set("title", e.target.value)}
-              placeholder="e.g. Review of AI Ethics manuscript for IJHCS submission"
-              style={{ width: "100%", padding: "9px 12px", border: `1px solid ${BORDER}`, fontSize: 13, color: "#1E293B", outline: "none", boxSizing: "border-box" }}
-              onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-              onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
-            />
-          </div>
+        {/* Review type + Confidentiality */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
+          <FormSelect
+            label="Review Type"
+            value={form.review_type}
+            onChange={(e) => set("review_type", e.target.value)}
+          >
+            {REVIEW_TYPE_VALUES.map((t) => <option key={t} value={t}>{cap(t)}</option>)}
+          </FormSelect>
+          <FormSelect
+            label="Confidentiality"
+            value={form.confidentiality}
+            onChange={(e) => set("confidentiality", e.target.value)}
+          >
+            {CONFIDENTIALITY_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </FormSelect>
+        </div>
 
-          {/* Description */}
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em" }}>Description</label>
-            <textarea
-              rows={4}
-              value={form.description}
-              onChange={(e) => set("description", e.target.value)}
-              placeholder="Describe what you need reviewed, context, scope, specific feedback areas…"
-              style={{ width: "100%", padding: "9px 12px", border: `1px solid ${BORDER}`, fontSize: 13, color: "#1E293B", outline: "none", resize: "vertical", boxSizing: "border-box" }}
-              onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-              onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
-            />
-          </div>
+        {/* Research area + Deadline */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
+          <Input
+            label="Research Area"
+            value={form.research_area}
+            onChange={(e) => set("research_area", e.target.value)}
+            placeholder="e.g. Machine Learning"
+          />
+          <Input
+            label="Deadline"
+            type="date"
+            value={form.deadline}
+            onChange={(e) => set("deadline", e.target.value)}
+          />
+        </div>
 
-          {/* Review type + Confidentiality */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
-            <div>
-              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em" }}>Review Type</label>
-              <select
-                value={form.review_type}
-                onChange={(e) => set("review_type", e.target.value)}
-                style={{ width: "100%", padding: "9px 10px", border: `1px solid ${BORDER}`, fontSize: 13, color: "#374151", background: "white", outline: "none", boxSizing: "border-box" }}
-              >
-                {REVIEW_TYPE_VALUES.map((t) => <option key={t} value={t}>{cap(t)}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em" }}>Confidentiality</label>
-              <select
-                value={form.confidentiality}
-                onChange={(e) => set("confidentiality", e.target.value)}
-                style={{ width: "100%", padding: "9px 10px", border: `1px solid ${BORDER}`, fontSize: 13, color: "#374151", background: "white", outline: "none", boxSizing: "border-box" }}
-              >
-                {CONFIDENTIALITY_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </div>
-          </div>
+        {/* Required expertise */}
+        <div style={{ marginBottom: 16 }}>
+          <Input
+            label="Required Expertise"
+            value={form.required_expertise}
+            onChange={(e) => set("required_expertise", e.target.value)}
+            placeholder="e.g. NLP, ethics, qualitative analysis (comma-separated)"
+          />
+        </div>
 
-          {/* Research area + Deadline */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
-            <div>
-              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em" }}>Research Area</label>
-              <input
-                value={form.research_area}
-                onChange={(e) => set("research_area", e.target.value)}
-                placeholder="e.g. Machine Learning"
-                style={{ width: "100%", padding: "9px 12px", border: `1px solid ${BORDER}`, fontSize: 13, color: "#1E293B", outline: "none", boxSizing: "border-box" }}
-                onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-                onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
+        {/* Visibility */}
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em" }}>Visibility</div>
+          <div style={{ display: "flex", gap: 12 }}>
+            {["public", "private"].map((v) => (
+              <Radio
+                key={v}
+                name="visibility"
+                checked={form.visibility === v}
+                onChange={() => set("visibility", v)}
+                label={cap(v)}
               />
-            </div>
-            <div>
-              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em" }}>Deadline</label>
-              <input
-                type="date"
-                value={form.deadline}
-                onChange={(e) => set("deadline", e.target.value)}
-                style={{ width: "100%", padding: "9px 12px", border: `1px solid ${BORDER}`, fontSize: 13, color: "#1E293B", outline: "none", boxSizing: "border-box" }}
-                onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-                onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
-              />
-            </div>
+            ))}
           </div>
-
-          {/* Required expertise */}
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em" }}>Required Expertise</label>
-            <input
-              value={form.required_expertise}
-              onChange={(e) => set("required_expertise", e.target.value)}
-              placeholder="e.g. NLP, ethics, qualitative analysis (comma-separated)"
-              style={{ width: "100%", padding: "9px 12px", border: `1px solid ${BORDER}`, fontSize: 13, color: "#1E293B", outline: "none", boxSizing: "border-box" }}
-              onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-              onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
-            />
-          </div>
-
-          {/* Visibility */}
-          <div style={{ marginBottom: 24 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em" }}>Visibility</label>
-            <div style={{ display: "flex", gap: 12 }}>
-              {["public", "private"].map((v) => (
-                <label key={v} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-                  <input
-                    type="radio"
-                    name="visibility"
-                    value={v}
-                    checked={form.visibility === v}
-                    onChange={() => set("visibility", v)}
-                    style={{ accentColor: NAVY }}
-                  />
-                  <span style={{ fontSize: 13, color: "#374151" }}>{cap(v)}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Submit */}
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-            <button type="button" onClick={onClose} style={{ padding: "9px 20px", border: `1px solid ${BORDER}`, background: "white", fontSize: 13, fontWeight: 600, color: "#64748B", cursor: "pointer", outline: "none" }}>
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              style={{ padding: "9px 22px", background: submitting ? "#94A3B8" : NAVY, color: "white", fontSize: 13, fontWeight: 700, border: "none", cursor: submitting ? "not-allowed" : "pointer", outline: "none", display: "flex", alignItems: "center", gap: 8 }}
-            >
-              {submitting ? "Posting…" : "Post & Find Reviewers"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      </form>
+    </Modal>
   );
 }

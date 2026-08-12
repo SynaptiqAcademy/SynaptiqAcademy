@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { AnalyticsLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -16,6 +16,13 @@ import {
 import { useCitationDashboard } from "../hooks/useCitations";
 import { WARM } from "@/lib/tokens";
 import { Spinner } from "@/components/ds/LoadingState";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { StatCard } from "@/components/ds/StatCard";
+import { Dropdown, DropdownItem } from "@/components/ds/Dropdown";
+import { EmptyState as DsEmptyState } from "@/components/ds/EmptyState";
+import { Tag as DsTag } from "@/components/ds/Tag";
 
 // ─────────────────────────── research intelligence nav ───────────────────────
 
@@ -51,23 +58,20 @@ function IntelNav({ current }) {
 
 function Stat({ label, value, sub, icon: Icon, highlight }) {
   return (
-    <div className={`border bg-white p-6 ${highlight ? "border-[#0F2847]" : "border-slate-200"}`}>
-      <div className="flex items-center justify-between">
-        <div className="overline">{label}</div>
-        {Icon && <Icon size={13} strokeWidth={1.5} className={highlight ? "text-[#0F2847]" : "text-slate-300"} />}
-      </div>
-      <div className={`font-serif text-5xl mt-3 tracking-tight ${highlight ? "text-[#0F2847]" : "text-slate-900"}`}>
-        {value ?? "—"}
-      </div>
-      {sub && <div className="text-xs text-slate-400 mt-1 font-mono">{sub}</div>}
-    </div>
+    <StatCard
+      label={label}
+      value={value ?? "—"}
+      sub={sub}
+      highlight={highlight}
+      icon={Icon ? <Icon size={13} strokeWidth={1.5} /> : undefined}
+    />
   );
 }
 
 function Score({ label, value }) {
   const pct = Math.min(100, Math.max(0, Number(value) || 0));
   return (
-    <div className="border border-slate-200 bg-white p-6">
+    <Card padding="xl">
       <div className="flex items-baseline justify-between">
         <div className="overline">{label}</div>
         <div className="font-serif text-3xl text-slate-900">{pct}</div>
@@ -75,7 +79,7 @@ function Score({ label, value }) {
       <div className="mt-3 h-1 bg-slate-100 relative">
         <div className="absolute inset-y-0 left-0 bg-[#0F2847] transition-all" style={{ width: `${pct}%` }} />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -93,16 +97,16 @@ function SectionHeader({ label, sub, action }) {
 
 function EmptyState({ text, link, linkLabel }) {
   return (
-    <div className="border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-      {text}
-      {link && (
-        <div className="mt-3">
-          <Link to={link} className="text-[#0F2847] text-xs underline underline-offset-2">
-            {linkLabel || "Go →"}
-          </Link>
-        </div>
-      )}
-    </div>
+    <DsEmptyState
+      title={text}
+      size="sm"
+      dashed
+      action={link ? (
+        <Button as={Link} to={link} variant="link">
+          {linkLabel || "Go →"}
+        </Button>
+      ) : undefined}
+    />
   );
 }
 
@@ -142,12 +146,8 @@ function useAnalytics(path) {
 
 function UpgradeWall() {
   return (
-    <div className="space-y-6">
-      <header className="border-b border-slate-200 pb-6">
-        <div className="overline">Dashboard</div>
-        <h1 className="font-serif text-5xl text-slate-900 mt-2">Analytics</h1>
-      </header>
-      <div className="border border-slate-200 bg-white p-16 flex flex-col items-center text-center gap-5">
+    <ResearchLayout title="Analytics" subtitle="Dashboard">
+      <Card padding="xl" className="!p-16 flex flex-col items-center text-center gap-5">
         <Lock size={28} strokeWidth={1} className="text-slate-300" />
         <div>
           <div className="overline text-[#0F2847] mb-2">Researcher plan required</div>
@@ -157,14 +157,11 @@ function UpgradeWall() {
             career timeline, and productivity scores.
           </p>
         </div>
-        <Link
-          to="/pricing"
-          className="inline-block bg-[#0F2847] text-white text-sm px-6 py-2.5 hover:opacity-90 transition-opacity"
-        >
+        <Button as={Link} to="/pricing" variant="primary">
           View Plans
-        </Link>
-      </div>
-    </div>
+        </Button>
+      </Card>
+    </ResearchLayout>
   );
 }
 
@@ -186,7 +183,7 @@ function CareerTimeline() {
 
   return (
     <div className="space-y-4">
-      <div className="border border-slate-200 bg-white p-5">
+      <Card padding="lg">
         <div className="overline mb-4">Publications &amp; Citations Per Year</div>
         <ResponsiveContainer width="100%" height={180}>
           <AreaChart data={data.timeline}>
@@ -204,22 +201,22 @@ function CareerTimeline() {
             <Area dataKey="grants_awarded" name="Grants awarded" stroke="#0891b2" fill="none" strokeWidth={1.5} dot={false} />
           </AreaChart>
         </ResponsiveContainer>
-      </div>
+      </Card>
 
       {data.first_publication_year && (
         <div className="grid sm:grid-cols-3 gap-4">
-          <div className="border border-slate-200 bg-white p-4">
+          <Card padding="md">
             <div className="overline text-slate-500">First Publication</div>
             <div className="font-serif text-3xl text-slate-900 mt-2">{data.first_publication_year}</div>
-          </div>
-          <div className="border border-slate-200 bg-white p-4">
+          </Card>
+          <Card padding="md">
             <div className="overline text-slate-500">Total Publications</div>
             <div className="font-serif text-3xl text-slate-900 mt-2">{data.total_publications}</div>
-          </div>
-          <div className="border border-slate-200 bg-white p-4">
+          </Card>
+          <Card padding="md">
             <div className="overline text-slate-500">Active Years</div>
             <div className="font-serif text-3xl text-slate-900 mt-2">{data.years_active}</div>
-          </div>
+          </Card>
         </div>
       )}
     </div>
@@ -269,7 +266,7 @@ function GrantAnalytics() {
 
       <div className="grid sm:grid-cols-2 gap-5">
         {pieData.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline mb-4">By Status</div>
             <div className="flex items-center gap-6">
               <ResponsiveContainer width="50%" height={120}>
@@ -291,11 +288,11 @@ function GrantAnalytics() {
                 ))}
               </div>
             </div>
-          </div>
+          </Card>
         )}
 
         {data.by_year?.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline mb-4">Grant Applications by Year</div>
             <ResponsiveContainer width="100%" height={120}>
               <BarChart data={data.by_year}>
@@ -306,12 +303,12 @@ function GrantAnalytics() {
                 <Bar dataKey="count" name="Grants" fill="#0F2847" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </Card>
         )}
       </div>
 
       {data.by_funder?.length > 0 && (
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <div className="overline mb-3">Top Funders</div>
           <div className="space-y-2">
             {data.by_funder.slice(0, 5).map((f) => (
@@ -321,7 +318,7 @@ function GrantAnalytics() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );
@@ -364,7 +361,7 @@ function ManuscriptAnalytics() {
 
       <div className="grid sm:grid-cols-2 gap-5">
         {data.stage_counts?.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline mb-3">Submission Pipeline</div>
             <div className="space-y-2">
               {data.stage_counts.slice(0, 8).map((s) => (
@@ -380,10 +377,10 @@ function ManuscriptAnalytics() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
-        <div className="border border-slate-200 bg-white p-5 space-y-4">
+        <Card padding="lg" className="space-y-4">
           <div>
             <div className="overline text-slate-500 text-[10px]">Avg Revision Cycles</div>
             <div className="font-serif text-4xl text-slate-900 mt-1">{data.avg_revision_cycles}</div>
@@ -398,11 +395,11 @@ function ManuscriptAnalytics() {
               {data.withdrawn} withdrawal{data.withdrawn !== 1 ? "s" : ""}
             </div>
           )}
-        </div>
+        </Card>
       </div>
 
       {data.top_venues?.length > 0 && (
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <div className="overline mb-3">Venues Submitted To</div>
           <div className="space-y-2">
             {data.top_venues.slice(0, 5).map((v) => (
@@ -412,7 +409,7 @@ function ManuscriptAnalytics() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );
@@ -428,7 +425,7 @@ function ProductivityScore() {
 
   return (
     <div className="space-y-5">
-      <div className="border border-[#0F2847] bg-white p-6">
+      <Card padding="xl" style={{ borderColor: "#0F2847" }}>
         <div className="flex items-start justify-between">
           <div>
             <div className="overline text-[#0F2847]">Research Productivity Score</div>
@@ -445,9 +442,9 @@ function ProductivityScore() {
         <div className="mt-4 h-1 bg-slate-100">
           <div className="h-1 bg-[#0F2847]" style={{ width: `${Math.min(100, data.score)}%` }} />
         </div>
-      </div>
+      </Card>
 
-      <div className="border border-slate-200 bg-white p-5">
+      <Card padding="lg">
         <div className="overline mb-4">Score Components</div>
         <div className="space-y-3">
           {(data.components || []).map((c) => (
@@ -475,7 +472,7 @@ function ProductivityScore() {
         <p className="text-[10px] text-slate-400 mt-4 font-mono border-t border-slate-100 pt-3">
           {data.formula}
         </p>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -506,7 +503,7 @@ function CollaborationNetwork() {
 
       <div className="grid sm:grid-cols-2 gap-5">
         {data.top_coauthors?.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline mb-3">Top Co-authors</div>
             <div className="space-y-2">
               {data.top_coauthors.slice(0, 8).map((c) => (
@@ -518,11 +515,11 @@ function CollaborationNetwork() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
         {data.top_institutions?.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline mb-3">Partner Institutions</div>
             <div className="space-y-2">
               {data.top_institutions.slice(0, 8).map((i) => (
@@ -532,25 +529,22 @@ function CollaborationNetwork() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
       </div>
 
       {data.country_distribution?.length > 0 && (
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <div className="overline mb-3">Country Distribution</div>
           <div className="flex flex-wrap gap-2">
             {data.country_distribution.map((c) => (
-              <div
-                key={c.country}
-                className="border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-700"
-              >
+              <DsTag key={c.country} variant="colored" color="#64748b">
                 {c.country}
                 <span className="font-mono ml-1.5 text-slate-400">{c.count}</span>
-              </div>
+              </DsTag>
             ))}
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );
@@ -591,59 +585,48 @@ function CitationWidgets() {
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="border border-slate-200 bg-white p-6">
-          <div className="flex items-center justify-between">
-            <div className="overline">Total Citations</div>
-            <BookOpen size={13} strokeWidth={1.5} className="text-slate-300" />
-          </div>
-          <div className="font-serif text-5xl text-slate-900 mt-3 tracking-tight">{total.toLocaleString()}</div>
-        </div>
+        <StatCard label="Total Citations" value={total.toLocaleString()} icon={<BookOpen size={13} strokeWidth={1.5} />} />
 
-        <div className="border border-slate-200 bg-white p-6">
-          <div className="flex items-center justify-between">
-            <div className="overline">New This Month</div>
-            <TrendingUp size={13} strokeWidth={1.5} className={newThisMonth > 0 ? "text-green-500" : "text-slate-300"} />
-          </div>
-          <div className={`font-serif text-5xl mt-3 tracking-tight ${newThisMonth > 0 ? "text-green-600" : "text-slate-900"}`}>
-            {newThisMonth > 0 ? `+${newThisMonth}` : "0"}
-          </div>
-        </div>
+        <StatCard
+          label="New This Month"
+          value={newThisMonth > 0 ? `+${newThisMonth}` : "0"}
+          icon={<TrendingUp size={13} strokeWidth={1.5} className={newThisMonth > 0 ? "text-green-500" : "text-slate-300"} />}
+        />
 
         {impactScore != null ? (
-          <div className="border border-[#0F2847] bg-white p-6">
-            <div className="flex items-center justify-between">
-              <div className="overline">Research Impact</div>
-              <Zap size={13} strokeWidth={1.5} className="text-[#0F2847]" />
-            </div>
-            <div className="font-serif text-5xl text-[#0F2847] mt-3 tracking-tight">{impactScore}</div>
-            <div className="text-xs text-slate-400 mt-1 font-mono">/ 100</div>
-          </div>
+          <StatCard
+            label="Research Impact"
+            value={impactScore}
+            sub="/ 100"
+            highlight
+            icon={<Zap size={13} strokeWidth={1.5} />}
+          />
         ) : (
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="xl">
             <div className="overline mb-3">Research Impact</div>
             <div className="text-sm text-slate-400">Sync publications to compute.</div>
-          </div>
+          </Card>
         )}
 
         {fastestArea ? (
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="xl">
             <div className="overline mb-3">Fastest Growing Area</div>
             <div className="text-base font-medium text-slate-900 line-clamp-2">{fastestArea.area}</div>
             <div className="text-xs text-slate-500 mt-1.5 font-mono">
               {fastestArea.total_citations} cit · {fastestArea.growth_rate > 0 ? "+" : ""}{fastestArea.growth_rate}%
             </div>
-          </div>
+          </Card>
         ) : (
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="xl">
             <div className="overline mb-3">Fastest Growing Area</div>
             <div className="text-sm text-slate-400">No area data yet.</div>
-          </div>
+          </Card>
         )}
       </div>
 
       <div className="grid sm:grid-cols-2 gap-5">
         {topPub && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline text-slate-500 mb-3">Most Cited Publication</div>
             <Link
               to={`/citations/${topPub.id}`}
@@ -659,10 +642,10 @@ function CitationWidgets() {
             <Link to={`/citations/${topPub.id}`} className="mt-3 flex items-center gap-1 text-xs text-[#0F2847] hover:underline">
               View detail <ArrowRight size={10} />
             </Link>
-          </div>
+          </Card>
         )}
 
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2 overline text-slate-500">
               <Bell size={12} strokeWidth={1.5} />
@@ -688,7 +671,7 @@ function CitationWidgets() {
           ) : (
             <div className="text-sm text-slate-400">No recent citation alerts.</div>
           )}
-        </div>
+        </Card>
       </div>
     </section>
   );
@@ -698,18 +681,13 @@ function CitationWidgets() {
 
 function WorkflowStat({ icon: Icon, label, value, link, urgent }) {
   return (
-    <Link
+    <StatCard
+      label={label}
+      value={value ?? 0}
       to={link}
-      className={`border bg-white p-6 hover:border-[#0F2847] transition-colors block ${urgent ? "border-[#0F2847]" : "border-slate-200"}`}
-    >
-      <div className="flex items-center justify-between">
-        <div className="overline">{label}</div>
-        <Icon size={14} strokeWidth={1.5} className={urgent ? "text-[#0F2847]" : "text-slate-300"} />
-      </div>
-      <div className={`font-serif text-5xl mt-3 tracking-tight ${urgent ? "text-[#0F2847]" : "text-slate-900"}`}>
-        {value ?? 0}
-      </div>
-    </Link>
+      highlight={urgent}
+      icon={<Icon size={14} strokeWidth={1.5} />}
+    />
   );
 }
 
@@ -745,7 +723,7 @@ function ResearchWorkflowWidgets() {
       )}
 
       {(metrics.recent_gap_analyses || []).length > 0 && (
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <div className="flex items-center justify-between mb-4">
             <div className="overline text-slate-500 flex items-center gap-2">
               <Clock size={12} strokeWidth={1.5} />
@@ -763,7 +741,7 @@ function ResearchWorkflowWidgets() {
                   {(g.keywords || []).length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {(g.keywords || []).slice(0, 3).map((k) => (
-                        <span key={k} className="text-xs border border-slate-200 text-slate-500 px-1.5 py-0.5">{k}</span>
+                        <DsTag key={k} size="sm">{k}</DsTag>
                       ))}
                     </div>
                   )}
@@ -776,33 +754,33 @@ function ResearchWorkflowWidgets() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
-      <div className="border border-slate-200 bg-slate-50 p-5">
+      <Card padding="lg" className="!bg-slate-50">
         <div className="overline text-slate-500 mb-3">Research Opportunities</div>
         <div className="grid sm:grid-cols-3 gap-3">
-          <Link to="/research-gap-finder" className="flex items-center gap-2 border border-slate-200 bg-white px-4 py-3 hover:border-[#0F2847] transition-colors group">
+          <Card to="/research-gap-finder" padding="md" className="flex items-center gap-2 group">
             <Target size={14} strokeWidth={1.5} className="text-slate-400 group-hover:text-[#0F2847]" />
             <span className="text-sm text-slate-700 group-hover:text-[#0F2847]">Find Research Gap</span>
-          </Link>
-          <Link to="/collaboration-intelligence" className="flex items-center gap-2 border border-slate-200 bg-white px-4 py-3 hover:border-[#0F2847] transition-colors group">
+          </Card>
+          <Card to="/collaboration-intelligence" padding="md" className="flex items-center gap-2 group">
             <Users size={14} strokeWidth={1.5} className="text-slate-400 group-hover:text-[#0F2847]" />
             <span className="text-sm text-slate-700 group-hover:text-[#0F2847]">Find Collaborators</span>
-          </Link>
-          <Link to="/collaboration-requests" className="flex items-center gap-2 border border-slate-200 bg-white px-4 py-3 hover:border-[#0F2847] transition-colors group">
+          </Card>
+          <Card to="/collaboration-requests" padding="md" className="flex items-center gap-2 group">
             <Send size={14} strokeWidth={1.5} className="text-slate-400 group-hover:text-[#0F2847]" />
             <span className="text-sm text-slate-700 group-hover:text-[#0F2847]">
               View Requests
               {metrics.pending_received > 0 && (
-                <span className="ml-2 text-[10px] bg-[#0F2847] text-white px-1.5 py-0.5 font-mono">
+                <Badge variant="default" size="sm" className="ml-2 font-mono">
                   {metrics.pending_received}
-                </span>
+                </Badge>
               )}
             </span>
-          </Link>
+          </Card>
         </div>
-      </div>
+      </Card>
     </section>
   );
 }
@@ -810,7 +788,6 @@ function ResearchWorkflowWidgets() {
 // ─────────────────────────── export button ───────────────────────────────────
 
 function ExportMenu() {
-  const [open, setOpen] = useState(false);
   const options = [
     { label: "Publications CSV",  report: "publications" },
     { label: "Grants CSV",        report: "grants" },
@@ -819,31 +796,23 @@ function ExportMenu() {
     { label: "Summary CSV",       report: "summary" },
   ];
   const download = (report) => {
-    setOpen(false);
     window.open(`/api/analytics/export?report=${report}`, "_blank");
   };
   return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 text-xs border border-slate-200 px-3 py-1.5 hover:border-slate-400 transition-colors"
-      >
-        <Download size={12} /> Export
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-slate-200 shadow-lg min-w-[160px]">
-          {options.map((o) => (
-            <button
-              key={o.report}
-              onClick={() => download(o.report)}
-              className="block w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50"
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <Dropdown
+      align="right"
+      trigger={
+        <Button variant="outline" size="sm">
+          <Download size={12} /> Export
+        </Button>
+      }
+    >
+      {options.map((o) => (
+        <DropdownItem key={o.report} onClick={() => download(o.report)}>
+          {o.label}
+        </DropdownItem>
+      ))}
+    </Dropdown>
   );
 }
 
@@ -866,7 +835,7 @@ export default function Analytics() {
   if (!stats)  return null;
 
   return (
-    <AnalyticsLayout
+    <ResearchLayout
       data-testid={TID.analyticsDashboard}
       title="Analytics"
       subtitle={
@@ -879,9 +848,9 @@ export default function Analytics() {
       actions={
         <>
           <ExportMenu />
-          <Link to="/research-impact" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none", padding: "8px 14px", border: "1px solid rgba(15,23,42,0.08)", background: "#fff" }}>
+          <Button as={Link} to="/research-impact" variant="outline" size="sm">
             <FileText size={12} strokeWidth={1.5} /> Full Impact
-          </Link>
+          </Button>
         </>
       }
     >
@@ -1016,16 +985,16 @@ export default function Analytics() {
             { to: "/reputation",          label: "Reputation Score"      },
             { to: "/verification",        label: "Verification Center"   },
           ].map(({ to, label }) => (
-            <Link key={to} to={to} className="border border-slate-200 bg-white p-4 hover:border-[#0F2847] transition-colors group block">
+            <Card key={to} to={to} padding="md" className="group">
               <div className="text-xs font-medium text-slate-700 group-hover:text-[#0F2847] transition-colors flex items-center justify-between">
                 {label} <ChevronRight size={12} className="text-slate-300 group-hover:text-[#0F2847]" />
               </div>
-            </Link>
+            </Card>
           ))}
         </div>
       </section>
 
     </div>
-    </AnalyticsLayout>
+    </ResearchLayout>
   );
 }

@@ -14,6 +14,12 @@
  *   import { NAVY, TYPE, MOTION, Z, SPACE, ICON } from "@/lib/tokens";
  */
 
+// MOTION below is derived from lib/motion.js's duration/ease primitives —
+// that file is the source of truth for animation values; this re-shapes
+// them into the flat lookup object components here already depend on, so
+// the two files can never drift apart.
+import { duration as _D, ease as _E } from "./motion";
+
 // ── Core palette ─────────────────────────────────────────────────────────────
 export const NAVY         = "#0F2847";   // Primary identity — actions, headings
 export const NAVY_LIGHT   = "#1a3a5c";   // Navy hover state
@@ -50,7 +56,7 @@ export const TEXT_PRIMARY   = "#0f172a";   // Headings, values, critical text
 export const TEXT_STRONG    = "#374151";   // Hover/active state on secondary text (between primary and secondary)
 export const TEXT_SECONDARY = "#475569";   // Supporting text, labels
 export const TEXT_TERTIARY  = "#64748b";   // Nav items, body copy, secondary labels (slate-500)
-export const TEXT_MUTED     = "#94a3b8";   // Timestamps, placeholders, captions
+export const TEXT_MUTED     = "#63707f";   // Timestamps, placeholders, captions
 export const TEXT_DISABLED  = "#cbd5e1";   // Disabled state text
 
 // ── Shadows ──────────────────────────────────────────────────────────────────
@@ -211,7 +217,7 @@ export const TYPE = {
     lineHeight:    1.3,
     letterSpacing: "0.08em",
     textTransform: "uppercase",
-    color:         "#94a3b8",
+    color:         "#63707f",
   },
 
   // ── Body copy ────────────────────────────────────────────────────────────
@@ -239,7 +245,7 @@ export const TYPE = {
     fontSize:   "0.75rem",
     fontWeight: 400,
     lineHeight: 1.5,
-    color:      "#94a3b8",
+    color:      "#63707f",
   },
   label: {
     fontSize:      "0.6875rem",
@@ -247,14 +253,14 @@ export const TYPE = {
     lineHeight:    1.3,
     letterSpacing: "0.06em",
     textTransform: "uppercase",
-    color:         "#94a3b8",
+    color:         "#63707f",
   },
   meta: {
     fontSize:      "0.625rem",
     fontWeight:    500,
     lineHeight:    1.3,
     letterSpacing: "0.04em",
-    color:         "#94a3b8",
+    color:         "#63707f",
   },
 
   // ── Numeric display ──────────────────────────────────────────────────────
@@ -287,29 +293,31 @@ export const TYPE = {
 };
 
 // ── Motion system ─────────────────────────────────────────────────────────────
+// Values below are the same numbers as lib/motion.js's `duration`/`ease` —
+// see the import note at the top of this file.
 export const MOTION = {
   // Durations
-  instant: "75ms",
-  fast:    "120ms",
-  base:    "150ms",    // ← default for hover states
-  smooth:  "200ms",
-  enter:   "250ms",
-  exit:    "150ms",
-  slow:    "350ms",
+  instant: `${_D.instant}ms`,
+  fast:    `${_D.fast}ms`,
+  base:    `${_D.base}ms`,    // ← default for hover states
+  smooth:  `${_D.smooth}ms`,
+  enter:   `${_D.enter}ms`,
+  exit:    `${_D.exit}ms`,
+  slow:    `${_D.slow}ms`,
 
   // Easings
-  ease:    "cubic-bezier(0.16, 1, 0.3, 1)",       // general purpose
-  easeIn:  "cubic-bezier(0.4, 0, 1, 1)",          // element leaving
-  easeOut: "cubic-bezier(0, 0, 0.2, 1)",          // element entering
-  spring:  "cubic-bezier(0.34, 1.56, 0.64, 1)",   // playful bounce
-  snappy:  "cubic-bezier(0.2, 0, 0, 1)",          // Linear-style fast settle
+  ease:    _E.default,   // general purpose
+  easeIn:  _E.in,         // element leaving
+  easeOut: _E.out,        // element entering
+  spring:  _E.spring,     // playful bounce
+  snappy:  _E.snappy,     // Linear-style fast settle
 
   // Transition presets (ready to use in style={{ transition: ... }})
-  hoverBase:   "border-color 150ms ease, box-shadow 150ms ease",
-  hoverCard:   "border-color 150ms ease, box-shadow 150ms ease, transform 120ms ease",
-  hoverButton: "opacity 120ms ease, background 150ms ease",
-  fade:        "opacity 200ms cubic-bezier(0.16, 1, 0.3, 1)",
-  slideUp:     "transform 200ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+  hoverBase:   `border-color ${_D.base}ms ${_E.default}, box-shadow ${_D.base}ms ${_E.default}`,
+  hoverCard:   `border-color ${_D.base}ms ${_E.default}, box-shadow ${_D.base}ms ${_E.default}, transform ${_D.fast}ms ${_E.default}`,
+  hoverButton: `opacity ${_D.fast}ms ${_E.default}, background ${_D.base}ms ${_E.default}`,
+  fade:        `opacity ${_D.smooth}ms ${_E.default}`,
+  slideUp:     `transform ${_D.smooth}ms ${_E.default}, opacity ${_D.smooth}ms ${_E.default}`,
 };
 
 // ── Z-index scale ─────────────────────────────────────────────────────────────

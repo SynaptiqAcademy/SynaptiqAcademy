@@ -32,6 +32,8 @@ import { ProgressBar } from "@/components/ds/Progress";
 import { EmptyState } from "@/components/ds/EmptyState";
 import { SkeletonPage } from "@/components/ds/LoadingState";
 import { Dialog } from "@/components/ds/Modal";
+import { DataTable } from "@/components/ds/DataTable";
+import { List, ListItem } from "@/components/ds/List";
 import {
   TYPE, NAVY, NAVY2, WHITE, WARM, BRD, EMERALD, AMBER, TEXT_MUTED, TEXT_SECONDARY,
   WARNING_BG, WARNING_TEXT,
@@ -39,10 +41,11 @@ import {
 
 function Row({ label, value }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 0", borderBottom: `1px solid ${BRD}` }}>
-      <span style={{ fontSize: 12.5, color: TEXT_SECONDARY }}>{label}</span>
-      <span style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a" }}>{value}</span>
-    </div>
+    <ListItem
+      title={label}
+      trailing={<span style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a" }}>{value}</span>}
+      style={{ padding: "9px 0" }}
+    />
   );
 }
 
@@ -147,7 +150,7 @@ export default function BillingCenter() {
           <div>
             <div style={{ fontWeight: 700, color: WARNING_TEXT }}>Payment past due</div>
             <p style={{ fontSize: 13, color: WARNING_TEXT, margin: "4px 0 0" }}>Your last invoice payment failed. Please update your billing method to keep access.</p>
-            <button onClick={openPortal} style={{ marginTop: 8, fontSize: 12.5, textDecoration: "underline", color: WARNING_TEXT, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Update payment method</button>
+            <Button variant="link" size="sm" onClick={openPortal} style={{ marginTop: 8, color: WARNING_TEXT, textDecoration: "underline", padding: 0 }}>Update payment method</Button>
           </div>
         </div>
       )}
@@ -223,12 +226,14 @@ export default function BillingCenter() {
           <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 20 }}>
             <Card padding="xl" data-testid="billing-plan-details">
               <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", marginBottom: 12 }}>Plan Details</div>
-              <Row label="Plan" value={planLabel} />
-              <Row label="Billing Cycle" value={subscription?.billing_period === "annual" ? "Annual" : "Monthly"} />
-              {renewsDate && <Row label="Next Billing Date" value={renewsDate} />}
-              {seats != null && <Row label="Team Seats" value={seats === -1 ? "Unlimited" : seats} />}
-              <Row label="AI Credits" value={`${(plan.credits_per_month ?? 0) === -1 ? "Unlimited" : (plan.credits_per_month ?? 0).toLocaleString()} / month`} />
-              {storageGb != null && <Row label="Storage" value={storageGb === -1 ? "Unlimited" : storageGb >= 1024 ? `${(storageGb / 1024).toFixed(1)} TB` : `${storageGb} GB`} />}
+              <List border={false} radius={0} style={{ background: "transparent" }}>
+                <Row label="Plan" value={planLabel} />
+                <Row label="Billing Cycle" value={subscription?.billing_period === "annual" ? "Annual" : "Monthly"} />
+                {renewsDate && <Row label="Next Billing Date" value={renewsDate} />}
+                {seats != null && <Row label="Team Seats" value={seats === -1 ? "Unlimited" : seats} />}
+                <Row label="AI Credits" value={`${(plan.credits_per_month ?? 0) === -1 ? "Unlimited" : (plan.credits_per_month ?? 0).toLocaleString()} / month`} />
+                {storageGb != null && <Row label="Storage" value={storageGb === -1 ? "Unlimited" : storageGb >= 1024 ? `${(storageGb / 1024).toFixed(1)} TB` : `${storageGb} GB`} />}
+              </List>
               <Link to="/pricing" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12.5, fontWeight: 600, color: NAVY, textDecoration: "none", marginTop: 14 }}>
                 View full plan details <ArrowRight size={12} />
               </Link>
@@ -253,9 +258,9 @@ export default function BillingCenter() {
                   <div style={{ ...TYPE.meta, marginTop: 2 }}>Total Available</div>
                 </div>
               </div>
-              <button onClick={openPortal} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12.5, fontWeight: 600, color: NAVY, background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: 16 }}>
+              <Button variant="link" size="sm" onClick={openPortal} style={{ marginTop: 16 }}>
                 View detailed usage <ArrowRight size={12} />
-              </button>
+              </Button>
             </Card>
           </div>
 
@@ -263,41 +268,33 @@ export default function BillingCenter() {
           <Card padding="none" data-testid="billing-history">
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px", borderBottom: `1px solid ${BRD}` }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a" }}>Recent Invoices</div>
-              <button onClick={openPortal} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12.5, fontWeight: 600, color: NAVY, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+              <Button variant="link" size="sm" onClick={openPortal}>
                 View all invoices <ArrowRight size={12} />
-              </button>
+              </Button>
             </div>
             {invoiceRows.length === 0 ? (
               <div style={{ padding: 24 }}><EmptyState icon={<CreditCard />} title="No billing activity yet." size="sm" /></div>
             ) : (
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", fontSize: 12.5, borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ textAlign: "left", borderBottom: `1px solid ${BRD}` }}>
-                      <th style={{ padding: "10px 24px", fontWeight: 600, color: TEXT_MUTED }}>Date</th>
-                      <th style={{ padding: "10px 12px", fontWeight: 600, color: TEXT_MUTED }}>Description</th>
-                      <th style={{ padding: "10px 12px", fontWeight: 600, color: TEXT_MUTED, textAlign: "right" }}>Amount</th>
-                      <th style={{ padding: "10px 24px", fontWeight: 600, color: TEXT_MUTED }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoiceRows.slice(0, 8).map((h) => (
-                      <tr key={h.id} style={{ borderBottom: `1px solid ${BRD}` }} data-testid={`history-row-${h.id}`}>
-                        <td style={{ padding: "12px 24px", color: TEXT_SECONDARY, whiteSpace: "nowrap" }}>{(h.created_at || "").slice(0, 10)}</td>
-                        <td style={{ padding: "12px 12px", color: TEXT_SECONDARY }}>{h.description || (h.kind || "").replace(/_/g, " ")}</td>
-                        <td style={{ padding: "12px 12px", color: "#0f172a", fontWeight: 600, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
-                          {h.amount_eur != null ? `€${Number(h.amount_eur).toFixed(2)}` : "—"}
-                        </td>
-                        <td style={{ padding: "12px 24px" }}>
-                          <Badge variant={h.status === "paid" || h.status === "succeeded" ? "success" : h.status === "failed" ? "danger" : "neutral"} size="sm">
-                            {h.status || "—"}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable
+                className="billing-invoice-table"
+                columns={[
+                  { key: "created_at", label: "Date", render: (v) => (v || "").slice(0, 10) },
+                  { key: "description", label: "Description", render: (v, row) => v || (row.kind || "").replace(/_/g, " ") },
+                  {
+                    key: "amount_eur", label: "Amount", align: "right",
+                    render: (v) => (v != null ? `€${Number(v).toFixed(2)}` : "—"),
+                  },
+                  {
+                    key: "status", label: "Status",
+                    render: (v) => (
+                      <Badge variant={v === "paid" || v === "succeeded" ? "success" : v === "failed" ? "danger" : "neutral"} size="sm">
+                        {v || "—"}
+                      </Badge>
+                    ),
+                  },
+                ]}
+                rows={invoiceRows.slice(0, 8)}
+              />
             )}
           </Card>
 
@@ -309,16 +306,17 @@ export default function BillingCenter() {
             {purchases.length === 0 ? (
               <div style={{ padding: 24 }}><EmptyState icon={<Sparkles />} title="No credit pack purchases yet." size="sm" /></div>
             ) : (
-              <div>
-                {purchases.map((p, i) => (
-                  <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 24px", borderTop: i > 0 ? `1px solid ${BRD}` : "none" }} data-testid={`purchase-row-${p.id}`}>
-                    <div style={{ fontSize: 12.5, color: TEXT_SECONDARY }}>
-                      <span style={{ fontWeight: 700, color: "#0f172a" }}>+{p.credits.toLocaleString()} credits</span> · {p.pack_code}
-                    </div>
-                    <div style={{ fontSize: 11.5, color: TEXT_MUTED }}>{(p.created_at || "").slice(0, 10)}</div>
-                  </div>
+              <List border={false} radius={0}>
+                {purchases.map((p) => (
+                  <ListItem
+                    key={p.id}
+                    data-testid={`purchase-row-${p.id}`}
+                    title={<span style={{ fontSize: 12.5, color: TEXT_SECONDARY, fontWeight: 400 }}><span style={{ fontWeight: 700, color: "#0f172a" }}>+{p.credits.toLocaleString()} credits</span> · {p.pack_code}</span>}
+                    trailing={<span style={{ fontSize: 11.5, color: TEXT_MUTED }}>{(p.created_at || "").slice(0, 10)}</span>}
+                    style={{ padding: "12px 24px" }}
+                  />
                 ))}
-              </div>
+              </List>
             )}
           </Card>
 
@@ -330,15 +328,17 @@ export default function BillingCenter() {
             {subHistory.length === 0 ? (
               <div style={{ padding: 24 }}><EmptyState icon={<ArrowRight />} title="No plan changes yet." size="sm" /></div>
             ) : (
-              <div>
-                {subHistory.map((s, i) => (
-                  <div key={s.id} style={{ padding: "12px 24px", fontSize: 12.5, color: TEXT_SECONDARY, borderTop: i > 0 ? `1px solid ${BRD}` : "none" }} data-testid={`sub-history-row-${s.id}`}>
-                    <span style={{ fontFamily: "monospace", fontSize: 11, color: TEXT_MUTED, marginRight: 10 }}>{(s.created_at || "").slice(0, 10)}</span>
-                    {s.from_plan || "—"} <ArrowRight size={11} style={{ display: "inline", margin: "0 4px", color: TEXT_MUTED }} /> {s.to_plan || "—"}
-                    <span style={{ marginLeft: 10, color: TEXT_MUTED }}>{s.reason}</span>
-                  </div>
+              <List border={false} radius={0}>
+                {subHistory.map((s) => (
+                  <ListItem key={s.id} data-testid={`sub-history-row-${s.id}`} style={{ padding: "12px 24px" }}>
+                    <span style={{ fontSize: 12.5, color: TEXT_SECONDARY }}>
+                      <span style={{ fontFamily: "monospace", fontSize: 11, color: TEXT_MUTED, marginRight: 10 }}>{(s.created_at || "").slice(0, 10)}</span>
+                      {s.from_plan || "—"} <ArrowRight size={11} style={{ display: "inline", margin: "0 4px", color: TEXT_MUTED }} /> {s.to_plan || "—"}
+                      <span style={{ marginLeft: 10, color: TEXT_MUTED }}>{s.reason}</span>
+                    </span>
+                  </ListItem>
                 ))}
-              </div>
+              </List>
             )}
           </Card>
         </div>
@@ -365,9 +365,9 @@ export default function BillingCenter() {
                 <span style={{ fontWeight: 600 }}>{totalBalance.toLocaleString()}</span>
               </div>
             </div>
-            <button onClick={openPortal} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600, color: NAVY, background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: 14 }}>
+            <Button variant="link" size="sm" onClick={openPortal} style={{ marginTop: 14 }}>
               View usage analytics <ArrowRight size={11} />
-            </button>
+            </Button>
           </Card>
 
           <Card padding="lg">

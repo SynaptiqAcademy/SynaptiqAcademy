@@ -248,7 +248,7 @@ export function CreateMeetingModal({ open, onClose, onCreated, defaultType, defa
                   padding: "3px 6px 3px 10px",
                 }}>
                   {p.full_name}
-                  <button onClick={() => removeParticipant(p.id)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", color: TEXT_MUTED }}>
+                  <button onClick={() => removeParticipant(p.id)} aria-label={`Remove ${p.full_name}`} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", color: TEXT_MUTED }}>
                     <X size={11} />
                   </button>
                 </span>

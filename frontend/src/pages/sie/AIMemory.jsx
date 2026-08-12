@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Save, RefreshCw, Plus } from "lucide-react";
 import { ACCENT } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Tag, TagGroup, Input, FormSelect, Textarea, Button, Spinner, H4, Label } from "@/components/ds";
 
@@ -33,6 +33,7 @@ function TagEditor({ label, items, onChange }) {
         <Button
           onClick={() => { if (input.trim()) { onChange([...items, input.trim()]); setInput(""); } }}
           size="sm"
+          aria-label={`Add ${label.toLowerCase()}`}
           style={{ background: ACCENT }}
         >
           <Plus size={13} />
@@ -80,11 +81,11 @@ export default function AIMemory() {
   };
 
   if (loading) return (
-    <AIWorkspaceLayout title="AI Memory" navItems={SIE_NAV_ITEMS}>
+    <ResearchLayout title="AI Memory" navItems={SIE_NAV_ITEMS}>
       <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Spinner size={32} color={ACCENT} />
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 
   const actions = (
@@ -101,7 +102,7 @@ export default function AIMemory() {
   );
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
       title="AI Memory"
       subtitle={`The AI learns from this profile to personalise all recommendations and plans. Last updated: ${memory?.last_updated?.slice(0, 10) || "never"}`}
       navItems={SIE_NAV_ITEMS}
@@ -159,6 +160,6 @@ export default function AIMemory() {
         </Card>
       </div>
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

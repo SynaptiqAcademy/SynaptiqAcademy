@@ -36,8 +36,8 @@ export function MiniCalendar({ highlightDates = [], onSelectDate }) {
           {cursor.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
         </span>
         <div style={{ display: "flex", gap: 2 }}>
-          <button onClick={() => setCursor(new Date(year, month - 1, 1))} style={btnStyle}><ChevronLeft size={13} /></button>
-          <button onClick={() => setCursor(new Date(year, month + 1, 1))} style={btnStyle}><ChevronRight size={13} /></button>
+          <button onClick={() => setCursor(new Date(year, month - 1, 1))} aria-label="Previous month" style={btnStyle}><ChevronLeft size={13} /></button>
+          <button onClick={() => setCursor(new Date(year, month + 1, 1))} aria-label="Next month" style={btnStyle}><ChevronRight size={13} /></button>
         </div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>

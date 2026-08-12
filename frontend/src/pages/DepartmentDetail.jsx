@@ -12,13 +12,16 @@ import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import {
   Building2, Users, FolderOpen, BookOpen, Coins, Award, BarChart3,
-  Network, ChevronRight, ArrowLeft, Loader2, Plus, Trash2, X,
+  Network, ChevronRight, Plus, Trash2, X,
   UserPlus, Edit3, Check, TrendingUp, Layers, ExternalLink, RefreshCw,
 } from "lucide-react";
 import { TID } from "../lib/testIds";
 import { userTypeLabel } from "../lib/userTypes";
 import { NAVY } from "@/lib/tokens";
-import { Spinner } from "@/components/ds/LoadingState";
+import {
+  Spinner, Card, StatCard, StatGrid, Button, Modal, Input, FormSelect,
+  EmptyState as DsEmptyState, DataTable, Callout,
+} from "@/components/ds";
 import {
   useDepartment, useDeptMembers, useDeptProjects, useDeptMetrics,
   useDeptRankings, useDeptCollaboration, useDeptPublications,
@@ -26,21 +29,6 @@ import {
 } from "../hooks/useDepartments";
 
 // ─────────────────────────── shared primitives ────────────────────────────────
-
-function Kpi({ label, value, sub, icon: Icon, highlight }) {
-  return (
-    <div className={`border bg-white p-5 ${highlight ? "border-[#0F2847]" : "border-slate-200"}`}>
-      <div className="overline flex items-center gap-1.5">
-        {Icon && <Icon size={11} strokeWidth={1.5} className="text-[#0F2847]" />}
-        {label}
-      </div>
-      <div className={`font-serif text-3xl mt-1 ${highlight ? "text-[#0F2847]" : "text-slate-900"}`}>
-        {value ?? "—"}
-      </div>
-      {sub && <div className="text-[10px] text-slate-500 mt-1">{sub}</div>}
-    </div>
-  );
-}
 
 function SectionHeader({ label, icon: Icon, action }) {
   return (
@@ -72,16 +60,6 @@ function MemberAvatar({ name, size = "md" }) {
   );
 }
 
-function EmptyState({ icon: Icon = Layers, message, action }) {
-  return (
-    <div className="border border-dashed border-slate-200 bg-white p-12 text-center">
-      <Icon size={22} strokeWidth={1} className="text-slate-300 mx-auto mb-3" />
-      <p className="text-sm text-slate-500">{message}</p>
-      {action && <div className="mt-3">{action}</div>}
-    </div>
-  );
-}
-
 const ROLE_LABEL = {
   unit_admin:    "Department Admin",
   research_lead: "Research Coordinator",
@@ -108,33 +86,33 @@ function OverviewTab({ dept, metrics, metricsLoading, onRefreshMetrics, isAdmin 
   const m = metrics || {};
   return (
     <div className="space-y-6">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Kpi label="Faculty"         value={m.members}               icon={Users} />
-        <Kpi label="Publications"    value={m.publications}           icon={BookOpen} highlight />
-        <Kpi label="Total Citations" value={m.total_citations?.toLocaleString()} icon={TrendingUp} />
-        <Kpi label="Avg h-index"     value={m.avg_h_index}            icon={Award} />
-      </div>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Kpi label="Grants Awarded"  value={m.grants_awarded}         icon={Coins} />
-        <Kpi label="Funding (USD)"   value={m.funding_usd ? `$${(m.funding_usd / 1000).toFixed(0)}k` : "—"} icon={Coins} />
-        <Kpi label="Projects"        value={m.projects}               icon={FolderOpen} />
-        <Kpi label="Avg Reputation"  value={m.avg_reputation}         icon={Award} />
-      </div>
+      <StatGrid cols={4}>
+        <StatCard label="Faculty"         value={m.members}               icon={<Users />} />
+        <StatCard label="Publications"    value={m.publications}          icon={<BookOpen />} highlight />
+        <StatCard label="Total Citations" value={m.total_citations?.toLocaleString()} icon={<TrendingUp />} />
+        <StatCard label="Avg h-index"     value={m.avg_h_index}           icon={<Award />} />
+      </StatGrid>
+      <StatGrid cols={4}>
+        <StatCard label="Grants Awarded"  value={m.grants_awarded}        icon={<Coins />} />
+        <StatCard label="Funding (USD)"   value={m.funding_usd ? `$${(m.funding_usd / 1000).toFixed(0)}k` : "—"} icon={<Coins />} />
+        <StatCard label="Projects"        value={m.projects}              icon={<FolderOpen />} />
+        <StatCard label="Avg Reputation"  value={m.avg_reputation}        icon={<Award />} />
+      </StatGrid>
 
       {(m.research_areas || []).length > 0 && (
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <div className="overline mb-3">Research Areas</div>
           <div className="flex flex-wrap gap-1.5">
             {m.research_areas.map((a) => <ResearchTag key={a} label={a} />)}
           </div>
-        </div>
+        </Card>
       )}
 
       {dept?.description && (
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <div className="overline mb-2">About</div>
           <p className="text-sm text-slate-700">{dept.description}</p>
-        </div>
+        </Card>
       )}
 
       <div className="flex items-center justify-between border border-slate-100 bg-slate-50 p-3 text-xs text-slate-500">
@@ -143,14 +121,10 @@ function OverviewTab({ dept, metrics, metricsLoading, onRefreshMetrics, isAdmin 
           {m.computed_at ? ` — computed ${new Date(m.computed_at).toLocaleString()}` : ""}
         </span>
         {isAdmin && (
-          <button
-            onClick={onRefreshMetrics}
-            disabled={metricsLoading}
-            className="flex items-center gap-1 text-[#0F2847] hover:underline disabled:opacity-50"
-          >
+          <Button variant="link" onClick={onRefreshMetrics} disabled={metricsLoading}>
             <RefreshCw size={10} className={metricsLoading ? "animate-spin" : ""} />
             Refresh
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -183,45 +157,40 @@ function ManageMembersModal({ did, iid, allInstMembers, currentMemberIds, onClos
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900/50 flex items-center justify-center px-4"
-      onClick={onClose} data-testid={TID.deptManageMembersModal}>
-      <div className="bg-white w-full max-w-lg border border-slate-200 max-h-[80vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}>
-        <div className="border-b border-slate-200 px-5 py-4 flex items-center justify-between">
-          <h3 className="font-serif text-lg text-slate-900">Manage Faculty</h3>
-          <button onClick={onClose}><X size={16} strokeWidth={1.5} /></button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {(allInstMembers || []).length === 0 && (
-            <p className="text-xs text-slate-500">No institution members available.</p>
-          )}
-          {(allInstMembers || []).map((m) => (
-            <label key={m.user_id}
-              className="flex items-center gap-3 cursor-pointer border border-slate-200 p-2.5 hover:border-[#0F2847]"
-              data-testid={TID.deptPickMember(m.user_id)}>
-              <input type="checkbox" checked={selected.has(m.user_id)}
-                onChange={() => toggle(m.user_id)} />
-              <MemberAvatar name={m.user?.full_name} size="sm" />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm text-slate-900">{m.user?.full_name || m.user_id}</div>
-                <div className="text-[10px] font-mono text-slate-500">{userTypeLabel(m.user)}</div>
-              </div>
-              <span className="overline text-[#0F2847] text-[9px]">
-                {ROLE_LABEL[m.role] || m.role}
-              </span>
-            </label>
-          ))}
-        </div>
-        <div className="border-t border-slate-200 px-5 py-3 flex justify-end gap-2">
-          <button onClick={onClose} className="text-xs border border-slate-200 px-3 py-2">Cancel</button>
-          <button onClick={save} disabled={busy}
-            className="text-xs bg-[#0F2847] text-white px-4 py-2 hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5"
-            data-testid={TID.deptSaveMembersBtn}>
-            {busy && <Loader2 size={11} className="animate-spin" />} Save
-          </button>
-        </div>
+    <Modal
+      open
+      onClose={onClose}
+      title="Manage Faculty"
+      data-testid={TID.deptManageMembersModal}
+      footer={
+        <>
+          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+          <Button size="sm" onClick={save} disabled={busy} loading={busy} data-testid={TID.deptSaveMembersBtn}>Save</Button>
+        </>
+      }
+    >
+      <div className="space-y-2">
+        {(allInstMembers || []).length === 0 && (
+          <p className="text-xs text-slate-500">No institution members available.</p>
+        )}
+        {(allInstMembers || []).map((m) => (
+          <label key={m.user_id}
+            className="flex items-center gap-3 cursor-pointer border border-slate-200 p-2.5 hover:border-[#0F2847]"
+            data-testid={TID.deptPickMember(m.user_id)}>
+            <input type="checkbox" checked={selected.has(m.user_id)}
+              onChange={() => toggle(m.user_id)} />
+            <MemberAvatar name={m.user?.full_name} size="sm" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-slate-900">{m.user?.full_name || m.user_id}</div>
+              <div className="text-[10px] font-mono text-slate-500">{userTypeLabel(m.user)}</div>
+            </div>
+            <span className="overline text-[#0F2847] text-[9px]">
+              {ROLE_LABEL[m.role] || m.role}
+            </span>
+          </label>
+        ))}
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -263,19 +232,21 @@ function FacultyTab({ did, iid, isAdmin }) {
         label={`Faculty & Staff (${memberList.length})`}
         icon={Users}
         action={isAdmin && (
-          <button onClick={openManage} data-testid={TID.deptManageMembersBtn}
-            className="text-xs flex items-center gap-1.5 border border-slate-200 px-3 py-1.5 hover:border-[#0F2847]">
+          <Button variant="ghost" size="sm" onClick={openManage} data-testid={TID.deptManageMembersBtn}>
             <UserPlus size={11} /> Manage
-          </button>
+          </Button>
         )}
       />
       {memberList.length === 0 && (
-        <EmptyState icon={Users} message="No faculty members yet."
-          action={isAdmin && <button onClick={openManage} className="text-xs text-[#0F2847] underline">Add faculty</button>} />
+        <DsEmptyState
+          icon={<Users />}
+          title="No faculty members yet."
+          action={isAdmin && <Button variant="link" onClick={openManage}>Add faculty</Button>}
+        />
       )}
       <div className="grid sm:grid-cols-2 gap-3" data-testid={TID.deptFacultyList}>
         {memberList.map((m) => (
-          <div key={m.user_id} className="border border-slate-200 bg-white p-4 flex items-center gap-3"
+          <Card key={m.user_id} padding="md" className="flex items-center gap-3"
             data-testid={TID.deptFacultyCard(m.user_id)}>
             <MemberAvatar name={m.user?.full_name} />
             <div className="flex-1 min-w-0">
@@ -294,22 +265,23 @@ function FacultyTab({ did, iid, isAdmin }) {
               )}
             </div>
             {isAdmin ? (
-              <select
+              <FormSelect
                 value={m.role}
                 onChange={(e) => handleRoleChange(m.user_id, e.target.value)}
                 disabled={roleBusy}
-                className="text-[10px] border border-slate-200 px-1.5 py-1 focus:outline-none text-[#0F2847]"
+                size="sm"
+                wrapperClassName="w-auto"
               >
                 <option value="researcher">Faculty Member</option>
                 <option value="research_lead">Research Coordinator</option>
                 <option value="unit_admin">Dept Admin</option>
-              </select>
+              </FormSelect>
             ) : (
               <span className="text-[10px] overline text-[#0F2847]">
                 {ROLE_LABEL[m.role] || m.role}
               </span>
             )}
-          </div>
+          </Card>
         ))}
       </div>
       {showManage && (
@@ -366,47 +338,44 @@ function ProjectsTab({ did, isAdmin }) {
         label={`Department Projects (${list.length})`}
         icon={FolderOpen}
         action={isAdmin && (
-          <button onClick={() => setShowLink((s) => !s)}
-            className="text-xs flex items-center gap-1.5 border border-slate-200 px-3 py-1.5 hover:border-[#0F2847]"
+          <Button
+            variant="ghost" size="sm"
+            onClick={() => setShowLink((s) => !s)}
             data-testid={TID.deptLinkProjectBtn}>
             <Plus size={11} /> Link Project
-          </button>
+          </Button>
         )}
       />
 
       {showLink && (
-        <div className="border border-slate-200 bg-white p-4 flex gap-2">
-          <input
+        <Card padding="md" className="flex gap-2">
+          <Input
             value={linkInput}
             onChange={(e) => setLinkInput(e.target.value)}
             placeholder="Project ID"
-            className="flex-1 border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-[#0F2847]"
+            wrapperClassName="flex-1"
             data-testid={TID.deptLinkProjectInput}
           />
-          <button onClick={handleLink} disabled={busy || !linkInput.trim()}
-            className="text-xs bg-[#0F2847] text-white px-3 py-2 disabled:opacity-50">
-            {busy ? <Loader2 size={11} className="animate-spin" /> : <Check size={13} />}
-          </button>
-          <button onClick={() => setShowLink(false)} className="text-xs border border-slate-200 px-2 py-2">
+          <Button onClick={handleLink} disabled={busy || !linkInput.trim()} loading={busy} size="icon" aria-label="Confirm link project">
+            {!busy && <Check size={13} />}
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => setShowLink(false)} aria-label="Cancel">
             <X size={13} />
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
 
       {list.length === 0 && (
-        <EmptyState icon={FolderOpen} message="No projects linked to this department."
-          action={isAdmin && (
-            <button onClick={() => setShowLink(true)} className="text-xs text-[#0F2847] underline">
-              Link a project
-            </button>
-          )} />
+        <DsEmptyState
+          icon={<FolderOpen />}
+          title="No projects linked to this department."
+          action={isAdmin && <Button variant="link" onClick={() => setShowLink(true)}>Link a project</Button>}
+        />
       )}
 
       <div className="grid sm:grid-cols-2 gap-4" data-testid={TID.deptProjectsList}>
         {list.map((p) => (
-          <div key={p.project_id}
-            className="border border-slate-200 bg-white p-4"
-            data-testid={TID.deptProjectCard(p.project_id)}>
+          <Card key={p.project_id} padding="md" data-testid={TID.deptProjectCard(p.project_id)}>
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <Link to={`/projects/${p.project_id}`}
@@ -418,11 +387,14 @@ function ProjectsTab({ did, isAdmin }) {
                 )}
               </div>
               {isAdmin && (
-                <button onClick={() => handleUnlink(p.project_id)}
-                  className="text-slate-300 hover:text-red-500 transition-colors shrink-0"
+                <Button
+                  variant="ghost" size="icon"
+                  onClick={() => handleUnlink(p.project_id)}
+                  aria-label="Unlink project"
+                  className="text-slate-300 hover:text-red-500 shrink-0"
                   data-testid={TID.deptUnlinkProjectBtn(p.project_id)}>
                   <Trash2 size={13} strokeWidth={1.5} />
-                </button>
+                </Button>
               )}
             </div>
             <div className="flex flex-wrap gap-1 mt-2">
@@ -436,7 +408,7 @@ function ProjectsTab({ did, isAdmin }) {
                 {p.visibility}
               </span>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     </div>
@@ -458,12 +430,11 @@ function OutputsTab({ did }) {
         icon={BookOpen}
       />
       {pubs.length === 0 && (
-        <EmptyState icon={BookOpen} message="No publications found for this department's members." />
+        <DsEmptyState icon={<BookOpen />} title="No publications found for this department's members." />
       )}
       <div className="space-y-3" data-testid={TID.deptPublicationsList}>
         {pubs.map((p) => (
-          <div key={p.id} className="border border-slate-200 bg-white p-4"
-            data-testid={TID.deptPublicationRow(p.id)}>
+          <Card key={p.id} padding="md" data-testid={TID.deptPublicationRow(p.id)}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-slate-900 line-clamp-2">{p.title}</p>
@@ -491,7 +462,7 @@ function OutputsTab({ did }) {
                 )}
               </div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     </div>
@@ -511,22 +482,21 @@ function FundingTab({ did }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid sm:grid-cols-3 gap-4">
-        <Kpi label="Awarded Funding" value={`$${(totalUsd / 1000).toFixed(0)}k`} icon={Coins} highlight />
+      <StatGrid cols={3}>
+        <StatCard label="Awarded Funding" value={`$${(totalUsd / 1000).toFixed(0)}k`} icon={<Coins />} highlight />
         {byStatus.map((s) => (
-          <Kpi key={s.status} label={s.status} value={s.n} icon={Coins}
-            sub={s.usd ? `$${(s.usd / 1000).toFixed(0)}k` : undefined} />
+          <StatCard key={s.status} label={s.status} value={s.n}
+            sub={s.usd ? `$${(s.usd / 1000).toFixed(0)}k` : undefined} icon={<Coins />} />
         ))}
-      </div>
+      </StatGrid>
 
       <SectionHeader label="Top Awarded Grants" icon={Coins} />
       {topGrants.length === 0 && (
-        <EmptyState icon={Coins} message="No awarded grants found for this department's members." />
+        <DsEmptyState icon={<Coins />} title="No awarded grants found for this department's members." />
       )}
       <div className="space-y-3" data-testid={TID.deptGrantsList}>
         {topGrants.map((g) => (
-          <div key={g.id} className="border border-slate-200 bg-white p-4 flex items-center justify-between gap-4"
-            data-testid={TID.deptGrantRow(g.id)}>
+          <Card key={g.id} padding="md" className="flex items-center justify-between gap-4" data-testid={TID.deptGrantRow(g.id)}>
             <div>
               <p className="text-sm font-medium text-slate-900">{g.title}</p>
               <p className="text-xs text-slate-500 mt-0.5">{g.researcher}</p>
@@ -537,7 +507,7 @@ function FundingTab({ did }) {
               </div>
               <div className="text-[10px] text-green-700">{g.status}</div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     </div>
@@ -564,20 +534,16 @@ function StatisticsTab({ metrics }) {
     ["Collaborations",      m.collaborations,  "Accepted collaboration requests"],
   ];
 
+  const columns = [
+    { key: "label", label: "Metric", render: (v) => <span className="text-slate-700 font-medium">{v}</span> },
+    { key: "value", label: "Value", render: (v) => <span className="font-serif text-slate-900">{v ?? "—"}</span> },
+    { key: "note", label: "Note", render: (v) => <span className="text-xs text-slate-400">{v}</span> },
+  ];
+  const dataRows = rows.map(([label, value, note], i) => ({ id: i, label, value, note }));
+
   return (
-    <div className="border border-slate-200 bg-white" data-testid={TID.deptStatisticsTable}>
-      <div className="overline px-5 pt-5 pb-3 border-b border-slate-100">Publication & Research Statistics</div>
-      <table className="w-full text-sm">
-        <tbody>
-          {rows.map(([label, value, note]) => (
-            <tr key={label} className="border-b border-slate-50 last:border-0">
-              <td className="px-5 py-3 text-slate-700 font-medium w-48">{label}</td>
-              <td className="px-5 py-3 font-serif text-slate-900">{value ?? "—"}</td>
-              <td className="px-5 py-3 text-xs text-slate-400 hidden sm:table-cell">{note}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div data-testid={TID.deptStatisticsTable}>
+      <DataTable columns={columns} rows={dataRows} />
     </div>
   );
 }
@@ -591,63 +557,50 @@ function RankingsTab({ did }) {
 
   const rankings = data?.rankings || [];
   if (rankings.length === 0) {
-    return <EmptyState icon={Award} message="No departments to rank yet." />;
+    return <DsEmptyState icon={<Award />} title="No departments to rank yet." />;
   }
+
+  const columns = [
+    {
+      key: "rank", label: "#",
+      render: (v) => (
+        <span className={`font-serif text-lg ${v === 1 ? "text-amber-500" : v === 2 ? "text-slate-400" : v === 3 ? "text-amber-700" : "text-slate-300"}`}>
+          #{v}
+        </span>
+      ),
+    },
+    {
+      key: "name", label: "Department",
+      render: (_, r) => (
+        <Link to={`/institution/departments/${r.department_id}`}
+          className={`text-sm hover:text-[#0F2847] ${r.is_current ? "font-semibold text-[#0F2847]" : "text-slate-900"}`}>
+          {r.name}
+          {r.is_current && <span className="ml-2 overline text-[9px] text-[#0F2847]">You</span>}
+        </Link>
+      ),
+    },
+    { key: "citations", label: "Citations", align: "right", render: (_, r) => (r.metrics?.total_citations || 0).toLocaleString() },
+    { key: "publications", label: "Publications", align: "right", render: (_, r) => r.metrics?.publications || 0 },
+    { key: "reputation", label: "Reputation", align: "right", render: (_, r) => r.metrics?.avg_reputation || 0 },
+    {
+      key: "score", label: "Score", align: "right",
+      render: (_, r) => (
+        <span className={`font-serif text-base ${r.is_current ? "text-[#0F2847]" : "text-slate-900"}`}>
+          {Math.round((r.score || 0) * 100)}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-4">
-      <div className="text-xs text-slate-500 border border-amber-100 bg-amber-50 p-3">
+      <Callout variant="warning">
         Rankings are computed across all departments in the institution using a composite score:
         30% Citations · 25% Publications · 20% Reputation · 15% Funding · 10% Projects.
         Scores are normalised within the institution.
-      </div>
-      <div className="border border-slate-200 bg-white" data-testid={TID.deptRankingsTable}>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-100">
-              <th className="px-5 py-3 text-left overline text-slate-500 font-normal">#</th>
-              <th className="px-5 py-3 text-left overline text-slate-500 font-normal">Department</th>
-              <th className="px-5 py-3 text-right overline text-slate-500 font-normal hidden sm:table-cell">Citations</th>
-              <th className="px-5 py-3 text-right overline text-slate-500 font-normal hidden md:table-cell">Publications</th>
-              <th className="px-5 py-3 text-right overline text-slate-500 font-normal hidden md:table-cell">Reputation</th>
-              <th className="px-5 py-3 text-right overline text-slate-500 font-normal">Score</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rankings.map((r) => (
-              <tr key={r.department_id}
-                className={`border-b border-slate-50 last:border-0 ${r.is_current ? "bg-[#0F2847]/5" : ""}`}
-                data-testid={TID.deptRankingRow(r.department_id)}>
-                <td className="px-5 py-3">
-                  <span className={`font-serif text-lg ${r.rank === 1 ? "text-amber-500" : r.rank === 2 ? "text-slate-400" : r.rank === 3 ? "text-amber-700" : "text-slate-300"}`}>
-                    #{r.rank}
-                  </span>
-                </td>
-                <td className="px-5 py-3">
-                  <Link to={`/institution/departments/${r.department_id}`}
-                    className={`text-sm hover:text-[#0F2847] ${r.is_current ? "font-semibold text-[#0F2847]" : "text-slate-900"}`}>
-                    {r.name}
-                    {r.is_current && <span className="ml-2 overline text-[9px] text-[#0F2847]">You</span>}
-                  </Link>
-                </td>
-                <td className="px-5 py-3 text-right text-slate-700 hidden sm:table-cell">
-                  {(r.metrics?.total_citations || 0).toLocaleString()}
-                </td>
-                <td className="px-5 py-3 text-right text-slate-700 hidden md:table-cell">
-                  {r.metrics?.publications || 0}
-                </td>
-                <td className="px-5 py-3 text-right text-slate-700 hidden md:table-cell">
-                  {r.metrics?.avg_reputation || 0}
-                </td>
-                <td className="px-5 py-3 text-right">
-                  <span className={`font-serif text-base ${r.is_current ? "text-[#0F2847]" : "text-slate-900"}`}>
-                    {Math.round((r.score || 0) * 100)}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      </Callout>
+      <div data-testid={TID.deptRankingsTable}>
+        <DataTable columns={columns} rows={rankings.map((r) => ({ ...r, id: r.department_id }))} />
       </div>
     </div>
   );
@@ -664,20 +617,20 @@ function NetworkTab({ did }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid sm:grid-cols-3 gap-4">
-        <Kpi label="Internal Collaborations" value={data?.internal ?? "—"} icon={Users} highlight
+      <StatGrid cols={3}>
+        <StatCard label="Internal Collaborations" value={data?.internal ?? "—"} icon={<Users />} highlight
           sub="Between dept members" />
-        <Kpi label="External Collaborations" value={data?.external ?? "—"} icon={Network}
+        <StatCard label="External Collaborations" value={data?.external ?? "—"} icon={<Network />}
           sub="With researchers outside dept" />
-        <Kpi label="Network Connections" value={network.length} icon={Network} />
-      </div>
+        <StatCard label="Network Connections" value={network.length} icon={<Network />} />
+      </StatGrid>
 
       {network.length === 0 && (
-        <EmptyState icon={Network} message="No collaboration data yet for this department's members." />
+        <DsEmptyState icon={<Network />} title="No collaboration data yet for this department's members." />
       )}
 
       {network.length > 0 && (
-        <div className="border border-slate-200 bg-white p-5" data-testid={TID.deptNetworkList}>
+        <Card padding="lg" data-testid={TID.deptNetworkList}>
           <div className="overline mb-4">Top Collaboration Connections</div>
           <div className="space-y-2">
             {network.map((edge, i) => (
@@ -696,7 +649,7 @@ function NetworkTab({ did }) {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );
@@ -731,42 +684,39 @@ function EditDepartmentModal({ dept, onClose, onUpdated }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900/50 flex items-center justify-center px-4"
-      onClick={onClose} data-testid={TID.deptEditModal}>
-      <div className="bg-white w-full max-w-lg border border-slate-200"
-        onClick={(e) => e.stopPropagation()}>
-        <div className="border-b border-slate-200 px-5 py-4 flex items-center justify-between">
-          <h3 className="font-serif text-xl text-slate-900">Edit Department</h3>
-          <button onClick={onClose}><X size={16} strokeWidth={1.5} /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {error && <div className="text-xs text-red-700 border border-red-100 bg-red-50 p-3">{error}</div>}
-          {[
-            ["Name",           "name",           "text", "e.g. Dept of Computer Science"],
-            ["Description",    "description",    "text", "Brief description"],
-            ["Research Areas", "research_areas", "text", "Comma-separated"],
-            ["Head User ID",   "head_id",        "text", "User ID of department head"],
-          ].map(([label, key, type, placeholder]) => (
-            <div key={key}>
-              <label className="text-xs font-medium text-slate-700 block mb-1">{label}</label>
-              <input type={type} value={form[key]}
-                onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                placeholder={placeholder}
-                className="w-full border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-[#0F2847]" />
-            </div>
-          ))}
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose}
-              className="text-xs border border-slate-200 px-3 py-2">Cancel</button>
-            <button type="submit" disabled={busy}
-              className="text-xs bg-[#0F2847] text-white px-4 py-2 hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5"
-              data-testid={TID.deptEditSubmit}>
-              {busy && <Loader2 size={11} className="animate-spin" />} Save Changes
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <Modal
+      open
+      onClose={onClose}
+      title="Edit Department"
+      data-testid={TID.deptEditModal}
+      footer={
+        <>
+          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+          <Button type="submit" form="edit-dept-form" size="sm" disabled={busy} loading={busy} data-testid={TID.deptEditSubmit}>
+            Save Changes
+          </Button>
+        </>
+      }
+    >
+      <form id="edit-dept-form" onSubmit={handleSubmit} className="space-y-4">
+        {error && <div className="text-xs text-red-700 border border-red-100 bg-red-50 p-3">{error}</div>}
+        {[
+          ["Name",           "name",           "text", "e.g. Dept of Computer Science"],
+          ["Description",    "description",    "text", "Brief description"],
+          ["Research Areas", "research_areas", "text", "Comma-separated"],
+          ["Head User ID",   "head_id",        "text", "User ID of department head"],
+        ].map(([label, key, type, placeholder]) => (
+          <Input
+            key={key}
+            label={label}
+            type={type}
+            value={form[key]}
+            onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+            placeholder={placeholder}
+          />
+        ))}
+      </form>
+    </Modal>
   );
 }
 
@@ -798,8 +748,8 @@ export default function DepartmentDetail() {
 
   if (deptLoading) {
     return (
-      <div className="text-sm text-slate-500 font-mono py-16 text-center">
-        <Loader2 size={14} className="animate-spin inline mr-2" />Loading department…
+      <div className="text-sm text-slate-500 font-mono py-16 text-center flex items-center justify-center gap-2">
+        <Spinner size={14} />Loading department…
       </div>
     );
   }
@@ -857,16 +807,15 @@ export default function DepartmentDetail() {
             )}
           </div>
           {isAdmin && (
-            <button onClick={() => setShowEdit(true)}
-              className="shrink-0 text-xs flex items-center gap-1.5 border border-slate-200 px-3 py-2 hover:border-[#0F2847]"
-              data-testid={TID.deptEditBtn}>
+            <Button variant="ghost" size="sm" onClick={() => setShowEdit(true)} data-testid={TID.deptEditBtn} className="shrink-0">
               <Edit3 size={11} /> Edit
-            </button>
+            </Button>
           )}
         </div>
       </header>
 
-      {/* Tabs */}
+      {/* Tabs — kept hand-rolled: ds NavTabs doesn't support per-tab data-testid,
+          and tests address individual tabs via TID.deptTab(t). */}
       <div className="flex items-center gap-0.5 border-b border-slate-200 overflow-x-auto" data-testid={TID.deptTabs}>
         {TAB_LIST.map((t) => {
           const { label, icon: Icon } = TAB_META[t];

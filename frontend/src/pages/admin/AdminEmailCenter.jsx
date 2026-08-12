@@ -4,6 +4,10 @@ import { toast } from "sonner";
 import api from "@/lib/api";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
+import {
+  NavTabs, Card, Input, Textarea, FormSelect, Button, Badge, Alert,
+  EmptyState, SkeletonLine, DataTable, List, ListItem,
+} from "@/components/ds";
 
 const TABS = ["Compose", "Templates", "Campaigns"];
 const SEGMENTS = [
@@ -12,15 +16,6 @@ const SEGMENTS = [
   { value: "paid", label: "Paid Users" },
   { value: "unverified", label: "Unverified Emails" },
 ];
-
-function TabBtn({ label, active, onClick }) {
-  return (
-    <button onClick={onClick}
-      className={`px-5 py-2.5 text-sm font-medium transition-colors ${active ? "border-b-2 border-[#0F2847] text-[#0F2847]" : "text-slate-500 hover:text-slate-800"}`}>
-      {label}
-    </button>
-  );
-}
 
 export default function AdminEmailCenter() {
   const [tab, setTab] = useState("Compose");
@@ -171,29 +166,45 @@ export default function AdminEmailCenter() {
 
   const fmt = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
+  const campaignColumns = [
+    { key: "created_at", label: "Date", render: (_, row) => <span className="text-xs text-slate-500">{fmt(row.created_at)}</span> },
+    { key: "segment", label: "Segment", render: (v) => <span className="text-xs text-slate-700">{v}</span> },
+    { key: "subject", label: "Subject", render: (v) => <span className="text-sm text-slate-900">{v}</span> },
+    { key: "sent_count", label: "Sent", render: (v) => <span className="text-sm font-medium text-green-700">{v}</span> },
+    { key: "failed_count", label: "Failed", render: (v) => <span className="text-sm text-red-700">{v || 0}</span> },
+    {
+      key: "status", label: "Status",
+      render: (v) => (
+        <Badge variant={v === "completed" ? "success" : v === "failed" ? "danger" : "warning"}>{v}</Badge>
+      ),
+    },
+  ];
+
   return (
     <AdministrationLayout
       title="Email Center"
       subtitle="Send communications and manage email templates"
     >
-      <div className="flex border-b border-slate-200 mb-6">
-        {TABS.map((t) => <TabBtn key={t} label={t} active={tab === t} onClick={() => setTab(t)} />)}
-      </div>
+      <NavTabs
+        tabs={TABS.map((t) => ({ id: t, label: t }))}
+        active={tab}
+        onChange={setTab}
+        className="mb-6"
+      />
 
       {/* Compose */}
       {tab === "Compose" && (
         <div>
-          <div className="flex gap-2 mb-5">
-            {["individual", "bulk"].map((m) => (
-              <button key={m} onClick={() => setMode(m)}
-                className={`px-4 py-2 text-sm font-medium border ${mode === m ? "bg-[#0F2847] text-white border-[#0F2847]" : "border-slate-300 text-slate-600 hover:bg-slate-50"}`}>
-                {m === "individual" ? "Individual" : "Bulk"}
-              </button>
-            ))}
-          </div>
+          <NavTabs
+            tabs={[{ id: "individual", label: "Individual" }, { id: "bulk", label: "Bulk" }]}
+            active={mode}
+            onChange={setMode}
+            variant="pill"
+            className="mb-5"
+          />
 
           {mode === "individual" ? (
-            <div className="bg-white border border-slate-200 p-5 space-y-4 max-w-2xl">
+            <Card padding="lg" className="space-y-4 max-w-2xl">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">Recipient</label>
                 {selectedUser ? (
@@ -202,75 +213,82 @@ export default function AdminEmailCenter() {
                       <span className="text-sm font-medium text-slate-900">{selectedUser.full_name || selectedUser.email}</span>
                       <span className="text-xs text-slate-500 ml-2">{selectedUser.email}</span>
                     </div>
-                    <button onClick={() => setSelectedUser(null)} className="text-xs text-slate-400 hover:text-slate-700">Remove</button>
+                    <Button variant="link" size="sm" onClick={() => setSelectedUser(null)}>Remove</Button>
                   </div>
                 ) : (
                   <div className="relative">
-                    <input value={userSearch} onChange={(e) => setUserSearch(e.target.value)}
+                    <Input
+                      value={userSearch}
+                      onChange={(e) => setUserSearch(e.target.value)}
                       placeholder="Search by name or email…"
-                      className="w-full px-3 py-2 text-sm border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0F2847]" />
+                    />
                     {userResults.length > 0 && (
-                      <div className="absolute z-10 top-full left-0 right-0 bg-white border border-slate-200 shadow-md max-h-48 overflow-y-auto">
-                        {userResults.map((u) => (
-                          <button key={u.id} onClick={() => { setSelectedUser(u); setUserSearch(""); setUserResults([]); }}
-                            className="w-full text-left px-3 py-2.5 text-sm hover:bg-slate-50 border-b border-slate-100 last:border-0">
-                            <div className="font-medium text-slate-900">{u.full_name || u.email}</div>
-                            <div className="text-xs text-slate-500">{u.email}</div>
-                          </button>
-                        ))}
+                      <div className="absolute z-10 top-full left-0 right-0 mt-1 shadow-md max-h-48 overflow-y-auto">
+                        <List>
+                          {userResults.map((u) => (
+                            <ListItem
+                              key={u.id}
+                              title={u.full_name || u.email}
+                              subtitle={u.email}
+                              onClick={() => { setSelectedUser(u); setUserSearch(""); setUserResults([]); }}
+                            />
+                          ))}
+                        </List>
                       </div>
                     )}
                   </div>
                 )}
               </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">Subject</label>
-                <input value={subject} onChange={(e) => setSubject(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
-                  placeholder="Email subject…" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">Body (HTML)</label>
-                <textarea value={bodyHtml} onChange={(e) => setBodyHtml(e.target.value)} rows={10}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0F2847] font-mono"
-                  placeholder="<p>Hello {name},</p><p>Your message here...</p>" />
-              </div>
-              <button onClick={sendIndividual} disabled={sending}
-                className="px-6 py-2.5 bg-[#0F2847] text-white text-sm font-medium hover:bg-slate-800 disabled:opacity-50">
-                {sending ? "Sending…" : "Send Email"}
-              </button>
-            </div>
+              <Input
+                label="Subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Email subject…"
+              />
+              <Textarea
+                label="Body (HTML)"
+                value={bodyHtml}
+                onChange={(e) => setBodyHtml(e.target.value)}
+                rows={10}
+                className="font-mono"
+                placeholder="<p>Hello {name},</p><p>Your message here...</p>"
+              />
+              <Button onClick={sendIndividual} loading={sending}>
+                Send Email
+              </Button>
+            </Card>
           ) : (
-            <div className="bg-white border border-slate-200 p-5 space-y-4 max-w-2xl">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">Recipient Segment</label>
-                <select value={bulkSegment} onChange={(e) => setBulkSegment(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0F2847]">
-                  {SEGMENTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">Subject</label>
-                <input value={bulkSubject} onChange={(e) => setBulkSubject(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
-                  placeholder="Email subject…" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">Body (HTML)</label>
-                <textarea value={bulkBody} onChange={(e) => setBulkBody(e.target.value)} rows={10}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0F2847] font-mono"
-                  placeholder="<p>Hello,</p><p>Your message here...</p>" />
-              </div>
+            <Card padding="lg" className="space-y-4 max-w-2xl">
+              <FormSelect
+                label="Recipient Segment"
+                value={bulkSegment}
+                onChange={(e) => setBulkSegment(e.target.value)}
+              >
+                {SEGMENTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </FormSelect>
+              <Input
+                label="Subject"
+                value={bulkSubject}
+                onChange={(e) => setBulkSubject(e.target.value)}
+                placeholder="Email subject…"
+              />
+              <Textarea
+                label="Body (HTML)"
+                value={bulkBody}
+                onChange={(e) => setBulkBody(e.target.value)}
+                rows={10}
+                className="font-mono"
+                placeholder="<p>Hello,</p><p>Your message here...</p>"
+              />
               {bulkResult && (
-                <div className="border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+                <Alert variant="success">
                   Campaign complete — {bulkResult.sent_count} sent, {bulkResult.failed_count} failed
-                </div>
+                </Alert>
               )}
-              <button onClick={sendBulk} disabled={bulkSending}
-                className="px-6 py-2.5 bg-[#0F2847] text-white text-sm font-medium hover:bg-slate-800 disabled:opacity-50">
-                {bulkSending ? "Sending…" : `Send to ${SEGMENTS.find((s) => s.value === bulkSegment)?.label}`}
-              </button>
-            </div>
+              <Button onClick={sendBulk} loading={bulkSending}>
+                Send to {SEGMENTS.find((s) => s.value === bulkSegment)?.label}
+              </Button>
+            </Card>
           )}
         </div>
       )}
@@ -280,58 +298,40 @@ export default function AdminEmailCenter() {
         <div>
           <div className="flex justify-between items-center mb-4">
             <p className="text-sm text-slate-600">{templates.length} templates</p>
-            <button onClick={() => setShowNewTemplate(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#0F2847] text-white text-sm hover:bg-slate-800">
+            <Button size="sm" onClick={() => setShowNewTemplate(true)}>
               <Plus size={14} /> New Template
-            </button>
+            </Button>
           </div>
 
           {showNewTemplate && (
-            <div className="bg-white border border-slate-200 p-5 mb-4 space-y-3">
+            <Card padding="lg" className="mb-4 space-y-3">
               <h3 className="text-sm font-semibold text-slate-800">New Template</h3>
-              <input value={newTplName} onChange={(e) => setNewTplName(e.target.value)}
-                placeholder="Template name" className="w-full px-3 py-2 text-sm border border-slate-300 focus:outline-none" />
-              <input value={newTplSubject} onChange={(e) => setNewTplSubject(e.target.value)}
-                placeholder="Email subject" className="w-full px-3 py-2 text-sm border border-slate-300 focus:outline-none" />
-              <textarea value={newTplBody} onChange={(e) => setNewTplBody(e.target.value)} rows={6}
-                placeholder="HTML body…" className="w-full px-3 py-2 text-sm border border-slate-300 focus:outline-none font-mono" />
+              <Input value={newTplName} onChange={(e) => setNewTplName(e.target.value)} placeholder="Template name" />
+              <Input value={newTplSubject} onChange={(e) => setNewTplSubject(e.target.value)} placeholder="Email subject" />
+              <Textarea value={newTplBody} onChange={(e) => setNewTplBody(e.target.value)} rows={6} className="font-mono" placeholder="HTML body…" />
               <div className="flex gap-2">
-                <button onClick={createTemplate} disabled={tplSaving}
-                  className="px-4 py-2 bg-[#0F2847] text-white text-sm disabled:opacity-50">
-                  {tplSaving ? "Saving…" : "Save Template"}
-                </button>
-                <button onClick={() => setShowNewTemplate(false)} className="px-4 py-2 border border-slate-300 text-sm text-slate-600 hover:bg-slate-50">
-                  Cancel
-                </button>
+                <Button size="sm" onClick={createTemplate} loading={tplSaving}>Save Template</Button>
+                <Button size="sm" variant="ghost" onClick={() => setShowNewTemplate(false)}>Cancel</Button>
               </div>
-            </div>
+            </Card>
           )}
 
           {templatesLoading ? (
-            <div className="space-y-2">{[...Array(3)].map((_, i) => <div key={i} className="h-24 animate-pulse bg-gray-200" />)}</div>
+            <div className="space-y-2">{[...Array(3)].map((_, i) => <SkeletonLine key={i} height={96} />)}</div>
           ) : templates.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
-              <Mail size={36} className="mx-auto mb-3 opacity-40" />
-              <p className="text-sm">No email templates yet</p>
-            </div>
+            <EmptyState icon={<Mail />} title="No email templates yet" />
           ) : (
             <div className="space-y-3">
               {templates.map((tpl) => (
-                <div key={tpl.id} className="bg-white border border-slate-200 p-4">
+                <Card key={tpl.id} padding="lg">
                   {editingTpl?.id === tpl.id ? (
                     <div className="space-y-3">
-                      <input value={editingTpl.name} onChange={(e) => setEditingTpl({ ...editingTpl, name: e.target.value })}
-                        className="w-full px-3 py-2 text-sm border border-slate-300 focus:outline-none" />
-                      <input value={editingTpl.subject} onChange={(e) => setEditingTpl({ ...editingTpl, subject: e.target.value })}
-                        className="w-full px-3 py-2 text-sm border border-slate-300 focus:outline-none" />
-                      <textarea value={editingTpl.body_html} onChange={(e) => setEditingTpl({ ...editingTpl, body_html: e.target.value })} rows={5}
-                        className="w-full px-3 py-2 text-sm border border-slate-300 focus:outline-none font-mono" />
+                      <Input value={editingTpl.name} onChange={(e) => setEditingTpl({ ...editingTpl, name: e.target.value })} />
+                      <Input value={editingTpl.subject} onChange={(e) => setEditingTpl({ ...editingTpl, subject: e.target.value })} />
+                      <Textarea value={editingTpl.body_html} onChange={(e) => setEditingTpl({ ...editingTpl, body_html: e.target.value })} rows={5} className="font-mono" />
                       <div className="flex gap-2">
-                        <button onClick={() => updateTemplate(tpl.id)} disabled={tplSaving}
-                          className="px-3 py-1.5 bg-[#0F2847] text-white text-xs disabled:opacity-50">
-                          {tplSaving ? "Saving…" : "Save"}
-                        </button>
-                        <button onClick={() => setEditingTpl(null)} className="px-3 py-1.5 border border-slate-300 text-xs hover:bg-slate-50">Cancel</button>
+                        <Button size="sm" onClick={() => updateTemplate(tpl.id)} loading={tplSaving}>Save</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setEditingTpl(null)}>Cancel</Button>
                       </div>
                     </div>
                   ) : (
@@ -342,12 +342,12 @@ export default function AdminEmailCenter() {
                         <p className="text-xs text-slate-400 mt-1 line-clamp-2 font-mono">{tpl.body_html?.slice(0, 120)}…</p>
                       </div>
                       <div className="flex gap-2 ml-4 flex-shrink-0">
-                        <button onClick={() => setEditingTpl({ ...tpl })} className="p-1.5 text-slate-400 hover:text-slate-700"><Edit2 size={14} /></button>
-                        <button onClick={() => deleteTemplate(tpl.id)} className="p-1.5 text-slate-400 hover:text-red-700"><Trash2 size={14} /></button>
+                        <Button variant="ghost" size="icon" onClick={() => setEditingTpl({ ...tpl })} aria-label={`Edit ${tpl.name} template`}><Edit2 size={14} /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => deleteTemplate(tpl.id)} aria-label={`Delete ${tpl.name} template`}><Trash2 size={14} /></Button>
                       </div>
                     </div>
                   )}
-                </div>
+                </Card>
               ))}
             </div>
           )}
@@ -356,45 +356,13 @@ export default function AdminEmailCenter() {
 
       {/* Campaigns */}
       {tab === "Campaigns" && (
-        <div className="bg-white border border-slate-200 overflow-hidden">
-          {campaignsLoading ? (
-            <div className="p-4 space-y-2">{[...Array(4)].map((_, i) => <div key={i} className="h-10 animate-pulse bg-gray-200" />)}</div>
-          ) : campaigns.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-slate-400">
-              <Mail size={36} className="mb-3 opacity-40" />
-              <p className="text-sm">No campaigns sent yet</p>
-            </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Date</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Segment</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Subject</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Sent</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Failed</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {campaigns.map((c, i) => (
-                  <tr key={i} className="border-b border-slate-100">
-                    <td className="px-4 py-2.5 text-xs text-slate-500">{fmt(c.created_at)}</td>
-                    <td className="px-4 py-2.5 text-xs text-slate-700">{c.segment}</td>
-                    <td className="px-4 py-2.5 text-sm text-slate-900">{c.subject}</td>
-                    <td className="px-4 py-2.5 text-sm font-medium text-green-700">{c.sent_count}</td>
-                    <td className="px-4 py-2.5 text-sm text-red-700">{c.failed_count || 0}</td>
-                    <td className="px-4 py-2.5">
-                      <span className={`inline-block px-2 py-0.5 text-xs font-medium ${c.status === "completed" ? "bg-green-50 text-green-700" : c.status === "failed" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"}`}>
-                        {c.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        campaignsLoading ? (
+          <div className="space-y-2">{[...Array(4)].map((_, i) => <SkeletonLine key={i} height={40} />)}</div>
+        ) : campaigns.length === 0 ? (
+          <EmptyState icon={<Mail />} title="No campaigns sent yet" />
+        ) : (
+          <DataTable columns={campaignColumns} rows={campaigns} />
+        )
       )}
     </AdministrationLayout>
   );

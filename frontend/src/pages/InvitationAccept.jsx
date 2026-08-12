@@ -150,16 +150,14 @@ export default function InvitationAccept() {
               <AuthButton loading={state === "accepting"} onClick={accept}>
                 Accept Invitation
               </AuthButton>
-              <button
+              <AuthButton
                 type="button"
+                variant="secondary"
                 onClick={decline}
                 disabled={state === "accepting"}
-                style={{ width: "100%", height: 48, background: "#fff", border: `1.5px solid ${BORDER}`, borderRadius: 10, fontSize: "0.875rem", fontWeight: 500, color: T_MID, cursor: "pointer", transition: "border-color 150ms", fontFamily: "inherit" }}
-                onMouseEnter={function(e) { e.currentTarget.style.borderColor = "#94a3b8"; }}
-                onMouseLeave={function(e) { e.currentTarget.style.borderColor = BORDER; }}
               >
                 Decline
-              </button>
+              </AuthButton>
             </div>
           </div>
         )}

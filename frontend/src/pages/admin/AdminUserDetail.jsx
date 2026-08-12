@@ -296,7 +296,7 @@ export default function AdminUserDetail() {
           )}
           {!timelineLoading && !timelineError && timelineData && (
             <>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="bg-slate-50 border border-slate-200 px-4 py-3 text-center">
                   <div className="font-serif text-2xl text-slate-900">{timelineData.total_logins ?? 0}</div>
                   <div className="text-xs text-slate-500 mt-0.5">Total Logins</div>
@@ -355,7 +355,7 @@ export default function AdminUserDetail() {
 
       {/* Actions */}
       {tab === "Actions" && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <ActionCard title="Suspend Account" desc="Prevents the user from signing in. Existing session stays until force logout.">
             {confirmAction === "suspend" ? (
               <>

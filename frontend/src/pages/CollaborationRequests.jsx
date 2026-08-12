@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Users, Check, X, RotateCcw, Clock, MessageSquare, FolderPlus,
   Layers, ArrowRight, AlertCircle, Send, Building2, Globe,
@@ -10,35 +10,30 @@ import { TID } from "../lib/testIds";
 import { userTypeLabel } from "../lib/userTypes";
 import { NAVY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
+import { Avatar } from "@/components/ds/Avatar";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { Button } from "@/components/ds/Button";
+import { Textarea } from "@/components/ds/Textarea";
+import { NavTabs } from "@/components/ds/NavTabs";
+import { EmptyState as DsEmptyState } from "@/components/ds/EmptyState";
+import { SkeletonCard } from "@/components/ds/LoadingState";
+import { Alert } from "@/components/ds/Alert";
 
 // ─────────────────────── helpers ─────────────────────────────────────────────
 
-function Avatar({ url, name, size = 40 }) {
-  const initials = (name || "?").split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
-  return (
-    <div
-      className="shrink-0 bg-slate-100 flex items-center justify-center text-xs font-medium text-slate-600 overflow-hidden"
-      style={{ width: size, height: size }}
-    >
-      {url ? <img src={url} alt="" className="w-full h-full object-cover" /> : initials}
-    </div>
-  );
-}
-
 function StatusBadge({ status }) {
   const map = {
-    pending:   { cls: "border-amber-400 text-amber-700 bg-amber-50",   label: "Pending" },
-    viewed:    { cls: "border-sky-400 text-sky-700 bg-sky-50",         label: "Viewed" },
-    accepted:  { cls: "border-green-500 text-green-700 bg-green-50",   label: "Accepted" },
-    declined:  { cls: "border-rose-400 text-rose-700 bg-rose-50",      label: "Declined" },
-    withdrawn: { cls: "border-slate-300 text-slate-500 bg-slate-50",   label: "Withdrawn" },
-    cancelled: { cls: "border-slate-300 text-slate-500 bg-slate-50",   label: "Cancelled" },
-    expired:   { cls: "border-orange-300 text-orange-600 bg-orange-50", label: "Expired" },
+    pending:   { variant: "warning", label: "Pending" },
+    viewed:    { variant: "info",    label: "Viewed" },
+    accepted:  { variant: "success", label: "Accepted" },
+    declined:  { variant: "danger",  label: "Declined" },
+    withdrawn: { variant: "neutral", label: "Withdrawn" },
+    cancelled: { variant: "neutral", label: "Cancelled" },
+    expired:   { variant: "warning", label: "Expired" },
   };
   const cfg = map[status] || map.pending;
-  return (
-    <span className={`text-[10px] font-mono border px-2 py-0.5 ${cfg.cls}`}>{cfg.label}</span>
-  );
+  return <Badge variant={cfg.variant} size="sm">{cfg.label}</Badge>;
 }
 
 function InvTypeLabel({ type }) {
@@ -55,19 +50,15 @@ function InvTypeLabel({ type }) {
   };
   const label = labels[type] || type;
   if (!label || type === "research_collaboration") return null;
-  return (
-    <span className="text-[10px] font-mono border border-[#0F2847]/20 text-[#0F2847] bg-[#0F2847]/5 px-2 py-0.5">
-      {label}
-    </span>
-  );
+  return <Badge variant="default" size="sm">{label}</Badge>;
 }
 
 // ─────────────────────── request card ────────────────────────────────────────
 
 function RequestCard({ req, isSender, onStatusChange }) {
+  const navigate = useNavigate();
   const [acting, setActing] = useState(false);
   const [error, setError] = useState(null);
-  const [showWorkspaceHint, setShowWorkspaceHint] = useState(false);
   const [declining, setDeclining] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
   const [withdrawConfirm, setWithdrawConfirm] = useState(false);
@@ -84,9 +75,12 @@ function RequestCard({ req, isSender, onStatusChange }) {
     setActing(true);
     setError(null);
     try {
-      await api.patch(`/collaboration-requests/${req.id}`, { status, ...extras });
-      onStatusChange(req.id, status);
-      if (status === "accepted") setShowWorkspaceHint(true);
+      const res = await api.patch(`/collaboration-requests/${req.id}`, { status, ...extras });
+      onStatusChange(req.id, status, res.data?.workspace_id);
+      if (status === "accepted" && res.data?.workspace_id) {
+        navigate(`/workspaces/${res.data.workspace_id}`);
+        return;
+      }
       if (status === "declined") setDeclining(false);
       if (status === "withdrawn" || status === "cancelled") setWithdrawConfirm(false);
     } catch (err) {
@@ -101,9 +95,9 @@ function RequestCard({ req, isSender, onStatusChange }) {
   };
 
   return (
-    <div
+    <Card
       data-testid={TID.collabRequestCard(req.id)}
-      className="border border-slate-200 bg-white"
+      padding="none"
     >
       <div className="flex items-start gap-4 p-5">
         <Avatar url={other?.avatar_url} name={other?.full_name} size={44} />
@@ -193,51 +187,52 @@ function RequestCard({ req, isSender, onStatusChange }) {
       {declining && (
         <div className="mx-5 mb-4 border border-rose-200 bg-rose-50 p-3 space-y-2" ref={declineRef}>
           <p className="text-xs text-rose-700 font-medium">Decline this request?</p>
-          <textarea
+          <Textarea
             rows={2}
             value={declineReason}
             onChange={(e) => setDeclineReason(e.target.value)}
             placeholder="Optional: share a reason with the sender"
-            className="w-full text-xs px-2 py-1.5 border border-rose-200 bg-white resize-none focus:outline-none focus:ring-1 focus:ring-rose-400"
           />
           <div className="flex gap-2">
-            <button
+            <Button
+              size="sm"
+              variant="danger"
               onClick={handleDeclineConfirm}
               disabled={acting}
-              className="text-xs bg-rose-600 text-white px-3 py-1.5 hover:bg-rose-700 disabled:opacity-50"
+              loading={acting}
             >
               Confirm decline
-            </button>
-            <button
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
               onClick={() => { setDeclining(false); setDeclineReason(""); }}
-              className="text-xs text-slate-600 px-3 py-1.5 border border-slate-200 hover:border-slate-400"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {/* Withdraw confirm */}
       {withdrawConfirm && (
-        <div className="mx-5 mb-4 border border-amber-200 bg-amber-50 p-3 space-y-2">
+        <Card variant="ghost" padding="sm" className="mx-5 mb-4 border border-amber-200 bg-amber-50 space-y-2">
           <p className="text-xs text-amber-700 font-medium">Withdraw this request? The recipient will be notified.</p>
           <div className="flex gap-2">
-            <button
+            <Button
+              size="sm"
               onClick={() => act("withdrawn")}
               disabled={acting}
-              className="text-xs bg-amber-600 text-white px-3 py-1.5 hover:bg-amber-700 disabled:opacity-50"
+              loading={acting}
+              className="bg-amber-600 hover:bg-amber-700"
             >
               Yes, withdraw
-            </button>
-            <button
-              onClick={() => setWithdrawConfirm(false)}
-              className="text-xs text-slate-600 px-3 py-1.5 border border-slate-200 hover:border-slate-400"
-            >
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setWithdrawConfirm(false)}>
               Cancel
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Actions */}
@@ -245,105 +240,71 @@ function RequestCard({ req, isSender, onStatusChange }) {
         <div className="px-5 pb-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
           {!isSender ? (
             <>
-              <button
+              <Button
+                size="sm"
                 onClick={() => act("accepted")}
                 disabled={acting}
-                className="flex items-center gap-1.5 text-xs bg-[#0F2847] text-white border border-[#0F2847] px-3 py-1.5 hover:bg-slate-800 disabled:opacity-50 transition-colors"
+                loading={acting}
               >
                 <Check size={11} strokeWidth={2} />
                 Accept
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
                 onClick={() => { setDeclining(true); setTimeout(() => declineRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50); }}
                 disabled={acting}
-                className="flex items-center gap-1.5 text-xs text-slate-600 border border-slate-200 px-3 py-1.5 hover:border-rose-400 hover:text-rose-600 disabled:opacity-50 transition-colors"
+                className="hover:border-rose-400 hover:text-rose-600"
               >
                 <X size={11} strokeWidth={2} />
                 Decline
-              </button>
+              </Button>
             </>
           ) : (
-            <button
+            <Button
+              size="sm"
+              variant="ghost"
               onClick={() => setWithdrawConfirm(true)}
               disabled={acting}
-              className="flex items-center gap-1.5 text-xs text-slate-500 border border-slate-200 px-3 py-1.5 hover:border-slate-400 disabled:opacity-50 transition-colors"
             >
               <RotateCcw size={11} strokeWidth={1.5} />
               Withdraw
-            </button>
+            </Button>
           )}
           {other?.id && (
-            <Link
-              to={`/messages/${other.id}`}
-              className="flex items-center gap-1.5 text-xs text-slate-600 border border-slate-200 px-3 py-1.5 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-            >
+            <Button as={Link} to={`/messages/${other.id}`} size="sm" variant="ghost">
               <MessageSquare size={11} strokeWidth={1.5} />
               Message
-            </Link>
+            </Button>
           )}
         </div>
       )}
 
-      {/* Post-accept CTA */}
-      {req.status === "accepted" && showWorkspaceHint && (
-        <div className="px-5 pb-4 pt-3 border-t border-slate-100 bg-green-50">
-          <p className="text-xs text-green-800 mb-2 font-medium">Request accepted! What next?</p>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              to="/workspaces"
-              className="flex items-center gap-1.5 text-xs text-slate-700 border border-slate-300 bg-white px-3 py-1.5 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-            >
-              <Layers size={11} strokeWidth={1.5} />
-              Create Workspace
-            </Link>
-            <Link
-              to="/projects"
-              className="flex items-center gap-1.5 text-xs text-slate-700 border border-slate-300 bg-white px-3 py-1.5 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-            >
-              <FolderPlus size={11} strokeWidth={1.5} />
-              Start Project
-            </Link>
-            {other?.id && (
-              <Link
-                to={`/messages/${other.id}`}
-                className="flex items-center gap-1.5 text-xs text-slate-700 border border-slate-300 bg-white px-3 py-1.5 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-              >
-                <MessageSquare size={11} strokeWidth={1.5} />
-                Open DM
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
-
-      {req.status === "accepted" && !showWorkspaceHint && (
+      {/* Post-accept — the shared workspace is auto-provisioned on accept (see
+          `act()` above, which navigates there immediately). This row is the
+          fallback for a request the user already accepted in a past visit. */}
+      {req.status === "accepted" && (
         <div className="px-5 pb-4 pt-3 border-t border-slate-100 flex flex-wrap gap-2">
-          <Link
-            to="/workspaces"
-            className="flex items-center gap-1.5 text-xs text-slate-600 border border-slate-200 px-3 py-1.5 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-          >
-            <Layers size={11} strokeWidth={1.5} />
-            Workspaces
-          </Link>
-          <Link
-            to="/projects"
-            className="flex items-center gap-1.5 text-xs text-slate-600 border border-slate-200 px-3 py-1.5 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-          >
-            <FolderPlus size={11} strokeWidth={1.5} />
-            Projects
-          </Link>
+          {req.workspace_id ? (
+            <Button as={Link} to={`/workspaces/${req.workspace_id}`} size="sm" variant="outline">
+              <Layers size={11} strokeWidth={1.5} />
+              Open Workspace
+            </Button>
+          ) : (
+            <Button as={Link} to="/workspaces" size="sm" variant="ghost">
+              <Layers size={11} strokeWidth={1.5} />
+              Workspaces
+            </Button>
+          )}
           {other?.id && (
-            <Link
-              to={`/messages/${other.id}`}
-              className="flex items-center gap-1.5 text-xs text-slate-600 border border-slate-200 px-3 py-1.5 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-            >
+            <Button as={Link} to={`/messages/${other.id}`} size="sm" variant="ghost">
               <MessageSquare size={11} strokeWidth={1.5} />
               Message
-            </Link>
+            </Button>
           )}
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -351,28 +312,25 @@ function RequestCard({ req, isSender, onStatusChange }) {
 
 function EmptyState({ tab }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-14 h-14 bg-slate-100 flex items-center justify-center mb-5">
-        <Users size={24} strokeWidth={1} className="text-slate-400" />
-      </div>
-      <div className="text-base font-semibold text-slate-700 mb-2">
-        {tab === "received" ? "No incoming requests" : "No outgoing requests"}
-      </div>
-      <p className="text-sm text-slate-500 max-w-xs leading-relaxed mb-6">
-        {tab === "received"
+    <DsEmptyState
+      icon={<Users strokeWidth={1} />}
+      title={tab === "received" ? "No incoming requests" : "No outgoing requests"}
+      description={
+        tab === "received"
           ? "When researchers send you collaboration requests, they'll appear here."
-          : "Use Collaboration Intelligence to find researchers and send collaboration requests."}
-      </p>
-      {tab === "sent" && (
-        <Link
-          to="/collaboration-intelligence"
-          className="flex items-center gap-2 border border-[#0F2847] bg-[#0F2847] text-white px-5 py-2.5 text-sm hover:bg-slate-800"
-        >
-          <Send size={13} strokeWidth={1.5} />
-          Find Collaborators
-        </Link>
-      )}
-    </div>
+          : "Use Collaboration Intelligence to find researchers and send collaboration requests."
+      }
+      action={
+        tab === "sent" ? (
+          <Button as={Link} to="/collaboration-intelligence">
+            <Send size={13} strokeWidth={1.5} />
+            Find Collaborators
+          </Button>
+        ) : undefined
+      }
+      size="lg"
+      dashed={false}
+    />
   );
 }
 
@@ -417,11 +375,11 @@ export default function CollaborationRequests() {
     loadBoth();
   }, []);
 
-  const handleStatusChangeReceived = (id, status) => {
-    setReceivedReqs((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
+  const handleStatusChangeReceived = (id, status, workspaceId) => {
+    setReceivedReqs((prev) => prev.map((r) => r.id === id ? { ...r, status, workspace_id: workspaceId ?? r.workspace_id } : r));
   };
-  const handleStatusChangeSent = (id, status) => {
-    setSentReqsList((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
+  const handleStatusChangeSent = (id, status, workspaceId) => {
+    setSentReqsList((prev) => prev.map((r) => r.id === id ? { ...r, status, workspace_id: workspaceId ?? r.workspace_id } : r));
   };
 
   const pendingCount = receivedReqs.filter((r) => r.status === "pending" || r.status === "viewed").length;
@@ -432,68 +390,43 @@ export default function CollaborationRequests() {
     <ResearchLayout
       title="Collaboration Requests"
       subtitle="Manage your incoming and outgoing collaboration invitations."
+      nav={
+        <NavTabs
+          tabs={[
+            { id: "received", label: "Received", count: pendingCount },
+            { id: "sent", label: "Sent", count: sentReqsList.filter((r) => r.status === "pending" || r.status === "viewed").length },
+          ]}
+          active={tab}
+          onChange={setTab}
+        />
+      }
     >
       <div data-testid={TID.collabRequestsDashboard} className="space-y-6">
 
       {error && (
-        <div className="flex items-center gap-2.5 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          <AlertCircle size={14} strokeWidth={1.5} />
-          {error}
-        </div>
+        <Alert variant="error">{error}</Alert>
       )}
-
-      {/* Tabs */}
-      <nav className="flex gap-6 border-b border-slate-200">
-        {[
-          { key: "received", label: "Received", count: pendingCount },
-          { key: "sent", label: "Sent", count: sentReqsList.filter((r) => r.status === "pending" || r.status === "viewed").length },
-        ].map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`pb-3 text-sm font-medium border-b-2 -mb-px flex items-center gap-2 ${
-              tab === t.key ? "border-[#0F2847] text-slate-900" : "border-transparent text-slate-500 hover:text-slate-900"
-            }`}
-          >
-            {t.label}
-            {t.count > 0 && (
-              <span className="text-[10px] bg-[#0F2847] text-white px-1.5 py-0.5 font-mono min-w-[18px] text-center">
-                {t.count}
-              </span>
-            )}
-          </button>
-        ))}
-      </nav>
 
       {/* Quick actions */}
       <div className="flex items-center gap-3">
-        <Link
-          to="/collaboration-intelligence"
-          className="flex items-center gap-1.5 text-xs text-slate-600 border border-slate-200 px-3 py-2 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-        >
+        <Button as={Link} to="/collaboration-intelligence" variant="ghost" size="sm">
           <Send size={12} strokeWidth={1.5} />
           Find & Invite Collaborators
-        </Link>
-        <Link
-          to="/network"
-          className="flex items-center gap-1.5 text-xs text-slate-600 border border-slate-200 px-3 py-2 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-        >
+        </Button>
+        <Button as={Link} to="/network" variant="ghost" size="sm">
           <Users size={12} strokeWidth={1.5} />
           Browse Network
-        </Link>
-        <Link
-          to="/research-gap-finder"
-          className="flex items-center gap-1.5 text-xs text-slate-600 border border-slate-200 px-3 py-2 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-        >
+        </Button>
+        <Button as={Link} to="/research-gap-finder" variant="ghost" size="sm">
           <ArrowRight size={12} strokeWidth={1.5} />
           Research Gap Finder
-        </Link>
+        </Button>
       </div>
 
       {/* Request list */}
       {loading ? (
         <div className="space-y-4">
-          {[1, 2, 3].map((i) => <div key={i} className="h-36 bg-slate-200 animate-pulse" />)}
+          {[1, 2, 3].map((i) => <SkeletonCard key={i} rows={3} />)}
         </div>
       ) : activeList.length === 0 ? (
         <EmptyState tab={tab} />

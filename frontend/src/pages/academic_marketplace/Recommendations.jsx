@@ -66,6 +66,7 @@ export default function Recommendations() {
                   {recs.map(r => (
                     <Card key={r.service_id} padding="lg" className="relative">
                       <button onClick={() => dismiss(r.service_id)}
+                        aria-label="Dismiss recommendation"
                         className="absolute top-3 right-3 bg-transparent border-none cursor-pointer text-slate-600 p-1">
                         <X size={14} />
                       </button>

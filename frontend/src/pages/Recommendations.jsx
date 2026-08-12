@@ -6,11 +6,23 @@ import { WARM } from "@/lib/tokens";
 import {
   Users, FolderOpen, BookOpen, Calendar, Coins,
   GraduationCap, ClipboardCheck, Building2,
-  ChevronDown, ChevronUp, RefreshCw, X, Check,
+  RefreshCw, X, Check,
   AlertCircle, ExternalLink, Bookmark, MessageSquare,
   UserPlus, Filter,
 } from "lucide-react";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { Button } from "@/components/ds/Button";
+import { FormSelect } from "@/components/ds/FormSelect";
+import { Checkbox } from "@/components/ds/Form";
+import { NavTabs } from "@/components/ds/NavTabs";
+import { SkeletonCard as DsSkeletonCard } from "@/components/ds/LoadingState";
+import { EmptyState as DsEmptyState } from "@/components/ds/EmptyState";
+import { ErrorState } from "@/components/ds/ErrorState";
+import { EvidencePanel } from "@/components/ds/AIComponents";
+import { Avatar as DsAvatar } from "@/components/ds/Avatar";
 
 
 
@@ -42,53 +54,37 @@ function deadlineStatus(iso) {
 function ScoreBadge({ score }) {
   if (score == null) return null;
   const pct = Math.round(score);
-  const color =
-    pct >= 80 ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-    pct >= 60 ? "bg-blue-50 text-blue-700 border-blue-200" :
-                "bg-slate-100 text-slate-600 border-slate-200";
+  const variant = pct >= 80 ? "success" : pct >= 60 ? "info" : "neutral";
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 text-xs font-semibold border ${color}`}>
+    <Badge variant={variant} size="sm">
       {pct}% Match
-    </span>
+    </Badge>
   );
 }
+
+const QUARTILE_VARIANT = { Q1: "success", Q2: "info", Q3: "warning", Q4: "neutral" };
 
 function QuartileBadge({ quartile }) {
   if (!quartile) return null;
-  const colors = {
-    Q1: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    Q2: "bg-blue-100 text-blue-700 border-blue-200",
-    Q3: "bg-amber-100 text-amber-700 border-amber-200",
-    Q4: "bg-slate-100 text-slate-600 border-slate-200",
-  };
   return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 text-xs font-semibold border ${colors[quartile] || colors.Q4}`}>
+    <Badge variant={QUARTILE_VARIANT[quartile] || "neutral"} size="sm">
       {quartile}
-    </span>
+    </Badge>
   );
 }
 
+const STATUS_VARIANT = { green: "success", blue: "info", amber: "warning", red: "danger", slate: "neutral" };
+
 function StatusBadge({ label, color }) {
-  const palette = {
-    green:  "bg-emerald-50 text-emerald-700 border-emerald-200",
-    blue:   "bg-blue-50 text-blue-700 border-blue-200",
-    amber:  "bg-amber-50 text-amber-700 border-amber-200",
-    red:    "bg-red-50 text-red-700 border-red-200",
-    slate:  "bg-slate-100 text-slate-600 border-slate-200",
-  };
   return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 text-xs border ${palette[color] || palette.slate}`}>
+    <Badge variant={STATUS_VARIANT[color] || "neutral"} size="sm">
       {label}
-    </span>
+    </Badge>
   );
 }
 
 function Chip({ label }) {
-  return (
-    <span className="inline-flex items-center px-2 py-0.5 text-xs bg-slate-100 text-slate-700">
-      {label}
-    </span>
-  );
+  return <Badge variant="neutral" size="sm">{label}</Badge>;
 }
 
 function ChipList({ items = [], max = 4 }) {
@@ -103,39 +99,19 @@ function ChipList({ items = [], max = 4 }) {
 }
 
 function Avatar({ url, name, size = 40 }) {
-  const initials = (name || "??").split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
-  return (
-    <div
-      className="bg-slate-200 text-slate-700 flex items-center justify-center font-semibold flex-shrink-0 overflow-hidden"
-      style={{ width: size, height: size, fontSize: size / 3 }}
-    >
-      {url ? <img src={url} alt="" className="w-full h-full object-cover" /> : initials}
-    </div>
-  );
+  return <DsAvatar url={url} name={name} size={size} />;
 }
 
+// Explanation bullets, mapped onto ds/AIComponents' EvidencePanel (the
+// collapsible "why recommended" pattern is exactly what EvidencePanel
+// models). Bullets are plain strings, so each becomes an evidence item with
+// just a title — the rest of EvidencePanel's optional per-item fields
+// (source/type/url/year/confidence) don't apply here and are omitted.
 function ExplanationToggle({ bullets = [] }) {
-  const [open, setOpen] = useState(false);
   if (!bullets || bullets.length === 0) return null;
   return (
     <div className="mt-3">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 text-xs text-slate-500 hover:text-[#0F2847] transition-colors"
-      >
-        Why recommended?
-        {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-      </button>
-      {open && (
-        <ul className="mt-2 space-y-1">
-          {bullets.map((b, i) => (
-            <li key={i} className="text-xs text-slate-600 flex items-start gap-1.5">
-              <span className="text-[#0F2847] mt-0.5 flex-shrink-0">•</span>
-              {b}
-            </li>
-          ))}
-        </ul>
-      )}
+      <EvidencePanel evidence={bullets.map((b) => ({ title: b }))} />
     </div>
   );
 }
@@ -143,50 +119,26 @@ function ExplanationToggle({ bullets = [] }) {
 // ── Skeleton card ─────────────────────────────────────────────────────────────
 
 function SkeletonCard() {
-  return (
-    <div className="border border-slate-200 bg-white p-5 animate-pulse">
-      <div className="flex gap-3 mb-4">
-        <div className="w-10 h-10 bg-slate-200 rounded-sm flex-shrink-0" />
-        <div className="flex-1 space-y-2">
-          <div className="h-4 bg-slate-200 rounded w-2/3" />
-          <div className="h-3 bg-slate-200 rounded w-1/2" />
-        </div>
-      </div>
-      <div className="flex gap-2 mb-3">
-        <div className="h-5 bg-slate-200 rounded w-16" />
-        <div className="h-5 bg-slate-200 rounded w-20" />
-        <div className="h-5 bg-slate-200 rounded w-14" />
-      </div>
-      <div className="h-3 bg-slate-200 rounded w-full mb-2" />
-      <div className="h-3 bg-slate-200 rounded w-4/5" />
-    </div>
-  );
+  return <DsSkeletonCard rows={3} />;
 }
 
 function EmptyState({ message }) {
   return (
-    <div className="border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
-      <AlertCircle size={32} strokeWidth={1.5} className="text-slate-300 mx-auto mb-3" />
-      <p className="text-slate-500 text-sm max-w-sm mx-auto">{message}</p>
-      <Link to="/academic-passport" className="mt-4 inline-flex items-center gap-1.5 text-xs text-[#0F2847] border-b border-[#0F2847] hover:opacity-70">
-        Complete your profile <ExternalLink size={10} />
-      </Link>
-    </div>
+    <DsEmptyState
+      icon={<AlertCircle />}
+      title={message}
+      action={
+        <Link to="/academic-passport" className="inline-flex items-center gap-1.5 text-xs text-[#0F2847] border-b border-[#0F2847] hover:opacity-70">
+          Complete your profile <ExternalLink size={10} />
+        </Link>
+      }
+    />
   );
 }
 
 function ErrorCard({ message, onRetry }) {
   return (
-    <div className="border border-red-200 bg-red-50 p-6 text-center">
-      <AlertCircle size={24} strokeWidth={1.5} className="text-red-400 mx-auto mb-2" />
-      <p className="text-red-700 text-sm mb-3">{message || "Failed to load recommendations."}</p>
-      <button
-        onClick={onRetry}
-        className="text-xs border border-red-300 text-red-700 px-3 py-1.5 hover:bg-red-100 transition-colors"
-      >
-        Retry
-      </button>
-    </div>
+    <ErrorState message={message || "Failed to load recommendations."} onRetry={onRetry} />
   );
 }
 
@@ -235,18 +187,14 @@ async function postFeedback({ rec_type, rec_id, action }) {
 
 // ── Card action buttons ───────────────────────────────────────────────────────
 
+const ACTION_BTN_VARIANT = { primary: "primary", secondary: "outline", danger: "danger" };
+
 function ActionBtn({ onClick, icon: Icon, label, variant = "secondary" }) {
-  const base = "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors";
-  const styles = {
-    primary: "bg-[#0F2847] text-white hover:bg-slate-800",
-    secondary: "border border-slate-300 text-slate-700 hover:border-[#0F2847] hover:text-[#0F2847]",
-    danger: "border border-red-200 text-red-600 hover:bg-red-50",
-  };
   return (
-    <button onClick={onClick} className={`${base} ${styles[variant] || styles.secondary}`}>
+    <Button onClick={onClick} variant={ACTION_BTN_VARIANT[variant] || "outline"} size="sm">
       {Icon && <Icon size={12} strokeWidth={1.5} />}
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -260,12 +208,12 @@ function ResearcherCard({ item, onDismiss, onClickAction }) {
 
   if (pending) {
     return (
-      <div className="border border-slate-200 bg-slate-50 p-5 flex items-center justify-between">
+      <Card padding="lg" className="bg-slate-50 flex items-center justify-between">
         <span className="text-sm text-slate-400 italic">Recommendation dismissed</span>
-        <button onClick={() => undo(item.id)} className="text-xs text-[#0F2847] hover:underline">
+        <Button onClick={() => undo(item.id)} variant="link" size="sm">
           Undo
-        </button>
-      </div>
+        </Button>
+      </Card>
     );
   }
 
@@ -277,7 +225,7 @@ function ResearcherCard({ item, onDismiss, onClickAction }) {
     : [];
 
   return (
-    <div className="border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
+    <Card padding="lg" className="hover:border-slate-300">
       <div className="flex items-start gap-3">
         <Avatar url={item.avatar_url} name={item.full_name} size={40} />
         <div className="flex-1 min-w-0">
@@ -314,7 +262,7 @@ function ResearcherCard({ item, onDismiss, onClickAction }) {
           }}
         />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -324,10 +272,10 @@ function ProjectCard({ item, onDismiss, onClickAction }) {
 
   if (pending) {
     return (
-      <div className="border border-slate-200 bg-slate-50 p-5 flex items-center justify-between">
+      <Card padding="lg" className="bg-slate-50 flex items-center justify-between">
         <span className="text-sm text-slate-400 italic">Recommendation dismissed</span>
-        <button onClick={() => undo(item.id)} className="text-xs text-[#0F2847] hover:underline">Undo</button>
-      </div>
+        <Button onClick={() => undo(item.id)} variant="link" size="sm">Undo</Button>
+      </Card>
     );
   }
 
@@ -335,7 +283,7 @@ function ProjectCard({ item, onDismiss, onClickAction }) {
   const statusColor = item.status === "open" ? "green" : item.status === "completed" ? "slate" : "blue";
 
   return (
-    <div className="border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
+    <Card padding="lg" className="hover:border-slate-300">
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="font-semibold text-slate-900">{fmt(item.title)}</div>
         <ScoreBadge score={item.score} />
@@ -355,7 +303,7 @@ function ProjectCard({ item, onDismiss, onClickAction }) {
         <ActionBtn label="Request to Join" icon={UserPlus} onClick={() => onClickAction(item.id, "clicked")} />
         <ActionBtn label="Dismiss" icon={X} variant="danger" onClick={() => { dismiss(item.id, onDismiss); onClickAction(item.id, "dismissed"); }} />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -365,10 +313,10 @@ function JournalCard({ item, onDismiss, onClickAction }) {
 
   if (pending) {
     return (
-      <div className="border border-slate-200 bg-slate-50 p-5 flex items-center justify-between">
+      <Card padding="lg" className="bg-slate-50 flex items-center justify-between">
         <span className="text-sm text-slate-400 italic">Recommendation dismissed</span>
-        <button onClick={() => undo(item.id)} className="text-xs text-[#0F2847] hover:underline">Undo</button>
-      </div>
+        <Button onClick={() => undo(item.id)} variant="link" size="sm">Undo</Button>
+      </Card>
     );
   }
 
@@ -376,7 +324,7 @@ function JournalCard({ item, onDismiss, onClickAction }) {
   const acceptColor = item.acceptance_rate === "High" ? "green" : item.acceptance_rate === "Low" ? "red" : "slate";
 
   return (
-    <div className="border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
+    <Card padding="lg" className="hover:border-slate-300">
       <div className="font-semibold text-slate-900 mb-1">{fmt(item.title || item.name)}</div>
       <div className="flex items-center gap-2 flex-wrap text-xs text-slate-500 mb-1">
         <span>{fmt(item.publisher)}</span>
@@ -396,7 +344,7 @@ function JournalCard({ item, onDismiss, onClickAction }) {
         <ActionBtn label="Bookmark" icon={Bookmark} onClick={() => onClickAction(item.id, "bookmarked")} />
         <ActionBtn label="Dismiss" icon={X} variant="danger" onClick={() => { dismiss(item.id, onDismiss); onClickAction(item.id, "dismissed"); }} />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -406,10 +354,10 @@ function ConferenceCard({ item, onDismiss, onClickAction }) {
 
   if (pending) {
     return (
-      <div className="border border-slate-200 bg-slate-50 p-5 flex items-center justify-between">
+      <Card padding="lg" className="bg-slate-50 flex items-center justify-between">
         <span className="text-sm text-slate-400 italic">Recommendation dismissed</span>
-        <button onClick={() => undo(item.id)} className="text-xs text-[#0F2847] hover:underline">Undo</button>
-      </div>
+        <Button onClick={() => undo(item.id)} variant="link" size="sm">Undo</Button>
+      </Card>
     );
   }
 
@@ -424,7 +372,7 @@ function ConferenceCard({ item, onDismiss, onClickAction }) {
   const topicColor = item.topic_fit === "Strong" ? "green" : item.topic_fit === "Moderate" ? "amber" : "blue";
 
   return (
-    <div className="border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
+    <Card padding="lg" className="hover:border-slate-300">
       <div className="flex items-start justify-between gap-3 mb-1">
         <div className="font-semibold text-slate-900">{fmt(item.name || item.title)}</div>
         {item.rank && <StatusBadge label={item.rank} color="blue" />}
@@ -448,7 +396,7 @@ function ConferenceCard({ item, onDismiss, onClickAction }) {
         <ActionBtn label="Bookmark" icon={Bookmark} onClick={() => onClickAction(item.id, "bookmarked")} />
         <ActionBtn label="Dismiss" icon={X} variant="danger" onClick={() => { dismiss(item.id, onDismiss); onClickAction(item.id, "dismissed"); }} />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -458,10 +406,10 @@ function GrantCard({ item, onDismiss, onClickAction }) {
 
   if (pending) {
     return (
-      <div className="border border-slate-200 bg-slate-50 p-5 flex items-center justify-between">
+      <Card padding="lg" className="bg-slate-50 flex items-center justify-between">
         <span className="text-sm text-slate-400 italic">Recommendation dismissed</span>
-        <button onClick={() => undo(item.id)} className="text-xs text-[#0F2847] hover:underline">Undo</button>
-      </div>
+        <Button onClick={() => undo(item.id)} variant="link" size="sm">Undo</Button>
+      </Card>
     );
   }
 
@@ -475,7 +423,7 @@ function GrantCard({ item, onDismiss, onClickAction }) {
   const eligPct = item.eligibility_score != null ? Math.round(item.eligibility_score) : null;
 
   return (
-    <div className="border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
+    <Card padding="lg" className="hover:border-slate-300">
       <div className="font-semibold text-slate-900 mb-1">{fmt(item.title)}</div>
       <div className="text-xs font-medium text-slate-700 mb-1">{fmt(item.sponsor || item.funder)}</div>
       {item.career_stages && item.career_stages.length > 0 && (
@@ -499,7 +447,7 @@ function GrantCard({ item, onDismiss, onClickAction }) {
         <ActionBtn label="Apply Now" icon={Check} onClick={() => onClickAction(item.id, "clicked")} />
         <ActionBtn label="Dismiss" icon={X} variant="danger" onClick={() => { dismiss(item.id, onDismiss); onClickAction(item.id, "dismissed"); }} />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -509,17 +457,17 @@ function MentorCard({ item, onDismiss, onClickAction }) {
 
   if (pending) {
     return (
-      <div className="border border-slate-200 bg-slate-50 p-5 flex items-center justify-between">
+      <Card padding="lg" className="bg-slate-50 flex items-center justify-between">
         <span className="text-sm text-slate-400 italic">Recommendation dismissed</span>
-        <button onClick={() => undo(item.id)} className="text-xs text-[#0F2847] hover:underline">Undo</button>
-      </div>
+        <Button onClick={() => undo(item.id)} variant="link" size="sm">Undo</Button>
+      </Card>
     );
   }
 
   const bullets = item.explanation_bullets || [];
 
   return (
-    <div className="border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
+    <Card padding="lg" className="hover:border-slate-300">
       <div className="flex items-start gap-3">
         <Avatar url={item.avatar_url} name={item.full_name} size={40} />
         <div className="flex-1 min-w-0">
@@ -548,7 +496,7 @@ function MentorCard({ item, onDismiss, onClickAction }) {
         <ActionBtn label="Send Message" icon={MessageSquare} onClick={() => onClickAction(item.id, "clicked")} />
         <ActionBtn label="Dismiss" icon={X} variant="danger" onClick={() => { dismiss(item.id, onDismiss); onClickAction(item.id, "dismissed"); }} />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -556,7 +504,7 @@ function ReviewerCard({ item, onClickAction }) {
   const bullets = item.explanation_bullets || [];
 
   return (
-    <div className="border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
+    <Card padding="lg" className="hover:border-slate-300">
       <div className="flex items-start gap-3">
         <Avatar url={item.avatar_url} name={item.full_name} size={40} />
         <div className="flex-1 min-w-0">
@@ -586,13 +534,13 @@ function ReviewerCard({ item, onClickAction }) {
         <ActionBtn label="Invite as Reviewer" icon={UserPlus} variant="primary" onClick={() => onClickAction(item.id, "clicked")} />
         <ActionBtn label="View Profile" icon={ExternalLink} onClick={() => onClickAction(item.id, "clicked")} />
       </div>
-    </div>
+    </Card>
   );
 }
 
 function InstitutionCard({ item, onClickAction }) {
   return (
-    <div className="border border-slate-200 bg-white p-5 hover:border-slate-300 transition-colors">
+    <Card padding="lg" className="hover:border-slate-300">
       <div className="flex items-start gap-3 mb-2">
         <div className="w-10 h-10 bg-[#0F2847] text-white flex items-center justify-center flex-shrink-0">
           <Building2 size={18} strokeWidth={1.5} />
@@ -609,7 +557,7 @@ function InstitutionCard({ item, onClickAction }) {
         <ActionBtn label="View Researchers" icon={Users} variant="primary" onClick={() => onClickAction(item.name, "clicked")} />
         <ActionBtn label="Connect with Institution" icon={Building2} onClick={() => onClickAction(item.name, "clicked")} />
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -706,16 +654,17 @@ const ROLES = [
 
 function SelectFilter({ label, value, onChange, options }) {
   return (
-    <select
+    <FormSelect
+      size="sm"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="text-xs border border-slate-300 bg-white text-slate-700 px-2 py-1.5 hover:border-slate-400 focus:outline-none focus:border-[#0F2847] transition-colors"
+      wrapperClassName="!mb-0"
     >
       <option value="">{label}</option>
       {options.filter(Boolean).map((o) => (
         <option key={o} value={o}>{o}</option>
       ))}
-    </select>
+    </FormSelect>
   );
 }
 
@@ -747,15 +696,11 @@ function FilterBar({ tabId, filters, onChange, manuscripts }) {
     return (
       <div className="flex items-center gap-2 flex-wrap">
         <Filter size={13} strokeWidth={1.5} className="text-slate-400" />
-        <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={filters.open_access || false}
-            onChange={(e) => onChange({ ...filters, open_access: e.target.checked })}
-            className="rounded"
-          />
-          Open Access only
-        </label>
+        <Checkbox
+          label="Open Access only"
+          checked={filters.open_access || false}
+          onChange={(e) => onChange({ ...filters, open_access: e.target.checked })}
+        />
         <SelectFilter label="All Quartiles" value={filters.quartile || ""} onChange={set("quartile")} options={["Q1", "Q2", "Q3", "Q4"]} />
       </div>
     );
@@ -924,60 +869,34 @@ export default function Recommendations() {
   const error = errorByTab[activeTab.id];
 
   return (
-    <AIWorkspaceLayout>
-    <div className="bg-[#F4F6FA]" style={{ margin: "-24px" }}>
-      {/* ── Sticky header ─────────────────────────────────── */}
-      <header className="sticky top-0 z-30 border-b border-slate-200 px-6 pt-3 pb-4" style={{ background: "#F4F6FA" }}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 mt-3">
-          <div>
-            <div className="overline text-[#0F2847]">AI-Powered</div>
-            <h1 className="font-serif text-2xl text-slate-900 leading-tight">Academic Recommendations</h1>
-            <p className="text-xs text-slate-500 mt-0.5">Personalized for your research profile</p>
-          </div>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshDisabled}
-            className="inline-flex items-center gap-2 border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-[#0F2847] hover:text-[#0F2847] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            <RefreshCw size={14} strokeWidth={1.5} className={refreshing ? "animate-spin" : ""} />
-            {refreshing ? "Refreshing…" : refreshDisabled ? "Refresh (wait 30s)" : "Refresh Recommendations"}
-          </button>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto flex gap-0">
-        {/* ── Left sidebar tabs ──────────────────────────────── */}
-        <aside className="w-64 shrink-0 border-r border-slate-200 bg-white min-h-[calc(100vh-73px)] sticky top-[73px]">
-          <nav className="py-4">
-            {TABS.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = tab.id === activeTab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => { setActiveTab(tab); setFilters({}); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm text-left transition-colors ${
-                    isActive
-                      ? "bg-[#0F2847] text-white"
-                      : "text-slate-700 hover:bg-slate-50 hover:text-[#0F2847]"
-                  }`}
-                >
-                  <Icon size={16} strokeWidth={1.5} className="flex-shrink-0" />
-                  <span className="leading-tight">{tab.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-        </aside>
-
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
+      title="Academic Recommendations"
+      subtitle="Personalized for your research profile"
+      actions={
+        <Button onClick={handleRefresh} disabled={refreshDisabled} variant="outline" size="sm">
+          <RefreshCw size={14} strokeWidth={1.5} className={refreshing ? "animate-spin" : ""} />
+          {refreshing ? "Refreshing…" : refreshDisabled ? "Refresh (wait 30s)" : "Refresh"}
+        </Button>
+      }
+      toolbar={
+        <NavTabs
+          className="overflow-x-auto scrollbar-none"
+          tabs={TABS.map((tab) => ({ id: tab.id, label: tab.label, icon: tab.icon }))}
+          active={activeTab.id}
+          onChange={(id) => { setActiveTab(TABS.find((t) => t.id === id) || TABS[0]); setFilters({}); }}
+        />
+      }
+    >
+    <div>
+      <div>
         {/* ── Main content area ──────────────────────────────── */}
-        <main className="flex-1 min-w-0 p-6">
+        <main className="flex-1 min-w-0">
           {/* Sub-header with filter bar */}
           <div className="flex items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-200">
             <div>
-              <h2 className="font-serif text-xl text-slate-900">{activeTab.label}</h2>
               {!isLoading && !error && (
-                <div className="text-xs text-slate-500 mt-0.5">
+                <div className="text-xs text-slate-500">
                   {displayItems.length} recommendation{displayItems.length !== 1 ? "s" : ""}
                 </div>
               )}
@@ -1070,6 +989,6 @@ export default function Recommendations() {
         </main>
       </div>
     </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

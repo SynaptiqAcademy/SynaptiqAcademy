@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { AnalyticsLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import {
   useResearchReputation,
   useReputationEvents,
@@ -12,6 +12,15 @@ import {
 } from "@/hooks/useReputation";
 import { useAuth } from "@/contexts/AuthContext";
 import { WARM } from "@/lib/tokens";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { StatCard } from "@/components/ds/StatCard";
+import { ProgressBar as DsProgressBar } from "@/components/ds/Progress";
+import { NavTabs } from "@/components/ds/NavTabs";
+import { ErrorState } from "@/components/ds/ErrorState";
+import { EmptyState } from "@/components/ds/EmptyState";
+import { SkeletonCard as DsSkeletonCard } from "@/components/ds/LoadingState";
 import {
   TrendingUp, Award, BarChart2, Users, BookOpen, Star,
   ArrowRight, ChevronRight, Target,
@@ -54,18 +63,6 @@ function IntelNav({ current }) {
 
 // ── Primitives ────────────────────────────────────────────────────────────────
 
-function Stat({ label, value, sub, highlight }) {
-  return (
-    <div className={`border bg-white p-6 ${highlight ? "border-[#0F2847]" : "border-slate-200"}`}>
-      <div className="overline">{label}</div>
-      <div className={`font-serif text-5xl mt-3 tracking-tight ${highlight ? "text-[#0F2847]" : "text-slate-900"}`}>
-        {value ?? "—"}
-      </div>
-      {sub && <div className="text-xs text-slate-400 mt-1 font-mono">{sub}</div>}
-    </div>
-  );
-}
-
 function SectionHeader({ label, action }) {
   return (
     <div className="flex items-center justify-between mb-5">
@@ -78,26 +75,20 @@ function SectionHeader({ label, action }) {
 function ScoreBar({ label, value, sub }) {
   const pct = Math.min(100, Math.max(0, Number(value) || 0));
   return (
-    <div className="border border-slate-200 bg-white p-5">
+    <Card padding="lg">
       <div className="flex items-baseline justify-between mb-1">
         <div className="overline text-slate-500">{label}</div>
         <div className="font-serif text-2xl text-slate-900">{pct}</div>
       </div>
-      <div className="h-1.5 bg-slate-100 relative mt-2">
-        <div className="absolute inset-y-0 left-0 bg-[#0F2847] transition-all duration-700" style={{ width: `${pct}%` }} />
-      </div>
+      <DsProgressBar value={pct} showValue={false} className="mt-2" />
       {sub && <div className="text-xs text-slate-400 mt-1.5 font-mono">{sub}</div>}
-    </div>
+    </Card>
   );
 }
 
 function ProgressBar({ value }) {
   const v = Math.min(100, Math.max(0, value || 0));
-  return (
-    <div className="h-1.5 bg-slate-100 w-full overflow-hidden">
-      <div className="h-full bg-[#0F2847] transition-all duration-700" style={{ width: `${v}%` }} />
-    </div>
-  );
+  return <DsProgressBar value={v} showValue={false} />;
 }
 
 // ── Icon helpers ──────────────────────────────────────────────────────────────
@@ -134,15 +125,7 @@ function formatDate(iso) {
 // ── Skeletons ─────────────────────────────────────────────────────────────────
 
 function SkeletonCard({ rows = 3 }) {
-  return (
-    <div className="border border-slate-200 bg-white p-5 animate-pulse space-y-3">
-      <div className="h-3 w-1/3 bg-slate-200" />
-      <div className="h-8 w-1/2 bg-slate-200" />
-      {Array.from({ length: rows - 2 }).map((_, i) => (
-        <div key={i} className="h-3 w-full bg-slate-200" />
-      ))}
-    </div>
-  );
+  return <DsSkeletonCard rows={Math.max(1, rows - 2)} />;
 }
 
 // ── Badge card ────────────────────────────────────────────────────────────────
@@ -150,7 +133,7 @@ function SkeletonCard({ rows = 3 }) {
 function BadgeCard({ badge, locked = false }) {
   const rarityClass = RARITY_COLORS[badge.rarity] || RARITY_COLORS.common;
   return (
-    <div className={`border p-4 flex flex-col items-center gap-2 text-center ${locked ? "opacity-40 grayscale" : ""} ${rarityClass}`}>
+    <Card padding="md" variant="ghost" className={`flex flex-col items-center gap-2 text-center border ${locked ? "opacity-40 grayscale" : ""} ${rarityClass}`}>
       <span className="text-2xl">{badge.icon || "🏅"}</span>
       <div className="text-xs font-semibold text-slate-700 leading-tight">{badge.label}</div>
       <div className="text-[10px] text-slate-400 capitalize font-mono">{badge.rarity}</div>
@@ -158,7 +141,7 @@ function BadgeCard({ badge, locked = false }) {
         <div className="text-[10px] text-slate-400">{formatDate(badge.awarded_at)}</div>
       )}
       {locked && <div className="text-[10px] text-slate-400 italic">Not yet earned</div>}
-    </div>
+    </Card>
   );
 }
 
@@ -215,9 +198,7 @@ function CategoryBreakdown({ breakdown, totalScore }) {
               <span className="text-xs font-medium text-slate-700">{CATEGORY_LABELS[key] || key}</span>
               <span className="text-xs text-slate-500 font-mono">{val} pts ({pct}%)</span>
             </div>
-            <div className="h-1.5 bg-slate-100 w-full overflow-hidden">
-              <div className="h-full bg-[#0F2847] transition-all duration-700" style={{ width: `${pct}%` }} />
-            </div>
+            <DsProgressBar value={pct} showValue={false} />
           </div>
         );
       })}
@@ -265,10 +246,10 @@ function QuickActions() {
       <SectionHeader label="Continue in Research Intelligence" />
       <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
         {actions.map(({ to, label, icon: Icon }) => (
-          <Link key={to} to={to} className="border border-slate-200 bg-white p-4 hover:border-[#0F2847] transition-colors group block">
+          <Card key={to} to={to} padding="md" className="group">
             <Icon size={14} strokeWidth={1.5} className="text-slate-300 group-hover:text-[#0F2847] mb-2 transition-colors" />
             <div className="text-xs font-medium text-slate-700 group-hover:text-[#0F2847] transition-colors">{label}</div>
-          </Link>
+          </Card>
         ))}
       </div>
     </section>
@@ -300,9 +281,9 @@ export default function ReputationAnalytics() {
     }
     if (repError) {
       return (
-        <div className="border border-red-200 bg-red-50 p-6 text-sm text-red-700">
-          Failed to load reputation data. Please refresh.
-        </div>
+        <Card padding="xl">
+          <ErrorState message="Failed to load reputation data. Please refresh." />
+        </Card>
       );
     }
     if (!rep) return null;
@@ -314,7 +295,7 @@ export default function ReputationAnalytics() {
     return (
       <div className="space-y-5">
         {/* Score + level strip */}
-        <div className="border border-[#0F2847] bg-white p-6">
+        <Card padding="xl" style={{ borderColor: "#0F2847" }}>
           <div className="flex flex-col md:flex-row md:items-center gap-6">
             <div className="flex-shrink-0">
               <div className="overline text-[#0F2847] mb-1">Reputation Score</div>
@@ -323,6 +304,8 @@ export default function ReputationAnalytics() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-3">
+                {/* level.tone is a dynamic Tailwind class string from data (e.g. "border-emerald-200 bg-emerald-50 text-emerald-700"),
+                    not a fixed Badge variant or hex color — Badge's prop API can't express arbitrary per-level tone classes, so this stays hand-rolled. */}
                 <span className={`inline-flex items-center gap-1 px-3 py-1 border text-sm font-semibold ${level.tone || "border-slate-200 bg-slate-50 text-slate-600"}`}>
                   Level {level.level} · {level.label}
                 </span>
@@ -345,14 +328,14 @@ export default function ReputationAnalytics() {
                 { label: "Country",     value: rep.rank_country },
                 { label: "Institution", value: rep.rank_institution },
               ].map(({ label, value }) => (
-                <div key={label} className="border border-slate-200 bg-white p-3 text-center min-w-[72px]">
+                <Card key={label} padding="sm" className="text-center min-w-[72px]">
                   <div className="font-serif text-2xl text-[#0F2847]">{value ? `#${value}` : "—"}</div>
                   <div className="overline text-slate-400 mt-0.5">{label}</div>
-                </div>
+                </Card>
               ))}
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Score breakdown grid */}
         <div className="grid sm:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -364,10 +347,10 @@ export default function ReputationAnalytics() {
             ["Teaching",       rep.teaching_score],
             ["Profile",        rep.profile_score],
           ].map(([label, val]) => (
-            <div key={label} className="border border-slate-200 bg-white p-4 text-center">
+            <Card key={label} padding="md" className="text-center">
               <div className="font-serif text-3xl text-[#0F2847]">{val ?? 0}</div>
               <div className="overline text-slate-400 mt-1">{label}</div>
-            </div>
+            </Card>
           ))}
         </div>
       </div>
@@ -390,10 +373,10 @@ export default function ReputationAnalytics() {
         <section>
           <SectionHeader label="Research Activity" />
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <Stat label="Projects"      value={rep.research_projects_count ?? 0} />
-            <Stat label="Publications"  value={rep.research_publications_count ?? 0} />
-            <Stat label="Reviews"       value={rep.research_reviews_count ?? 0} />
-            <Stat label="Collaborations" value={rep.research_collaborations_count ?? 0} />
+            <StatCard label="Projects"      value={rep.research_projects_count ?? 0} />
+            <StatCard label="Publications"  value={rep.research_publications_count ?? 0} />
+            <StatCard label="Reviews"       value={rep.research_reviews_count ?? 0} />
+            <StatCard label="Collaborations" value={rep.research_collaborations_count ?? 0} />
           </div>
         </section>
 
@@ -420,9 +403,9 @@ export default function ReputationAnalytics() {
             <SectionHeader
               label={`Earned Badges (${rep.badges.length})`}
               action={
-                <button onClick={() => setActiveTab("Badges")} className="text-xs text-[#0F2847] hover:underline flex items-center gap-1">
+                <Button onClick={() => setActiveTab("Badges")} variant="link" className="text-xs !text-[#0F2847]">
                   View all <ArrowRight size={10} />
-                </button>
+                </Button>
               }
             />
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -438,15 +421,15 @@ export default function ReputationAnalytics() {
           <SectionHeader
             label="Rankings"
             action={
-              <button onClick={() => setActiveTab("Rankings")} className="text-xs text-[#0F2847] hover:underline flex items-center gap-1">
+              <Button onClick={() => setActiveTab("Rankings")} variant="link" className="text-xs !text-[#0F2847]">
                 Full rankings <ArrowRight size={10} />
-              </button>
+              </Button>
             }
           />
           <div className="grid sm:grid-cols-3 gap-5">
-            <Stat label="Global Rank"      value={rep.rank_global ? `#${rep.rank_global}` : "—"} sub={`Top ${rep.percentile_global ? (100 - rep.percentile_global).toFixed(1) : "?"}%`} />
-            <Stat label="Country Rank"     value={rep.rank_country ? `#${rep.rank_country}` : "—"} />
-            <Stat label="Institution Rank" value={rep.rank_institution ? `#${rep.rank_institution}` : "—"} />
+            <StatCard label="Global Rank"      value={rep.rank_global ? `#${rep.rank_global}` : "—"} sub={`Top ${rep.percentile_global ? (100 - rep.percentile_global).toFixed(1) : "?"}%`} />
+            <StatCard label="Country Rank"     value={rep.rank_country ? `#${rep.rank_country}` : "—"} />
+            <StatCard label="Institution Rank" value={rep.rank_institution ? `#${rep.rank_institution}` : "—"} />
           </div>
         </section>
       </div>
@@ -468,21 +451,21 @@ export default function ReputationAnalytics() {
         {/* Monthly chart */}
         <section>
           <SectionHeader label="Reputation Points by Month" />
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <p className="text-xs text-slate-500 mb-4">Reputation points earned each calendar month</p>
             <MonthlyBarChart months={analytics?.events_by_month || []} />
-          </div>
+          </Card>
         </section>
 
         {/* Category breakdown */}
         <section>
           <SectionHeader label="Score by Category" />
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <CategoryBreakdown
               breakdown={analytics?.category_breakdown}
               totalScore={rep?.overall_score}
             />
-          </div>
+          </Card>
         </section>
 
         {/* Recent events */}
@@ -493,7 +476,7 @@ export default function ReputationAnalytics() {
               <span className="text-xs text-slate-400 font-mono">{analytics.total_events} total events</span>
             )}
           />
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             {!events || events.length === 0 ? (
               <div className="py-8 text-center text-slate-400 text-sm">
                 No events recorded yet. Publish research, collaborate, and engage to earn reputation points.
@@ -514,7 +497,7 @@ export default function ReputationAnalytics() {
                 ))}
               </div>
             )}
-          </div>
+          </Card>
         </section>
       </div>
     );
@@ -535,9 +518,9 @@ export default function ReputationAnalytics() {
         {/* Percentile */}
         <section>
           <SectionHeader label="Global Percentile" />
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="xl">
             <PercentileDisplay percentile={rep.percentile_global} />
-          </div>
+          </Card>
         </section>
 
         {/* Rank breakdown */}
@@ -549,11 +532,11 @@ export default function ReputationAnalytics() {
               { label: "Country Rank",     value: rep.rank_country,     desc: "Among researchers in your country" },
               { label: "Institution Rank", value: rep.rank_institution, desc: "Among researchers at your institution" },
             ].map(({ label, value, desc }) => (
-              <div key={label} className="border border-slate-200 bg-white p-6 text-center">
+              <Card key={label} padding="xl" className="text-center">
                 <div className="font-serif text-5xl text-[#0F2847] tracking-tight">{value ? `#${value}` : "—"}</div>
                 <div className="overline mt-2">{label}</div>
                 <div className="text-xs text-slate-400 mt-1">{desc}</div>
-              </div>
+              </Card>
             ))}
           </div>
         </section>
@@ -561,7 +544,7 @@ export default function ReputationAnalytics() {
         {/* Level progression */}
         <section>
           <SectionHeader label="Level Progression" />
-          <div className="border border-slate-200 bg-white p-5 space-y-3">
+          <Card padding="lg" className="space-y-3">
             {RESEARCH_LEVELS.map((lvl) => {
               const isCurrentLevel = rep.reputation_level === lvl.level;
               const isPast = (rep.reputation_level || 1) > lvl.level;
@@ -581,18 +564,18 @@ export default function ReputationAnalytics() {
                     <div className="text-xs text-slate-400 font-mono">{lvl.min} – {lvl.max === 9999999 ? "∞" : lvl.max} pts</div>
                   </div>
                   {isCurrentLevel && (
-                    <span className="text-xs font-medium px-2 py-0.5 bg-[#0F2847] text-white">Current</span>
+                    <Badge variant="default" size="sm">Current</Badge>
                   )}
                 </div>
               );
             })}
-          </div>
+          </Card>
         </section>
 
         <div className="text-center">
-          <Link to="/leaderboards" className="inline-flex items-center gap-2 text-sm text-[#0F2847] hover:underline font-medium">
+          <Button as={Link} to="/leaderboards" variant="link" className="!text-[#0F2847] font-medium">
             View Global Leaderboards <ChevronRight size={14} />
-          </Link>
+          </Button>
         </div>
       </div>
     );
@@ -614,7 +597,7 @@ export default function ReputationAnalytics() {
     if (repLoading) return (
       <div className="grid sm:grid-cols-4 gap-4">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="border border-slate-200 bg-white p-4 animate-pulse h-28" />
+          <Card key={i} padding="md" className="animate-pulse h-28" />
         ))}
       </div>
     );
@@ -632,13 +615,13 @@ export default function ReputationAnalytics() {
 
     if (Object.keys(badgesByCategory).length === 0) {
       return (
-        <div className="border border-dashed border-slate-200 bg-white p-12 text-center">
-          <span className="text-5xl mb-4 block">🏅</span>
-          <div className="overline text-slate-500 mb-2">No badges yet</div>
-          <p className="text-sm text-slate-500 max-w-sm mx-auto">
-            Complete research activities — publish papers, collaborate with peers, submit reviews, and engage with the community to earn your first badge.
-          </p>
-        </div>
+        <EmptyState
+          icon={<span className="text-5xl">🏅</span>}
+          title="No badges yet"
+          description="Complete research activities — publish papers, collaborate with peers, submit reviews, and engage with the community to earn your first badge."
+          size="lg"
+          dashed
+        />
       );
     }
 
@@ -665,14 +648,14 @@ export default function ReputationAnalytics() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <AnalyticsLayout
+    <ResearchLayout
       title="Reputation"
       subtitle="Your academic reputation score, earned badges, and relative rankings — all computed from real platform activity."
       nav={<IntelNav current="/reputation" />}
       actions={
-        <Link to="/leaderboards" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none", padding: "8px 14px", border: "1px solid rgba(15,23,42,0.08)", background: "#fff" }}>
+        <Button as={Link} to="/leaderboards" variant="outline" size="sm">
           <Star size={12} strokeWidth={1.5} /> Leaderboards
-        </Link>
+        </Button>
       }
     >
       <div className="space-y-10">
@@ -681,23 +664,12 @@ export default function ReputationAnalytics() {
         {renderHeader()}
 
         {/* Tab bar */}
-        <div className="border-b border-slate-200">
-          <div className="flex gap-0">
-            {TABS.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-3 text-sm font-medium border-b-2 transition -mb-px ${
-                  activeTab === tab
-                    ? "border-[#0F2847] text-[#0F2847]"
-                    : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
+        <NavTabs
+          variant="underline"
+          active={activeTab}
+          onChange={setActiveTab}
+          tabs={TABS.map((tab) => ({ id: tab, label: tab }))}
+        />
 
         {/* Tab content */}
         <div>
@@ -711,6 +683,6 @@ export default function ReputationAnalytics() {
         <QuickActions />
 
       </div>
-    </AnalyticsLayout>
+    </ResearchLayout>
   );
 }

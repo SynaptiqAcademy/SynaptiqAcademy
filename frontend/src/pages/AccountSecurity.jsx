@@ -30,6 +30,7 @@ import { FormField } from "@/components/ds/Form";
 import { Modal, Dialog } from "@/components/ds/Modal";
 import { EmptyState } from "@/components/ds/EmptyState";
 import { Spinner } from "@/components/ds/LoadingState";
+import { List, ListItem } from "@/components/ds/List";
 import { NAVY, WARM, BRD, EMERALD, CRIMSON, TEXT_MUTED, TEXT_SECONDARY, TEXT_PRIMARY, TEXT_DISABLED, DANGER_BG } from "@/lib/tokens";
 import { TID } from "@/lib/testIds";
 import api, { formatApiError, getErrorMessage } from "@/lib/api";
@@ -234,26 +235,32 @@ export default function AccountSecurity() {
               </div>
             ) : (
               <>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${BRD}` }}>
-                    <span style={{ fontSize: 12.5, color: TEXT_SECONDARY }}>Status</span>
-                    <Badge variant={mfaStatus.enabled ? "success" : "neutral"} size="sm">{mfaStatus.enabled ? "Enabled" : "Disabled"}</Badge>
-                  </div>
+                <List border={false} radius={0} style={{ background: "transparent" }}>
+                  <ListItem
+                    title="Status"
+                    trailing={<Badge variant={mfaStatus.enabled ? "success" : "neutral"} size="sm">{mfaStatus.enabled ? "Enabled" : "Disabled"}</Badge>}
+                    style={{ padding: "10px 0" }}
+                  />
                   {mfaStatus.enabled && (
                     <>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${BRD}` }}>
-                        <span style={{ fontSize: 12.5, color: TEXT_SECONDARY }}>Method</span>
-                        <span style={{ fontSize: 12.5, fontWeight: 600, color: TEXT_PRIMARY }}>Authenticator App (TOTP)</span>
-                      </div>
-                      <button onClick={openRegenerate} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${BRD}`, borderTop: "none", borderLeft: "none", borderRight: "none", background: "none", cursor: "pointer", width: "100%", textAlign: "left" }}>
-                        <span style={{ fontSize: 12.5, color: TEXT_SECONDARY }}>Backup Codes</span>
-                        <span style={{ fontSize: 12.5, fontWeight: 600, color: NAVY, display: "flex", alignItems: "center", gap: 4 }}>
-                          {mfaStatus.recovery_codes_remaining} codes remaining <ArrowRight size={11} />
-                        </span>
-                      </button>
+                      <ListItem
+                        title="Method"
+                        trailing={<span style={{ fontSize: 12.5, fontWeight: 600, color: TEXT_PRIMARY }}>Authenticator App (TOTP)</span>}
+                        style={{ padding: "10px 0" }}
+                      />
+                      <ListItem
+                        title="Backup Codes"
+                        onClick={openRegenerate}
+                        trailing={
+                          <span style={{ fontSize: 12.5, fontWeight: 600, color: NAVY, display: "flex", alignItems: "center", gap: 4 }}>
+                            {mfaStatus.recovery_codes_remaining} codes remaining <ArrowRight size={11} />
+                          </span>
+                        }
+                        style={{ padding: "10px 0" }}
+                      />
                     </>
                   )}
-                </div>
+                </List>
                 <div style={{ marginTop: 14 }}>
                   {mfaStatus.enabled ? (
                     <Button size="sm" variant="ghost" onClick={openDisable}>Disable 2FA</Button>
@@ -275,27 +282,29 @@ export default function AccountSecurity() {
             ) : sessions.length === 0 ? (
               <EmptyState icon={<Monitor />} title="No other active sessions." size="sm" />
             ) : (
-              <div style={{ display: "flex", flexDirection: "column" }}>
+              <List border={false} radius={0} style={{ background: "transparent" }}>
                 {sessions.map((s, i) => {
                   const Icon = s.is_mobile ? Smartphone : Monitor;
                   return (
-                    <div key={s.session_id || `${s.ip}-${s.issued_at}-${i}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderTop: i > 0 ? `1px solid ${BRD}` : "none" }}>
-                      <div style={{ width: 34, height: 34, borderRadius: 9, background: WARM, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        <Icon size={15} color={NAVY} />
-                      </div>
-                      <div style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{ fontSize: 12.5, fontWeight: 700, color: TEXT_PRIMARY }}>{s.label}</div>
-                        <div style={{ fontSize: 11.5, color: TEXT_MUTED, marginTop: 1 }}>{s.ip || "Unknown IP"} · {timeAgo(s.last_seen_at)}</div>
-                      </div>
-                      {s.is_current ? (
-                        <Badge variant="success" size="sm">Current Session</Badge>
-                      ) : (
-                        <Button size="sm" variant="ghost" onClick={() => setRevokeTarget(s)}>Revoke</Button>
-                      )}
-                    </div>
+                    <ListItem
+                      key={s.session_id || `${s.ip}-${s.issued_at}-${i}`}
+                      leading={
+                        <div style={{ width: 34, height: 34, borderRadius: 9, background: WARM, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <Icon size={15} color={NAVY} />
+                        </div>
+                      }
+                      title={s.label}
+                      subtitle={`${s.ip || "Unknown IP"} · ${timeAgo(s.last_seen_at)}`}
+                      trailing={
+                        s.is_current
+                          ? <Badge variant="success" size="sm">Current Session</Badge>
+                          : <Button size="sm" variant="ghost" onClick={() => setRevokeTarget(s)}>Revoke</Button>
+                      }
+                      style={{ padding: "12px 0", borderBottom: i < sessions.length - 1 ? `1px solid ${BRD}` : "none" }}
+                    />
                   );
                 })}
-              </div>
+              </List>
             )}
           </Card>
 

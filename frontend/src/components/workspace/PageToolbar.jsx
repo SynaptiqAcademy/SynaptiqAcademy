@@ -141,6 +141,7 @@ export function ViewToggle({ view = "grid", onChange }) {
     <button
       onClick={() => onChange?.(v)}
       aria-pressed={view === v}
+      aria-label={`Switch to ${v} view`}
       style={{
         display: "flex",
         alignItems: "center",

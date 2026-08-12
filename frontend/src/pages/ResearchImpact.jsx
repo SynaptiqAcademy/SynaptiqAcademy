@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { AnalyticsLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -14,6 +14,17 @@ import {
 import { TID } from "../lib/testIds";
 import { NAVY, WARM } from "@/lib/tokens";
 import { Spinner } from "@/components/ds/LoadingState";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Badge as DsBadge } from "@/components/ds/Badge";
+import { StatCard } from "@/components/ds/StatCard";
+import { Input } from "@/components/ds/Input";
+import { Avatar } from "@/components/ds/Avatar";
+import { NavTabs } from "@/components/ds/NavTabs";
+import { InlineError, Callout } from "@/components/ds/Alert";
+import { ProgressBar } from "@/components/ds/Progress";
+import { EmptyState } from "@/components/ds/EmptyState";
+import { ErrorState } from "@/components/ds/ErrorState";
 import {
   useResearchImpactDashboard,
   useImpactCitationChart,
@@ -63,12 +74,12 @@ const ImpactHero = ({ kpi, onExport }) => (
         </p>
       </div>
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={onExport} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", padding: "8px 14px", border: "1px solid rgba(15,23,42,0.08)", background: "#fff", cursor: "pointer" }}>
+        <Button onClick={onExport} variant="outline" size="sm">
           <Download size={12} strokeWidth={1.5} /> Export CSV
-        </button>
-        <button onClick={() => window.print()} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#fff", padding: "8px 14px", background: "#0F2847", border: "none", cursor: "pointer" }}>
+        </Button>
+        <Button onClick={() => window.print()} variant="primary" size="sm">
           <FileText size={12} strokeWidth={1.5} /> Print / PDF
-        </button>
+        </Button>
       </div>
     </div>
   </div>
@@ -78,16 +89,13 @@ const ImpactHero = ({ kpi, onExport }) => (
 
 function Stat({ label, value, sub, highlight, icon: Icon }) {
   return (
-    <div className={`border bg-white p-6 ${highlight ? "border-[#0F2847]" : "border-slate-200"}`}>
-      <div className="flex items-center justify-between mb-1">
-        <div className="overline">{label}</div>
-        {Icon && <Icon size={14} strokeWidth={1.5} className="text-slate-400" />}
-      </div>
-      <div className={`font-serif text-5xl mt-2 tracking-tight ${highlight ? "text-[#0F2847]" : "text-slate-900"}`}>
-        {value ?? "—"}
-      </div>
-      {sub && <div className="text-xs text-slate-500 mt-2">{sub}</div>}
-    </div>
+    <StatCard
+      label={label}
+      value={value ?? "—"}
+      sub={sub}
+      highlight={highlight}
+      icon={Icon ? <Icon size={14} strokeWidth={1.5} /> : undefined}
+    />
   );
 }
 
@@ -131,18 +139,18 @@ function ChartTooltip({ active, payload, label }) {
 }
 
 function Badge({ children, color = "slate" }) {
-  const colors = {
-    slate:  "bg-slate-100 text-slate-700",
-    cyan:   "bg-cyan-50 text-cyan-800 border border-cyan-200",
-    green:  "bg-green-50 text-green-800 border border-green-200",
-    amber:  "bg-amber-50 text-amber-800 border border-amber-200",
-    red:    "bg-red-50 text-red-800 border border-red-200",
-    navy:   "bg-[#0F2847] text-white",
+  const variants = {
+    slate: "neutral",
+    cyan:  "info",
+    green: "success",
+    amber: "warning",
+    red:   "danger",
+    navy:  "default",
   };
   return (
-    <span className={`text-[10px] font-medium px-2 py-0.5 ${colors[color] || colors.slate}`}>
+    <DsBadge variant={variants[color] || "neutral"} size="sm">
       {children}
-    </span>
+    </DsBadge>
   );
 }
 
@@ -158,18 +166,19 @@ function ScoreBar({ label, value, color = "#0F2847", formula, reasoning }) {
         <div className="h-full transition-all duration-700" style={{ width: `${value ?? 0}%`, backgroundColor: color }} />
       </div>
       {(formula || reasoning) && (
-        <button
+        <Button
           onClick={() => setOpen((o) => !o)}
-          className="text-[10px] text-slate-400 hover:text-slate-600 mt-1 flex items-center gap-1"
+          variant="link"
+          className="text-[10px] !text-slate-400 hover:!text-slate-600 mt-1"
         >
           <Info size={9} /> {open ? "Hide formula" : "How is this calculated?"}
-        </button>
+        </Button>
       )}
       {open && (
-        <div className="mt-2 border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600 space-y-1">
+        <Card padding="sm" variant="ghost" className="!bg-slate-50 border border-slate-100 mt-2 text-xs text-slate-600 space-y-1">
           {formula   && <p><span className="font-medium">Formula:</span> <code className="font-mono text-[10px]">{formula}</code></p>}
           {reasoning && <p><span className="font-medium">Your data:</span> {reasoning}</p>}
-        </div>
+        </Card>
       )}
     </div>
   );
@@ -197,12 +206,7 @@ function GoalRow({ label, current, target, pct }) {
         <span className="text-xs text-slate-700">{label}</span>
         <span className="text-xs text-slate-500">{current?.toLocaleString()} / {target?.toLocaleString()}</span>
       </div>
-      <div className="h-1.5 bg-slate-100 w-full">
-        <div
-          className="h-full bg-[#0F2847] transition-all duration-700"
-          style={{ width: `${Math.min(100, pct ?? 0)}%` }}
-        />
-      </div>
+      <ProgressBar value={Math.min(100, pct ?? 0)} showValue={false} size="sm" />
       {pct !== null && pct !== undefined && (
         <div className="text-[10px] text-slate-400 mt-0.5">{pct}% complete</div>
       )}
@@ -236,12 +240,8 @@ const PERIOD_LABELS  = { "30d": "30 days", "90d": "90 days", "365d": "1 year", "
 
 function UpgradeWall() {
   return (
-    <div className="space-y-6">
-      <header className="border-b border-slate-200 pb-6">
-        <div className="overline">Pro Researcher</div>
-        <h1 className="font-serif text-5xl text-slate-900 mt-2">Research Impact Dashboard</h1>
-      </header>
-      <div className="border border-slate-200 bg-white p-16 flex flex-col items-center text-center gap-6">
+    <ResearchLayout title="Research Impact Dashboard" subtitle="Pro Researcher">
+      <Card padding="xl" className="!p-16 flex flex-col items-center text-center gap-6">
         <Lock size={28} strokeWidth={1} className="text-slate-300" />
         <div>
           <div className="overline text-[#0F2847] mb-2">Pro Researcher plan required</div>
@@ -260,21 +260,18 @@ function UpgradeWall() {
             ["Goals & Progress",   "Set publication and citation milestones"],
             ["CSV Export",         "Download complete publication impact table"],
           ].map(([t, d]) => (
-            <div key={t} className="border border-slate-100 bg-slate-50 p-3">
+            <Card key={t} padding="sm" variant="ghost" className="!bg-slate-50 border border-slate-100">
               <CheckCircle2 size={12} className="text-[#0F2847] mb-1" />
               <div className="font-medium text-slate-800">{t}</div>
               <div className="text-slate-500 mt-0.5">{d}</div>
-            </div>
+            </Card>
           ))}
         </div>
-        <Link
-          to="/pricing"
-          className="inline-block bg-[#0F2847] text-white text-sm px-8 py-3 hover:opacity-90 transition-opacity"
-        >
+        <Button as={Link} to="/pricing" variant="primary" size="lg">
           Upgrade to Pro Researcher
-        </Link>
-      </div>
-    </div>
+        </Button>
+      </Card>
+    </ResearchLayout>
   );
 }
 
@@ -291,21 +288,13 @@ function CitationGrowthSection() {
         icon={TrendingUp}
         sub="Citation accumulation over time from OpenAlex snapshots"
         action={
-          <div className="flex gap-1">
-            {PERIOD_OPTIONS.map((p) => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`text-xs px-3 py-1 border transition-colors ${
-                  period === p
-                    ? "bg-[#0F2847] text-white border-[#0F2847]"
-                    : "border-slate-200 text-slate-600 hover:border-slate-400"
-                }`}
-              >
-                {PERIOD_LABELS[p]}
-              </button>
-            ))}
-          </div>
+          <NavTabs
+            variant="pill"
+            size="sm"
+            active={period}
+            onChange={setPeriod}
+            tabs={PERIOD_OPTIONS.map((p) => ({ id: p, label: PERIOD_LABELS[p] }))}
+          />
         }
       />
 
@@ -313,7 +302,7 @@ function CitationGrowthSection() {
 
       {!loading && data?.series?.length > 0 && (
         <div className="grid lg:grid-cols-2 gap-6">
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline mb-4">Cumulative Citations</div>
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={data.series}>
@@ -330,9 +319,9 @@ function CitationGrowthSection() {
                 <Area dataKey="cumulative" name="Cumulative" stroke="#0F2847" fill="url(#citFill)" strokeWidth={2} dot={false} />
               </AreaChart>
             </ResponsiveContainer>
-          </div>
+          </Card>
 
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline mb-4">New Citations per Month</div>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={data.series}>
@@ -343,12 +332,12 @@ function CitationGrowthSection() {
                 <Bar dataKey="new_citations" name="New Citations" fill="#0891b2" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </Card>
         </div>
       )}
 
       {!loading && data?.distribution?.length > 0 && (
-        <div className="mt-5 border border-slate-200 bg-white p-5">
+        <Card padding="lg" className="mt-5">
           <div className="overline mb-4">Publication Citation Distribution</div>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={data.distribution} layout="vertical">
@@ -362,18 +351,20 @@ function CitationGrowthSection() {
           <p className="text-xs text-slate-500 mt-2">
             Avg monthly velocity: <span className="font-medium text-slate-800">{data.avg_monthly_velocity} citations/month</span>
           </p>
-        </div>
+        </Card>
       )}
 
       {!loading && (!data?.series?.length) && (
-        <div className="border border-dashed border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
-          No citation history yet. Sync your publications via Citation Tracker to start tracking.
-          <div className="mt-3">
-            <Link to="/citations" className="text-[#0F2847] underline underline-offset-2 text-xs">
+        <EmptyState
+          title="No citation history yet"
+          description="Sync your publications via Citation Tracker to start tracking."
+          action={
+            <Button as={Link} to="/citations" variant="link">
               Go to Citation Tracker →
-            </Link>
-          </div>
-        </div>
+            </Button>
+          }
+          dashed
+        />
       )}
     </section>
   );
@@ -420,67 +411,50 @@ function GoalsSection({ goals: initialGoals, progress }) {
         sub="Set personal research milestones and track your progress"
         action={
           !editing ? (
-            <button
-              onClick={() => setEditing(true)}
-              className="text-xs border border-slate-200 px-3 py-1.5 hover:border-slate-400 transition-colors"
-            >
+            <Button onClick={() => setEditing(true)} variant="outline" size="sm">
               {initialGoals ? "Edit goals" : "Set goals"}
-            </button>
+            </Button>
           ) : (
             <div className="flex gap-2">
-              <button
-                onClick={() => setEditing(false)}
-                className="text-xs border border-slate-200 px-3 py-1.5 hover:border-slate-400"
-              >
+              <Button onClick={() => setEditing(false)} variant="outline" size="sm">
                 Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="text-xs bg-[#0F2847] text-white px-3 py-1.5 hover:opacity-90 disabled:opacity-50"
-              >
+              </Button>
+              <Button onClick={handleSave} disabled={saving} loading={saving} variant="primary" size="sm">
                 {saving ? "Saving…" : "Save"}
-              </button>
+              </Button>
             </div>
           )
         }
       />
 
       {error && (
-        <div className="flex items-center gap-2 text-xs text-red-700 border border-red-100 bg-red-50 p-3 mb-4">
-          <AlertCircle size={12} /> {error}
-        </div>
+        <InlineError className="mb-4">{error}</InlineError>
       )}
 
       {editing ? (
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {fields.map(({ key, label }) => (
-              <div key={key}>
-                <label className="text-xs font-medium text-slate-700 block mb-1">{label}</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={form[key]}
-                  onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                  className="w-full border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-[#0F2847]"
-                  placeholder="e.g. 50"
-                />
-              </div>
-            ))}
-            <div>
-              <label className="text-xs font-medium text-slate-700 block mb-1">Target Deadline</label>
-              <input
-                type="date"
-                value={form.deadline ? form.deadline.slice(0, 10) : ""}
-                onChange={(e) => setForm((f) => ({ ...f, deadline: e.target.value }))}
-                className="w-full border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-[#0F2847]"
+              <Input
+                key={key}
+                label={label}
+                type="number"
+                min={0}
+                value={form[key]}
+                onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+                placeholder="e.g. 50"
               />
-            </div>
+            ))}
+            <Input
+              label="Target Deadline"
+              type="date"
+              value={form.deadline ? form.deadline.slice(0, 10) : ""}
+              onChange={(e) => setForm((f) => ({ ...f, deadline: e.target.value }))}
+            />
           </div>
-        </div>
+        </Card>
       ) : progress ? (
-        <div className="border border-slate-200 bg-white p-6 space-y-5">
+        <Card padding="xl" className="space-y-5">
           {initialGoals?.deadline && (
             <p className="text-xs text-slate-500">Deadline: <span className="font-medium text-slate-700">{initialGoals.deadline.slice(0, 10)}</span></p>
           )}
@@ -489,13 +463,14 @@ function GoalsSection({ goals: initialGoals, progress }) {
           <GoalRow label="Collaborations" current={progress.collaborations?.current} target={progress.collaborations?.target} pct={progress.collaborations?.pct} />
           <GoalRow label="Projects"    current={progress.projects?.current}    target={progress.projects?.target}    pct={progress.projects?.pct} />
           <GoalRow label="h-index"     current={progress.h_index?.current}     target={progress.h_index?.target}     pct={progress.h_index?.pct} />
-        </div>
+        </Card>
       ) : (
-        <div className="border border-dashed border-slate-200 p-10 text-center">
-          <Target size={24} strokeWidth={1} className="text-slate-300 mx-auto mb-3" />
-          <p className="text-sm text-slate-500">No goals set yet.</p>
-          <p className="text-xs text-slate-400 mt-1">Click "Set goals" to add publication, citation, and collaboration targets.</p>
-        </div>
+        <EmptyState
+          icon={<Target />}
+          title="No goals set yet."
+          description={'Click "Set goals" to add publication, citation, and collaboration targets.'}
+          dashed
+        />
       )}
     </section>
   );
@@ -514,21 +489,19 @@ export default function ResearchImpact() {
 
   if (loading) {
     return (
-      <AnalyticsLayout title="Research Impact" subtitle="Publication output, citation growth, collaboration network, and research score in one view.">
+      <ResearchLayout title="Research Impact" subtitle="Publication output, citation growth, collaboration network, and research score in one view.">
         <div className="py-16 flex justify-center"><Spinner size={20} /></div>
-      </AnalyticsLayout>
+      </ResearchLayout>
     );
   }
 
   if (error) {
     return (
-      <AnalyticsLayout title="Research Impact" subtitle="Publication output, citation growth, collaboration network, and research score in one view.">
-        <div className="border border-red-100 bg-red-50 p-6 text-sm text-red-700 flex items-center gap-3">
-          <AlertCircle size={16} />
-          <span>Failed to load dashboard: {error}</span>
-          <button onClick={refetch} className="ml-auto text-xs underline">Retry</button>
-        </div>
-      </AnalyticsLayout>
+      <ResearchLayout title="Research Impact" subtitle="Publication output, citation growth, collaboration network, and research score in one view.">
+        <Card padding="xl">
+          <ErrorState message={`Failed to load dashboard: ${error}`} onRetry={refetch} />
+        </Card>
+      </ResearchLayout>
     );
   }
 
@@ -543,7 +516,7 @@ export default function ResearchImpact() {
   };
 
   return (
-    <AnalyticsLayout
+    <ResearchLayout
       title="Research Impact"
       subtitle={
         <>
@@ -553,21 +526,21 @@ export default function ResearchImpact() {
       }
       actions={
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={handleExport} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", padding: "8px 14px", border: "1px solid rgba(15,23,42,0.08)", background: "#fff", cursor: "pointer" }}>
+          <Button onClick={handleExport} variant="outline" size="sm">
             <Download size={12} strokeWidth={1.5} /> Export CSV
-          </button>
-          <button onClick={() => window.print()} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#fff", padding: "8px 14px", background: "#0F2847", border: "none", cursor: "pointer" }}>
+          </Button>
+          <Button onClick={() => window.print()} variant="primary" size="sm">
             <FileText size={12} strokeWidth={1.5} /> Print / PDF
-          </button>
+          </Button>
         </div>
       }
     >
     <div data-testid={TID.researchImpactPage}>
 
       {kpi?.has_citations_data === false && (
-        <div style={{ marginBottom: 24, fontSize: 12, color: "#92400E", background: "#FFFBEB", border: "1px solid #FDE68A", padding: "10px 16px" }}>
+        <Callout variant="warning" style={{ marginBottom: 24 }}>
           No citation data yet. Import publications via ORCID then sync via Citation Tracker to populate this dashboard.
-        </div>
+        </Callout>
       )}
 
       <div className="space-y-14">
@@ -594,7 +567,7 @@ export default function ResearchImpact() {
             sub="Top publications by citations, velocity, and recent growth" />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {pub_spotlight.most_cited && (
-              <div className="border border-[#0F2847] bg-white p-5">
+              <Card padding="lg" style={{ borderColor: "#0F2847" }}>
                 <div className="overline text-[#0F2847] mb-2">Most Cited</div>
                 <p className="text-sm font-medium text-slate-900 line-clamp-2">{pub_spotlight.most_cited.title}</p>
                 <div className="flex items-center gap-3 mt-3 text-xs text-slate-500">
@@ -611,11 +584,11 @@ export default function ResearchImpact() {
                   className="mt-4 flex items-center gap-1 text-xs text-[#0F2847] hover:underline">
                   View details <ChevronRight size={12} />
                 </Link>
-              </div>
+              </Card>
             )}
 
             {pub_spotlight.fastest_growing && (
-              <div className="border border-slate-200 bg-white p-5">
+              <Card padding="lg">
                 <div className="overline mb-2">Fastest Growing</div>
                 <p className="text-sm font-medium text-slate-900 line-clamp-2">{pub_spotlight.fastest_growing.title}</p>
                 <div className="flex items-center gap-3 mt-3 text-xs text-slate-500">
@@ -628,11 +601,11 @@ export default function ResearchImpact() {
                   className="mt-4 flex items-center gap-1 text-xs text-[#0F2847] hover:underline">
                   View details <ChevronRight size={12} />
                 </Link>
-              </div>
+              </Card>
             )}
 
             {pub_spotlight.highest_velocity && (
-              <div className="border border-slate-200 bg-white p-5">
+              <Card padding="lg">
                 <div className="overline mb-2">Highest Velocity</div>
                 <p className="text-sm font-medium text-slate-900 line-clamp-2">{pub_spotlight.highest_velocity.title}</p>
                 <div className="flex items-center gap-3 mt-3 text-xs text-slate-500">
@@ -644,7 +617,7 @@ export default function ResearchImpact() {
                   className="mt-4 flex items-center gap-1 text-xs text-[#0F2847] hover:underline">
                   View details <ChevronRight size={12} />
                 </Link>
-              </div>
+              </Card>
             )}
           </div>
         </section>
@@ -662,7 +635,7 @@ export default function ResearchImpact() {
             {allAreas.slice(0, 9).map((a) => {
               const t = TREND_BADGE[a.trend] || TREND_BADGE.stable;
               return (
-                <div key={a.area} className="border border-slate-200 bg-white p-4">
+                <Card key={a.area} padding="md">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <span className="text-sm font-medium text-slate-900 line-clamp-1">{a.area}</span>
                     <Badge color={t.color}>{t.label}</Badge>
@@ -674,7 +647,7 @@ export default function ResearchImpact() {
                   {a.growth_rate > 0 && (
                     <div className="text-xs text-green-700 mt-1">+{a.growth_rate}% growth</div>
                   )}
-                </div>
+                </Card>
               );
             })}
           </div>
@@ -692,15 +665,12 @@ export default function ResearchImpact() {
           <Stat label="Success Rate"      value={collabs?.success_rate != null ? `${collabs.success_rate}%` : "—"} />
         </div>
         {collabs?.top_collaborators?.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline mb-4">Active Collaborators</div>
             <div className="divide-y divide-slate-100">
               {collabs.top_collaborators.map((c) => (
                 <div key={c.id} className="flex items-center gap-3 py-2.5">
-                  {c.avatar_url
-                    ? <img src={c.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
-                    : <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium text-slate-600">{c.full_name?.[0]}</div>
-                  }
+                  <Avatar url={c.avatar_url} name={c.full_name} size={32} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-800 truncate">{c.full_name}</p>
                     <p className="text-xs text-slate-500 truncate">{c.institution || c.role}</p>
@@ -711,7 +681,7 @@ export default function ResearchImpact() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
       </section>
 
@@ -728,7 +698,7 @@ export default function ResearchImpact() {
         {projects?.project_cards?.length > 0 && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.project_cards.slice(0, 6).map((p) => (
-              <div key={p.id} className="border border-slate-200 bg-white p-4">
+              <Card key={p.id} padding="md">
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <p className="text-sm font-medium text-slate-900 line-clamp-1">{p.title}</p>
                   <Badge color={p.visibility === "public" ? "green" : "slate"}>
@@ -743,7 +713,7 @@ export default function ResearchImpact() {
                 <Link to={`/projects/${p.id}`} className="mt-3 text-xs text-[#0F2847] hover:underline flex items-center gap-0.5">
                   View project <ChevronRight size={10} />
                 </Link>
-              </div>
+              </Card>
             ))}
           </div>
         )}
@@ -759,7 +729,7 @@ export default function ResearchImpact() {
               <div className="space-y-3">
                 <div className="overline mb-3">From Gap Analyses</div>
                 {opportunities.gap_opportunities.map((o, i) => (
-                  <div key={i} className="border border-slate-200 bg-white p-4">
+                  <Card key={i} padding="md">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-medium text-slate-900">{o.area}</p>
                       <Badge color={o.opportunity_level === "high" ? "navy" : o.opportunity_level === "medium" ? "cyan" : "slate"}>
@@ -769,7 +739,7 @@ export default function ResearchImpact() {
                     {o.explanation && <p className="text-xs text-slate-500 mt-1">{o.explanation}</p>}
                     {o.why && <p className="text-xs text-slate-400 mt-1 italic">{o.why}</p>}
                     <div className="mt-2 text-xs text-slate-400">Topic: {o.topic}</div>
-                  </div>
+                  </Card>
                 ))}
                 <Link to="/research-gap-finder" className="text-xs text-[#0F2847] hover:underline flex items-center gap-0.5">
                   Run new gap analysis <ChevronRight size={10} />
@@ -781,7 +751,7 @@ export default function ResearchImpact() {
               <div className="space-y-3">
                 <div className="overline mb-3">From Citation Patterns</div>
                 {opportunities.citation_opps.map((o, i) => (
-                  <div key={i} className="border border-slate-200 bg-white p-4">
+                  <Card key={i} padding="md">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-medium text-slate-900">{o.area}</p>
                       <Badge color={o.priority === "high" ? "green" : "slate"}>
@@ -793,7 +763,7 @@ export default function ResearchImpact() {
                       <span>{(o.citations || 0).toLocaleString()} citations</span>
                       {o.growth_rate > 0 && <span>+{o.growth_rate}% growth</span>}
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             )}
@@ -809,16 +779,13 @@ export default function ResearchImpact() {
             icon={Award}
             sub="Transparent 5-component research impact score with open formulas"
             action={
-              <button
-                onClick={() => setScorecardOpen((o) => !o)}
-                className="text-xs border border-slate-200 px-3 py-1.5 hover:border-slate-400 transition-colors"
-              >
+              <Button onClick={() => setScorecardOpen((o) => !o)} variant="outline" size="sm">
                 {scorecardOpen ? "Collapse" : "Show formulas"}
-              </button>
+              </Button>
             }
           />
 
-          <div className="border border-[#0F2847] bg-white p-6">
+          <Card padding="xl" style={{ borderColor: "#0F2847" }}>
             <div className="flex items-center gap-6 mb-8">
               <div className="relative flex-shrink-0">
                 <ProgressRing pct={scorecard.overall} size={100} stroke={8} />
@@ -848,7 +815,7 @@ export default function ResearchImpact() {
                 />
               ))}
             </div>
-          </div>
+          </Card>
         </section>
       )}
 
@@ -860,13 +827,13 @@ export default function ResearchImpact() {
           <div className="grid sm:grid-cols-2 gap-4">
             {insights.map((ins, i) => {
               const Icon = INSIGHT_ICONS[ins.icon] || Sparkles;
-              const pColor = ins.priority === "high" ? "border-l-[#0F2847]" :
-                             ins.priority === "medium" ? "border-l-[#0891b2]" : "border-l-slate-300";
+              const pColor = ins.priority === "high" ? "#0F2847" :
+                             ins.priority === "medium" ? "#0891b2" : "#cbd5e1";
               return (
-                <div key={i} className={`border border-slate-200 border-l-4 ${pColor} bg-white p-4 flex gap-3`}>
+                <Card key={i} padding="md" accent={pColor} className="flex gap-3">
                   <Icon size={16} strokeWidth={1.5} className="text-slate-400 shrink-0 mt-0.5" />
                   <p className="text-sm text-slate-700">{ins.text}</p>
-                </div>
+                </Card>
               );
             })}
           </div>
@@ -880,43 +847,29 @@ export default function ResearchImpact() {
       <section data-testid={TID.impactExport}>
         <SectionHeader label="Export & Reports" icon={Download} />
         <div className="grid sm:grid-cols-2 gap-4">
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="xl">
             <div className="overline mb-2">CSV Export</div>
             <p className="text-xs text-slate-500 mb-4">Download all publications with citation counts, topics, co-authors, and enrichment status.</p>
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-2 text-xs bg-[#0F2847] text-white px-4 py-2 hover:opacity-90 transition-opacity"
-            >
+            <Button onClick={handleExport} variant="primary" size="sm">
               <Download size={12} /> Download CSV
-            </button>
-          </div>
-          <div className="border border-slate-200 bg-white p-6">
+            </Button>
+          </Card>
+          <Card padding="xl">
             <div className="overline mb-2">PDF / Print</div>
             <p className="text-xs text-slate-500 mb-4">Print this page or save it as a PDF — includes all charts, scorecard, and insights.</p>
-            <button
-              onClick={() => window.print()}
-              className="flex items-center gap-2 text-xs border border-slate-200 px-4 py-2 hover:border-slate-400 transition-colors"
-            >
+            <Button onClick={() => window.print()} variant="outline" size="sm">
               <FileText size={12} /> Print / Save PDF
-            </button>
-          </div>
+            </Button>
+          </Card>
         </div>
       </section>
 
       {/* ── Section 12: Institutional compatibility note ── */}
-      <section className="border border-dashed border-slate-200 bg-slate-50 p-6">
-        <div className="flex items-start gap-3">
-          <Info size={14} strokeWidth={1.5} className="text-slate-400 mt-0.5 shrink-0" />
-          <div>
-            <div className="overline mb-1">Institutional Compatibility</div>
-            <p className="text-xs text-slate-600">
-              This dashboard is designed to align with future institutional analytics in SYNAPTIQ.
-              Department heads and institutional admins will be able to aggregate impact scores across
-              their research groups. Your individual data feeds directly into those institutional views.
-            </p>
-          </div>
-        </div>
-      </section>
+      <Callout variant="info" title="Institutional Compatibility">
+        This dashboard is designed to align with future institutional analytics in SYNAPTIQ.
+        Department heads and institutional admins will be able to aggregate impact scores across
+        their research groups. Your individual data feeds directly into those institutional views.
+      </Callout>
 
       {/* ── Research Intelligence Quick Links ── */}
       <section>
@@ -929,17 +882,17 @@ export default function ResearchImpact() {
             { to: "/reputation",          label: "Reputation Score"     },
             { to: "/impact-dashboard",    label: "Impact Dashboard"     },
           ].map(({ to, label }) => (
-            <Link key={to} to={to} className="border border-slate-200 bg-white p-4 hover:border-[#0F2847] transition-colors group block">
+            <Card key={to} to={to} padding="md" className="group">
               <div className="text-xs font-medium text-slate-700 group-hover:text-[#0F2847] transition-colors flex items-center justify-between">
                 {label} <ChevronRight size={12} className="text-slate-300 group-hover:text-[#0F2847]" />
               </div>
-            </Link>
+            </Card>
           ))}
         </div>
       </section>
 
     </div>
     </div>
-    </AnalyticsLayout>
+    </ResearchLayout>
   );
 }

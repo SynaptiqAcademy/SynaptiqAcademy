@@ -88,8 +88,9 @@ export function FormRow({ cols = 2, gap = 16, children, style }) {
  *   hint          string   helper text under label
  *   indeterminate bool     shows dash instead of check
  *   disabled      bool
+ *   ...props      spread onto the underlying <input> (e.g. data-testid)
  */
-export function Checkbox({ label, hint, checked, onChange, disabled, indeterminate, id, name, value, style }) {
+export function Checkbox({ label, hint, checked, onChange, disabled, indeterminate, id, name, value, style, ...props }) {
   const inputRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -109,13 +110,14 @@ export function Checkbox({ label, hint, checked, onChange, disabled, indetermina
           onChange={onChange}
           disabled={disabled}
           style={{ position: "absolute", opacity: 0, width: 16, height: 16, cursor: "inherit", margin: 0, zIndex: 1 }}
+          {...props}
         />
         <div style={{
           width: 16, height: 16, borderRadius: 4, flexShrink: 0,
           border: `1.5px solid ${(checked || indeterminate) ? NAVY : "rgba(15,23,42,0.22)"}`,
           background: (checked || indeterminate) ? NAVY : WHITE,
           display: "flex", alignItems: "center", justifyContent: "center",
-          transition: "all 100ms ease",
+          transition: "all 120ms ease",
           pointerEvents: "none",
         }}>
           {checked && !indeterminate && (
@@ -159,11 +161,11 @@ export function Radio({ label, hint, checked, onChange, disabled, id, name, valu
           border: `1.5px solid ${checked ? NAVY : "rgba(15,23,42,0.22)"}`,
           background: WHITE,
           display: "flex", alignItems: "center", justifyContent: "center",
-          transition: "border-color 100ms ease",
+          transition: "border-color 120ms ease",
           pointerEvents: "none",
         }}>
           {checked && (
-            <div style={{ width: 7, height: 7, borderRadius: "50%", background: NAVY, transition: "transform 100ms ease", transform: checked ? "scale(1)" : "scale(0)" }} />
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: NAVY, transition: "transform 120ms ease", transform: checked ? "scale(1)" : "scale(0)" }} />
           )}
         </div>
       </div>

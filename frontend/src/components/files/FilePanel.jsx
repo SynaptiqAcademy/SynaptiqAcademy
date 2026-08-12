@@ -158,7 +158,7 @@ function FileRow({ f, expanded, onExpand, onPreview, onDownload, onDelete, onUpl
   return (
     <div className="py-2.5" data-testid={`file-row-${f.id}`}>
       <div className="flex items-center gap-3">
-        <button onClick={onExpand} className="text-slate-400 hover:text-slate-700">
+        <button onClick={onExpand} aria-label={expanded ? `Collapse ${f.filename}` : `Expand ${f.filename}`} className="text-slate-400 hover:text-slate-700">
           {expanded ? <ChevronDown size={12} strokeWidth={1.5} /> : <ChevronRight size={12} strokeWidth={1.5} />}
         </button>
         <Icon size={14} strokeWidth={1.5} className="text-[#0F2847] shrink-0" />

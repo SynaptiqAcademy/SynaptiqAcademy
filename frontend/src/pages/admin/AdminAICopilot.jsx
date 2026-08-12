@@ -3,6 +3,7 @@ import { RefreshCw, Send, Cpu, FileText, ChevronDown, ChevronRight } from "lucid
 import api from "@/lib/api";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
+import { Modal } from "@/components/ds";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -37,34 +38,35 @@ function BriefingRow({ brief, onView }) {
 
 function BriefingModal({ brief, onClose }) {
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 p-4 pt-12 overflow-y-auto">
-      <div className="bg-[#0B1C35] border border-[#1a3050] w-full max-w-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1a3050]">
-          <div className="flex items-center gap-2">
-            <Cpu size={16} className="text-blue-400" />
-            <span className="text-sm font-semibold text-white capitalize">{brief.kind} Briefing</span>
-            <span className="text-xs text-slate-500">{(brief.created_at || "").slice(0, 10)}</span>
+    <Modal
+      open
+      onClose={onClose}
+      size="lg"
+      title={
+        <span className="inline-flex items-center gap-2 capitalize">
+          <Cpu size={16} className="text-blue-600" />
+          {brief.kind} Briefing
+        </span>
+      }
+      description={(brief.created_at || "").slice(0, 10)}
+    >
+      <div className="space-y-4">
+        <div>
+          <div className="text-[10px] text-slate-500 font-medium mb-2">AI NARRATIVE</div>
+          <div className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed bg-slate-50 border border-slate-200 p-4">
+            {brief.briefing}
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-xl">×</button>
         </div>
-        <div className="p-5 space-y-4">
-          <div>
-            <div className="text-[10px] text-slate-500 font-medium mb-2">AI NARRATIVE</div>
-            <div className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed bg-[#080f1f] border border-[#1a3050] p-4">
-              {brief.briefing}
+        {brief.context && (
+          <details>
+            <summary className="text-[10px] text-slate-500 cursor-pointer hover:text-slate-700">Show Platform Context Used</summary>
+            <div className="mt-2 text-[10px] text-slate-500 font-mono whitespace-pre bg-slate-50 border border-slate-200 p-3 overflow-x-auto">
+              {brief.context}
             </div>
-          </div>
-          {brief.context && (
-            <details>
-              <summary className="text-[10px] text-slate-500 cursor-pointer hover:text-slate-300">Show Platform Context Used</summary>
-              <div className="mt-2 text-[10px] text-slate-400 font-mono whitespace-pre bg-[#080f1f] border border-[#1a3050] p-3 overflow-x-auto">
-                {brief.context}
-              </div>
-            </details>
-          )}
-        </div>
+          </details>
+        )}
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -117,7 +119,7 @@ export default function AdminAICopilot() {
       title="Executive AI Copilot"
       subtitle="Anthropic-powered daily briefings, reports, and AI platform assistant"
       actions={
-        <button onClick={refBriefings} className="p-1.5 bg-[#0F2847] border border-[#1a3050] text-slate-400 hover:text-white">
+        <button onClick={refBriefings} aria-label="Refresh briefings" className="p-1.5 bg-[#0F2847] border border-[#1a3050] text-slate-400 hover:text-white">
           <RefreshCw size={14} className={bL ? "animate-spin" : ""} />
         </button>
       }
@@ -235,6 +237,7 @@ export default function AdminAICopilot() {
                 className="flex-1 text-xs bg-[#0B1C35] border border-[#1a3050] text-slate-300 placeholder-slate-600 px-3 py-2"
               />
               <button onClick={sendMessage} disabled={chatLoading || !inputVal.trim()}
+                aria-label="Send message"
                 className="px-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white">
                 <Send size={13} />
               </button>

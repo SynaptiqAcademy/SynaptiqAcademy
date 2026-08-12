@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Button } from "@/components/ds";
-import { DiscoveryLayout } from "@/layouts";
-import { Link, NavLink } from "react-router-dom";
+import { Button, NavTabs } from "@/components/ds";
+import { ResearchLayout } from "@/layouts";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { useAuth } from "../contexts/AuthContext";
@@ -104,12 +104,13 @@ const DEADLINE_STATES = [
 const TABS = [
   { to: "/journals",    label: "Journals",         testid: TID.discoveryTabJournals },
   { to: "/conferences", label: "Conferences",       testid: TID.discoveryTabConferences },
-  { to: "/grants",      label: "Grants & Funding",  testid: TID.discoveryTabGrants },
+  { to: "/grants",      label: "Grants",            testid: TID.discoveryTabGrants },
 ];
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function Conferences() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const explorerRef = useRef(null);
 
   // Search / filter state
@@ -225,7 +226,22 @@ export default function Conferences() {
     .slice(0, 8);
 
   return (
-    <DiscoveryLayout>
+    <ResearchLayout
+      title="Conferences"
+      subtitle="Track submission windows, acceptance notifications and conference dates worldwide — aggregated from WikiCFP and curated with CORE rankings."
+      actions={
+        <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} size="sm">
+          Find Best Conference
+        </Button>
+      }
+      nav={
+        <NavTabs
+          tabs={TABS.map((tab) => ({ id: tab.to, label: tab.label, "data-testid": tab.testid }))}
+          active="/conferences"
+          onChange={(id) => navigate(id)}
+        />
+      }
+    >
       <style>{`
         @keyframes sq-pulse {
           0%, 100% { opacity: 1; }
@@ -233,33 +249,6 @@ export default function Conferences() {
         }
         .sq-pulse { animation: sq-pulse 1.8s ease-in-out infinite; }
       `}</style>
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <HeroHeader
-        user={user}
-        onExplore={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })}
-      />
-      {/* ── Tabs ──────────────────────────────────────────────────────────── */}
-      <div style={{ margin: "0 -24px", borderBottom: `1px solid ${BORDER}`, background: "white", display: "flex", paddingLeft: 24 }}>
-        {TABS.map((tab) => (
-          <NavLink
-            key={tab.to}
-            to={tab.to}
-            data-testid={tab.testid}
-            style={({ isActive }) => ({
-              padding: "10px 20px",
-              fontSize: 13,
-              fontWeight: isActive ? 700 : 500,
-              color: isActive ? NAVY : "#64748B",
-              borderBottom: `2px solid ${isActive ? NAVY : "transparent"}`,
-              textDecoration: "none",
-              whiteSpace: "nowrap",
-              transition: "color 150ms, border-color 150ms",
-            })}
-          >
-            {tab.label}
-          </NavLink>
-        ))}
-      </div>
       {/* ── Recommendations ───────────────────────────────────────────────── */}
       {(recsLoading || recs) && (
         <RecsPanel
@@ -307,6 +296,7 @@ export default function Conferences() {
                   size="icon"
                   variant="ghost"
                   onClick={() => setQ("")}
+                  aria-label="Clear search"
                   style={{
                     position: "absolute",
                     right: 10,
@@ -424,87 +414,7 @@ export default function Conferences() {
           onClose={() => setCompareList([])}
         />
       )}
-    </DiscoveryLayout>
-  );
-}
-
-// ── Hero ──────────────────────────────────────────────────────────────────────
-function HeroHeader({ user, onExplore }) {
-  const userField = (user?.research_areas || []).slice(0, 2).join(", ") || "your research";
-  const institution = user?.institution || "your institution";
-
-  return (
-    <div
-      style={{
-        margin: "-24px -24px 0",
-        background: `linear-gradient(145deg, #0B1E38 0%, ${NAVY} 50%, #163355 100%)`,
-        padding: "48px 56px 0",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Grid overlay */}
-      <div style={{ position: "absolute", inset: 0, opacity: 0.04, backgroundImage: "linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
-
-      <div style={{ position: "relative" }}>
-        {/* Kicker */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#818CF8" }} />
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)" }}>
-            Academic Conference Intelligence
-          </span>
-        </div>
-
-        {/* Title */}
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 46, fontWeight: 400, color: "white", lineHeight: 1.1, marginBottom: 16, maxWidth: 560 }}>
-          Discover Academic<br />
-          <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 38 }}>Conferences &amp; CFPs</span>
-        </h1>
-
-        <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.65, maxWidth: 500, marginBottom: 28 }}>
-          Track submission windows, acceptance notifications and conference dates worldwide.
-          Aggregated from WikiCFP and curated with CORE rankings.
-          Matched to <strong style={{ color: "rgba(255,255,255,0.75)" }}>{userField}</strong> at{" "}
-          <strong style={{ color: "rgba(255,255,255,0.75)" }}>{institution}</strong>.
-        </p>
-
-        {/* CTAs */}
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 36 }}>
-          <button
-            onClick={onExplore}
-            style={{ padding: "10px 22px", background: "white", color: NAVY, fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, outline: "none" }}
-          >
-            <CalendarDays size={14} strokeWidth={2} />
-            Find Best Conference
-          </button>
-          <Link
-            to="/manuscript-review"
-            style={{ padding: "10px 22px", background: "transparent", color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: 600, border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}
-          >
-            <FileText size={14} strokeWidth={1.5} />
-            Prepare Submission
-          </Link>
-        </div>
-
-        {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 20 }}>
-          {[
-            { Icon: CalendarDays, label: "Active CFPs",     val: "800+" },
-            { Icon: Globe,        label: "Countries",       val: "60+" },
-            { Icon: Award,        label: "CORE Ranked",     val: "Yes" },
-            { Icon: Sparkles,     label: "AI Matched",      val: "Free" },
-          ].map(({ Icon, label, val }) => (
-            <div key={label} style={{ padding: "12px 16px 12px 0", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
-                <Icon size={10} strokeWidth={1.5} style={{ color: "rgba(255,255,255,0.35)" }} />
-                <span style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>{label}</span>
-              </div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: "white", fontFamily: "monospace" }}>{val}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    </ResearchLayout>
   );
 }
 
@@ -537,6 +447,7 @@ function RecsPanel({ recs, loading, compareList, toggleCompare, user }) {
             size="icon"
             variant="ghost"
             onClick={() => setExpanded((v) => !v)}
+            aria-label={expanded ? "Collapse recommendations" : "Expand recommendations"}
             style={{
               color: "#94A3B8",
               display: "flex",
@@ -913,7 +824,7 @@ function FilterChip({ label, onRemove }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 8px", background: `${NAVY}0D`, border: `1px solid ${NAVY}20`, fontSize: 11, color: NAVY, fontWeight: 600 }}>
       {label}
-      <button onClick={onRemove} style={{ display: "flex", alignItems: "center", color: "#94A3B8", cursor: "pointer", marginLeft: 2, background: "none", border: "none", outline: "none" }}>
+      <button onClick={onRemove} aria-label={`Remove ${label} filter`} style={{ display: "flex", alignItems: "center", color: "#94A3B8", cursor: "pointer", marginLeft: 2, background: "none", border: "none", outline: "none" }}>
         <X size={10} strokeWidth={2} />
       </button>
     </div>

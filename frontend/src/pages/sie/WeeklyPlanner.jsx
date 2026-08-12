@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Clock, CheckSquare } from "lucide-react";
 import { NAVY, WARM, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Tag, StatCard, StatGrid, Spinner } from "@/components/ds";
 
@@ -75,7 +75,7 @@ export default function WeeklyPlanner() {
   );
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
       title="Weekly Planner"
       subtitle="Weekly view of missions, goals, and research commitments."
       navItems={SIE_NAV_ITEMS}
@@ -105,6 +105,6 @@ export default function WeeklyPlanner() {
           <StatCard label="Completed This Week" value={plan?.completed_this_week ?? 0} icon={<CheckSquare />} />
         </StatGrid>
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ShoppingBag, Star, TrendingUp, Users, Zap, ChevronRight, Award } from "lucide-react";
 import { NAVY, ACCENT, EMERALD } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Grid, StatGrid, StatCard, SearchBar, Button, H2, Caption } from "@/components/ds";
 
 const API = "/api/acad-market";
@@ -38,7 +38,7 @@ export default function MarketplaceHome() {
   const runSearch = () => window.location.assign(`/academic-marketplace/services?q=${encodeURIComponent(search)}`);
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Academic Services Marketplace"
       subtitle="Connect with verified academic experts. Every service is transparent, every transaction is traceable."
     >
@@ -164,6 +164,6 @@ export default function MarketplaceHome() {
             <Caption>Track and manage your service orders</Caption>
           </Card>
         </Grid>
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

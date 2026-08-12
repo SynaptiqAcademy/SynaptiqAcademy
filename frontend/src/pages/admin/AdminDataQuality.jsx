@@ -1,9 +1,10 @@
 /* eslint-disable */
 import React, { useState, useCallback, useEffect } from "react";
-import { RefreshCw, AlertTriangle, CheckCircle, Wrench } from "lucide-react";
+import { RefreshCw, CheckCircle, Wrench } from "lucide-react";
 import api from "@/lib/api";
-import { NAVY } from "@/lib/tokens";
+import { EMERALD, AMBER, CRIMSON, INFO } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
+import { Button, Card, Badge, MiniBar, Alert } from "@/components/ds";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -18,29 +19,27 @@ function useX(path, params = {}) {
   return { data, loading, refetch: load };
 }
 
+function scoreColor(score) {
+  return score >= 80 ? EMERALD : score >= 55 ? AMBER : CRIMSON;
+}
+
 function ScoreMeter({ label, score, description }) {
-  const color = score >= 80 ? "bg-green-500" : score >= 55 ? "bg-yellow-500" : "bg-red-500";
-  const textColor = score >= 80 ? "text-green-400" : score >= 55 ? "text-yellow-400" : "text-red-400";
+  const color = scoreColor(score ?? 0);
   return (
-    <div className="bg-[#0F2847] border border-[#1a3050] p-4">
+    <Card padding="lg">
       <div className="flex items-end gap-2 mb-1">
-        <span className={`text-3xl font-bold ${textColor}`}>{score ?? 0}</span>
-        <span className="text-slate-500 text-xs mb-1">/100</span>
+        <span className="text-3xl font-bold" style={{ color }}>{score ?? 0}</span>
+        <span className="text-slate-400 text-xs mb-1">/100</span>
       </div>
-      <div className="text-xs text-white mb-1">{label}</div>
-      <div className="h-1 bg-[#1a3050] rounded-full overflow-hidden mb-1.5">
-        <div className={`h-full ${color} transition-all`} style={{ width: `${score ?? 0}%` }} />
-      </div>
-      {description && <div className="text-[10px] text-slate-500">{description}</div>}
-    </div>
+      <div className="text-xs text-slate-700 mb-1.5">{label}</div>
+      <MiniBar value={score ?? 0} max={100} height={4} className="mb-1.5" />
+      {description && <div className="text-[10px] text-slate-400">{description}</div>}
+    </Card>
   );
 }
 
-const SEVERITY_STYLE = {
-  high:   "border-l-red-500 bg-red-900/20 text-red-300",
-  medium: "border-l-yellow-500 bg-yellow-900/20 text-yellow-300",
-  low:    "border-l-blue-500 bg-blue-900/20 text-blue-300",
-};
+const SEVERITY_VARIANT = { high: "danger", medium: "warning", low: "info" };
+const SEVERITY_ACCENT = { high: CRIMSON, medium: AMBER, low: INFO };
 
 export default function AdminDataQuality() {
   const { data: scores, loading: sL, refetch: refScores } = useX("data-quality/scores");
@@ -67,9 +66,9 @@ export default function AdminDataQuality() {
       title="Data Governance Center"
       subtitle="Completeness, accuracy, and consistency scoring with automated remediation"
       actions={
-        <button onClick={refetchAll} className="p-1.5 bg-[#0F2847] border border-[#1a3050] text-slate-400 hover:text-white">
+        <Button variant="ghost" size="icon" onClick={refetchAll} aria-label="Refresh">
           <RefreshCw size={14} className={(sL || iL) ? "animate-spin" : ""} />
-        </button>
+        </Button>
       }
     >
 
@@ -86,46 +85,45 @@ export default function AdminDataQuality() {
 
       {/* Completeness detail */}
       {s.completeness && (
-        <div className="bg-[#0F2847] border border-[#1a3050] p-4">
+        <Card padding="lg">
           <div className="text-xs text-slate-500 font-medium mb-3">User Profile Completeness Breakdown</div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {Object.entries(s.completeness).map(([key, pct]) => (
               <div key={key}>
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-slate-400 capitalize">{key.replace("with_", "")}</span>
-                  <span className={pct >= 80 ? "text-green-400" : pct >= 50 ? "text-yellow-400" : "text-red-400"}>{pct}%</span>
+                  <span className="text-slate-500 capitalize">{key.replace("with_", "")}</span>
+                  <span style={{ color: scoreColor(pct) }}>{pct}%</span>
                 </div>
-                <div className="h-1 bg-[#1a3050] rounded-full overflow-hidden">
-                  <div className={`h-full ${pct >= 80 ? "bg-green-500" : pct >= 50 ? "bg-yellow-500" : "bg-red-500"}`}
-                    style={{ width: `${pct}%` }} />
-                </div>
+                <MiniBar value={pct} max={100} height={4} />
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Issues */}
       <div>
         <div className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">
-          Detected Issues {issueList.length > 0 && <span className="text-yellow-400">({issueList.length})</span>}
+          Detected Issues {issueList.length > 0 && <span style={{ color: AMBER }}>({issueList.length})</span>}
         </div>
         <div className="space-y-2">
           {issueList.map((issue, i) => (
-            <div key={i} className={`border-l-2 p-3 flex items-start justify-between gap-4 ${SEVERITY_STYLE[issue.severity] || SEVERITY_STYLE.low}`}>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-[10px] font-medium uppercase">{issue.severity}</span>
-                  <span className="text-xs font-semibold">{issue.label}</span>
-                  <span className="text-xs">({issue.count.toLocaleString()})</span>
-                  {issue.pct && <span className="text-[10px] text-slate-500">{issue.pct}% of users</span>}
+            <Card key={i} padding="sm" accent={SEVERITY_ACCENT[issue.severity] || SEVERITY_ACCENT.low}>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <Badge variant={SEVERITY_VARIANT[issue.severity] || "info"} size="sm">{issue.severity}</Badge>
+                    <span className="text-xs font-semibold text-slate-800">{issue.label}</span>
+                    <span className="text-xs text-slate-600">({issue.count.toLocaleString()})</span>
+                    {issue.pct && <span className="text-[10px] text-slate-400">{issue.pct}% of users</span>}
+                  </div>
+                  <div className="text-[10px] text-slate-500">{issue.action}</div>
                 </div>
-                <div className="text-[10px] text-slate-400">{issue.action}</div>
               </div>
-            </div>
+            </Card>
           ))}
           {!iL && issueList.length === 0 && (
-            <div className="flex items-center gap-2 text-green-400 text-sm">
+            <div className="flex items-center gap-2 text-sm" style={{ color: EMERALD }}>
               <CheckCircle size={16} />
               No data quality issues detected
             </div>
@@ -134,10 +132,10 @@ export default function AdminDataQuality() {
       </div>
 
       {/* Remediation */}
-      <div className="bg-[#0F2847] border border-[#1a3050] p-4">
+      <Card padding="lg">
         <div className="flex items-center gap-2 mb-3">
-          <Wrench size={14} className="text-blue-400" />
-          <span className="text-sm font-semibold text-white">Auto-Remediation</span>
+          <Wrench size={14} style={{ color: INFO }} />
+          <span className="text-sm font-semibold text-slate-800">Auto-Remediation</span>
         </div>
         <div className="space-y-2">
           {[
@@ -145,23 +143,25 @@ export default function AdminDataQuality() {
             { action: "verify_emails_batch", label: "Queue verification emails for unverified accounts" },
           ].map(({ action, label }) => (
             <div key={action} className="flex items-center justify-between gap-4 text-xs">
-              <span className="text-slate-300">{label}</span>
+              <span className="text-slate-600">{label}</span>
               <div className="flex gap-2 flex-shrink-0">
-                <button onClick={() => remediate(action, true)} disabled={remediating}
-                  className="text-[10px] text-slate-400 border border-[#1a3050] px-2 py-1 hover:text-white disabled:opacity-50">
+                <Button variant="ghost" size="sm" onClick={() => remediate(action, true)} disabled={remediating}>
                   Dry Run
-                </button>
-                <button onClick={() => { if (window.confirm(`Run "${label}" for real?`)) remediate(action, false); }}
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => { if (window.confirm(`Run "${label}" for real?`)) remediate(action, false); }}
                   disabled={remediating}
-                  className="text-[10px] bg-blue-700 hover:bg-blue-600 text-white px-2 py-1 disabled:opacity-50">
+                >
                   Apply
-                </button>
+                </Button>
               </div>
             </div>
           ))}
         </div>
-        {remedResp && <div className="mt-3 text-xs text-slate-300 bg-[#0B1C35] border border-[#1a3050] p-2">{remedResp}</div>}
-      </div>
+        {remedResp && <Alert variant="info" className="mt-3">{remedResp}</Alert>}
+      </Card>
     </AdministrationLayout>
   );
 }

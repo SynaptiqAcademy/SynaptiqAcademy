@@ -224,7 +224,7 @@ function DiscussionTab({ meeting, onNoteAdded }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div style={{ display: "flex", gap: 8 }}>
         <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Add a discussion note…" rows={2} style={{ flex: 1 }} />
-        <Button onClick={submit} disabled={!body.trim()} loading={submitting}><Send size={13} /></Button>
+        <Button onClick={submit} disabled={!body.trim()} loading={submitting} aria-label="Post note"><Send size={13} /></Button>
       </div>
       {notes.length === 0 ? (
         <EmptyState title="No discussion yet" description="Notes added during or after the meeting will show up here." />
@@ -279,7 +279,7 @@ function TasksTab({ meeting, onChanged }) {
           placeholder="Add an action item…"
           style={{ flex: 1, height: 34, border: `1px solid ${BRD}`, borderRadius: 6, padding: "0 10px", fontSize: 13, outline: "none" }}
         />
-        <Button onClick={submit} disabled={!title.trim()} loading={submitting}><Plus size={13} /></Button>
+        <Button onClick={submit} disabled={!title.trim()} loading={submitting} aria-label="Add action item"><Plus size={13} /></Button>
       </div>
       {items.length === 0 ? (
         <EmptyState title="No action items" description="Add items manually, or generate them from the AI Summary tab." />

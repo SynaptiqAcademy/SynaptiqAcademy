@@ -69,7 +69,7 @@ function BreadcrumbLink({ to, fontSize, Icon, children }) {
         fontWeight: 400,
         color: hov ? NAVY : TEXT_MUTED,
         textDecoration: "none",
-        transition: "color 100ms",
+        transition: "color 120ms",
       }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}

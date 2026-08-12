@@ -150,7 +150,7 @@ export default function ServiceCreate() {
             onChange={id => setActivePkg(Number(id))}
             className="mb-5"
           />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
               { label: "Price (USD)", key: "price", type: "number", placeholder: "100" },
               { label: "Delivery Days", key: "delivery_days", type: "number", placeholder: "7" },

@@ -13,13 +13,12 @@ import MatchCard from "../components/marketplace/MatchCard";
 import InviteModal from "../components/marketplace/InviteModal";
 import ReputationBadge from "../components/marketplace/ReputationBadge";
 import { NAVY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import {
-  Sparkles, Search, SlidersHorizontal, Loader2, Compass, TrendingUp,
-  Users, BookOpen, BarChart3, Mail, Award, ArrowRight, X,
+  Sparkles, Search, SlidersHorizontal, Compass, TrendingUp,
+  Users, BookOpen, BarChart3, Mail, Award, ArrowRight,
 } from "lucide-react";
-import { Spinner } from "@/components/ds/LoadingState";
-import EmptyState from "@/components/ds/EmptyState";
+import { Spinner, EmptyState, Button, Input, FormSelect, Card } from "@/components/ds";
 
 const ROLES = [
   { value: "co_author",       label: "Co-authors",        Icon: Users },
@@ -108,7 +107,7 @@ export default function Marketplace() {
   const activeFilters = [availability, country, institution].filter(Boolean).length;
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Find collaborators"
       subtitle="People-first discovery across the network. Search by expertise, then use AI to surface the best fits with explanations."
       actions={
@@ -123,7 +122,9 @@ export default function Marketplace() {
       }
     >
     <div className="space-y-8">
-      {/* Role chips */}
+      {/* Role chips — kept hand-rolled: ds Tag doesn't spread arbitrary props
+          (no data-testid support), and these chips are addressed individually
+          by test hooks (role-chip-any / role-chip-{value}). */}
       <div className="flex flex-wrap gap-1.5" data-testid="marketplace-role-chips">
         <button
           onClick={() => setRole(null)}
@@ -147,54 +148,44 @@ export default function Marketplace() {
 
       {/* Search + actions row */}
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[260px]">
-          <Search size={13} strokeWidth={1.5} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            data-testid="marketplace-search-input"
-            value={q} onChange={(e) => setQ(e.target.value)}
-            placeholder="Search by keyword, name, institution, skill…"
-            className="w-full pl-9 pr-3 py-2 border border-slate-300 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847]"
-          />
-        </div>
-        <button
+        <Input
+          data-testid="marketplace-search-input"
+          value={q} onChange={(e) => setQ(e.target.value)}
+          placeholder="Search by keyword, name, institution, skill…"
+          prefix={<Search size={13} strokeWidth={1.5} />}
+          wrapperClassName="flex-1 min-w-[260px]"
+        />
+        <Button
+          variant="ghost"
           data-testid="marketplace-filters-toggle"
           onClick={() => setFiltersOpen((f) => !f)}
-          className="inline-flex items-center gap-1.5 text-xs border border-slate-300 px-3 py-2 hover:border-[#0F2847]"
         >
           <SlidersHorizontal size={11} strokeWidth={1.5} />
           Filters{activeFilters > 0 ? ` · ${activeFilters}` : ""}
-        </button>
-        <button
+        </Button>
+        <Button
           data-testid="marketplace-rerank-btn"
           onClick={rerank}
           disabled={reranking || !results.length}
-          className="inline-flex items-center gap-1.5 text-xs bg-gradient-to-r from-[#0F2847] to-[#1E3A5F] text-white px-3 py-2 hover:from-[#0a1f3a] hover:to-[#0F2847] disabled:opacity-50"
+          loading={reranking}
+          className="bg-gradient-to-r from-[#0F2847] to-[#1E3A5F] hover:from-[#0a1f3a] hover:to-[#0F2847]"
         >
-          {reranking ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} strokeWidth={1.5} />}
+          {!reranking && <Sparkles size={11} strokeWidth={1.5} />}
           Rerank with AI ({RERANK_COST} credits)
-        </button>
+        </Button>
       </div>
 
       {filtersOpen && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border border-slate-200 bg-white p-4">
-          <div>
-            <div className="overline mb-1">Availability</div>
-            <select data-testid="filter-availability" value={availability} onChange={(e) => setAvailability(e.target.value)} className="w-full px-2 py-1.5 border border-slate-300 text-sm">
-              <option value="">Any</option>
-              <option value="available">Available</option>
-              <option value="selective">Selective</option>
-              <option value="not_available">Not available</option>
-            </select>
-          </div>
-          <div>
-            <div className="overline mb-1">Country</div>
-            <input data-testid="filter-country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. Germany" className="w-full px-2 py-1.5 border border-slate-300 text-sm" />
-          </div>
-          <div>
-            <div className="overline mb-1">Institution</div>
-            <input data-testid="filter-institution" value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="e.g. ETH" className="w-full px-2 py-1.5 border border-slate-300 text-sm" />
-          </div>
-        </div>
+        <Card padding="lg" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <FormSelect label="Availability" data-testid="filter-availability" value={availability} onChange={(e) => setAvailability(e.target.value)}>
+            <option value="">Any</option>
+            <option value="available">Available</option>
+            <option value="selective">Selective</option>
+            <option value="not_available">Not available</option>
+          </FormSelect>
+          <Input label="Country" data-testid="filter-country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="e.g. Germany" />
+          <Input label="Institution" data-testid="filter-institution" value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="e.g. ETH" />
+        </Card>
       )}
 
       {/* Layout: results + side widgets */}
@@ -253,7 +244,7 @@ export default function Marketplace() {
         />
       )}
     </div>
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }
 
@@ -262,7 +253,7 @@ function SidebarReverse({ reverse }) {
   const exp = reverse.expertise_requests || [];
   const inv = reverse.invitations || [];
   return (
-    <div className="border border-slate-200 bg-white p-4" data-testid="reverse-matches">
+    <Card padding="md" data-testid="reverse-matches">
       <div className="flex items-center gap-2 mb-3">
         <TrendingUp size={12} strokeWidth={1.5} className="text-[#0F2847]" />
         <div className="overline">Looking for you</div>
@@ -293,7 +284,7 @@ function SidebarReverse({ reverse }) {
       <Link to="/expertise" className="text-[11px] font-mono text-[#0F2847] hover:underline mt-3 inline-block">
         See all expertise requests →
       </Link>
-    </div>
+    </Card>
   );
 }
 
@@ -307,7 +298,7 @@ function SidebarAnalytics({ analytics }) {
   ];
   const rate = Math.round((analytics.collaboration_success_rate || 0) * 100);
   return (
-    <div className="border border-slate-200 bg-white p-4" data-testid="marketplace-analytics">
+    <Card padding="md" data-testid="marketplace-analytics">
       <div className="flex items-center gap-2 mb-3">
         <BarChart3 size={12} strokeWidth={1.5} className="text-[#0F2847]" />
         <div className="overline">Your network impact</div>
@@ -329,7 +320,7 @@ function SidebarAnalytics({ analytics }) {
           <div className="absolute inset-y-0 left-0 bg-[#0F2847]" style={{ width: `${rate}%` }} />
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -351,34 +342,37 @@ function SidebarReputation() {
   };
   if (!rep) return <SectionLoading title="Your reputation" />;
   return (
-    <div className="border border-slate-200 bg-white p-4" data-testid="sidebar-reputation">
+    <Card padding="md" data-testid="sidebar-reputation">
       <div className="flex items-center gap-2 mb-3">
         <Award size={12} strokeWidth={1.5} className="text-[#0F2847]" />
         <div className="overline">Your reputation</div>
       </div>
       <ReputationBadge reputation={rep} />
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         data-testid="sync-openalex-btn"
         onClick={syncOA}
         disabled={syncing}
-        className="mt-3 w-full text-[11px] inline-flex items-center justify-center gap-1.5 border border-slate-300 px-2 py-1.5 hover:border-[#0F2847]"
+        loading={syncing}
+        className="mt-3 w-full"
       >
-        {syncing ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} strokeWidth={1.5} />}
+        {!syncing && <Sparkles size={11} strokeWidth={1.5} />}
         Sync OpenAlex citations
-      </button>
+      </Button>
       <div className="text-[10px] font-mono text-slate-400 mt-2">Add your ORCID in Settings for a precise match.</div>
-    </div>
+    </Card>
   );
 }
 
 function SectionLoading({ title }) {
   return (
-    <div className="border border-slate-200 bg-white p-4">
+    <Card padding="md">
       <div className="overline mb-3">{title}</div>
       <div className="flex items-center gap-2">
         <Spinner size={12} />
         <span className="text-xs text-slate-400">Loading…</span>
       </div>
-    </div>
+    </Card>
   );
 }

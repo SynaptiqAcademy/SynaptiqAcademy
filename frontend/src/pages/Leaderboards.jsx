@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import { ACCENT, EMERALD, NAVY, WARM } from "@/lib/tokens";
-import { Avatar } from "@/components/ds";
+import { Avatar, Button, Input } from "@/components/ds";
 import {
   Award, Shield, Globe, Building2, BookOpen, ClipboardCheck, Users,
   GraduationCap, BarChart2, Star, TrendingUp, ArrowRight, ChevronLeft,
@@ -72,14 +72,6 @@ function getLevelInfo(level) {
 function getLevelByScore(score) {
   const s = Math.round(score || 0);
   return RESEARCH_LEVELS.slice().reverse().find((l) => s >= l.min) || RESEARCH_LEVELS[0];
-}
-
-function getProgressPct(score, levelInfo) {
-  const next = RESEARCH_LEVELS.find((l) => l.level === levelInfo.level + 1);
-  if (!next) return 100;
-  const range  = next.min - levelInfo.min;
-  const within = Math.round(score) - levelInfo.min;
-  return Math.min(100, Math.max(0, Math.round((within / range) * 100)));
 }
 
 function fmtPts(n) {
@@ -190,7 +182,20 @@ export default function Leaderboards() {
   const scrollToMain = () => mainRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
-    <DiscoveryLayout>
+    <ResearchLayout
+      title="Rankings"
+      subtitle="Transparent, evidence-based rankings that celebrate genuine academic contributions — research activity, collaboration, peer review, mentoring and teaching."
+      actions={
+        <>
+          <Button as={Link} to="/settings#profile" size="sm">
+            <UserCheck size={12} strokeWidth={2} /> Improve My Profile
+          </Button>
+          <Button variant="ghost" size="sm" onClick={scrollToMain}>
+            <Award size={12} strokeWidth={1.5} /> Explore Rankings
+          </Button>
+        </>
+      }
+    >
       <style>{`
         @keyframes sq-pulse { 0%,100%{opacity:1} 50%{opacity:.42} }
         .sq-pulse { animation: sq-pulse 1.8s ease-in-out infinite; }
@@ -198,8 +203,27 @@ export default function Leaderboards() {
         .slide-up { animation: slide-up 350ms ease both; }
       `}</style>
 
-      {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <HeroSection myRep={myRep} loading={myRepLoading} user={user} onExplore={scrollToMain} />
+      {/* ── My standing snapshot ──────────────────────────────────────────── */}
+      {!myRepLoading && myRep && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mb-8">
+          <div>
+            <div className="font-serif text-3xl" style={{ color: NAVY }}>{fmtPts(myRep.overall_score || 0)}</div>
+            <div className="text-xs text-slate-500 mt-1">Reputation Points</div>
+          </div>
+          <div>
+            <div className="font-serif text-3xl" style={{ color: NAVY }}>{myRep.reputation_level || 1}</div>
+            <div className="text-xs text-slate-500 mt-1">{myRep.reputation_label || "Research Explorer"}</div>
+          </div>
+          <div>
+            <div className="font-serif text-3xl" style={{ color: NAVY }}>{myRep.rank_global ? `#${myRep.rank_global}` : "—"}</div>
+            <div className="text-xs text-slate-500 mt-1">Global Rank</div>
+          </div>
+          <div>
+            <div className="font-serif text-3xl" style={{ color: NAVY }}>{myRep.percentile_global > 0 ? `${myRep.percentile_global.toFixed(1)}%` : "—"}</div>
+            <div className="text-xs text-slate-500 mt-1">Percentile</div>
+          </div>
+        </div>
+      )}
 
       {/* ── My Academic Standing ────────────────────────────────────────── */}
       {(myRepLoading || myRep) && (
@@ -233,13 +257,9 @@ export default function Leaderboards() {
               </h2>
               <p style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>{activeCat.desc}</p>
             </div>
-            <button
-              onClick={fetchLeaderboard}
-              style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", fontSize: 11, fontWeight: 600, color: "#64748B", border: `1px solid ${BORDER}`, background: "white", cursor: "pointer", outline: "none" }}
-              title="Refresh"
-            >
+            <Button variant="ghost" size="sm" onClick={fetchLeaderboard} title="Refresh">
               <RefreshCw size={12} strokeWidth={1.5} /> Refresh
-            </button>
+            </Button>
           </div>
 
           {/* Researcher cards */}
@@ -269,21 +289,13 @@ export default function Leaderboards() {
           {/* Pagination */}
           {!loading && items.length > 0 && (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 24, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 16px", fontSize: 12, border: `1px solid ${BORDER}`, background: page === 1 ? WARM : "white", color: page === 1 ? "#CBD5E1" : NAVY, cursor: page === 1 ? "not-allowed" : "pointer", outline: "none" }}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
                 <ChevronLeft size={13} strokeWidth={1.5} /> Previous
-              </button>
+              </Button>
               <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>Page {page}</span>
-              <button
-                onClick={() => setPage((p) => p + 1)}
-                disabled={isLastPage}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 16px", fontSize: 12, border: `1px solid ${BORDER}`, background: isLastPage ? WARM : "white", color: isLastPage ? "#CBD5E1" : NAVY, cursor: isLastPage ? "not-allowed" : "pointer", outline: "none" }}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setPage((p) => p + 1)} disabled={isLastPage}>
                 Next <ChevronRight size={13} strokeWidth={1.5} />
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -305,152 +317,7 @@ export default function Leaderboards() {
           onClose={() => setCompareList([])}
         />
       )}
-    </DiscoveryLayout>
-  );
-}
-
-// ── Hero section ──────────────────────────────────────────────────────────────
-function HeroSection({ myRep, loading, user, onExplore }) {
-  const score    = myRep?.overall_score || 0;
-  const level    = myRep?.reputation_level || 1;
-  const label    = myRep?.reputation_label || "Research Explorer";
-  const rankGlobal  = myRep?.rank_global;
-  const percentile  = myRep?.percentile_global;
-  const lvlInfo  = getLevelInfo(level);
-  const progress = getProgressPct(score, lvlInfo);
-  const nextMin  = myRep?.next_level_min;
-  const nextLabel = myRep?.next_level_label;
-
-  return (
-    <div
-      style={{
-        margin: "-24px -24px 0",
-        background: `linear-gradient(145deg, #091D35 0%, ${NAVY} 55%, #163355 100%)`,
-        padding: "48px 56px 40px",
-        overflow: "hidden",
-        position: "relative",
-      }}
-    >
-      {/* Subtle grid */}
-      <div style={{ position: "absolute", inset: 0, opacity: 0.03, backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
-      {/* Glow */}
-      <div style={{ position: "absolute", top: -120, right: 100, width: 400, height: 400, background: "radial-gradient(circle, rgba(138,21,56,0.1) 0%, transparent 65%)", pointerEvents: "none" }} />
-
-      <div style={{ position: "relative", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 48 }}>
-
-        {/* Left: headline */}
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-            <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#FCD34D" }} />
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>
-              Academic Excellence Center
-            </span>
-          </div>
-
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: 44, fontWeight: 400, color: "white", lineHeight: 1.08, marginBottom: 14, maxWidth: 560 }}>
-            Academic<br />
-            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 36 }}>Recognition Rankings</span>
-          </h1>
-
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.42)", lineHeight: 1.75, maxWidth: 440, marginBottom: 28 }}>
-            Transparent, evidence-based rankings that celebrate genuine academic contributions —
-            research activity, collaboration, peer review, mentoring and teaching.
-          </p>
-
-          <div style={{ display: "flex", gap: 10 }}>
-            <Link
-              to="/settings#profile"
-              style={{ padding: "9px 20px", background: "white", color: NAVY, fontSize: 12, fontWeight: 700, textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}
-            >
-              <UserCheck size={12} strokeWidth={2} /> Improve My Profile
-            </Link>
-            <button
-              onClick={onExplore}
-              style={{ padding: "9px 20px", background: "transparent", color: "rgba(255,255,255,0.75)", fontSize: 12, fontWeight: 600, border: "1px solid rgba(255,255,255,0.18)", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, outline: "none" }}
-            >
-              <Award size={12} strokeWidth={1.5} /> Explore Rankings
-            </button>
-          </div>
-        </div>
-
-        {/* Right: personal standing card */}
-        <div style={{ flexShrink: 0, width: 260, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", padding: 24 }}>
-          {loading ? (
-            <HeroStandingSkeleton />
-          ) : (
-            <>
-              <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 14 }}>
-                Your Standing
-              </div>
-
-              {/* Level badge */}
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.13)", marginBottom: 12 }}>
-                <div style={{ width: 5, height: 5, borderRadius: "50%", background: lvlInfo.color }} />
-                <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>Level {level} · {label}</span>
-              </div>
-
-              {/* Score */}
-              <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 36, fontWeight: 800, color: "white", fontFamily: "monospace", lineHeight: 1 }}>
-                  {fmtPts(score)}
-                </div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  Reputation Points
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              {level < 7 && nextMin && (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontWeight: 600 }}>Progress to {nextLabel}</span>
-                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", fontFamily: "monospace" }}>{progress}%</span>
-                  </div>
-                  <div style={{ height: 3, background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${progress}%`, background: lvlInfo.color, transition: "width 800ms ease" }} />
-                  </div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 3, fontFamily: "monospace" }}>
-                    {fmtPts(nextMin - score)} pts to next level
-                  </div>
-                </div>
-              )}
-              {level === 7 && (
-                <div style={{ marginBottom: 16, fontSize: 10, color: "#FCD34D", fontWeight: 600 }}>
-                  ✦ Distinguished Scholar — highest level
-                </div>
-              )}
-
-              {/* Rank / percentile */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                <div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>Global Rank</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: "white", fontFamily: "monospace", marginTop: 2 }}>
-                    {rankGlobal ? `#${rankGlobal}` : "—"}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>Percentile</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: "white", fontFamily: "monospace", marginTop: 2 }}>
-                    {percentile > 0 ? `${percentile.toFixed(1)}%` : "—"}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function HeroStandingSkeleton() {
-  return (
-    <div>
-      <div className="sq-pulse" style={{ height: 10, width: "60%", background: "rgba(255,255,255,0.12)", marginBottom: 18 }} />
-      <div className="sq-pulse" style={{ height: 18, width: "80%", background: "rgba(255,255,255,0.1)", marginBottom: 10 }} />
-      <div className="sq-pulse" style={{ height: 36, width: "60%", background: "rgba(255,255,255,0.1)", marginBottom: 14 }} />
-      <div className="sq-pulse" style={{ height: 3, background: "rgba(255,255,255,0.08)", marginBottom: 16 }} />
-    </div>
+    </ResearchLayout>
   );
 }
 
@@ -614,29 +481,25 @@ function CategorySidebar({ categories, active, onSelect, country, setCountry, in
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <span style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em" }}>Filters</span>
           {hasFilters && (
-            <button onClick={() => { setCountry(""); setInstitution(""); }} style={{ fontSize: 9, color: "#94A3B8", cursor: "pointer", background: "none", border: "none", outline: "none", textDecoration: "underline" }}>Clear</button>
+            <Button variant="link" size="sm" onClick={() => { setCountry(""); setInstitution(""); }} style={{ fontSize: 9, textDecoration: "underline" }}>Clear</Button>
           )}
         </div>
         <div style={{ marginBottom: 10 }}>
           <div style={{ fontSize: 9, fontWeight: 600, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>Country</div>
-          <input
+          <Input
+            size="sm"
             value={country}
             onChange={(e) => setCountry(e.target.value)}
             placeholder="e.g. Germany"
-            style={{ width: "100%", padding: "7px 9px", border: `1px solid ${BORDER}`, fontSize: 12, color: "#374151", outline: "none", boxSizing: "border-box" }}
-            onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-            onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
           />
         </div>
         <div>
           <div style={{ fontSize: 9, fontWeight: 600, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>Institution</div>
-          <input
+          <Input
+            size="sm"
             value={institution}
             onChange={(e) => setInstitution(e.target.value)}
             placeholder="e.g. MIT"
-            style={{ width: "100%", padding: "7px 9px", border: `1px solid ${BORDER}`, fontSize: 12, color: "#374151", outline: "none", boxSizing: "border-box" }}
-            onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-            onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
           />
         </div>
       </div>
@@ -1058,9 +921,9 @@ function ComparePanel({ researchers, onRemove, onClose }) {
             Comparing {researchers.length} researchers
           </span>
         </div>
-        <button onClick={onClose} style={{ color: "rgba(255,255,255,0.45)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 12, background: "none", border: "none", outline: "none" }}>
+        <Button variant="link" onClick={onClose} style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
           <X size={13} strokeWidth={1.5} /> Close
-        </button>
+        </Button>
       </div>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 400 }}>
@@ -1070,9 +933,9 @@ function ComparePanel({ researchers, onRemove, onClose }) {
               {researchers.map((r) => (
                 <th key={r.user_id} style={{ padding: "3px 14px", textAlign: "left", borderBottom: "1px solid rgba(255,255,255,0.07)", minWidth: 160 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "white", fontFamily: "Georgia, serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{r.full_name}</div>
-                  <button onClick={() => onRemove(r.user_id)} style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 2, background: "none", border: "none", outline: "none", padding: 0, marginTop: 2 }}>
+                  <Button variant="link" onClick={() => onRemove(r.user_id)} style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", marginTop: 2 }}>
                     <X size={7} strokeWidth={1.5} /> Remove
-                  </button>
+                  </Button>
                 </th>
               ))}
             </tr>

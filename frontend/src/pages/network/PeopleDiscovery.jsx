@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { Search, X, Shield } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Input, FormSelect, EmptyState, LoadingOverlay, Pagination } from "@/components/ds";
 
 const CAREER_STAGES = ["student", "postdoc", "early_career", "mid_career", "senior", "professor"];
@@ -95,7 +95,7 @@ export default function PeopleDiscovery() {
   };
 
   return (
-    <DiscoveryLayout title="Find Researchers">
+    <ResearchLayout title="Find Researchers">
       {/* Search bar */}
       <form onSubmit={handleSearch} style={{ display: "flex", gap: 10, marginBottom: 16 }}>
         <Input
@@ -130,6 +130,7 @@ export default function PeopleDiscovery() {
                 size="icon"
                 variant="ghost"
                 onClick={() => clearFilter(key)}
+                aria-label={`Clear ${placeholder}`}
                 style={{
                   position: "absolute",
                   right: 8,
@@ -171,6 +172,6 @@ export default function PeopleDiscovery() {
           />
         </div>
       )}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

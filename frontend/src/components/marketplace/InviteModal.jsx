@@ -71,7 +71,7 @@ export default function InviteModal({ target, onClose, defaultKind = "collaborat
               {[userTypeLabel(u), u.institution].filter(Boolean).join(" · ")}
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900"><X size={16} strokeWidth={1.5} /></button>
+          <button onClick={onClose} aria-label="Close" className="text-slate-400 hover:text-slate-900"><X size={16} strokeWidth={1.5} /></button>
         </div>
         <div className="p-5 space-y-4 overflow-y-auto flex-1">
           <div className="grid sm:grid-cols-2 gap-4">

@@ -48,7 +48,7 @@ export function Sparkline({ data = [], width = 80, height = 28, color, trend, mi
   const last = pts[pts.length - 1];
 
   return (
-    <svg width={width} height={height} style={{ display: "block", overflow: "visible", ...style }}>
+    <svg width={width} height={height} aria-hidden="true" style={{ display: "block", overflow: "visible", ...style }}>
       <path d={path} fill="none" stroke={lineColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx={last.x} cy={last.y} r="2.5" fill={lineColor} />
     </svg>
@@ -69,7 +69,7 @@ export function SparkArea({ data = [], width = 80, height = 32, color, trend, mi
   const areaPath = `${linePath} L ${pts[pts.length - 1].x.toFixed(1)} ${height} L ${pts[0].x.toFixed(1)} ${height} Z`;
 
   return (
-    <svg width={width} height={height} style={{ display: "block", overflow: "visible", ...style }}>
+    <svg width={width} height={height} aria-hidden="true" style={{ display: "block", overflow: "visible", ...style }}>
       <path d={areaPath} fill={lineColor} fillOpacity="0.1" />
       <path d={linePath} fill="none" stroke={lineColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -116,8 +116,14 @@ export function BarChart({ data = [], height = 80, gap = 4, color, showValues = 
   const max = Math.max(...data.map(d => d.value), 1);
   const barColor = color ?? NAVY;
 
+  const summary = data.map(d => `${d.label}: ${d.value}`).join(", ");
+
   return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap, height: height + (showLabels ? 18 : 0), width: "100%", ...style }}>
+    <div
+      role="img"
+      aria-label={summary || "Bar chart"}
+      style={{ display: "flex", alignItems: "flex-end", gap, height: height + (showLabels ? 18 : 0), width: "100%", ...style }}
+    >
       {data.map((d, i) => {
         const pct = (d.value / max) * 100;
         return (
@@ -166,8 +172,12 @@ export function DonutChart({ value = 0, max = 100, size = 56, strokeWidth = 6, c
   const center = size / 2;
 
   return (
-    <div style={{ position: "relative", width: size, height: size, flexShrink: 0, ...style }}>
-      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+    <div
+      role="img"
+      aria-label={`${Math.round(pct)}%`}
+      style={{ position: "relative", width: size, height: size, flexShrink: 0, ...style }}
+    >
+      <svg width={size} height={size} aria-hidden="true" style={{ transform: "rotate(-90deg)" }}>
         <circle
           cx={center} cy={center} r={r}
           fill="none"
@@ -229,8 +239,16 @@ export function LineChart({ series = [], height = 160, min, max, showGrid = true
     }));
   };
 
+  const summary = series.map(s => s.label).filter(Boolean).join(", ");
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height, display: "block", ...style }}>
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="none"
+      role="img"
+      aria-label={summary ? `Line chart: ${summary}` : "Line chart"}
+      style={{ width: "100%", height, display: "block", ...style }}
+    >
       {showGrid && [0.25, 0.5, 0.75].map(t => (
         <line
           key={t}

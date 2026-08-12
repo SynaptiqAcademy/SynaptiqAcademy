@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import api from "../../lib/api";
 import { useAuth } from "../../contexts/AuthContext";
-import { NAVY } from "@/lib/tokens";
 import { EmptyState } from "../../components/ds/EmptyState";
 import { Spinner } from "../../components/ds/LoadingState";
 import { Card } from "@/components/ds/Card";
@@ -99,7 +98,7 @@ export default function TeachingHub() {
       icon={GraduationCap}
     >
       {/* Stats bar */}
-      <div className="grid grid-cols-4 gap-6 max-w-lg mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mb-8">
         <StatPill label="Lessons"     value={stats?.lessons}         loading={loading} />
         <StatPill label="Assessments" value={stats?.assessments}     loading={loading} />
         <StatPill label="Portfolio"   value={stats?.portfolio_items} loading={loading} />

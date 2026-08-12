@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { BookOpen, Plus, Users } from "lucide-react";
 import { NAVY, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Button, Input, Textarea, Modal, EmptyState, LoadingOverlay } from "@/components/ds";
 
 export default function TeachingCommunities() {
@@ -35,7 +35,7 @@ export default function TeachingCommunities() {
   const handleLeave = async id => { await axios.post(`/api/network/groups/${id}/leave`); fetchGroups(); };
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Teaching Communities"
       subtitle="Collaborative spaces for educators — share pedagogy, resources, and teaching strategies."
       actions={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={15} />Create</Button>}
@@ -103,6 +103,6 @@ export default function TeachingCommunities() {
           />
         </Modal>
       )}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

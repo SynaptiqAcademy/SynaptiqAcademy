@@ -7,6 +7,10 @@ import {
   RefreshCw, AlertCircle, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { AdministrationLayout } from "@/layouts";
+import {
+  Card, Button, Badge, ErrorState, Skeleton, StatCard, StatGrid,
+  DataTable, Pagination, ProgressBar,
+} from "@/components/ds";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -32,59 +36,23 @@ function formatDate(iso) {
   }
 }
 
+// Thin adapter over ds/Skeleton preserving the original `className="h-# w-#"`
+// call sites used throughout this file's custom charts.
 function SkeletonBlock({ className = "" }) {
-  return <div className={`animate-pulse bg-slate-200 rounded ${className}`} />;
+  return <Skeleton height="" width="" className={className} />;
 }
 
 function ErrorCard({ message, onRetry }) {
-  return (
-    <div className="border border-red-200 bg-red-50 p-6 text-center rounded">
-      <AlertCircle size={24} strokeWidth={1.5} className="text-red-400 mx-auto mb-2" />
-      <p className="text-red-700 text-sm mb-3">{message || "Failed to load data."}</p>
-      {onRetry && (
-        <button
-          onClick={onRetry}
-          className="text-xs border border-red-300 text-red-700 px-3 py-1.5 hover:bg-red-100 transition-colors"
-        >
-          Retry
-        </button>
-      )}
-    </div>
-  );
-}
-
-// ── Metric card ───────────────────────────────────────────────────────────────
-
-function MetricCard({ icon: Icon, label, value, sub, loading, color = "blue" }) {
-  const palette = {
-    blue:  { bg: "bg-blue-50",   text: "text-blue-700",   icon: "text-blue-400" },
-    green: { bg: "bg-emerald-50", text: "text-emerald-700", icon: "text-emerald-400" },
-    amber: { bg: "bg-amber-50",  text: "text-amber-700",  icon: "text-amber-400" },
-    red:   { bg: "bg-red-50",    text: "text-red-700",    icon: "text-red-400" },
-  };
-  const c = palette[color] || palette.blue;
-
-  return (
-    <div className="border border-slate-200 bg-white p-5">
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="text-xs font-medium text-slate-500 uppercase tracking-widest">{label}</div>
-        <div className={`w-8 h-8 ${c.bg} flex items-center justify-center`}>
-          <Icon size={15} strokeWidth={1.5} className={c.icon} />
-        </div>
-      </div>
-      {loading ? (
-        <SkeletonBlock className="h-8 w-24 mb-1" />
-      ) : (
-        <div className={`text-3xl font-bold font-mono ${c.text}`}>{value}</div>
-      )}
-      {sub && !loading && (
-        <div className="text-xs text-slate-400 mt-1">{sub}</div>
-      )}
-    </div>
-  );
+  return <ErrorState message={message || "Failed to load data."} onRetry={onRetry} />;
 }
 
 // ── Horizontal bar chart (div-based) ─────────────────────────────────────────
+// NOTE: these three charts render custom segmented/stacked percentage bars
+// driven by arbitrary per-row breakdowns (accepted/bookmarked/dismissed/clicked
+// sub-widths, ranked area lists). The ds/ Chart.jsx components (BarChart,
+// DonutChart, etc.) are recharts-based single-series charts and don't expose
+// a stacked-segment-per-row API, so the bar rendering here is left hand-rolled;
+// only their containers are migrated to Card.
 
 const TYPE_COLORS = {
   researchers: "bg-blue-500",
@@ -268,20 +236,16 @@ function TopAreasChart({ data, loading }) {
 
 // ── Quality metric badge ──────────────────────────────────────────────────────
 
+const QUALITY_BADGE_VARIANT = { green: "success", blue: "info", amber: "warning", slate: "neutral" };
+
 function QualityBadge({ label, value, color }) {
-  const palette = {
-    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    blue:  "bg-blue-50 text-blue-700 border-blue-200",
-    amber: "bg-amber-50 text-amber-700 border-amber-200",
-    slate: "bg-slate-100 text-slate-600 border-slate-200",
-  };
   return (
-    <div className="border border-slate-200 bg-white p-3">
+    <Card padding="sm">
       <div className="text-xs text-slate-500 mb-1">{label}</div>
-      <div className={`inline-flex items-center px-2 py-1 text-sm font-bold border ${palette[color] || palette.slate}`}>
+      <Badge variant={QUALITY_BADGE_VARIANT[color] || "neutral"} size="md" className="text-sm font-bold">
         {value}
-      </div>
-    </div>
+      </Badge>
+    </Card>
   );
 }
 
@@ -492,6 +456,40 @@ export default function AdminRecommendationCenter() {
 
   const totalPages = Math.max(1, Math.ceil(intTotal / PAGE_SIZE));
 
+  // ── Interactions table columns ─────────────────────────────────────────────
+
+  const ACTION_BADGE_VARIANT = { accepted: "success", bookmarked: "info", dismissed: "danger", clicked: "neutral" };
+
+  const interactionColumns = [
+    {
+      key: "rec_type",
+      label: "Type",
+      render: (_, row) => <span className="font-medium capitalize">{fmt(row.rec_type || row.type)}</span>,
+    },
+    {
+      key: "target_name",
+      label: "Target",
+      maxWidth: 200,
+      render: (_, row) => fmt(row.target_name || row.rec_id || row.target),
+    },
+    {
+      key: "action",
+      label: "Action",
+      render: (_, row) => <Badge variant={ACTION_BADGE_VARIANT[row.action] || "neutral"} size="sm">{fmt(row.action)}</Badge>,
+    },
+    {
+      key: "user_email",
+      label: "User",
+      maxWidth: 160,
+      render: (_, row) => fmt(row.user_email || row.user_name || row.user_id),
+    },
+    {
+      key: "created_at",
+      label: "Timestamp",
+      render: (_, row) => <span className="font-mono text-xs">{formatDate(row.created_at || row.timestamp)}</span>,
+    },
+  ];
+
   // ─────────────────────────────────────────────────────────────────────────────
 
   return (
@@ -505,39 +503,31 @@ export default function AdminRecommendationCenter() {
         {statsError ? (
           <ErrorCard message={statsError} onRetry={fetchStats} />
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              icon={Activity}
+          <StatGrid cols={4}>
+            <StatCard
+              icon={<Activity />}
               label="Total Interactions"
-              value={totalInteractions != null ? totalInteractions.toLocaleString() : "—"}
-              loading={statsLoading}
-              color="blue"
+              value={statsLoading ? "…" : (totalInteractions != null ? totalInteractions.toLocaleString() : "—")}
             />
-            <MetricCard
-              icon={ThumbsUp}
+            <StatCard
+              icon={<ThumbsUp />}
               label="Acceptance Rate"
-              value={acceptanceRate != null ? `${acceptanceRate}%` : "—"}
+              value={statsLoading ? "…" : (acceptanceRate != null ? `${acceptanceRate}%` : "—")}
               sub={totalAccepted != null ? `${totalAccepted.toLocaleString()} accepted` : undefined}
-              loading={statsLoading}
-              color="green"
             />
-            <MetricCard
-              icon={Users}
+            <StatCard
+              icon={<Users />}
               label="Profile Coverage"
-              value={coveragePct != null ? `${Math.round(coveragePct)}%` : "—"}
+              value={coverageLoading ? "…" : (coveragePct != null ? `${Math.round(coveragePct)}%` : "—")}
               sub={coverage?.total_users != null ? `${coverage.total_users.toLocaleString()} users` : undefined}
-              loading={coverageLoading}
-              color="amber"
             />
-            <MetricCard
-              icon={XCircle}
+            <StatCard
+              icon={<XCircle />}
               label="Dismissal Rate"
-              value={dismissalRate != null ? `${dismissalRate}%` : "—"}
+              value={statsLoading ? "…" : (dismissalRate != null ? `${dismissalRate}%` : "—")}
               sub={totalDismissals != null ? `${totalDismissals.toLocaleString()} dismissed` : undefined}
-              loading={statsLoading}
-              color="red"
             />
-          </div>
+          </StatGrid>
         )}
       </section>
 
@@ -547,35 +537,35 @@ export default function AdminRecommendationCenter() {
         <div className="grid lg:grid-cols-2 gap-6">
 
           {/* Chart 1: Interactions by Type */}
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <h3 className="font-medium text-slate-900 mb-4 text-sm">Interactions by Type</h3>
             {byTypeError ? (
               <ErrorCard message={byTypeError} onRetry={fetchByType} />
             ) : (
               <InteractionsByTypeChart data={byType} loading={byTypeLoading} />
             )}
-          </div>
+          </Card>
 
           {/* Chart 2: Acceptance Rate by Type */}
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <h3 className="font-medium text-slate-900 mb-4 text-sm">Acceptance Rate by Type</h3>
             {byTypeError ? (
               <ErrorCard message={byTypeError} onRetry={fetchByType} />
             ) : (
               <AcceptanceByTypeChart data={byType} loading={byTypeLoading} />
             )}
-          </div>
+          </Card>
         </div>
 
         {/* Chart 3: Top Research Areas */}
-        <div className="border border-slate-200 bg-white p-5 mt-6">
+        <Card padding="lg" className="mt-6">
           <h3 className="font-medium text-slate-900 mb-4 text-sm">Top Research Areas in Profiles</h3>
           {topAreasError ? (
             <ErrorCard message={topAreasError} onRetry={fetchTopAreas} />
           ) : (
             <TopAreasChart data={topAreas} loading={topAreasLoading} />
           )}
-        </div>
+        </Card>
       </section>
 
       {/* ── Quality Metrics ───────────────────────────────────── */}
@@ -586,10 +576,10 @@ export default function AdminRecommendationCenter() {
         ) : qualityLoading ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="border border-slate-200 bg-white p-3">
+              <Card key={i} padding="sm">
                 <SkeletonBlock className="h-3 w-24 mb-2" />
                 <SkeletonBlock className="h-6 w-16" />
-              </div>
+              </Card>
             ))}
           </div>
         ) : qualityItems.length === 0 ? (
@@ -606,118 +596,38 @@ export default function AdminRecommendationCenter() {
       {/* ── Tables section ────────────────────────────────────── */}
       <section>
         <div className="overline mb-3">Recent Interactions</div>
-        <div className="border border-slate-200 bg-white overflow-hidden">
-          {intError ? (
-            <div className="p-6">
-              <ErrorCard message={intError} onRetry={() => fetchInteractions(intPage)} />
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50">
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Type</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Target</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Action</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">User</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Timestamp</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {intLoading
-                      ? Array.from({ length: 10 }).map((_, i) => (
-                          <tr key={i} className="border-b border-slate-100">
-                            {[1, 2, 3, 4, 5].map((j) => (
-                              <td key={j} className="px-4 py-3">
-                                <SkeletonBlock className="h-4 w-full" />
-                              </td>
-                            ))}
-                          </tr>
-                        ))
-                      : interactions.length === 0
-                      ? (
-                        <tr>
-                          <td colSpan={5} className="px-4 py-10 text-center text-slate-400 text-sm">
-                            No interactions recorded yet.
-                          </td>
-                        </tr>
-                      )
-                      : interactions.map((row, i) => {
-                          const actionColor = {
-                            accepted:   "text-emerald-700 bg-emerald-50",
-                            bookmarked: "text-blue-700 bg-blue-50",
-                            dismissed:  "text-red-700 bg-red-50",
-                            clicked:    "text-slate-700 bg-slate-100",
-                          }[row.action] || "text-slate-700 bg-slate-100";
-
-                          return (
-                            <tr key={row.id || i} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                              <td className="px-4 py-3">
-                                <span className="text-xs font-medium capitalize text-slate-700">
-                                  {fmt(row.rec_type || row.type)}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 max-w-[200px]">
-                                <span className="text-xs text-slate-600 truncate block">
-                                  {fmt(row.target_name || row.rec_id || row.target)}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className={`inline-flex items-center px-2 py-0.5 text-xs rounded-full font-medium ${actionColor}`}>
-                                  {fmt(row.action)}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className="text-xs text-slate-600 truncate block max-w-[160px]">
-                                  {fmt(row.user_email || row.user_name || row.user_id)}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className="text-xs font-mono text-slate-500">
-                                  {formatDate(row.created_at || row.timestamp)}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50">
-                  <div className="text-xs text-slate-500">
-                    Page {intPage} of {totalPages} ({intTotal.toLocaleString()} total)
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setIntPage((p) => Math.max(1, p - 1))}
-                      disabled={intPage <= 1 || intLoading}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs border border-slate-300 text-slate-700 hover:border-[#0F2847] hover:text-[#0F2847] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <ChevronLeft size={12} /> Previous
-                    </button>
-                    <button
-                      onClick={() => setIntPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={intPage >= totalPages || intLoading}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs border border-slate-300 text-slate-700 hover:border-[#0F2847] hover:text-[#0F2847] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Next <ChevronRight size={12} />
-                    </button>
-                  </div>
+        {intError ? (
+          <Card padding="lg">
+            <ErrorCard message={intError} onRetry={() => fetchInteractions(intPage)} />
+          </Card>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <DataTable
+              columns={interactionColumns}
+              rows={interactions}
+              loading={intLoading}
+              emptyNode={
+                <div className="px-4 py-10 text-center text-slate-400 text-sm">
+                  No interactions recorded yet.
                 </div>
-              )}
-            </>
-          )}
-        </div>
+              }
+            />
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-1 py-1">
+                <div className="text-xs text-slate-500">
+                  Page {intPage} of {totalPages} ({intTotal.toLocaleString()} total)
+                </div>
+                <Pagination page={intPage} totalPages={totalPages} onPage={(p) => setIntPage(p)} />
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       {/* ── Profile Coverage Details ──────────────────────────── */}
       <section>
         <div className="overline mb-3">Profile Coverage Details</div>
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           {coverageError ? (
             <ErrorCard message={coverageError} onRetry={fetchCoverage} />
           ) : coverageLoading ? (
@@ -761,30 +671,17 @@ export default function AdminRecommendationCenter() {
               {/* Coverage bar */}
               {coveragePct != null && (
                 <div className="mb-5">
-                  <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-                    <span>Coverage</span>
-                    <span className="font-mono">{Math.round(coveragePct)}%</span>
-                  </div>
-                  <div className="h-3 bg-slate-100 w-full overflow-hidden">
-                    <div
-                      className="h-full bg-[#0F2847] transition-all duration-700"
-                      style={{ width: `${Math.min(coveragePct, 100)}%` }}
-                    />
-                  </div>
+                  <ProgressBar value={Math.min(coveragePct, 100)} max={100} label="Coverage" />
                 </div>
               )}
 
-              <button
-                onClick={handleRefreshAll}
-                disabled={refreshingAll}
-                className="inline-flex items-center gap-2 border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-[#0F2847] hover:text-[#0F2847] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
+              <Button variant="ghost" onClick={handleRefreshAll} disabled={refreshingAll}>
                 <RefreshCw size={14} strokeWidth={1.5} className={refreshingAll ? "animate-spin" : ""} />
                 {refreshingAll ? "Refreshing profiles…" : "Refresh All Profiles"}
-              </button>
+              </Button>
             </>
           )}
-        </div>
+        </Card>
       </section>
     </AdministrationLayout>
   );

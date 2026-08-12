@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ChevronRight, CheckCircle } from "lucide-react";
 import { NAVY, WARM, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Badge, Input, FormSelect, Button, NavTabs, Spinner, H4 } from "@/components/ds";
 
@@ -79,7 +79,7 @@ export default function CareerPlanner() {
   const readyColor = readinessScore >= 75 ? EMERALD : readinessScore >= 50 ? "#f59e0b" : ACCENT;
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
       title="Career Planner"
       subtitle="AI-powered academic career planning and progression tracker."
       navItems={SIE_NAV_ITEMS}
@@ -186,6 +186,6 @@ export default function CareerPlanner() {
           </div>
         </Card>
       )}
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

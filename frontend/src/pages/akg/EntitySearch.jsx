@@ -3,7 +3,7 @@ import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Filter, ExternalLink } from "lucide-react";
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Button, Badge, Tag, SearchBar, EmptyState, LoadingOverlay } from "@/components/ds";
 
 const API = (p) => `/api/akg${p}`;
@@ -46,7 +46,7 @@ export default function EntitySearch() {
   const handleKeyDown = (e) => { if (e.key === "Enter") search(); };
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Semantic Entity Search"
       subtitle="TF-IDF cosine similarity search across all knowledge graph entities. No LLM — pure rule-based intelligence."
     >
@@ -112,7 +112,7 @@ export default function EntitySearch() {
                       <div style={{ fontSize: 11, color: TEXT_SECONDARY, marginTop: 4 }}>Relevance: {(r.score * 100).toFixed(0)}%</div>
                     )}
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => nav(`/akg/entity/${r.entity_id}`)}>
+                  <Button variant="ghost" size="icon" onClick={() => nav(`/akg/entity/${r.entity_id}`)} aria-label={`Open ${r.label}`}>
                     <ExternalLink size={14} color={ACCENT} />
                   </Button>
                 </Card>
@@ -121,6 +121,6 @@ export default function EntitySearch() {
           </div>
         </div>
       )}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

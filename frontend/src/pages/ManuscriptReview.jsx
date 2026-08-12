@@ -7,7 +7,12 @@ import {
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { WARM } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { InlineError } from "@/components/ds/Alert";
 
 
 
@@ -66,18 +71,18 @@ function ScoreBar({ score }) {
 }
 
 const REC_CONFIG = {
-  accept:          { label: "Accept",                cls: "bg-green-50 text-green-800 border-green-300" },
-  minor_revision:  { label: "Minor Revision",        cls: "bg-blue-50 text-blue-800 border-blue-300" },
-  major_revision:  { label: "Major Revision Required", cls: "bg-amber-50 text-amber-800 border-amber-300" },
-  reject:          { label: "Reject",                cls: "bg-red-50 text-red-800 border-red-300" },
+  accept:          { label: "Accept",                  variant: "success" },
+  minor_revision:  { label: "Minor Revision",           variant: "info"    },
+  major_revision:  { label: "Major Revision Required",  variant: "warning" },
+  reject:          { label: "Reject",                   variant: "danger"  },
 };
 
 function RecBadge({ rec }) {
   const cfg = REC_CONFIG[rec] || REC_CONFIG.major_revision;
   return (
-    <span className={`inline-block border px-3 py-1 text-xs font-medium tracking-wider uppercase ${cfg.cls}`}>
+    <Badge variant={cfg.variant} className="tracking-wider uppercase">
       {cfg.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -158,7 +163,7 @@ function SectionCard({ def: s, data, defaultOpen = false }) {
   const Chev = open ? ChevronUp : ChevronDown;
 
   return (
-    <div className="border border-slate-200 bg-white">
+    <Card padding="none">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-slate-50 transition-colors"
@@ -197,7 +202,7 @@ function SectionCard({ def: s, data, defaultOpen = false }) {
           })}
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -225,8 +230,10 @@ function HistoryItem({ review, onSelect, active }) {
   const rec = review.review_json?.executive_summary?.recommendation;
   const cfg = REC_CONFIG[rec] || REC_CONFIG.major_revision;
   return (
-    <button
+    <Card
       onClick={() => onSelect(review)}
+      variant="ghost"
+      padding="none"
       className={`w-full text-left px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition-colors ${active ? "bg-slate-50" : ""}`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -240,12 +247,12 @@ function HistoryItem({ review, onSelect, active }) {
           <span className="font-mono text-sm font-semibold" style={{ color: scoreColor(review.overall_score) }}>
             {review.overall_score}
           </span>
-          <span className={`text-[9px] font-medium tracking-wider uppercase border px-1.5 py-0.5 ${cfg.cls}`}>
+          <Badge variant={cfg.variant} size="sm" className="tracking-wider uppercase">
             {cfg.label.split(" ")[0]}
-          </span>
+          </Badge>
         </div>
       </div>
-    </button>
+    </Card>
   );
 }
 
@@ -254,7 +261,7 @@ function HistoryItem({ review, onSelect, active }) {
 function GateView() {
   return (
     <div className="space-y-6">
-      <div className="border border-slate-200 bg-white p-16 flex flex-col items-center text-center gap-5">
+      <Card padding="xl" className="!p-16 flex flex-col items-center text-center gap-5">
         <Lock size={28} strokeWidth={1} className="text-slate-300" />
         <div>
           <div className="overline text-[#0F2847] mb-2">Researcher plan required</div>
@@ -264,13 +271,10 @@ function GateView() {
             research problem, methodology, statistical validity, and publication readiness.
           </p>
         </div>
-        <Link
-          to="/pricing"
-          className="inline-block bg-[#0F2847] text-white text-sm px-6 py-2.5 hover:opacity-90 transition-opacity"
-        >
+        <Button as={Link} to="/pricing" variant="primary">
           View Plans
-        </Link>
-      </div>
+        </Button>
+      </Card>
     </div>
   );
 }
@@ -357,12 +361,13 @@ function UploadView({ onReview }) {
                   <div className="font-medium text-slate-900">{file.name}</div>
                   <div className="text-sm text-slate-500 mt-1">{(file.size / 1024 / 1024).toFixed(2)} MB</div>
                 </div>
-                <button
+                <Button
                   onClick={(e) => { e.stopPropagation(); setFile(null); setError(null); }}
-                  className="text-xs text-slate-400 hover:text-slate-700 underline"
+                  variant="link"
+                  className="text-xs !text-slate-400 hover:!text-slate-700"
                 >
                   Remove file
-                </button>
+                </Button>
               </>
             ) : (
               <>
@@ -377,34 +382,32 @@ function UploadView({ onReview }) {
           </div>
 
           {error && (
-            <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
+            <InlineError>{error}</InlineError>
           )}
 
-          <button
+          <Button
             data-testid={TID.manuscriptReviewAnalyzeBtn}
             onClick={analyze}
             disabled={!file || analyzing}
-            className="w-full bg-[#0F2847] text-white py-3 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            loading={analyzing}
+            variant="primary"
+            size="lg"
+            className="w-full"
           >
             {analyzing ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Running academic review — this may take up to 60 seconds…
-              </>
+              "Running academic review — this may take up to 60 seconds…"
             ) : (
               <>
                 <Microscope size={15} strokeWidth={1.5} />
                 Analyze Manuscript · 20 Credits
               </>
             )}
-          </button>
+          </Button>
         </div>
 
         {/* Info panel */}
         <div className="space-y-4">
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline mb-3">Review covers</div>
             <ul className="space-y-2 text-sm text-slate-600">
               {[
@@ -421,12 +424,12 @@ function UploadView({ onReview }) {
                 </li>
               ))}
             </ul>
-          </div>
-          <div className="border border-slate-200 bg-white p-5">
+          </Card>
+          <Card padding="lg">
             <div className="overline mb-2">Credit cost</div>
             <div className="font-serif text-3xl text-slate-900">20</div>
             <div className="text-xs text-slate-500 mt-1">Research Credits per review</div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>
@@ -461,18 +464,15 @@ function ResultView({ review, onNew }) {
               <span>{review.credits_used} credits used</span>
             </div>
           </div>
-          <button
-            onClick={onNew}
-            className="shrink-0 flex items-center gap-2 border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-          >
+          <Button onClick={onNew} variant="outline" size="sm" className="shrink-0">
             <RotateCcw size={13} strokeWidth={1.5} />
             New Review
-          </button>
+          </Button>
         </div>
       </header>
 
       {/* Executive summary */}
-      <div className="border border-slate-200 bg-white p-6 space-y-4">
+      <Card padding="xl" className="space-y-4">
         <div className="flex items-start justify-between gap-6">
           <div className="flex-1">
             <div className="overline mb-2">Executive Summary</div>
@@ -486,18 +486,18 @@ function ResultView({ review, onNew }) {
             <div className="text-xs text-slate-500 overline">Overall</div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Score overview grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {SECTIONS.map((s) => {
           const score = sections[s.key]?.score ?? 0;
           return (
-            <div key={s.key} className="border border-slate-200 bg-white px-4 py-3">
+            <Card key={s.key} padding="none" className="px-4 py-3">
               <div className="overline text-[10px] text-slate-400">Section {s.roman}</div>
               <div className="text-sm font-medium text-slate-800 mt-0.5">{s.label}</div>
               <ScoreBar score={score} />
-            </div>
+            </Card>
           );
         })}
       </div>
@@ -513,7 +513,7 @@ function ResultView({ review, onNew }) {
       </div>
 
       {/* Revision checklist */}
-      <div className="border border-slate-200 bg-white p-6">
+      <Card padding="xl">
         <div className="overline mb-5">Priority Revision Checklist</div>
         <div className="space-y-5">
           <ChecklistSection
@@ -535,7 +535,7 @@ function ResultView({ review, onNew }) {
             iconColor="#16a34a"
           />
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -558,10 +558,11 @@ export default function ManuscriptReview() {
 
   useEffect(() => { loadHistory(); }, [loadHistory]);
 
-  if (gated) return <AIWorkspaceLayout title="Manuscript Review"><GateView /></AIWorkspaceLayout>;
+  if (gated) return <ResearchLayout navItems={AI_NAV_ITEMS} title="Manuscript Review"><GateView /></ResearchLayout>;
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="Manuscript Review"
       subtitle="AI-powered academic peer review — research quality, methodology, and publication readiness."
     >
@@ -585,7 +586,7 @@ export default function ManuscriptReview() {
       {history.length > 0 && (
         <section>
           <div className="overline mb-3">Review History</div>
-          <div className="border border-slate-200 bg-white divide-y divide-slate-100">
+          <Card padding="none" className="divide-y divide-slate-100">
             {history.map((h) => (
               <HistoryItem
                 key={h.id}
@@ -604,10 +605,10 @@ export default function ManuscriptReview() {
                 }}
               />
             ))}
-          </div>
+          </Card>
         </section>
       )}
     </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

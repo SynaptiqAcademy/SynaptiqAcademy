@@ -9,6 +9,13 @@ import AIMatchModal from "../components/ai/AIMatchModal";
 import AssistantLauncher from "../components/ai/AssistantLauncher";
 import FilePanel from "../components/files/FilePanel";
 import { NAVY } from "@/lib/tokens";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { Input } from "@/components/ds/Input";
+import { Textarea } from "@/components/ds/Textarea";
+import { FormSelect } from "@/components/ds/FormSelect";
+import { ResearchLayout } from "@/layouts";
 import {
   MessageSquare, History, GitBranch, RotateCcw, ChevronUp, ChevronDown,
   CheckCircle2, Circle, Star, Save, Send, ListChecks, FileCheck2,
@@ -56,16 +63,16 @@ function ReadinessCard({ dash, m }) {
   ];
   const done = items.filter((i) => i.ok).length;
   return (
-    <div data-testid={TID.manuscriptReadiness} className="border border-slate-200 bg-white p-4">
+    <Card data-testid={TID.manuscriptReadiness} padding="md">
       <div className="flex items-center gap-2 mb-3">
         <FileCheck2 size={13} strokeWidth={1.5} className="text-[#0F2847]" />
         <div className="overline">Submission readiness</div>
       </div>
       <div className="flex items-baseline gap-2 mb-3">
         <span className="text-2xl font-bold text-slate-900">{done}/{items.length}</span>
-        <span className={`text-[11px] font-mono ${dash.ready_for_submission ? "text-emerald-700" : "text-amber-700"}`}>
+        <Badge variant={dash.ready_for_submission ? "success" : "warning"} size="sm" className="font-mono">
           {dash.ready_for_submission ? "Ready" : "In progress"}
-        </span>
+        </Badge>
       </div>
       <ul className="space-y-1.5">
         {items.map((it, i) => (
@@ -78,7 +85,7 @@ function ReadinessCard({ dash, m }) {
           </li>
         ))}
       </ul>
-    </div>
+    </Card>
   );
 }
 
@@ -109,13 +116,13 @@ function VersionTimeline({ mid, currentVersion, onRestored }) {
   return (
     <ol className="space-y-3">
       {versions.map((v) => (
-        <li key={v.id} data-testid={TID.manuscriptVersionItem(v.version)} className="border-l-2 border-[#0F2847] pl-3">
+        <Card key={v.id} as="li" data-testid={TID.manuscriptVersionItem(v.version)} accent="#0F2847" variant="ghost" padding="none" className="pl-3">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-[11px] text-[#0F2847]">v{v.version}</span>
                 {v.version === currentVersion && (
-                  <span className="text-[10px] border border-emerald-200 bg-emerald-50 text-emerald-700 px-1.5 py-0.5">current</span>
+                  <Badge variant="success" size="sm">current</Badge>
                 )}
               </div>
               <div className="text-[13px] text-slate-900 mt-0.5 truncate">{v.summary || "—"}</div>
@@ -124,16 +131,18 @@ function VersionTimeline({ mid, currentVersion, onRestored }) {
               </div>
             </div>
             {v.version !== currentVersion && (
-              <button
+              <Button
                 data-testid={TID.manuscriptVersionRestore(v.version)}
                 onClick={() => restore(v.version)}
-                className="shrink-0 inline-flex items-center gap-1 text-[11px] border border-slate-200 px-2 py-1 hover:border-slate-400 transition-colors"
+                variant="outline"
+                size="sm"
+                className="shrink-0"
               >
                 <RotateCcw size={10} strokeWidth={1.5} /> Restore
-              </button>
+              </Button>
             )}
           </div>
-        </li>
+        </Card>
       ))}
     </ol>
   );
@@ -169,53 +178,56 @@ function CommentsPanel({ mid, section }) {
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
-        <input
+        <Input
           data-testid={TID.manuscriptCommentBody}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder={`Comment on ${section}…`}
-          className="flex-1 h-8 px-2.5 border border-slate-200 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors"
+          size="sm"
+          wrapperClassName="flex-1"
         />
-        <button
+        <Button
           data-testid={TID.manuscriptCommentSubmit}
           onClick={submit}
           disabled={busy}
-          className="bg-[#0F2847] text-white h-8 px-3 text-[11px] hover:bg-[#1a3d65] inline-flex items-center gap-1 transition-colors"
+          variant="primary"
+          size="sm"
         >
           <Send size={10} strokeWidth={1.5} /> Post
-        </button>
+        </Button>
       </div>
       {open.length === 0 && done.length === 0 && (
         <p className="text-[11px] text-slate-400">No comments on this section.</p>
       )}
       {open.map((c) => (
-        <div key={c.id} data-testid={TID.manuscriptCommentItem(c.id)} className="border-l-2 border-amber-400 pl-3">
+        <Card key={c.id} data-testid={TID.manuscriptCommentItem(c.id)} accent="#fbbf24" variant="ghost" padding="none" className="pl-3">
           <div className="flex items-center justify-between gap-2">
             <div className="text-[10px] font-mono text-slate-400">
               {c.author_name} · {new Date(c.created_at).toLocaleString()}
             </div>
-            <button
+            <Button
               data-testid={TID.manuscriptCommentResolve(c.id)}
               onClick={() => resolve(c.id)}
-              className="text-[10px] text-emerald-700 hover:underline"
+              variant="link"
+              className="text-[10px] !text-emerald-700"
             >
               Resolve
-            </button>
+            </Button>
           </div>
           {c.anchor && <div className="text-[10px] text-slate-400 italic mt-0.5">"{c.anchor}"</div>}
           <div className="text-[12px] text-slate-900 mt-1 leading-relaxed">{c.body}</div>
-        </div>
+        </Card>
       ))}
       {done.length > 0 && (
         <details className="text-[11px]">
           <summary className="text-slate-400 cursor-pointer">Resolved ({done.length})</summary>
           <div className="space-y-2 mt-2">
             {done.map((c) => (
-              <div key={c.id} className="border-l-2 border-emerald-200 pl-3 opacity-50">
+              <Card key={c.id} accent="#a7f3d0" variant="ghost" padding="none" className="pl-3 opacity-50">
                 <div className="text-[10px] font-mono text-slate-400">{c.author_name}</div>
                 <div className="text-[12px] text-slate-600 line-through">{c.body}</div>
-              </div>
+              </Card>
             ))}
           </div>
         </details>
@@ -257,7 +269,7 @@ function AuthorsPanel({ m, refresh, currentUserId }) {
         .map((a, i) => {
           const isCorr = m.corresponding_author_id === a.id;
           return (
-            <div key={a.id} className="flex items-center gap-2 border border-slate-200 bg-white px-2 py-1.5">
+            <Card key={a.id} padding="none" className="flex items-center gap-2 px-2 py-1.5">
               <span className="font-mono text-[10px] text-slate-400 w-4">{i + 1}.</span>
               <Avatar url={a.avatar_url} name={a.full_name} size={26} />
               <div className="min-w-0 flex-1">
@@ -267,34 +279,41 @@ function AuthorsPanel({ m, refresh, currentUserId }) {
               {isCorr && <Star size={11} strokeWidth={1.5} className="text-amber-500 shrink-0" title="Corresponding author" />}
               {isLead && (
                 <div className="flex flex-col">
-                  <button
+                  <Button
                     data-testid={TID.manuscriptAuthorUp(a.id)}
                     disabled={i === 0}
                     onClick={() => move(a.id, -1)}
-                    className="text-slate-300 hover:text-slate-700 disabled:opacity-20 transition-colors"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Move ${a.full_name} up`}
+                    className="!h-4 !w-4 text-slate-300 hover:text-slate-700"
                   >
                     <ChevronUp size={11} strokeWidth={1.5} />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     data-testid={TID.manuscriptAuthorDown(a.id)}
                     disabled={i === authors.length - 1}
                     onClick={() => move(a.id, +1)}
-                    className="text-slate-300 hover:text-slate-700 disabled:opacity-20 transition-colors"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Move ${a.full_name} down`}
+                    className="!h-4 !w-4 text-slate-300 hover:text-slate-700"
                   >
                     <ChevronDown size={11} strokeWidth={1.5} />
-                  </button>
+                  </Button>
                 </div>
               )}
               {isLead && !isCorr && (
-                <button
+                <Button
                   data-testid={TID.manuscriptCorrespondingPick(a.id)}
                   onClick={() => setCorresponding(a.id)}
-                  className="text-[10px] text-[#0F2847] hover:underline font-mono"
+                  variant="link"
+                  className="text-[10px] !text-[#0F2847] font-mono"
                 >
                   Set ✦
-                </button>
+                </Button>
               )}
-            </div>
+            </Card>
           );
         })}
     </div>
@@ -343,58 +362,61 @@ function ReviewsPanel({ m, currentUserId, authors, refresh }) {
     finally { setBusy(null); }
   };
 
-  const STATUS_TONE = {
-    pending:   "border-amber-200 bg-amber-50 text-amber-700",
-    accepted:  "border-emerald-200 bg-emerald-50 text-emerald-700",
-    declined:  "border-slate-200 bg-slate-50 text-slate-500",
-    completed: "border-[#0F2847]/30 bg-[#0F2847]/5 text-[#0F2847]",
+  const STATUS_VARIANT = {
+    pending:   "warning",
+    accepted:  "success",
+    declined:  "neutral",
+    completed: "default",
   };
 
   return (
     <div className="space-y-3">
       {isAuthor && (
-        <button
+        <Button
           data-testid={TID.manuscriptReviewAssignBtn}
           onClick={() => setShowAssign((s) => !s)}
-          className="w-full inline-flex items-center justify-center gap-2 bg-[#0F2847] text-white h-8 text-[11px] hover:bg-[#1a3d65] transition-colors"
+          variant="primary"
+          size="sm"
+          className="w-full"
         >
           <UserPlus size={11} strokeWidth={1.5} /> {showAssign ? "Close" : "Assign reviewer"}
-        </button>
+        </Button>
       )}
 
       {showAssign && (
-        <div className="border border-slate-200 bg-slate-50/60 p-3 space-y-2">
-          <input
+        <Card padding="md" className="!bg-slate-50/60 space-y-2">
+          <Input
             value={section}
             onChange={(e) => setSection(e.target.value)}
             placeholder="Section (optional)"
-            className="w-full h-8 px-2.5 border border-slate-200 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors"
+            size="sm"
           />
-          <textarea
+          <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={2}
             placeholder="Note for reviewer (optional)"
-            className="w-full px-2.5 py-2 border border-slate-200 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] resize-none transition-colors"
+            resize={false}
           />
-          <div className="relative">
-            <Search size={11} strokeWidth={1.5} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search reviewer…"
-              className="w-full h-8 pl-8 pr-2.5 border border-slate-200 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors"
-            />
-          </div>
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search reviewer…"
+            size="sm"
+            prefix={<Search size={11} strokeWidth={1.5} />}
+          />
           {q.trim() && results.length === 0 && <div className="text-[11px] text-slate-400">No matches.</div>}
           <div className="max-h-44 overflow-auto">
             {results.map((u) => (
-              <button
+              <Card
                 key={u.id}
+                as="button"
                 data-testid={TID.manuscriptReviewPick(u.id)}
                 disabled={busy === u.id}
                 onClick={() => assign(u.id)}
-                className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-white text-left border-b border-slate-100 transition-colors"
+                variant="ghost"
+                padding="none"
+                className="w-full flex items-center gap-2 px-2 py-1.5 hover:bg-white text-left border-b border-slate-100"
               >
                 <Avatar url={u.avatar_url} name={u.full_name} size={22} />
                 <div className="min-w-0 flex-1">
@@ -404,33 +426,33 @@ function ReviewsPanel({ m, currentUserId, authors, refresh }) {
                 <span className="text-[10px] text-[#0F2847] font-mono" data-testid={TID.manuscriptReviewAssignSubmit}>
                   {busy === u.id ? "…" : "Assign"}
                 </span>
-              </button>
+              </Card>
             ))}
           </div>
-        </div>
+        </Card>
       )}
 
       {items.length === 0 && <p className="text-[11px] text-slate-400">No reviews assigned yet.</p>}
 
       {items.map((rr) => {
-        const tone = STATUS_TONE[rr.status] || "border-slate-200 bg-slate-50 text-slate-500";
+        const variant = STATUS_VARIANT[rr.status] || "neutral";
         const label = rr.verdict ? rr.verdict.replace("_", " ") : rr.status;
         return (
-          <div key={rr.id} data-testid={TID.manuscriptReviewItem(rr.id)} className="border border-slate-200 bg-white p-2.5">
+          <Card key={rr.id} data-testid={TID.manuscriptReviewItem(rr.id)} padding="sm">
             <div className="flex items-center gap-2">
               {rr.reviewer && <Avatar url={rr.reviewer.avatar_url} name={rr.reviewer.full_name} size={22} />}
               <div className="min-w-0 flex-1">
                 <div className="text-[12px] text-slate-900 truncate">{rr.reviewer?.full_name || "Reviewer"}</div>
                 {rr.section && <div className="text-[10px] font-mono text-slate-400">{rr.section}</div>}
               </div>
-              <span className={`text-[10px] font-mono border px-1.5 py-0.5 ${tone}`}>{label}</span>
+              <Badge variant={variant} size="sm" className="font-mono">{label}</Badge>
             </div>
             {rr.verdict_comment && (
               <div className="mt-2 text-[11px] text-slate-700 border-l-2 border-[#0F2847] pl-2">
                 {rr.verdict_comment}
               </div>
             )}
-          </div>
+          </Card>
         );
       })}
     </div>
@@ -553,84 +575,75 @@ export default function ManuscriptDetail() {
     if (k === "journals") loadJournalMatches();
   };
 
-  if (!m) return <ManuscriptSkeleton />;
+  if (!m) return <ResearchLayout title="Manuscript"><ManuscriptSkeleton /></ResearchLayout>;
 
   const filledSections = SECTIONS.filter((s) => (m.sections || {})[s.key]?.trim()).length;
   const wordCount = Math.max(1, draft.split(/\s+/).filter(Boolean).length);
 
+  const headerActions = (
+    <>
+      <Button
+        data-testid={TID.manuscriptSnapshotBtn}
+        onClick={snapshot}
+        variant="outline"
+        size="sm"
+      >
+        <GitBranch size={11} strokeWidth={1.5} /> Snapshot
+      </Button>
+      <div className="flex items-center border border-[#0F2847]/20 divide-x divide-[#0F2847]/20">
+        <span className="flex items-center gap-1 pl-2 pr-1">
+          <Sparkles size={10} strokeWidth={1.5} className="text-[#0F2847]" />
+          <span className="text-[10px] text-slate-400 font-mono">AI match</span>
+        </span>
+        <Button data-testid="ai-match-journal"     onClick={() => setAIMatch("journal")}     variant="ghost" size="sm" className="!border-0 !h-8 text-[10px] !text-[#0F2847]">Journal</Button>
+        <Button data-testid="ai-match-conference" onClick={() => setAIMatch("conference")}  variant="ghost" size="sm" className="!border-0 !h-8 text-[10px] !text-[#0F2847]">Conf</Button>
+        <Button data-testid="ai-match-grant"       onClick={() => setAIMatch("grant")}       variant="ghost" size="sm" className="!border-0 !h-8 text-[10px] !text-[#0F2847]">Grant</Button>
+        <Button data-testid="ai-match-reviewer"    onClick={() => setAIMatch("reviewer")}    variant="ghost" size="sm" className="!border-0 !h-8 text-[10px] !text-[#0F2847]">Reviewer</Button>
+      </div>
+      <Button
+        data-testid={TID.openChatBtn}
+        onClick={() => navigate("/messages", { state: { openContext: { type: "manuscript", id } } })}
+        variant="outline"
+        size="sm"
+      >
+        <MessageSquare size={11} strokeWidth={1.5} /> Chat
+      </Button>
+      <AssistantLauncher entityKind="manuscript" entityId={id} entityTitle={m.title} />
+    </>
+  );
+
   return (
+    <ResearchLayout title={m.title} subtitle={m.manuscript_type} actions={headerActions}>
     <div className="space-y-5">
-      {/* ── Header ───────────────────────────────────────────── */}
-      <header className="border-b border-slate-200 pb-5">
+      {/* ── Meta bar ───────────────────────────────────────────── */}
+      <div className="border-b border-slate-200 pb-5">
         <Link to="/manuscripts" className="text-[11px] font-mono text-slate-400 hover:text-slate-700 transition-colors">
           ← Manuscripts
         </Link>
-        <div className="mt-3">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-mono text-slate-400 mb-1.5">{m.manuscript_type}</div>
-              <h1 className="text-[1.3rem] font-semibold text-slate-900 tracking-tight leading-snug">
-                {m.title}
-              </h1>
-              <div className="flex items-center gap-3 mt-2 flex-wrap text-[12px] text-slate-500">
-                {m.project && (
-                  <Link to={`/projects/${m.project.id}`} className="text-[#0F2847] hover:underline">
-                    {m.project.title}
-                  </Link>
-                )}
-                {m.workspace && (
-                  <Link to={`/workspaces/${m.workspace.id}`} className="text-[#0F2847] hover:underline">
-                    {m.workspace.name}
-                  </Link>
-                )}
-                {m.target_journal && (
-                  <span>
-                    Target: <strong className="text-slate-700">{m.target_journal.title}</strong>
-                    {m.target_journal.quartile ? ` (${m.target_journal.quartile})` : ""}
-                  </span>
-                )}
-                {dash && (
-                  <span className={`inline-flex items-center gap-1 text-[10px] border px-2 py-0.5 font-mono ${
-                    dash.ready_for_submission
-                      ? "text-emerald-700 border-emerald-200 bg-emerald-50"
-                      : "text-amber-700 border-amber-200 bg-amber-50"
-                  }`}>
-                    <ListChecks size={10} strokeWidth={1.5} /> {dash.progress_pct}% drafted
-                  </span>
-                )}
-              </div>
-            </div>
-            {/* Action strip */}
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
-              <button
-                data-testid={TID.manuscriptSnapshotBtn}
-                onClick={snapshot}
-                className="inline-flex items-center gap-1.5 text-[11px] border border-slate-200 px-3 h-8 hover:border-slate-400 text-slate-600 transition-colors"
-              >
-                <GitBranch size={11} strokeWidth={1.5} /> Snapshot
-              </button>
-              <div className="flex items-center border border-[#0F2847]/20 divide-x divide-[#0F2847]/20">
-                <span className="flex items-center gap-1 pl-2 pr-1">
-                  <Sparkles size={10} strokeWidth={1.5} className="text-[#0F2847]" />
-                  <span className="text-[10px] text-slate-400 font-mono">AI match</span>
-                </span>
-                <button data-testid="ai-match-journal"     onClick={() => setAIMatch("journal")}     className="text-[10px] text-[#0F2847] px-2 h-8 hover:bg-[#0F2847]/5 transition-colors">Journal</button>
-                <button data-testid="ai-match-conference" onClick={() => setAIMatch("conference")}  className="text-[10px] text-[#0F2847] px-2 h-8 hover:bg-[#0F2847]/5 transition-colors">Conf</button>
-                <button data-testid="ai-match-grant"       onClick={() => setAIMatch("grant")}       className="text-[10px] text-[#0F2847] px-2 h-8 hover:bg-[#0F2847]/5 transition-colors">Grant</button>
-                <button data-testid="ai-match-reviewer"    onClick={() => setAIMatch("reviewer")}    className="text-[10px] text-[#0F2847] px-2 h-8 hover:bg-[#0F2847]/5 transition-colors">Reviewer</button>
-              </div>
-              <button
-                data-testid={TID.openChatBtn}
-                onClick={() => navigate("/messages", { state: { openContext: { type: "manuscript", id } } })}
-                className="inline-flex items-center gap-1.5 text-[11px] border border-slate-200 px-3 h-8 hover:border-slate-400 text-slate-600 transition-colors"
-              >
-                <MessageSquare size={11} strokeWidth={1.5} /> Chat
-              </button>
-              <AssistantLauncher entityKind="manuscript" entityId={id} entityTitle={m.title} />
-            </div>
-          </div>
+        <div className="flex items-center gap-3 mt-2 flex-wrap text-[12px] text-slate-500">
+          {m.project && (
+            <Link to={`/projects/${m.project.id}`} className="text-[#0F2847] hover:underline">
+              {m.project.title}
+            </Link>
+          )}
+          {m.workspace && (
+            <Link to={`/workspaces/${m.workspace.id}`} className="text-[#0F2847] hover:underline">
+              {m.workspace.name}
+            </Link>
+          )}
+          {m.target_journal && (
+            <span>
+              Target: <strong className="text-slate-700">{m.target_journal.title}</strong>
+              {m.target_journal.quartile ? ` (${m.target_journal.quartile})` : ""}
+            </span>
+          )}
+          {dash && (
+            <Badge variant={dash.ready_for_submission ? "success" : "warning"} size="sm" className="font-mono">
+              <ListChecks size={10} strokeWidth={1.5} /> {dash.progress_pct}% drafted
+            </Badge>
+          )}
         </div>
-      </header>
+      </div>
 
       {/* ── Three-column workspace ───────────────────────────── */}
       <div className="grid lg:grid-cols-12 gap-4">
@@ -638,7 +651,7 @@ export default function ManuscriptDetail() {
         {/* LEFT — navigation + meta */}
         <aside className="lg:col-span-3 space-y-4">
           {/* Section nav */}
-          <div className="border border-slate-200 bg-white">
+          <Card padding="none">
             <div className="border-b border-slate-200 px-3 py-2 flex items-center justify-between">
               <div className="overline text-slate-500">Sections</div>
               <div className="font-mono text-[10px] text-slate-400">{filledSections}/{SECTIONS.length}</div>
@@ -666,40 +679,40 @@ export default function ManuscriptDetail() {
                 );
               })}
             </div>
-          </div>
+          </Card>
 
           {/* Status */}
-          <div className="border border-slate-200 bg-white p-3">
+          <Card padding="md">
             <div className="overline text-slate-500 mb-2">Status</div>
-            <select
+            <FormSelect
               data-testid={TID.manuscriptStatus}
               value={m.status}
               onChange={(e) => changeStatus(e.target.value)}
-              className="h-8 w-full px-2.5 border border-slate-200 bg-white text-[12px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors"
+              size="sm"
             >
               {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
-          </div>
+            </FormSelect>
+          </Card>
 
           {/* Target journal */}
-          <div className="border border-slate-200 bg-white p-3">
+          <Card padding="md">
             <div className="overline text-slate-500 mb-2">Target journal</div>
-            <select
+            <FormSelect
               value={m.target_journal_id || ""}
               onChange={(e) => setTargetJournal(e.target.value)}
-              className="h-8 w-full px-2.5 border border-slate-200 bg-white text-[12px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] transition-colors"
+              size="sm"
             >
               <option value="">No target yet</option>
               {journals.map((j) => <option key={j.id} value={j.id}>{j.title} ({j.quartile})</option>)}
-            </select>
-          </div>
+            </FormSelect>
+          </Card>
 
           <ReadinessCard dash={dash} m={m} />
         </aside>
 
         {/* CENTER — writing area */}
         <main className="lg:col-span-6">
-          <div className="border border-slate-200 bg-white">
+          <Card padding="none">
             {/* Editor toolbar */}
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2.5 bg-slate-50/50">
               <div className="text-[12px] font-medium text-slate-700">
@@ -709,13 +722,15 @@ export default function ManuscriptDetail() {
                 {savedFlag && (
                   <span className="text-[10px] text-emerald-600 font-mono">{savedFlag}</span>
                 )}
-                <button
+                <Button
                   data-testid={TID.manuscriptSaveBtn}
                   onClick={saveSection}
-                  className="inline-flex items-center gap-1.5 bg-[#0F2847] text-white h-7 px-3 text-[11px] hover:bg-[#1a3d65] transition-colors"
+                  variant="primary"
+                  size="sm"
+                  className="!h-7"
                 >
                   <Save size={10} strokeWidth={1.5} /> Save
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -734,12 +749,12 @@ export default function ManuscriptDetail() {
               <span>{draft.length.toLocaleString()} chars · ~{wordCount.toLocaleString()} words</span>
               <span className="text-slate-300">Ctrl+S to save · Snapshot to checkpoint</span>
             </div>
-          </div>
+          </Card>
         </main>
 
         {/* RIGHT — collaboration rail */}
         <aside className="lg:col-span-3 space-y-3">
-          <div className="border border-slate-200 bg-white">
+          <Card padding="none">
             <div className="flex border-b border-slate-200 overflow-x-auto">
               {[
                 { k: "comments", label: "Comments"             },
@@ -784,7 +799,7 @@ export default function ManuscriptDetail() {
                     <p className="text-[11px] text-slate-400">No journals found. Add keywords to improve matching.</p>
                   )}
                   {(journalMatches || []).map((j) => (
-                    <div key={j.id} className="border border-slate-200 bg-white p-2.5 hover:border-[#0F2847]/40 transition-colors">
+                    <Card key={j.id} padding="none" className="p-2.5">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <div className="text-[12px] text-slate-900 font-medium leading-snug truncate">{j.title}</div>
@@ -792,7 +807,7 @@ export default function ManuscriptDetail() {
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">
                           {j.quartile && (
-                            <span className="text-[10px] border border-slate-200 px-1 font-mono">{j.quartile}</span>
+                            <Badge variant="outline" size="sm" className="font-mono">{j.quartile}</Badge>
                           )}
                           <span className="text-[10px] font-mono text-emerald-700">{j.match_score}pts</span>
                         </div>
@@ -805,22 +820,23 @@ export default function ManuscriptDetail() {
                         {j.review_time_weeks && <span>~{j.review_time_weeks}w</span>}
                         {j.acceptance_rate && <span>{j.acceptance_rate}% accept</span>}
                       </div>
-                      <button
+                      <Button
                         onClick={() => setTargetJournal(j.id)}
-                        className="mt-2 text-[10px] text-[#0F2847] hover:underline font-mono"
+                        variant="link"
+                        className="mt-2 text-[10px] !text-[#0F2847] font-mono"
                       >
                         Set as target →
-                      </button>
-                    </div>
+                      </Button>
+                    </Card>
                   ))}
                 </div>
               )}
             </div>
-          </div>
+          </Card>
 
           {/* Contributions */}
           {dash?.contributions?.length > 0 && (
-            <div className="border border-slate-200 bg-white p-3">
+            <Card padding="md">
               <div className="overline text-slate-500 mb-2">Contributions</div>
               <ul className="space-y-1.5">
                 {dash.contributions.slice(0, 6).map((c) => (
@@ -830,7 +846,7 @@ export default function ManuscriptDetail() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Card>
           )}
         </aside>
       </div>
@@ -846,5 +862,6 @@ export default function ManuscriptDetail() {
         manuscriptId={id}
       />
     </div>
+    </ResearchLayout>
   );
 }

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import { ACCENT, EMERALD, NAVY, WARM } from "@/lib/tokens";
-import { Avatar, Button } from "@/components/ds";
+import { Avatar, Button, Input, Checkbox, NavTabs } from "@/components/ds";
 import {
   Search, X, ChevronDown, ChevronLeft, ChevronRight, ArrowRight,
   Users, Globe, Building2, MapPin, BookOpen, Award, TrendingUp,
@@ -226,7 +226,20 @@ export default function Researchers() {
     : null;
 
   return (
-    <DiscoveryLayout>
+    <ResearchLayout
+      title="Researchers"
+      subtitle="AI-powered matching — find collaborators, mentors, reviewers, and research partners worldwide."
+      actions={
+        <>
+          <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} size="sm">
+            <Search size={13} strokeWidth={2} /> Find Researchers
+          </Button>
+          <Button as={Link} to="/collaboration-requests" variant="ghost" size="sm">
+            <UserPlus size={13} strokeWidth={1.5} /> Invite Collaborator
+          </Button>
+        </>
+      }
+    >
       <style>{`
         @keyframes sq-pulse {
           0%, 100% { opacity: 1; }
@@ -234,8 +247,20 @@ export default function Researchers() {
         }
         .sq-pulse { animation: sq-pulse 1.8s ease-in-out infinite; }
       `}</style>
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <HeroSection user={user} total={totalInPlatform} onExplore={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} />
+      {/* ── Stats strip ───────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mb-8">
+        {[
+          { label: "Researchers",  value: totalInPlatform != null ? `${totalInPlatform}+` : "—" },
+          { label: "Countries",    value: "50+" },
+          { label: "Institutions", value: "100+" },
+          { label: "AI Matched",   value: "Always" },
+        ].map(({ label, value }) => (
+          <div key={label} className="text-center">
+            <div className="font-serif text-3xl text-slate-900">{value}</div>
+            <div className="overline mt-1 text-xs">{label}</div>
+          </div>
+        ))}
+      </div>
       {/* ── Recently Viewed ───────────────────────────────────────────────── */}
       {recentlyViewed.length > 0 && (
         <RecentlyViewedStrip researchers={recentlyViewed} isSaved={isSaved} toggleSave={toggleSave} />
@@ -279,34 +304,24 @@ export default function Researchers() {
           {/* Results */}
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* Search input */}
-            <div style={{ position: "relative", marginBottom: 12 }}>
-              <Search size={14} strokeWidth={1.5} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#94A3B8", pointerEvents: "none" }} />
-              <input
+            <div style={{ marginBottom: 12 }}>
+              <Input
                 data-testid={TID.discoverySearch}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search name, institution, research area, ORCID, keywords…"
-                style={{ width: "100%", padding: "10px 36px 10px 38px", border: `1px solid ${BORDER}`, background: "white", fontSize: 13, color: "#1E293B", outline: "none", boxSizing: "border-box" }}
-                onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-                onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
+                prefix={<Search size={14} strokeWidth={1.5} />}
+                suffix={q && (
+                  <button
+                    type="button"
+                    onClick={() => setQ("")}
+                    aria-label="Clear search"
+                    style={{ color: "#94A3B8", display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", pointerEvents: "auto" }}
+                  >
+                    <X size={13} strokeWidth={1.5} />
+                  </button>
+                )}
               />
-              {q && (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => setQ("")}
-                  style={{
-                    position: "absolute",
-                    right: 10,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    color: "#94A3B8",
-                    display: "flex",
-                    alignItems: "center"
-                  }}>
-                  <X size={13} strokeWidth={1.5} />
-                </Button>
-              )}
             </div>
 
             {/* Results */}
@@ -344,13 +359,14 @@ export default function Researchers() {
                 </div>
                 {hasMore && (
                   <div style={{ textAlign: "center", marginTop: 24 }}>
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={() => fetchResearchers(false)}
                       disabled={loading}
-                      style={{ padding: "9px 24px", border: `1px solid ${BORDER}`, background: "white", fontSize: 13, fontWeight: 600, color: NAVY, cursor: "pointer", outline: "none" }}
+                      loading={loading}
                     >
                       Load more researchers
-                    </button>
+                    </Button>
                   </div>
                 )}
               </>
@@ -368,86 +384,7 @@ export default function Researchers() {
           onClose={() => setCompareList([])}
         />
       )}
-    </DiscoveryLayout>
-  );
-}
-
-// ── Hero ──────────────────────────────────────────────────────────────────────
-function HeroSection({ user, total, onExplore }) {
-  const areas = (user?.research_areas || []).slice(0, 2).join(", ") || "your research";
-  const institution = user?.institution || "your institution";
-
-  return (
-    <div
-      style={{
-        margin: "-24px -24px 0",
-        background: `linear-gradient(145deg, #0B1E38 0%, ${NAVY} 55%, #163355 100%)`,
-        padding: "48px 56px 0",
-        overflow: "hidden",
-        position: "relative",
-      }}
-    >
-      {/* Grid pattern */}
-      <div style={{ position: "absolute", inset: 0, opacity: 0.035, backgroundImage: "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
-      {/* Radial glow */}
-      <div style={{ position: "absolute", top: -120, right: 80, width: 400, height: 400, background: "radial-gradient(circle, rgba(138,21,56,0.15) 0%, transparent 70%)", pointerEvents: "none" }} />
-
-      <div style={{ position: "relative" }}>
-        {/* Kicker */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-          <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#818CF8" }} />
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>
-            Academic Researcher Discovery
-          </span>
-        </div>
-
-        {/* Headline */}
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 48, fontWeight: 400, color: "white", lineHeight: 1.07, marginBottom: 14, maxWidth: 580 }}>
-          Discover Your<br />
-          <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 40 }}>Research Community</span>
-        </h1>
-
-        <p style={{ fontSize: 14, color: "rgba(255,255,255,0.48)", lineHeight: 1.7, maxWidth: 480, marginBottom: 30 }}>
-          AI-powered matching for <strong style={{ color: "rgba(255,255,255,0.75)" }}>{areas}</strong> at{" "}
-          <strong style={{ color: "rgba(255,255,255,0.75)" }}>{institution}</strong>.
-          Find collaborators, mentors, reviewers and research partners worldwide.
-        </p>
-
-        {/* CTAs */}
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 36 }}>
-          <button
-            onClick={onExplore}
-            style={{ padding: "10px 22px", background: "white", color: NAVY, fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, outline: "none" }}
-          >
-            <Search size={13} strokeWidth={2} /> Find Researchers
-          </button>
-          <Link
-            to="/collaboration-requests"
-            style={{ padding: "10px 22px", background: "transparent", color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: 600, border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}
-          >
-            <UserPlus size={13} strokeWidth={1.5} /> Invite Collaborator
-          </Link>
-        </div>
-
-        {/* Stats bar */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0, borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 20 }}>
-          {[
-            { Icon: Users,         label: "Researchers",       val: total != null ? `${total}+` : "—" },
-            { Icon: Globe,         label: "Countries",         val: "50+" },
-            { Icon: Building2,     label: "Institutions",      val: "100+" },
-            { Icon: Sparkles,      label: "AI Matched",        val: "Always" },
-          ].map(({ Icon, label, val }) => (
-            <div key={label} style={{ padding: "12px 16px 12px 0" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 3 }}>
-                <Icon size={9} strokeWidth={1.5} style={{ color: "rgba(255,255,255,0.3)" }} />
-                <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>{label}</span>
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "white", fontFamily: "monospace" }}>{val}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    </ResearchLayout>
   );
 }
 
@@ -496,6 +433,7 @@ function AiRecsPanel({ recs, loading, isSaved, toggleSave, compareList, toggleCo
           size="icon"
           variant="ghost"
           onClick={() => setExpanded((v) => !v)}
+          aria-label={expanded ? "Collapse recommendations" : "Expand recommendations"}
           style={{
             color: "#94A3B8",
             display: "flex",
@@ -547,24 +485,24 @@ function DiscoverySections({ sections, loading, activeSection, setActiveSection,
       </div>
 
       {/* Tab strip */}
-      <div style={{ display: "flex", gap: 0, overflowX: "auto", borderBottom: `1px solid ${BORDER}`, marginBottom: 20 }}>
-        {SECTION_TABS.map((tab) => {
-          const count = sections?.[tab.key]?.length || 0;
-          const isActive = tab.key === activeSection;
-          const hidden = !loading && sections && count === 0 && tab.key !== "recommended";
-          if (hidden) return null;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setActiveSection(tab.key)}
-              style={{ display: "flex", alignItems: "center", gap: 5, padding: "8px 14px", fontSize: 12, fontWeight: isActive ? 700 : 500, color: isActive ? NAVY : "#64748B", borderBottom: `2px solid ${isActive ? NAVY : "transparent"}`, cursor: "pointer", background: "none", border: "none", borderBottomStyle: "solid", borderBottomWidth: 2, borderBottomColor: isActive ? NAVY : "transparent", whiteSpace: "nowrap", outline: "none", transition: "color 150ms" }}
-            >
-              <tab.icon size={11} strokeWidth={1.5} />
-              {tab.label}
-              {count > 0 && <span style={{ fontSize: 9, color: "#94A3B8", fontFamily: "monospace" }}>({count})</span>}
-            </button>
-          );
-        })}
+      <div style={{ overflowX: "auto", marginBottom: 20 }}>
+        <NavTabs
+          variant="underline"
+          active={activeSection}
+          onChange={setActiveSection}
+          tabs={SECTION_TABS
+            .filter((tab) => {
+              const count = sections?.[tab.key]?.length || 0;
+              const hidden = !loading && sections && count === 0 && tab.key !== "recommended";
+              return !hidden;
+            })
+            .map((tab) => ({
+              id: tab.key,
+              label: tab.label,
+              icon: tab.icon,
+              count: (sections?.[tab.key]?.length || 0) || undefined,
+            }))}
+        />
       </div>
 
       {/* Cards */}
@@ -746,12 +684,13 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
           View Profile <ArrowRight size={9} strokeWidth={2} />
         </Link>
         <span style={{ color: "#E2E8F0" }}>|</span>
-        <button
+        <Button
+          variant="link"
           onClick={(e) => onCompare(r, e)}
-          style={{ fontSize: 10, fontWeight: 600, color: isCompared ? NAVY : "#94A3B8", cursor: "pointer", display: "flex", alignItems: "center", gap: 3, background: "none", border: "none", outline: "none", padding: 0, textDecoration: isCompared ? "underline" : "none" }}
+          style={{ fontSize: 10, fontWeight: 600, color: isCompared ? NAVY : "#94A3B8", textDecoration: isCompared ? "underline" : "none" }}
         >
           <BarChart2 size={10} strokeWidth={1.5} /> Compare
-        </button>
+        </Button>
         <span style={{ color: "#E2E8F0" }}>|</span>
         <Link
           to="/collaboration-requests"
@@ -812,6 +751,7 @@ function ResearcherCardCompact({ r, isSaved, onSave, isCompared, onCompare, show
           size="icon"
           variant="ghost"
           onClick={(e) => onSave && onSave(r, e)}
+          aria-label={isSaved ? "Remove from saved" : "Save researcher"}
           style={{
             color: isSaved ? NAVY : "#CBD5E1",
             flexShrink: 0
@@ -865,7 +805,7 @@ function FilterPanel({ filters, setFilter, clearAll }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.1em" }}>Filters</span>
         {Object.values(filters).some(Boolean) && (
-          <button onClick={clearAll} style={{ fontSize: 10, color: "#94A3B8", cursor: "pointer", background: "none", border: "none", outline: "none", textDecoration: "underline" }}>Clear</button>
+          <Button variant="link" onClick={clearAll} style={{ fontSize: 10, color: "#94A3B8", textDecoration: "underline" }}>Clear</Button>
         )}
       </div>
 
@@ -877,83 +817,69 @@ function FilterPanel({ filters, setFilter, clearAll }) {
           { key: "available_for_reviewing",     label: "Peer reviewer" },
           { key: "available_for_supervision",   label: "Supervisor / mentor" },
         ].map(({ key, label }) => (
-          <label key={key} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 7, cursor: "pointer" }}>
-            <input
-              type="checkbox"
+          <div key={key} style={{ marginBottom: 7 }}>
+            <Checkbox
+              label={label}
               checked={!!filters[key]}
               onChange={(e) => setFilter(key, e.target.checked || "")}
-              style={{ accentColor: NAVY, width: 13, height: 13, flexShrink: 0 }}
             />
-            <span style={{ fontSize: 12, color: "#374151" }}>{label}</span>
-          </label>
+          </div>
         ))}
       </div>
 
       {/* Identifiers */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Identifiers</div>
-        <label style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}>
-          <input
-            type="checkbox"
-            checked={!!filters.has_orcid}
-            onChange={(e) => setFilter("has_orcid", e.target.checked || "")}
-            style={{ accentColor: NAVY, width: 13, height: 13, flexShrink: 0 }}
-          />
-          <span style={{ fontSize: 12, color: "#374151" }}>Has ORCID</span>
-        </label>
+        <Checkbox
+          label="Has ORCID"
+          checked={!!filters.has_orcid}
+          onChange={(e) => setFilter("has_orcid", e.target.checked || "")}
+        />
       </div>
 
       {/* Country */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Country</div>
-        <input
+        <Input
+          size="sm"
           value={filters.country || ""}
           onChange={(e) => setFilter("country", e.target.value)}
           placeholder="e.g. Romania"
-          style={{ width: "100%", padding: "6px 8px", border: `1px solid ${BORDER}`, fontSize: 12, color: "#374151", outline: "none", boxSizing: "border-box" }}
-          onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-          onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
         />
       </div>
 
       {/* Institution */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Institution</div>
-        <input
+        <Input
+          size="sm"
           value={filters.institution || ""}
           onChange={(e) => setFilter("institution", e.target.value)}
           placeholder="e.g. MIT"
-          style={{ width: "100%", padding: "6px 8px", border: `1px solid ${BORDER}`, fontSize: 12, color: "#374151", outline: "none", boxSizing: "border-box" }}
-          onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-          onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
         />
       </div>
 
       {/* Research area */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Area</div>
-        <input
+        <Input
+          size="sm"
           value={filters.research_area || ""}
           onChange={(e) => setFilter("research_area", e.target.value)}
           placeholder="e.g. Machine Learning"
-          style={{ width: "100%", padding: "6px 8px", border: `1px solid ${BORDER}`, fontSize: 12, color: "#374151", outline: "none", boxSizing: "border-box" }}
-          onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-          onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
         />
       </div>
 
       {/* Min H-index */}
       <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Min H-Index</div>
-        <input
+        <Input
+          size="sm"
           type="number"
           min={0}
           value={filters.min_h_index || ""}
           onChange={(e) => setFilter("min_h_index", e.target.value)}
           placeholder="e.g. 5"
-          style={{ width: "100%", padding: "6px 8px", border: `1px solid ${BORDER}`, fontSize: 12, color: "#374151", outline: "none", boxSizing: "border-box" }}
-          onFocus={(e) => { e.target.style.borderColor = NAVY; }}
-          onBlur={(e)  => { e.target.style.borderColor = BORDER; }}
         />
       </div>
     </div>
@@ -1029,12 +955,9 @@ function ExplorerPlaceholder({ onExplore }) {
           </div>
         ))}
       </div>
-      <button
-        onClick={onExplore}
-        style={{ padding: "8px 18px", background: NAVY, color: "white", fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", outline: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
-      >
+      <Button onClick={onExplore}>
         <UserPlus size={12} strokeWidth={2} /> Show Available Collaborators
-      </button>
+      </Button>
     </div>
   );
 }
@@ -1124,9 +1047,9 @@ function ComparePanel({ researchers, onRemove, onClose }) {
             Comparing {researchers.length} researchers
           </span>
         </div>
-        <button onClick={onClose} style={{ color: "rgba(255,255,255,0.45)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 12, background: "none", border: "none", outline: "none" }}>
+        <Button variant="link" onClick={onClose} style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
           <X size={13} strokeWidth={1.5} /> Close
-        </button>
+        </Button>
       </div>
 
       <div style={{ overflowX: "auto" }}>
@@ -1140,9 +1063,9 @@ function ComparePanel({ researchers, onRemove, onClose }) {
                     <AvatarCircle r={r} size={22} />
                     <span style={{ fontSize: 12, fontWeight: 700, color: "white", fontFamily: "Georgia, serif" }}>{r.full_name}</span>
                   </div>
-                  <button onClick={() => onRemove(r.id)} style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 2, background: "none", border: "none", outline: "none", padding: 0, marginTop: 2 }}>
+                  <Button variant="link" onClick={() => onRemove(r.id)} style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>
                     <X size={7} strokeWidth={1.5} /> Remove
-                  </button>
+                  </Button>
                 </th>
               ))}
             </tr>

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { BarChart2, Network, Users, Layers, Activity } from "lucide-react";
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
-import { AnalyticsLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, NavTabs, StatGrid, StatCard, ProgressBar, EmptyState } from "@/components/ds";
 
 const API = (p) => `/api/akg${p}`;
@@ -38,7 +38,7 @@ export default function GraphAnalytics() {
   const maxInfluence = Math.max(...influence.map(n => n.influence_score || 0), 1);
 
   return (
-    <AnalyticsLayout
+    <ResearchLayout
       title="Graph Analytics"
       subtitle="Network-level analytics: centrality, influence, and community structure."
     >
@@ -124,6 +124,6 @@ export default function GraphAnalytics() {
           )}
         </Card>
       )}
-    </AnalyticsLayout>
+    </ResearchLayout>
   );
 }

@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Trophy, ArrowRight, Users } from "lucide-react";
 import { NAVY, WARM, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Button } from "@/components/ds";
 
 const STEPS = [
@@ -16,7 +16,7 @@ const STEPS = [
 export default function GrantTeams() {
   const navigate = useNavigate();
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Grant Teams"
       subtitle="Assemble high-quality research consortia. Find co-applicants, partner institutions and specialist collaborators for competitive grants."
     >
@@ -57,6 +57,6 @@ export default function GrantTeams() {
           </div>
         ))}
       </Card>
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

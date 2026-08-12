@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Lightbulb, Command, Sparkles, HelpCircle, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ds/Card";
-import { TEXT_MUTED, TEXT_SECONDARY, TEXT_PRIMARY, NAVY, NAVY_08, WHITE, BRD } from "@/lib/tokens";
+import { Button } from "@/components/ds/Button";
+import { Badge } from "@/components/ds/Badge";
+import { List, ListItem } from "@/components/ds/List";
+import { BodySmall } from "@/components/ds/Typography";
+import { TEXT_MUTED, TEXT_SECONDARY, TEXT_PRIMARY, NAVY, WHITE, BRD } from "@/lib/tokens";
 
 const TIPS = {
   general: "These preferences are saved to this browser; they don't yet change app behaviour.",
@@ -69,58 +73,55 @@ export function SettingsSidebar({ activeCategory }) {
             <Lightbulb size={14} style={{ color: WHITE }} />
             <div style={{ fontSize: 12.5, fontWeight: 700, color: WHITE, letterSpacing: "-0.01em" }}>Contextual Tip</div>
           </div>
-          <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.82)", lineHeight: 1.6, margin: "0 0 12px" }}>
+          <BodySmall as="p" style={{ color: "rgba(255,255,255,0.82)", lineHeight: 1.6, margin: "0 0 12px" }}>
             {TIPS[activeCategory]}
-          </p>
-          <button
+          </BodySmall>
+          <Button
+            size="sm"
+            variant="ghost"
             onClick={() => setTipDismissed(true)}
-            style={{
-              fontSize: 11.5, fontWeight: 600, color: WHITE, background: "rgba(255,255,255,0.12)",
-              border: "1px solid rgba(255,255,255,0.2)", borderRadius: 6, padding: "6px 12px", cursor: "pointer",
-            }}
+            style={{ color: WHITE, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)" }}
           >
             Got it
-          </button>
+          </Button>
         </Card>
       )}
 
       <Card padding="lg">
         <SidebarCardHeading icon={Command}>Quick Shortcuts</SidebarCardHeading>
-        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+        <List border={false} radius={0} style={{ background: "transparent" }}>
           {QUICK_SHORTCUTS.map((s) => (
-            <div key={s.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 12.5, color: TEXT_SECONDARY }}>{s.label}</span>
-              <span style={{ display: "flex", gap: 3 }}>
-                {s.keys.map((k, i) => <Kbd key={i}>{k}</Kbd>)}
-              </span>
-            </div>
+            <ListItem
+              key={s.label}
+              compact
+              title={s.label}
+              trailing={<span style={{ display: "flex", gap: 3 }}>{s.keys.map((k, i) => <Kbd key={i}>{k}</Kbd>)}</span>}
+              style={{ borderBottom: "none", padding: "5px 0" }}
+            />
           ))}
-        </div>
+        </List>
         <FooterLink to="/settings?section=keyboard">View all shortcuts</FooterLink>
       </Card>
 
       <Card padding="lg">
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
           <SidebarCardHeading icon={Sparkles}>Release Notes</SidebarCardHeading>
-          <span style={{
-            fontSize: 9, fontWeight: 700, color: NAVY, background: NAVY_08,
-            padding: "1px 6px", borderRadius: 4, letterSpacing: "0.04em", marginLeft: -2, marginBottom: 8,
-          }}>NEW</span>
+          <Badge variant="default" size="sm" style={{ marginLeft: -2, marginBottom: 8 }}>NEW</Badge>
         </div>
         <div style={{ fontSize: 12.5, fontWeight: 600, color: TEXT_PRIMARY, marginTop: -4, marginBottom: 4 }}>
           Application Preferences
         </div>
-        <p style={{ fontSize: 12, color: TEXT_MUTED, margin: 0, lineHeight: 1.6 }}>
+        <BodySmall as="p" color={TEXT_MUTED} style={{ margin: 0, lineHeight: 1.6 }}>
           Launched today. More categories arrive as new Synaptiq features ship.
-        </p>
+        </BodySmall>
         <FooterLink to="/help-center">View release notes</FooterLink>
       </Card>
 
       <Card padding="lg">
         <SidebarCardHeading icon={HelpCircle}>Need Help?</SidebarCardHeading>
-        <p style={{ fontSize: 12.5, color: TEXT_SECONDARY, lineHeight: 1.6, margin: 0 }}>
+        <BodySmall as="p" style={{ lineHeight: 1.6, margin: 0 }}>
           Visit our Help Center for guides, tutorials and best practices.
-        </p>
+        </BodySmall>
         <FooterLink to="/help-center">Open Help Center</FooterLink>
       </Card>
     </div>

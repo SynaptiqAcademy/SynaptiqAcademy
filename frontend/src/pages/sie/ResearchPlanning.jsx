@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { BookMarked, Plus, CheckCircle, Clock, X } from "lucide-react";
 import { NAVY, WARM, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Tag, Button, Modal, Input, EmptyState, Spinner } from "@/components/ds";
 
@@ -176,7 +176,7 @@ export default function ResearchPlanning() {
   };
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
       title="Research Roadmaps"
       subtitle={`${roadmaps.length} roadmap${roadmaps.length !== 1 ? "s" : ""} · 18-stage AI-generated plans`}
       navItems={SIE_NAV_ITEMS}
@@ -206,7 +206,7 @@ export default function ResearchPlanning() {
                   <div style={{ fontSize: 15, fontWeight: 800, color: NAVY }}>{selected.title}</div>
                   <div style={{ fontSize: 12, color: TEXT_SECONDARY }}>Overall: {selected.overall_completion}% complete · Est. end: {selected.estimated_end_date}</div>
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => setSelected(null)}><X size={16} color={TEXT_SECONDARY} /></Button>
+                <Button size="icon" variant="ghost" onClick={() => setSelected(null)} aria-label="Close"><X size={16} color={TEXT_SECONDARY} /></Button>
               </Card.Header>
               <div style={{ padding: 16, maxHeight: 600, overflowY: "auto" }}>
                 {(selected.stages || []).map(s => <StageRow key={s.key} stage={s} onAdvance={advance} />)}
@@ -216,6 +216,6 @@ export default function ResearchPlanning() {
         </div>
       )}
       {showNew && <GenerateModal onClose={() => setShowNew(false)} onCreate={rm => { setRoadmaps(rs => [rm, ...rs]); setSelected(rm); }} />}
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

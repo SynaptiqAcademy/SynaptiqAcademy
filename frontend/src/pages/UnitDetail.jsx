@@ -200,7 +200,7 @@ function ManageMembersBody({ unit, allMembers, currentIds, onClose, onChanged })
         {allMembers.length === 0 && <div className="text-xs text-slate-500">No approved institution members to add.</div>}
         {allMembers.map((m) => (
           <label key={m.user_id} className="flex items-center gap-3 cursor-pointer border border-slate-200 p-2 hover:border-[#0F2847]" data-testid={`pick-member-${m.user_id}`}>
-            <Checkbox checked={selected.has(m.user_id)} onChange={() => toggle(m.user_id)} />
+            <input type="checkbox" checked={selected.has(m.user_id)} onChange={() => toggle(m.user_id)} />
             <div className="flex-1 min-w-0">
               <div className="text-sm">{m.user?.full_name || m.user_id}</div>
               <div className="text-[10px] font-mono text-slate-500">{userTypeLabel(m.user)}</div>

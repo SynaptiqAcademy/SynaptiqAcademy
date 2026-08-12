@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
-import { ExternalLink, CalendarDays, MapPin, Clock, Bookmark, BookmarkCheck } from "lucide-react";
+import { toast } from "sonner";
+import { ExternalLink, CalendarDays, MapPin, Clock, Bookmark, BookmarkCheck, Users } from "lucide-react";
 import { NAVY } from "@/lib/tokens";
 import { SkeletonCard } from "@/components/ds/LoadingState";
+import { Button } from "@/components/ds/Button";
+import { ResearchLayout } from "@/layouts";
 
 function dateRow(label, value) {
   if (!value) return null;
@@ -17,10 +20,36 @@ function dateRow(label, value) {
 
 export default function ConferenceDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [c, setC] = useState(null);
+  const [myTeam, setMyTeam] = useState(undefined); // undefined = loading, null = none
+  const [formingTeam, setFormingTeam] = useState(false);
+
   useEffect(() => { api.get(`/conferences/${id}`).then((r) => setC(r.data)).catch(() => setC({error: true})); }, [id]);
-  if (!c) return <div className="p-6"><SkeletonCard rows={4} /></div>;
-  if (c.error) return <div className="text-sm text-slate-500">Conference not found. <Link to="/conferences" className="underline">Back</Link></div>;
+  useEffect(() => {
+    api.get("/conference-teams/mine")
+      .then((r) => setMyTeam((r.data?.teams || []).find((t) => t.conference_id === id) || null))
+      .catch(() => setMyTeam(null));
+  }, [id]);
+
+  const formTeam = async () => {
+    setFormingTeam(true);
+    try {
+      const res = await api.post("/conference-teams", { conference_id: id, title: c?.name });
+      navigate(`/conference-teams/${res.data.id}`);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Could not form a team.");
+    } finally {
+      setFormingTeam(false);
+    }
+  };
+
+  if (!c) return <ResearchLayout title="Conference"><SkeletonCard rows={4} /></ResearchLayout>;
+  if (c.error) return (
+    <ResearchLayout title="Conference not found">
+      <div className="text-sm text-slate-500">Conference not found. <Link to="/conferences" className="underline">Back</Link></div>
+    </ResearchLayout>
+  );
 
   const state = c.deadline_state || "unknown";
   const STATE_TONE = {
@@ -31,11 +60,12 @@ export default function ConferenceDetail() {
   };
 
   return (
-    <div className="space-y-8">
-      <Link to="/conferences" className="text-sm text-slate-500 hover:text-slate-900">← All conferences</Link>
+    <ResearchLayout title={c.name} subtitle={c.organizer ? `Organized by ${c.organizer}` : undefined}>
+      <div className="space-y-8">
+        <Link to="/conferences" className="text-sm text-slate-500 hover:text-slate-900">← All conferences</Link>
 
-      <header className="border-b border-slate-200 pb-6">
-        <div className="flex items-center gap-2 mb-2">
+        {/* Meta bar */}
+        <div className="flex items-center gap-2 flex-wrap pb-6 border-b border-slate-200">
           <CalendarDays size={16} strokeWidth={1.5} className="text-[#0F2847]" />
           {c.acronym && (
             <div className="overline border border-[#0F2847]/20 bg-[#0F2847]/5 text-[#0F2847] px-2 py-0.5">
@@ -49,9 +79,6 @@ export default function ConferenceDetail() {
             {state === "closing_soon" ? "Closing soon" : state}
           </div>
         </div>
-        <h1 className="font-serif text-5xl text-slate-900 mt-2 leading-tight">{c.name}</h1>
-        {c.organizer && <div className="mt-2 text-sm text-slate-500">Organized by {c.organizer}</div>}
-      </header>
 
       <div className="grid lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8">
@@ -108,6 +135,28 @@ export default function ConferenceDetail() {
 
         <aside className="lg:col-span-4 space-y-6">
           <div className="border border-slate-200 bg-white p-6">
+            <div className="overline mb-4 flex items-center gap-2">
+              <Users size={13} strokeWidth={1.5} className="text-[#0F2847]" />
+              Submission team
+            </div>
+            {myTeam === undefined ? (
+              <div className="text-sm text-slate-400">Loading…</div>
+            ) : myTeam ? (
+              <Button as={Link} to={`/conference-teams/${myTeam.id}`} size="sm" variant="outline" className="w-full justify-center">
+                View my team
+              </Button>
+            ) : (
+              <>
+                <p className="text-xs text-slate-500 mb-3">
+                  Form a co-author team for this submission — opens a shared workspace to write and coordinate in.
+                </p>
+                <Button onClick={formTeam} disabled={formingTeam} loading={formingTeam} size="sm" className="w-full justify-center">
+                  Form a team
+                </Button>
+              </>
+            )}
+          </div>
+          <div className="border border-slate-200 bg-white p-6">
             <div className="overline mb-4">Key dates (UTC)</div>
             {dateRow("Submission deadline", c.submission_deadline)}
             {dateRow("Notification", c.notification_date)}
@@ -123,6 +172,7 @@ export default function ConferenceDetail() {
           </div>
         </aside>
       </div>
-    </div>
+      </div>
+    </ResearchLayout>
   );
 }

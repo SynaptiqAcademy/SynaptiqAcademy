@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { MessageSquare, Plus, Users, ChevronRight, Send } from "lucide-react";
 import { NAVY, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Input, Textarea, FormSelect, Modal, NavTabs, EmptyState, LoadingOverlay } from "@/components/ds";
 
 const TOPIC_COLOR = {
@@ -94,7 +94,7 @@ function CommunityDetail({ community, onClose }) {
               placeholder="Share your thoughts, resources, or questions…"
               wrapperClassName="flex-1"
             />
-            <Button variant="primary" onClick={handlePost} disabled={posting || !form.content.trim()} loading={posting}>
+            <Button variant="primary" onClick={handlePost} disabled={posting || !form.content.trim()} loading={posting} aria-label="Post">
               <Send size={16} />
             </Button>
           </div>
@@ -196,12 +196,10 @@ export default function Communities() {
   const handleLeave = async id => { await axios.post(`/api/network/communities/${id}/leave`); fetchCommunities(); fetchMyCommunities(); };
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Academic Communities"
       actions={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={15} />Create</Button>}
-    >
-
-      <div style={{ marginBottom: 16 }}>
+      nav={
         <NavTabs
           variant="pill"
           tabs={[
@@ -211,7 +209,8 @@ export default function Communities() {
           active={tab}
           onChange={setTab}
         />
-      </div>
+      }
+    >
 
       {tab === "discover" && (
         <>
@@ -247,6 +246,6 @@ export default function Communities() {
 
       {openCommunity && <CommunityDetail community={openCommunity} onClose={() => setOpenCommunity(null)} />}
       {showCreate && <CreateCommunityModal onClose={() => setShowCreate(false)} onCreate={() => { fetchCommunities(); fetchMyCommunities(); }} />}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

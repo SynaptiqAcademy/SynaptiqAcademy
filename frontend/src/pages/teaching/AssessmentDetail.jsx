@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Sparkles, Download, Edit2, Check, X, Trash2, Plus, CheckCircle } from "lucide-react";
 import api from "../../lib/api";
 import { toast } from "sonner";
-import { NAVY } from "@/lib/tokens";
 import { SkeletonPage } from "../../components/ds/LoadingState";
 import { Button } from "@/components/ds/Button";
 import { Card } from "@/components/ds/Card";
@@ -183,64 +182,62 @@ export default function AssessmentDetail() {
   const d = editing ? draft : assessment;
   const totalQMarks = (d.questions || []).reduce((s, q) => s + (q.marks || 0), 0);
 
-  return (
-    <ResearchLayout>
-    <div className="max-w-4xl space-y-8">
-      <header className="border-b border-slate-200 pb-6">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex-1 min-w-0">
-            {editing
-              ? <input value={d.title} onChange={(e) => setDraft({ ...d, title: e.target.value })}
-                  className="w-full font-serif text-3xl text-slate-900 border-b border-slate-300 focus:outline-none focus:border-[#0F2847] bg-transparent pb-1" />
-              : <h1 className="font-serif text-3xl text-slate-900">{d.title}</h1>
-            }
-            <div className="flex items-center gap-3 mt-2 flex-wrap">
-              <Badge variant={TYPE_BADGE_VARIANT[d.assessment_type] || "neutral"}>
-                {d.assessment_type}
-              </Badge>
-              <span className="text-sm text-slate-500">{d.subject}</span>
-              <span className="text-slate-300">·</span>
-              <span className="text-sm text-slate-500">{d.total_marks} marks</span>
-              {d.ai_generated && (
-                <span className="inline-flex items-center gap-1 text-[10px] text-[#0F2847]/60">
-                  <Sparkles size={9} strokeWidth={1.5} /> AI-generated
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {editing ? (
-              <>
-                <Button onClick={save} loading={saving}>
-                  <Check size={14} strokeWidth={1.5} />{saving ? "Saving…" : "Save"}
-                </Button>
-                <Button variant="ghost" onClick={() => { setDraft(assessment); setEditing(false); }}>
-                  Cancel
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button variant="ghost" size="sm" onClick={exportAsText}>
-                  <Download size={13} strokeWidth={1.5} /> Export
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
-                  <Edit2 size={13} strokeWidth={1.5} /> Edit
-                </Button>
-                <Button variant="ghost" size="icon" onClick={handleDelete} className="text-slate-400 hover:text-red-500">
-                  <Trash2 size={15} strokeWidth={1.5} />
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
+  const headerActions = editing ? (
+    <>
+      <Button onClick={save} loading={saving}>
+        <Check size={14} strokeWidth={1.5} />{saving ? "Saving…" : "Save"}
+      </Button>
+      <Button variant="ghost" onClick={() => { setDraft(assessment); setEditing(false); }}>
+        Cancel
+      </Button>
+    </>
+  ) : (
+    <>
+      <Button variant="ghost" size="sm" onClick={exportAsText}>
+        <Download size={13} strokeWidth={1.5} /> Export
+      </Button>
+      <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+        <Edit2 size={13} strokeWidth={1.5} /> Edit
+      </Button>
+      <Button variant="ghost" size="icon" onClick={handleDelete} aria-label="Delete assessment" className="text-slate-400 hover:text-red-500">
+        <Trash2 size={15} strokeWidth={1.5} />
+      </Button>
+    </>
+  );
 
+  return (
+    <ResearchLayout
+      title={d.title}
+      actions={headerActions}
+      nav={
         <NavTabs
-          className="mt-6 -mb-6"
           tabs={["questions", "rubric", "instructions"].map((t) => ({ id: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))}
           active={tab}
           onChange={setTab}
         />
-      </header>
+      }
+    >
+    <div className="max-w-4xl space-y-8">
+      <div className="border-b border-slate-200 pb-6">
+        {editing && (
+          <input value={d.title} onChange={(e) => setDraft({ ...d, title: e.target.value })}
+            placeholder="Assessment title"
+            className="w-full font-serif text-2xl text-slate-900 border-b border-slate-300 focus:outline-none focus:border-[#0F2847] bg-transparent pb-1 mb-3" />
+        )}
+        <div className="flex items-center gap-3 flex-wrap">
+          <Badge variant={TYPE_BADGE_VARIANT[d.assessment_type] || "neutral"}>
+            {d.assessment_type}
+          </Badge>
+          <span className="text-sm text-slate-500">{d.subject}</span>
+          <span className="text-slate-300">·</span>
+          <span className="text-sm text-slate-500">{d.total_marks} marks</span>
+          {d.ai_generated && (
+            <span className="inline-flex items-center gap-1 text-[10px] text-[#0F2847]/60">
+              <Sparkles size={9} strokeWidth={1.5} /> AI-generated
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* Questions tab */}
       {tab === "questions" && (

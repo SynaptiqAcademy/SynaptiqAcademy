@@ -10,6 +10,18 @@ import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { NAVY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
+import { Button as DsButton } from "@/components/ds/Button";
+import { Card as DsCard } from "@/components/ds/Card";
+import { Badge as DsBadge } from "@/components/ds/Badge";
+import { Input as DsInput } from "@/components/ds/Input";
+import { Textarea as DsTextarea } from "@/components/ds/Textarea";
+import { FormSelect } from "@/components/ds/FormSelect";
+import { Avatar as DsAvatar } from "@/components/ds/Avatar";
+import { EmptyState as DsEmptyState } from "@/components/ds/EmptyState";
+import { Spinner } from "@/components/ds/LoadingState";
+import { Modal } from "@/components/ds/Modal";
+import { NavTabs } from "@/components/ds/NavTabs";
+import { Callout, InlineError, Alert } from "@/components/ds/Alert";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -23,81 +35,60 @@ function cap(s) {
   return s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, " ");
 }
 
-const REQ_STATUS_COLORS = {
-  draft:      "bg-blue-50 text-blue-700 border border-blue-200",
-  open:       "bg-blue-100 text-blue-700 border border-blue-200",
-  matching:   "bg-amber-100 text-amber-700 border border-amber-200",
-  assigned:   "bg-purple-100 text-purple-700 border border-purple-200",
-  in_review:  "bg-purple-100 text-purple-700 border border-purple-200",
-  completed:  "bg-emerald-100 text-emerald-700 border border-emerald-200",
-  archived:   "bg-slate-100 text-slate-500 border border-slate-200",
+const REQ_STATUS_VARIANTS = {
+  draft: "info", open: "info", matching: "warning", assigned: "purple",
+  in_review: "purple", completed: "success", archived: "neutral",
 };
 
-const ASSIGN_STATUS_COLORS = {
-  invited:    "bg-amber-100 text-amber-700 border border-amber-200",
-  accepted:   "bg-blue-100 text-blue-700 border border-blue-200",
-  declined:   "bg-red-100 text-red-700 border border-red-200",
-  completed:  "bg-emerald-100 text-emerald-700 border border-emerald-200",
-  withdrawn:  "bg-slate-100 text-slate-500 border border-slate-200",
+const ASSIGN_STATUS_VARIANTS = {
+  invited: "warning", accepted: "info", declined: "danger",
+  completed: "success", withdrawn: "neutral",
 };
 
-const CONF_COLORS = {
-  anonymous:    "bg-slate-100 text-slate-600",
-  "double-blind": "bg-indigo-100 text-indigo-700",
-  "single-blind": "bg-amber-100 text-amber-700",
-  public:       "bg-emerald-100 text-emerald-700",
+const CONF_VARIANTS = {
+  anonymous: "neutral", "double-blind": "purple", "single-blind": "warning", public: "success",
 };
 
-const TYPE_COLORS = {
-  manuscript:   "bg-blue-100 text-blue-700",
-  grant:        "bg-indigo-100 text-indigo-700",
-  thesis:       "bg-purple-100 text-purple-700",
-  conference:   "bg-amber-100 text-amber-700",
-  methodology:  "bg-emerald-100 text-emerald-700",
-  statistical:  "bg-rose-100 text-rose-700",
-  dissertation: "bg-purple-100 text-purple-700",
-  custom:       "bg-slate-100 text-slate-600",
+const TYPE_VARIANTS = {
+  manuscript: "info", grant: "purple", thesis: "purple", conference: "warning",
+  methodology: "success", statistical: "danger", dissertation: "purple", custom: "neutral",
 };
 
-function StatusBadge({ status, map = REQ_STATUS_COLORS }) {
+function StatusBadge({ status, map = REQ_STATUS_VARIANTS }) {
   return (
-    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${map[status] || "bg-slate-100 text-slate-600 border border-slate-200"}`}>
+    <DsBadge variant={map[status] || "neutral"}>
       {cap(status)}
-    </span>
+    </DsBadge>
   );
 }
 
 function TypeBadge({ type }) {
   return (
-    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${TYPE_COLORS[type] || TYPE_COLORS.custom}`}>
+    <DsBadge variant={TYPE_VARIANTS[type] || "neutral"}>
       {cap(type)}
-    </span>
+    </DsBadge>
   );
 }
 
 function ConfBadge({ value }) {
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${CONF_COLORS[value] || "bg-slate-100 text-slate-600"}`}>
+    <DsBadge variant={CONF_VARIANTS[value] || "neutral"}>
       <Lock size={10} />
       {cap(value)}
-    </span>
+    </DsBadge>
   );
 }
 
+const CHIP_VARIANTS = {
+  slate: "neutral", blue: "info", indigo: "purple", purple: "purple",
+  amber: "warning", emerald: "success", rose: "danger",
+};
+
 function Chip({ label, color = "slate" }) {
-  const map = {
-    slate:   "bg-slate-100 text-slate-700",
-    blue:    "bg-blue-100 text-blue-700",
-    indigo:  "bg-indigo-100 text-indigo-700",
-    purple:  "bg-purple-100 text-purple-700",
-    amber:   "bg-amber-100 text-amber-700",
-    emerald: "bg-emerald-100 text-emerald-700",
-    rose:    "bg-rose-100 text-rose-700",
-  };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${map[color] || map.slate}`}>
+    <DsBadge variant={CHIP_VARIANTS[color] || "neutral"}>
       {label}
-    </span>
+    </DsBadge>
   );
 }
 
@@ -123,13 +114,7 @@ function ScoreBar({ value = 0, max = 100, color = "bg-[#0F2847]" }) {
 }
 
 function InitialAvatar({ name, size = "md" }) {
-  const sz = size === "sm" ? "w-7 h-7 text-xs" : "w-9 h-9 text-sm";
-  const initials = (name || "?").split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
-  return (
-    <div className={`${sz} rounded-full bg-[#0F2847] text-white flex items-center justify-center font-semibold flex-shrink-0`}>
-      {initials}
-    </div>
-  );
+  return <DsAvatar name={name} size={size === "sm" ? 28 : 36} />;
 }
 
 function StarRatingInput({ value, onChange, max = 5 }) {
@@ -162,7 +147,7 @@ function StarDisplay({ rating, max = 5 }) {
 
 function SectionCard({ title, children, action, className = "" }) {
   return (
-    <div className={`bg-white border border-slate-200 rounded-md ${className}`}>
+    <DsCard padding="none" className={className}>
       {(title || action) && (
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
           {title && <h3 className="text-sm font-semibold text-slate-900">{title}</h3>}
@@ -170,14 +155,14 @@ function SectionCard({ title, children, action, className = "" }) {
         </div>
       )}
       <div className="p-5">{children}</div>
-    </div>
+    </DsCard>
   );
 }
 
 function TabLoading() {
   return (
     <div className="flex items-center justify-center py-16 gap-2 text-slate-400">
-      <Loader2 size={16} className="animate-spin" />
+      <Spinner size={16} />
       <span className="text-sm">Loading...</span>
     </div>
   );
@@ -185,41 +170,30 @@ function TabLoading() {
 
 function EmptyState({ icon: Icon, title, description, action }) {
   return (
-    <div className="text-center py-12">
-      <Icon size={32} className="mx-auto text-slate-300 mb-3" />
-      <div className="text-sm font-medium text-slate-600">{title}</div>
-      {description && <p className="text-xs text-slate-400 mt-1">{description}</p>}
-      {action && <div className="mt-4">{action}</div>}
-    </div>
+    <DsEmptyState
+      icon={<Icon size={32} />}
+      title={title}
+      description={description}
+      action={action}
+      size="md"
+      dashed={false}
+    />
   );
 }
 
 function Input({ className = "", ...props }) {
-  return (
-    <input
-      className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] ${className}`}
-      {...props}
-    />
-  );
+  return <DsInput className={className} {...props} />;
 }
 
 function Textarea({ className = "", ...props }) {
-  return (
-    <textarea
-      className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] resize-none ${className}`}
-      {...props}
-    />
-  );
+  return <DsTextarea className={className} resize={false} {...props} />;
 }
 
 function Select({ className = "", children, ...props }) {
   return (
-    <select
-      className={`w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0F2847]/20 focus:border-[#0F2847] bg-white ${className}`}
-      {...props}
-    >
+    <FormSelect className={className} {...props}>
       {children}
-    </select>
+    </FormSelect>
   );
 }
 
@@ -233,25 +207,17 @@ function Label({ children, required }) {
 
 function PrimaryBtn({ children, loading, className = "", ...props }) {
   return (
-    <button
-      className={`inline-flex items-center justify-center gap-2 bg-[#0F2847] text-white text-sm px-4 py-2 rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors ${className}`}
-      disabled={loading || props.disabled}
-      {...props}
-    >
-      {loading && <Loader2 size={13} className="animate-spin" />}
+    <DsButton variant="primary" loading={loading} className={className} {...props}>
       {children}
-    </button>
+    </DsButton>
   );
 }
 
 function GhostBtn({ children, className = "", ...props }) {
   return (
-    <button
-      className={`inline-flex items-center justify-center gap-2 text-sm px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 font-medium transition-colors ${className}`}
-      {...props}
-    >
+    <DsButton variant="outline" className={className} {...props}>
       {children}
-    </button>
+    </DsButton>
   );
 }
 
@@ -263,20 +229,14 @@ const RECOMMENDATIONS = [
   { value: "resubmit", label: "Resubmit Elsewhere" },
 ];
 
-const REC_COLORS = {
-  accept:           "bg-emerald-100 text-emerald-700 border border-emerald-200",
-  minor_revisions:  "bg-blue-100 text-blue-700 border border-blue-200",
-  major_revisions:  "bg-amber-100 text-amber-700 border border-amber-200",
-  reject:           "bg-red-100 text-red-700 border border-red-200",
-  resubmit:         "bg-slate-100 text-slate-600 border border-slate-200",
+const REC_VARIANTS = {
+  accept: "success", minor_revisions: "info", major_revisions: "warning",
+  reject: "danger", resubmit: "neutral",
 };
 
-const CONFLICT_TYPE_COLORS = {
-  coauthor:         "bg-red-100 text-red-700",
-  same_institution: "bg-amber-100 text-amber-700",
-  advisor:          "bg-orange-100 text-orange-700",
-  competing:        "bg-purple-100 text-purple-700",
-  personal:         "bg-rose-100 text-rose-700",
+const CONFLICT_TYPE_VARIANTS = {
+  coauthor: "danger", same_institution: "warning", advisor: "warning",
+  competing: "purple", personal: "danger",
 };
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
@@ -399,9 +359,9 @@ function OverviewTab({ request, user, onInvite }) {
                 <Input type="date" value={inviteDue} onChange={e => setInviteDue(e.target.value)} />
               </div>
               {inviteMsg && (
-                <div className={`text-xs px-3 py-2 rounded-lg ${inviteMsg.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-600 border border-red-200"}`}>
-                  {inviteMsg.text}
-                </div>
+                inviteMsg.type === "success"
+                  ? <Alert variant="success">{inviteMsg.text}</Alert>
+                  : <InlineError>{inviteMsg.text}</InlineError>
               )}
               <PrimaryBtn type="submit" loading={inviting} className="w-full">
                 <UserCheck size={13} />
@@ -451,14 +411,10 @@ function MatchesTab({ requestId, data, loading, onRefresh }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="text-sm text-slate-500">{matches.length} match{matches.length !== 1 ? "es" : ""} found</div>
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="inline-flex items-center gap-2 text-xs text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 disabled:opacity-50"
-        >
+        <GhostBtn onClick={handleRefresh} disabled={refreshing} className="text-xs !px-3 !py-1.5">
           <RefreshCw size={12} className={refreshing ? "animate-spin" : ""} />
           Refresh Matches
-        </button>
+        </GhostBtn>
       </div>
 
       {matches.length === 0 ? (
@@ -478,7 +434,7 @@ function MatchesTab({ requestId, data, loading, onRefresh }) {
             const isInvited = invitedSet.has(uid) || match.is_invited;
 
             return (
-              <div key={uid || idx} className="bg-white border border-slate-200 rounded-md p-5 flex items-start gap-4 hover:border-slate-300 hover:shadow-sm transition-all">
+              <DsCard key={uid || idx} variant="interactive" padding="lg" className="flex items-start gap-4">
                 <InitialAvatar name={name} />
                 <div className="flex-1 min-w-0 space-y-3">
                   <div>
@@ -515,10 +471,10 @@ function MatchesTab({ requestId, data, loading, onRefresh }) {
                 </div>
                 <div className="flex-shrink-0 mt-1">
                   {isInvited ? (
-                    <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <DsBadge variant="success">
                       <CheckCircle size={12} />
                       Invited
-                    </span>
+                    </DsBadge>
                   ) : (
                     <PrimaryBtn
                       onClick={() => handleInvite(match)}
@@ -528,7 +484,7 @@ function MatchesTab({ requestId, data, loading, onRefresh }) {
                     </PrimaryBtn>
                   )}
                 </div>
-              </div>
+              </DsCard>
             );
           })}
         </div>
@@ -578,7 +534,7 @@ function AssignmentsTab({ request, user }) {
         const reviewerName = assignment.reviewer?.full_name || assignment.reviewer?.name || "Reviewer";
 
         return (
-          <div key={aId || idx} className="bg-white border border-slate-200 rounded-md p-5 flex items-start gap-4 hover:border-slate-300 transition-all">
+          <DsCard key={aId || idx} variant="interactive" padding="lg" className="flex items-start gap-4">
             <InitialAvatar name={isOwner ? reviewerName : "You"} />
             <div className="flex-1 min-w-0 space-y-1">
               {isOwner ? (
@@ -590,7 +546,7 @@ function AssignmentsTab({ request, user }) {
                 <div className="text-xs text-slate-400">{assignment.reviewer.institution}</div>
               )}
               <div className="flex items-center gap-2 flex-wrap mt-1">
-                <StatusBadge status={status} map={ASSIGN_STATUS_COLORS} />
+                <StatusBadge status={status} map={ASSIGN_STATUS_VARIANTS} />
                 {assignment.due_date && (
                   <span className="text-xs text-slate-400">Due {fmt(assignment.due_date)}</span>
                 )}
@@ -599,27 +555,30 @@ function AssignmentsTab({ request, user }) {
             </div>
             {isMyAssignment && status === "invited" && (
               <div className="flex items-center gap-2 flex-shrink-0">
-                <button
+                <DsButton
                   onClick={() => handleAction(aId, "accepted")}
                   disabled={!!actionLoading[aId]}
-                  className="text-xs text-white bg-emerald-600 px-3 py-1.5 rounded-lg hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-1"
+                  loading={actionLoading[aId] === "accepted"}
+                  variant="primary"
+                  size="sm"
+                  className="!bg-emerald-600 hover:!bg-emerald-700"
                 >
-                  {actionLoading[aId] === "accepted" && <Loader2 size={11} className="animate-spin" />}
                   <CheckCircle size={12} />
                   Accept
-                </button>
-                <button
+                </DsButton>
+                <DsButton
                   onClick={() => handleAction(aId, "declined")}
                   disabled={!!actionLoading[aId]}
-                  className="text-xs text-red-600 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 disabled:opacity-50 flex items-center gap-1"
+                  loading={actionLoading[aId] === "declined"}
+                  variant="danger"
+                  size="sm"
                 >
-                  {actionLoading[aId] === "declined" && <Loader2 size={11} className="animate-spin" />}
                   <XCircle size={12} />
                   Decline
-                </button>
+                </DsButton>
               </div>
             )}
-          </div>
+          </DsCard>
         );
       })}
     </div>
@@ -630,17 +589,17 @@ function AssignmentsTab({ request, user }) {
 
 function ReportSection({ section, onChange, onRemove }) {
   return (
-    <div className="border border-slate-200 rounded-lg p-4 space-y-3">
+    <DsCard padding="md" className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <Input
           value={section.title}
           onChange={e => onChange({ ...section, title: e.target.value })}
           placeholder="Section title (e.g. Introduction, Methods)"
-          className="flex-1"
+          wrapperClassName="flex-1"
         />
-        <button onClick={onRemove} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+        <DsButton onClick={onRemove} variant="ghost" size="icon" className="!text-slate-400 hover:!text-red-500 hover:!bg-red-50">
           <Trash2 size={14} />
-        </button>
+        </DsButton>
       </div>
       <div>
         <Label>Score (0–10)</Label>
@@ -666,7 +625,7 @@ function ReportSection({ section, onChange, onRemove }) {
           placeholder="Provide detailed feedback for this section..."
         />
       </div>
-    </div>
+    </DsCard>
   );
 }
 
@@ -745,16 +704,13 @@ function ReportTab({ requestId, request, data, loading, user, onSubmit }) {
     if (report && (report.overall_recommendation || report.summary_comments)) {
       return (
         <div className="space-y-4">
-          <div className="bg-emerald-50 border border-emerald-200 rounded-md p-4 flex items-center gap-3">
-            <CheckCircle size={16} className="text-emerald-600" />
-            <span className="text-sm font-medium text-emerald-700">Your report has been submitted.</span>
-          </div>
+          <Alert variant="success" icon={CheckCircle}>Your report has been submitted.</Alert>
           <SectionCard title="Submitted Report">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${REC_COLORS[report.overall_recommendation] || "bg-slate-100 text-slate-600"}`}>
+                <DsBadge variant={REC_VARIANTS[report.overall_recommendation] || "neutral"}>
                   {cap(report.overall_recommendation)}
-                </span>
+                </DsBadge>
                 <span className="text-sm text-slate-600">Overall Score: <strong className="text-[#0F2847]">{report.overall_score}/10</strong></span>
               </div>
               {report.summary_comments && (
@@ -775,7 +731,7 @@ function ReportTab({ requestId, request, data, loading, user, onSubmit }) {
           <h3 className="font-semibold text-slate-900">Submit Review Report</h3>
         </div>
         {submitError && (
-          <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{submitError}</div>
+          <InlineError>{submitError}</InlineError>
         )}
         <SectionCard title="Recommendation & Score">
           <div className="space-y-4">
@@ -820,17 +776,17 @@ function ReportTab({ requestId, request, data, loading, user, onSubmit }) {
         <SectionCard
           title="Review Sections"
           action={
-            <button type="button" onClick={addSection} className="inline-flex items-center gap-1 text-xs text-[#0F2847] font-medium hover:underline">
+            <DsButton type="button" onClick={addSection} variant="link" className="text-xs">
               <Plus size={12} /> Add Section
-            </button>
+            </DsButton>
           }
         >
           {form.sections.length === 0 ? (
             <div className="text-center py-6">
               <p className="text-sm text-slate-400">No sections added. Sections let you organize feedback by topic.</p>
-              <button type="button" onClick={addSection} className="mt-3 text-xs text-[#0F2847] font-medium hover:underline">
+              <DsButton type="button" onClick={addSection} variant="link" className="mt-3 text-xs">
                 + Add your first section
-              </button>
+              </DsButton>
             </div>
           ) : (
             <div className="space-y-3">
@@ -883,9 +839,9 @@ function ReportTab({ requestId, request, data, loading, user, onSubmit }) {
         <SectionCard title="Review Report">
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3">
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${REC_COLORS[report.overall_recommendation] || "bg-slate-100 text-slate-600"}`}>
+              <DsBadge variant={REC_VARIANTS[report.overall_recommendation] || "neutral"}>
                 {cap(report.overall_recommendation)}
-              </span>
+              </DsBadge>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-slate-500">Overall Score:</span>
                 <span className="text-xl font-bold text-[#0F2847]">{report.overall_score}</span>
@@ -905,7 +861,7 @@ function ReportTab({ requestId, request, data, loading, user, onSubmit }) {
                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Section Reviews</div>
                 <div className="space-y-3">
                   {report.sections.map((section, i) => (
-                    <div key={i} className="border border-slate-200 rounded-lg p-4 space-y-2">
+                    <DsCard key={i} padding="md" className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-slate-900 text-sm">{section.title}</span>
                         <span className="text-sm font-bold text-[#0F2847]">{section.score}/10</span>
@@ -914,20 +870,16 @@ function ReportTab({ requestId, request, data, loading, user, onSubmit }) {
                       {section.comments && (
                         <p className="text-xs text-slate-600 leading-relaxed pt-1">{section.comments}</p>
                       )}
-                    </div>
+                    </DsCard>
                   ))}
                 </div>
               </div>
             )}
 
             {report.confidential_comments && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Lock size={12} className="text-amber-600" />
-                  <span className="text-xs font-semibold text-amber-700">Confidential Comments</span>
-                </div>
-                <p className="text-sm text-amber-900 whitespace-pre-wrap">{report.confidential_comments}</p>
-              </div>
+              <Callout variant="warning" title="Confidential Comments">
+                <p className="whitespace-pre-wrap">{report.confidential_comments}</p>
+              </Callout>
             )}
           </div>
         </SectionCard>
@@ -937,7 +889,7 @@ function ReportTab({ requestId, request, data, loading, user, onSubmit }) {
           <SectionCard title="Rate This Reviewer">
             <form onSubmit={handleRateReviewer} className="space-y-4">
               {rating_error && (
-                <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{rating_error}</div>
+                <InlineError>{rating_error}</InlineError>
               )}
               {[
                 { key: "rating", label: "Overall Rating" },
@@ -971,10 +923,7 @@ function ReportTab({ requestId, request, data, loading, user, onSubmit }) {
             </form>
           </SectionCard>
         ) : (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-md p-4 flex items-center gap-3">
-            <CheckCircle size={16} className="text-emerald-600" />
-            <span className="text-sm font-medium text-emerald-700">Thank you — your rating has been submitted.</span>
-          </div>
+          <Alert variant="success" icon={CheckCircle}>Thank you — your rating has been submitted.</Alert>
         )}
       </div>
     );
@@ -1020,28 +969,28 @@ function ConflictsTab({ requestId, data, loading }) {
   return (
     <div className="space-y-5">
       {conflicts.length === 0 ? (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-md p-6 flex items-start gap-3">
+        <DsCard padding="xl" className="!bg-emerald-50 border border-emerald-200 flex items-start gap-3">
           <CheckCircle size={18} className="text-emerald-600 mt-0.5 flex-shrink-0" />
           <div>
             <div className="font-medium text-emerald-800 text-sm">No conflicts detected</div>
             <p className="text-xs text-emerald-600 mt-0.5">This request has no identified conflicts of interest.</p>
           </div>
-        </div>
+        </DsCard>
       ) : (
         <div className="space-y-3">
           {conflicts.map((conflict, i) => (
-            <div key={conflict._id || i} className="bg-white border border-slate-200 rounded-md p-4 flex items-start gap-3">
+            <DsCard key={conflict._id || i} padding="md" className="flex items-start gap-3">
               <AlertTriangle size={16} className="text-amber-500 mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${CONFLICT_TYPE_COLORS[conflict.type] || "bg-slate-100 text-slate-600"}`}>
+                  <DsBadge variant={CONFLICT_TYPE_VARIANTS[conflict.type] || "neutral"}>
                     {cap(conflict.type)}
-                  </span>
+                  </DsBadge>
                   {conflict.auto_detected && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200">
+                    <DsBadge variant="info">
                       <Shield size={10} />
                       Auto-detected
-                    </span>
+                    </DsBadge>
                   )}
                 </div>
                 {conflict.details && (
@@ -1051,7 +1000,7 @@ function ConflictsTab({ requestId, data, loading }) {
                   <div className="text-xs text-slate-400">{fmt(conflict.detected_at)}</div>
                 )}
               </div>
-            </div>
+            </DsCard>
           ))}
         </div>
       )}
@@ -1065,19 +1014,18 @@ function ConflictsTab({ requestId, data, loading }) {
               value={checkUid}
               onChange={e => setCheckUid(e.target.value)}
               placeholder="Enter user ID to check..."
-              className="flex-1"
+              wrapperClassName="flex-1"
             />
             <PrimaryBtn type="submit" loading={checking}>
               Check
             </PrimaryBtn>
           </div>
           {checkError && (
-            <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{checkError}</div>
+            <InlineError>{checkError}</InlineError>
           )}
           {checkResult && (
-            <div className={`rounded-lg px-4 py-3 text-sm ${checkResult.has_conflict ? "bg-red-50 border border-red-200 text-red-700" : "bg-emerald-50 border border-emerald-200 text-emerald-700"}`}>
-              <div className="flex items-center gap-2 font-medium">
-                {checkResult.has_conflict ? <AlertTriangle size={14} /> : <CheckCircle size={14} />}
+            <Alert variant={checkResult.has_conflict ? "error" : "success"} icon={checkResult.has_conflict ? AlertTriangle : CheckCircle}>
+              <div className="font-medium">
                 {checkResult.has_conflict ? "Conflict detected" : "No conflict found"}
               </div>
               {checkResult.conflicts && checkResult.conflicts.length > 0 && (
@@ -1087,7 +1035,7 @@ function ConflictsTab({ requestId, data, loading }) {
                   ))}
                 </ul>
               )}
-            </div>
+            </Alert>
           )}
         </form>
       </SectionCard>
@@ -1163,9 +1111,9 @@ function SettingsTab({ requestId, request, user, onUpdate }) {
       <SectionCard title="Edit Request">
         <div className="space-y-4">
           {saveMsg && (
-            <div className={`text-sm px-3 py-2 rounded-lg ${saveMsg.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-600 border border-red-200"}`}>
-              {saveMsg.text}
-            </div>
+            saveMsg.type === "success"
+              ? <Alert variant="success">{saveMsg.text}</Alert>
+              : <InlineError>{saveMsg.text}</InlineError>
           )}
           <div>
             <Label required>Title</Label>
@@ -1183,7 +1131,7 @@ function SettingsTab({ requestId, request, user, onUpdate }) {
               placeholder="Comma-separated expertise areas"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Deadline</Label>
               <Input type="date" value={form.deadline} onChange={e => setF("deadline", e.target.value)} />
@@ -1205,19 +1153,20 @@ function SettingsTab({ requestId, request, user, onUpdate }) {
         </div>
       </SectionCard>
 
-      <div className="border border-red-200 rounded-md p-5 bg-red-50">
+      <DsCard padding="lg" className="!bg-red-50 border border-red-200">
         <h4 className="text-sm font-semibold text-red-800 mb-1">Danger Zone</h4>
         <p className="text-xs text-red-600 mb-4">Archiving this request will close it and stop all matching. This cannot be undone.</p>
-        <button
+        <DsButton
           type="button"
           onClick={handleArchive}
           disabled={archiving || request?.status === "archived"}
-          className="inline-flex items-center gap-2 text-sm text-red-700 border border-red-300 px-4 py-2 rounded-lg hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          loading={archiving}
+          variant="danger"
         >
-          {archiving ? <Loader2 size={13} className="animate-spin" /> : <Archive size={13} />}
+          <Archive size={13} />
           Archive Request
-        </button>
-      </div>
+        </DsButton>
+      </DsCard>
     </form>
   );
 }
@@ -1332,13 +1281,10 @@ export default function ReviewWorkspace() {
         <AlertCircle size={40} className="mx-auto text-slate-300 mb-4" />
         <div className="text-lg font-semibold text-slate-600">Review request not found</div>
         <p className="text-sm text-slate-400 mt-2">This request may have been removed or you don't have access.</p>
-        <Link
-          to="/reviewer-marketplace"
-          className="mt-6 inline-flex items-center gap-2 text-sm text-[#0F2847] font-medium border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors"
-        >
+        <DsButton as={Link} to="/reviewer-marketplace" variant="outline" className="mt-6">
           <ArrowLeft size={14} />
           Back to Marketplace
-        </Link>
+        </DsButton>
       </div>
     );
   }
@@ -1349,14 +1295,16 @@ export default function ReviewWorkspace() {
       subtitle={cap(request.review_type) || ""}
       actions={
         canClose ? (
-          <button
+          <DsButton
             onClick={handleCloseRequest}
             disabled={closing}
-            className="flex-shrink-0 inline-flex items-center gap-2 text-sm text-slate-600 border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors"
+            loading={closing}
+            variant="outline"
+            className="flex-shrink-0"
           >
-            {closing ? <Loader2 size={13} className="animate-spin" /> : <XCircle size={13} />}
+            <XCircle size={13} />
             Close Request
-          </button>
+          </DsButton>
         ) : undefined
       }
     >
@@ -1384,21 +1332,13 @@ export default function ReviewWorkspace() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-slate-200 overflow-x-auto">
-        {TABS.map(({ key, label, icon: Icon }) => (
-          <button
-            key={key}
-            onClick={() => handleTabChange(key)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px flex-shrink-0 ${
-              activeTab === key
-                ? "border-[#0F2847] text-[#0F2847]"
-                : "border-transparent text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            <Icon size={14} />
-            {label}
-          </button>
-        ))}
+      <div className="overflow-x-auto">
+        <NavTabs
+          variant="underline"
+          active={activeTab}
+          onChange={handleTabChange}
+          tabs={TABS.map((t) => ({ id: t.key, label: t.label, icon: t.icon }))}
+        />
       </div>
 
       {/* Tab content */}

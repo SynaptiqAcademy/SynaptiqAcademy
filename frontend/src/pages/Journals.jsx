@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { Button } from "@/components/ds";
-import { DiscoveryLayout } from "@/layouts";
-import { Link } from "react-router-dom";
+import { Button, Input, FormSelect, Tag, TagGroup, EmptyState, NavTabs } from "@/components/ds";
+import { ResearchLayout } from "@/layouts";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import SavedSearchControls from "../components/discovery/SavedSearchControls";
@@ -70,6 +70,7 @@ const COMPARE_ROWS = [
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function Journals() {
+  const navigate = useNavigate();
   const searchRef = useRef(null);
 
   const [q, setQ]             = useState("");
@@ -166,70 +167,29 @@ export default function Journals() {
   if (gated) return <GatedState tabLinks={tabLinks} />;
 
   return (
-    <DiscoveryLayout>
+    <ResearchLayout
+      title="Journals"
+      subtitle="9,000+ journals indexed from OpenAlex, Crossref, and DOAJ — with quartile rankings, open access status, impact metrics, and subject coverage."
+      actions={
+        <>
+          <Button onClick={focusSearch} size="sm">
+            Find Best Journal
+          </Button>
+          <Button onClick={() => setShowCompare((s) => !s)} variant="ghost" size="sm">
+            <Scale size={12} strokeWidth={1.5} />
+            Compare{compareList.length > 0 ? ` (${compareList.length})` : ""}
+          </Button>
+        </>
+      }
+      nav={
+        <NavTabs
+          tabs={tabLinks.map(({ to, label, testid }) => ({ id: to, label, "data-testid": testid }))}
+          active="/journals"
+          onChange={(id) => navigate(id)}
+        />
+      }
+    >
       <style>{`@keyframes jpulse{0%,100%{opacity:1}50%{opacity:.4}}`}</style>
-
-      {/* ── HERO HEADER (full-bleed navy) ─────────────────────────────── */}
-      <div style={{ margin: "-24px -24px 0", background: NAVY }}>
-        {/* Tab navigation row */}
-        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", padding: "0 24px" }}>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.22)", marginRight: "auto" }}>
-            Discovery Suite
-          </span>
-          {tabLinks.map(({ to, label, testid, active }) => (
-            <Link
-              key={to}
-              to={to}
-              data-testid={testid}
-              style={{
-                display: "block", padding: "14px 20px",
-                fontSize: 13, fontWeight: active ? 600 : 400,
-                color: active ? "white" : "rgba(255,255,255,0.45)",
-                textDecoration: "none",
-                borderBottom: `2px solid ${active ? "white" : "transparent"}`,
-                transition: "color 0.12s",
-              }}
-            >
-              {label}
-            </Link>
-          ))}
-        </div>
-
-        {/* Hero content */}
-        <div style={{ padding: "30px 24px 26px", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>
-              Academic Publishing Intelligence
-            </div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, color: "white", margin: 0, letterSpacing: "-0.025em", lineHeight: 1.2 }}>
-              Discover Academic Journals
-            </h1>
-            <p style={{ color: "rgba(255,255,255,0.48)", fontSize: 13, margin: "8px 0 0", maxWidth: 520, lineHeight: 1.65 }}>
-              9,000+ journals indexed from OpenAlex, Crossref, and DOAJ — with quartile rankings,
-              open access status, impact metrics, and subject coverage.
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-            <button
-              onClick={focusSearch}
-              style={{ background: "white", color: NAVY, padding: "9px 18px", fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer" }}
-            >
-              Find Best Journal
-            </button>
-            <button
-              onClick={() => setShowCompare((s) => !s)}
-              style={{
-                background: compareList.length > 0 ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)",
-                color: "white", padding: "9px 16px", fontSize: 12, fontWeight: 500,
-                border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer",
-              }}
-            >
-              <Scale size={12} strokeWidth={1.5} style={{ display: "inline", marginRight: 5, verticalAlign: "middle" }} />
-              Compare{compareList.length > 0 ? ` (${compareList.length})` : ""}
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* ── STICKY SEARCH + SORT BAR ───────────────────────────────────── */}
       <div style={{
@@ -241,7 +201,9 @@ export default function Journals() {
         boxShadow: "0 2px 10px rgba(0,0,0,0.055)",
       }}>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {/* Search */}
+          {/* Search — kept as a raw input (not ds Input) because it needs an
+              imperative ref for focusSearch()'s focus()+scrollIntoView(), and
+              ds/Input isn't forwardRef-wrapped */}
           <div style={{ flex: 1, position: "relative" }}>
             <Search size={14} strokeWidth={1.5} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#94A3B8", pointerEvents: "none" }} />
             <input
@@ -257,14 +219,15 @@ export default function Journals() {
           </div>
 
           {/* Sort */}
-          <select
+          <FormSelect
             data-testid={TID.discoverySortSelect}
             value={sort}
             onChange={(e) => { setSort(e.target.value); setPage(1); }}
-            style={{ padding: "8px 10px", border: `1px solid ${BORDER}`, fontSize: 12, color: "#374151", background: "white", cursor: "pointer", flexShrink: 0 }}
+            wrapperClassName="flex-shrink-0"
+            style={{ width: 180 }}
           >
             {SORT_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
+          </FormSelect>
 
           {/* Saved search controls */}
           <SavedSearchControls kind="journal" query={q} filters={filters} />
@@ -272,15 +235,13 @@ export default function Journals() {
 
         {/* Active filter chips */}
         {activeCount > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 9, alignItems: "center" }}>
-            {q && <FilterChip label={`"${q}"`} onRemove={() => setQ("")} />}
+          <TagGroup gap={6} className="mt-2">
+            {q && <Tag variant="active" onRemove={() => setQ("")}>{`"${q}"`}</Tag>}
             {Object.entries(filters).map(([k, v]) => (
-              <FilterChip key={k} label={`${k}: ${String(v)}`} onRemove={() => setFilter(k, null)} />
+              <Tag key={k} variant="active" onRemove={() => setFilter(k, null)}>{`${k}: ${String(v)}`}</Tag>
             ))}
-            <button onClick={clearAll} style={{ fontSize: 11, color: "#94A3B8", background: "none", border: "none", cursor: "pointer", padding: "2px 4px" }}>
-              Clear all
-            </button>
-          </div>
+            <Button variant="link" size="sm" onClick={clearAll}>Clear all</Button>
+          </TagGroup>
         )}
       </div>
 
@@ -423,23 +384,25 @@ export default function Journals() {
           {/* Pagination */}
           {(page > 1 || hasMore) && !loading && (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 24, paddingTop: 20, borderTop: `1px solid ${BORDER}` }}>
-              <button
+              <Button
                 data-testid={TID.discoveryPagePrev}
                 disabled={page === 1}
                 onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 200, behavior: "smooth" }); }}
-                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", border: `1px solid ${BORDER}`, fontSize: 12, background: "white", cursor: page === 1 ? "not-allowed" : "pointer", opacity: page === 1 ? 0.4 : 1 }}
+                variant="ghost"
+                size="sm"
               >
                 <ChevronLeft size={12} strokeWidth={1.5} /> Previous
-              </button>
+              </Button>
               <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>Page {page}</span>
-              <button
+              <Button
                 data-testid={TID.discoveryPageNext}
                 disabled={!hasMore}
                 onClick={() => { setPage((p) => p + 1); window.scrollTo({ top: 200, behavior: "smooth" }); }}
-                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", border: `1px solid ${BORDER}`, fontSize: 12, background: "white", cursor: !hasMore ? "not-allowed" : "pointer", opacity: !hasMore ? 0.4 : 1 }}
+                variant="ghost"
+                size="sm"
               >
                 Next <ChevronRight size={12} strokeWidth={1.5} />
-              </button>
+              </Button>
             </div>
           )}
 
@@ -462,7 +425,7 @@ export default function Journals() {
           onClearAll={() => { setCompareList([]); setShowCompare(false); }}
         />
       )}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }
 
@@ -890,6 +853,7 @@ function ComparePanel({ journals, onRemove, onClose, onClearAll }) {
             size="icon"
             variant="ghost"
             onClick={onClose}
+            aria-label="Close comparison"
             style={{
               color: "rgba(255,255,255,0.5)",
               display: "flex",
@@ -919,7 +883,7 @@ function ComparePanel({ journals, onRemove, onClose, onClearAll }) {
                         </span>
                       )}
                     </div>
-                    <button onClick={() => onRemove(j.id)} style={{ color: "#CBD5E1", background: "none", border: "none", cursor: "pointer", flexShrink: 0, padding: 2 }}>
+                    <button onClick={() => onRemove(j.id)} aria-label={`Remove ${j.title} from comparison`} style={{ color: "#CBD5E1", background: "none", border: "none", cursor: "pointer", flexShrink: 0, padding: 2 }}>
                       <X size={11} strokeWidth={1.5} />
                     </button>
                   </div>
@@ -1000,34 +964,22 @@ function JournalSkeleton() {
 // ─── Empty state ──────────────────────────────────────────────────────────────
 function JournalsEmptyState({ q, filters, onClear, onSearch }) {
   const hasActive = q || Object.keys(filters).length > 0;
-  return (
-    <div style={{ padding: "52px 32px", background: "white", border: `1px solid ${BORDER}`, textAlign: "center" }}>
-      <div style={{ width: 54, height: 54, background: WARM, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-        <BookOpen size={22} strokeWidth={1} style={{ color: NAVY + "50" }} />
-      </div>
-      {hasActive ? (
-        <>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", margin: "0 0 8px", letterSpacing: "-0.01em" }}>
-            No journals match your search
-          </h3>
-          <p style={{ fontSize: 13, color: "#64748B", maxWidth: 380, margin: "0 auto 20px", lineHeight: 1.65 }}>
-            Try a broader keyword, remove a filter, or search by publisher or subject area.
-            The index covers 9,000+ venues from OpenAlex, Crossref, and DOAJ.
-          </p>
-          <button onClick={onClear} style={{ background: NAVY, color: "white", padding: "9px 20px", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer" }}>
-            Clear filters
-          </button>
-        </>
-      ) : (
-        <>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", margin: "0 0 8px", letterSpacing: "-0.01em" }}>
-            Search Academic Journals
-          </h3>
-          <p style={{ fontSize: 13, color: "#64748B", maxWidth: 400, margin: "0 auto 20px", lineHeight: 1.65 }}>
-            Search by journal name, publisher, or research field. Use the filters on the left
-            to narrow by quartile, open access status, or country of publication.
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center", maxWidth: 340, margin: "0 auto 20px" }}>
+  return hasActive ? (
+    <EmptyState
+      icon={<BookOpen />}
+      title="No journals match your search"
+      description="Try a broader keyword, remove a filter, or search by publisher or subject area. The index covers 9,000+ venues from OpenAlex, Crossref, and DOAJ."
+      action={<Button onClick={onClear}>Clear filters</Button>}
+      size="lg"
+    />
+  ) : (
+    <EmptyState
+      icon={<BookOpen />}
+      title="Search Academic Journals"
+      description="Search by journal name, publisher, or research field. Use the filters on the left to narrow by quartile, open access status, or country of publication."
+      action={
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "center", maxWidth: 340 }}>
             {[
               "Find Q1 journals in your research field",
               "Compare impact metrics across venues",
@@ -1038,15 +990,13 @@ function JournalsEmptyState({ q, filters, onClear, onSearch }) {
               </div>
             ))}
           </div>
-          <button
-            onClick={onSearch}
-            style={{ background: NAVY, color: "white", padding: "9px 20px", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
-          >
+          <Button onClick={onSearch}>
             <Search size={12} strokeWidth={1.5} /> Start searching
-          </button>
-        </>
-      )}
-    </div>
+          </Button>
+        </div>
+      }
+      size="lg"
+    />
   );
 }
 
@@ -1055,7 +1005,7 @@ function FilterChip({ label, onRemove }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, background: NAVY + "0f", color: NAVY, padding: "3px 8px 3px 10px", border: `1px solid ${NAVY}22` }}>
       {label}
-      <button onClick={onRemove} style={{ background: "none", border: "none", cursor: "pointer", color: NAVY + "70", display: "flex", alignItems: "center", padding: 0 }}>
+      <button onClick={onRemove} aria-label={`Remove ${label} filter`} style={{ background: "none", border: "none", cursor: "pointer", color: NAVY + "70", display: "flex", alignItems: "center", padding: 0 }}>
         <X size={10} strokeWidth={1.5} />
       </button>
     </span>
@@ -1064,38 +1014,39 @@ function FilterChip({ label, onRemove }) {
 
 // ─── Gated state (402 → upgrade required) ────────────────────────────────────
 function GatedState({ tabLinks }) {
+  const navigate = useNavigate();
   return (
-    <div>
-      <div style={{ margin: "-24px -24px 0", background: NAVY }}>
-        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", padding: "0 24px" }}>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.22)", marginRight: "auto" }}>Discovery Suite</span>
-          {tabLinks.map(({ to, label, testid, active }) => (
-            <Link key={to} to={to} data-testid={testid} style={{ display: "block", padding: "14px 20px", fontSize: 13, fontWeight: active ? 600 : 400, color: active ? "white" : "rgba(255,255,255,0.45)", textDecoration: "none", borderBottom: `2px solid ${active ? "white" : "transparent"}` }}>
-              {label}
-            </Link>
-          ))}
-        </div>
-        <div style={{ padding: "30px 24px 26px" }}>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: "white", margin: 0, letterSpacing: "-0.025em" }}>Discover Academic Journals</h1>
-        </div>
+    <ResearchLayout
+      title="Journals"
+      subtitle="9,000+ journals indexed from OpenAlex, Crossref, and DOAJ — with quartile rankings, open access status, impact metrics, and subject coverage."
+      nav={
+        <NavTabs
+          tabs={tabLinks.map(({ to, label, testid }) => ({ id: to, label, "data-testid": testid }))}
+          active="/journals"
+          onChange={(id) => navigate(id)}
+        />
+      }
+    >
+      <div style={{ maxWidth: 480, margin: "48px auto" }}>
+        <EmptyState
+          icon={<Lock />}
+          title={
+            <>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: NAVY, marginBottom: 8 }}>
+                Researcher Plan Required
+              </div>
+              Full journal access is a paid feature
+            </>
+          }
+          description="Upgrade to unlock unlimited journal discovery, faceted filters, quartile rankings, open access data, and AI venue matching across 9,000+ academic journals."
+          action={
+            <Button as={Link} to="/pricing">
+              <Zap size={13} strokeWidth={1.5} /> View Plans
+            </Button>
+          }
+          size="lg"
+        />
       </div>
-      <div style={{ maxWidth: 480, margin: "48px auto", padding: "44px 36px", background: "white", border: `1px solid ${BORDER}`, textAlign: "center" }}>
-        <div style={{ width: 52, height: 52, background: WARM, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-          <Lock size={20} strokeWidth={1.5} style={{ color: "#94A3B8" }} />
-        </div>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: NAVY, marginBottom: 8 }}>
-          Researcher Plan Required
-        </div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#0f172a", margin: "0 0 10px", letterSpacing: "-0.01em" }}>
-          Full journal access is a paid feature
-        </h2>
-        <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.7, margin: "0 0 24px" }}>
-          Upgrade to unlock unlimited journal discovery, faceted filters, quartile rankings, open access data, and AI venue matching across 9,000+ academic journals.
-        </p>
-        <Link to="/pricing" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: NAVY, color: "white", padding: "10px 22px", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
-          <Zap size={13} strokeWidth={1.5} /> View Plans
-        </Link>
-      </div>
-    </div>
+    </ResearchLayout>
   );
 }

@@ -38,12 +38,18 @@ import { toast } from "sonner";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { ErrorState } from "@/components/ds/ErrorState";
+import { SearchBar, FilterChip } from "@/components/ds/SearchBar";
+import { Dropdown, DropdownItem } from "@/components/ds/Dropdown";
+import { List, ListItem } from "@/components/ds/List";
+import { Tag as DsTag } from "@/components/ds/Tag";
+import { Badge } from "@/components/ds/Badge";
+import { Input } from "@/components/ds/Input";
 import { usePersistentSet } from "@/hooks/usePersistentSet";
 import { ShortcutsModal } from "@/components/shared/ShortcutsModal";
 import {
   ACCENT, NAVY, NAVY2, WARM, BRDX, WHITE,
   TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, TEXT_DISABLED,
-  SHADOW_CARD, SHADOW_CARD_HOVER,
+  SHADOW_CARD,
   EMERALD, AMBER, CRIMSON,
   RADIUS_LG, RADIUS_MD, RADIUS_FULL,
 } from "@/lib/tokens";
@@ -706,31 +712,17 @@ function NavSectionLabel({ children }) {
 }
 
 function NavRow({ label, icon: Icon, dotColor, active, count, onClick }) {
-  const [hov, setHov] = useState(false);
   return (
-    <button
+    <ListItem
+      compact
+      selected={active}
       onClick={onClick}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        display: "flex", alignItems: "center", gap: 9,
-        width: "100%", textAlign: "left",
-        padding: "7px 10px", borderRadius: RADIUS_MD,
-        border: "none", cursor: "pointer",
-        background: active ? WHITE : hov ? "rgba(15,23,42,0.03)" : "transparent",
-        boxShadow: active ? SHADOW_CARD : "none",
-        transition: "background 120ms ease",
-      }}
-    >
-      {Icon ? (
+      leading={Icon ? (
         <Icon size={14} strokeWidth={1.75} style={{ color: active ? ACCENT : TEXT_MUTED, flexShrink: 0 }} />
       ) : (
         <span style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor || TEXT_MUTED, flexShrink: 0 }} />
       )}
-      <span style={{ fontSize: "0.82rem", fontWeight: active ? 600 : 500, color: active ? INK : TEXT_SECONDARY, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-        {label}
-      </span>
-      {count != null && count > 0 && (
+      trailing={count != null && count > 0 ? (
         <span style={{
           fontSize: "0.65rem", fontWeight: 700, minWidth: 17, textAlign: "center",
           color: active ? WHITE : TEXT_MUTED, background: active ? ACCENT : "rgba(15,23,42,0.06)",
@@ -738,32 +730,22 @@ function NavRow({ label, icon: Icon, dotColor, active, count, onClick }) {
         }}>
           {count}
         </span>
-      )}
-    </button>
+      ) : undefined}
+      style={{
+        borderBottom: "none", borderRadius: RADIUS_MD,
+        background: active ? WHITE : "transparent",
+        boxShadow: active ? SHADOW_CARD : "none",
+      }}
+    >
+      <span style={{ fontSize: "0.82rem", fontWeight: active ? 600 : 500, color: active ? INK : TEXT_SECONDARY, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {label}
+      </span>
+    </ListItem>
   );
 }
 
 function CompactPill({ label, active, count, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        flexShrink: 0, whiteSpace: "nowrap",
-        display: "inline-flex", alignItems: "center", gap: 5,
-        padding: "6px 12px", borderRadius: RADIUS_FULL,
-        border: `1px solid ${active ? ACCENT : HAIR}`,
-        background: active ? ACCENT : WHITE,
-        color: active ? WHITE : TEXT_SECONDARY,
-        fontSize: "0.78rem", fontWeight: active ? 600 : 500,
-        cursor: "pointer",
-      }}
-    >
-      {label}
-      {count != null && count > 0 && (
-        <span style={{ fontSize: "0.62rem", fontWeight: 700, opacity: 0.85 }}>{count}</span>
-      )}
-    </button>
-  );
+  return <FilterChip label={label} active={active} count={count} onClick={onClick} />;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -771,74 +753,37 @@ function CompactPill({ label, active, count, onClick }) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function Toolbar({ q, setQ, searchRef, sortBy, setSortBy, unreadCount, hasRead, onMarkAll, onClearRead, onShortcuts, resultCount }) {
-  const [sortOpen, setSortOpen] = useState(false);
-
   return (
     <div
       className="flex items-center gap-3 px-5 py-3"
       style={{ borderBottom: `1px solid ${HAIR}`, background: WHITE }}
     >
-      <div style={{ position: "relative", flex: 1, maxWidth: 420 }}>
-        <Search size={14} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: TEXT_MUTED }} />
-        <input
-          ref={searchRef}
-          value={q}
-          onChange={e => setQ(e.target.value)}
-          placeholder="Search your inbox…"
-          aria-label="Search notifications"
-          style={{
-            width: "100%", padding: "8px 12px 8px 32px",
-            border: `1px solid ${HAIR}`, borderRadius: RADIUS_MD,
-            background: RAIL_BG, fontSize: "0.82rem", color: TEXT_PRIMARY,
-            outline: "none",
-          }}
-          onFocus={e => e.target.style.borderColor = ACCENT}
-          onBlur={e => e.target.style.borderColor = HAIR}
-        />
-        {q && (
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => setQ("")}
-            aria-label="Clear search"
-            style={{
-              position: "absolute",
-              right: 8,
-              top: "50%",
-              transform: "translateY(-50%)",
-              color: TEXT_MUTED
-            }}>
-            <X size={13} />
-          </Button>
-        )}
-      </div>
+      <SearchBar
+        value={q}
+        onChange={setQ}
+        onClear={q ? () => setQ("") : undefined}
+        placeholder="Search your inbox…"
+        style={{ flex: 1, maxWidth: 420 }}
+      />
       <span style={{ fontSize: "0.72rem", color: TEXT_DISABLED, flexShrink: 0 }}>
         {resultCount} {resultCount === 1 ? "item" : "items"}
       </span>
       <div className="flex-1" />
       {/* Sort */}
-      <div style={{ position: "relative" }}>
-        <ToolbarBtn icon={ArrowUpDown} label={sortBy === "priority" ? "Priority" : "Newest"} onClick={() => setSortOpen(o => !o)} />
-        {sortOpen && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} />
-            <div style={{ position: "absolute", right: 0, top: "calc(100% + 6px)", background: WHITE, border: `1px solid ${HAIR}`, borderRadius: RADIUS_MD, boxShadow: SHADOW_CARD_HOVER, zIndex: 20, minWidth: 140, padding: 4 }}>
-              {[{ k: "newest", l: "Newest first" }, { k: "priority", l: "Priority first" }].map(o => (
-                <button
-                  key={o.k}
-                  onClick={() => { setSortBy(o.k); setSortOpen(false); }}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "7px 10px", background: "none", border: "none", cursor: "pointer", fontSize: "0.78rem", color: TEXT_PRIMARY, borderRadius: RADIUS_MD }}
-                  onMouseEnter={e => e.currentTarget.style.background = RAIL_BG}
-                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                >
-                  {o.l}
-                  {sortBy === o.k && <Check size={12} style={{ color: ACCENT }} />}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+      <Dropdown
+        align="right"
+        width={160}
+        trigger={<ToolbarBtn icon={ArrowUpDown} label={sortBy === "priority" ? "Priority" : "Newest"} />}
+      >
+        {[{ k: "newest", l: "Newest first" }, { k: "priority", l: "Priority first" }].map(o => (
+          <DropdownItem key={o.k} onClick={() => setSortBy(o.k)}>
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+              {o.l}
+              {sortBy === o.k && <Check size={12} style={{ color: ACCENT }} />}
+            </span>
+          </DropdownItem>
+        ))}
+      </Dropdown>
       {unreadCount > 0 && (
         <ToolbarBtn icon={CheckCheck} label="Mark all read" onClick={onMarkAll} />
       )}
@@ -854,26 +799,18 @@ function Toolbar({ q, setQ, searchRef, sortBy, setSortBy, unreadCount, hasRead, 
 }
 
 function ToolbarBtn({ icon: Icon, label, onClick, title }) {
-  const [hov, setHov] = useState(false);
   return (
-    <button
+    <Button
+      variant="outline"
+      size={label ? "sm" : "icon"}
       onClick={onClick}
       title={title || label}
       aria-label={title || label}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        display: "inline-flex", alignItems: "center", gap: 6,
-        padding: label ? "7px 11px" : "7px",
-        borderRadius: RADIUS_MD, border: `1px solid ${hov ? "rgba(15,23,42,0.16)" : HAIR}`,
-        background: hov ? RAIL_BG : WHITE, cursor: "pointer",
-        fontSize: "0.76rem", fontWeight: 500, color: TEXT_SECONDARY,
-        whiteSpace: "nowrap", flexShrink: 0,
-      }}
+      style={{ borderColor: HAIR, color: TEXT_SECONDARY, fontWeight: 500, flexShrink: 0 }}
     >
       <Icon size={13} strokeWidth={1.75} />
       {label}
-    </button>
+    </Button>
   );
 }
 
@@ -1037,12 +974,14 @@ function IntelligencePanel({
             </ul>
           )}
           {priorityCount > 0 && (
-            <button
+            <Button
+              variant="link"
+              size="sm"
               onClick={onViewPriority}
-              style={{ marginTop: 14, display: "inline-flex", alignItems: "center", gap: 5, background: "none", border: "none", padding: 0, fontSize: "0.78rem", fontWeight: 600, color: ACCENT, cursor: "pointer" }}
+              style={{ marginTop: 14, color: ACCENT }}
             >
               View {priorityCount} priority item{priorityCount > 1 ? "s" : ""} <ChevronRight size={12} />
-            </button>
+            </Button>
           )}
         </div>
 
@@ -1104,9 +1043,9 @@ function IntelligencePanel({
         <div className="flex items-center gap-2 pb-4" style={{ borderBottom: `1px solid ${HAIR}` }}>
           <PanelToggle icon={Star} active={isPinned} label={isPinned ? "Pinned" : "Pin"} onClick={onTogglePin} />
           <PanelToggle icon={ArchiveIcon} active={isArchived} label={isArchived ? "Archived" : "Archive"} onClick={onToggleArchive} />
-          <button onClick={onDelete} style={{ marginLeft: "auto", fontSize: "0.75rem", color: TEXT_MUTED, background: "none", border: "none", cursor: "pointer" }}>
+          <Button variant="link" size="sm" onClick={onDelete} style={{ marginLeft: "auto", color: TEXT_MUTED }}>
             Dismiss
-          </button>
+          </Button>
         </div>
 
         {/* Related activity — real, computed */}
@@ -1124,19 +1063,20 @@ function IntelligencePanel({
           <SectionHeading>Label</SectionHeading>
           {label ? (
             <div className="flex items-center gap-2">
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: "0.76rem", fontWeight: 600, color: labelColor(label), background: `${labelColor(label)}14`, padding: "3px 9px", borderRadius: RADIUS_FULL }}>
+              <Badge color={labelColor(label)} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                 <Tag size={10} /> {label}
-              </span>
-              <button onClick={() => onSetLabel(null)} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_MUTED, fontSize: "0.7rem" }}>Remove</button>
+              </Badge>
+              <Button variant="link" size="sm" onClick={() => onSetLabel(null)} style={{ color: TEXT_MUTED }}>Remove</Button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 value={labelInput}
                 onChange={e => setLabelInput(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter" && labelInput.trim()) { onSetLabel(labelInput.trim()); setLabelInput(""); } }}
                 placeholder="Add a label…"
-                style={{ flex: 1, fontSize: "0.78rem", padding: "6px 9px", border: `1px solid ${HAIR}`, borderRadius: RADIUS_MD, outline: "none" }}
+                size="sm"
+                wrapperClassName="flex-1"
               />
               {labelInput.trim() && (
                 <Button
@@ -1155,9 +1095,9 @@ function IntelligencePanel({
           {!label && knownLabels.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2">
               {knownLabels.map(l => (
-                <button key={l} onClick={() => onSetLabel(l)} style={{ fontSize: "0.7rem", color: labelColor(l), background: `${labelColor(l)}14`, border: "none", borderRadius: RADIUS_FULL, padding: "2px 8px", cursor: "pointer" }}>
+                <DsTag key={l} size="sm" color={labelColor(l)} onClick={() => onSetLabel(l)}>
                   {l}
-                </button>
+                </DsTag>
               ))}
             </div>
           )}
@@ -1183,38 +1123,30 @@ function SectionHeading({ children }) {
 
 function PanelToggle({ icon: Icon, active, label, onClick }) {
   return (
-    <button
-      onClick={onClick}
-      style={{
-        display: "inline-flex", alignItems: "center", gap: 5,
-        padding: "5px 10px", borderRadius: RADIUS_FULL,
-        border: `1px solid ${active ? ACCENT : HAIR}`,
-        background: active ? "rgba(138,21,56,0.06)" : WHITE,
-        color: active ? ACCENT : TEXT_SECONDARY,
-        fontSize: "0.74rem", fontWeight: 600, cursor: "pointer",
-      }}
-    >
+    <DsTag color={active ? ACCENT : undefined} onClick={onClick} style={{ gap: 5 }}>
       <Icon size={11} fill={active && Icon === Star ? "currentColor" : "none"} />
       {label}
-    </button>
+    </DsTag>
   );
 }
 
 function IntelActionBtn({ action, onRead }) {
   const isAccept  = action.variant === "accept";
   const isDecline = action.variant === "decline";
-  const style = {
-    display: "inline-flex", alignItems: "center", gap: 5,
-    fontSize: "0.78rem", fontWeight: 600, cursor: "pointer",
-    textDecoration: "none", padding: "7px 14px", borderRadius: RADIUS_MD,
-    border: `1px solid ${isAccept ? EMERALD : isDecline ? HAIR : ACCENT}`,
-    background: isAccept ? "#F0FDF4" : isDecline ? "transparent" : ACCENT,
-    color: isAccept ? EMERALD : isDecline ? TEXT_MUTED : WHITE,
-  };
+  const style = isAccept
+    ? { borderColor: EMERALD, background: "#F0FDF4", color: EMERALD }
+    : isDecline
+      ? { borderColor: HAIR, color: TEXT_MUTED }
+      : { borderColor: ACCENT, background: ACCENT, color: WHITE };
+  const variant = isDecline ? "ghost" : "outline";
   if (action.to) {
-    return <Link to={action.to} onClick={onRead} style={style}>{action.label}</Link>;
+    return (
+      <Link to={action.to} onClick={onRead}>
+        <Button as="span" size="sm" variant={variant} style={style}>{action.label}</Button>
+      </Link>
+    );
   }
-  return <button style={style} onClick={onRead}>{action.label}</button>;
+  return <Button size="sm" variant={variant} style={style} onClick={onRead}>{action.label}</Button>;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1252,6 +1184,11 @@ function FeedSkeleton() {
   );
 }
 
+// Exception: bespoke multi-state line-art illustration (circles + a
+// checkmark/archive-box path that changes with `showArchived`) — ds/EmptyState's
+// `icon` slot always wraps its icon in a fixed small boxed container, which
+// would clip/distort this larger custom illustration rather than showing it
+// as designed. Kept hand-rolled below; the CTA still uses ds/Button.
 function FeedEmptyState({ hasFilter, showArchived, onClear }) {
   return (
     <div className="flex flex-col items-center text-center" style={{ padding: "88px 24px" }}>
@@ -1276,12 +1213,9 @@ function FeedEmptyState({ hasFilter, showArchived, onClear }) {
           : "New activity — collaborations, manuscript updates, citations, and AI results — will land here."}
       </p>
       {hasFilter && (
-        <button
-          onClick={onClear}
-          style={{ background: NAVY, color: WHITE, border: "none", padding: "8px 18px", borderRadius: RADIUS_MD, fontSize: "0.78rem", fontWeight: 600, cursor: "pointer" }}
-        >
+        <Button size="sm" onClick={onClear}>
           Clear filters
-        </button>
+        </Button>
       )}
     </div>
   );

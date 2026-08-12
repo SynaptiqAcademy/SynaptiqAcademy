@@ -100,7 +100,7 @@ export default function MobileTopBar({ onOpenDrawer, onOpenSearch }) {
     >
       <button
         onClick={onOpenDrawer}
-        className="w-9 h-9 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors shrink-0"
+        className="w-11 h-11 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors shrink-0"
         aria-label="Open navigation menu"
         aria-expanded={false}
         aria-controls="mobile-drawer"
@@ -117,7 +117,7 @@ export default function MobileTopBar({ onOpenDrawer, onOpenSearch }) {
       <div className="flex items-center gap-0.5 shrink-0">
         <button
           onClick={onOpenSearch}
-          className="w-9 h-9 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          className="w-11 h-11 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
           aria-label="Search platform"
         >
           <Search size={15} strokeWidth={1.5} />
@@ -125,7 +125,7 @@ export default function MobileTopBar({ onOpenDrawer, onOpenSearch }) {
 
         <Link
           to="/notifications"
-          className="relative w-9 h-9 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          className="relative w-11 h-11 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
           aria-label={`Inbox${notifCount > 0 ? `, ${notifCount} new` : ""}`}
         >
           <Bell size={15} strokeWidth={1.5} />
@@ -141,7 +141,7 @@ export default function MobileTopBar({ onOpenDrawer, onOpenSearch }) {
 
         <Link
           to="/messages"
-          className="relative w-9 h-9 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          className="relative w-11 h-11 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
           aria-label={`Messages${msgUnread > 0 ? `, ${msgUnread} unread` : ""}`}
         >
           <MessageSquare size={15} strokeWidth={1.5} />

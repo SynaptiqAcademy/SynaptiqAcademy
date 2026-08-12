@@ -3,9 +3,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFirstExperience } from "@/hooks/useFirstExperience";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import FirstExperience from "@/components/onboarding/FirstExperience";
 import { WorkspaceSkeleton } from "@/components/workspace";
+import WorkflowLauncher from "@/components/layout/WorkflowLauncher";
 import { TID } from "@/lib/testIds";
 import api from "@/lib/api";
 import { WARM, NAVY, NAVY2, NAVY_LIGHT } from "@/lib/tokens";
@@ -15,8 +16,11 @@ import MyWork            from "./MyWork";
 import AICommandCenter   from "./AICommandCenter";
 import Activity          from "./Activity";
 import Analytics         from "./Analytics";
+import QuickActions      from "./QuickActions";
+import KpiCards          from "./KpiCards";
 import Upcoming          from "./Upcoming";
 import Recommendations   from "./Recommendations";
+import PersonalProgress  from "./PersonalProgress";
 import Learning          from "./Learning";
 import FooterSummary     from "./FooterSummary";
 
@@ -35,6 +39,8 @@ export default function Home() {
   const [aiConvs,     setAiConvs]     = useState([]);
   const [deadlines,   setDeadlines]   = useState([]);
   const [notifCount,  setNotifCount]  = useState(0);
+
+  const [launcherOpen, setLauncherOpen] = useState(false);
 
   const fex = useFirstExperience(user?.id);
   const [fexVisible, setFexVisible] = useState(!fex.isComplete);
@@ -61,9 +67,19 @@ export default function Home() {
     }).catch(() => {});
   }, []);
 
+  // AUTH-BUG parity fix: this bell count used to be a one-time fetch, so it
+  // silently drifted from the TopNav bell on the very same page (which
+  // updates live off the same WebSocket event). Listen for the identical
+  // "synaptiq:notification" event MobileTopBar/MobileBottomNav already use.
+  useEffect(() => {
+    const handler = () => setNotifCount(n => n + 1);
+    window.addEventListener("synaptiq:notification", handler);
+    return () => window.removeEventListener("synaptiq:notification", handler);
+  }, []);
+
   if (fexVisible) {
     return (
-      <DiscoveryLayout>
+      <ResearchLayout>
         <FirstExperience
           user={user}
           steps={fex.steps}
@@ -74,7 +90,7 @@ export default function Home() {
           isComplete={fex.isComplete}
           onComplete={() => setFexVisible(false)}
         />
-      </DiscoveryLayout>
+      </ResearchLayout>
     );
   }
 
@@ -111,7 +127,7 @@ export default function Home() {
 
   return (
     <div data-testid={TID.discoverFeed} style={{ background: WARM, flex: 1, display: "flex", flexDirection: "column" }}>
-    <DiscoveryLayout customHero={hero} noPad>
+    <ResearchLayout customHero={hero} noPad>
 
       {/* ══════════════════════════════════════════════════════════════════
           THE SURFACE — where the actual work lives.
@@ -119,16 +135,25 @@ export default function Home() {
       <div className="max-w-[1180px] mx-auto px-1 md:px-2 pt-16 pb-16 space-y-16">
 
         <div className="sq-fade-up">
+          <QuickActions onOpenLauncher={() => setLauncherOpen(true)} />
+        </div>
+
+        <div className="sq-fade-up sq-delay-1">
+          <KpiCards kpi={kpi} feed={feed} manuscripts={manuscripts} workspaces={workspaces} billing={billing} />
+        </div>
+
+        <div className="sq-fade-up sq-delay-1">
           <MyWork manuscripts={manuscripts} workspaces={workspaces} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-x-14 gap-y-16 items-start sq-fade-up sq-delay-1">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-x-14 gap-y-16 items-start sq-fade-up sq-delay-2">
           <div className="flex flex-col gap-16 min-w-0">
             <Activity feed={feed} manuscripts={manuscripts} />
             <Recommendations feed={feed} />
           </div>
           <div className="flex flex-col gap-12">
             <Upcoming deadlines={deadlines} />
+            <PersonalProgress />
             <Learning />
           </div>
         </div>
@@ -144,7 +169,9 @@ export default function Home() {
         </footer>
       </div>
 
-    </DiscoveryLayout>
+      <WorkflowLauncher open={launcherOpen} onClose={() => setLauncherOpen(false)} />
+
+    </ResearchLayout>
     </div>
   );
 }

@@ -3,16 +3,22 @@ import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { toast } from "sonner";
-import { BRD, BRDH, NAVY, WARM } from "@/lib/tokens";
+import { BRD, NAVY, WARM } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import {
   ClipboardCheck, ChevronRight, Check, X, Send,
-  CheckCircle2, AlertCircle, XCircle, Clock, User,
+  CheckCircle2, AlertCircle, XCircle, Clock,
   ArrowRight, Layers, FileText, Archive, Coins, Microscope,
 } from "lucide-react";
 import { EmptyState } from "@/components/ds/EmptyState";
 import { SkeletonCard } from "@/components/ds/LoadingState";
 import { NavTabs } from "@/components/ds/NavTabs";
+import { Card } from "@/components/ds/Card";
+import { Badge as DsBadge } from "@/components/ds/Badge";
+import { Button } from "@/components/ds/Button";
+import { FormSelect } from "@/components/ds/FormSelect";
+import { Textarea } from "@/components/ds/Textarea";
+import { Avatar } from "@/components/ds/Avatar";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const EMRL  = "#059669";
@@ -75,15 +81,7 @@ function Badge({ verdict, status }) {
   } else {
     cfg = STATUS_CONFIG[status] || { label: status || "—", color: "#64748B", bg: "#F8FAFC", border: "#CBD5E1" };
   }
-  return (
-    <span style={{
-      fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase",
-      padding: "3px 8px", background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
-      whiteSpace: "nowrap",
-    }}>
-      {cfg.label}
-    </span>
-  );
+  return <DsBadge color={cfg.color} className="whitespace-nowrap">{cfg.label}</DsBadge>;
 }
 
 // ─── Verdict submission form ──────────────────────────────────────────────────
@@ -107,35 +105,33 @@ function VerdictForm({ rr, onSubmitted }) {
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94A3B8" }}>
         Submit Verdict
       </div>
-      <select
+      <FormSelect
         data-testid={TID.reviewVerdictSelect(rr.id)}
         value={verdict}
         onChange={(e) => setVerdict(e.target.value)}
-        style={{ padding: "8px 12px", border: `1px solid ${BRD}`, fontSize: 13, fontFamily: "inherit", outline: "none", background: "#fff", color: "#0F172A" }}
       >
         <option value="accepted">Accept</option>
         <option value="minor_revision">Minor Revision</option>
         <option value="major_revision">Major Revision</option>
         <option value="rejected">Reject</option>
-      </select>
-      <textarea
+      </FormSelect>
+      <Textarea
         data-testid={TID.reviewVerdictComment(rr.id)}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         placeholder="Reviewer comments (visible to authors)…"
         rows={4}
-        style={{ padding: "10px 12px", border: `1px solid ${BRD}`, fontSize: 13, fontFamily: "inherit", resize: "vertical", outline: "none", color: "#0F172A", lineHeight: 1.6 }}
       />
       <div style={{ display: "flex", gap: 8 }}>
-        <button
+        <Button
           data-testid={TID.reviewVerdictSubmit(rr.id)}
           onClick={submit}
           disabled={busy}
-          style={{ display: "inline-flex", alignItems: "center", gap: 6, background: NAVY, color: "#fff", border: "none", padding: "8px 18px", fontSize: 13, fontWeight: 600, cursor: busy ? "wait" : "pointer", opacity: busy ? 0.7 : 1 }}
+          loading={busy}
         >
           <Send size={12} strokeWidth={1.5} />
-          {busy ? "Submitting…" : "Submit verdict"}
-        </button>
+          Submit verdict
+        </Button>
       </div>
     </div>
   );
@@ -143,7 +139,6 @@ function VerdictForm({ rr, onSubmitted }) {
 
 // ─── Review card ─────────────────────────────────────────────────────────────
 function ReviewCard({ rr, onLoad }) {
-  const [hov, setHov] = useState(false);
   const [showVerdict, setShowVerdict] = useState(false);
 
   const respond = async (decision) => {
@@ -155,17 +150,9 @@ function ReviewCard({ rr, onLoad }) {
   };
 
   return (
-    <div
+    <Card
       data-testid={TID.reviewItem(rr.id)}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        background: "#fff",
-        border: `1px solid ${hov ? BRDH : BRD}`,
-        padding: "20px 24px",
-        transition: "border-color 150ms, box-shadow 150ms",
-        boxShadow: hov ? "0 2px 12px rgba(15,23,42,0.07)" : "none",
-      }}
+      padding="lg"
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: 16, justifyContent: "space-between" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -188,14 +175,7 @@ function ReviewCard({ rr, onLoad }) {
 
           {rr.requester && (
             <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{
-                width: 24, height: 24, borderRadius: "50%", background: "rgba(15,40,71,0.07)",
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden",
-              }}>
-                {rr.requester.avatar_url
-                  ? <img src={rr.requester.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  : <User size={12} strokeWidth={1.5} style={{ color: NAVY }} />}
-              </div>
+              <Avatar url={rr.requester.avatar_url} name={rr.requester.full_name} size={24} />
               <span style={{ fontSize: 12, color: "#475569" }}>
                 {rr.requester.full_name}
                 {rr.requester.institution && <span style={{ color: "#94A3B8" }}> · {rr.requester.institution}</span>}
@@ -215,33 +195,35 @@ function ReviewCard({ rr, onLoad }) {
           {/* Actions */}
           {rr.status === "pending" && (
             <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
-              <button
+              <Button
+                size="sm"
                 data-testid={TID.reviewAcceptBtn(rr.id)}
                 onClick={() => respond("accept")}
-                style={{ display: "inline-flex", alignItems: "center", gap: 6, background: NAVY, color: "#fff", border: "none", padding: "8px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
               >
                 <Check size={12} strokeWidth={2} /> Accept Review
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 data-testid={TID.reviewDeclineBtn(rr.id)}
                 onClick={() => respond("decline")}
-                style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#fff", color: "#64748B", border: `1px solid ${BRD}`, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
               >
                 <X size={12} strokeWidth={2} /> Decline
-              </button>
+              </Button>
             </div>
           )}
           {rr.status === "accepted" && (
             showVerdict ? (
               <VerdictForm rr={rr} onSubmitted={() => { setShowVerdict(false); onLoad(); }} />
             ) : (
-              <button
+              <Button
+                size="sm"
                 data-testid={TID.reviewVerdictBtn(rr.id)}
                 onClick={() => setShowVerdict(true)}
-                style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 6, background: NAVY, color: "#fff", border: "none", padding: "8px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                className="mt-4"
               >
                 <Send size={12} strokeWidth={1.5} /> Submit Verdict
-              </button>
+              </Button>
             )
           )}
         </div>
@@ -253,7 +235,7 @@ function ReviewCard({ rr, onLoad }) {
           </span>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -285,12 +267,12 @@ export default function Reviews() {
 
   const actions = (
     <div style={{ display: "flex", gap: 8 }}>
-      <Link to="/manuscripts" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none", padding: "8px 14px", border: `1px solid ${BRD}`, background: "#fff" }}>
+      <Button as={Link} to="/manuscripts" variant="ghost" size="sm">
         <FileText size={12} strokeWidth={1.5} /> My Manuscripts
-      </Link>
-      <Link to="/reviewer-marketplace" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none", padding: "8px 14px", border: `1px solid ${BRD}`, background: "#fff" }}>
+      </Button>
+      <Button as={Link} to="/reviewer-marketplace" variant="ghost" size="sm">
         <ClipboardCheck size={12} strokeWidth={1.5} /> Reviewer Marketplace
-      </Link>
+      </Button>
     </div>
   );
 

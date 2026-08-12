@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Users, Handshake, Layers, MessageSquare, Calendar, Award } from "lucide-react";
 import { NAVY, WARM, ACCENT, EMERALD, WHITE, TEXT_SECONDARY } from "@/lib/tokens";
-import { AnalyticsLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, LoadingOverlay } from "@/components/ds";
 
 // Hand-rolled rather than ds/StatCard: StatCard hardcodes icon-badge/value colors
@@ -70,10 +70,10 @@ export default function NetworkAnalytics() {
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <LoadingOverlay text="Loading analytics…" />;
+  if (loading) return <ResearchLayout title="Network Analytics"><LoadingOverlay text="Loading analytics…" /></ResearchLayout>;
 
   return (
-    <AnalyticsLayout title="Network Analytics">
+    <ResearchLayout title="Network Analytics">
 
       {/* Network Score */}
       {overview && (
@@ -157,6 +157,6 @@ export default function NetworkAnalytics() {
           </div>
         </Card>
       )}
-    </AnalyticsLayout>
+    </ResearchLayout>
   );
 }

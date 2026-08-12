@@ -27,7 +27,7 @@ export function ShortcutsModal({ onClose, rows, title = "Keyboard shortcuts" }) 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "rgba(15,23,42,0.4)" }}
+      style={{ background: "rgba(15,23,42,0.4)", padding: 16 }}
       onClick={onClose}
     >
       <div
@@ -36,7 +36,7 @@ export function ShortcutsModal({ onClose, rows, title = "Keyboard shortcuts" }) 
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        style={{ background: WHITE, borderRadius: RADIUS_LG, boxShadow: SHADOW_CARD_HOVER, width: 320, padding: 24, outline: "none" }}
+        style={{ background: WHITE, borderRadius: RADIUS_LG, boxShadow: SHADOW_CARD_HOVER, width: 320, maxWidth: "100%", padding: 24, outline: "none" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">

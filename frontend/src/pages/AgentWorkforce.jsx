@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
 import {
   Bot, Plus, RefreshCw, Play, Pause, CheckCircle, Clock,
   AlertCircle, XCircle, Calendar, Activity, ShieldCheck,
-  ChevronRight, Loader, Bell, List,
+  ChevronRight, Bell, List,
 } from "lucide-react";
 import {
   listMissions, getMission, getMissionSteps, getMissionLogs,
@@ -14,6 +15,17 @@ import {
 import MissionCard from "../components/ara/MissionCard";
 import MissionPlanner from "../components/ara/MissionPlanner";
 import ApprovalGate from "../components/ara/ApprovalGate";
+import { Card } from "@/components/ds/Card";
+import { Button } from "@/components/ds/Button";
+import { Input } from "@/components/ds/Input";
+import { Textarea } from "@/components/ds/Textarea";
+import { FormSelect } from "@/components/ds/FormSelect";
+import { Alert } from "@/components/ds/Alert";
+import { Badge } from "@/components/ds/Badge";
+import { NavTabs } from "@/components/ds/NavTabs";
+import { EmptyState } from "@/components/ds/EmptyState";
+import { Spinner } from "@/components/ds/LoadingState";
+import { ProgressBar } from "@/components/ds/Progress";
 
 const TABS = [
   { id: "active",    label: "Active",           icon: Play },
@@ -66,73 +78,57 @@ function NewMissionForm({ onCreated, onClose }) {
   ];
 
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-5">
+    <Card padding="lg">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-slate-800">New Research Mission</h3>
-        <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-sm">
+        <Button onClick={onClose} variant="link" size="sm">
           Cancel
-        </button>
+        </Button>
       </div>
       <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label className="block text-xs text-slate-500 mb-1">Mission Title</label>
-          <input
-            className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-300"
-            placeholder="e.g. Prepare manuscript for submission"
-            value={form.title}
-            onChange={e => set("title", e.target.value)}
-            required
-          />
+        <Input
+          label="Mission Title"
+          placeholder="e.g. Prepare manuscript for submission"
+          value={form.title}
+          onChange={e => set("title", e.target.value)}
+          required
+        />
+        <Textarea
+          label="Describe what you want the agents to do"
+          rows={3}
+          placeholder="e.g. Review this manuscript for statistical issues, simulate peer review, find matching journals, and prepare a submission checklist."
+          value={form.description}
+          onChange={e => set("description", e.target.value)}
+          required
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormSelect
+            label="Mission Type"
+            value={form.mission_type}
+            onChange={e => set("mission_type", e.target.value)}
+          >
+            {missionTypes.map(t => (
+              <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+            ))}
+          </FormSelect>
+          <FormSelect
+            label="Autonomy Level"
+            value={form.autonomy_level}
+            onChange={e => set("autonomy_level", parseInt(e.target.value))}
+          >
+            {Object.entries(AUTONOMY_LABELS).map(([k, v]) => (
+              <option key={k} value={k}>{k} — {v}</option>
+            ))}
+          </FormSelect>
         </div>
-        <div>
-          <label className="block text-xs text-slate-500 mb-1">Describe what you want the agents to do</label>
-          <textarea
-            className="w-full border border-slate-200 rounded px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-indigo-300"
-            rows={3}
-            placeholder="e.g. Review this manuscript for statistical issues, simulate peer review, find matching journals, and prepare a submission checklist."
-            value={form.description}
-            onChange={e => set("description", e.target.value)}
-            required
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">Mission Type</label>
-            <select
-              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none"
-              value={form.mission_type}
-              onChange={e => set("mission_type", e.target.value)}
-            >
-              {missionTypes.map(t => (
-                <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">Autonomy Level</label>
-            <select
-              className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none"
-              value={form.autonomy_level}
-              onChange={e => set("autonomy_level", parseInt(e.target.value))}
-            >
-              {Object.entries(AUTONOMY_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{k} — {v}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <p className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded">
+        <Alert variant="warning">
           Agents never submit, send emails, or apply for grants without your explicit approval.
-        </p>
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 disabled:opacity-50"
-        >
+        </Alert>
+        <Button type="submit" disabled={loading} loading={loading} variant="primary" className="w-full">
           {loading ? "Creating plan…" : "Create Mission"}
-        </button>
+        </Button>
       </form>
-    </div>
+    </Card>
   );
 }
 
@@ -171,56 +167,63 @@ function MissionDetail({ missionId, onBack, onUpdated }) {
     return () => clearInterval(t);
   }, [mission, load]);
 
-  if (loading) return <div className="p-6 text-slate-400 text-sm">Loading…</div>;
+  if (loading) return (
+    <div className="p-6 text-slate-400 text-sm flex items-center gap-2">
+      <Spinner size={14} /> Loading…
+    </div>
+  );
   if (!mission) return <div className="p-6 text-slate-500 text-sm">Mission not found.</div>;
 
   const pendingApprovals = steps.filter(s => s.status === "awaiting_approval");
 
-  const StepStatusDot = ({ status }) => {
-    const colors = {
-      pending: "bg-slate-300", running: "bg-indigo-500 animate-pulse",
-      completed: "bg-green-500", failed: "bg-red-500", skipped: "bg-slate-300",
-      awaiting_approval: "bg-orange-500", approved: "bg-green-400", rejected: "bg-red-400",
-    };
-    return <span className={`inline-block w-2 h-2 rounded-full ${colors[status] || "bg-slate-300"}`} />;
+  const STATUS_DOT_COLOR = {
+    pending: "#CBD5E1", running: "#6366F1",
+    completed: "#22C55E", failed: "#EF4444", skipped: "#CBD5E1",
+    awaiting_approval: "#F97316", approved: "#4ADE80", rejected: "#F87171",
+  };
+
+  const StepStatusDot = ({ status }) => (
+    <span
+      className={status === "running" ? "animate-pulse" : ""}
+      style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: STATUS_DOT_COLOR[status] || "#CBD5E1" }}
+    />
+  );
+
+  const MISSION_STATUS_BADGE = {
+    completed: "success",
+    failed: "danger",
+    running: "info",
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-1">
-        <button onClick={onBack} className="text-slate-400 hover:text-slate-600 text-sm">
+        <Button onClick={onBack} variant="link" size="sm">
           ← Back
-        </button>
+        </Button>
       </div>
 
-      <div className="rounded-md border border-slate-200 bg-white p-4">
+      <Card padding="md">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="font-semibold text-slate-800">{mission.title}</h2>
             <p className="text-xs text-slate-400 mt-0.5">{mission.description}</p>
           </div>
-          <span className={`text-xs px-2 py-0.5 rounded-full capitalize font-medium
-            ${mission.status === "completed" ? "bg-green-50 text-green-600" :
-              mission.status === "failed"    ? "bg-red-50 text-red-500" :
-              mission.status === "running"   ? "bg-indigo-50 text-indigo-600" :
-              "bg-slate-50 text-slate-500"}`}>
+          <Badge variant={MISSION_STATUS_BADGE[mission.status] || "neutral"} className="capitalize">
             {mission.status.replace("_", " ")}
-          </span>
+          </Badge>
         </div>
         {mission.total_steps > 0 && (
           <div className="mt-3">
-            <div className="flex justify-between text-xs text-slate-400 mb-1">
-              <span>{mission.completed_steps}/{mission.total_steps} steps</span>
-            </div>
-            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-indigo-500 rounded-full transition-all"
-                style={{ width: `${mission.total_steps > 0 ? Math.round((mission.completed_steps/mission.total_steps)*100) : 0}%` }}
-              />
-            </div>
+            <ProgressBar
+              value={mission.completed_steps}
+              max={mission.total_steps}
+              valueLabel={`${mission.completed_steps}/${mission.total_steps} steps`}
+              size="sm"
+            />
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Plan review */}
       {mission.status === "plan_review" && steps.length > 0 && (
@@ -250,23 +253,17 @@ function MissionDetail({ missionId, onBack, onUpdated }) {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-slate-100">
-        {[["steps","Steps"], ["logs","Logs"]].map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={`px-3 py-2 text-xs font-medium transition-colors
-              ${tab === id ? "text-indigo-600 border-b-2 border-indigo-500" : "text-slate-400 hover:text-slate-600"}`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <NavTabs
+        tabs={[{ id: "steps", label: "Steps" }, { id: "logs", label: "Logs" }]}
+        active={tab}
+        onChange={setTab}
+        size="sm"
+      />
 
       {tab === "steps" && (
         <div className="space-y-2">
           {steps.map((step, i) => (
-            <div key={step.step_id} className="rounded-md border border-slate-100 bg-white p-3">
+            <Card key={step.step_id} padding="sm">
               <div className="flex items-center gap-2">
                 <StepStatusDot status={step.status} />
                 <span className="text-xs text-slate-400">{i + 1}.</span>
@@ -279,17 +276,22 @@ function MissionDetail({ missionId, onBack, onUpdated }) {
                 </p>
               )}
               {step.outputs?.confidence && (
-                <span className={`ml-4 mt-1 inline-block text-xs px-1.5 py-0.5 rounded
-                  ${step.outputs.confidence === "high" ? "bg-green-50 text-green-600" :
-                    step.outputs.confidence === "medium" ? "bg-amber-50 text-amber-600" :
-                    "bg-slate-50 text-slate-400"}`}>
-                  Confidence: {step.outputs.confidence}
-                </span>
+                <div className="ml-4 mt-1">
+                  <Badge
+                    size="sm"
+                    variant={
+                      step.outputs.confidence === "high" ? "success" :
+                      step.outputs.confidence === "medium" ? "warning" : "neutral"
+                    }
+                  >
+                    Confidence: {step.outputs.confidence}
+                  </Badge>
+                </div>
               )}
               {step.error && (
                 <p className="text-xs text-red-500 mt-1 ml-4">{step.error}</p>
               )}
-            </div>
+            </Card>
           ))}
           {steps.length === 0 && (
             <p className="text-xs text-slate-400 text-center py-4">No steps yet.</p>
@@ -315,15 +317,14 @@ function MissionDetail({ missionId, onBack, onUpdated }) {
       )}
 
       {mission.result_summary && mission.status === "completed" && (
-        <div className="rounded-md border border-green-100 bg-green-50 p-4">
-          <p className="text-xs font-semibold text-green-700 mb-1">Mission Summary</p>
-          <p className="text-sm text-green-800 whitespace-pre-line">{mission.result_summary}</p>
+        <Alert variant="success" title="Mission Summary">
+          <p className="whitespace-pre-line">{mission.result_summary}</p>
           {mission.validation && !mission.validation.passed && (
             <p className="text-xs text-amber-600 mt-2">
               Validation warnings: {mission.validation.warnings?.length ?? 0}
             </p>
           )}
-        </div>
+        </Alert>
       )}
     </div>
   );
@@ -389,25 +390,20 @@ export default function AgentWorkforce() {
 
   const pageActions = (
     <>
-      <button
-        onClick={() => loadTab(tab)}
-        className="p-2 text-slate-400 hover:text-slate-600 border border-slate-200 rounded"
-      >
+      <Button onClick={() => loadTab(tab)} variant="ghost" size="icon" aria-label="Refresh">
         <RefreshCw size={15} />
-      </button>
-      <button
-        onClick={() => setShowNew(v => !v)}
-        className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700"
-      >
+      </Button>
+      <Button onClick={() => setShowNew(v => !v)} variant="primary" size="sm">
         <Plus size={15} />
         New Mission
-      </button>
+      </Button>
     </>
   );
 
   if (selected) {
     return (
-      <AIWorkspaceLayout
+      <ResearchLayout
+        navItems={AI_NAV_ITEMS}
         title="Agent Workforce"
         subtitle="Autonomous research agents that execute workflows while you stay in control"
         actions={pageActions}
@@ -417,12 +413,13 @@ export default function AgentWorkforce() {
             onBack={() => { setSelected(null); loadTab(tab); }}
             onUpdated={() => loadTab(tab)}
           />
-      </AIWorkspaceLayout>
+      </ResearchLayout>
     );
   }
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="Agent Workforce"
       subtitle="Autonomous research agents that execute workflows while you stay in control"
       actions={pageActions}
@@ -457,26 +454,14 @@ export default function AgentWorkforce() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-0.5 border-b border-slate-100 mb-5 overflow-x-auto">
-        {TABS.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium whitespace-nowrap transition-colors
-              ${tab === id
-                ? "text-indigo-600 border-b-2 border-indigo-500"
-                : "text-slate-400 hover:text-slate-600"}`}
-          >
-            <Icon size={13} />
-            {label}
-          </button>
-        ))}
+      <div className="mb-5 overflow-x-auto">
+        <NavTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
 
       {/* Tab content */}
       {loading ? (
         <div className="flex items-center justify-center py-12 text-slate-400">
-          <Loader size={20} className="animate-spin mr-2" />
+          <Spinner size={20} className="mr-2" />
           Loading…
         </div>
       ) : (
@@ -484,19 +469,14 @@ export default function AgentWorkforce() {
           {/* Active / Completed / Failed missions */}
           {["active","completed","failed"].includes(tab) && (
             missions.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 text-sm">
-                No missions in this category.
-                {tab === "active" && (
-                  <p className="mt-2">
-                    <button
-                      onClick={() => setShowNew(true)}
-                      className="text-indigo-500 hover:underline"
-                    >
-                      Create your first mission →
-                    </button>
-                  </p>
+              <EmptyState
+                title="No missions in this category."
+                action={tab === "active" && (
+                  <Button onClick={() => setShowNew(true)} variant="link" size="sm">
+                    Create your first mission →
+                  </Button>
                 )}
-              </div>
+              />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {missions.map(m => (
@@ -513,13 +493,11 @@ export default function AgentWorkforce() {
           {/* Pending approvals */}
           {tab === "approvals" && (
             approvals.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 text-sm">
-                No pending approvals. Agents are running autonomously within their permitted actions.
-              </div>
+              <EmptyState title="No pending approvals. Agents are running autonomously within their permitted actions." />
             ) : (
               <div className="space-y-3">
                 {approvals.map(a => (
-                  <div key={a._id} className="rounded-md border border-slate-200 bg-white p-4">
+                  <Card key={a._id} padding="md">
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-sm font-medium text-slate-700">
                         Mission: <span className="text-indigo-600">{a.mission_id?.slice(-8)}</span>
@@ -532,7 +510,7 @@ export default function AgentWorkforce() {
                       approval={a}
                       onResolved={() => loadTab("approvals")}
                     />
-                  </div>
+                  </Card>
                 ))}
               </div>
             )
@@ -542,31 +520,30 @@ export default function AgentWorkforce() {
           {tab === "agents" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {agents.map(agent => (
-                <div key={agent.name} className="rounded-md border border-slate-200 bg-white p-4">
+                <Card key={agent.name} padding="md">
                   <div className="flex items-center justify-between mb-2">
                     <p className="font-medium text-sm text-slate-800">{agent.label}</p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full
-                      ${agent.health === "active" ? "bg-green-50 text-green-600" : "bg-slate-50 text-slate-400"}`}>
+                    <Badge variant={agent.health === "active" ? "success" : "neutral"}>
                       {agent.health}
-                    </span>
+                    </Badge>
                   </div>
                   <p className="text-xs text-slate-500 line-clamp-2 mb-2">{agent.mission}</p>
                   <div className="flex flex-wrap gap-1">
                     {(agent.safe_actions || []).slice(0, 3).map(a => (
-                      <span key={a} className="text-xs bg-green-50 text-green-600 px-1.5 py-0.5 rounded">
+                      <Badge key={a} variant="success" size="sm">
                         {a.replace("_", " ")}
-                      </span>
+                      </Badge>
                     ))}
                     {(agent.approval_required_actions || []).slice(0, 2).map(a => (
-                      <span key={a} className="text-xs bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded">
+                      <Badge key={a} variant="warning" size="sm">
                         {a.replace("_", " ")} ⚠
-                      </span>
+                      </Badge>
                     ))}
                   </div>
                   <p className="text-xs text-slate-300 mt-2">
                     ~{agent.cost_estimate_credits} credits · ~{Math.ceil(agent.estimated_duration_s / 60)} min
                   </p>
-                </div>
+                </Card>
               ))}
             </div>
           )}
@@ -574,13 +551,11 @@ export default function AgentWorkforce() {
           {/* Schedules */}
           {tab === "scheduled" && (
             schedules.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 text-sm">
-                No scheduled missions. Use the API to set up recurring workflows.
-              </div>
+              <EmptyState title="No scheduled missions. Use the API to set up recurring workflows." />
             ) : (
               <div className="space-y-2">
                 {schedules.map(s => (
-                  <div key={s._id} className="rounded-md border border-slate-200 bg-white p-4 flex items-center justify-between">
+                  <Card key={s._id} padding="md" className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-slate-700">{s.title}</p>
                       <p className="text-xs text-slate-400 mt-0.5">
@@ -588,10 +563,10 @@ export default function AgentWorkforce() {
                         {s.last_run && ` · Last: ${new Date(s.last_run).toLocaleDateString()}`}
                       </p>
                     </div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${s.active ? "bg-green-50 text-green-600" : "bg-slate-50 text-slate-400"}`}>
+                    <Badge variant={s.active ? "success" : "neutral"}>
                       {s.active ? "Active" : "Paused"}
-                    </span>
-                  </div>
+                    </Badge>
+                  </Card>
                 ))}
               </div>
             )
@@ -604,27 +579,26 @@ export default function AgentWorkforce() {
                 <p className="text-sm text-slate-600">
                   Background monitors watch publications, grants, and trends continuously.
                 </p>
-                <button
+                <Button
                   onClick={async () => {
                     try {
                       await runMonitors();
                       setTimeout(() => loadTab("monitors"), 3000);
                     } catch {}
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-slate-200 rounded hover:bg-slate-50"
+                  variant="ghost"
+                  size="sm"
                 >
                   <Play size={13} />
                   Run Now
-                </button>
+                </Button>
               </div>
               {alerts.length === 0 ? (
-                <p className="text-center py-8 text-slate-400 text-sm">
-                  No alerts yet. Click "Run Now" to check for updates.
-                </p>
+                <EmptyState size="sm" title="No alerts yet. Click &quot;Run Now&quot; to check for updates." />
               ) : (
                 <div className="space-y-2">
                   {alerts.map((a, i) => (
-                    <div key={i} className="rounded-md border border-slate-100 bg-white p-3">
+                    <Card key={i} padding="sm">
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <p className="text-sm font-medium text-slate-700">{a.data?.title || a.detail}</p>
@@ -634,7 +608,7 @@ export default function AgentWorkforce() {
                           {a.created_at ? new Date(a.created_at).toLocaleDateString() : ""}
                         </span>
                       </div>
-                    </div>
+                    </Card>
                   ))}
                 </div>
               )}
@@ -642,6 +616,6 @@ export default function AgentWorkforce() {
           )}
         </>
       )}
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

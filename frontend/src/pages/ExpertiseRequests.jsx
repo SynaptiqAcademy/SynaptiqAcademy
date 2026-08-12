@@ -10,11 +10,18 @@ import api from "../lib/api";
 import { toast } from "sonner";
 import { NAVY } from "@/lib/tokens";
 import { Spinner } from "@/components/ds/LoadingState";
-import { DiscoveryLayout } from "@/layouts";
-import {
-  Compass, Plus, X, Loader2, Filter, ArrowRight, Briefcase, MapPin,
-  Building2, ChevronDown,
-} from "lucide-react";
+import { ResearchLayout } from "@/layouts";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { Tag } from "@/components/ds/Tag";
+import { Button } from "@/components/ds/Button";
+import { Input } from "@/components/ds/Input";
+import { Textarea } from "@/components/ds/Textarea";
+import { FormSelect } from "@/components/ds/FormSelect";
+import { NavTabs } from "@/components/ds/NavTabs";
+import { Modal } from "@/components/ds/Modal";
+import { EmptyState } from "@/components/ds/EmptyState";
+import { Plus, Briefcase, Building2 } from "lucide-react";
 
 const KIND_LABEL = {
   co_author: "Co-author",
@@ -71,56 +78,47 @@ export default function ExpertiseRequests() {
   useEffect(() => { load(); }, [load]);
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Expertise Requests"
       subtitle="Researchers post specific needs — co-author, statistician, reviewer, AI specialist, methodologist — and you respond."
       actions={
-        <button
-          data-testid="expertise-create-btn"
-          onClick={() => setCreating(true)}
-          className="inline-flex items-center gap-2 bg-[#0F2847] text-white text-sm px-4 py-2 hover:bg-slate-800"
-        >
+        <Button data-testid="expertise-create-btn" onClick={() => setCreating(true)} size="sm">
           <Plus size={12} strokeWidth={1.5} /> Post request
-        </button>
+        </Button>
+      }
+      nav={
+        <NavTabs
+          tabs={[
+            { id: "open", label: "Open requests" },
+            { id: "matching", label: "Matching me" },
+            { id: "mine", label: "My requests" },
+          ]}
+          active={tab}
+          onChange={setTab}
+        />
       }
     >
-
-      {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-slate-200" data-testid="expertise-tabs">
-        {[
-          { v: "open", label: "Open requests" },
-          { v: "matching", label: "Matching me" },
-          { v: "mine", label: "My requests" },
-        ].map((t) => (
-          <button
-            key={t.v}
-            data-testid={`expertise-tab-${t.v}`}
-            onClick={() => setTab(t.v)}
-            className={`px-4 py-2 text-sm -mb-px border-b-2 transition-colors ${tab === t.v ? "border-[#0F2847] text-[#0F2847]" : "border-transparent text-slate-500 hover:text-slate-900"}`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
 
       {/* Filter row (only on Open tab) */}
       {tab === "open" && (
         <div className="flex flex-wrap items-center gap-2">
-          <select
+          <FormSelect
             data-testid="expertise-kind-filter"
+            size="sm"
             value={kind} onChange={(e) => setKind(e.target.value)}
-            className="text-xs px-3 py-2 border border-slate-300"
+            wrapperClassName="w-auto"
           >
             <option value="">All kinds</option>
             {Object.entries(KIND_LABEL).map(([k, label]) => (
               <option key={k} value={k}>{label}</option>
             ))}
-          </select>
-          <input
+          </FormSelect>
+          <Input
             data-testid="expertise-search"
+            size="sm"
             value={q} onChange={(e) => setQ(e.target.value)}
             placeholder="Search title, description, areas, skills…"
-            className="flex-1 min-w-[240px] px-3 py-2 border border-slate-300 text-sm"
+            wrapperClassName="flex-1 min-w-[240px]"
           />
           {(facets.by_kind || []).length > 0 && (
             <div className="text-[10px] font-mono text-slate-400">
@@ -133,10 +131,16 @@ export default function ExpertiseRequests() {
       {/* List */}
       {items === null && <div className="py-4 flex justify-center"><Spinner size={16} /></div>}
       {items && items.length === 0 && (
-        <div className="text-center py-16 border border-dashed border-slate-300 text-sm text-slate-500" data-testid="expertise-empty">
-          {tab === "matching" ? "No requests match your profile yet. Update your expertise tags to surface more." :
-           tab === "mine" ? "You haven't posted any requests yet. Click 'Post request' to begin." :
-           "No open requests right now."}
+        <div data-testid="expertise-empty">
+          <EmptyState
+            title={
+              tab === "matching" ? "No requests match your profile yet. Update your expertise tags to surface more." :
+              tab === "mine" ? "You haven't posted any requests yet. Click 'Post request' to begin." :
+              "No open requests right now."
+            }
+            size="md"
+            dashed={true}
+          />
         </div>
       )}
       {items && items.length > 0 && (
@@ -146,25 +150,25 @@ export default function ExpertiseRequests() {
       )}
 
       {creating && <CreateModal onClose={() => setCreating(false)} onCreated={() => { setCreating(false); setTab("mine"); load(); }} />}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }
 
 function RequestCard({ r }) {
   return (
-    <Link to={`/expertise/${r.id}`} className="block border border-slate-200 bg-white p-4 hover:border-[#0F2847] group transition-colors" data-testid={`expertise-card-${r.id}`}>
+    <Card to={`/expertise/${r.id}`} padding="md" className="group" data-testid={`expertise-card-${r.id}`}>
       <div className="flex items-start justify-between gap-2">
-        <span className={`overline border px-1.5 py-0.5 ${KIND_TONE[r.kind] || KIND_TONE.sme}`}>{KIND_LABEL[r.kind] || r.kind}</span>
-        <span className={`overline px-1.5 py-0.5 ${r.status === "open" ? "border-emerald-300 bg-emerald-50 text-emerald-800" : r.status === "filled" ? "border-[#0F2847]/30 bg-[#0F2847]/5 text-[#0F2847]" : "border-slate-200 bg-slate-50 text-slate-500"}`}>
+        <Badge variant="outline" size="sm" className={KIND_TONE[r.kind] || KIND_TONE.sme}>{KIND_LABEL[r.kind] || r.kind}</Badge>
+        <Badge variant={r.status === "open" ? "success" : r.status === "filled" ? "default" : "neutral"} size="sm">
           {r.status}
-        </span>
+        </Badge>
       </div>
       <h3 className="font-serif text-lg text-slate-900 mt-2 group-hover:text-[#0F2847]">{r.title}</h3>
       <p className="text-xs text-slate-600 mt-1 line-clamp-2">{r.description}</p>
       {(r.required_skills || []).length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
           {(r.required_skills || []).slice(0, 5).map((s, i) => (
-            <span key={i} className="text-[10px] font-mono border border-slate-200 bg-slate-50 px-1.5 py-0.5">{s}</span>
+            <Tag key={i} size="sm">{s}</Tag>
           ))}
         </div>
       )}
@@ -183,7 +187,7 @@ function RequestCard({ r }) {
           <span className="ml-auto">{(r.applicants || []).length} applicant{(r.applicants || []).length === 1 ? "" : "s"}</span>
         )}
       </div>
-    </Link>
+    </Card>
   );
 }
 
@@ -225,76 +229,55 @@ function CreateModal({ onClose, onCreated }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900/50 flex items-center justify-center px-4 overflow-y-auto py-10" onClick={onClose} data-testid="expertise-create-modal">
-      <div className="bg-white w-full max-w-xl border border-slate-200" onClick={(e) => e.stopPropagation()}>
-        <div className="border-b border-slate-200 px-5 py-4 flex items-center justify-between">
-          <div>
-            <div className="overline">Marketplace</div>
-            <h3 className="font-serif text-xl text-slate-900">Post an expertise request</h3>
-          </div>
-          <button onClick={onClose}><X size={16} strokeWidth={1.5} className="text-slate-400 hover:text-slate-900" /></button>
+    <Modal
+      open
+      onClose={onClose}
+      title="Post an expertise request"
+      description="Marketplace"
+      size="md"
+      data-testid="expertise-create-modal"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button data-testid="create-submit" disabled={busy} loading={busy} onClick={submit}>
+            Post request
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        <FormSelect label="Kind of expertise needed" data-testid="create-kind" value={kind} onChange={(e) => setKind(e.target.value)}>
+          {Object.entries(KIND_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </FormSelect>
+        <Input label="Title" data-testid="create-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Need PLS-SEM expert for HR study" />
+        <Textarea label="Description" data-testid="create-description" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Project context, scope, sample size, timeline." />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Input label="Required skills (comma-sep)" data-testid="create-skills" value={skillsRaw} onChange={(e) => setSkillsRaw(e.target.value)} placeholder="pls-sem, sem, statistics" />
+          <Input label="Research areas" data-testid="create-areas" value={areasRaw} onChange={(e) => setAreasRaw(e.target.value)} placeholder="management, hrm" />
         </div>
-        <div className="p-5 space-y-3">
-          <div>
-            <div className="overline mb-1">Kind of expertise needed</div>
-            <select data-testid="create-kind" value={kind} onChange={(e) => setKind(e.target.value)} className="w-full px-3 py-2 border border-slate-300 text-sm">
-              {Object.entries(KIND_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-            </select>
-          </div>
-          <div>
-            <div className="overline mb-1">Title</div>
-            <input data-testid="create-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Need PLS-SEM expert for HR study" className="w-full px-3 py-2 border border-slate-300 text-sm" />
-          </div>
-          <div>
-            <div className="overline mb-1">Description</div>
-            <textarea data-testid="create-description" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Project context, scope, sample size, timeline." className="w-full px-3 py-2 border border-slate-300 text-sm" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <div className="overline mb-1">Required skills (comma-sep)</div>
-              <input data-testid="create-skills" value={skillsRaw} onChange={(e) => setSkillsRaw(e.target.value)} placeholder="pls-sem, sem, statistics" className="w-full px-3 py-2 border border-slate-300 text-sm" />
-            </div>
-            <div>
-              <div className="overline mb-1">Research areas</div>
-              <input data-testid="create-areas" value={areasRaw} onChange={(e) => setAreasRaw(e.target.value)} placeholder="management, hrm" className="w-full px-3 py-2 border border-slate-300 text-sm" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <div className="overline mb-1">Duration</div>
-              <input data-testid="create-duration" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 3 months" className="w-full px-3 py-2 border border-slate-300 text-sm" />
-            </div>
-            <div>
-              <div className="overline mb-1">Compensation</div>
-              <select data-testid="create-compensation" value={compensation} onChange={(e) => setCompensation(e.target.value)} className="w-full px-3 py-2 border border-slate-300 text-sm">
-                <option value="authorship">Authorship</option>
-                <option value="paid">Paid engagement</option>
-                <option value="credit">Acknowledgment / credit</option>
-                <option value="grant_split">Grant split</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <div className="overline mb-1">Link to (optional)</div>
-            <div className="grid grid-cols-2 gap-2">
-              <select data-testid="create-entity-kind" value={entityKind} onChange={(e) => setEntityKind(e.target.value)} className="px-3 py-2 border border-slate-300 text-sm">
-                <option value="">No link</option>
-                <option value="workspace">Workspace</option>
-                <option value="project">Project</option>
-                <option value="manuscript">Manuscript</option>
-              </select>
-              <input data-testid="create-entity-id" value={entityId} onChange={(e) => setEntityId(e.target.value)} placeholder="ID" className="px-3 py-2 border border-slate-300 text-sm font-mono" disabled={!entityKind} />
-            </div>
-            <div className="text-[10px] text-slate-400 mt-1">Linking helps applicants understand context. You must own/be a member.</div>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Input label="Duration" data-testid="create-duration" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 3 months" />
+          <FormSelect label="Compensation" data-testid="create-compensation" value={compensation} onChange={(e) => setCompensation(e.target.value)}>
+            <option value="authorship">Authorship</option>
+            <option value="paid">Paid engagement</option>
+            <option value="credit">Acknowledgment / credit</option>
+            <option value="grant_split">Grant split</option>
+          </FormSelect>
         </div>
-        <div className="border-t border-slate-200 px-5 py-3 flex items-center justify-end gap-2">
-          <button onClick={onClose} className="text-xs text-slate-600 px-3 py-2">Cancel</button>
-          <button data-testid="create-submit" disabled={busy} onClick={submit} className="text-xs bg-[#0F2847] text-white px-4 py-2 hover:bg-slate-800 disabled:opacity-50 inline-flex items-center gap-1.5">
-            {busy && <Loader2 size={11} className="animate-spin" />} Post request
-          </button>
+        <div>
+          <div className="overline mb-1">Link to (optional)</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <FormSelect data-testid="create-entity-kind" value={entityKind} onChange={(e) => setEntityKind(e.target.value)}>
+              <option value="">No link</option>
+              <option value="workspace">Workspace</option>
+              <option value="project">Project</option>
+              <option value="manuscript">Manuscript</option>
+            </FormSelect>
+            <Input data-testid="create-entity-id" value={entityId} onChange={(e) => setEntityId(e.target.value)} placeholder="ID" className="font-mono" disabled={!entityKind} />
+          </div>
+          <div className="text-[10px] text-slate-400 mt-1">Linking helps applicants understand context. You must own/be a member.</div>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

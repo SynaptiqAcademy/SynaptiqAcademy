@@ -5,37 +5,8 @@ import api from "@/lib/api";
 import { NAVY } from "@/lib/tokens";
 import { SkeletonPage } from "@/components/ds/LoadingState";
 import { ErrorState } from "@/components/ds/ErrorState";
+import { StatCard, StatGrid, Card, H2, List, ListItem, StatusDot, DataTable } from "@/components/ds";
 import { AdministrationLayout } from "@/layouts";
-
-function KpiCard({ label, value, sub, icon: Icon, iconColor = "text-slate-600" }) {
-  return (
-    <div className="bg-white border border-slate-200 p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">{label}</p>
-          <p className="font-serif text-3xl text-slate-900 mt-1">{value}</p>
-          {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
-        </div>
-        <Icon size={20} className={iconColor} />
-      </div>
-    </div>
-  );
-}
-
-function MetricRow({ label, value }) {
-  return (
-    <div className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
-      <span className="text-sm text-slate-600">{label}</span>
-      <span className="text-sm font-medium text-slate-900">{value?.toLocaleString() ?? "—"}</span>
-    </div>
-  );
-}
-
-function StatusDot({ ok }) {
-  return (
-    <span className={`inline-block w-2 h-2 rounded-full mr-2 ${ok ? "bg-green-500" : "bg-red-500"}`} />
-  );
-}
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
@@ -82,76 +53,98 @@ export default function AdminDashboard() {
     { label: "Stripe Payments", ok: system.stripe_configured },
   ];
 
+  const systemColumns = [
+    { key: "label", label: "Check", render: (v) => <span className="text-slate-600">{v}</span> },
+    {
+      key: "ok",
+      label: "Status",
+      align: "right",
+      render: (ok) => (
+        <span className="inline-flex items-center justify-end gap-2">
+          <StatusDot color={ok ? "#16a34a" : "#dc2626"} size={8} />
+          <span className={ok ? "text-green-700" : "text-red-700"}>
+            {ok ? "Configured" : "Not configured"}
+          </span>
+        </span>
+      ),
+    },
+  ];
+
   return (
     <AdministrationLayout
       title="Admin Dashboard"
       subtitle="Platform overview — live data"
     >
       {/* KPI Row */}
-      <div className="grid grid-cols-4 gap-4">
-        <KpiCard
+      <StatGrid cols={4}>
+        <StatCard
           label="Total Users"
           value={users.total.toLocaleString()}
           sub={`+${users.new_today} today · +${users.new_week} this week`}
-          icon={Users}
-          iconColor="text-blue-600"
+          icon={<Users style={{ color: "#2563eb" }} />}
         />
-        <KpiCard
+        <StatCard
           label="Active Subscribers"
           value={financial.active_subscribers.toLocaleString()}
           sub={`${financial.churn_rate_pct}% churn (30d)`}
-          icon={Users}
-          iconColor="text-indigo-600"
+          icon={<Users style={{ color: "#4f46e5" }} />}
         />
-        <KpiCard
+        <StatCard
           label="Monthly Revenue"
           value={`€${financial.mrr_eur.toFixed(2)}`}
           sub={`ARR €${financial.arr_eur.toFixed(2)}`}
-          icon={DollarSign}
-          iconColor="text-green-600"
+          icon={<DollarSign style={{ color: "#16a34a" }} />}
         />
-        <KpiCard
+        <StatCard
           label="System Status"
           value={systemIssues === 0 ? "Operational" : `${systemIssues} issue${systemIssues > 1 ? "s" : ""}`}
           sub={systemIssues === 0 ? "All systems nominal" : "Check health page"}
-          icon={Activity}
-          iconColor={systemIssues === 0 ? "text-green-600" : "text-red-600"}
+          icon={<Activity style={{ color: systemIssues === 0 ? "#16a34a" : "#dc2626" }} />}
         />
-      </div>
+      </StatGrid>
 
       {/* Metrics grid */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
         {/* Users breakdown */}
-        <div className="bg-white border border-slate-200 p-5">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">Users by Plan</h2>
-          <MetricRow label="Free" value={users.free} />
-          <MetricRow label="Researcher" value={users.researcher} />
-          <MetricRow label="Pro Researcher" value={users.pro_researcher} />
-          <MetricRow label="Institution" value={users.institution} />
-          <MetricRow label="ORCID Connected" value={users.orcid_connected} />
-          <MetricRow label="Email Verified" value={users.email_verified} />
-          {(users.suspended > 0 || users.banned > 0) && (
-            <>
-              <MetricRow label="Suspended" value={users.suspended} />
-              <MetricRow label="Banned" value={users.banned} />
-            </>
-          )}
-        </div>
+        <Card padding="lg">
+          <H2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">Users by Plan</H2>
+          <List radius={0} border={false}>
+            <ListItem compact title="Free" trailing={users.free?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
+            <ListItem compact title="Researcher" trailing={users.researcher?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
+            <ListItem compact title="Pro Researcher" trailing={users.pro_researcher?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
+            <ListItem compact title="Institution" trailing={users.institution?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
+            <ListItem compact title="ORCID Connected" trailing={users.orcid_connected?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
+            <ListItem
+              compact
+              title="Email Verified"
+              trailing={users.email_verified?.toLocaleString() ?? "—"}
+              style={{ padding: "8px 0", borderBottom: (users.suspended > 0 || users.banned > 0) ? undefined : "none" }}
+            />
+            {(users.suspended > 0 || users.banned > 0) && (
+              <>
+                <ListItem compact title="Suspended" trailing={users.suspended?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
+                <ListItem compact title="Banned" trailing={users.banned?.toLocaleString() ?? "—"} style={{ padding: "8px 0", borderBottom: "none" }} />
+              </>
+            )}
+          </List>
+        </Card>
 
         {/* Engagement */}
-        <div className="bg-white border border-slate-200 p-5">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">Engagement (30d)</h2>
-          <MetricRow label="Projects Created" value={engagement.projects_month} />
-          <MetricRow label="Workspaces Created" value={engagement.workspaces_month} />
-          <MetricRow label="Active Collaborations" value={engagement.collaborations_active} />
-          <MetricRow label="Manuscripts" value={engagement.manuscripts_total} />
-          <MetricRow label="AI Requests" value={engagement.ai_requests_month} />
-          <MetricRow label="Messages Sent" value={engagement.messages_month} />
-        </div>
+        <Card padding="lg">
+          <H2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">Engagement (30d)</H2>
+          <List radius={0} border={false}>
+            <ListItem compact title="Projects Created" trailing={engagement.projects_month?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
+            <ListItem compact title="Workspaces Created" trailing={engagement.workspaces_month?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
+            <ListItem compact title="Active Collaborations" trailing={engagement.collaborations_active?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
+            <ListItem compact title="Manuscripts" trailing={engagement.manuscripts_total?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
+            <ListItem compact title="AI Requests" trailing={engagement.ai_requests_month?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
+            <ListItem compact title="Messages Sent" trailing={engagement.messages_month?.toLocaleString() ?? "—"} style={{ padding: "8px 0", borderBottom: "none" }} />
+          </List>
+        </Card>
 
         {/* Research chart */}
-        <div className="bg-white border border-slate-200 p-5">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">AI Research Tools (30d)</h2>
+        <Card padding="lg">
+          <H2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">AI Research Tools (30d)</H2>
           <ResponsiveContainer width="100%" height={140}>
             <BarChart data={researchChartData} barSize={18}>
               <XAxis dataKey="name" tick={{ fontSize: 10 }} />
@@ -164,38 +157,26 @@ export default function AdminDashboard() {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </Card>
       </div>
 
       {/* Financial + System */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white border border-slate-200 p-5">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">Financial (30d)</h2>
-          <MetricRow label="Pack Revenue" value={`€${financial.pack_revenue_30d_eur.toFixed(2)}`} />
-          <MetricRow label="Credits Consumed" value={financial.credits_consumed_30d.toLocaleString()} />
-          <MetricRow label="Credits Purchased" value={financial.credits_purchased_30d.toLocaleString()} />
-          <MetricRow label="Churned Users" value={financial.churned_30d} />
-          <MetricRow label="Churn Rate" value={`${financial.churn_rate_pct}%`} />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <Card padding="lg">
+          <H2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">Financial (30d)</H2>
+          <List radius={0} border={false}>
+            <ListItem compact title="Pack Revenue" trailing={`€${financial.pack_revenue_30d_eur.toFixed(2)}`} style={{ padding: "8px 0" }} />
+            <ListItem compact title="Credits Consumed" trailing={financial.credits_consumed_30d.toLocaleString()} style={{ padding: "8px 0" }} />
+            <ListItem compact title="Credits Purchased" trailing={financial.credits_purchased_30d.toLocaleString()} style={{ padding: "8px 0" }} />
+            <ListItem compact title="Churned Users" trailing={financial.churned_30d?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
+            <ListItem compact title="Churn Rate" trailing={`${financial.churn_rate_pct}%`} style={{ padding: "8px 0", borderBottom: "none" }} />
+          </List>
+        </Card>
 
-        <div className="bg-white border border-slate-200 p-5">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">System Health</h2>
-          <table className="w-full text-sm">
-            <tbody>
-              {systemChecks.map(({ label, ok }) => (
-                <tr key={label} className="border-b border-slate-100 last:border-0">
-                  <td className="py-2 text-slate-600">{label}</td>
-                  <td className="py-2 text-right">
-                    <StatusDot ok={ok} />
-                    <span className={ok ? "text-green-700" : "text-red-700"}>
-                      {ok ? "Configured" : "Not configured"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Card padding="lg">
+          <H2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">System Health</H2>
+          <DataTable columns={systemColumns} rows={systemChecks} />
+        </Card>
       </div>
     </AdministrationLayout>
   );

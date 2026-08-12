@@ -6,7 +6,7 @@ import {
   MessageSquare, UserCheck, Brain, Search, ArrowRight, TrendingUp,
 } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, WHITE, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Button, Input, StatCard, StatGrid } from "@/components/ds";
 
 const TILES = [
@@ -35,7 +35,7 @@ export default function DiscoveryHome() {
   };
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Academic Network"
       subtitle="Discover researchers, institutions, projects and opportunities. Quality and relevance over engagement."
     >
@@ -101,6 +101,6 @@ export default function DiscoveryHome() {
           View Recommendations <ArrowRight size={13} />
         </Button>
       </Card>
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

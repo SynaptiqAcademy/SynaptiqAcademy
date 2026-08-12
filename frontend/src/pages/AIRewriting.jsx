@@ -4,10 +4,9 @@ import { PenLine, Lock, RotateCcw, Clock, Copy, Check, ChevronDown, ChevronUp } 
 import api from "../lib/api";
 import { WARM } from "@/lib/tokens";
 import { ErrorState } from "@/components/ds/ErrorState";
-import { Button } from "@/components/ds";
-import { AIWorkspaceLayout } from "@/layouts";
-
-
+import { Button, Card, Input, Textarea, EmptyState } from "@/components/ds";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
 
 // ─────────────────────────── shared primitives ───────────────────────────────
 
@@ -18,11 +17,10 @@ function CopyButton({ text }) {
     catch {/* ignore */}
   };
   return (
-    <button onClick={copy}
-      className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 border border-slate-200 px-3 py-1.5 transition-colors">
+    <Button onClick={copy} variant="ghost" size="sm">
       {copied ? <Check size={12} strokeWidth={2} /> : <Copy size={12} strokeWidth={1.5} />}
       {copied ? "Copied" : "Copy text"}
-    </button>
+    </Button>
   );
 }
 
@@ -30,23 +28,18 @@ function CopyButton({ text }) {
 
 function GateView() {
   return (
-    <div className="space-y-6">
-      <div className="border border-slate-200 bg-white p-16 flex flex-col items-center text-center gap-5">
-        <Lock size={28} strokeWidth={1} className="text-slate-300" />
-        <div>
+    <EmptyState
+      icon={<Lock />}
+      title={
+        <>
           <div className="overline text-[#0F2847] mb-2">Researcher plan required</div>
-          <h2 className="font-serif text-2xl text-slate-900">AI Rewriting is a Researcher feature</h2>
-          <p className="text-slate-500 text-sm mt-3 max-w-sm mx-auto">
-            Upgrade to Researcher to rewrite and refine your academic writing — improve clarity,
-            tone, and style while preserving your original meaning.
-          </p>
-        </div>
-        <Link to="/pricing"
-          className="inline-block bg-[#0F2847] text-white text-sm px-6 py-2.5 hover:opacity-90 transition-opacity">
-          View Plans
-        </Link>
-      </div>
-    </div>
+          AI Rewriting is a Researcher feature
+        </>
+      }
+      description="Upgrade to Researcher to rewrite and refine your academic writing — improve clarity, tone, and style while preserving your original meaning."
+      action={<Button as={Link} to="/pricing">View Plans</Button>}
+      size="lg"
+    />
   );
 }
 
@@ -95,47 +88,46 @@ function InputView({ onResult, gated }) {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <form onSubmit={submit} className="lg:col-span-2 space-y-4">
-          <div className="border border-slate-200 bg-white p-5 space-y-4">
+          <Card padding="lg" className="space-y-4">
             <div className="overline text-[10px] text-slate-400 mb-1">Text to rewrite</div>
 
             <div>
-              <textarea value={form.text} onChange={set("text")} required rows={10}
+              <Textarea
+                value={form.text} onChange={set("text")} required rows={10}
                 placeholder="Paste the passage you want to rewrite — a paragraph, section, or full passage (up to 5,000 characters)."
-                className="w-full border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847] resize-y" />
+              />
               <div className="text-[10px] text-slate-400 mt-1 font-mono">
                 {form.text.length} / 5,000 characters
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="border border-slate-200 bg-white p-5 space-y-4">
+          <Card padding="lg" className="space-y-4">
             <div className="overline text-[10px] text-slate-400 mb-1">Options</div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Rewriting Style</label>
               <div className="grid grid-cols-2 gap-2">
                 {STYLES.map((s) => (
-                  <button key={s.value} type="button"
+                  <Card key={s.value}
+                    as="button"
+                    type="button"
                     onClick={() => setForm((f) => ({ ...f, style: s.value }))}
-                    className={`text-left border p-3 transition-colors ${
-                      form.style === s.value ? "border-[#0F2847] bg-[#0F2847]/5" : "border-slate-200 hover:border-slate-400"
-                    }`}>
+                    padding="sm"
+                    className={`text-left ${form.style === s.value ? "!border-[#0F2847] !bg-[#0F2847]/5" : ""}`}>
                     <div className="text-sm font-medium text-slate-900">{s.label}</div>
                     <div className="text-[10px] text-slate-500 mt-0.5">{s.desc}</div>
-                  </button>
+                  </Card>
                 ))}
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Custom instruction <span className="font-normal text-slate-500">(optional)</span>
-              </label>
-              <input value={form.instruction} onChange={set("instruction")}
-                placeholder='e.g. "Avoid passive voice" or "Use hedging language appropriate for a lit review"'
-                className="w-full border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847]" />
-            </div>
-          </div>
+            <Input
+              label={<>Custom instruction <span className="font-normal text-slate-500">(optional)</span></>}
+              value={form.instruction} onChange={set("instruction")}
+              placeholder='e.g. "Avoid passive voice" or "Use hedging language appropriate for a lit review"'
+            />
+          </Card>
 
           {error && (
             <ErrorState message={error} type="generic" />
@@ -153,7 +145,7 @@ function InputView({ onResult, gated }) {
 
         {/* Info panel */}
         <div className="space-y-4">
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline mb-3">Output includes</div>
             <ul className="space-y-2 text-sm text-slate-600">
               {["Rewritten passage", "Summary of changes made", "Before / after word count"].map((item) => (
@@ -163,19 +155,19 @@ function InputView({ onResult, gated }) {
                 </li>
               ))}
             </ul>
-          </div>
-          <div className="border border-slate-200 bg-white p-5">
+          </Card>
+          <Card padding="lg">
             <div className="overline mb-2">Credit cost</div>
             <div className="font-serif text-3xl text-slate-900">2</div>
             <div className="text-xs text-slate-500 mt-1">Research Credits per rewrite</div>
-          </div>
-          <div className="border border-amber-100 bg-amber-50 p-4">
+          </Card>
+          <Card padding="md" className="!border-amber-100 !bg-amber-50">
             <div className="overline text-[10px] text-amber-700 mb-1">Academic integrity</div>
             <p className="text-xs text-amber-800 leading-relaxed">
               This tool helps improve how ideas are expressed, not generate new content.
               Always disclose AI assistance according to your institution's policy.
             </p>
-          </div>
+          </Card>
         </div>
       </div>
     </div>
@@ -187,7 +179,7 @@ function InputView({ onResult, gated }) {
 function OriginalCollapsible({ text }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-slate-200 bg-white">
+    <Card padding="none">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-slate-50 transition-colors">
@@ -199,7 +191,7 @@ function OriginalCollapsible({ text }) {
           <p className="text-sm text-slate-500 leading-relaxed whitespace-pre-wrap mt-3">{text}</p>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -228,28 +220,27 @@ function ResultView({ result, onNew }) {
               )}
             </div>
           </div>
-          <button onClick={onNew}
-            className="shrink-0 flex items-center gap-2 border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+          <Button onClick={onNew} variant="ghost" className="shrink-0">
             <RotateCcw size={13} strokeWidth={1.5} /> New Rewrite
-          </button>
+          </Button>
         </div>
       </header>
 
       {/* Rewritten text */}
-      <div className="border border-[#0F2847] bg-white p-6">
+      <Card padding="lg" className="!border-[#0F2847]">
         <div className="flex items-center justify-between mb-4">
           <div className="overline text-[#0F2847]">Rewritten Version</div>
           <CopyButton text={r.rewritten_text || ""} />
         </div>
         <p className="text-slate-800 leading-[1.85] whitespace-pre-wrap">{r.rewritten_text}</p>
-      </div>
+      </Card>
 
       {/* Changes summary */}
       {r.changes_summary && (
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <div className="overline text-[10px] text-slate-400 mb-2">Changes Made</div>
           <p className="text-sm text-slate-700 leading-relaxed">{r.changes_summary}</p>
-        </div>
+        </Card>
       )}
 
       {/* Original (collapsible) */}
@@ -309,7 +300,8 @@ export default function AIRewriting() {
   };
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="AI Rewriting"
       subtitle="Paste a passage and Synaptiq AI rewrites it in your chosen academic style."
     >
@@ -323,14 +315,14 @@ export default function AIRewriting() {
         {history.length > 0 && !gated && (
           <section>
             <div className="overline mb-3">Rewriting History</div>
-            <div className="border border-slate-200 bg-white divide-y divide-slate-100">
+            <Card padding="none" className="divide-y divide-slate-100">
               {history.map((h) => (
                 <HistoryItem key={h.id} item={h} active={result?.id === h.id} onSelect={openHistoryItem} />
               ))}
-            </div>
+            </Card>
           </section>
         )}
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

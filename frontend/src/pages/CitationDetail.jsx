@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import {
   ArrowLeft, ExternalLink, BookOpen, TrendingUp, Bell, CheckCircle2,
-  AlertCircle, Zap, Award, RefreshCw, Info, GitBranch, Users,
+  AlertCircle, Zap, Award, RefreshCw, GitBranch, Users,
   ChevronRight,
 } from "lucide-react";
 import api from "../lib/api";
@@ -15,6 +15,13 @@ import { useCitationSync } from "../hooks/useCitations";
 import { TID } from "../lib/testIds";
 import { NAVY } from "@/lib/tokens";
 import { SkeletonCard } from "@/components/ds/LoadingState";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { DataTable } from "@/components/ds/DataTable";
+import { ErrorState } from "@/components/ds/ErrorState";
+import { Callout } from "@/components/ds/Alert";
+import { ResearchLayout } from "@/layouts";
 
 // ─────────────────────────── primitives ──────────────────────────────────────
 
@@ -29,15 +36,6 @@ function ChartTooltip({ active, payload, label }) {
           {p.name}: <span className="font-medium text-slate-800">{p.value}</span>
         </div>
       ))}
-    </div>
-  );
-}
-
-function DataNote({ children }) {
-  return (
-    <div className="flex items-start gap-2 border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800">
-      <Info size={12} className="shrink-0 mt-0.5 text-amber-600" />
-      <span>{children}</span>
     </div>
   );
 }
@@ -68,10 +66,9 @@ const ALERT_META = {
 function AlertBadge({ type }) {
   const meta = ALERT_META[type] || { label: type, color: "#64748b" };
   return (
-    <span className="text-xs border px-1.5 py-0.5 font-mono whitespace-nowrap"
-      style={{ borderColor: meta.color, color: meta.color }}>
+    <Badge color={meta.color} size="sm" className="font-mono whitespace-nowrap">
       {meta.label}
-    </span>
+    </Badge>
   );
 }
 
@@ -133,7 +130,7 @@ function VelocityGauge({ velocity, growthRate, recentDelta }) {
     velocity >= 0.5  ? { label: "Low Activity",     color: "#64748b", pct: 20 } :
                        { label: "No Recent Growth", color: "#cbd5e1", pct: 5  };
   return (
-    <div className="border border-slate-200 bg-white p-5">
+    <Card padding="lg">
       <div className="overline mb-3">Citation Velocity</div>
       <div className="flex items-end gap-3 mb-3">
         <div className="font-serif text-4xl text-slate-900">{velocity}</div>
@@ -154,7 +151,7 @@ function VelocityGauge({ velocity, growthRate, recentDelta }) {
           {growthRate > 0 ? "+" : ""}{growthRate}% growth rate since last snapshot
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -184,23 +181,21 @@ export default function CitationDetail() {
     } catch {}
   }, [refetch]);
 
-  if (loading) return <div className="p-6"><SkeletonCard rows={4} /></div>;
+  if (loading) return <ResearchLayout title="Publication"><SkeletonCard rows={4} /></ResearchLayout>;
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <Link to="/citations"
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#0F2847] transition-colors">
-          <ArrowLeft size={13} /> Back to Citation Tracker
-        </Link>
-        <div className="border border-slate-200 bg-white p-12 flex flex-col items-center text-center gap-4">
-          <AlertCircle size={28} strokeWidth={1} className="text-slate-300" />
-          <div>
-            <div className="font-serif text-xl text-slate-900">Publication not found</div>
-            <div className="text-sm text-slate-500 mt-2">{error}</div>
-          </div>
+      <ResearchLayout title="Publication not found">
+        <div className="space-y-6">
+          <Link to="/citations"
+            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#0F2847] transition-colors">
+            <ArrowLeft size={13} /> Back to Citation Tracker
+          </Link>
+          <Card padding="xl">
+            <ErrorState type="not_found" message="Publication not found" detail={error} />
+          </Card>
         </div>
-      </div>
+      </ResearchLayout>
     );
   }
 
@@ -227,6 +222,24 @@ export default function CitationDetail() {
   const yearlyData = (pub.counts_by_year || []).slice(-10);
 
   return (
+    <ResearchLayout
+      title={pub.title}
+      subtitle={pub.journal ? (pub.year ? `${pub.journal} · ${pub.year}` : pub.journal) : undefined}
+      actions={
+        <>
+          <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm">
+            <RefreshCw size={13} className={syncing ? "animate-spin" : ""} />
+            {syncing ? "Syncing…" : "Sync This Paper"}
+          </Button>
+          {syncMsg && (
+            <span className={`text-sm flex items-center gap-1 ${syncMsg.ok ? "text-green-700" : "text-red-600"}`}>
+              {syncMsg.ok ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
+              {syncMsg.text}
+            </span>
+          )}
+        </>
+      }
+    >
     <div data-testid={TID.citationDetailPage(id)} className="space-y-8">
       {/* ─── breadcrumb ──────────────────────────────────────────────────── */}
       <Link to="/citations"
@@ -234,13 +247,9 @@ export default function CitationDetail() {
         <ArrowLeft size={13} /> Back to Citation Tracker
       </Link>
 
-      {/* ─── publication header ───────────────────────────────────────────── */}
-      <header className="border-b border-slate-200 pb-6">
-        <div className="overline text-slate-400 mb-2">Publication</div>
-        <h1 className="font-serif text-3xl text-slate-900 leading-snug max-w-3xl">{pub.title}</h1>
-        <div className="mt-4 flex flex-wrap items-center gap-4">
-          {pub.journal && <span className="text-sm text-slate-600 italic">{pub.journal}</span>}
-          {pub.year    && <span className="font-mono text-sm text-slate-500">{pub.year}</span>}
+      {/* ─── publication meta ─────────────────────────────────────────────── */}
+      <div className="border-b border-slate-200 pb-6">
+        <div className="flex flex-wrap items-center gap-4">
           <span className="text-xs border border-slate-200 text-slate-500 px-1.5 py-0.5 font-mono">
             {(pub.type || "journal_article").replace(/_/g, " ")}
           </span>
@@ -273,31 +282,18 @@ export default function CitationDetail() {
             )}
           </div>
         )}
-        <div className="mt-4 flex items-center gap-2">
-          <button onClick={handleSync} disabled={syncing}
-            className="flex items-center gap-1.5 border border-slate-300 text-slate-600 text-sm px-3 py-1.5 hover:border-[#0F2847] hover:text-[#0F2847] disabled:opacity-50 transition-colors">
-            <RefreshCw size={13} className={syncing ? "animate-spin" : ""} />
-            {syncing ? "Syncing…" : "Sync This Paper"}
-          </button>
-          {syncMsg && (
-            <span className={`text-sm flex items-center gap-1 ${syncMsg.ok ? "text-green-700" : "text-red-600"}`}>
-              {syncMsg.ok ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
-              {syncMsg.text}
-            </span>
-          )}
-        </div>
-      </header>
+      </div>
 
       {/* ─── hero metrics ─────────────────────────────────────────────────── */}
       <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="border border-[#0F2847] bg-white p-6 text-center">
+        <Card padding="xl" style={{ borderColor: NAVY, textAlign: "center" }}>
           <div className="overline mb-2">Total Citations</div>
           <div className="font-serif text-6xl text-[#0F2847] tracking-tight">
             {citations.toLocaleString()}
           </div>
-        </div>
+        </Card>
         <VelocityGauge velocity={velocity} growthRate={growthRate} recentDelta={recentDelta} />
-        <div className="border border-slate-200 bg-white p-5 flex flex-col justify-between">
+        <Card padding="lg" className="flex flex-col justify-between">
           <div className="overline mb-2">Research Areas</div>
           <div className="space-y-1.5">
             {((pub.topics || []).concat(pub.concepts || [])).slice(0, 4).map((t) => (
@@ -310,8 +306,8 @@ export default function CitationDetail() {
               <div className="text-sm text-slate-400">No topics yet. Sync to populate.</div>
             )}
           </div>
-        </div>
-        <div className="border border-slate-200 bg-white p-5">
+        </Card>
+        <Card padding="lg">
           <div className="overline mb-2">Alert History</div>
           <div className="font-serif text-4xl text-slate-900 tracking-tight">{alerts.length}</div>
           <div className="text-xs text-slate-400 mt-1">
@@ -333,23 +329,23 @@ export default function CitationDetail() {
               );
             })}
           </div>
-        </div>
+        </Card>
       </section>
 
       {/* ─── Feature 8: publication impact breakdown ──────────────────────── */}
       <section>
         <SectionHeader label="Publication Impact Breakdown" icon={Award}
           action={<span className="text-xs text-slate-400 font-mono">40 / 25 / 20 / 15 formula</span>} />
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <ImpactBreakdown impact={impact} />
-        </div>
+        </Card>
       </section>
 
       {/* ─── citation growth chart ────────────────────────────────────────── */}
       {chartData.length > 1 && (
         <section>
           <SectionHeader label="Citation Growth" icon={TrendingUp} />
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="xl">
             <p className="text-xs text-slate-500 mb-4">
               Citation count across recorded snapshots (newest on the right).
             </p>
@@ -374,35 +370,26 @@ export default function CitationDetail() {
             </ResponsiveContainer>
 
             {/* snapshot table */}
-            <div className="mt-5 overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200">
-                    <th className="text-left py-2 overline font-normal text-slate-500">Date</th>
-                    <th className="text-right py-2 overline font-normal text-slate-500">Month</th>
-                    <th className="text-right py-2 overline font-normal text-slate-500">Citations</th>
-                    <th className="text-right py-2 overline font-normal text-slate-500">Change</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.slice(0, 20).map((h, i) => (
-                    <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="py-2.5 text-slate-600 text-xs">
-                        {new Date(h.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                      </td>
-                      <td className="py-2.5 text-right font-mono text-slate-500 text-xs">{h.month || "—"}</td>
-                      <td className="py-2.5 text-right font-medium text-slate-900">{h.count.toLocaleString()}</td>
-                      <td className="py-2.5 text-right">
-                        {h.delta > 0
-                          ? <span className="text-green-600 font-mono text-xs">+{h.delta}</span>
-                          : <span className="text-slate-300 font-mono text-xs">—</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="mt-5">
+              <DataTable
+                columns={[
+                  { key: "date",      label: "Date" },
+                  { key: "month",     label: "Month",     align: "right" },
+                  { key: "count",     label: "Citations", align: "right" },
+                  { key: "delta",     label: "Change",    align: "right" },
+                ]}
+                rows={history.slice(0, 20).map((h, i) => ({
+                  id: i,
+                  date: new Date(h.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+                  month: h.month || "—",
+                  count: h.count.toLocaleString(),
+                  delta: h.delta > 0
+                    ? <span className="text-green-600 font-mono text-xs">+{h.delta}</span>
+                    : <span className="text-slate-300 font-mono text-xs">—</span>,
+                }))}
+              />
             </div>
-          </div>
+          </Card>
         </section>
       )}
 
@@ -410,7 +397,7 @@ export default function CitationDetail() {
       {yearlyData.length > 1 && (
         <section>
           <SectionHeader label="Citation Rate by Year" icon={BarChart} />
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="xl">
             <p className="text-xs text-slate-500 mb-4">
               Citations received each year as reported by OpenAlex.
             </p>
@@ -426,7 +413,7 @@ export default function CitationDetail() {
                 <Bar dataKey="count" name="Citations" fill="#0F2847" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </Card>
         </section>
       )}
 
@@ -435,52 +422,38 @@ export default function CitationDetail() {
         <SectionHeader label="Citation Sources" icon={BookOpen}
           action={<span className="text-xs text-slate-400 font-mono">{sources.length} citing papers</span>} />
         {sources.length > 0 ? (
-          <div className="border border-slate-200 bg-white overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="text-left px-4 py-3 overline font-normal text-slate-500">Citing Paper</th>
-                  <th className="text-right px-4 py-3 overline font-normal text-slate-500 whitespace-nowrap">Year</th>
-                  <th className="px-4 py-3 overline font-normal text-slate-500 whitespace-nowrap">Journal</th>
-                  <th className="px-4 py-3 overline font-normal text-slate-500 whitespace-nowrap">DOI</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sources.map((s) => (
-                  <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="px-4 py-3 text-slate-800 max-w-xs">
-                      <div className="line-clamp-2">{s.title || "—"}</div>
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono text-slate-600">{s.year || "—"}</td>
-                    <td className="px-4 py-3 text-slate-500 text-xs max-w-xs">
-                      <div className="truncate">{s.journal || "—"}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      {s.doi ? (
-                        <a href={`https://doi.org/${s.doi}`} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-0.5 text-xs text-slate-500 hover:text-[#0F2847] transition-colors">
-                          {s.doi.substring(0, 18)}{s.doi.length > 18 ? "…" : ""}
-                          <ExternalLink size={10} />
-                        </a>
-                      ) : <span className="text-xs text-slate-300">—</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={[
+              { key: "title",   label: "Citing Paper" },
+              { key: "year",    label: "Year",    align: "right" },
+              { key: "journal", label: "Journal" },
+              { key: "doi",     label: "DOI" },
+            ]}
+            rows={sources.map((s) => ({
+              id: s.id,
+              title: <div className="line-clamp-2 max-w-xs">{s.title || "—"}</div>,
+              year: <span className="font-mono">{s.year || "—"}</span>,
+              journal: <div className="truncate max-w-xs text-xs">{s.journal || "—"}</div>,
+              doi: s.doi ? (
+                <a href={`https://doi.org/${s.doi}`} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-0.5 text-xs text-slate-500 hover:text-[#0F2847] transition-colors">
+                  {s.doi.substring(0, 18)}{s.doi.length > 18 ? "…" : ""}
+                  <ExternalLink size={10} />
+                </a>
+              ) : <span className="text-xs text-slate-300">—</span>,
+            }))}
+          />
         ) : (
-          <div className="border border-slate-200 bg-white p-8 text-center">
+          <Card padding="xl" className="text-center">
             <div className="text-slate-400 text-sm">No citation sources recorded yet.</div>
             <div className="text-xs text-slate-400 mt-1">
               Sources are populated from OpenAlex when you sync this paper.
             </div>
-            <button onClick={handleSync} disabled={syncing}
-              className="mt-3 flex items-center gap-1.5 mx-auto border border-slate-300 text-slate-600 text-sm px-4 py-2 hover:border-[#0F2847] hover:text-[#0F2847] disabled:opacity-50 transition-colors">
+            <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm" className="mt-3 mx-auto">
               <RefreshCw size={12} className={syncing ? "animate-spin" : ""} />
               {syncing ? "Syncing…" : "Sync This Paper"}
-            </button>
-          </div>
+            </Button>
+          </Card>
         )}
       </section>
 
@@ -491,8 +464,7 @@ export default function CitationDetail() {
             action={<span className="text-xs text-slate-400 font-mono">same research areas</span>} />
           <div className="grid sm:grid-cols-2 gap-4">
             {related.map((r) => (
-              <Link key={r.id} to={`/citations/${r.id}`}
-                className="border border-slate-200 bg-white p-4 hover:border-[#0F2847] transition-colors group">
+              <Card key={r.id} to={`/citations/${r.id}`} padding="md" className="group">
                 <div className="font-medium text-slate-900 text-sm line-clamp-2 group-hover:text-[#0F2847] transition-colors">
                   {r.title}
                 </div>
@@ -510,7 +482,7 @@ export default function CitationDetail() {
                 <div className="flex items-center gap-0.5 text-xs text-slate-300 group-hover:text-[#0F2847] mt-2 transition-colors">
                   View detail <ChevronRight size={10} />
                 </div>
-              </Link>
+              </Card>
             ))}
           </div>
         </section>
@@ -521,7 +493,7 @@ export default function CitationDetail() {
         <SectionHeader label="Alert History" icon={Bell}
           action={<span className="text-xs text-slate-400 font-mono">{alerts.filter((a) => !a.read).length} unread</span>} />
         {alerts.length > 0 ? (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             {alerts.map((a) => (
               <div key={a.id}
                 className={`flex items-start gap-3 py-3 border-b border-slate-100 last:border-0 ${a.read ? "opacity-55" : ""}`}>
@@ -537,26 +509,27 @@ export default function CitationDetail() {
                   </div>
                 </div>
                 {!a.read && (
-                  <button onClick={() => handleMarkRead(a.id)}
-                    className="shrink-0 text-slate-300 hover:text-slate-600 transition-colors" title="Mark as read">
+                  <Button onClick={() => handleMarkRead(a.id)} variant="ghost" size="icon" title="Mark as read"
+                    className="shrink-0 text-slate-300 hover:text-slate-600">
                     <CheckCircle2 size={14} />
-                  </button>
+                  </Button>
                 )}
               </div>
             ))}
-          </div>
+          </Card>
         ) : (
-          <div className="border border-slate-200 bg-white p-8 text-center text-sm text-slate-400">
+          <Card padding="xl" className="text-center text-sm text-slate-400">
             No alerts for this publication yet.
-          </div>
+          </Card>
         )}
       </section>
 
-      <DataNote>
+      <Callout variant="warning">
         Citation history is built from point-in-time snapshots. Use "Sync This Paper" to update
         via OpenAlex. Sources are populated from citing-works API calls on each sync.{" "}
         <Link to="/citations" className="underline hover:text-amber-900">Citation Tracker</Link>
-      </DataNote>
+      </Callout>
     </div>
+    </ResearchLayout>
   );
 }

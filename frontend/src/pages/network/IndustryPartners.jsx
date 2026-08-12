@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { Search, ArrowRight } from "lucide-react";
 import { NAVY, WARM, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Button, Input, EmptyState, LoadingOverlay } from "@/components/ds";
 
 const TIPS = [
@@ -38,7 +38,7 @@ export default function IndustryPartners() {
   const handleSearch = e => { e.preventDefault(); setPage(1); search(1); };
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Industry Partners"
       subtitle="Discover industry organisations for applied research, technology transfer, and co-funded projects."
     >
@@ -88,6 +88,6 @@ export default function IndustryPartners() {
           Post Collaboration Opportunity <ArrowRight size={13} />
         </Button>
       </Card>
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

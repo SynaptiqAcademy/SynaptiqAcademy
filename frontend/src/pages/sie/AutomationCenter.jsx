@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Zap, Play, Trash2 } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Tag, Button, Modal, Input, FormSelect, Alert, Spinner } from "@/components/ds";
 
@@ -42,7 +42,7 @@ function AutomationCard({ auto, onToggle, onRun, onDelete }) {
         <Tag onClick={() => onToggle(auto.id, !auto.enabled)} color={auto.enabled ? EMERALD : ACCENT}>
           {auto.enabled ? "Enabled" : "Disabled"}
         </Tag>
-        <Button onClick={run} loading={running} disabled={running || !auto.enabled} variant="primary" size="sm">
+        <Button onClick={run} loading={running} disabled={running || !auto.enabled} variant="primary" size="sm" aria-label={`Run ${auto.name}`}>
           {!running && <Play size={12} />}
         </Button>
         {/* Delete control: bare 14px icon-only button — Button's smallest
@@ -52,6 +52,7 @@ function AutomationCard({ auto, onToggle, onRun, onDelete }) {
           size="icon"
           variant="ghost"
           onClick={() => onDelete(auto.id)}
+          aria-label={`Delete ${auto.name}`}
           style={{
             padding: 4,
             color: "#dc2626"
@@ -161,7 +162,7 @@ export default function AutomationCenter() {
   const enabled = automations.filter(a => a.enabled).length;
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
       title="Automation Center"
       subtitle="Automate repetitive research tasks with AI workflows."
       navItems={SIE_NAV_ITEMS}
@@ -184,6 +185,6 @@ export default function AutomationCenter() {
       )}
 
       {showNew && <NewAutoModal onClose={() => setShowNew(false)} onCreate={a => { setAutomations(as => [a, ...as]); }} />}
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

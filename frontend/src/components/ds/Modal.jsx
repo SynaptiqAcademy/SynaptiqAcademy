@@ -128,7 +128,7 @@ export function Modal({
               width: 32, height: 32, borderRadius: RADIUS_MD, border: `1px solid ${BRD}`,
               background: "transparent", cursor: "pointer", color: TEXT_TERTIARY,
               flexShrink: 0, marginLeft: 16,
-              transition: "background 100ms",
+              transition: "background 120ms",
             }}
             onMouseEnter={e => (e.currentTarget.style.background = SURF2)}
             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}

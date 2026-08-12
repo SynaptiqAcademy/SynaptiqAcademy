@@ -66,7 +66,7 @@ export default function InsightsPanel() {
           <Brain size={14} className="text-blue-600" />
           <span className="text-[12px] font-bold text-slate-700 uppercase tracking-widest">Graph Insights</span>
         </div>
-        <button onClick={load} disabled={loading}
+        <button onClick={load} disabled={loading} aria-label="Refresh insights"
           className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
           <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
         </button>

@@ -23,7 +23,7 @@ import { Badge } from "@/components/ds/Badge";
 import { NavTabs } from "@/components/ds/NavTabs";
 import { List, ListItem } from "@/components/ds/List";
 import { Alert, Callout } from "@/components/ds/Alert";
-import { AnalyticsLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 
 // ── Period picker ──────────────────────────────────────────────────────────────
 const PERIODS = [
@@ -49,7 +49,7 @@ const TABS = [
 ];
 
 // ── Chart colours ──────────────────────────────────────────────────────────────
-const PRIMARY   = "#0F2847";
+const PRIMARY   = NAVY;
 const SECONDARY = "#94a3b8";
 const ACCENT    = "#10b981";
 
@@ -200,7 +200,7 @@ export default function TeachingAnalytics() {
   };
 
   return (
-    <AnalyticsLayout
+    <ResearchLayout
       title="Teaching Analytics"
       subtitle="Intelligence derived from your real platform activity"
       icon={BarChart2}
@@ -700,6 +700,6 @@ export default function TeachingAnalytics() {
           </>
         )}
       </div>
-    </AnalyticsLayout>
+    </ResearchLayout>
   );
 }

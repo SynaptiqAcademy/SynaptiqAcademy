@@ -6,7 +6,7 @@ import {
   BookMarked, GraduationCap, Calendar,
 } from "lucide-react";
 import { NAVY, WARM, BRD, ACCENT, EMERALD, WHITE, TEXT_SECONDARY } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Badge, Tag, Button, Input, Callout, StatCard, StatGrid, Spinner, H4 } from "@/components/ds";
 
@@ -84,7 +84,7 @@ export default function ResearchCommandCenter() {
   const insights = overview?.insights || [];
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
       title="Synaptiq Intelligence Engine"
       subtitle={ctx ? `Welcome, ${ctx.user?.name || "Researcher"}. Your AI research partner is active.` : "Your AI academic operating system."}
       navItems={SIE_NAV_ITEMS}
@@ -248,6 +248,6 @@ export default function ResearchCommandCenter() {
           )}
         </div>
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

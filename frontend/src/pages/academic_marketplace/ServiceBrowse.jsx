@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Star, Package, Tag as TagIcon } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Grid, SearchBar, FormSelect, Button, EmptyState, LoadingOverlay, Caption } from "@/components/ds";
 
 const API = "/api/acad-market";
@@ -43,7 +43,7 @@ export default function ServiceBrowse() {
   useEffect(() => { fetchServices(); }, [fetchServices]);
 
   return (
-    <DiscoveryLayout title="Browse Services" subtitle={`${total} services available`}>
+    <ResearchLayout title="Browse Services" subtitle={`${total} services available`}>
 
         {/* Filters */}
         <div className="flex gap-3 mb-6 flex-wrap items-center">
@@ -119,6 +119,6 @@ export default function ServiceBrowse() {
             </Button>
           </div>
         )}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

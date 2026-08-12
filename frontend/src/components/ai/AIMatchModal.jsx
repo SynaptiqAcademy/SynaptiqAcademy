@@ -214,7 +214,7 @@ export default function AIMatchModal({ open, onClose, kind, manuscriptId, projec
               <h3 className="font-serif text-xl text-slate-900">{meta.label}</h3>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900"><X size={18} strokeWidth={1.5}/></button>
+          <button onClick={onClose} aria-label="Close" className="text-slate-400 hover:text-slate-900"><X size={18} strokeWidth={1.5}/></button>
         </div>
         <div className="p-5 space-y-3">
           {loading && (

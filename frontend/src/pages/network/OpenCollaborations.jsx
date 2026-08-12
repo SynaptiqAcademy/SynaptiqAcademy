@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { Plus, Search, Clock } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import {
   Card, Badge, Tag, Button, Input, Textarea, FormSelect, FormRow, Checkbox, Modal,
   NavTabs, EmptyState, LoadingOverlay, InlineError,
@@ -232,12 +232,10 @@ export default function OpenCollaborations() {
   useEffect(() => { fetchCollabsRef.current(); fetchMine(); }, [fetchMine]);
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Open Collaborations"
       actions={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={15} />Post</Button>}
-    >
-
-      <div style={{ marginBottom: 16 }}>
+      nav={
         <NavTabs
           variant="pill"
           tabs={[
@@ -247,7 +245,8 @@ export default function OpenCollaborations() {
           active={tab}
           onChange={setTab}
         />
-      </div>
+      }
+    >
 
       {tab === "discover" && (
         <>
@@ -298,6 +297,6 @@ export default function OpenCollaborations() {
 
       {applyCollab && <ApplyModal collab={applyCollab} onClose={() => setApplyCollab(null)} onSuccess={() => { fetchCollabs(); fetchMine(); }} />}
       {showCreate && <CreateCollabModal onClose={() => setShowCreate(false)} onCreate={() => { fetchCollabs(); fetchMine(); }} />}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

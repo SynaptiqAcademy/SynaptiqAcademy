@@ -11,6 +11,10 @@ import {
   CheckCircle2, ChevronDown, ChevronUp, Search, Calendar, Award,
   Lock,
 } from "lucide-react";
+import {
+  Card, NavTabs, StatCard, StatGrid, Badge, ErrorState, EmptyState,
+  DataTable, Input, Button,
+} from "@/components/ds";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -62,43 +66,6 @@ function iisLabel(score) {
   if (score >= 5000) return "Premier";
   if (score >= 2500) return "Established";
   return "Emerging";
-}
-
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-
-function Skeleton({ h = "h-4", w = "w-full", className = "" }) {
-  return <div className={`${h} ${w} bg-slate-200 animate-pulse ${className}`} />;
-}
-
-// ── Error card ────────────────────────────────────────────────────────────────
-
-function ErrorCard({ message, onRetry }) {
-  return (
-    <div className="border border-red-200 bg-red-50 p-6 text-center">
-      <AlertCircle size={20} strokeWidth={1.5} className="text-red-400 mx-auto mb-2" />
-      <p className="text-red-700 text-sm mb-3">{message || "Failed to load data."}</p>
-      {onRetry && (
-        <button
-          onClick={onRetry}
-          className="text-xs border border-red-300 text-red-700 px-3 py-1.5 hover:bg-red-100 transition-colors"
-        >
-          Retry
-        </button>
-      )}
-    </div>
-  );
-}
-
-// ── Empty state ───────────────────────────────────────────────────────────────
-
-function EmptyState({ icon: Icon = AlertCircle, message, sub }) {
-  return (
-    <div className="border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
-      <Icon size={28} strokeWidth={1.5} className="text-slate-300 mx-auto mb-3" />
-      <p className="text-slate-600 text-sm font-medium">{message}</p>
-      {sub && <p className="text-slate-400 text-xs mt-1 max-w-sm mx-auto">{sub}</p>}
-    </div>
-  );
 }
 
 // ── IIS Ring (SVG) ────────────────────────────────────────────────────────────
@@ -153,35 +120,24 @@ function ProgressBar({ label, value = 0, max = 1000, color = "#0F2847" }) {
 
 // ── Type badge ────────────────────────────────────────────────────────────────
 
+const TYPE_COLOR = {
+  university: "#1D4ED8",
+  research_center: "#7C3AED",
+  laboratory: "#047857",
+  hospital: "#BE123C",
+};
+
 function TypeBadge({ type }) {
-  const map = {
-    university: "bg-blue-50 text-blue-700 border-blue-200",
-    research_center: "bg-purple-50 text-purple-700 border-purple-200",
-    laboratory: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    hospital: "bg-rose-50 text-rose-700 border-rose-200",
-  };
-  const cls = map[type] || "bg-slate-100 text-slate-600 border-slate-200";
   const label = type ? type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "Unknown";
-  return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 text-xs border ${cls}`}>{label}</span>
-  );
+  return <Badge size="sm" variant="neutral" color={TYPE_COLOR[type]}>{label}</Badge>;
 }
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 
+const STATUS_VARIANT = { green: "success", blue: "info", amber: "warning", red: "danger", slate: "neutral" };
+
 function StatusBadge({ label, color = "slate" }) {
-  const palette = {
-    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    blue: "bg-blue-50 text-blue-700 border-blue-200",
-    amber: "bg-amber-50 text-amber-700 border-amber-200",
-    red: "bg-red-50 text-red-700 border-red-200",
-    slate: "bg-slate-100 text-slate-600 border-slate-200",
-  };
-  return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 text-xs border ${palette[color] || palette.slate}`}>
-      {label}
-    </span>
-  );
+  return <Badge size="sm" variant={STATUS_VARIANT[color] || "neutral"}>{label}</Badge>;
 }
 
 // ── Grant status color ────────────────────────────────────────────────────────
@@ -394,7 +350,7 @@ export default function InstitutionProfile() {
   if (profileError) {
     return (
       <div className="max-w-5xl mx-auto px-6 py-10">
-        <ErrorCard message={profileError} onRetry={() => window.location.reload()} />
+        <ErrorState message={profileError} onRetry={() => window.location.reload()} />
       </div>
     );
   }
@@ -420,26 +376,20 @@ export default function InstitutionProfile() {
     return (
       <div className="space-y-6">
         {/* Key stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <StatGrid cols={4}>
           {[
             { label: "Members", value: fmtNum(profile.member_count), icon: Users },
             { label: "Publications", value: fmtNum(profile.total_publications || impactData.total_publications), icon: BookOpen },
             { label: "Citations", value: fmtNum(profile.total_citations || impactData.total_citations), icon: TrendingUp },
             { label: "Grants", value: fmtNum(profile.total_grants || impactData.total_grants), icon: DollarSign },
           ].map(({ label, value, icon: Icon }) => (
-            <div key={label} className="border border-slate-200 bg-white p-4">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Icon size={12} strokeWidth={1.5} className="text-slate-400" />
-                <span className="text-xs text-slate-500">{label}</span>
-              </div>
-              <div className="font-serif text-2xl text-slate-900">{value}</div>
-            </div>
+            <StatCard key={label} label={label} value={value} icon={<Icon />} />
           ))}
-        </div>
+        </StatGrid>
 
         {/* IIS components */}
         {componentKeys.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">IIS Score Breakdown</h3>
             <div className="space-y-4">
               {componentKeys.map((key, idx) => {
@@ -457,12 +407,12 @@ export default function InstitutionProfile() {
                 );
               })}
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Top researchers */}
         {topResearchers.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">Top Researchers</h3>
             <div className="space-y-3">
               {topResearchers.slice(0, 5).map((r, idx) => (
@@ -479,7 +429,7 @@ export default function InstitutionProfile() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
       </div>
     );
@@ -499,77 +449,54 @@ export default function InstitutionProfile() {
         )
       : pubs;
 
+    const columns = [
+      { key: "title", label: "Title", maxWidth: 280, render: (v) => <span title={v}>{fmt(v)}</span> },
+      { key: "year", label: "Year", render: (v) => fmt(v) },
+      { key: "journal", label: "Journal", render: (_, row) => fmt(row.journal || row.venue) },
+      { key: "citations", label: "Citations", render: (v) => fmtNum(v) },
+      { key: "researcher", label: "Researcher", render: (_, row) => fmt(row.researcher_name || row.author) },
+    ];
+
     return (
       <div className="space-y-5">
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: "Total Publications", value: fmtNum(stats.total_publications || pubs.length) },
             { label: "Total Citations", value: fmtNum(stats.total_citations) },
             { label: "Avg Citations", value: fmt(stats.avg_citations != null ? stats.avg_citations.toFixed(1) : null) },
           ].map(({ label, value }) => (
-            <div key={label} className="border border-slate-200 bg-white p-4">
-              <div className="text-xs text-slate-500 mb-1">{label}</div>
-              <div className="font-serif text-2xl text-slate-900">{value}</div>
-            </div>
+            <StatCard key={label} label={label} value={value} />
           ))}
         </div>
 
         {/* Citation trend chart */}
         {trends.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">Citation Trends</h3>
             <VBarChart items={trends} valueKey="count" labelKey="year" color="#0891B2" height={100} />
-          </div>
+          </Card>
         )}
 
         {/* Search + table */}
-        <div className="border border-slate-200 bg-white">
+        <Card padding="none">
           <div className="p-4 border-b border-slate-100">
-            <div className="relative">
-              <Search size={13} strokeWidth={1.5} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search publications..."
-                value={pubSearch}
-                onChange={(e) => setPubSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 border border-slate-200 text-sm focus:outline-none focus:border-[#0F2847]"
-              />
-            </div>
+            <Input
+              type="text"
+              placeholder="Search publications..."
+              value={pubSearch}
+              onChange={(e) => setPubSearch(e.target.value)}
+              prefix={<Search size={13} strokeWidth={1.5} />}
+            />
           </div>
           {filtered.length === 0 ? (
             <div className="p-8">
-              <EmptyState icon={BookOpen} message="No publications found." />
+              <EmptyState icon={<BookOpen />} title="No publications found." />
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50">
-                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Title</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Year</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Journal</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Citations</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Researcher</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((pub, idx) => (
-                    <tr key={pub._id || idx} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="px-4 py-2.5 max-w-xs">
-                        <div className="text-sm text-slate-900 truncate" title={pub.title}>{fmt(pub.title)}</div>
-                      </td>
-                      <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">{fmt(pub.year)}</td>
-                      <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">{fmt(pub.journal || pub.venue)}</td>
-                      <td className="px-4 py-2.5 text-xs font-mono text-slate-700">{fmtNum(pub.citations)}</td>
-                      <td className="px-4 py-2.5 text-xs text-slate-500">{fmt(pub.researcher_name || pub.author)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable columns={columns} rows={filtered.map((p, i) => ({ ...p, id: p._id || i }))} />
           )}
-        </div>
+        </Card>
       </div>
     );
   }
@@ -586,76 +513,47 @@ export default function InstitutionProfile() {
         ? grants
         : grants.filter((g) => g.status === grantStatusFilter);
 
+    const columns = [
+      { key: "title", label: "Grant Title", maxWidth: 280, render: (v) => <span title={v}>{fmt(v)}</span> },
+      { key: "applicant", label: "Applicant", render: (_, row) => fmt(row.applicant_name || row.applicant) },
+      { key: "status", label: "Status", render: (v) => <StatusBadge label={v || "unknown"} color={grantStatusColor(v)} /> },
+      { key: "amount", label: "Amount", render: (v) => (v != null ? `$${fmtNum(v)}` : "—") },
+      { key: "submitted", label: "Submitted", render: (_, row) => formatDate(row.submitted_at || row.created_at) },
+    ];
+
     return (
       <div className="space-y-5">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: "Total Applications", value: fmtNum(stats.total_applications || grants.length) },
             { label: "Success Rate", value: stats.success_rate != null ? `${stats.success_rate.toFixed(1)}%` : "—" },
             { label: "Total Awarded", value: stats.total_awarded != null ? `$${fmtNum(stats.total_awarded)}` : "—" },
           ].map(({ label, value }) => (
-            <div key={label} className="border border-slate-200 bg-white p-4">
-              <div className="text-xs text-slate-500 mb-1">{label}</div>
-              <div className="font-serif text-2xl text-slate-900">{value}</div>
-            </div>
+            <StatCard key={label} label={label} value={value} />
           ))}
         </div>
 
-        <div className="border border-slate-200 bg-white">
+        <Card padding="none">
           <div className="p-4 border-b border-slate-100 flex gap-2 flex-wrap">
             {["all", "pending", "approved", "rejected"].map((s) => (
-              <button
+              <Button
                 key={s}
+                size="sm"
+                variant={grantStatusFilter === s ? "primary" : "ghost"}
                 onClick={() => setGrantStatusFilter(s)}
-                className={`px-3 py-1 text-xs font-medium transition-colors ${
-                  grantStatusFilter === s
-                    ? "bg-[#0F2847] text-white"
-                    : "border border-slate-200 text-slate-600 hover:bg-slate-50"
-                }`}
               >
                 {s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
+              </Button>
             ))}
           </div>
           {filtered.length === 0 ? (
             <div className="p-8">
-              <EmptyState icon={DollarSign} message="No grants found." />
+              <EmptyState icon={<DollarSign />} title="No grants found." />
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50">
-                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Grant Title</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Applicant</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Status</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Amount</th>
-                    <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Submitted</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((g, idx) => (
-                    <tr key={g._id || idx} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="px-4 py-2.5 max-w-xs">
-                        <div className="text-sm text-slate-900 truncate" title={g.title}>{fmt(g.title)}</div>
-                      </td>
-                      <td className="px-4 py-2.5 text-xs text-slate-500">{fmt(g.applicant_name || g.applicant)}</td>
-                      <td className="px-4 py-2.5">
-                        <StatusBadge label={g.status || "unknown"} color={grantStatusColor(g.status)} />
-                      </td>
-                      <td className="px-4 py-2.5 text-xs font-mono text-slate-700">
-                        {g.amount != null ? `$${fmtNum(g.amount)}` : "—"}
-                      </td>
-                      <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">
-                        {formatDate(g.submitted_at || g.created_at)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable columns={columns} rows={filtered.map((g, i) => ({ ...g, id: g._id || i }))} />
           )}
-        </div>
+        </Card>
       </div>
     );
   }
@@ -671,7 +569,7 @@ export default function InstitutionProfile() {
     return (
       <div className="space-y-5">
         {top.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">Top Researchers by SIS Score</h3>
             <div className="space-y-4">
               {top.map((r, idx) => {
@@ -695,11 +593,11 @@ export default function InstitutionProfile() {
                 );
               })}
             </div>
-          </div>
+          </Card>
         )}
 
         {members.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">All Members</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {members.map((m, idx) => (
@@ -714,11 +612,11 @@ export default function InstitutionProfile() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
         {top.length === 0 && members.length === 0 && (
-          <EmptyState icon={Users} message="No researchers listed." />
+          <EmptyState icon={<Users />} title="No researchers listed." />
         )}
       </div>
     );
@@ -734,7 +632,7 @@ export default function InstitutionProfile() {
 
     return (
       <div className="space-y-5">
-        <div className="border border-slate-200 bg-white p-5">
+        <Card padding="lg">
           <div className="flex items-center gap-4 mb-6">
             <IisRing score={data.iis_score || iisScore} size={100} stroke={8} />
             <div>
@@ -780,7 +678,7 @@ export default function InstitutionProfile() {
               })}
             </div>
           )}
-        </div>
+        </Card>
       </div>
     );
   }
@@ -792,32 +690,20 @@ export default function InstitutionProfile() {
     const units = data.units || data.rankings || data.data || [];
 
     if (units.length === 0) {
-      return <EmptyState icon={Building2} message="No units listed." sub="Units will appear here once added by the institution admin." />;
+      return <EmptyState icon={<Building2 />} title="No units listed." description="Units will appear here once added by the institution admin." />;
     }
 
+    const columns = [
+      { key: "rank", label: "Rank", render: (_, row, i) => <span className="font-mono text-xs text-slate-400">{units.indexOf(row) + 1}</span> },
+      { key: "name", label: "Unit Name", render: (v) => <span className="text-sm font-medium text-slate-900">{fmt(v)}</span> },
+      { key: "members", label: "Members", render: (_, row) => fmtNum(row.member_count || row.members) },
+      { key: "publications", label: "Publications", render: (_, row) => fmtNum(row.publication_count || row.publications) },
+    ];
+
     return (
-      <div className="border border-slate-200 bg-white overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50">
-              <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Rank</th>
-              <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Unit Name</th>
-              <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Members</th>
-              <th className="text-left px-4 py-2.5 text-xs font-semibold text-slate-600">Publications</th>
-            </tr>
-          </thead>
-          <tbody>
-            {units.map((u, idx) => (
-              <tr key={u._id || idx} className="border-b border-slate-100 hover:bg-slate-50">
-                <td className="px-4 py-2.5 font-mono text-xs text-slate-400">{idx + 1}</td>
-                <td className="px-4 py-2.5 text-sm font-medium text-slate-900">{fmt(u.name)}</td>
-                <td className="px-4 py-2.5 text-xs text-slate-600">{fmtNum(u.member_count || u.members)}</td>
-                <td className="px-4 py-2.5 text-xs text-slate-600">{fmtNum(u.publication_count || u.publications)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Card padding="none">
+        <DataTable columns={columns} rows={units.map((u, i) => ({ ...u, id: u._id || i }))} />
+      </Card>
     );
   }
 
@@ -829,15 +715,15 @@ export default function InstitutionProfile() {
     const sorted = [...events].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     if (sorted.length === 0) {
-      return <EmptyState icon={Clock} message="No timeline events yet." />;
+      return <EmptyState icon={<Clock />} title="No timeline events yet." />;
     }
 
     return (
-      <div className="border border-slate-200 bg-white p-5">
+      <Card padding="lg">
         {sorted.map((ev, idx) => (
           <TimelineEvent key={ev._id || idx} event={ev} />
         ))}
-      </div>
+      </Card>
     );
   }
 
@@ -848,19 +734,13 @@ export default function InstitutionProfile() {
 
     if (data.auth_required) {
       return (
-        <div className="border border-slate-200 bg-white p-10 text-center">
-          <Lock size={28} strokeWidth={1.5} className="text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-600 text-sm font-medium">Sign in to view recommendations</p>
-          <p className="text-slate-400 text-xs mt-1">
-            Log in to see personalized collaboration and funding recommendations.
-          </p>
-          <Link
-            to="/login"
-            className="inline-block mt-4 px-4 py-2 bg-[#0F2847] text-white text-sm font-medium hover:bg-[#0a1f38] transition-colors"
-          >
-            Sign In
-          </Link>
-        </div>
+        <EmptyState
+          icon={<Lock />}
+          size="lg"
+          title="Sign in to view recommendations"
+          description="Log in to see personalized collaboration and funding recommendations."
+          action={<Button as={Link} to="/login">Sign In</Button>}
+        />
       );
     }
 
@@ -869,13 +749,13 @@ export default function InstitutionProfile() {
     const recruit = data.researchers_to_recruit || [];
 
     if (collab.length === 0 && funding.length === 0 && recruit.length === 0) {
-      return <EmptyState message="No recommendations available at this time." />;
+      return <EmptyState title="No recommendations available at this time." />;
     }
 
     return (
       <div className="space-y-6">
         {collab.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">Collaborating Institutions</h3>
             <div className="space-y-3">
               {collab.map((inst, idx) => (
@@ -890,11 +770,11 @@ export default function InstitutionProfile() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
         {funding.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">Funding Opportunities</h3>
             <div className="space-y-3">
               {funding.map((f, idx) => (
@@ -905,11 +785,11 @@ export default function InstitutionProfile() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
         {recruit.length > 0 && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">Researchers to Recruit</h3>
             <div className="space-y-3">
               {recruit.map((r, idx) => (
@@ -924,7 +804,7 @@ export default function InstitutionProfile() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         )}
       </div>
     );
@@ -943,7 +823,7 @@ export default function InstitutionProfile() {
       );
     }
     if (te) {
-      return <ErrorCard message={te} />;
+      return <ErrorState message={te} />;
     }
 
     switch (activeTab) {
@@ -965,22 +845,13 @@ export default function InstitutionProfile() {
       subtitle={profile.country ? `${profile.country}${profile.member_count != null ? ` · ${fmtNum(profile.member_count)} members` : ""}` : undefined}
     >
       {/* Tab bar */}
-      <div className="border-b border-slate-200 bg-white sticky top-0 z-10 overflow-x-auto">
-          <nav className="flex gap-0 min-w-max">
-            {TABS.map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => handleTabChange(key)}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === key
-                    ? "border-[#0F2847] text-[#0F2847]"
-                    : "border-transparent text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </nav>
+      <div className="bg-white sticky top-0 z-10 mb-6 overflow-x-auto">
+        <NavTabs
+          variant="underline"
+          active={activeTab}
+          onChange={handleTabChange}
+          tabs={TABS.map((t) => ({ id: t.key, label: t.label }))}
+        />
       </div>
 
         <TabContent />

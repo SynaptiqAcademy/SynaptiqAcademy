@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ResearchLayout } from "@/layouts";
+import { Button, Card } from "@/components/ds";
 import { NAVY, WARM, ACCENT } from "@/lib/tokens";
 import {
   Search, BookOpen, Target, Lightbulb, Database, BarChart2, FileText,
@@ -135,27 +136,12 @@ function Inner({ mw = 960, children }) {
 
 function HeroSection() {
   return (
-    <Sec py={80} px={48} bg="#fff">
+    <Sec py={48} px={48} bg="#fff">
       <Inner mw={680}>
         <div style={{ textAlign: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 22 }}>
-            <FlaskConical size={13} style={{ color: FAINT }} />
-            <span style={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: FAINT }}>Research Workspace</span>
-          </div>
-          <h1 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(2.4rem, 5vw, 3.6rem)", fontWeight: 700, color: NAVY, lineHeight: 1.1, letterSpacing: "-0.035em", margin: "0 0 20px" }}>
-            Research without<br />fragmentation.
-          </h1>
-          <p style={{ fontSize: "1.1rem", color: MID, lineHeight: 1.8, margin: "0 auto 36px", maxWidth: 480 }}>
-            One workspace for every stage of your research.
+          <p style={{ fontSize: "1rem", color: MID, lineHeight: 1.8, margin: "0 auto 28px", maxWidth: 480 }}>
+            One workspace for every stage of your research — research without fragmentation.
           </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link to="/projects" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "13px 26px", background: NAVY, color: "#fff", borderRadius: 10, fontSize: "0.88rem", fontWeight: 700, textDecoration: "none", letterSpacing: "-0.01em" }}>
-              Open Research Hub <ArrowRight size={13} />
-            </Link>
-            <Link to="/workspaces" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "13px 22px", background: "#fff", color: NAVY, border: `1px solid ${BORDER}`, borderRadius: 10, fontSize: "0.88rem", fontWeight: 500, textDecoration: "none" }}>
-              Create Workspace
-            </Link>
-          </div>
         </div>
       </Inner>
     </Sec>
@@ -178,20 +164,24 @@ function LifecycleSection() {
             const Icon = stage.icon;
             const on = active === stage.n;
             return (
-              <Link key={stage.n} to={stage.href} style={{ textDecoration: "none" }}
+              <Card
+                key={stage.n}
+                to={stage.href}
+                variant="interactive"
+                padding="none"
                 onMouseEnter={function(){ setActive(stage.n); }}
-                onMouseLeave={function(){ setActive(null); }}>
-                <div style={{ background: on ? NAVY : "#fff", border: `1px solid ${on ? NAVY : BORDER}`, borderRadius: 12, padding: "18px 16px 16px", transition: "all 160ms", cursor: "pointer", minHeight: 130, display: "flex", flexDirection: "column" }}>
-                  <div style={{ fontSize: "0.6rem", fontWeight: 800, letterSpacing: "0.06em", color: on ? "rgba(255,255,255,0.35)" : FAINT, marginBottom: 10 }}>
-                    {String(stage.n).padStart(2, "0")}
-                  </div>
-                  <Icon size={17} strokeWidth={1.5} style={{ color: on ? "#fff" : NAVY, marginBottom: 10, flexShrink: 0 }} />
-                  <div style={{ fontSize: "0.8rem", fontWeight: 700, color: on ? "#fff" : "#0f172a", lineHeight: 1.3, marginBottom: on ? 8 : 0 }}>{stage.label}</div>
-                  {on && (
-                    <div style={{ fontSize: "0.71rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.55, marginTop: "auto" }}>{stage.desc}</div>
-                  )}
+                onMouseLeave={function(){ setActive(null); }}
+                style={{ background: on ? NAVY : "#fff", borderColor: on ? NAVY : undefined, padding: "18px 16px 16px", minHeight: 130, display: "flex", flexDirection: "column" }}
+              >
+                <div style={{ fontSize: "0.6rem", fontWeight: 800, letterSpacing: "0.06em", color: on ? "rgba(255,255,255,0.35)" : FAINT, marginBottom: 10 }}>
+                  {String(stage.n).padStart(2, "0")}
                 </div>
-              </Link>
+                <Icon size={17} strokeWidth={1.5} style={{ color: on ? "#fff" : NAVY, marginBottom: 10, flexShrink: 0 }} />
+                <div style={{ fontSize: "0.8rem", fontWeight: 700, color: on ? "#fff" : "#0f172a", lineHeight: 1.3, marginBottom: on ? 8 : 0 }}>{stage.label}</div>
+                {on && (
+                  <div style={{ fontSize: "0.71rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.55, marginTop: "auto" }}>{stage.desc}</div>
+                )}
+              </Card>
             );
           })}
         </div>
@@ -210,26 +200,18 @@ function ModulesSection() {
         <H2>Everything you need to conduct research.</H2>
         <Body>Twelve modules covering every dimension of the research process — from first idea to measured impact.</Body>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", marginTop: 48, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden" }}>
-          {MODULES.map(function(mod, i) {
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 48 }}>
+          {MODULES.map(function(mod) {
             const Icon = mod.icon;
-            const row = Math.floor(i / 4);
-            const col = i % 4;
-            const isLastRow = row === Math.floor((MODULES.length - 1) / 4);
-            const isLastCol = col === 3;
             return (
-              <Link key={mod.label} to={mod.href} style={{ textDecoration: "none" }}>
-                <div style={{ padding: "26px 22px", borderRight: isLastCol ? "none" : `1px solid ${BORDER}`, borderBottom: isLastRow ? "none" : `1px solid ${BORDER}`, transition: "background 140ms", background: "#fff" }}
-                  onMouseEnter={function(e){ e.currentTarget.style.background = WARM; }}
-                  onMouseLeave={function(e){ e.currentTarget.style.background = "#fff"; }}>
-                  <Icon size={18} strokeWidth={1.5} style={{ color: NAVY, marginBottom: 14, display: "block" }} />
-                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f172a", marginBottom: 7, lineHeight: 1.3 }}>{mod.label}</div>
-                  <div style={{ fontSize: "0.74rem", color: MID, lineHeight: 1.65, marginBottom: 14 }}>{mod.desc}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.71rem", fontWeight: 600, color: NAVY, opacity: 0.6 }}>
-                    Open <ArrowRight size={10} />
-                  </div>
+              <Card key={mod.label} to={mod.href} variant="interactive" padding="lg">
+                <Icon size={18} strokeWidth={1.5} style={{ color: NAVY, marginBottom: 14, display: "block" }} />
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f172a", marginBottom: 7, lineHeight: 1.3 }}>{mod.label}</div>
+                <div style={{ fontSize: "0.74rem", color: MID, lineHeight: 1.65, marginBottom: 14 }}>{mod.desc}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.71rem", fontWeight: 600, color: NAVY, opacity: 0.6 }}>
+                  Open <ArrowRight size={10} />
                 </div>
-              </Link>
+              </Card>
             );
           })}
         </div>
@@ -276,12 +258,12 @@ function WorkflowSection() {
               Research is not linear, but it has a structure. Synaptiq maps that structure so nothing falls through the gaps between tools, emails and file systems.
             </p>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <Link to="/projects" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 22px", background: "#fff", color: NAVY, borderRadius: 9, fontSize: "0.86rem", fontWeight: 700, textDecoration: "none" }}>
+              <Button as={Link} to="/projects" variant="primary" style={{ background: "#fff", color: NAVY }}>
                 Start a project <ArrowRight size={13} />
-              </Link>
-              <Link to="/workspaces" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 18px", background: "transparent", color: "rgba(255,255,255,0.65)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 9, fontSize: "0.86rem", fontWeight: 500, textDecoration: "none" }}>
+              </Button>
+              <Button as={Link} to="/workspaces" variant="ghost" style={{ background: "transparent", color: "rgba(255,255,255,0.65)", borderColor: "rgba(255,255,255,0.18)" }}>
                 Open Workspace
-              </Link>
+              </Button>
             </div>
           </div>
         </div>
@@ -304,13 +286,11 @@ function ResearcherTypesSection() {
           {RESEARCHER_TYPES.map(function(r) {
             const Icon = r.icon;
             return (
-              <div key={r.label} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 12, padding: "24px 20px", transition: "border-color 150ms" }}
-                onMouseEnter={function(e){ e.currentTarget.style.borderColor = NAVY; }}
-                onMouseLeave={function(e){ e.currentTarget.style.borderColor = BORDER; }}>
+              <Card key={r.label} variant="default" padding="lg">
                 <Icon size={16} strokeWidth={1.5} style={{ color: NAVY, marginBottom: 12, opacity: 0.6 }} />
                 <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>{r.label}</div>
                 <div style={{ fontSize: "0.76rem", color: MID, lineHeight: 1.65 }}>{r.desc}</div>
-              </div>
+              </Card>
             );
           })}
         </div>
@@ -330,9 +310,9 @@ function CollaborationSection() {
             <Eyebrow text="Collaboration" />
             <H2>Research is a team effort.</H2>
             <Body>Synaptiq makes it easy to work with anyone, anywhere — whether you are co-authoring with a colleague across the hall or coordinating an international consortium.</Body>
-            <Link to="/collaborations" style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 32, padding: "11px 20px", background: NAVY, color: "#fff", borderRadius: 9, fontSize: "0.84rem", fontWeight: 600, textDecoration: "none" }}>
+            <Button as={Link} to="/collaborations" variant="primary" style={{ marginTop: 32 }}>
               Open Collaborations <ArrowRight size={13} />
-            </Link>
+            </Button>
           </div>
           <div>
             {COLLAB_FEATURES.map(function(f, i) {
@@ -430,17 +410,13 @@ function OutcomesSection() {
         <Eyebrow text="What you get" />
         <H2>Research outcomes that matter.</H2>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", marginTop: 48, border: `1px solid ${BORDER}`, borderRadius: 16, overflow: "hidden" }}>
-          {OUTCOMES.map(function(o, i) {
-            const row = Math.floor(i / 3);
-            const col = i % 3;
-            const isLastRow = row === Math.floor((OUTCOMES.length - 1) / 3);
-            const isLastCol = col === 2;
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 48 }}>
+          {OUTCOMES.map(function(o) {
             return (
-              <div key={o.label} style={{ padding: "28px 26px", borderRight: isLastCol ? "none" : `1px solid ${BORDER}`, borderBottom: isLastRow ? "none" : `1px solid ${BORDER}` }}>
+              <Card key={o.label} variant="default" padding="lg">
                 <div style={{ fontSize: "0.93rem", fontWeight: 700, color: "#0f172a", marginBottom: 10 }}>{o.label}</div>
                 <div style={{ fontSize: "0.78rem", color: MID, lineHeight: 1.75 }}>{o.desc}</div>
-              </div>
+              </Card>
             );
           })}
         </div>
@@ -462,12 +438,12 @@ function CTASection() {
           Every stage of the research lifecycle — in one place. It takes less than a minute to create your first project.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link to="/projects" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 28px", background: "#fff", color: NAVY, borderRadius: 10, fontSize: "0.9rem", fontWeight: 700, textDecoration: "none", letterSpacing: "-0.01em" }}>
+          <Button as={Link} to="/projects" variant="primary" size="lg" style={{ background: "#fff", color: NAVY }}>
             Create a Project <ArrowRight size={14} />
-          </Link>
-          <Link to="/workspaces" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "14px 24px", background: "transparent", color: "rgba(255,255,255,0.65)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 10, fontSize: "0.9rem", fontWeight: 500, textDecoration: "none" }}>
+          </Button>
+          <Button as={Link} to="/workspaces" variant="ghost" size="lg" style={{ background: "transparent", color: "rgba(255,255,255,0.65)", borderColor: "rgba(255,255,255,0.18)" }}>
             Open a Workspace
-          </Link>
+          </Button>
         </div>
       </div>
     </section>
@@ -478,7 +454,20 @@ function CTASection() {
 
 export default function ResearchCommandCenter() {
   return (
-    <ResearchLayout title="" subtitle="" actions={null}>
+    <ResearchLayout
+      title="Research"
+      subtitle="One workspace for every stage of your research."
+      actions={
+        <>
+          <Button as={Link} to="/projects" size="sm">
+            Open Research Hub <ArrowRight size={13} />
+          </Button>
+          <Button as={Link} to="/workspaces" variant="outline" size="sm">
+            Create Workspace
+          </Button>
+        </>
+      }
+    >
       <HeroSection />
       <SectionDivider />
       <LifecycleSection />

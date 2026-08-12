@@ -21,7 +21,14 @@ import {
   Users, Bot,
 } from "lucide-react";
 import { Spinner, SkeletonCard } from "@/components/ds/LoadingState";
-import { AIWorkspaceLayout } from "@/layouts";
+import { Card } from "@/components/ds/Card";
+import { Button } from "@/components/ds/Button";
+import { Badge } from "@/components/ds/Badge";
+import { StatCard } from "@/components/ds/StatCard";
+import { BarChart } from "@/components/ds/Chart";
+import { List, ListItem } from "@/components/ds/List";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
 
 // ─── Credit packs (mirrors CREDIT_PACKS in plans_catalogue.py) ───────────────
 const CREDIT_PACKS = [
@@ -59,19 +66,12 @@ function SparklineBars({ data }) {
     const found = data.find((x) => x._id === iso);
     days.push({ date: iso, credits: found?.credits || 0 });
   }
-  const max = Math.max(...days.map((d) => d.credits), 1);
-  return (
-    <div className="flex items-end gap-[2px] h-20">
-      {days.map((d, i) => (
-        <div
-          key={i}
-          title={`${d.date} · ${d.credits} credits`}
-          className={`flex-1 transition-colors ${d.credits > 0 ? "bg-[#0F2847] hover:bg-amber-500" : "bg-slate-100"}`}
-          style={{ height: `${Math.max(2, (d.credits / max) * 80)}px` }}
-        />
-      ))}
-    </div>
-  );
+  const chartData = days.map((d) => ({
+    label: d.date,
+    value: d.credits,
+    color: d.credits > 0 ? "#0F2847" : "#F1F5F9",
+  }));
+  return <BarChart data={chartData} height={80} gap={2} />;
 }
 
 export default function AICredits() {
@@ -99,7 +99,8 @@ export default function AICredits() {
   const planLabel  = sub?.plan?.name || "Free";
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="Research Credits"
       subtitle="Credits unlock AI tools. Subscriptions unlock collaboration. Two separate economies."
     >
@@ -111,44 +112,34 @@ export default function AICredits() {
           <>
             {/* ── Credit balance ─────────────────────────────────────── */}
             <div className="grid sm:grid-cols-3 gap-3">
-              <div className="border border-slate-200 bg-white p-5">
-                <div className="overline flex items-center gap-1">
-                  <Coins size={11} strokeWidth={1.5} className="text-[#0F2847]" />
-                  Monthly credits
-                </div>
-                <div className="font-serif text-4xl text-slate-900 mt-2">{(credits.monthly_balance ?? 0).toLocaleString()}</div>
-                <div className="text-xs text-slate-500 font-mono mt-1">
-                  of {(credits.monthly_allowance ?? 0).toLocaleString()} · refreshes each month
-                </div>
-                <div className="text-[10px] text-slate-400 mt-1">{planLabel} plan</div>
-              </div>
-              <div className="border border-slate-200 bg-white p-5">
-                <div className="overline flex items-center gap-1">
-                  <Package size={11} strokeWidth={1.5} className="text-[#0F2847]" />
-                  Pack credits
-                </div>
-                <div className="font-serif text-4xl text-slate-900 mt-2">{(credits.pack_balance ?? 0).toLocaleString()}</div>
-                <div className="text-xs text-slate-500 font-mono mt-1">never expire</div>
-              </div>
-              <div className="border border-[#0F2847] bg-[#0F2847] text-white p-5">
+              <StatCard
+                label="Monthly credits"
+                icon={<Coins />}
+                value={(credits.monthly_balance ?? 0).toLocaleString()}
+                sub={`of ${(credits.monthly_allowance ?? 0).toLocaleString()} · refreshes each month · ${planLabel} plan`}
+              />
+              <StatCard
+                label="Pack credits"
+                icon={<Package />}
+                value={(credits.pack_balance ?? 0).toLocaleString()}
+                sub="never expire"
+              />
+              <Card padding="lg" style={{ background: "#0F2847", borderColor: "#0F2847", color: "#fff" }}>
                 <div className="overline" style={{ color: "#94a3b8" }}>Total available</div>
                 <div className="font-serif text-4xl mt-2">{(credits.balance ?? 0).toLocaleString()}</div>
                 <div className="text-xs mt-1 flex items-center gap-1 text-slate-300">
                   <Sparkles size={11} strokeWidth={1.5} />
                   Research Credits
                 </div>
-                <Link
-                  to="/settings/billing"
-                  className="mt-3 inline-flex items-center gap-1 text-xs border border-white/30 text-white px-2 py-1 hover:bg-white/10"
-                >
+                <Button as={Link} to="/settings/billing" variant="ghost" size="sm" className="mt-3 !text-white !border-white/30 hover:!bg-white/10">
                   <CreditCard size={10} strokeWidth={1.5} />
                   Buy more
-                </Link>
-              </div>
+                </Button>
+              </Card>
             </div>
 
             {/* ── 30-day trend ───────────────────────────────────────── */}
-            <div className="border border-slate-200 bg-white p-6">
+            <Card padding="lg">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <div className="overline flex items-center gap-2">
@@ -172,7 +163,7 @@ export default function AICredits() {
               <Link to="/ai-usage" className="mt-2 inline-flex items-center gap-1 text-xs text-[#0F2847] border-b border-[#0F2847] hover:opacity-70">
                 Full analytics <ChevronRight size={10} strokeWidth={1.5} />
               </Link>
-            </div>
+            </Card>
 
             {/* ── Credit packages ────────────────────────────────────── */}
             <section>
@@ -182,29 +173,30 @@ export default function AICredits() {
               </p>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {CREDIT_PACKS.map((pack) => (
-                  <div
+                  <Card
                     key={pack.code}
-                    className={`border p-5 relative ${pack.popular ? "border-[#0F2847]" : "border-slate-200 bg-white"}`}
+                    padding="lg"
+                    className="relative"
+                    style={pack.popular ? { borderColor: "#0F2847" } : undefined}
                   >
                     {pack.popular && (
-                      <div className="absolute -top-2.5 left-4 text-[10px] font-mono bg-[#0F2847] text-white px-2 py-0.5">
-                        Most popular
+                      <div className="absolute -top-2.5 left-4">
+                        <Badge color="#0F2847">Most popular</Badge>
                       </div>
                     )}
                     <div className="overline">{pack.label}</div>
                     <div className="font-serif text-3xl text-slate-900 mt-2">{pack.price}</div>
                     <div className="text-xs text-slate-500 mt-1 font-mono">{pack.desc}</div>
-                    <Link
+                    <Button
+                      as={Link}
                       to="/settings/billing"
-                      className={`mt-4 w-full inline-flex items-center justify-center gap-1.5 text-xs px-3 py-2 transition-colors ${
-                        pack.popular
-                          ? "bg-[#0F2847] text-white hover:bg-slate-800"
-                          : "border border-slate-300 text-slate-700 hover:border-[#0F2847] hover:text-[#0F2847]"
-                      }`}
+                      variant={pack.popular ? "primary" : "outline"}
+                      size="sm"
+                      className="mt-4 w-full"
                     >
                       Purchase <ExternalLink size={10} strokeWidth={1.5} />
-                    </Link>
-                  </div>
+                    </Button>
+                  </Card>
                 ))}
               </div>
               <p className="text-[10px] text-slate-400 font-mono mt-3">
@@ -214,7 +206,7 @@ export default function AICredits() {
             </section>
 
             {/* ── Tool costs ──────────────────────────────────────────── */}
-            <section className="border border-slate-200 bg-white">
+            <Card padding="none">
               <div className="px-5 py-4 border-b border-slate-200">
                 <div className="overline flex items-center gap-2">
                   <Info size={11} strokeWidth={1.5} className="text-[#0F2847]" />
@@ -222,51 +214,51 @@ export default function AICredits() {
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">Costs per AI tool use. Monthly plan credits refresh automatically.</p>
               </div>
-              <div className="divide-y divide-slate-100">
+              <List border={false} divided>
                 {TOOL_COSTS.map((t) => {
                   const Icon = t.icon;
                   return (
-                    <Link
+                    <ListItem
                       key={t.to}
                       to={t.to}
-                      className="px-5 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors"
-                    >
-                      <Icon size={13} strokeWidth={1.5} className="text-[#0F2847] shrink-0" />
-                      <div className="flex-1 text-sm text-slate-900">{t.label}</div>
-                      <div className="text-xs font-mono text-slate-500 shrink-0">
-                        {t.cost === 0 ? "Free" : `${t.cost} credits`}
-                      </div>
-                      <div className="text-[10px] font-mono text-slate-400 shrink-0 w-24 text-right">{t.unit}</div>
-                      <ChevronRight size={12} strokeWidth={1.5} className="text-slate-300 shrink-0" />
-                    </Link>
+                      leading={<Icon size={13} strokeWidth={1.5} className="text-[#0F2847] shrink-0" />}
+                      title={t.label}
+                      trailing={
+                        <span className="flex items-center gap-3">
+                          <span className="text-xs font-mono text-slate-500 shrink-0">
+                            {t.cost === 0 ? "Free" : `${t.cost} credits`}
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-400 shrink-0 w-24 text-right">{t.unit}</span>
+                          <ChevronRight size={12} strokeWidth={1.5} className="text-slate-300 shrink-0" />
+                        </span>
+                      }
+                    />
                   );
                 })}
-              </div>
-            </section>
+              </List>
+            </Card>
 
             {/* ── Purchase history ────────────────────────────────────── */}
             {purchases.length > 0 && (
-              <section className="border border-slate-200 bg-white">
+              <Card padding="none">
                 <div className="px-5 py-4 border-b border-slate-200 overline">Recent pack purchases</div>
-                <div className="divide-y divide-slate-100">
+                <List border={false} divided>
                   {purchases.slice(0, 8).map((p) => (
-                    <div key={p.id} className="px-5 py-3 flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <Package size={12} strokeWidth={1.5} className="text-[#0F2847] shrink-0" />
-                        <span className="font-medium text-slate-900">+{p.credits} credits</span>
-                        <span className="text-slate-500">{p.pack_code?.replace("_", " ")}</span>
-                      </div>
-                      <span className="text-xs font-mono text-slate-400">{(p.created_at || "").slice(0, 10)}</span>
-                    </div>
+                    <ListItem
+                      key={p.id}
+                      leading={<Package size={12} strokeWidth={1.5} className="text-[#0F2847] shrink-0" />}
+                      title={<span><span className="font-medium text-slate-900">+{p.credits} credits</span>{" "}<span className="text-slate-500">{p.pack_code?.replace("_", " ")}</span></span>}
+                      trailing={<span className="text-xs font-mono text-slate-400">{(p.created_at || "").slice(0, 10)}</span>}
+                    />
                   ))}
-                </div>
-              </section>
+                </List>
+              </Card>
             )}
           </>
         )}
 
         {/* ── Subscription vs credits explainer ─────────────────────── */}
-        <div className="border border-slate-200 bg-slate-50 p-5">
+        <Card padding="lg" className="bg-slate-50">
           <div className="overline mb-3">Two separate economies</div>
           <div className="grid sm:grid-cols-2 gap-5">
             <div>
@@ -290,9 +282,9 @@ export default function AICredits() {
               </Link>
             </div>
           </div>
-        </div>
+        </Card>
 
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

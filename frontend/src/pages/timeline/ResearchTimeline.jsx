@@ -148,6 +148,7 @@ function EventCard({ event, onDelete }) {
             size="icon"
             variant="ghost"
             onClick={() => onDelete(event._id)}
+            aria-label="Delete event"
             style={{
               color: TEXT_SECONDARY,
               padding: 4,
@@ -214,6 +215,7 @@ function AddEventModal({ catalogue, onClose, onAdd }) {
             size="icon"
             variant="ghost"
             onClick={onClose}
+            aria-label="Close"
             style={{
               color: TEXT_SECONDARY
             }}>

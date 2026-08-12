@@ -20,6 +20,10 @@ import { ResearchLayout } from "@/layouts";
 import { SkeletonPage } from "../components/ds/LoadingState";
 import { EmptyState } from "../components/ds/EmptyState";
 import { SearchBar, FilterChip } from "../components/ds/SearchBar";
+import { Card } from "../components/ds/Card";
+import { Badge } from "../components/ds/Badge";
+import { Tag } from "../components/ds/Tag";
+import { Alert } from "../components/ds/Alert";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const BORDER = "#E4E8EF";
@@ -187,21 +191,14 @@ export default function Workspaces() {
       subtitle={`${getGreeting()}, ${firstName}. Your research headquarters — projects, manuscripts, team and AI in one place.`}
       actions={
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <Link
-            to="/collaboration-requests"
-            className="flex items-center gap-1.5 border border-slate-200 text-slate-600 text-xs px-3 py-1.5 hover:bg-slate-50 transition-colors"
-          >
+          <Button as={Link} to="/collaboration-requests" variant="ghost" size="sm">
             <Users size={12} strokeWidth={1.5} />
             Find Collaborators
-          </Link>
-          <button
-            data-testid={TID.workspaceCreateBtn}
-            onClick={() => setShowNew((v) => !v)}
-            className="flex items-center gap-1.5 bg-[#6B0E28] text-white text-sm px-3 py-1.5 hover:opacity-90 transition-opacity"
-          >
+          </Button>
+          <Button data-testid={TID.workspaceCreateBtn} onClick={() => setShowNew((v) => !v)} size="sm">
             <Plus size={13} strokeWidth={2} />
             New Workspace
-          </button>
+          </Button>
         </div>
       }
       meta={statsMeta}
@@ -209,15 +206,15 @@ export default function Workspaces() {
 
       {/* ── PENDING INVITATIONS ───────────────────────────────────────────── */}
       {invitations.length > 0 && (
-        <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderLeft: "3px solid #F59E0B", padding: "16px 20px", marginTop: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <Mail size={13} strokeWidth={1.5} style={{ color: "#D97706" }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#92400E" }}>Workspace Invitations</span>
-            <span style={{ fontSize: 11, background: "#D97706", color: "white", padding: "1px 7px", fontFamily: "monospace", fontWeight: 600 }}>{invitations.length}</span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <Alert
+          variant="warning"
+          icon={Mail}
+          title={<>Workspace Invitations <Badge variant="warning" size="sm">{invitations.length}</Badge></>}
+          style={{ marginTop: 0 }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
             {invitations.map((inv) => (
-              <div key={inv.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: "white", border: "1px solid #FDE68A", padding: "12px 16px" }}>
+              <Card key={inv.id} padding="sm" className="flex items-center justify-between gap-3 border-amber-200">
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {inv.workspace?.name || "Workspace"}
@@ -234,15 +231,15 @@ export default function Workspaces() {
                     <X size={11} strokeWidth={2} /> Decline
                   </Button>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
-        </div>
+        </Alert>
       )}
 
       {/* ── CREATE FORM ──────────────────────────────────────────────────── */}
       {showNew && (
-        <div style={{ border: `1px solid ${BORDER}`, background: "white", padding: 24, marginTop: 24 }}>
+        <Card padding="xl" style={{ marginTop: 24 }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 18 }}>
             New Research Workspace
           </div>
@@ -292,7 +289,7 @@ export default function Workspaces() {
               Cancel
             </Button>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* ── SEARCH + TYPE FILTER ─────────────────────────────────────────── */}
@@ -334,12 +331,9 @@ export default function Workspaces() {
             icon={<Layers size={24} />}
             title="No workspaces match your filters"
             action={
-              <button
-                onClick={() => { setQ(""); setFilterType(""); }}
-                style={{ fontSize: 12, color: NAVY, background: "white", border: `1px solid ${BORDER}`, padding: "7px 16px", cursor: "pointer" }}
-              >
+              <Button variant="outline" size="sm" onClick={() => { setQ(""); setFilterType(""); }}>
                 Clear filters
-              </button>
+              </Button>
             }
             size="sm"
             dashed={true}
@@ -378,12 +372,11 @@ function WorkspaceCard({ w, userId }) {
   const statusOk = !w.status || w.status === "active";
 
   return (
-    <Link
+    <Card
       to={`/workspaces/${w.id}`}
       data-testid={TID.workspaceCard(w.id)}
-      style={{ display: "flex", flexDirection: "column", border: `1px solid ${BORDER}`, background: "white", textDecoration: "none", transition: "border-color 0.15s, box-shadow 0.15s, transform 0.12s" }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = cfg.color + "60"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(15,40,71,0.1)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}
+      padding="none"
+      style={{ display: "flex", flexDirection: "column" }}
     >
       {/* Type accent bar */}
       <div style={{ height: 3, background: cfg.color, flexShrink: 0 }} />
@@ -396,17 +389,15 @@ function WorkspaceCard({ w, userId }) {
           </div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center" }}>
             {!isOwner && (
-              <span style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 600, color: "#7C3AED", background: "#FAF5FF", border: "1px solid #DDD6FE", padding: "2px 6px" }}>
-                Collab
-              </span>
+              <Badge variant="purple" size="sm">Collab</Badge>
             )}
-            <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, color: "#94A3B8", border: `1px solid ${BORDER}`, padding: "2px 7px", fontFamily: "monospace" }}>
+            <Badge variant="outline" size="sm">
               <VisIcon size={9} strokeWidth={1.5} />
               {visLabel}
-            </span>
-            <span style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 600, color: statusOk ? "#10B981" : "#94A3B8", background: statusOk ? "#F0FDF4" : WARM, border: `1px solid ${statusOk ? "#A7F3D0" : BORDER}`, padding: "2px 6px" }}>
+            </Badge>
+            <Badge variant={statusOk ? "success" : "neutral"} size="sm">
               {w.status || "active"}
-            </span>
+            </Badge>
           </div>
         </div>
 
@@ -439,19 +430,19 @@ function WorkspaceCard({ w, userId }) {
         {(w.research_area || (w.keywords || []).length > 0) && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 12 }}>
             {w.research_area && (
-              <span style={{ fontSize: 10, padding: "2px 8px", background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}30`, fontWeight: 600 }}>{w.research_area}</span>
+              <Badge color={cfg.color} size="sm">{w.research_area}</Badge>
             )}
             {(w.keywords || []).slice(0, 3).map((k) => (
-              <span key={k} style={{ fontSize: 10, padding: "2px 7px", background: WARM, color: "#475569", border: `1px solid ${BORDER}` }}>{k}</span>
+              <Tag key={k} size="sm">{k}</Tag>
             ))}
           </div>
         )}
 
         {/* Role badge */}
         <div style={{ marginTop: "auto", marginBottom: 14 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: isOwner ? NAVY : "#64748B", background: isOwner ? WARM : "#F8FAFC", border: `1px solid ${isOwner ? BORDER : BORDER}`, padding: "3px 8px" }}>
+          <Badge variant={isOwner ? "default" : "neutral"} size="sm">
             {myRole}
-          </span>
+          </Badge>
         </div>
 
         {/* Footer */}
@@ -476,7 +467,7 @@ function WorkspaceCard({ w, userId }) {
           </div>
         </div>
       </div>
-    </Link>
+    </Card>
   );
 }
 
@@ -485,48 +476,39 @@ function WorkspaceCard({ w, userId }) {
 function WorkspaceEmptyState({ onNew }) {
   return (
     <div style={{ marginTop: 28 }}>
-      <div style={{ border: `1px solid ${BORDER}`, background: "white", padding: "56px 40px", textAlign: "center", marginBottom: 20 }}>
-        <div style={{ width: 56, height: 56, background: WARM, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-          <Layers size={24} strokeWidth={0.75} style={{ color: "#CBD5E1" }} />
-        </div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#0f172a", margin: "0 0 10px", letterSpacing: "-0.02em" }}>
-          Create your research headquarters
-        </h2>
-        <p style={{ fontSize: 14, color: "#64748B", lineHeight: 1.7, margin: "0 auto 28px", maxWidth: 480 }}>
-          Workspaces are role-governed research environments — bring your team, manuscripts, AI tools, repository, and project tasks together in a secure, shared space built for academic research.
-        </p>
-        <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-          <button
-            data-testid={TID.workspaceCreateBtn}
-            onClick={onNew}
-            style={{ display: "inline-flex", alignItems: "center", gap: 7, background: NAVY, color: "white", border: "none", padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-          >
-            <Plus size={13} strokeWidth={2} />
-            Create a workspace
-          </button>
-          <Link
-            to="/collaborations"
-            style={{ display: "inline-flex", alignItems: "center", gap: 7, border: `1px solid ${BORDER}`, color: "#374151", padding: "10px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}
-          >
-            Browse collaborations
-            <ArrowRight size={12} strokeWidth={1.5} />
-          </Link>
-        </div>
-      </div>
+      <EmptyState
+        icon={<Layers strokeWidth={0.75} />}
+        title="Create your research headquarters"
+        description="Workspaces are role-governed research environments — bring your team, manuscripts, AI tools, repository, and project tasks together in a secure, shared space built for academic research."
+        size="lg"
+        className="mb-5"
+        action={
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+            <Button data-testid={TID.workspaceCreateBtn} onClick={onNew}>
+              <Plus size={13} strokeWidth={2} />
+              Create a workspace
+            </Button>
+            <Button as={Link} to="/collaborations" variant="ghost">
+              Browse collaborations
+              <ArrowRight size={12} strokeWidth={1.5} />
+            </Button>
+          </div>
+        }
+      />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 24 }}>
         {[
           { icon: BrainCircuit, title: "AI-integrated research",     desc: "Launch literature reviews, manuscript analysis, and gap detection directly from your workspace." },
           { icon: Users2,       title: "Role-governed collaboration", desc: "Invite team members with specific roles — Owner, Admin, Researcher, or Observer." },
           { icon: Shield,       title: "Secure & private",           desc: "Private by default. Control visibility per workspace — private, institutional, or open." },
         ].map(({ icon: Icon, title, desc }) => (
-          <div key={title} style={{ border: `1px solid ${BORDER}`, background: WARM, padding: "20px 18px" }}>
+          <Card key={title} variant="ghost" padding="md" style={{ background: WARM, border: `1px solid ${BORDER}` }}>
             <div style={{ width: 32, height: 32, background: "white", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
               <Icon size={14} strokeWidth={1.5} style={{ color: NAVY }} />
             </div>
             <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", marginBottom: 6 }}>{title}</div>
             <p style={{ fontSize: 12, color: "#64748B", lineHeight: 1.55, margin: 0 }}>{desc}</p>
-          </div>
+          </Card>
         ))}
       </div>
     </div>
@@ -550,13 +532,7 @@ function WorkspaceQuickActions() {
           { label: "Research Projects",         to: "/projects",                   icon: FolderOpen,   desc: "Manage your research project portfolio" },
           { label: "Collaboration Requests",    to: "/collaboration-requests",     icon: Users2,       desc: "Manage sent and received invitations" },
         ].map(({ label, to, icon: Icon, desc }) => (
-          <Link
-            key={to}
-            to={to}
-            style={{ display: "flex", gap: 12, alignItems: "flex-start", border: `1px solid ${BORDER}`, background: "white", padding: "14px 16px", textDecoration: "none", transition: "border-color 0.15s, box-shadow 0.15s" }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = NAVY + "50"; e.currentTarget.style.boxShadow = "0 2px 10px rgba(15,40,71,0.07)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
-          >
+          <Card key={to} to={to} padding="md" style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
             <div style={{ width: 30, height: 30, background: WARM, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <Icon size={13} strokeWidth={1.5} style={{ color: NAVY }} />
             </div>
@@ -564,7 +540,7 @@ function WorkspaceQuickActions() {
               <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", marginBottom: 3 }}>{label}</div>
               <div style={{ fontSize: 11, color: "#94A3B8", lineHeight: 1.4 }}>{desc}</div>
             </div>
-          </Link>
+          </Card>
         ))}
       </div>
     </div>

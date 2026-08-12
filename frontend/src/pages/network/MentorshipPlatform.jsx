@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { UserCheck, Star, X } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import {
   Card, Badge, Tag, Button, Input, Textarea, FormSelect, FormRow, Modal,
   NavTabs, EmptyState, LoadingOverlay, InlineError,
@@ -231,7 +231,7 @@ export default function MentorshipPlatform() {
   useEffect(() => { fetchMentorsRef.current(); fetchMyRequests(); fetchMyProfile(); }, [fetchMyRequests, fetchMyProfile]);
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Mentorship"
       icon={<UserCheck size={22} color={NAVY} />}
       actions={
@@ -239,8 +239,7 @@ export default function MentorshipPlatform() {
           {myProfile ? "Edit Mentor Profile" : "Become a Mentor"}
         </Button>
       }
-    >
-      <div style={{ marginBottom: 16 }}>
+      nav={
         <NavTabs
           variant="pill"
           tabs={[
@@ -251,7 +250,8 @@ export default function MentorshipPlatform() {
           active={tab}
           onChange={setTab}
         />
-      </div>
+      }
+    >
 
       {tab === "find" && (
         <>
@@ -332,6 +332,6 @@ export default function MentorshipPlatform() {
 
       {requestMentor && <RequestModal mentor={requestMentor} onClose={() => setRequestMentor(null)} onSuccess={fetchMyRequests} />}
       {showBecomeMentor && <BecomeMentorModal onClose={() => setShowBecomeMentor(false)} onSuccess={fetchMyProfile} />}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

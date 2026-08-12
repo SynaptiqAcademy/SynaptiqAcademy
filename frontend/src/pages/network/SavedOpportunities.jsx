@@ -33,7 +33,7 @@ function SavedCard({ item, onUnsave }) {
         {item.notes && <div style={{ fontSize: 12, color: ACCENT, marginTop: 4, fontStyle: "italic" }}>Note: {item.notes}</div>}
         <div style={{ fontSize: 11, color: TEXT_SECONDARY, marginTop: 4 }}>Saved {item.saved_at?.slice(0, 10)}</div>
       </div>
-      <Button variant="ghost" size="sm" onClick={() => onUnsave(item)}>
+      <Button variant="ghost" size="sm" onClick={() => onUnsave(item)} aria-label={`Remove ${item.title || "saved item"}`}>
         <Trash2 size={15} />
       </Button>
     </Card>

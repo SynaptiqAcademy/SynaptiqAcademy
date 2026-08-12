@@ -3,13 +3,22 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
-import { NAVY } from "@/lib/tokens";
 import { SkeletonCard } from "@/components/ds/LoadingState";
 import {
   ChevronDown, Users, DollarSign, ClipboardList, Save,
   GitBranch, Trash2, Plus, Check, X, FileText, AlertTriangle,
   CheckCircle2, Calendar,
 } from "lucide-react";
+import { Badge } from "@/components/ds/Badge";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Input } from "@/components/ds/Input";
+import { Textarea } from "@/components/ds/Textarea";
+import { FormSelect } from "@/components/ds/FormSelect";
+import { NavTabs } from "@/components/ds/NavTabs";
+import { StatCard, StatGrid } from "@/components/ds/StatCard";
+import { ProgressBar } from "@/components/ds/Progress";
+import { ResearchLayout } from "@/layouts";
 
 // ── constants ──────────────────────────────────────────────────────────────────
 
@@ -26,17 +35,18 @@ const STATUSES = [
   { value: "withdrawn",            label: "Withdrawn" },
 ];
 
-const STATUS_COLOR = {
-  draft:                "bg-slate-100 text-slate-700",
-  in_preparation:       "bg-sky-50 text-sky-700",
-  internal_review:      "bg-amber-50 text-amber-700",
-  ready_for_submission: "bg-violet-50 text-violet-700",
-  submitted:            "bg-blue-50 text-blue-700",
-  eligible:             "bg-teal-50 text-teal-700",
-  under_evaluation:     "bg-amber-100 text-amber-800",
-  funded:               "bg-emerald-100 text-emerald-800",
-  rejected:             "bg-rose-50 text-rose-700",
-  withdrawn:            "bg-slate-200 text-slate-600",
+// Hex equivalents for the ds Badge's `color` prop
+const STATUS_HEX = {
+  draft:                "#64748B",
+  in_preparation:       "#0369A1",
+  internal_review:      "#B45309",
+  ready_for_submission: "#6D28D9",
+  submitted:            "#1D4ED8",
+  eligible:             "#0F766E",
+  under_evaluation:     "#92400E",
+  funded:               "#065F46",
+  rejected:             "#BE123C",
+  withdrawn:            "#475569",
 };
 
 const TEAM_ROLES = [
@@ -55,12 +65,13 @@ const DELIVERABLE_TYPES = [
   "Patent", "Workshop", "Deliverable", "Other",
 ];
 
-const DELIVERABLE_STATUS = {
-  pending:   "bg-slate-100 text-slate-700",
-  in_progress: "bg-amber-50 text-amber-700",
-  completed: "bg-emerald-50 text-emerald-700",
-  submitted: "bg-blue-50 text-blue-700",
-  delayed:   "bg-rose-50 text-rose-700",
+// Hex equivalents for the ds Badge's `color` prop
+const DELIVERABLE_STATUS_HEX = {
+  pending:     "#64748B",
+  in_progress: "#B45309",
+  completed:   "#059669",
+  submitted:   "#1D4ED8",
+  delayed:     "#BE123C",
 };
 
 const PROPOSAL_SECTIONS = [
@@ -299,39 +310,47 @@ export default function GrantApplicationDetail() {
     } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
   };
 
-  if (!app) return <div className="p-6"><SkeletonCard rows={5} /></div>;
+  if (!app) return <ResearchLayout title="Grant Application"><SkeletonCard rows={5} /></ResearchLayout>;
 
   const isPi = app.pi_id === user?.id;
 
+  const headerActions = isPi ? (
+    <FormSelect
+      value={app.status}
+      onChange={(e) => changeStatus(e.target.value)}
+      size="sm"
+      style={{ width: 200 }}
+    >
+      {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+    </FormSelect>
+  ) : null;
+
   return (
+    <ResearchLayout
+      title={app.grant?.title || app.grant_title || "Grant Application"}
+      actions={headerActions}
+      nav={
+        <NavTabs
+          tabs={TABS.map((t) => ({ id: t.k, label: t.label }))}
+          active={tab}
+          onChange={loadTab}
+        />
+      }
+    >
     <div className="space-y-6">
       <Link to="/grant-applications" className="text-sm text-slate-500 hover:text-slate-900">← My Applications</Link>
 
-      {/* Header */}
-      <header className="border-b border-slate-200 pb-6">
+      {/* Meta bar */}
+      <div className="border-b border-slate-200 pb-6">
         <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <span className={`text-xs px-2 py-0.5 rounded-sm ${STATUS_COLOR[app.status] || "bg-slate-100 text-slate-700"}`}>
+          <Badge color={STATUS_HEX[app.status] || "#64748B"}>
             {STATUSES.find((s) => s.value === app.status)?.label || app.status}
-          </span>
+          </Badge>
           {app.grant?.agency && (
-            <span className="overline text-slate-500 border border-slate-200 bg-slate-50 px-2 py-0.5">
-              {app.grant.agency}
-            </span>
-          )}
-          {isPi && (
-            <select
-              value={app.status}
-              onChange={(e) => changeStatus(e.target.value)}
-              className="ml-auto text-xs border border-slate-300 bg-white px-2 py-1 focus:outline-none"
-            >
-              {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
+            <Badge variant="neutral">{app.grant.agency}</Badge>
           )}
         </div>
-        <h1 className="font-serif text-4xl text-slate-900 leading-tight mt-2">
-          {app.grant?.title || app.grant_title || "Grant Application"}
-        </h1>
-        <div className="mt-2 flex items-center gap-4 text-sm text-slate-500 flex-wrap font-mono">
+        <div className="flex items-center gap-4 text-sm text-slate-500 flex-wrap font-mono">
           {app.grant?.deadline && <span className="flex items-center gap-1"><Calendar size={12} /> Deadline {app.grant.deadline}</span>}
           {app.consortium_name && <span>{app.consortium_name}</span>}
           {app.institution && <span>{app.institution}</span>}
@@ -339,19 +358,6 @@ export default function GrantApplicationDetail() {
             <span className="text-emerald-700 font-medium">{fmtBudget(app.requested_budget, app.currency)}</span>
           )}
         </div>
-      </header>
-
-      {/* Tabs */}
-      <div className="flex border-b border-slate-200 overflow-x-auto">
-        {TABS.map((t) => (
-          <button
-            key={t.k}
-            onClick={() => loadTab(t.k)}
-            className={`shrink-0 px-4 py-2.5 text-sm border-b-2 -mb-px ${tab === t.k ? "border-[#0F2847] text-slate-900 font-medium" : "border-transparent text-slate-500 hover:text-slate-900"}`}
-          >
-            {t.label}
-          </button>
-        ))}
       </div>
 
       {/* ── OVERVIEW ─────────────────────────────────────────────────── */}
@@ -360,38 +366,28 @@ export default function GrantApplicationDetail() {
           <div className="lg:col-span-8 space-y-6">
             {dash && (
               <>
-                <div className="grid sm:grid-cols-3 gap-4">
-                  {[
-                    { label: "Proposal progress",  value: `${dash.progress_pct}%`, sub: `${dash.filled_sections}/${dash.total_sections} sections` },
-                    { label: "Total budget",        value: fmtBudget(dash.total_budget, dash.currency), sub: `${dash.currency}` },
-                    { label: "Deliverables",        value: dash.deliverable_count, sub: dash.overdue_count > 0 ? `${dash.overdue_count} overdue` : "on track" },
-                  ].map((k) => (
-                    <div key={k.label} className="border border-slate-200 bg-white p-4">
-                      <div className="overline text-slate-500">{k.label}</div>
-                      <div className="font-serif text-2xl text-slate-900 mt-1">{k.value || "—"}</div>
-                      <div className="text-xs text-slate-500 font-mono mt-1">{k.sub}</div>
-                    </div>
-                  ))}
-                </div>
+                <StatGrid cols={3}>
+                  <StatCard label="Proposal progress" value={`${dash.progress_pct}%`} sub={`${dash.filled_sections}/${dash.total_sections} sections`} />
+                  <StatCard label="Total budget" value={fmtBudget(dash.total_budget, dash.currency)} sub={dash.currency} />
+                  <StatCard label="Deliverables" value={dash.deliverable_count} sub={dash.overdue_count > 0 ? `${dash.overdue_count} overdue` : "on track"} />
+                </StatGrid>
 
                 {/* Progress bar */}
-                <div className="bg-slate-100 h-1.5">
-                  <div className="bg-[#0F2847] h-full transition-all" style={{ width: `${dash.progress_pct}%` }} />
-                </div>
+                <ProgressBar value={dash.progress_pct} max={100} size="sm" showValue={false} />
 
                 {/* Readiness checklist */}
-                <div className="border border-slate-200 bg-white p-5">
+                <Card padding="lg">
                   <div className="overline mb-3">{dash.ready_to_submit ? "Ready to submit" : "Checklist"}</div>
                   <div className="space-y-2">
                     {(dash.checklist || []).map((c, i) => (
                       <ChecklistItem key={i} label={c.label} done={c.done} />
                     ))}
                   </div>
-                </div>
+                </Card>
 
                 {/* Upcoming deliverables */}
                 {(dash.upcoming_deliverables || []).length > 0 && (
-                  <div className="border border-slate-200 bg-white p-5">
+                  <Card padding="lg">
                     <div className="overline mb-3">Upcoming deliverables</div>
                     <div className="space-y-2">
                       {dash.upcoming_deliverables.map((d) => (
@@ -401,29 +397,29 @@ export default function GrantApplicationDetail() {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </Card>
                 )}
               </>
             )}
           </div>
 
           <aside className="lg:col-span-4 space-y-4">
-            <div className="border border-slate-200 bg-white p-5 space-y-2 text-sm">
+            <Card padding="lg" className="space-y-2 text-sm">
               <div className="overline">Grant details</div>
               {app.grant?.deadline && <div className="flex justify-between"><span className="text-slate-500">Deadline</span><span className="font-mono text-slate-900">{app.grant.deadline}</span></div>}
               {app.grant?.funding_amount?.amount && <div className="flex justify-between"><span className="text-slate-500">Available budget</span><span className="text-slate-900">{fmtBudget(app.grant.funding_amount.amount, app.grant.funding_amount.currency)}</span></div>}
               <div className="flex justify-between"><span className="text-slate-500">Your request</span><span className="text-emerald-700">{fmtBudget(app.requested_budget, app.currency)}</span></div>
               <div className="flex justify-between"><span className="text-slate-500">Team</span><span>{(app.team || []).length + 1} members</span></div>
-            </div>
+            </Card>
             {app.grant?.id && (
-              <Link to={`/grants/${app.grant.id}`} className="block text-center text-sm text-[#0F2847] border border-[#0F2847] px-4 py-2 hover:bg-[#0F2847] hover:text-white transition-colors">
+              <Button as={Link} to={`/grants/${app.grant.id}`} variant="outline" className="w-full">
                 View grant opportunity →
-              </Link>
+              </Button>
             )}
             {isPi && (
-              <button onClick={deleteApplication} className="w-full text-center text-sm text-rose-600 border border-rose-200 px-4 py-2 hover:bg-rose-50 flex items-center justify-center gap-2">
+              <Button onClick={deleteApplication} variant="danger" className="w-full !bg-transparent !text-rose-600 !border !border-rose-200 hover:!bg-rose-50">
                 <Trash2 size={13} /> Delete application
-              </button>
+              </Button>
             )}
           </aside>
         </div>
@@ -437,15 +433,17 @@ export default function GrantApplicationDetail() {
             <div className="space-y-1">
               {PROPOSAL_SECTIONS.map((s) => {
                 const filled = !!(app.proposal_sections || {})[s.key]?.trim();
+                const active = sectionKey === s.key;
                 return (
-                  <button
+                  <Button
                     key={s.key}
                     onClick={() => setSectionKey(s.key)}
-                    className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between ${sectionKey === s.key ? "bg-[#0F2847] text-white" : "text-slate-700 hover:bg-slate-50"}`}
+                    variant={active ? "primary" : "ghost"}
+                    className={`!w-full !justify-between !border-none ${active ? "" : "!bg-transparent"}`}
                   >
                     <span className="truncate">{s.label}</span>
-                    {filled && <CheckCircle2 size={12} className={sectionKey === s.key ? "text-white/70" : "text-emerald-500"} />}
-                  </button>
+                    {filled && <CheckCircle2 size={12} className={active ? "text-white/70" : "text-emerald-500"} />}
+                  </Button>
                 );
               })}
             </div>
@@ -459,20 +457,15 @@ export default function GrantApplicationDetail() {
               </h3>
               <div className="flex items-center gap-3">
                 {savedFlag && <span className="text-xs text-emerald-600 font-mono">{savedFlag}</span>}
-                <button
-                  onClick={saveSection}
-                  disabled={saving}
-                  className="inline-flex items-center gap-1 bg-[#0F2847] text-white px-3 py-1.5 text-xs hover:bg-slate-800 disabled:opacity-50"
-                >
+                <Button onClick={saveSection} loading={saving} size="sm">
                   <Save size={12} strokeWidth={1.5} /> {saving ? "Saving…" : "Save"}
-                </button>
+                </Button>
               </div>
             </div>
-            <textarea
+            <Textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder={`Write the ${PROPOSAL_SECTIONS.find((s) => s.key === sectionKey)?.label || sectionKey} section…`}
-              className="w-full border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#0F2847] leading-relaxed"
               rows={20}
             />
             <div className="text-xs text-slate-500 font-mono">{draft.length} chars</div>
@@ -492,55 +485,52 @@ export default function GrantApplicationDetail() {
                 </div>
               )}
             </div>
-            <button onClick={() => setAddingBudget(!addingBudget)} className="inline-flex items-center gap-1 bg-[#0F2847] text-white px-3 py-1.5 text-xs">
+            <Button onClick={() => setAddingBudget(!addingBudget)} size="sm">
               <Plus size={12} /> Add item
-            </button>
+            </Button>
           </div>
 
           {/* Category breakdown */}
           {budget && (budget.by_category || []).length > 0 && (
             <div className="grid sm:grid-cols-3 gap-3">
               {budget.by_category.map((c) => (
-                <div key={c.category} className="border border-slate-200 bg-white p-3">
+                <Card key={c.category} padding="sm">
                   <div className="overline text-slate-500">{c.category}</div>
                   <div className="font-serif text-lg text-slate-900">{fmtBudget(c.amount, budget.currency)}</div>
-                </div>
+                </Card>
               ))}
             </div>
           )}
 
           {addingBudget && (
-            <div className="border border-slate-200 bg-white p-5 space-y-3">
+            <Card padding="lg" className="space-y-3">
               <div className="overline">New budget item</div>
               <div className="grid sm:grid-cols-2 gap-3">
-                <select value={budgetForm.category} onChange={(e) => setBudgetForm({ ...budgetForm, category: e.target.value })} className="px-3 py-2 border border-slate-300 bg-white text-sm">
+                <FormSelect value={budgetForm.category} onChange={(e) => setBudgetForm({ ...budgetForm, category: e.target.value })}>
                   {BUDGET_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-                </select>
-                <input
+                </FormSelect>
+                <Input
                   placeholder="Description"
                   value={budgetForm.description}
                   onChange={(e) => setBudgetForm({ ...budgetForm, description: e.target.value })}
-                  className="px-3 py-2 border border-slate-300 text-sm"
                 />
-                <input
+                <Input
                   type="number"
                   placeholder="Amount"
                   value={budgetForm.amount}
                   onChange={(e) => setBudgetForm({ ...budgetForm, amount: e.target.value })}
-                  className="px-3 py-2 border border-slate-300 text-sm"
                 />
-                <input
+                <Input
                   placeholder="Justification"
                   value={budgetForm.justification}
                   onChange={(e) => setBudgetForm({ ...budgetForm, justification: e.target.value })}
-                  className="px-3 py-2 border border-slate-300 text-sm"
                 />
               </div>
               <div className="flex gap-2">
-                <button onClick={addBudgetItem} className="bg-[#0F2847] text-white px-4 py-1.5 text-sm">Add</button>
-                <button onClick={() => setAddingBudget(false)} className="border border-slate-300 px-4 py-1.5 text-sm">Cancel</button>
+                <Button onClick={addBudgetItem} size="sm">Add</Button>
+                <Button onClick={() => setAddingBudget(false)} variant="ghost" size="sm">Cancel</Button>
               </div>
-            </div>
+            </Card>
           )}
 
           <div className="border border-slate-200 divide-y divide-slate-100">
@@ -556,7 +546,7 @@ export default function GrantApplicationDetail() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-mono text-emerald-700">{fmtBudget(b.amount, budget?.currency)}</span>
-                  {isPi && <button onClick={() => deleteBudgetItem(b.id)} className="text-slate-400 hover:text-rose-600"><Trash2 size={13} /></button>}
+                  {isPi && <Button onClick={() => deleteBudgetItem(b.id)} variant="ghost" size="icon" aria-label="Delete budget item" className="!text-slate-400 hover:!text-rose-600"><Trash2 size={13} /></Button>}
                 </div>
               </div>
             ))}
@@ -569,34 +559,33 @@ export default function GrantApplicationDetail() {
         <div className="space-y-5">
           <div className="flex items-center justify-between">
             <div className="overline">Grant team</div>
-            <button onClick={() => setAddingMember(!addingMember)} className="inline-flex items-center gap-1 bg-[#0F2847] text-white px-3 py-1.5 text-xs">
+            <Button onClick={() => setAddingMember(!addingMember)} size="sm">
               <Plus size={12} /> Invite member
-            </button>
+            </Button>
           </div>
 
           {addingMember && (
-            <div className="border border-slate-200 bg-white p-5 space-y-3">
+            <Card padding="lg" className="space-y-3">
               <div className="overline">Invite collaborator</div>
               <div className="grid sm:grid-cols-2 gap-3">
-                <input
+                <Input
                   placeholder="Email or name"
                   value={teamInviteEmail}
                   onChange={(e) => setTeamInviteEmail(e.target.value)}
-                  className="px-3 py-2 border border-slate-300 text-sm"
                 />
-                <select value={teamInviteRole} onChange={(e) => setTeamInviteRole(e.target.value)} className="px-3 py-2 border border-slate-300 bg-white text-sm">
+                <FormSelect value={teamInviteRole} onChange={(e) => setTeamInviteRole(e.target.value)}>
                   {TEAM_ROLES.map((r) => <option key={r}>{r}</option>)}
-                </select>
+                </FormSelect>
               </div>
               <div className="flex gap-2">
-                <button onClick={inviteTeamMember} className="bg-[#0F2847] text-white px-4 py-1.5 text-sm">Send invitation</button>
-                <button onClick={() => setAddingMember(false)} className="border border-slate-300 px-4 py-1.5 text-sm">Cancel</button>
+                <Button onClick={inviteTeamMember} size="sm">Send invitation</Button>
+                <Button onClick={() => setAddingMember(false)} variant="ghost" size="sm">Cancel</Button>
               </div>
-            </div>
+            </Card>
           )}
 
           {/* PI card */}
-          <div className="border border-[#0F2847]/20 bg-[#0F2847]/5 p-4">
+          <Card padding="md" className="border-[#0F2847]/20 bg-[#0F2847]/5">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-[#0F2847] flex items-center justify-center text-white text-xs font-medium">
                 {(app.pi?.full_name || "PI").charAt(0).toUpperCase()}
@@ -607,11 +596,11 @@ export default function GrantApplicationDetail() {
               </div>
               <span className="ml-auto overline text-[#0F2847] text-xs">Principal Investigator</span>
             </div>
-          </div>
+          </Card>
 
           {/* Team members */}
           {(app.team || []).map((m) => (
-            <div key={m.id} className="border border-slate-200 bg-white p-4 flex items-center gap-3">
+            <Card key={m.id} padding="md" className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 text-xs font-medium shrink-0">
                 {(m.user?.full_name || "?").charAt(0).toUpperCase()}
               </div>
@@ -621,14 +610,14 @@ export default function GrantApplicationDetail() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="overline text-xs text-slate-600">{m.role}</span>
-                <span className={`text-xs px-1.5 py-0.5 ${m.status === "accepted" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>{m.status}</span>
+                <Badge color={m.status === "accepted" ? "#059669" : "#B45309"} size="sm">{m.status}</Badge>
                 {isPi && (
-                  <button onClick={() => removeTeamMember(m.user_id)} className="text-slate-400 hover:text-rose-600 ml-2">
+                  <Button onClick={() => removeTeamMember(m.user_id)} variant="ghost" size="icon" aria-label="Remove team member" className="!text-slate-400 hover:!text-rose-600 ml-2">
                     <X size={13} />
-                  </button>
+                  </Button>
                 )}
               </div>
-            </div>
+            </Card>
           ))}
 
           {(app.team || []).length === 0 && (
@@ -642,48 +631,45 @@ export default function GrantApplicationDetail() {
         <div className="space-y-5">
           <div className="flex items-center justify-between">
             <div className="overline">Deliverables & milestones</div>
-            <button onClick={() => setAddingDeliv(!addingDeliv)} className="inline-flex items-center gap-1 bg-[#0F2847] text-white px-3 py-1.5 text-xs">
+            <Button onClick={() => setAddingDeliv(!addingDeliv)} size="sm">
               <Plus size={12} /> Add deliverable
-            </button>
+            </Button>
           </div>
 
           {addingDeliv && (
-            <div className="border border-slate-200 bg-white p-5 space-y-3">
+            <Card padding="lg" className="space-y-3">
               <div className="overline">New deliverable</div>
               <div className="grid sm:grid-cols-2 gap-3">
-                <input
+                <Input
                   placeholder="Title"
                   value={delivForm.title}
                   onChange={(e) => setDelivForm({ ...delivForm, title: e.target.value })}
-                  className="px-3 py-2 border border-slate-300 text-sm sm:col-span-2"
+                  wrapperClassName="sm:col-span-2"
                 />
-                <select value={delivForm.type} onChange={(e) => setDelivForm({ ...delivForm, type: e.target.value })} className="px-3 py-2 border border-slate-300 bg-white text-sm">
+                <FormSelect value={delivForm.type} onChange={(e) => setDelivForm({ ...delivForm, type: e.target.value })}>
                   {DELIVERABLE_TYPES.map((t) => <option key={t}>{t}</option>)}
-                </select>
-                <input
+                </FormSelect>
+                <Input
                   type="date"
                   value={delivForm.due_date}
                   onChange={(e) => setDelivForm({ ...delivForm, due_date: e.target.value })}
-                  className="px-3 py-2 border border-slate-300 text-sm"
                 />
-                <input
+                <Input
                   placeholder="Work package (e.g. WP1)"
                   value={delivForm.work_package}
                   onChange={(e) => setDelivForm({ ...delivForm, work_package: e.target.value })}
-                  className="px-3 py-2 border border-slate-300 text-sm"
                 />
-                <input
+                <Input
                   placeholder="Description"
                   value={delivForm.description}
                   onChange={(e) => setDelivForm({ ...delivForm, description: e.target.value })}
-                  className="px-3 py-2 border border-slate-300 text-sm"
                 />
               </div>
               <div className="flex gap-2">
-                <button onClick={addDeliverable} className="bg-[#0F2847] text-white px-4 py-1.5 text-sm">Add</button>
-                <button onClick={() => setAddingDeliv(false)} className="border border-slate-300 px-4 py-1.5 text-sm">Cancel</button>
+                <Button onClick={addDeliverable} size="sm">Add</Button>
+                <Button onClick={() => setAddingDeliv(false)} variant="ghost" size="sm">Cancel</Button>
               </div>
-            </div>
+            </Card>
           )}
 
           <div className="border border-slate-200 divide-y divide-slate-100">
@@ -694,7 +680,7 @@ export default function GrantApplicationDetail() {
               <div key={d.id} className="flex items-start justify-between px-4 py-3 gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-xs px-1.5 py-0.5 ${DELIVERABLE_STATUS[d.status] || "bg-slate-100 text-slate-700"}`}>{d.status}</span>
+                    <Badge color={DELIVERABLE_STATUS_HEX[d.status] || "#64748B"} size="sm">{d.status}</Badge>
                     <span className="overline text-xs text-[#0F2847]">{d.type}</span>
                     {d.work_package && <span className="text-xs text-slate-500 font-mono">{d.work_package}</span>}
                   </div>
@@ -708,9 +694,13 @@ export default function GrantApplicationDetail() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {d.status !== "completed" && (
-                    <button onClick={() => markDeliverable(d.id, "completed")} className="text-xs text-emerald-600 hover:underline flex items-center gap-1"><Check size={12} /> Done</button>
+                    <Button onClick={() => markDeliverable(d.id, "completed")} variant="link" size="sm" className="!text-emerald-600">
+                      <Check size={12} /> Done
+                    </Button>
                   )}
-                  <button onClick={() => deleteDeliverable(d.id)} className="text-slate-400 hover:text-rose-600"><Trash2 size={13} /></button>
+                  <Button onClick={() => deleteDeliverable(d.id)} variant="ghost" size="icon" aria-label="Delete deliverable" className="!text-slate-400 hover:!text-rose-600">
+                    <Trash2 size={13} />
+                  </Button>
                 </div>
               </div>
             ))}
@@ -723,9 +713,9 @@ export default function GrantApplicationDetail() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="overline">Proposal version history</div>
-            <button onClick={snapshotVersion} className="inline-flex items-center gap-1 bg-[#0F2847] text-white px-3 py-1.5 text-xs">
+            <Button onClick={snapshotVersion} size="sm">
               <GitBranch size={12} /> Snapshot current version
-            </button>
+            </Button>
           </div>
           <div className="border border-slate-200 divide-y divide-slate-100">
             {versions.length === 0 && (
@@ -739,12 +729,13 @@ export default function GrantApplicationDetail() {
                     {v.author_name} · {v.created_at ? new Date(v.created_at).toLocaleString() : "—"}
                   </div>
                 </div>
-                <button onClick={() => restoreVersion(v.version)} className="text-xs text-[#0F2847] hover:underline">Restore</button>
+                <Button onClick={() => restoreVersion(v.version)} variant="link" size="sm">Restore</Button>
               </div>
             ))}
           </div>
         </div>
       )}
     </div>
+    </ResearchLayout>
   );
 }

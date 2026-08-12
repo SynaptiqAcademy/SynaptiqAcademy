@@ -25,7 +25,8 @@ import { Badge } from "@/components/ds/Badge";
 import { Tag } from "@/components/ds/Tag";
 import { Alert } from "@/components/ds/Alert";
 import { StatCard } from "@/components/ds/StatCard";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
 
 // ─── Credit costs (mirrors plans_catalogue.py CREDIT_COSTS) ─────────────────
 const CREDIT_COST = {
@@ -324,7 +325,8 @@ export default function AISuite() {
   const firstName = user?.full_name?.split(" ")[0] || "there";
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="Research AI Suite"
       subtitle="AI tools designed to enhance existing research work — not replace it."
     >
@@ -438,6 +440,6 @@ export default function AISuite() {
         </section>
 
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

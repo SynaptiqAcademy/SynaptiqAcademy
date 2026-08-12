@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useReducer, useRef, useMemo } from "react";
-import { Button, EmptyState } from "@/components/ds";
+import { Button, EmptyState, Badge, Card, FormSelect, Textarea as DsTextarea } from "@/components/ds";
+import { Dialog } from "@/components/ds/Modal";
 import { getDailyWelcomeMessage, getGreeting } from "@/lib/welcomeEngine";
 import { Link } from "react-router-dom";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
 import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -783,22 +785,6 @@ function MessageThread({ messages, onActionClick, onRetry }) {
   );
 }
 
-function ConfirmModal({ title, message, confirmLabel, danger, onConfirm, onCancel }) {
-  confirmLabel = confirmLabel || "Confirm";
-  return (
-    <div style={{position:"fixed",inset:0,zIndex:50,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.4)",backdropFilter:"blur(4px)"}}>
-      <div style={{background:"#fff",borderRadius:16,boxShadow:"0 20px 60px rgba(0,0,0,0.2)",padding:"28px 32px",width:360,maxWidth:"90vw"}}>
-        <div style={{fontFamily:"Georgia,serif",fontSize:"1rem",fontWeight:700,color:NAVY,marginBottom:10}}>{title}</div>
-        <p style={{fontSize:"0.87rem",color:"#64748b",lineHeight:1.65,marginBottom:24}}>{message}</p>
-        <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
-          <button onClick={onCancel} style={{padding:"9px 18px",fontSize:"0.84rem",border:"1px solid "+BORDER,borderRadius:8,background:"transparent",color:"#64748b",cursor:"pointer"}}>Cancel</button>
-          <button onClick={onConfirm} style={{padding:"9px 18px",fontSize:"0.84rem",borderRadius:8,border:"none",fontWeight:600,cursor:"pointer",background:danger?"#DC2626":NAVY,color:"#fff"}}>{confirmLabel}</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function ConvItem({ conv, active, onSelect, onPin, onArchive, onDelete }) {
   var [hover, setHover] = useState(false);
   var dot = SIDEBAR_DOT[conv.agent_type]||SIDEBAR_DOT.general;
@@ -815,10 +801,10 @@ function ConvItem({ conv, active, onSelect, onPin, onArchive, onDelete }) {
       </div>
       {hover && (
         <div style={{display:"flex",gap:2,flexShrink:0}} onClick={function(e){e.stopPropagation();}}>
-          <button onClick={function(){onPin(conv.id,!conv.pinned);}} title={conv.pinned?"Unpin":"Pin"}
-            style={{background:"none",border:"none",cursor:"pointer",padding:4,color:conv.pinned?"#a78bfa":"rgba(255,255,255,0.4)",borderRadius:4}}><Pin size={10}/></button>
-          <button onClick={function(){onDelete(conv.id);}} title="Delete"
-            style={{background:"none",border:"none",cursor:"pointer",padding:4,color:"rgba(255,255,255,0.35)",borderRadius:4}}><Trash2 size={10}/></button>
+          <Button size="icon" variant="ghost" onClick={function(){onPin(conv.id,!conv.pinned);}} title={conv.pinned?"Unpin":"Pin"}
+            style={{padding:4,width:"auto",height:"auto",color:conv.pinned?"#a78bfa":"rgba(255,255,255,0.4)"}}><Pin size={10}/></Button>
+          <Button size="icon" variant="ghost" onClick={function(){onDelete(conv.id);}} title="Delete"
+            style={{padding:4,width:"auto",height:"auto",color:"rgba(255,255,255,0.35)"}}><Trash2 size={10}/></Button>
         </div>
       )}
     </div>
@@ -832,11 +818,16 @@ function LeftPanel({ state, dispatch, onNewChat, onSelectConv, onPin, onArchive,
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:NAVY2,transition:"width 200ms",width:state.leftPanelOpen?264:0,overflow:"hidden",flexShrink:0}}>
       <div style={{minWidth:264,flex:1,display:"flex",flexDirection:"column",height:"100%"}}>
         <div style={{padding:"18px 14px 12px",flexShrink:0}}>
-          <button onClick={onNewChat} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"10px 0",background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:10,cursor:"pointer",color:"#fff",fontSize:"0.82rem",fontWeight:600,transition:"background 150ms",letterSpacing:"0.01em"}}
+          <Button
+            onClick={onNewChat}
+            variant="ghost"
+            className="w-full"
+            style={{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.15)",color:"#fff"}}
             onMouseEnter={function(e){e.currentTarget.style.background="rgba(255,255,255,0.16)";}}
-            onMouseLeave={function(e){e.currentTarget.style.background="rgba(255,255,255,0.1)";}}>
+            onMouseLeave={function(e){e.currentTarget.style.background="rgba(255,255,255,0.1)";}}
+          >
             <Plus size={14}/>New Research Session
-          </button>
+          </Button>
         </div>
         <div style={{flex:1,overflowY:"auto",padding:"0 10px 16px"}}>
           {pinned.length>0&&(
@@ -856,11 +847,14 @@ function LeftPanel({ state, dispatch, onNewChat, onSelectConv, onPin, onArchive,
           )}
         </div>
         <div style={{padding:"12px 14px",borderTop:"1px solid rgba(255,255,255,0.07)",flexShrink:0}}>
-          <button style={{display:"flex",alignItems:"center",gap:8,padding:"7px 8px",width:"100%",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.4)",fontSize:"0.77rem",borderRadius:6}}
+          <Button
+            variant="ghost"
+            className="w-full !justify-start"
+            style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)"}}
             onMouseEnter={function(e){e.currentTarget.style.color="rgba(255,255,255,0.7)";}}
             onMouseLeave={function(e){e.currentTarget.style.color="rgba(255,255,255,0.4)";}}>
             <Archive size={13}/>Archived sessions
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -961,11 +955,12 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
               var isHover = hoveredWF===wf.id;
               var cost = WF_CREDITS[wf.id] || 8;
               return (
-                <button key={wf.id}
+                <Card key={wf.id}
                   onMouseEnter={function(){setHoveredWF(wf.id);}}
                   onMouseLeave={function(){setHoveredWF(null);}}
                   onClick={function(){onStartWithAgent(wf.agent,wf.prompt);}}
-                  style={{display:"flex",flexDirection:"column",alignItems:"flex-start",textAlign:"left",padding:"16px 16px 14px",background:"#fff",border:"1px solid "+(isHover?NAVY:BORDER),borderRadius:12,cursor:"pointer",boxShadow:isHover?"0 6px 24px rgba(15,40,71,0.1)":"0 1px 4px rgba(0,0,0,0.04)",transition:"all 160ms",transform:isHover?"translateY(-2px)":"none"}}>
+                  padding="none"
+                  style={{display:"flex",flexDirection:"column",alignItems:"flex-start",textAlign:"left",padding:"16px 16px 14px",border:"1px solid "+(isHover?NAVY:BORDER),boxShadow:isHover?"0 6px 24px rgba(15,40,71,0.1)":"0 1px 4px rgba(0,0,0,0.04)",transform:isHover?"translateY(-2px)":"none"}}>
                   <div style={{width:36,height:36,borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",background:isHover?NAVY:WARM,marginBottom:12,transition:"background 160ms",flexShrink:0}}>
                     <Icon size={16} style={{color:isHover?"#fff":NAVY,transition:"color 160ms"}}/>
                   </div>
@@ -975,7 +970,7 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
                     <span style={{fontSize:"0.6rem",fontWeight:700,color:isHover?NAVY:"#94a3b8",background:isHover?WARM:"#f1f5f9",border:"1px solid "+(isHover?BORDER:"transparent"),padding:"2px 7px",borderRadius:20,transition:"all 160ms"}}>~{cost} cr</span>
                     {isHover && <ArrowRight size={11} style={{color:NAVY}}/>}
                   </div>
-                </button>
+                </Card>
               );
             })}
           </div>
@@ -989,14 +984,15 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
               var Icon = a.icon;
               var isHov = hoveredAgent===a.id;
               return (
-                <button key={a.id}
+                <Card key={a.id}
                   onMouseEnter={function(){setHoveredAgent(a.id);}}
                   onMouseLeave={function(){setHoveredAgent(null);}}
                   onClick={function(){onStartWithAgent(a.id,"");}}
-                  style={{display:"flex",alignItems:"center",gap:7,padding:"8px 13px",background:isHov?NAVY:"#fff",border:"1px solid "+(isHov?NAVY:BORDER),borderRadius:10,cursor:"pointer",transition:"all 150ms"}}>
+                  padding="none"
+                  style={{display:"flex",alignItems:"center",gap:7,padding:"8px 13px",background:isHov?NAVY:"#fff",border:"1px solid "+(isHov?NAVY:BORDER)}}>
                   <Icon size={13} style={{color:isHov?"#fff":NAVY}}/>
                   <span style={{fontSize:"0.78rem",fontWeight:600,color:isHov?"#fff":"#0f172a"}}>{a.label}</span>
-                </button>
+                </Card>
               );
             })}
           </div>
@@ -1012,15 +1008,16 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
                   {recentSessions.map(function(c){
                     var dot = SIDEBAR_DOT[c.agent_type]||SIDEBAR_DOT.general;
                     return (
-                      <button key={c.id} onClick={function(){onSelectConv&&onSelectConv(c.id);}}
-                        style={{display:"flex",alignItems:"center",gap:10,padding:"10px 13px",background:"#fff",border:"1px solid "+BORDER,borderRadius:10,cursor:"pointer",textAlign:"left",transition:"border-color 150ms,box-shadow 150ms",width:"100%"}}
+                      <Card key={c.id} onClick={function(){onSelectConv&&onSelectConv(c.id);}}
+                        padding="none"
+                        style={{display:"flex",alignItems:"center",gap:10,padding:"10px 13px",width:"100%"}}
                         onMouseEnter={function(e){e.currentTarget.style.borderColor=NAVY;e.currentTarget.style.boxShadow="0 4px 12px rgba(15,40,71,0.08)";}}
                         onMouseLeave={function(e){e.currentTarget.style.borderColor=BORDER;e.currentTarget.style.boxShadow="none";}}>
                         <span style={{width:6,height:6,borderRadius:"50%",background:dot,flexShrink:0}}/>
                         <span style={{flex:1,fontSize:"0.8rem",fontWeight:500,color:"#0f172a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{truncate(c.title,40)}</span>
                         <span style={{fontSize:"0.67rem",color:"#94a3b8",flexShrink:0}}>{relativeTime(c.updated_at)}</span>
                         <ArrowRight size={11} style={{color:"#94a3b8",flexShrink:0}}/>
-                      </button>
+                      </Card>
                     );
                   })}
                 </div>
@@ -1080,6 +1077,7 @@ function ConversationHeader({ conv, onPin, onArchive, onDelete, onTitleChange })
           size="icon"
           variant="ghost"
           onClick={startEdit}
+          aria-label="Rename conversation"
           style={{
             color:"#94a3b8",
             padding:2,
@@ -1200,10 +1198,9 @@ function InputArea({ state, dispatch, onSend }) {
                   color:"#cbd5e1",
                   padding:4
                 }}><Mic size={16}/></Button>
-              <button onClick={onSend} disabled={state.sending||!state.inputText.trim()}
-                style={{display:"flex",alignItems:"center",gap:6,padding:"8px 18px",background:state.sending||!state.inputText.trim()?"#E2E8F0":NAVY,color:state.sending||!state.inputText.trim()?"#94a3b8":"#fff",border:"none",borderRadius:10,cursor:state.sending||!state.inputText.trim()?"not-allowed":"pointer",fontSize:"0.82rem",fontWeight:600,transition:"all 150ms"}}>
+              <Button onClick={onSend} disabled={state.sending||!state.inputText.trim()} variant="primary" size="sm">
                 <Send size={13}/>{state.sending?"Analysing…":"Send"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1255,10 +1252,10 @@ function RightPanel({ state, dispatch, onRefreshContext, onDeleteMemory, onClear
         <div style={{padding:"16px 16px 4px"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
             <span style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#94a3b8"}}>Research Context</span>
-            <button onClick={onRefreshContext} title="Refresh" style={{background:"none",border:"none",cursor:"pointer",color:"#94a3b8",padding:4,borderRadius:4}}
+            <Button size="icon" variant="ghost" onClick={onRefreshContext} title="Refresh" style={{padding:4,width:"auto",height:"auto",color:"#94a3b8"}}
               onMouseEnter={function(e){e.currentTarget.style.color=NAVY;}} onMouseLeave={function(e){e.currentTarget.style.color="#94a3b8";}}>
               <RefreshCw size={12}/>
-            </button>
+            </Button>
           </div>
           {ctx && ctx.credits_remaining!=null && (
             <div style={{background:WARM,border:"1px solid "+BORDER,borderRadius:10,padding:"12px 14px",marginBottom:12}}>
@@ -1322,32 +1319,30 @@ function RightPanel({ state, dispatch, onRefreshContext, onDeleteMemory, onClear
                 <span style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"#64748b"}}>AI Memory</span>
                 {secOpen.memory ? <ChevronUp size={12} style={{color:"#94a3b8"}}/> : <ChevronDown size={12} style={{color:"#94a3b8"}}/>}
               </button>
-              <button onClick={function(){setShowMemoryForm(function(v){return !v;});setSecOpen(function(s){return Object.assign({},s,{memory:true});});}}
-                style={{background:"none",border:"none",cursor:"pointer",color:"#94a3b8",padding:3,borderRadius:4}}
+              <Button size="icon" variant="ghost"
+                onClick={function(){setShowMemoryForm(function(v){return !v;});setSecOpen(function(s){return Object.assign({},s,{memory:true});});}}
+                aria-label="Add memory"
+                style={{padding:3,width:"auto",height:"auto",color:"#94a3b8"}}
                 onMouseEnter={function(e){e.currentTarget.style.color=NAVY;}} onMouseLeave={function(e){e.currentTarget.style.color="#94a3b8";}}>
                 <Plus size={13}/>
-              </button>
+              </Button>
             </div>
             {secOpen.memory && (
               <div style={{padding:"10px 12px"}}>
                 {showMemoryForm && (
                   <div style={{padding:12,background:WARM,borderRadius:8,border:"1px solid "+BORDER,marginBottom:10}}>
-                    <select value={memoryType} onChange={function(e){setMemoryType(e.target.value);}}
-                      style={{width:"100%",fontSize:"0.78rem",border:"1px solid "+BORDER,borderRadius:6,padding:"5px 8px",marginBottom:8,background:"#fff",color:"#374151",outline:"none"}}>
+                    <FormSelect size="sm" value={memoryType} onChange={function(e){setMemoryType(e.target.value);}} wrapperClassName="!mb-2">
                       <option value="preference">Preference</option>
                       <option value="goal">Goal</option>
                       <option value="fact">Fact</option>
                       <option value="context">Context</option>
-                    </select>
-                    <textarea value={memoryInput} onChange={function(e){setMemoryInput(e.target.value);}} placeholder="What should I remember?" rows={2}
-                      style={{width:"100%",fontSize:"0.78rem",border:"1px solid "+BORDER,borderRadius:6,padding:"6px 8px",background:"#fff",color:"#374151",resize:"none",outline:"none",boxSizing:"border-box",fontFamily:"inherit"}}/>
+                    </FormSelect>
+                    <DsTextarea value={memoryInput} onChange={function(e){setMemoryInput(e.target.value);}} placeholder="What should I remember?" rows={2} wrapperClassName="!mb-0" />
                     <div style={{display:"flex",gap:6,marginTop:8}}>
-                      <button onClick={submitMemory} disabled={addingMemory||!memoryInput.trim()}
-                        style={{flex:1,padding:"6px 0",fontSize:"0.75rem",background:NAVY,color:"#fff",border:"none",borderRadius:6,cursor:"pointer",fontWeight:600,opacity:addingMemory||!memoryInput.trim()?0.5:1}}>
+                      <Button onClick={submitMemory} disabled={addingMemory||!memoryInput.trim()} loading={addingMemory} variant="primary" size="sm" className="flex-1">
                         {addingMemory?"Saving…":"Save"}
-                      </button>
-                      <button onClick={function(){setShowMemoryForm(false);setMemoryInput("");}}
-                        style={{padding:"6px 10px",fontSize:"0.75rem",background:"transparent",border:"1px solid "+BORDER,borderRadius:6,cursor:"pointer",color:"#64748b"}}>Cancel</button>
+                      </Button>
+                      <Button onClick={function(){setShowMemoryForm(false);setMemoryInput("");}} variant="ghost" size="sm">Cancel</Button>
                     </div>
                   </div>
                 )}
@@ -1364,16 +1359,18 @@ function RightPanel({ state, dispatch, onRefreshContext, onDeleteMemory, onClear
                             <span style={{display:"inline-block",fontSize:"0.6rem",textTransform:"uppercase",fontWeight:700,color:"#94a3b8",letterSpacing:"0.1em",marginBottom:2}}>{m.memory_type}</span>
                             <p style={{fontSize:"0.77rem",color:"#374151",lineHeight:1.45,margin:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={m.content}>{m.content}</p>
                           </div>
-                          <button className="del-m" onClick={function(){onDeleteMemory(m.id);}}
-                            style={{background:"none",border:"none",cursor:"pointer",color:"#94a3b8",padding:2,flexShrink:0,opacity:0,transition:"opacity 120ms"}}><X size={11}/></button>
+                          <Button size="icon" variant="ghost" className="del-m" onClick={function(){onDeleteMemory(m.id);}}
+                            aria-label="Delete memory"
+                            style={{color:"#94a3b8",padding:2,width:"auto",height:"auto",flexShrink:0,opacity:0,transition:"opacity 120ms"}}><X size={11}/></Button>
                         </div>
                       );})}
                     </div>
-                    <button onClick={onClearMemory} style={{width:"100%",marginTop:10,padding:"7px 0",fontSize:"0.72rem",color:"#DC2626",border:"1px solid #FCA5A5",borderRadius:7,background:"transparent",cursor:"pointer"}}
+                    <Button onClick={onClearMemory} variant="outline" size="sm" className="w-full"
+                      style={{marginTop:10,color:"#DC2626",borderColor:"#FCA5A5",background:"transparent"}}
                       onMouseEnter={function(e){e.currentTarget.style.background="#FEF2F2";}}
                       onMouseLeave={function(e){e.currentTarget.style.background="transparent";}}>
                       Clear all memory (GDPR)
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -1555,15 +1552,13 @@ export default function AIAssistant() {
   var hasConv = !!state.activeConvId;
 
   return (
-    <AIWorkspaceLayout>
+    <ResearchLayout navItems={AI_NAV_ITEMS}>
     <div style={{margin:"-24px",display:"flex",flexDirection:"column",background:WARM,overflow:"hidden",fontFamily:"system-ui,-apple-system,sans-serif",height:"calc(100vh - 120px)"}}>
       <header style={{flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 18px",height:52,background:"#fff",borderBottom:"1px solid "+BORDER,zIndex:10}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <button onClick={function(){dispatch({type:"TOGGLE_LEFT"});}}
-            style={{background:"none",border:"none",cursor:"pointer",color:"#94a3b8",padding:6,borderRadius:6,display:"flex",alignItems:"center"}}
-            onMouseEnter={function(e){e.currentTarget.style.color=NAVY;}} onMouseLeave={function(e){e.currentTarget.style.color="#94a3b8";}}>
+          <Button size="icon" variant="ghost" onClick={function(){dispatch({type:"TOGGLE_LEFT"});}} aria-label={state.leftPanelOpen ? "Collapse sidebar" : "Expand sidebar"} style={{color:"#94a3b8"}}>
             {state.leftPanelOpen ? <ChevronLeft size={16}/> : <ChevronRight size={16}/>}
-          </button>
+          </Button>
           <div style={{display:"flex",alignItems:"center",gap:9}}>
             <div style={{position:"relative",width:24,height:24}}>
               <div style={{position:"absolute",width:14,height:14,borderRadius:"50%",background:NAVY,top:0,left:0}}/>
@@ -1580,20 +1575,16 @@ export default function AIAssistant() {
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           {state.context && state.context.credits_remaining!=null && (
-            <div style={{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",background:WARM,border:"1px solid "+BORDER,borderRadius:8,fontSize:"0.75rem",color:"#374151",fontWeight:500}}>
+            <Badge variant="neutral" style={{gap:5}}>
               <Sparkles size={11} style={{color:NAVY}}/>{state.context.credits_remaining} credits
-            </div>
+            </Badge>
           )}
-          <button onClick={handleNewChat}
-            style={{display:"flex",alignItems:"center",gap:6,padding:"7px 14px",background:NAVY,color:"#fff",border:"none",borderRadius:9,cursor:"pointer",fontSize:"0.8rem",fontWeight:600}}
-            onMouseEnter={function(e){e.currentTarget.style.background=NAVY2;}} onMouseLeave={function(e){e.currentTarget.style.background=NAVY;}}>
+          <Button onClick={handleNewChat} variant="primary" size="sm">
             <Plus size={13}/>New
-          </button>
-          <button onClick={function(){dispatch({type:"TOGGLE_RIGHT"});}}
-            style={{background:"none",border:"none",cursor:"pointer",color:"#94a3b8",padding:6,borderRadius:6,display:"flex",alignItems:"center"}}
-            onMouseEnter={function(e){e.currentTarget.style.color=NAVY;}} onMouseLeave={function(e){e.currentTarget.style.color="#94a3b8";}}>
+          </Button>
+          <Button size="icon" variant="ghost" onClick={function(){dispatch({type:"TOGGLE_RIGHT"});}} aria-label={state.rightPanelOpen ? "Collapse insights panel" : "Expand insights panel"} style={{color:"#94a3b8"}}>
             {state.rightPanelOpen ? <ChevronRight size={16}/> : <ChevronLeft size={16}/>}
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -1616,9 +1607,24 @@ export default function AIAssistant() {
         <RightPanel state={state} dispatch={dispatch} onRefreshContext={handleRefreshContext} onDeleteMemory={handleDeleteMemory} onClearMemory={handleClearMemory}/>
       </div>
 
-      {confirm && <ConfirmModal title={confirm.title} message={confirm.message} danger={confirm.danger} confirmLabel={confirm.confirmLabel} onConfirm={confirm.onConfirm} onCancel={function(){setConfirm(null);}}/>}
-      {actionConfirm && <ConfirmModal title={actionConfirm.title} message={actionConfirm.message} confirmLabel={actionConfirm.confirmLabel} onConfirm={function(){executeAction(actionConfirm.action);}} onCancel={function(){setActionConfirm(null);}}/>}
+      <Dialog
+        open={!!confirm}
+        title={confirm?.title}
+        description={confirm?.message}
+        variant={confirm?.danger ? "destructive" : "confirm"}
+        confirmLabel={confirm?.confirmLabel}
+        onConfirm={confirm?.onConfirm}
+        onClose={function(){setConfirm(null);}}
+      />
+      <Dialog
+        open={!!actionConfirm}
+        title={actionConfirm?.title}
+        description={actionConfirm?.message}
+        confirmLabel={actionConfirm?.confirmLabel}
+        onConfirm={function(){executeAction(actionConfirm.action);}}
+        onClose={function(){setActionConfirm(null);}}
+      />
     </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

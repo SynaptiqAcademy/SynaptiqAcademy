@@ -303,7 +303,7 @@ function AIWorkspaceMockup() {
   return (
     <div style={{
       background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-      borderRadius: 16, overflow: "hidden",
+      borderRadius: 16, overflow: "hidden", minWidth: 0, maxWidth: "100%",
     }}>
       {/* Toolbar */}
       <div style={{ background: "rgba(255,255,255,0.04)", padding: "10px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 8 }}>
@@ -311,13 +311,15 @@ function AIWorkspaceMockup() {
         <div style={{ flex: 1, background: "rgba(255,255,255,0.06)", borderRadius: 4, height: 6 }} />
         <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: "0.06em" }}>AI COPILOT</div>
       </div>
-      {/* Tool tabs */}
-      <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 20px" }}>
+      {/* Tool tabs — horizontally scrollable so 4 fixed labels never force the
+          grid cell (and the page) wider than the viewport on narrow screens */}
+      <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 20px", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
         {["Literature Review", "Gap Detection", "Manuscript", "Statistics"].map((t, i) => (
           <div key={t} style={{
             padding: "10px 12px", fontSize: "0.62rem", fontWeight: i === 0 ? 700 : 400,
             color: i === 0 ? "#fff" : "rgba(255,255,255,0.4)",
             borderBottom: i === 0 ? "2px solid #fff" : "2px solid transparent",
+            whiteSpace: "nowrap", flexShrink: 0,
           }}>{t}</div>
         ))}
       </div>
@@ -741,13 +743,13 @@ export default function Landing() {
                 Synaptiq's AI understands methodology, statistical design, and academic publishing standards — not just autocomplete.
               </p>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {AI_FEATURES.map(({ icon: Icon, label, body }) => (
-                  <div key={label} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  <div key={label} style={{ display: "flex", gap: 12, alignItems: "flex-start", minWidth: 0 }}>
                     <div style={{ width: 28, height: 28, borderRadius: 7, background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <Icon size={13} strokeWidth={1.5} style={{ color: "rgba(255,255,255,0.7)" }} />
                     </div>
-                    <div>
+                    <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", marginBottom: 2 }}>{label}</div>
                       <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", lineHeight: 1.55 }}>{body}</div>
                     </div>

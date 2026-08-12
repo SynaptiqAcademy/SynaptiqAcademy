@@ -91,6 +91,7 @@ export default function AgentCard({ output, compact = false }) {
         {output.content && !isRunning && (
           <button
             onClick={() => setExpanded(v => !v)}
+            aria-label={expanded ? "Collapse output" : "Expand output"}
             className="text-slate-400 hover:text-slate-600 transition-colors p-0.5 shrink-0"
           >
             {expanded ? <ChevronDown size={13} strokeWidth={1.5} /> : <ChevronRight size={13} strokeWidth={1.5} />}

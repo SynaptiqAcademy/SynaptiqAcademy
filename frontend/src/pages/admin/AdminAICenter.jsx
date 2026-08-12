@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "@/lib/api";
-import { EMERALD } from "@/lib/tokens";
+import { EMERALD, CRIMSON, TEAL, TEXT_MUTED } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import {
   RefreshCw,
@@ -8,15 +8,15 @@ import {
   Users,
   Zap,
   Cpu,
-  TrendingUp,
-  AlertCircle,
   ChevronDown,
   ChevronUp,
   DollarSign,
-  Brain,
-  BarChart2,
   Activity,
 } from "lucide-react";
+import {
+  Button, Card, StatCard, StatGrid, MiniBar, DataTable, Badge,
+  EmptyState, ErrorState, Skeleton, SkeletonCard,
+} from "@/components/ds";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -33,13 +33,12 @@ const AGENT_COLORS_ADMIN = {
   auto:          { bar: "#8B5CF6", label: "Auto" },
 };
 
-const ACTION_COLORS = {
-  create:   "text-emerald-400 border-emerald-700 bg-emerald-950/30",
-  update:   "text-blue-400 border-blue-700 bg-blue-950/30",
-  delete:   "text-red-400 border-red-700 bg-red-950/30",
-  export:   "text-amber-400 border-amber-700 bg-amber-950/30",
-  analyze:  "text-violet-400 border-violet-700 bg-violet-950/30",
-  search:   "text-cyan-400 border-cyan-700 bg-cyan-950/30",
+const ACTION_VARIANT = {
+  create:  "success",
+  update:  "info",
+  delete:  "danger",
+  export:  "warning",
+  analyze: "purple",
 };
 
 const MEMORY_TYPE_COLORS = {
@@ -54,13 +53,6 @@ const MEMORY_TYPE_COLORS = {
 function fmtNum(val) {
   if (val == null) return "—";
   return Number(val).toLocaleString();
-}
-
-function fmtDate(iso) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (isNaN(d)) return iso;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function fmtDateTime(iso) {
@@ -109,63 +101,17 @@ function useAdminAI(path) {
   return { data, loading, error, refetch: load };
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-
-function Sk({ h = "h-4", w = "w-full" }) {
-  return <div className={`${h} ${w} bg-[#1a3050] animate-pulse rounded-sm`} />;
-}
-
-function SkCard() {
-  return (
-    <div className="border border-[#1a3050] bg-[#0B1C35] p-5 space-y-3 animate-pulse">
-      <Sk h="h-3" w="w-1/3" />
-      <Sk h="h-8" w="w-1/2" />
-      <Sk h="h-3" />
-    </div>
-  );
-}
-
-// ── Error ─────────────────────────────────────────────────────────────────────
-
-function Err({ message, onRetry }) {
-  return (
-    <div className="border border-red-800 bg-red-950/30 p-4 text-center">
-      <AlertCircle size={18} strokeWidth={1.5} className="text-red-400 mx-auto mb-2" />
-      <p className="text-red-400 text-xs mb-2">{message || "Failed to load."}</p>
-      {onRetry && (
-        <button
-          onClick={onRetry}
-          className="text-[10px] border border-red-700 text-red-400 px-3 py-1 hover:bg-red-950 transition-colors"
-        >
-          Retry
-        </button>
-      )}
-    </div>
-  );
-}
-
 // ── KPI Card ─────────────────────────────────────────────────────────────────
 
 function KpiCard({ label, value, sub, icon: Icon, loading, highlight }) {
   return (
-    <div className={`border bg-[#0B1C35] p-5 ${highlight ? "border-[#0891B2]" : "border-[#1a3050]"}`}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-[9px] font-semibold uppercase tracking-widest text-slate-500">
-          {label}
-        </div>
-        {Icon && <Icon size={12} strokeWidth={1.5} className="text-slate-600" />}
-      </div>
-      {loading ? (
-        <Sk h="h-8" w="w-2/3" />
-      ) : (
-        <>
-          <div className={`font-serif text-3xl ${highlight ? "text-[#0891B2]" : "text-white"}`}>
-            {value ?? "—"}
-          </div>
-          {sub && <div className="text-[10px] text-slate-500 mt-1">{sub}</div>}
-        </>
-      )}
-    </div>
+    <StatCard
+      label={label}
+      value={loading ? <Skeleton height="h-7" width="w-16" /> : (value ?? "—")}
+      sub={loading ? undefined : sub}
+      icon={Icon ? <Icon /> : undefined}
+      highlight={highlight}
+    />
   );
 }
 
@@ -174,9 +120,9 @@ function KpiCard({ label, value, sub, icon: Icon, loading, highlight }) {
 function Section({ title, children, action, collapsible = false }) {
   const [open, setOpen] = useState(true);
   return (
-    <div className="border border-[#1a3050] bg-[#080f1f]">
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[#1a3050]">
-        <h2 className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+    <Card padding="none">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
           {title}
         </h2>
         <div className="flex items-center gap-2">
@@ -184,7 +130,8 @@ function Section({ title, children, action, collapsible = false }) {
           {collapsible && (
             <button
               onClick={() => setOpen((v) => !v)}
-              className="text-slate-500 hover:text-slate-300 transition-colors"
+              aria-label={open ? `Collapse ${title}` : `Expand ${title}`}
+              className="text-slate-400 hover:text-slate-600 transition-colors"
             >
               {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
             </button>
@@ -192,35 +139,29 @@ function Section({ title, children, action, collapsible = false }) {
         </div>
       </div>
       {(!collapsible || open) && <div className="p-5">{children}</div>}
-    </div>
+    </Card>
   );
 }
 
-// ── Horizontal bar chart (div-based) ─────────────────────────────────────────
+// ── Horizontal bar chart — chrome converted to ds/, bar itself uses MiniBar ───
 
-function HBarChart({ items, maxVal, colorKey = "bar" }) {
+function HBarChart({ items, maxVal }) {
   if (!items || items.length === 0) {
-    return <p className="text-xs text-slate-500 italic">No data.</p>;
+    return <EmptyState title="No data." size="inline" />;
   }
   const top = maxVal || Math.max(...items.map((i) => i.value || 0), 1);
 
   return (
     <div className="space-y-3">
       {items.map((item, idx) => {
-        const color = item.color || AGENT_COLORS_ADMIN[item.key]?.bar || "#64748B";
-        const w = pct(item.value, top);
+        const color = item.color || AGENT_COLORS_ADMIN[item.key]?.bar || TEXT_MUTED;
         return (
           <div key={idx} className="flex items-center gap-3">
-            <div className="w-20 text-[10px] text-slate-400 text-right flex-shrink-0 truncate" title={item.label}>
+            <div className="w-20 text-[10px] text-slate-500 text-right flex-shrink-0 truncate" title={item.label}>
               {item.label}
             </div>
-            <div className="flex-1 h-4 bg-[#1a3050] rounded-sm overflow-hidden">
-              <div
-                className="h-full rounded-sm transition-all duration-500"
-                style={{ width: `${w}%`, backgroundColor: color }}
-              />
-            </div>
-            <div className="w-14 text-[10px] text-slate-400 text-right flex-shrink-0">
+            <MiniBar value={item.value || 0} max={top} height={14} color={color} style={{ flex: 1 }} />
+            <div className="w-14 text-[10px] text-slate-500 text-right flex-shrink-0">
               {typeof item.value === "number" ? fmtNum(item.value) : item.value}
               {item.pct != null ? ` (${item.pct}%)` : ""}
             </div>
@@ -231,11 +172,14 @@ function HBarChart({ items, maxVal, colorKey = "bar" }) {
   );
 }
 
-// ── Vertical bar chart (div-based) ────────────────────────────────────────────
+// ── Vertical bar chart (div-based) — kept hand-rolled: this renders 30+ dense
+// daily bars with 45°-rotated labels and a horizontal scroll container, which
+// ds/Chart's BarChart can't do (no label rotation, no per-bar min-width
+// scroll). Only its colors are restyled for the light theme. ─────────────────
 
 function VBarChart({ data, height = 100 }) {
   if (!data || data.length === 0) {
-    return <p className="text-xs text-slate-500 italic">No data.</p>;
+    return <EmptyState title="No data." size="inline" />;
   }
   const maxVal = Math.max(...data.map((d) => d.value || 0), 1);
 
@@ -251,11 +195,11 @@ function VBarChart({ data, height = 100 }) {
             title={`${item.label}: ${fmtNum(item.value)}`}
           >
             <div
-              className="w-full rounded-t-sm bg-[#0891B2] hover:bg-[#06B6D4] transition-colors"
-              style={{ height: h }}
+              className="w-full rounded-t-sm transition-colors"
+              style={{ height: h, backgroundColor: TEAL }}
             />
             <div
-              className="text-[8px] text-slate-600 mt-1 rotate-45 origin-left"
+              className="text-[8px] text-slate-400 mt-1 rotate-45 origin-left"
               style={{ whiteSpace: "nowrap" }}
             >
               {item.label}
@@ -356,23 +300,68 @@ export default function AdminAICenter() {
     },
   ];
 
+  const topUsersList = (Array.isArray(topUsers) ? topUsers : topUsers?.users || []);
+  const topUsersRows = topUsersList.slice(0, 50).map((u, idx) => ({
+    ...u, id: u.user_id ?? idx, _rank: idx + 1,
+  }));
+  const topUsersColumns = [
+    { key: "_rank", label: "#", width: 32, render: (v) => <span className="font-mono text-slate-400">{v}</span> },
+    { key: "name", label: "Name", render: (_v, row) => row.full_name || row.name || row.email || "—" },
+    { key: "institution", label: "Institution", maxWidth: 160, render: (v) => v || "—" },
+    { key: "message_count", label: "Messages", render: (v) => <span className="font-mono text-slate-800">{fmtNum(v)}</span> },
+    { key: "tokens_used", label: "Tokens", render: (v) => <span className="font-mono">{fmtNum(v)}</span> },
+    { key: "actions_count", label: "Actions", render: (v) => <span className="font-mono">{fmtNum(v)}</span> },
+  ];
+
+  const actionsList = (Array.isArray(actionsLog) ? actionsLog : actionsLog?.actions || []);
+  const actionsRows = actionsList.slice(0, 100).map((a, idx) => ({ ...a, id: a.id ?? idx }));
+  const actionsColumns = [
+    { key: "user", label: "User", render: (_v, row) => row.user_email || row.user_id || "—" },
+    {
+      key: "action_type", label: "Action Type",
+      render: (v) => {
+        const key = (v || "").split("_")[0].toLowerCase();
+        return key === "search"
+          ? <Badge size="sm" color={TEAL}>{v || "—"}</Badge>
+          : <Badge size="sm" variant={ACTION_VARIANT[key] || "neutral"}>{v || "—"}</Badge>;
+      },
+    },
+    {
+      key: "status", label: "Status",
+      render: (v) => (
+        <span
+          className="text-[10px] font-mono"
+          style={{ color: (v === "success" || v === "completed") ? EMERALD : (v === "failed" || v === "error") ? CRIMSON : TEXT_MUTED }}
+        >
+          {v || "—"}
+        </span>
+      ),
+    },
+    {
+      key: "params", label: "Params", maxWidth: 200,
+      render: (v) => (
+        <span className="font-mono text-[10px] text-slate-400">
+          {v ? (typeof v === "string" ? v.slice(0, 60) : JSON.stringify(v).slice(0, 60)) : "—"}
+        </span>
+      ),
+    },
+    { key: "created_at", label: "Date", render: (_v, row) => fmtDateTime(row.created_at || row.timestamp) },
+  ];
+
   return (
     <AdministrationLayout
       title="AI Operating System Center"
       subtitle="Usage analytics, cost tracking, and operational intelligence for Synaptiq AI OS"
       actions={
-        <button
-          onClick={refetchAll}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs border border-[#1a3050] text-slate-400 hover:text-white hover:border-[#0891B2] transition-colors"
-        >
+        <Button variant="ghost" size="sm" onClick={refetchAll}>
           <RefreshCw size={12} />
           Refresh All
-        </button>
+        </Button>
       }
     >
 
       {/* Section 1: KPI Cards */}
-      <div className="grid grid-cols-5 gap-3">
+      <StatGrid cols={5}>
         {kpis.map((kpi, idx) => (
           <KpiCard
             key={idx}
@@ -384,20 +373,20 @@ export default function AdminAICenter() {
             highlight={kpi.highlight}
           />
         ))}
-      </div>
+      </StatGrid>
 
       {/* Section 2: Agent Usage Distribution */}
       <Section title="Agent Usage Distribution">
         {statsE ? (
-          <Err message={statsE} onRetry={refStats} />
+          <ErrorState message={statsE} onRetry={refStats} />
         ) : statsL ? (
           <div className="space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
-              <Sk key={i} h="h-4" />
+              <Skeleton key={i} height="h-4" />
             ))}
           </div>
         ) : agentUsage.length === 0 ? (
-          <p className="text-xs text-slate-500 italic">No agent usage data available.</p>
+          <EmptyState title="No agent usage data available." size="inline" />
         ) : (
           <HBarChart items={agentUsage} />
         )}
@@ -406,11 +395,11 @@ export default function AdminAICenter() {
       {/* Section 3: Daily Activity */}
       <Section title="Daily Message Activity (last 30 days)">
         {statsE ? (
-          <Err message={statsE} onRetry={refStats} />
+          <ErrorState message={statsE} onRetry={refStats} />
         ) : statsL ? (
-          <Sk h="h-32" />
+          <Skeleton height="h-32" />
         ) : dailyActivity.length === 0 ? (
-          <p className="text-xs text-slate-500 italic">No daily activity data available.</p>
+          <EmptyState title="No daily activity data available." size="inline" />
         ) : (
           <div className="overflow-x-auto">
             <VBarChart data={dailyActivity} height={120} />
@@ -421,127 +410,26 @@ export default function AdminAICenter() {
       {/* Section 4: Top Users Table */}
       <Section title="Top Users by Activity" collapsible>
         {topE ? (
-          <Err message={topE} onRetry={refTop} />
+          <ErrorState message={topE} onRetry={refTop} />
         ) : topL ? (
-          <div className="space-y-2">
-            {[1, 2, 3, 4, 5].map((i) => <Sk key={i} h="h-8" />)}
-          </div>
-        ) : !topUsers || (Array.isArray(topUsers) ? topUsers : topUsers.users || []).length === 0 ? (
-          <p className="text-xs text-slate-500 italic">No user data available.</p>
+          <SkeletonCard rows={5} />
+        ) : topUsersList.length === 0 ? (
+          <EmptyState title="No user data available." size="inline" />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-[#1a3050]">
-                  {["#", "Name", "Institution", "Messages", "Tokens", "Actions"].map((col) => (
-                    <th
-                      key={col}
-                      className="px-3 py-2 text-left text-[9px] font-semibold uppercase tracking-widest text-slate-500"
-                    >
-                      {col}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {(Array.isArray(topUsers) ? topUsers : topUsers.users || [])
-                  .slice(0, 50)
-                  .map((u, idx) => (
-                    <tr
-                      key={u.user_id || idx}
-                      className="border-t border-[#1a3050] hover:bg-[#1a3050]/30 transition-colors"
-                    >
-                      <td className="px-3 py-2 text-slate-500 font-mono">{idx + 1}</td>
-                      <td className="px-3 py-2 text-slate-200">
-                        {u.full_name || u.name || u.email || "—"}
-                      </td>
-                      <td className="px-3 py-2 text-slate-400 truncate max-w-[160px]">
-                        {u.institution || "—"}
-                      </td>
-                      <td className="px-3 py-2 text-white font-mono">{fmtNum(u.message_count)}</td>
-                      <td className="px-3 py-2 text-slate-300 font-mono">{fmtNum(u.tokens_used)}</td>
-                      <td className="px-3 py-2 text-slate-300 font-mono">{fmtNum(u.actions_count)}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable columns={topUsersColumns} rows={topUsersRows} />
         )}
       </Section>
 
       {/* Section 5: Actions Log */}
       <Section title="Actions Log" collapsible>
         {actE ? (
-          <Err message={actE} onRetry={refAct} />
+          <ErrorState message={actE} onRetry={refAct} />
         ) : actL ? (
-          <div className="space-y-2">
-            {[1, 2, 3, 4, 5].map((i) => <Sk key={i} h="h-8" />)}
-          </div>
-        ) : !actionsLog || (Array.isArray(actionsLog) ? actionsLog : actionsLog.actions || []).length === 0 ? (
-          <p className="text-xs text-slate-500 italic">No actions logged yet.</p>
+          <SkeletonCard rows={5} />
+        ) : actionsList.length === 0 ? (
+          <EmptyState title="No actions logged yet." size="inline" />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-[#1a3050]">
-                  {["User", "Action Type", "Status", "Params", "Date"].map((col) => (
-                    <th
-                      key={col}
-                      className="px-3 py-2 text-left text-[9px] font-semibold uppercase tracking-widest text-slate-500"
-                    >
-                      {col}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {(Array.isArray(actionsLog) ? actionsLog : actionsLog.actions || [])
-                  .slice(0, 100)
-                  .map((a, idx) => {
-                    const actionKey = (a.action_type || "").split("_")[0].toLowerCase();
-                    const cls = ACTION_COLORS[actionKey] || "text-slate-400 border-slate-700 bg-slate-900/30";
-                    return (
-                      <tr
-                        key={a.id || idx}
-                        className="border-t border-[#1a3050] hover:bg-[#1a3050]/30 transition-colors"
-                      >
-                        <td className="px-3 py-2 text-slate-300">
-                          {a.user_email || a.user_id || "—"}
-                        </td>
-                        <td className="px-3 py-2">
-                          <span className={`text-[10px] px-2 py-0.5 border rounded-full ${cls}`}>
-                            {a.action_type || "—"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2">
-                          <span
-                            className={`text-[10px] font-mono ${
-                              a.status === "success" || a.status === "completed"
-                                ? "text-emerald-400"
-                                : a.status === "failed" || a.status === "error"
-                                ? "text-red-400"
-                                : "text-slate-400"
-                            }`}
-                          >
-                            {a.status || "—"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 text-slate-500 font-mono text-[10px] max-w-[200px] truncate">
-                          {a.params
-                            ? typeof a.params === "string"
-                              ? a.params.slice(0, 60)
-                              : JSON.stringify(a.params).slice(0, 60)
-                            : "—"}
-                        </td>
-                        <td className="px-3 py-2 text-slate-500">
-                          {fmtDateTime(a.created_at || a.timestamp)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
+          <DataTable columns={actionsColumns} rows={actionsRows} />
         )}
       </Section>
 
@@ -549,67 +437,52 @@ export default function AdminAICenter() {
       <Section
         title="Cost Analytics"
         action={
-          <span className="text-[9px] text-slate-600 italic">
+          <span className="text-[10px] text-slate-400 italic">
             claude-sonnet-4-6: $3/M input · $15/M output
           </span>
         }
         collapsible
       >
         {costE ? (
-          <Err message={costE} onRetry={refCost} />
+          <ErrorState message={costE} onRetry={refCost} />
         ) : costL ? (
           <div className="grid grid-cols-2 gap-4">
-            <Sk h="h-24" />
-            <Sk h="h-24" />
+            <Skeleton height="h-24" />
+            <Skeleton height="h-24" />
           </div>
         ) : !costData ? (
-          <p className="text-xs text-slate-500 italic">No cost data available.</p>
+          <EmptyState title="No cost data available." size="inline" />
         ) : (
           <div className="space-y-6">
             {/* Summary cards */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="border border-[#1a3050] bg-[#0B1C35] p-4">
-                <div className="text-[9px] uppercase tracking-widest text-slate-500 mb-2">
-                  Total Input Tokens
-                </div>
-                <div className="text-2xl text-white font-serif">
-                  {fmtNum(costData.total_input_tokens)}
-                </div>
-                <div className="text-[10px] text-slate-500 mt-1">
-                  ≈ ${((costData.total_input_tokens || 0) / 1_000_000 * 3).toFixed(2)}
-                </div>
-              </div>
-              <div className="border border-[#1a3050] bg-[#0B1C35] p-4">
-                <div className="text-[9px] uppercase tracking-widest text-slate-500 mb-2">
-                  Total Output Tokens
-                </div>
-                <div className="text-2xl text-white font-serif">
-                  {fmtNum(costData.total_output_tokens)}
-                </div>
-                <div className="text-[10px] text-slate-500 mt-1">
-                  ≈ ${((costData.total_output_tokens || 0) / 1_000_000 * 15).toFixed(2)}
-                </div>
-              </div>
-              <div className="border border-[#0891B2] bg-[#0B1C35] p-4">
-                <div className="text-[9px] uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-1">
-                  <DollarSign size={10} />
-                  Estimated Total Cost
-                </div>
-                <div className="text-2xl text-[#0891B2] font-serif">
-                  {costData.estimated_cost_usd != null
+            <StatGrid cols={3}>
+              <StatCard
+                label="Total Input Tokens"
+                value={fmtNum(costData.total_input_tokens)}
+                sub={`≈ $${((costData.total_input_tokens || 0) / 1_000_000 * 3).toFixed(2)}`}
+              />
+              <StatCard
+                label="Total Output Tokens"
+                value={fmtNum(costData.total_output_tokens)}
+                sub={`≈ $${((costData.total_output_tokens || 0) / 1_000_000 * 15).toFixed(2)}`}
+              />
+              <StatCard
+                label="Estimated Total Cost"
+                value={
+                  costData.estimated_cost_usd != null
                     ? `$${Number(costData.estimated_cost_usd).toFixed(2)}`
-                    : fmtCost((costData.total_input_tokens || 0) + (costData.total_output_tokens || 0))}
-                </div>
-                <div className="text-[10px] text-slate-500 mt-1">
-                  blended avg rate applied
-                </div>
-              </div>
-            </div>
+                    : fmtCost((costData.total_input_tokens || 0) + (costData.total_output_tokens || 0))
+                }
+                sub="blended avg rate applied"
+                icon={<DollarSign />}
+                highlight
+              />
+            </StatGrid>
 
             {/* Cost by agent */}
             {costByAgent.length > 0 && (
               <div>
-                <div className="text-[9px] uppercase tracking-widest text-slate-500 mb-3">
+                <div className="text-xs uppercase tracking-widest text-slate-500 mb-3">
                   Cost by Agent ($USD est.)
                 </div>
                 <HBarChart
@@ -622,7 +495,7 @@ export default function AdminAICenter() {
             {/* Daily cost */}
             {costData.daily_cost && costData.daily_cost.length > 0 && (
               <div>
-                <div className="text-[9px] uppercase tracking-widest text-slate-500 mb-3">
+                <div className="text-xs uppercase tracking-widest text-slate-500 mb-3">
                   Daily Cost Trend ($USD)
                 </div>
                 <VBarChart
@@ -641,47 +514,27 @@ export default function AdminAICenter() {
       {/* Section 7: Memory Stats */}
       <Section title="Memory Analytics" collapsible>
         {memE ? (
-          <Err message={memE} onRetry={refMem} />
+          <ErrorState message={memE} onRetry={refMem} />
         ) : memL ? (
           <div className="space-y-2">
-            {[1, 2, 3].map((i) => <Sk key={i} h="h-5" />)}
+            {[1, 2, 3].map((i) => <Skeleton key={i} height="h-5" />)}
           </div>
         ) : !memStats ? (
-          <p className="text-xs text-slate-500 italic">No memory stats available.</p>
+          <EmptyState title="No memory stats available." size="inline" />
         ) : (
           <div className="space-y-5">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="border border-[#1a3050] bg-[#0B1C35] p-4">
-                <div className="text-[9px] uppercase tracking-widest text-slate-500 mb-2">
-                  Total Memory Items
-                </div>
-                <div className="text-2xl text-white font-serif">
-                  {fmtNum(memStats.total_count || memStats.total)}
-                </div>
-              </div>
-              <div className="border border-[#1a3050] bg-[#0B1C35] p-4">
-                <div className="text-[9px] uppercase tracking-widest text-slate-500 mb-2">
-                  Users with Memory
-                </div>
-                <div className="text-2xl text-white font-serif">
-                  {fmtNum(memStats.users_with_memory)}
-                </div>
-              </div>
-              <div className="border border-[#1a3050] bg-[#0B1C35] p-4">
-                <div className="text-[9px] uppercase tracking-widest text-slate-500 mb-2">
-                  Avg per User
-                </div>
-                <div className="text-2xl text-white font-serif">
-                  {memStats.avg_per_user != null
-                    ? Number(memStats.avg_per_user).toFixed(1)
-                    : "—"}
-                </div>
-              </div>
-            </div>
+            <StatGrid cols={3}>
+              <StatCard label="Total Memory Items" value={fmtNum(memStats.total_count || memStats.total)} />
+              <StatCard label="Users with Memory" value={fmtNum(memStats.users_with_memory)} />
+              <StatCard
+                label="Avg per User"
+                value={memStats.avg_per_user != null ? Number(memStats.avg_per_user).toFixed(1) : "—"}
+              />
+            </StatGrid>
 
             {memByType.length > 0 && (
               <div>
-                <div className="text-[9px] uppercase tracking-widest text-slate-500 mb-3">
+                <div className="text-xs uppercase tracking-widest text-slate-500 mb-3">
                   Distribution by Memory Type
                 </div>
                 <HBarChart items={memByType} />
@@ -692,7 +545,7 @@ export default function AdminAICenter() {
       </Section>
 
       {/* Footer note */}
-      <div className="text-center text-[9px] text-slate-600 pb-4">
+      <div className="text-center text-[10px] text-slate-400 pb-4">
         Cost estimates based on claude-sonnet-4-6 pricing ($3/M input tokens · $15/M output tokens).
         Actual billing may vary.
       </div>

@@ -48,7 +48,7 @@ export function ListItem({
     borderBottom: `1px solid ${BRD}`,
     background: selected ? NAVY_06 : hov && interactive ? WARM : "transparent",
     cursor: interactive ? "pointer" : "default",
-    transition: "background 100ms",
+    transition: "background 120ms",
     opacity: disabled ? 0.45 : 1,
     textDecoration: "none",
     color: "inherit",

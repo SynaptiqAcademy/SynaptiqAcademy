@@ -90,7 +90,7 @@ export default function ProviderSetup() {
             </TagGroup>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
             <Input
               label="Hourly Rate (USD)"
               type="number"

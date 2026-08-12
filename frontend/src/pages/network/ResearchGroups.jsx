@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { Plus, Users, Search, Lock } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Input, Textarea, FormSelect, FormRow, Modal, NavTabs, EmptyState, LoadingOverlay } from "@/components/ds";
 
 const TYPE_COLOR = {
@@ -163,13 +163,10 @@ export default function ResearchGroups() {
   };
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Research Groups"
       actions={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={15} />Create</Button>}
-    >
-
-      {/* Tabs */}
-      <div style={{ marginBottom: 16 }}>
+      nav={
         <NavTabs
           variant="pill"
           tabs={[
@@ -179,7 +176,8 @@ export default function ResearchGroups() {
           active={tab}
           onChange={setTab}
         />
-      </div>
+      }
+    >
 
       {tab === "discover" && (
         <>
@@ -216,6 +214,6 @@ export default function ResearchGroups() {
       )}
 
       {showCreate && <CreateModal onClose={() => setShowCreate(false)} onCreate={() => { fetchGroups(); fetchMyGroups(); }} />}
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }

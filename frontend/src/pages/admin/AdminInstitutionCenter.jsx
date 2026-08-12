@@ -4,6 +4,7 @@ import { RefreshCw, Search, Building2, ChevronRight, X } from "lucide-react";
 import api from "@/lib/api";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
+import { Drawer, Modal, Button, Input, FormSelect, Badge, StatCard, Alert } from "@/components/ds";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -24,48 +25,40 @@ function DetailPanel({ instId, onClose }) {
   const s = d.stats || {};
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-start justify-end z-50">
-      <div className="bg-[#0B1C35] border-l border-[#1a3050] w-full max-w-md h-full overflow-y-auto">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1a3050] sticky top-0 bg-[#0B1C35]">
-          <span className="text-sm font-semibold text-white">{d.name || "Institution"}</span>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-xl">×</button>
-        </div>
-        {loading ? (
-          <div className="p-5 text-sm text-slate-500">Loading...</div>
-        ) : (
-          <div className="p-5 space-y-5">
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div><span className="text-slate-500">Country:</span> <span className="text-slate-300 ml-1">{d.country || "—"}</span></div>
-              <div><span className="text-slate-500">Type:</span> <span className="text-slate-300 ml-1">{d.type || "—"}</span></div>
-              <div><span className="text-slate-500">Status:</span>
-                <span className={`ml-1 ${d.status === "active" ? "text-green-400" : "text-red-400"}`}>{d.status || "active"}</span>
-              </div>
-              <div><span className="text-slate-500">Website:</span>
-                <a href={d.website} target="_blank" rel="noreferrer" className="text-blue-400 ml-1 hover:underline">
-                  {d.website ? "Link" : "—"}
-                </a>
-              </div>
+    <Drawer open onClose={onClose} title={d.name || "Institution"}>
+      {loading ? (
+        <div className="text-sm text-slate-500">Loading...</div>
+      ) : (
+        <div className="space-y-5">
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div><span className="text-slate-500">Country:</span> <span className="text-slate-700 ml-1">{d.country || "—"}</span></div>
+            <div><span className="text-slate-500">Type:</span> <span className="text-slate-700 ml-1">{d.type || "—"}</span></div>
+            <div className="flex items-center gap-1">
+              <span className="text-slate-500">Status:</span>
+              <Badge variant={d.status === "active" ? "success" : "danger"}>{d.status || "active"}</Badge>
             </div>
-            <div>
-              <div className="text-xs text-slate-500 font-medium mb-3">Platform Statistics</div>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  ["Total Users", s.users], ["Researchers", s.researchers],
-                  ["Professors", s.professors], ["Publications", s.publications],
-                  ["Projects", s.projects], ["Collaborations", s.collaborations],
-                  ["Grants", s.grants], ["Units", s.units],
-                ].map(([label, val]) => (
-                  <div key={label} className="bg-[#0F2847] border border-[#1a3050] p-3">
-                    <div className="text-lg font-bold text-white">{val ?? 0}</div>
-                    <div className="text-[10px] text-slate-500">{label}</div>
-                  </div>
-                ))}
-              </div>
+            <div><span className="text-slate-500">Website:</span>
+              <a href={d.website} target="_blank" rel="noreferrer" className="text-blue-600 ml-1 hover:underline">
+                {d.website ? "Link" : "—"}
+              </a>
             </div>
           </div>
-        )}
-      </div>
-    </div>
+          <div>
+            <div className="text-xs text-slate-500 font-medium mb-3">Platform Statistics</div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                ["Total Users", s.users], ["Researchers", s.researchers],
+                ["Professors", s.professors], ["Publications", s.publications],
+                ["Projects", s.projects], ["Collaborations", s.collaborations],
+                ["Grants", s.grants], ["Units", s.units],
+              ].map(([label, val]) => (
+                <StatCard key={label} label={label} value={val ?? 0} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </Drawer>
   );
 }
 
@@ -84,36 +77,35 @@ function PatchModal({ inst, onClose, onSaved }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#0B1C35] border border-[#1a3050] w-full max-w-sm">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1a3050]">
-          <span className="text-sm font-semibold text-white">Edit Institution</span>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-xl">×</button>
-        </div>
-        <div className="p-5 space-y-3">
-          <div>
-            <label className="block text-[10px] text-slate-500 mb-1">Name</label>
-            <input value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))}
-              className="w-full text-xs bg-[#0B1C35] border border-[#1a3050] text-slate-300 px-2 py-1.5" />
-          </div>
-          <div>
-            <label className="block text-[10px] text-slate-500 mb-1">Status</label>
-            <select value={form.status} onChange={e => setForm(f => ({...f, status: e.target.value}))}
-              className="w-full text-xs bg-[#0B1C35] border border-[#1a3050] text-slate-300 px-2 py-1.5">
-              <option value="active">Active</option>
-              <option value="suspended">Suspended</option>
-            </select>
-          </div>
-          {msg && <div className="text-xs text-red-400">{msg}</div>}
-          <div className="flex gap-2 pt-1">
-            <button onClick={onClose} className="flex-1 text-xs text-slate-400 border border-[#1a3050] px-3 py-2 hover:text-white">Cancel</button>
-            <button onClick={save} disabled={saving} className="flex-1 text-xs bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-3 py-2">
-              {saving ? "Saving..." : "Save"}
-            </button>
-          </div>
-        </div>
+    <Modal
+      open
+      onClose={onClose}
+      title="Edit Institution"
+      size="sm"
+      footer={
+        <>
+          <Button variant="ghost" size="sm" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button variant="primary" size="sm" onClick={save} loading={saving}>Save</Button>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        <Input
+          label="Name"
+          value={form.name}
+          onChange={e => setForm(f => ({...f, name: e.target.value}))}
+        />
+        <FormSelect
+          label="Status"
+          value={form.status}
+          onChange={e => setForm(f => ({...f, status: e.target.value}))}
+        >
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+        </FormSelect>
+        {msg && <Alert variant="error">{msg}</Alert>}
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -136,7 +128,7 @@ export default function AdminInstitutionCenter() {
       title="Institution Management Center"
       subtitle="Academic institution governance — users, publications, grants, departments"
       actions={
-        <button onClick={refetch} className="p-1.5 bg-[#0F2847] border border-[#1a3050] text-slate-400 hover:text-white">
+        <button onClick={refetch} aria-label="Refresh institutions" className="p-1.5 bg-[#0F2847] border border-[#1a3050] text-slate-400 hover:text-white">
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
         </button>
       }
@@ -152,7 +144,7 @@ export default function AdminInstitutionCenter() {
             className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#0F2847] border border-[#1a3050] text-slate-300 placeholder-slate-600" />
         </div>
         <button onClick={doSearch} className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5">Search</button>
-        {search && <button onClick={() => { setSearch(""); setSearchInput(""); setPage(1); }} className="text-xs text-slate-400 hover:text-white px-2">
+        {search && <button onClick={() => { setSearch(""); setSearchInput(""); setPage(1); }} aria-label="Clear search" className="text-xs text-slate-400 hover:text-white px-2">
           <X size={13} />
         </button>}
         <span className="text-xs text-slate-500 self-center">{total} institutions</span>
@@ -199,7 +191,7 @@ export default function AdminInstitutionCenter() {
                 </td>
                 <td className="px-3 py-2">
                   <div className="flex gap-1">
-                    <button onClick={() => setSelected(inst.id)} className="text-slate-400 hover:text-blue-400">
+                    <button onClick={() => setSelected(inst.id)} aria-label={`View ${inst.name} details`} className="text-slate-400 hover:text-blue-400">
                       <ChevronRight size={13} />
                     </button>
                     <button onClick={() => setEditInst(inst)} className="text-slate-400 hover:text-white text-[10px] px-1 border border-[#1a3050] hover:border-slate-500">

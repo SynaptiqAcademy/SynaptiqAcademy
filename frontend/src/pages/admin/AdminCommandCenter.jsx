@@ -10,9 +10,13 @@ import {
   Sparkles, LifeBuoy, Network, HeartPulse,
 } from "lucide-react";
 import api from "@/lib/api";
-import { NAVY } from "@/lib/tokens";
+import { INFO, EMERALD, AMBER, CRIMSON, VIOLET, TEXT_MUTED, BRD, BRD_SOFT, WHITE } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { useAdminRealtime } from "@/contexts/AdminRealtimeContext";
+import {
+  Button, Card, StatCard, Badge, MiniBar, FormSelect, Input,
+  Dropdown, DropdownItem,
+} from "@/components/ds";
 
 function useAOS(path, params = {}) {
   const [data, setData] = useState(null);
@@ -39,25 +43,17 @@ function useAdminEndpoint(path) {
   return { data, refetch: fetch };
 }
 
+const KPI_COLORS = { blue: INFO, green: EMERALD, yellow: AMBER, red: CRIMSON, purple: VIOLET };
+
 function KpiCard({ icon: Icon, label, value, sub, color = "blue" }) {
-  const colors = {
-    blue:   "text-blue-400 bg-blue-900/30",
-    green:  "text-green-400 bg-green-900/30",
-    yellow: "text-yellow-400 bg-yellow-900/30",
-    red:    "text-red-400 bg-red-900/30",
-    purple: "text-purple-400 bg-purple-900/30",
-  };
+  const c = KPI_COLORS[color] || KPI_COLORS.blue;
   return (
-    <div className="bg-[#0F2847] border border-[#1a3050] p-4 flex gap-4 items-start">
-      <div className={`p-2 ${colors[color] || colors.blue}`}>
-        <Icon size={18} />
-      </div>
-      <div className="min-w-0">
-        <div className="text-2xl font-bold text-white">{value ?? "—"}</div>
-        <div className="text-xs text-slate-400">{label}</div>
-        {sub && <div className="text-xs text-slate-500 mt-0.5">{sub}</div>}
-      </div>
-    </div>
+    <StatCard
+      label={label}
+      value={value ?? "—"}
+      sub={sub}
+      icon={Icon ? <Icon style={{ color: c }} /> : undefined}
+    />
   );
 }
 
@@ -73,22 +69,15 @@ function MCSection({ icon: Icon, title, children }) {
   );
 }
 
+const STATUS_VARIANT = { healthy: "success", degraded: "warning", unhealthy: "danger" };
+
 function StatusPill({ status }) {
-  const styles = {
-    healthy: "bg-green-900/30 text-green-400 border-green-800",
-    degraded: "bg-yellow-900/30 text-yellow-400 border-yellow-800",
-    unhealthy: "bg-red-900/30 text-red-400 border-red-800",
-  };
-  return (
-    <span className={`inline-block px-2 py-0.5 text-xs font-medium border rounded ${styles[status] || styles.healthy}`}>
-      {status || "unknown"}
-    </span>
-  );
+  return <Badge variant={STATUS_VARIANT[status] || "neutral"}>{status || "unknown"}</Badge>;
 }
 
-const CHART_BLUE = "#3b82f6";
-const CHART_GREEN = "#22c55e";
-const CHART_PURPLE = "#a855f7";
+const CHART_BLUE = INFO;
+const CHART_GREEN = EMERALD;
+const CHART_PURPLE = VIOLET;
 
 export default function AdminCommandCenter() {
   const [days, setDays] = useState(30);
@@ -146,46 +135,43 @@ export default function AdminCommandCenter() {
       subtitle="The single place to operate Synaptiq"
       actions={
         <div className="flex items-center gap-2">
-          <select
+          <FormSelect
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
-            className="text-xs bg-[#0F2847] border border-[#1a3050] text-slate-300 px-2 py-1.5"
+            size="sm"
+            wrapperClassName="w-32"
           >
             <option value={7}>Last 7 days</option>
             <option value={30}>Last 30 days</option>
             <option value={90}>Last 90 days</option>
             <option value={365}>Last year</option>
-          </select>
-          <input
+          </FormSelect>
+          <Input
             type="text"
             placeholder="Country filter"
             value={country}
             onChange={(e) => setCountry(e.target.value)}
-            className="text-xs bg-[#0F2847] border border-[#1a3050] text-slate-300 px-2 py-1.5 w-28"
+            size="sm"
+            wrapperClassName="w-28"
           />
-          <button
-            onClick={refetch}
-            className="p-1.5 bg-[#0F2847] border border-[#1a3050] text-slate-400 hover:text-white transition-colors"
-          >
+          <Button variant="ghost" size="icon" onClick={refetch} aria-label="Refresh">
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          </button>
-          <div className="relative group">
-            <button className="flex items-center gap-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 transition-colors">
-              <Download size={12} />
-              Export
-            </button>
-            <div className="absolute right-0 top-full mt-1 bg-[#0F2847] border border-[#1a3050] z-20 hidden group-hover:block min-w-[140px]">
-              {["users", "activity", "financial"].map((r) => (
-                <button
-                  key={r}
-                  onClick={() => handleExport(r)}
-                  className="block w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-[#1a3050] capitalize"
-                >
-                  {r} CSV
-                </button>
-              ))}
-            </div>
-          </div>
+          </Button>
+          <Dropdown
+            align="right"
+            trigger={
+              <Button variant="primary" size="sm">
+                <Download size={12} />
+                Export
+              </Button>
+            }
+          >
+            {["users", "activity", "financial"].map((r) => (
+              <DropdownItem key={r} onClick={() => handleExport(r)}>
+                <span className="capitalize">{r} CSV</span>
+              </DropdownItem>
+            ))}
+          </Dropdown>
         </div>
       }
     >
@@ -206,53 +192,51 @@ export default function AdminCommandCenter() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-[#0F2847] border border-[#1a3050] p-4">
-            <div className="text-sm font-semibold text-white mb-3">User Registrations</div>
+          <Card padding="lg">
+            <div className="text-sm font-semibold text-slate-800 mb-3">User Registrations</div>
             {tsLoading ? (
-              <div className="h-48 flex items-center justify-center text-slate-500 text-sm">Loading...</div>
+              <div className="h-48 flex items-center justify-center text-slate-400 text-sm">Loading...</div>
             ) : (
               <ResponsiveContainer width="100%" height={180}>
                 <AreaChart data={ts?.series || []}>
                   <defs>
                     <linearGradient id="regGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={CHART_BLUE} stopOpacity={0.3} />
+                      <stop offset="5%" stopColor={CHART_BLUE} stopOpacity={0.25} />
                       <stop offset="95%" stopColor={CHART_BLUE} stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1a3050" />
-                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#94a3b8" }} tickFormatter={(v) => v.slice(5)} />
-                  <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} />
-                  <Tooltip contentStyle={{ backgroundColor: "#0B1C35", border: "1px solid #1a3050", fontSize: 12 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={BRD_SOFT} />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: TEXT_MUTED }} tickFormatter={(v) => v.slice(5)} />
+                  <YAxis tick={{ fontSize: 10, fill: TEXT_MUTED }} />
+                  <Tooltip contentStyle={{ backgroundColor: WHITE, border: `1px solid ${BRD}`, fontSize: 12 }} />
                   <Area type="monotone" dataKey="registrations" stroke={CHART_BLUE} fill="url(#regGrad)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             )}
-          </div>
+          </Card>
 
-          <div className="bg-[#0F2847] border border-[#1a3050] p-4">
-            <div className="text-sm font-semibold text-white mb-3">Plan Distribution</div>
+          <Card padding="lg">
+            <div className="text-sm font-semibold text-slate-800 mb-3">Plan Distribution</div>
             {!loading && (
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { label: "Free",            value: u.free,           pct: u.total ? Math.round(u.free / u.total * 100) : 0,           color: "bg-slate-500" },
-                  { label: "Researcher",      value: u.researcher,     pct: u.total ? Math.round(u.researcher / u.total * 100) : 0,     color: "bg-blue-500" },
-                  { label: "Pro Researcher",  value: u.pro_researcher, pct: u.total ? Math.round(u.pro_researcher / u.total * 100) : 0, color: "bg-purple-500" },
-                  { label: "Institution",     value: u.institution,    pct: u.total ? Math.round(u.institution / u.total * 100) : 0,    color: "bg-green-500" },
+                  { label: "Free",            value: u.free,           pct: u.total ? Math.round(u.free / u.total * 100) : 0,           color: TEXT_MUTED },
+                  { label: "Researcher",      value: u.researcher,     pct: u.total ? Math.round(u.researcher / u.total * 100) : 0,     color: INFO },
+                  { label: "Pro Researcher",  value: u.pro_researcher, pct: u.total ? Math.round(u.pro_researcher / u.total * 100) : 0, color: VIOLET },
+                  { label: "Institution",     value: u.institution,    pct: u.total ? Math.round(u.institution / u.total * 100) : 0,    color: EMERALD },
                 ].map(({ label, value, pct, color }) => (
                   <div key={label}>
                     <div className="flex justify-between text-xs text-slate-400 mb-1">
                       <span>{label}</span>
                       <span>{pct}%</span>
                     </div>
-                    <div className="h-1.5 bg-[#1a3050] rounded-full overflow-hidden">
-                      <div className={`h-full ${color}`} style={{ width: `${pct}%` }} />
-                    </div>
-                    <div className="text-xs text-white mt-1">{value?.toLocaleString() ?? 0}</div>
+                    <MiniBar value={pct} max={100} height={6} color={color} />
+                    <div className="text-xs text-slate-800 mt-1">{value?.toLocaleString() ?? 0}</div>
                   </div>
                 ))}
               </div>
             )}
-          </div>
+          </Card>
         </div>
       </MCSection>
 
@@ -311,23 +295,23 @@ export default function AdminCommandCenter() {
           <KpiCard icon={TrendingUp} label="Avg Msgs / User" value={aiStats?.avg_messages_per_user ?? "—"} color="green" />
         </div>
 
-        <div className="bg-[#0F2847] border border-[#1a3050] p-4">
-          <div className="text-sm font-semibold text-white mb-3">Daily Logins &amp; AI Requests</div>
+        <Card padding="lg">
+          <div className="text-sm font-semibold text-slate-800 mb-3">Daily Logins &amp; AI Requests</div>
           {tsLoading ? (
-            <div className="h-48 flex items-center justify-center text-slate-500 text-sm">Loading...</div>
+            <div className="h-48 flex items-center justify-center text-slate-400 text-sm">Loading...</div>
           ) : (
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={ts?.series || []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1a3050" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#94a3b8" }} tickFormatter={(v) => v.slice(5)} />
-                <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} />
-                <Tooltip contentStyle={{ backgroundColor: "#0B1C35", border: "1px solid #1a3050", fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={BRD_SOFT} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: TEXT_MUTED }} tickFormatter={(v) => v.slice(5)} />
+                <YAxis tick={{ fontSize: 10, fill: TEXT_MUTED }} />
+                <Tooltip contentStyle={{ backgroundColor: WHITE, border: `1px solid ${BRD}`, fontSize: 12 }} />
                 <Bar dataKey="logins"      name="Logins"      fill={CHART_GREEN}  radius={[2, 2, 0, 0]} />
                 <Bar dataKey="ai_requests" name="AI Requests" fill={CHART_PURPLE} radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </Card>
       </MCSection>
 
       {/* ═══════════════════════ 6. SECURITY ═══════════════════════ */}
@@ -342,12 +326,12 @@ export default function AdminCommandCenter() {
 
       {/* ═══════════════════════ 7. INFRASTRUCTURE ═══════════════════════ */}
       <MCSection icon={Server} title="Infrastructure">
-        <div className="bg-[#0F2847] border border-[#1a3050] p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm font-semibold text-white">
+        <Card padding="lg" className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
             <Server size={14} /> Overall Platform Status
           </div>
           <StatusPill status={opsHealth?.status} />
-        </div>
+        </Card>
         <div className="grid grid-cols-2 gap-3">
           <KpiCard icon={Server} label="App Uptime (h)" value={health?.app_uptime_hours ?? "—"} color="blue" />
           <KpiCard icon={AlertCircle} label="Errors (24h)" value={health?.errors_24h ?? "—"} color={health?.errors_24h ? "red" : "green"} />
@@ -385,8 +369,8 @@ export default function AdminCommandCenter() {
       {/* ═══════════════════════ 10. SYSTEM HEALTH ═══════════════════════ */}
       <MCSection icon={HeartPulse} title="System Health">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-[#0F2847] border border-[#1a3050] p-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-white mb-3">
+          <Card padding="lg">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-800 mb-3">
               <ShieldAlert size={14} /> Errors &amp; Incidents
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -395,11 +379,11 @@ export default function AdminCommandCenter() {
               <KpiCard icon={AlertCircle} label="New (24h)" value={errorStats?.new_24h ?? "—"} color="blue" />
               <KpiCard icon={Activity} label="Top Category" value={errorStats?.by_category?.[0]?.category ?? "—"} color="purple" />
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-[#0F2847] border border-[#1a3050] p-4">
+          <Card padding="lg">
             <div className="flex items-center gap-2 justify-between mb-3">
-              <div className="flex items-center gap-2 text-sm font-semibold text-white">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                 <HeartPulse size={14} /> Component Health
               </div>
               <StatusPill status={opsHealth?.status} />
@@ -409,7 +393,7 @@ export default function AdminCommandCenter() {
               <KpiCard icon={AlertCircle} label="Degraded" value={opsHealth?.summary?.degraded ?? "—"} color="yellow" />
               <KpiCard icon={AlertCircle} label="Unhealthy" value={opsHealth?.summary?.unhealthy ?? "—"} color="red" />
             </div>
-          </div>
+          </Card>
         </div>
       </MCSection>
     </AdministrationLayout>

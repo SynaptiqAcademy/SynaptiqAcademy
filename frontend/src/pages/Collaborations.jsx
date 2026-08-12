@@ -10,6 +10,13 @@ import { ACCENT, NAVY, WARM, BRD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SkeletonCard } from "@/components/ds/LoadingState";
 import EmptyState from "@/components/ds/EmptyState";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { Tag } from "@/components/ds/Tag";
+import { Button } from "@/components/ds/Button";
+import { SearchBar } from "@/components/ds/SearchBar";
+import { FormSelect } from "@/components/ds/FormSelect";
+import { Alert } from "@/components/ds/Alert";
 import {
   Search, Plus, Handshake, Users, Check, X, ArrowRight,
   BrainCircuit, Coins, Calendar, FolderOpen, MessageSquare, Send,
@@ -162,19 +169,19 @@ export default function Collaborations() {
       subtitle="Build your research network. Collaborate globally. Publish together."
       actions={
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <Link to="/collaborations/my" className="flex items-center gap-1.5 border border-slate-200 text-slate-600 text-xs px-3 py-1.5 hover:bg-slate-50 transition-colors">
+          <Button as={Link} to="/collaborations/my" variant="ghost" size="sm">
             <FolderOpen size={12} strokeWidth={1.5} /> My Collaborations
-          </Link>
-          <Link to="/collaboration-intelligence" className="flex items-center gap-1.5 border border-slate-200 text-slate-600 text-xs px-3 py-1.5 hover:bg-slate-50 transition-colors">
+          </Button>
+          <Button as={Link} to="/collaboration-intelligence" variant="ghost" size="sm">
             <BrainCircuit size={12} strokeWidth={1.5} /> Find Researchers
-          </Link>
-          <button
+          </Button>
+          <Button
             data-testid={TID.collabCreateBtn}
             onClick={() => navigate("/collaborations/new")}
-            className="flex items-center gap-1.5 bg-[#6B0E28] text-white text-sm px-3 py-1.5 hover:opacity-90 transition-opacity"
+            size="sm"
           >
             <Plus size={13} strokeWidth={2} /> Post Collaboration
-          </button>
+          </Button>
         </div>
       }
       meta={statsMeta}
@@ -182,16 +189,15 @@ export default function Collaborations() {
 
       {/* ── PRIORITY INVITATIONS ───────────────────────────────────────────── */}
       {requests.length > 0 && (
-        <div style={{ background: "#FFFBEB", borderLeft: "3px solid #F59E0B", border: "1px solid #FDE68A", borderTop: "none", padding: "18px 20px 16px", marginBottom: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <Alert
+          variant="warning"
+          icon={AlertCircle}
+          style={{ marginBottom: 0, borderRadius: 0 }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <AlertCircle size={14} strokeWidth={1.5} style={{ color: "#D97706" }} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#92400E" }}>
-                Requires your attention
-              </span>
-              <span style={{ fontSize: 11, background: "#D97706", color: "white", padding: "1px 7px", fontFamily: "monospace", fontWeight: 600 }}>
-                {requests.length}
-              </span>
+              <span style={{ fontWeight: 700 }}>Requires your attention</span>
+              <Badge variant="warning" size="sm">{requests.length}</Badge>
             </div>
             <Link
               to="/collaboration-requests"
@@ -200,7 +206,7 @@ export default function Collaborations() {
               View all requests <ChevronRight size={12} strokeWidth={2} />
             </Link>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 10, marginTop: 6 }}>
             {requests.slice(0, 4).map((req) => (
               <InvitationCard
                 key={req.id}
@@ -217,7 +223,7 @@ export default function Collaborations() {
               </Link>
             </div>
           )}
-        </div>
+        </Alert>
       )}
 
       {/* ── MAIN CONTENT GRID ──────────────────────────────────────────────── */}
@@ -253,56 +259,32 @@ export default function Collaborations() {
                 <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 3 }}>Open Marketplace</div>
                 <h2 style={{ fontSize: 17, fontWeight: 700, color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>Open Collaborations</h2>
               </div>
-              <button
-                onClick={() => navigate("/collaborations/new")}
-                style={{ display: "inline-flex", alignItems: "center", gap: 6, background: NAVY, color: "white", border: "none", padding: "7px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
-                onMouseEnter={(e) => e.currentTarget.style.background = "#1a3d65"}
-                onMouseLeave={(e) => e.currentTarget.style.background = NAVY}
-              >
+              <Button size="sm" onClick={() => navigate("/collaborations/new")}>
                 <Plus size={12} strokeWidth={2} />
                 Post opportunity
-              </button>
+              </Button>
             </div>
 
             {/* Search + Filters */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 8, marginBottom: 16 }}>
-              <div style={{ position: "relative" }}>
-                <Search size={13} strokeWidth={1.5} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#94A3B8" }} />
-                <input
-                  data-testid={TID.collabSearch}
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") fetchOpen(); }}
-                  placeholder="Search title, description…"
-                  style={{ width: "100%", paddingLeft: 32, paddingRight: 12, paddingTop: 8, paddingBottom: 8, border: `1px solid ${BORDER}`, background: "white", fontSize: 13, color: "#374151", outline: "none", boxSizing: "border-box" }}
-                  onFocus={(e) => e.currentTarget.style.borderColor = NAVY + "80"}
-                  onBlur={(e) => e.currentTarget.style.borderColor = BORDER}
-                />
-              </div>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                style={{ padding: "8px 12px", border: `1px solid ${BORDER}`, background: "white", fontSize: 12, color: "#374151", cursor: "pointer" }}
-              >
+              <SearchBar
+                data-testid={TID.collabSearch}
+                value={q}
+                onChange={setQ}
+                onKeyDown={(e) => { if (e.key === "Enter") fetchOpen(); }}
+                placeholder="Search title, description…"
+              />
+              <FormSelect value={type} onChange={(e) => setType(e.target.value)}>
                 <option value="">All types</option>
                 {TYPES.map((t) => <option key={t}>{t}</option>)}
-              </select>
-              <select
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-                style={{ padding: "8px 12px", border: `1px solid ${BORDER}`, background: "white", fontSize: 12, color: "#374151", cursor: "pointer" }}
-              >
+              </FormSelect>
+              <FormSelect value={area} onChange={(e) => setArea(e.target.value)}>
                 <option value="">All areas</option>
                 {AREAS.map((a) => <option key={a}>{a}</option>)}
-              </select>
-              <button
-                onClick={fetchOpen}
-                style={{ padding: "8px 14px", background: WARM, border: `1px solid ${BORDER}`, fontSize: 12, fontWeight: 600, color: NAVY, cursor: "pointer" }}
-                onMouseEnter={(e) => e.currentTarget.style.background = "#E4E8EF"}
-                onMouseLeave={(e) => e.currentTarget.style.background = WARM}
-              >
+              </FormSelect>
+              <Button variant="subtle" onClick={fetchOpen}>
                 Search
-              </button>
+              </Button>
             </div>
 
             {/* Collaborations List */}
@@ -323,21 +305,14 @@ export default function Collaborations() {
                   }
                   action={
                     (q || type || area) ? (
-                      <button
-                        onClick={() => { setQ(""); setType(""); setArea(""); }}
-                        style={{ fontSize: 12, color: NAVY, background: "white", border: `1px solid ${BORDER}`, padding: "7px 16px", cursor: "pointer" }}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => { setQ(""); setType(""); setArea(""); }}>
                         Clear filters
-                      </button>
+                      </Button>
                     ) : (
-                      <button
-                        data-testid={TID.collabCreateBtn}
-                        onClick={() => navigate("/collaborations/new")}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 6, background: NAVY, color: "white", border: "none", padding: "9px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-                      >
+                      <Button data-testid={TID.collabCreateBtn} onClick={() => navigate("/collaborations/new")}>
                         <Plus size={13} strokeWidth={2} />
                         Post a collaboration
-                      </button>
+                      </Button>
                     )
                   }
                   size="md"
@@ -367,13 +342,13 @@ export default function Collaborations() {
                   { label: "Accepted",         value: metrics.requests_accepted,  icon: Check     },
                   { label: "Projects",         value: metrics.total_projects,     icon: FolderOpen },
                 ].map(({ label, value, icon: Icon }) => (
-                  <div key={label} style={{ background: WARM, border: `1px solid ${BORDER}`, padding: "12px 14px" }}>
+                  <Card key={label} variant="ghost" padding="sm" style={{ background: WARM, border: `1px solid ${BORDER}` }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}>
                       <Icon size={11} strokeWidth={1.5} style={{ color: "#94A3B8" }} />
                       <span style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>{label}</span>
                     </div>
                     <div style={{ fontSize: 20, fontWeight: 700, color: "#0f172a", fontFamily: "monospace" }}>{value ?? 0}</div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -393,12 +368,13 @@ export default function Collaborations() {
                 { label: "Research Projects",           to: "/projects",                   icon: FolderOpen,  desc: "Manage your active projects" },
                 { label: "Research Gap Finder",         to: "/research-gap-finder",        icon: Sparkles,    desc: "Find gaps to drive collaborations" },
               ].map(({ label, to, icon: Icon, desc, badge }) => (
-                <Link
+                <Card
                   key={to}
                   to={to}
-                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 4px", textDecoration: "none", borderBottom: `1px solid ${BORDER}`, transition: "background 0.1s" }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = WARM}
-                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                  variant="ghost"
+                  padding="sm"
+                  className="border-b border-slate-200 rounded-none"
+                  style={{ display: "flex", alignItems: "center", gap: 10 }}
                 >
                   <div style={{ width: 30, height: 30, background: WARM, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <Icon size={13} strokeWidth={1.5} style={{ color: NAVY }} />
@@ -407,13 +383,13 @@ export default function Collaborations() {
                     <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", display: "flex", alignItems: "center", gap: 6 }}>
                       {label}
                       {badge && (
-                        <span style={{ fontSize: 10, background: ACCENT, color: "white", padding: "1px 6px", fontFamily: "monospace" }}>{badge}</span>
+                        <Badge color={ACCENT} size="sm">{badge}</Badge>
                       )}
                     </div>
                     <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>{desc}</div>
                   </div>
                   <ArrowRight size={11} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} />
-                </Link>
+                </Card>
               ))}
             </div>
           </div>
@@ -427,26 +403,28 @@ export default function Collaborations() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {mine.pending?.slice(0, 2).map((c) => (
-                  <Link
+                  <Card
                     key={c.id}
                     to={`/collaborations/${c.id}`}
-                    style={{ display: "block", padding: "10px 12px", border: `1px solid ${BORDER}`, textDecoration: "none", background: "#FFFBEB" }}
+                    padding="sm"
+                    style={{ background: "#FFFBEB" }}
                   >
                     <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#D97706", marginBottom: 4 }}>Application pending</div>
                     <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                     <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2 }}>{c.research_area}</div>
-                  </Link>
+                  </Card>
                 ))}
                 {mine.completed?.slice(0, 2).map((c) => (
-                  <Link
+                  <Card
                     key={c.id}
                     to={`/collaborations/${c.id}`}
-                    style={{ display: "block", padding: "10px 12px", border: `1px solid ${BORDER}`, textDecoration: "none", background: WARM }}
+                    padding="sm"
+                    style={{ background: WARM }}
                   >
                     <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#10B981", marginBottom: 4 }}>Completed</div>
                     <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                     <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2 }}>{c.research_area}</div>
-                  </Link>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -462,15 +440,10 @@ export default function Collaborations() {
             <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.55, margin: "0 0 14px" }}>
               Collaboration Intelligence analyses your research profile and surfaces the best co-author matches.
             </p>
-            <Link
-              to="/collaboration-intelligence"
-              style={{ display: "inline-flex", alignItems: "center", gap: 6, background: ACCENT, color: "white", padding: "8px 14px", fontSize: 12, fontWeight: 600, textDecoration: "none" }}
-              onMouseEnter={(e) => e.currentTarget.style.background = "#a01a42"}
-              onMouseLeave={(e) => e.currentTarget.style.background = ACCENT}
-            >
+            <Button as={Link} to="/collaboration-intelligence" size="sm" style={{ background: ACCENT }}>
               <Sparkles size={12} strokeWidth={1.5} />
               Match me with researchers
-            </Link>
+            </Button>
           </div>
 
         </aside>
@@ -493,7 +466,7 @@ function InvitationCard({ req, onAccept, onDecline }) {
   };
 
   return (
-    <div style={{ background: "white", border: "1px solid #FDE68A", padding: "14px 16px" }}>
+    <Card padding="sm" style={{ border: "1px solid #FDE68A" }}>
       <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
         <Avatar url={sender.avatar_url} name={sender.full_name} size={38} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -506,9 +479,9 @@ function InvitationCard({ req, onAccept, onDecline }) {
                 {[userTypeLabel(sender), sender.institution].filter(Boolean).join(" · ")}
               </div>
             </div>
-            <span style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 600, color: "#D97706", background: "#FEF3C7", border: "1px solid #FDE68A", padding: "2px 7px", flexShrink: 0, whiteSpace: "nowrap" }}>
+            <Badge variant="warning" size="sm" className="shrink-0 whitespace-nowrap">
               {invLabel}
-            </span>
+            </Badge>
           </div>
           {req.message && (
             <div style={{ fontSize: 12, color: "#475569", marginTop: 8, lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", background: "#FFFBEB", border: "1px solid #FEF3C7", padding: "6px 10px", fontStyle: "italic" }}>
@@ -516,35 +489,24 @@ function InvitationCard({ req, onAccept, onDecline }) {
             </div>
           )}
           <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
-            <button
-              onClick={() => act(onAccept)}
-              disabled={acting}
-              style={{ display: "inline-flex", alignItems: "center", gap: 5, background: NAVY, color: "white", border: "none", padding: "5px 12px", fontSize: 11, fontWeight: 600, cursor: "pointer", opacity: acting ? 0.6 : 1 }}
-            >
+            <Button size="sm" onClick={() => act(onAccept)} disabled={acting} loading={acting}>
               <Check size={10} strokeWidth={2.5} />
               Accept
-            </button>
-            <button
-              onClick={() => act(onDecline)}
-              disabled={acting}
-              style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "transparent", color: "#6B7280", border: `1px solid ${BORDER}`, padding: "5px 10px", fontSize: 11, fontWeight: 500, cursor: "pointer", opacity: acting ? 0.6 : 1 }}
-            >
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => act(onDecline)} disabled={acting}>
               <X size={10} strokeWidth={2.5} />
               Decline
-            </button>
+            </Button>
             {sender.id && (
-              <Link
-                to={`/messages/${sender.id}`}
-                style={{ display: "inline-flex", alignItems: "center", gap: 5, border: `1px solid ${BORDER}`, color: "#6B7280", padding: "5px 10px", fontSize: 11, textDecoration: "none" }}
-              >
+              <Button as={Link} to={`/messages/${sender.id}`} variant="ghost" size="sm">
                 <MessageSquare size={10} strokeWidth={1.5} />
                 Message
-              </Link>
+              </Button>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -553,12 +515,7 @@ function InvitationCard({ req, onAccept, onDecline }) {
 function ActiveCollabCard({ c }) {
   const statusColor = c.status === "active" ? "#10B981" : c.status === "open" ? NAVY : "#94A3B8";
   return (
-    <Link
-      to={`/collaborations/${c.id}`}
-      style={{ display: "flex", alignItems: "center", gap: 14, border: `1px solid ${BORDER}`, background: "white", padding: "14px 18px", textDecoration: "none", transition: "border-color 0.15s, box-shadow 0.15s" }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = NAVY + "50"; e.currentTarget.style.boxShadow = "0 2px 10px rgba(15,40,71,0.07)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
-    >
+    <Card to={`/collaborations/${c.id}`} padding="md" style={{ display: "flex", alignItems: "center", gap: 14 }}>
       <div style={{ width: 4, height: 44, background: statusColor, flexShrink: 0, borderRadius: 2 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 3 }}>{c.collab_type}</div>
@@ -568,7 +525,7 @@ function ActiveCollabCard({ c }) {
       {c.creator && (
         <Avatar url={c.creator.avatar_url} name={c.creator.full_name} size={28} />
       )}
-    </Link>
+    </Card>
   );
 }
 
@@ -576,13 +533,7 @@ function ActiveCollabCard({ c }) {
 
 function CollabCard({ c }) {
   return (
-    <Link
-      to={`/collaborations/${c.id}`}
-      data-testid={TID.collabCard(c.id)}
-      style={{ display: "block", border: `1px solid ${BORDER}`, background: "white", padding: "20px 22px", textDecoration: "none", transition: "border-color 0.15s, box-shadow 0.15s" }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = NAVY + "55"; e.currentTarget.style.boxShadow = "0 2px 14px rgba(15,40,71,0.08)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
-    >
+    <Card to={`/collaborations/${c.id}`} data-testid={TID.collabCard(c.id)} padding="lg">
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 20, alignItems: "start" }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: NAVY, marginBottom: 8 }}>
@@ -596,7 +547,7 @@ function CollabCard({ c }) {
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
             {(c.skills_needed || []).slice(0, 5).map((s) => (
-              <span key={s} style={{ fontSize: 11, padding: "3px 8px", background: WARM, color: "#475569", border: `1px solid ${BORDER}` }}>{s}</span>
+              <Tag key={s}>{s}</Tag>
             ))}
           </div>
           {c.creator && (
@@ -638,6 +589,6 @@ function CollabCard({ c }) {
           </div>
         </div>
       </div>
-    </Link>
+    </Card>
   );
 }

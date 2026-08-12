@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Camera } from "lucide-react";
 import { NAVY, WARM, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Button, StatCard, StatGrid, DataTable, EmptyState, Spinner, MiniBar as DsMiniBar, H4 } from "@/components/ds";
 
@@ -44,11 +44,11 @@ export default function ResearchProgress() {
   };
 
   if (loading) return (
-    <AIWorkspaceLayout title="Research Progress" navItems={SIE_NAV_ITEMS}>
+    <ResearchLayout title="Research Progress" navItems={SIE_NAV_ITEMS}>
       <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Spinner size={32} color={ACCENT} />
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 
   const s = overview?.summary || {};
@@ -56,7 +56,7 @@ export default function ResearchProgress() {
   const maxPubs = Math.max(...history.map(h => h.pubs || 0), 1);
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
       title="Research Progress"
       subtitle={`Cross-platform activity snapshot · ${overview?.generated_at?.slice(0, 10) || ""}`}
       navItems={SIE_NAV_ITEMS}
@@ -142,6 +142,6 @@ export default function ResearchProgress() {
           )}
         </Card>
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

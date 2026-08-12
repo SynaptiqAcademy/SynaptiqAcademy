@@ -188,12 +188,12 @@ export default function GrantApplications() {
 
   const grantActions = (
     <div style={{ display: "flex", gap: 8 }}>
-      <Link to="/grants" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none", padding: "8px 14px", border: `1px solid ${BRD}`, background: "#fff" }}>
+      <Button as={Link} to="/grants" variant="ghost" size="sm">
         <Coins size={12} strokeWidth={1.5} /> Browse Grants
-      </Link>
-      <Link to="/grant-collaboration-hub" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B", textDecoration: "none", padding: "8px 14px", border: `1px solid ${BRD}`, background: "#fff" }}>
+      </Button>
+      <Button as={Link} to="/grant-collaboration-hub" variant="ghost" size="sm">
         <Users size={12} strokeWidth={1.5} /> Grant Hub
-      </Link>
+      </Button>
     </div>
   );
 
@@ -265,12 +265,12 @@ export default function GrantApplications() {
                 description='Discover funding opportunities that match your research profile. Click "Start Application" on any grant to open your proposal workspace.'
                 action={
                   <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-                    <Link to="/grants" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: NAVY, color: "#fff", textDecoration: "none", padding: "10px 18px", fontSize: 13, fontWeight: 600 }}>
+                    <Button as={Link} to="/grants" variant="primary" size="md">
                       <Coins size={13} strokeWidth={1.5} /> Browse Funding
-                    </Link>
-                    <Link to="/funding" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#fff", color: NAVY, textDecoration: "none", padding: "10px 18px", fontSize: 13, fontWeight: 600, border: `1px solid ${BRD}` }}>
+                    </Button>
+                    <Button as={Link} to="/funding" variant="outline" size="md">
                       Funding Sources
-                    </Link>
+                    </Button>
                   </div>
                 }
                 size="lg"
@@ -282,9 +282,9 @@ export default function GrantApplications() {
                 icon={<Target />}
                 title="No applications match this filter"
                 action={
-                  <button onClick={() => setFilterStatus("")} style={{ fontSize: 12, color: NAVY, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+                  <Button variant="link" size="sm" onClick={() => setFilterStatus("")}>
                     Clear filter
-                  </button>
+                  </Button>
                 }
                 size="sm"
               />

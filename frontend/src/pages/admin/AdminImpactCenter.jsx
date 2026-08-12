@@ -1,12 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "@/lib/api";
-import { NAVY } from "@/lib/tokens";
+import { NAVY, TEAL, EMERALD, VIOLET } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import {
   RefreshCw, Users, Award, BookOpen, BarChart2,
-  Globe, Building2, TrendingUp, AlertCircle,
-  ChevronUp, ChevronDown, Activity,
+  Globe, Building2, TrendingUp,
 } from "lucide-react";
+import {
+  Button, Card, StatCard, MiniBar, BarChart, DataTable, NavTabs,
+  ErrorState, EmptyState, Skeleton, SkeletonCard,
+} from "@/components/ds";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -21,8 +24,8 @@ const SIS_BUCKETS = [
 ];
 
 const BUCKET_COLORS = [
-  "#94A3B8", "#64748B", "#0891B2", "#0F2847",
-  "#7C3AED", "#D97706", "#D97706",
+  "#94A3B8", "#64748B", "#0891B2", NAVY,
+  VIOLET, "#D97706", "#D97706",
 ];
 
 const METRIC_OPTIONS = [
@@ -73,119 +76,26 @@ function useAdminImpact(path) {
   return { data, loading, error, refetch: load };
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-
-function Skeleton({ h = "h-4", w = "w-full" }) {
-  return <div className={`${h} ${w} bg-[#1a3050] animate-pulse rounded-sm`} />;
-}
-
-function SkeletonCard({ rows = 3 }) {
-  return (
-    <div className="border border-[#1a3050] bg-[#0B1C35] p-4 animate-pulse space-y-3">
-      <Skeleton h="h-3" w="w-1/3" />
-      <Skeleton h="h-7" w="w-1/2" />
-      {Array.from({ length: rows - 2 }).map((_, i) => <Skeleton key={i} />)}
-    </div>
-  );
-}
-
-// ── Error card ────────────────────────────────────────────────────────────────
-
-function ErrorCard({ message, onRetry }) {
-  return (
-    <div className="border border-red-800 bg-red-950/30 p-4 text-center">
-      <AlertCircle size={20} strokeWidth={1.5} className="text-red-400 mx-auto mb-2" />
-      <p className="text-red-400 text-sm mb-2">{message || "Failed to load."}</p>
-      {onRetry && (
-        <button onClick={onRetry} className="text-xs border border-red-700 text-red-400 px-3 py-1 hover:bg-red-950 transition-colors">
-          Retry
-        </button>
-      )}
-    </div>
-  );
-}
-
 // ── KPI Card ──────────────────────────────────────────────────────────────────
 
 function KpiCard({ label, value, sub, icon: Icon, loading, highlight }) {
   return (
-    <div className={`border bg-[#0B1C35] p-5 ${highlight ? "border-[#0891B2]" : "border-[#1a3050]"}`}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-[9px] font-semibold uppercase tracking-widest text-slate-500">{label}</div>
-        {Icon && <Icon size={13} strokeWidth={1.5} className="text-slate-600" />}
-      </div>
-      {loading ? (
-        <Skeleton h="h-8" w="w-2/3" />
-      ) : (
-        <>
-          <div className={`font-serif text-3xl ${highlight ? "text-[#0891B2]" : "text-white"}`}>{value}</div>
-          {sub && <div className="text-[10px] text-slate-500 mt-1">{sub}</div>}
-        </>
-      )}
-    </div>
+    <StatCard
+      label={label}
+      value={loading ? <Skeleton height="h-7" width="w-16" /> : value}
+      sub={loading ? undefined : sub}
+      icon={Icon ? <Icon /> : undefined}
+      highlight={highlight}
+    />
   );
 }
 
-// ── Horizontal Bar ────────────────────────────────────────────────────────────
-
-function HBar({ label, value, maxVal, color = "#0F2847", sub }) {
-  const w = pct(value || 0, maxVal || 1);
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-slate-400 truncate max-w-[65%]">{label}</span>
-        <span className="text-xs text-slate-300 font-medium">{fmtNum(value)}</span>
-      </div>
-      <div className="h-2 bg-[#1a3050] w-full overflow-hidden">
-        <div className="h-full transition-all duration-700" style={{ width: `${w}%`, backgroundColor: color }} />
-      </div>
-      {sub && <div className="text-[9px] text-slate-600 mt-0.5">{sub}</div>}
-    </div>
-  );
-}
-
-// ── Vertical Bar Chart (div-based) ────────────────────────────────────────────
-
-function VBarChart({ items = [], valueKey = "value", labelKey = "label", color = "#0891B2", height = 100 }) {
-  const max = Math.max(...items.map((i) => i[valueKey] || 0), 1);
-  return (
-    <div className="flex items-end gap-1" style={{ height }}>
-      {items.map((item, idx) => {
-        const h = Math.max(4, pct(item[valueKey] || 0, max));
-        return (
-          <div key={idx} className="flex-1 flex flex-col items-center gap-1">
-            <div
-              className="w-full transition-all duration-700 min-h-[4px]"
-              style={{ height: `${h}%`, backgroundColor: color }}
-              title={`${item[labelKey]}: ${item[valueKey]}`}
-            />
-            <div className="text-[8px] text-slate-600 truncate w-full text-center">{item[labelKey]}</div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── Sortable table header ─────────────────────────────────────────────────────
-
-function SortHeader({ label, sortKey, sortState, onSort }) {
-  const { key, dir } = sortState;
-  const active = key === sortKey;
-  return (
-    <button
-      onClick={() => onSort(sortKey)}
-      className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-widest text-slate-500 hover:text-slate-300 transition-colors"
-    >
-      {label}
-      {active ? (
-        dir === "asc" ? <ChevronUp size={10} /> : <ChevronDown size={10} />
-      ) : (
-        <ChevronDown size={10} className="opacity-30" />
-      )}
-    </button>
-  );
-}
+// ── Sortable table header (drives DataTable's onSort) ─────────────────────────
+// DataTable's own click-to-toggle defaults to "asc" on a newly-selected
+// column; this page's original behavior always starts a freshly-selected
+// column at "desc" (ranking metrics read best-first). `handleSort` below
+// reimplements that exact toggle rule and DataTable's onSort callback just
+// forwards the clicked key into it, discarding DataTable's own guess at dir.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
@@ -259,6 +169,68 @@ export default function AdminImpactCenter() {
   const maxInstSIS = Math.max(...topInstitutions.map((i) => i.avg_sis || 0), 1);
   const maxCountrySIS = Math.max(...topCountries.map((c) => c.avg_sis || 0), 1);
 
+  // Rows for the Top Researchers DataTable — a synthetic `_rank` field carries
+  // the "#" column since DataTable's render(value, row) doesn't expose the
+  // row index.
+  const researcherRows = sortedResearchers.slice(0, 50).map((r, idx) => ({ ...r, _rank: idx + 1 }));
+
+  const researcherColumns = [
+    { key: "_rank", label: "#", width: 32, render: (v) => <span className="text-slate-400 text-xs">{v}</span> },
+    {
+      key: "name", label: "Researcher",
+      render: (_v, row) => (
+        <div>
+          <div className="font-medium text-slate-800 text-xs">{fmt(row.full_name || row.name)}</div>
+          {row.role && <div className="text-[10px] text-slate-400 mt-0.5">{row.role}</div>}
+        </div>
+      ),
+    },
+    { key: "institution", label: "Institution", maxWidth: 180, render: (v) => fmt(v) },
+    { key: "country", label: "Country", render: (v) => fmt(v) },
+    {
+      key: "sis_score", label: "SIS Score", sortable: true,
+      render: (v) => <span className="font-semibold" style={{ color: TEAL }}>{fmtNum(v)}</span>,
+    },
+    { key: "h_index", label: "H-Index", sortable: true, render: (v) => fmt(v) },
+    { key: "publications", label: "Publications", sortable: true, render: (v) => fmtNum(v) },
+  ];
+
+  const institutionColumns = [
+    {
+      key: "name", label: "Institution",
+      render: (v, row) => (
+        <div>
+          <div className="text-slate-700 truncate max-w-[180px]">{fmt(v)}</div>
+          {row.country && <div className="text-slate-400 text-[9px]">{row.country}</div>}
+        </div>
+      ),
+    },
+    { key: "researcher_count", label: "Researchers", render: (v, row) => fmtNum(v || row.researchers) },
+    {
+      key: "avg_sis", label: "Avg SIS",
+      render: (v) => (
+        <div className="flex items-center gap-2">
+          <span className="font-semibold" style={{ color: TEAL }}>{fmtNum(v)}</span>
+          <MiniBar value={v || 0} max={maxInstSIS} height={4} color={TEAL} style={{ flex: 1, minWidth: 40 }} />
+        </div>
+      ),
+    },
+  ];
+
+  const countryColumns = [
+    { key: "country", label: "Country", render: (v) => <span className="text-slate-700">{fmt(v)}</span> },
+    { key: "researcher_count", label: "Researchers", render: (v, row) => fmtNum(v || row.researchers) },
+    {
+      key: "avg_sis", label: "Avg SIS",
+      render: (v) => (
+        <div className="flex items-center gap-2">
+          <span className="font-semibold" style={{ color: TEAL }}>{fmtNum(v)}</span>
+          <MiniBar value={v || 0} max={maxCountrySIS} height={4} color={TEAL} style={{ flex: 1, minWidth: 40 }} />
+        </div>
+      ),
+    },
+  ];
+
   return (
     <AdministrationLayout
       title="Research Impact Center"
@@ -266,16 +238,12 @@ export default function AdminImpactCenter() {
       actions={
         <div className="flex items-center gap-3">
           {refreshMsg && (
-            <span className="text-xs text-[#0891B2] animate-pulse">{refreshMsg}</span>
+            <span className="text-xs animate-pulse" style={{ color: TEAL }}>{refreshMsg}</span>
           )}
-          <button
-            onClick={handleRefreshAll}
-            disabled={refreshingAll}
-            className="inline-flex items-center gap-2 bg-[#0891B2] text-white px-4 py-2 text-xs hover:bg-[#0e7490] disabled:opacity-50 transition-colors"
-          >
-            <RefreshCw size={12} strokeWidth={1.5} className={refreshingAll ? "animate-spin" : ""} />
+          <Button variant="primary" size="md" onClick={handleRefreshAll} loading={refreshingAll}>
+            <RefreshCw size={12} className={refreshingAll ? "animate-spin" : ""} />
             {refreshingAll ? "Triggering…" : "Refresh All Impact Scores"}
-          </button>
+          </Button>
         </div>
       }
     >
@@ -285,11 +253,11 @@ export default function AdminImpactCenter() {
             SECTION 1: PLATFORM KPIs
         ══════════════════════════════════════════════════════════════ */}
         <section>
-          <div className="text-[9px] font-semibold uppercase tracking-widest text-slate-500 mb-4">
+          <div className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">
             Platform Overview
           </div>
           {statsError ? (
-            <ErrorCard message={statsError} onRetry={refetchStats} />
+            <ErrorState message={statsError} onRetry={refetchStats} />
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <KpiCard
@@ -327,31 +295,31 @@ export default function AdminImpactCenter() {
             SECTION 2: SIS DISTRIBUTION
         ══════════════════════════════════════════════════════════════ */}
         <section>
-          <div className="text-[9px] font-semibold uppercase tracking-widest text-slate-500 mb-4">
+          <div className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">
             SIS Distribution by Level
           </div>
           {statsLoading ? (
-            <div className="border border-[#1a3050] bg-[#0B1C35] p-5 space-y-3">
-              {Array.from({ length: 7 }).map((_, i) => <Skeleton key={i} />)}
-            </div>
+            <SkeletonCard rows={7} />
           ) : statsError ? (
-            <ErrorCard message={statsError} onRetry={refetchStats} />
+            <ErrorState message={statsError} onRetry={refetchStats} />
           ) : (
-            <div className="border border-[#1a3050] bg-[#0B1C35] p-5 space-y-3">
-              {SIS_BUCKETS.map((bucket, idx) => {
-                const count = distribution[bucket.key] || distribution[bucket.label] || 0;
-                return (
-                  <HBar
-                    key={bucket.key}
-                    label={`${bucket.label} (${bucket.range})`}
-                    value={count}
-                    maxVal={maxBucketCount}
-                    color={BUCKET_COLORS[idx]}
-                    sub={`${fmtNum(count)} researchers`}
-                  />
-                );
-              })}
-            </div>
+            <Card padding="lg">
+              <div className="space-y-3">
+                {SIS_BUCKETS.map((bucket, idx) => {
+                  const count = distribution[bucket.key] || distribution[bucket.label] || 0;
+                  return (
+                    <div key={bucket.key}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-slate-500 truncate max-w-[65%]">{`${bucket.label} (${bucket.range})`}</span>
+                        <span className="text-xs text-slate-700 font-medium">{fmtNum(count)}</span>
+                      </div>
+                      <MiniBar value={count} max={maxBucketCount} height={8} color={BUCKET_COLORS[idx]} />
+                      <div className="text-[10px] text-slate-400 mt-0.5">{fmtNum(count)} researchers</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
           )}
         </section>
 
@@ -359,102 +327,43 @@ export default function AdminImpactCenter() {
             SECTION 3: TOP RESEARCHERS TABLE
         ══════════════════════════════════════════════════════════════ */}
         <section>
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-            <div className="text-[9px] font-semibold uppercase tracking-widest text-slate-500">
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
+            <div className="text-xs font-semibold uppercase tracking-widest text-slate-500">
               Top Researchers
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">Sort by:</span>
-              {METRIC_OPTIONS.map((opt) => (
-                <button
-                  key={opt.key}
-                  onClick={() => { setMetricKey(opt.key); setSort({ key: opt.key, dir: "desc" }); }}
-                  className={`text-xs px-3 py-1 border transition-colors ${
-                    metricKey === opt.key
-                      ? "border-[#0891B2] bg-[#0891B2]/10 text-[#0891B2]"
-                      : "border-[#1a3050] text-slate-500 hover:border-slate-500 hover:text-slate-300"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
+              <span className="text-xs text-slate-400">Sort by:</span>
+              <NavTabs
+                variant="pill"
+                size="sm"
+                tabs={METRIC_OPTIONS.map((opt) => ({ id: opt.key, label: opt.label }))}
+                active={metricKey}
+                onChange={(key) => { setMetricKey(key); setSort({ key, dir: "desc" }); }}
+              />
             </div>
           </div>
 
           {topLoading ? (
-            <div className="border border-[#1a3050] bg-[#0B1C35] overflow-hidden">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="flex gap-4 p-3 border-b border-[#1a3050] animate-pulse">
-                  <Skeleton h="h-3" w="w-6" />
-                  <Skeleton h="h-3" w="w-1/3" />
-                  <Skeleton h="h-3" w="w-1/4" />
-                  <Skeleton h="h-3" w="w-1/6" />
-                </div>
-              ))}
-            </div>
+            <SkeletonCard rows={6} />
           ) : topError ? (
-            <ErrorCard message={topError} onRetry={refetchTop} />
+            <ErrorState message={topError} onRetry={refetchTop} />
           ) : sortedResearchers.length === 0 ? (
-            <div className="border border-dashed border-[#1a3050] p-8 text-center text-slate-600 text-sm">
-              No researcher data available yet.
-            </div>
+            <EmptyState icon={<Users />} title="No researcher data available yet." size="sm" />
           ) : (
-            <div className="border border-[#1a3050] bg-[#0B1C35] overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-[#1a3050] bg-[#060F1E]">
-                      <th className="text-left px-4 py-3">
-                        <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-500">#</span>
-                      </th>
-                      <th className="text-left px-4 py-3">
-                        <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-500">Researcher</span>
-                      </th>
-                      <th className="text-left px-4 py-3">
-                        <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-500">Institution</span>
-                      </th>
-                      <th className="text-left px-4 py-3">
-                        <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-500">Country</span>
-                      </th>
-                      <th className="text-left px-4 py-3">
-                        <SortHeader label="SIS Score" sortKey="sis_score" sortState={sort} onSort={handleSort} />
-                      </th>
-                      <th className="text-left px-4 py-3">
-                        <SortHeader label="H-Index" sortKey="h_index" sortState={sort} onSort={handleSort} />
-                      </th>
-                      <th className="text-left px-4 py-3">
-                        <SortHeader label="Publications" sortKey="publications" sortState={sort} onSort={handleSort} />
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#1a3050]">
-                    {sortedResearchers.slice(0, 50).map((r, idx) => (
-                      <tr key={r.id || idx} className="hover:bg-[#0F2847]/40 transition-colors">
-                        <td className="px-4 py-3 text-slate-500 text-xs">{idx + 1}</td>
-                        <td className="px-4 py-3">
-                          <div className="font-medium text-white text-xs">{fmt(r.full_name || r.name)}</div>
-                          {r.role && <div className="text-[10px] text-slate-500 mt-0.5">{r.role}</div>}
-                        </td>
-                        <td className="px-4 py-3 text-xs text-slate-400 max-w-[180px] truncate">
-                          {fmt(r.institution)}
-                        </td>
-                        <td className="px-4 py-3 text-xs text-slate-400">{fmt(r.country)}</td>
-                        <td className="px-4 py-3">
-                          <span className="font-semibold text-[#0891B2]">{fmtNum(r.sis_score)}</span>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-slate-300">{fmt(r.h_index)}</td>
-                        <td className="px-4 py-3 text-xs text-slate-300">{fmtNum(r.publications)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <Card padding="none">
+              <DataTable
+                columns={researcherColumns}
+                rows={researcherRows}
+                sortKey={sort.key}
+                sortDir={sort.dir}
+                onSort={({ key }) => handleSort(key)}
+              />
               {sortedResearchers.length > 50 && (
-                <div className="px-4 py-2 border-t border-[#1a3050] text-xs text-slate-500 text-center">
+                <div className="px-4 py-2 border-t border-slate-100 text-xs text-slate-400 text-center">
                   Showing top 50 of {fmtNum(sortedResearchers.length)} researchers
                 </div>
               )}
-            </div>
+            </Card>
           )}
         </section>
 
@@ -462,104 +371,43 @@ export default function AdminImpactCenter() {
             SECTION 4: TOP INSTITUTIONS & COUNTRIES
         ══════════════════════════════════════════════════════════════ */}
         <section>
-          <div className="text-[9px] font-semibold uppercase tracking-widest text-slate-500 mb-4">
+          <div className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">
             Top Institutions &amp; Countries
           </div>
           <div className="grid lg:grid-cols-2 gap-5">
             {/* Institutions */}
-            <div className="border border-[#1a3050] bg-[#0B1C35] overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1a3050] bg-[#060F1E]">
-                <Building2 size={12} strokeWidth={1.5} className="text-slate-500" />
-                <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-500">Top 20 Institutions</span>
+            <Card padding="none">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100">
+                <Building2 size={12} className="text-slate-400" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">Top 20 Institutions</span>
               </div>
               {instLoading ? (
-                <div className="p-4 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} />)}</div>
+                <div className="p-4"><SkeletonCard rows={5} /></div>
               ) : instError ? (
-                <div className="p-4"><ErrorCard message={instError} onRetry={refetchInst} /></div>
+                <div className="p-4"><ErrorState message={instError} onRetry={refetchInst} /></div>
               ) : topInstitutions.length === 0 ? (
-                <div className="p-6 text-center text-slate-600 text-xs">No institution data available.</div>
+                <EmptyState title="No institution data available." size="sm" />
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-[#1a3050]">
-                        <th className="text-left px-3 py-2 text-[8px] font-semibold uppercase tracking-wider text-slate-600">Institution</th>
-                        <th className="text-left px-3 py-2 text-[8px] font-semibold uppercase tracking-wider text-slate-600">Researchers</th>
-                        <th className="text-left px-3 py-2 text-[8px] font-semibold uppercase tracking-wider text-slate-600">Avg SIS</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#1a3050]">
-                      {topInstitutions.slice(0, 20).map((inst, idx) => (
-                        <tr key={inst.id || inst.name || idx} className="hover:bg-[#0F2847]/30 transition-colors">
-                          <td className="px-3 py-2">
-                            <div className="text-slate-300 truncate max-w-[180px]">{fmt(inst.name)}</div>
-                            {inst.country && <div className="text-slate-600 text-[9px]">{inst.country}</div>}
-                          </td>
-                          <td className="px-3 py-2 text-slate-400">{fmtNum(inst.researcher_count || inst.researchers)}</td>
-                          <td className="px-3 py-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[#0891B2] font-semibold">{fmtNum(inst.avg_sis)}</span>
-                              <div className="flex-1 h-1 bg-[#1a3050] min-w-[40px]">
-                                <div
-                                  className="h-full bg-[#0891B2]/40 transition-all duration-700"
-                                  style={{ width: `${pct(inst.avg_sis || 0, maxInstSIS)}%` }}
-                                />
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <DataTable columns={institutionColumns} rows={topInstitutions.slice(0, 20).map((i, idx) => ({ ...i, id: i.id || i.name || idx }))} />
               )}
-            </div>
+            </Card>
 
             {/* Countries */}
-            <div className="border border-[#1a3050] bg-[#0B1C35] overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1a3050] bg-[#060F1E]">
-                <Globe size={12} strokeWidth={1.5} className="text-slate-500" />
-                <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-500">Top 20 Countries</span>
+            <Card padding="none">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100">
+                <Globe size={12} className="text-slate-400" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">Top 20 Countries</span>
               </div>
               {countryLoading ? (
-                <div className="p-4 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} />)}</div>
+                <div className="p-4"><SkeletonCard rows={5} /></div>
               ) : countryError ? (
-                <div className="p-4"><ErrorCard message={countryError} onRetry={refetchCountries} /></div>
+                <div className="p-4"><ErrorState message={countryError} onRetry={refetchCountries} /></div>
               ) : topCountries.length === 0 ? (
-                <div className="p-6 text-center text-slate-600 text-xs">No country data available.</div>
+                <EmptyState title="No country data available." size="sm" />
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-[#1a3050]">
-                        <th className="text-left px-3 py-2 text-[8px] font-semibold uppercase tracking-wider text-slate-600">Country</th>
-                        <th className="text-left px-3 py-2 text-[8px] font-semibold uppercase tracking-wider text-slate-600">Researchers</th>
-                        <th className="text-left px-3 py-2 text-[8px] font-semibold uppercase tracking-wider text-slate-600">Avg SIS</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#1a3050]">
-                      {topCountries.slice(0, 20).map((c, idx) => (
-                        <tr key={c.country || idx} className="hover:bg-[#0F2847]/30 transition-colors">
-                          <td className="px-3 py-2 text-slate-300">{fmt(c.country)}</td>
-                          <td className="px-3 py-2 text-slate-400">{fmtNum(c.researcher_count || c.researchers)}</td>
-                          <td className="px-3 py-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[#0891B2] font-semibold">{fmtNum(c.avg_sis)}</span>
-                              <div className="flex-1 h-1 bg-[#1a3050] min-w-[40px]">
-                                <div
-                                  className="h-full bg-[#0891B2]/40 transition-all duration-700"
-                                  style={{ width: `${pct(c.avg_sis || 0, maxCountrySIS)}%` }}
-                                />
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <DataTable columns={countryColumns} rows={topCountries.slice(0, 20).map((c, idx) => ({ ...c, id: c.country || idx }))} />
               )}
-            </div>
+            </Card>
           </div>
         </section>
 
@@ -567,51 +415,48 @@ export default function AdminImpactCenter() {
             SECTION 5: GROWTH TRENDS
         ══════════════════════════════════════════════════════════════ */}
         <section>
-          <div className="text-[9px] font-semibold uppercase tracking-widest text-slate-500 mb-4">
+          <div className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">
             Monthly Avg SIS Growth
           </div>
           {trendLoading ? (
-            <div className="border border-[#1a3050] bg-[#0B1C35] p-5">
-              <Skeleton h="h-24" />
-            </div>
+            <Card padding="lg"><Skeleton height="h-24" /></Card>
           ) : trendError ? (
-            <ErrorCard message={trendError} onRetry={refetchTrends} />
+            <ErrorState message={trendError} onRetry={refetchTrends} />
           ) : growthTrends.length === 0 ? (
-            <div className="border border-dashed border-[#1a3050] p-8 text-center text-slate-600 text-sm">
-              No growth trend data available yet.
-            </div>
+            <EmptyState icon={<TrendingUp />} title="No growth trend data available yet." size="sm" />
           ) : (
-            <div className="border border-[#1a3050] bg-[#0B1C35] p-5">
+            <Card padding="lg">
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp size={12} strokeWidth={1.5} className="text-[#0891B2]" />
-                <span className="text-xs text-slate-400">Platform average SIS over time</span>
+                <TrendingUp size={12} style={{ color: TEAL }} />
+                <span className="text-xs text-slate-500">Platform average SIS over time</span>
               </div>
-              <VBarChart
-                items={growthTrends.map((t) => ({
+              <BarChart
+                data={growthTrends.map((t) => ({
                   label: t.month || t.period || "",
                   value: t.avg_sis || t.value || 0,
                 }))}
                 height={140}
-                color="#0891B2"
+                color={TEAL}
+                showLabels
               />
-              <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-[#1a3050]">
+              <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-slate-100">
                 {growthTrends.length >= 2 && (
                   <>
                     <div>
-                      <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">First Month</div>
-                      <div className="text-sm font-semibold text-white">
+                      <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">First Month</div>
+                      <div className="text-sm font-semibold text-slate-800">
                         {fmtNum(growthTrends[0]?.avg_sis || growthTrends[0]?.value)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Latest Month</div>
-                      <div className="text-sm font-semibold text-[#0891B2]">
+                      <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Latest Month</div>
+                      <div className="text-sm font-semibold" style={{ color: TEAL }}>
                         {fmtNum(growthTrends[growthTrends.length - 1]?.avg_sis || growthTrends[growthTrends.length - 1]?.value)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Growth</div>
-                      <div className="text-sm font-semibold text-emerald-400">
+                      <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Growth</div>
+                      <div className="text-sm font-semibold" style={{ color: EMERALD }}>
                         {(() => {
                           const first = growthTrends[0]?.avg_sis || growthTrends[0]?.value || 0;
                           const last = growthTrends[growthTrends.length - 1]?.avg_sis || growthTrends[growthTrends.length - 1]?.value || 0;
@@ -624,7 +469,7 @@ export default function AdminImpactCenter() {
                   </>
                 )}
               </div>
-            </div>
+            </Card>
           )}
         </section>
 
@@ -632,49 +477,44 @@ export default function AdminImpactCenter() {
             SECTION 6: RESEARCH AREAS
         ══════════════════════════════════════════════════════════════ */}
         <section>
-          <div className="text-[9px] font-semibold uppercase tracking-widest text-slate-500 mb-4">
+          <div className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">
             Top Research Areas by Avg SIS
           </div>
           {areaLoading ? (
-            <div className="border border-[#1a3050] bg-[#0B1C35] p-5 space-y-3">
-              {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} />)}
-            </div>
+            <SkeletonCard rows={8} />
           ) : areaError ? (
-            <ErrorCard message={areaError} onRetry={refetchAreas} />
+            <ErrorState message={areaError} onRetry={refetchAreas} />
           ) : researchAreas.length === 0 ? (
-            <div className="border border-dashed border-[#1a3050] p-8 text-center text-slate-600 text-sm">
-              No research area data available yet.
-            </div>
+            <EmptyState title="No research area data available yet." size="sm" />
           ) : (
-            <div className="border border-[#1a3050] bg-[#0B1C35] p-5 space-y-3">
-              {researchAreas.slice(0, 20).map((area, idx) => (
-                <div key={area.area || idx}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[9px] text-slate-600 w-5 text-right">{idx + 1}.</span>
-                      <span className="text-xs text-slate-300 truncate max-w-[220px]">{area.area || area.name}</span>
+            <Card padding="lg">
+              <div className="space-y-3">
+                {researchAreas.slice(0, 20).map((area, idx) => (
+                  <div key={area.area || idx}>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 w-5 text-right">{idx + 1}.</span>
+                        <span className="text-xs text-slate-700 truncate max-w-[220px]">{area.area || area.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {area.researcher_count != null && (
+                          <span className="text-[10px] text-slate-400">{fmtNum(area.researcher_count)} researchers</span>
+                        )}
+                        <span className="text-xs font-semibold" style={{ color: TEAL }}>{fmtNum(area.avg_sis)}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      {area.researcher_count != null && (
-                        <span className="text-[9px] text-slate-600">{fmtNum(area.researcher_count)} researchers</span>
-                      )}
-                      <span className="text-xs font-semibold text-[#0891B2]">{fmtNum(area.avg_sis)}</span>
+                    <div className="ml-7">
+                      <MiniBar value={area.avg_sis || 0} max={maxAreaSIS} height={6} color={VIOLET} />
                     </div>
                   </div>
-                  <div className="h-1.5 bg-[#1a3050] w-full overflow-hidden ml-7">
-                    <div
-                      className="h-full transition-all duration-700"
-                      style={{ width: `${pct(area.avg_sis || 0, maxAreaSIS)}%`, backgroundColor: "#7C3AED" }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </Card>
           )}
         </section>
 
         {/* Footer note */}
-        <div className="text-[10px] text-slate-600 text-center pb-4">
+        <div className="text-[10px] text-slate-400 text-center pb-4">
           Impact scores are computed from publication, citation, collaboration, teaching, and grant data.
           Scores refresh periodically or on demand via "Refresh All Impact Scores."
         </div>

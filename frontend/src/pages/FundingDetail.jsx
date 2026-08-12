@@ -8,6 +8,7 @@ import { SkeletonCard } from "@/components/ds/LoadingState";
 import { Card } from "@/components/ds/Card";
 import { Button } from "@/components/ds/Button";
 import { Tag, TagGroup } from "@/components/ds/Tag";
+import { ResearchLayout } from "@/layouts";
 
 export default function FundingDetail() {
   const { id } = useParams();
@@ -26,16 +27,13 @@ export default function FundingDetail() {
     } catch (e) { toast.error("Failed"); }
   };
 
-  if (!g) return <div className="p-6"><SkeletonCard rows={4} /></div>;
+  if (!g) return <ResearchLayout title="Funding"><SkeletonCard rows={4} /></ResearchLayout>;
 
   return (
+    <ResearchLayout title={g.title} subtitle={`${g.funding_type || "Grant"} · ${g.agency}`}>
     <div className="grid lg:grid-cols-12 gap-10">
       <div className="lg:col-span-8 space-y-8">
         <Link to="/funding" className="text-sm text-slate-500 hover:text-slate-900">← All funding</Link>
-        <header>
-          <div className="overline text-[#0F2847]">{g.funding_type || "Grant"} · {g.agency}</div>
-          <h1 className="font-serif text-5xl text-slate-900 mt-3 leading-tight">{g.title}</h1>
-        </header>
 
         <p className="text-lg text-slate-700 leading-relaxed">{g.description || "Funding opportunity."}</p>
 
@@ -73,6 +71,7 @@ export default function FundingDetail() {
         </Button>
       </aside>
     </div>
+    </ResearchLayout>
   );
 }
 

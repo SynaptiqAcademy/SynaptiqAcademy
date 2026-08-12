@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Calendar, Zap, AlertTriangle, CheckSquare, Sparkles, Target } from "lucide-react";
 import { NAVY, WARM, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Badge, StatCard, StatGrid, EmptyState, LoadingOverlay, H4 } from "@/components/ds";
 
@@ -72,7 +72,7 @@ export default function DailyAgenda() {
   );
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
       title="Daily Agenda"
       subtitle="Your AI-generated daily research schedule and priorities."
       navItems={SIE_NAV_ITEMS}
@@ -125,6 +125,6 @@ export default function DailyAgenda() {
           ))}
         </Card>
       )}
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

@@ -10,14 +10,16 @@ import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import {
-  Building2, MapPin, Globe, Users, Sparkles, BookOpen, Coins, Award, BarChart3,
-  Loader2, UserPlus, ShieldCheck, ScrollText, Trash2, Check, X, Layers, Plus, ChevronRight,
-  Handshake, Target, Network, GraduationCap, MessageSquare, FileText, Calendar, ExternalLink,
+  Building2, Globe, Users, Sparkles, BookOpen, Coins, Award, Layers,
+  UserPlus, ShieldCheck, ScrollText, Trash2, Check, X, Plus, ChevronRight,
+  Handshake, Target, Network, Calendar,
 } from "lucide-react";
-import ReputationBadge from "../components/marketplace/ReputationBadge";
 import { userTypeLabel } from "../lib/userTypes";
 import { NAVY } from "@/lib/tokens";
-import { SkeletonCard } from "@/components/ds/LoadingState";
+import {
+  SkeletonCard, Card, Button, Badge, StatCard, StatGrid,
+  EmptyState, Modal, Input, FormSelect, Textarea,
+} from "@/components/ds";
 
 const TAB_LIST = ["overview", "researchers", "units", "publications", "funding", "reputation", "collaboration", "govern"];
 const TAB_LABEL = {
@@ -54,7 +56,8 @@ export default function InstitutionDetail() {
     <div className="space-y-6">
       <Header inst={inst} onChanged={load} isAdmin={isAdmin} />
 
-      {/* Tabs */}
+      {/* Tabs — kept hand-rolled: ds NavTabs doesn't support per-tab data-testid,
+          and tests address individual tabs via data-testid={`inst-tab-${t}`}. */}
       <div className="flex items-center gap-1 border-b border-slate-200 overflow-x-auto" data-testid="inst-tabs">
         {visibleTabs.map((t) => (
           <button
@@ -119,22 +122,20 @@ function Header({ inst, onChanged, isAdmin }) {
         </div>
         <div className="shrink-0 flex flex-col gap-2 items-end">
           {!status && (
-            <button data-testid="claim-institution-btn" onClick={claim} className="inline-flex items-center gap-1.5 text-xs bg-[#0F2847] text-white px-3 py-2 hover:bg-slate-800">
+            <Button data-testid="claim-institution-btn" size="sm" onClick={claim}>
               <UserPlus size={11} strokeWidth={1.5} /> Request to join
-            </button>
+            </Button>
           )}
           {status === "pending" && (
-            <span className="overline border border-amber-300 bg-amber-50 text-amber-800 px-2 py-1">Pending approval</span>
+            <Badge variant="warning">Pending approval</Badge>
           )}
           {status === "approved" && (
-            <span className="overline border border-emerald-300 bg-emerald-50 text-emerald-800 px-2 py-1">
-              {inst.my_membership?.role} · member
-            </span>
+            <Badge variant="success">{inst.my_membership?.role} · member</Badge>
           )}
           {isAdmin && (
-            <span className="overline border border-[#0F2847]/30 bg-[#0F2847]/5 text-[#0F2847] px-2 py-1 inline-flex items-center gap-1">
+            <Badge variant="default">
               <ShieldCheck size={10} strokeWidth={1.5} /> Admin
-            </span>
+            </Badge>
           )}
         </div>
       </div>
@@ -161,20 +162,13 @@ function OverviewTab({ id }) {
   ];
   return (
     <div className="space-y-6">
-      <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3" data-testid="overview-kpis">
+      <StatGrid cols={3} data-testid="overview-kpis">
         {kpis.map(({ label, value, sub, icon: Icon }) => (
-          <div key={label} className="border border-slate-200 bg-white p-5">
-            <div className="flex items-center gap-2 overline">
-              <Icon size={11} strokeWidth={1.5} className="text-[#0F2847]" />
-              {label}
-            </div>
-            <div className="font-serif text-3xl text-slate-900 mt-2">{value}</div>
-            {sub && <div className="text-xs text-slate-500 mt-1 font-mono">{sub}</div>}
-          </div>
+          <StatCard key={label} label={label} value={value} sub={sub} icon={<Icon />} />
         ))}
-      </section>
+      </StatGrid>
       {health && (
-        <section className="border border-slate-200 bg-white p-6" data-testid="research-health">
+        <Card padding="xl" data-testid="research-health">
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="overline">Research Health Score</div>
@@ -200,7 +194,7 @@ function OverviewTab({ id }) {
               ))}
             </div>
           </div>
-        </section>
+        </Card>
       )}
     </div>
   );
@@ -224,20 +218,24 @@ function ResearchersTab({ id, isAdmin }) {
       {isAdmin && (
         <div className="flex items-center gap-2">
           {["approved", "pending", "denied", "revoked"].map((s) => (
-            <button key={s} data-testid={`members-filter-${s}`} onClick={() => setStatus(s)} className={`text-xs px-3 py-1.5 border ${status === s ? "border-[#0F2847] bg-[#0F2847] text-white" : "border-slate-300 text-slate-700"}`}>
+            <Button
+              key={s}
+              data-testid={`members-filter-${s}`}
+              onClick={() => setStatus(s)}
+              variant={status === s ? "primary" : "ghost"}
+              size="sm"
+            >
               {s}
-            </button>
+            </Button>
           ))}
         </div>
       )}
       {members.length === 0 && (
-        <div className="text-center py-12 border border-dashed border-slate-300 text-sm text-slate-500" data-testid="members-empty">
-          No {status} members.
-        </div>
+        <EmptyState data-testid="members-empty" title={`No ${status} members.`} />
       )}
       <div className="space-y-2" data-testid="members-list">
         {members.map((m) => (
-          <Link key={m.id} to={`/profile/${m.user_id}`} className="flex items-center gap-3 border border-slate-200 bg-white p-3 hover:border-[#0F2847]" data-testid={`member-row-${m.user_id}`}>
+          <Card key={m.id} to={`/profile/${m.user_id}`} padding="sm" className="flex items-center gap-3" data-testid={`member-row-${m.user_id}`}>
             <div className="w-9 h-9 bg-[#0F2847] text-white text-xs font-serif flex items-center justify-center shrink-0">
               {(m.user?.full_name || "").split(" ").map((p) => p[0]).filter(Boolean).slice(0,2).join("").toUpperCase()}
             </div>
@@ -247,9 +245,9 @@ function ResearchersTab({ id, isAdmin }) {
             </div>
             <span className="overline text-[#0F2847]">{m.role}</span>
             {m.seat_type && m.seat_type !== "personal" && (
-              <span className="overline border border-amber-300 bg-amber-50 text-amber-800 px-1.5 py-0.5">{m.seat_type.replace("_", " ")} seat</span>
+              <Badge variant="warning" size="sm">{m.seat_type.replace("_", " ")} seat</Badge>
             )}
-          </Link>
+          </Card>
         ))}
       </div>
     </div>
@@ -274,15 +272,17 @@ function UnitsTab({ id, isAdmin }) {
     <div className="space-y-4">
       {isAdmin && (
         <div className="flex items-center justify-end">
-          <button data-testid="create-unit-btn" onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 text-xs bg-[#0F2847] text-white px-3 py-2 hover:bg-slate-800">
+          <Button data-testid="create-unit-btn" size="sm" onClick={() => setCreating(true)}>
             <Plus size={11} strokeWidth={1.5} /> New unit
-          </button>
+          </Button>
         </div>
       )}
       {rootUnits.length === 0 && (
-        <div className="text-center py-12 border border-dashed border-slate-300 text-sm text-slate-500" data-testid="units-empty">
-          No units yet. {isAdmin && "Create faculties, departments, research centers, or labs to model your institution."}
-        </div>
+        <EmptyState
+          data-testid="units-empty"
+          title="No units yet."
+          description={isAdmin ? "Create faculties, departments, research centers, or labs to model your institution." : undefined}
+        />
       )}
       <div className="grid sm:grid-cols-2 gap-3" data-testid="units-list">
         {rootUnits.map((u) => <UnitCard key={u.id} u={u} />)}
@@ -294,7 +294,7 @@ function UnitsTab({ id, isAdmin }) {
 
 function UnitCard({ u }) {
   return (
-    <Link to={`/units/${u.id}`} className="block border border-slate-200 bg-white p-4 hover:border-[#0F2847] group" data-testid={`unit-card-${u.id}`}>
+    <Card to={`/units/${u.id}`} padding="md" className="group" data-testid={`unit-card-${u.id}`}>
       <div className="flex items-center justify-between">
         <span className="overline">{(u.type || "").replace("_", " ")}</span>
         <div className="text-[10px] font-mono text-slate-400">
@@ -310,7 +310,7 @@ function UnitCard({ u }) {
           ))}
         </div>
       )}
-    </Link>
+    </Card>
   );
 }
 
@@ -335,42 +335,30 @@ function CreateUnitModal({ institutionId, onClose, onCreated, parentId = null })
     finally { setBusy(false); }
   };
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-900/50 flex items-center justify-center px-4 overflow-y-auto py-10" onClick={onClose} data-testid="create-unit-modal">
-      <div className="bg-white w-full max-w-lg border border-slate-200" onClick={(e) => e.stopPropagation()}>
-        <div className="border-b border-slate-200 px-5 py-4 flex items-center justify-between">
-          <h3 className="font-serif text-xl text-slate-900">New unit</h3>
-          <button onClick={onClose}><X size={16} strokeWidth={1.5} className="text-slate-400 hover:text-slate-900" /></button>
+    <Modal
+      open
+      onClose={onClose}
+      closeOnOverlay
+      title="New unit"
+      data-testid="create-unit-modal"
+      footer={
+        <>
+          <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+          <Button data-testid="unit-submit" size="sm" disabled={busy} loading={busy} onClick={submit}>Create</Button>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        <Input data-testid="unit-name" label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Department of Computer Science / AI Lab / …" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormSelect data-testid="unit-type" label="Type" value={type} onChange={(e) => setType(e.target.value)}>
+            {["faculty","department","research_center","lab","institute","school","research_group","other"].map((t) => <option key={t} value={t}>{t.replace("_", " ")}</option>)}
+          </FormSelect>
+          <Input data-testid="unit-areas" label="Research areas (csv)" value={areas} onChange={(e) => setAreas(e.target.value)} placeholder="nlp, robotics" />
         </div>
-        <div className="p-5 space-y-3">
-          <div>
-            <div className="overline mb-1">Name</div>
-            <input data-testid="unit-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Department of Computer Science / AI Lab / …" className="w-full px-3 py-2 border border-slate-300 text-sm" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <div className="overline mb-1">Type</div>
-              <select data-testid="unit-type" value={type} onChange={(e) => setType(e.target.value)} className="w-full px-3 py-2 border border-slate-300 text-sm">
-                {["faculty","department","research_center","lab","institute","school","research_group","other"].map((t) => <option key={t} value={t}>{t.replace("_", " ")}</option>)}
-              </select>
-            </div>
-            <div>
-              <div className="overline mb-1">Research areas (csv)</div>
-              <input data-testid="unit-areas" value={areas} onChange={(e) => setAreas(e.target.value)} placeholder="nlp, robotics" className="w-full px-3 py-2 border border-slate-300 text-sm" />
-            </div>
-          </div>
-          <div>
-            <div className="overline mb-1">Description</div>
-            <textarea data-testid="unit-description" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-3 py-2 border border-slate-300 text-sm" />
-          </div>
-        </div>
-        <div className="border-t border-slate-200 px-5 py-3 flex items-center justify-end gap-2">
-          <button onClick={onClose} className="text-xs text-slate-600 px-3 py-2">Cancel</button>
-          <button data-testid="unit-submit" disabled={busy} onClick={submit} className="text-xs bg-[#0F2847] text-white px-4 py-2 hover:bg-slate-800 disabled:opacity-50 inline-flex items-center gap-1.5">
-            {busy && <Loader2 size={11} className="animate-spin" />} Create
-          </button>
-        </div>
+        <Textarea data-testid="unit-description" label="Description" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -383,12 +371,12 @@ function PublicationsTab({ id }) {
   if (!d) return <LoadingBlock />;
   return (
     <div className="grid lg:grid-cols-2 gap-5" data-testid="publications-tab">
-      <div className="border border-slate-200 bg-white p-5">
+      <Card padding="lg">
         <div className="overline mb-3">By year</div>
         {d.by_year.length === 0 && <div className="text-xs text-slate-500">No published manuscripts yet.</div>}
         <YearBars data={d.by_year} />
-      </div>
-      <div className="border border-slate-200 bg-white p-5">
+      </Card>
+      <Card padding="lg">
         <div className="overline mb-3">By unit</div>
         {d.by_unit.length === 0 && <div className="text-xs text-slate-500">No publications attributable to a unit yet.</div>}
         <div className="space-y-2">
@@ -399,7 +387,7 @@ function PublicationsTab({ id }) {
             </Link>
           ))}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -429,7 +417,7 @@ function FundingTab({ id }) {
   if (!d) return <LoadingBlock />;
   return (
     <div className="space-y-5" data-testid="funding-tab">
-      <div className="border border-slate-200 bg-white p-5">
+      <Card padding="lg">
         <div className="overline">Total awarded</div>
         <div className="font-serif text-4xl text-slate-900 mt-1">${(d.total_usd || 0).toLocaleString()}</div>
         <div className="grid sm:grid-cols-4 gap-3 mt-4">
@@ -441,8 +429,8 @@ function FundingTab({ id }) {
             </div>
           ))}
         </div>
-      </div>
-      <div className="border border-slate-200 bg-white p-5">
+      </Card>
+      <Card padding="lg">
         <div className="overline mb-3">By unit</div>
         {d.by_unit.length === 0 && <div className="text-xs text-slate-500">No grants attributable to a unit yet.</div>}
         <div className="space-y-2">
@@ -453,7 +441,7 @@ function FundingTab({ id }) {
             </Link>
           ))}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -467,7 +455,7 @@ function ReputationTab({ id }) {
   if (!d) return <LoadingBlock />;
   return (
     <div className="grid lg:grid-cols-2 gap-5" data-testid="reputation-tab">
-      <div className="border border-slate-200 bg-white p-5">
+      <Card padding="lg">
         <div className="overline mb-1">Average reputation</div>
         <div className="font-serif text-4xl text-[#0F2847]">{d.average}</div>
         <div className="overline mt-5 mb-2">Top researchers</div>
@@ -481,8 +469,8 @@ function ReputationTab({ id }) {
             </Link>
           ))}
         </div>
-      </div>
-      <div className="border border-slate-200 bg-white p-5">
+      </Card>
+      <Card padding="lg">
         <div className="overline mb-2">Top units by avg reputation</div>
         {d.top_units.length === 0 && <div className="text-xs text-slate-500">No unit data yet.</div>}
         <div className="space-y-2">
@@ -495,7 +483,7 @@ function ReputationTab({ id }) {
             </Link>
           ))}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -545,7 +533,7 @@ function GovernTab({ id, inst, onChanged }) {
   return (
     <div className="space-y-6" data-testid="govern-tab">
       {/* Seats */}
-      <section className="border border-slate-200 bg-white p-5" data-testid="govern-seats">
+      <Card padding="lg" data-testid="govern-seats">
         <div className="flex items-center justify-between mb-3">
           <div className="overline">Seat management</div>
           <div className="font-mono text-xs text-slate-500">
@@ -553,16 +541,16 @@ function GovernTab({ id, inst, onChanged }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <input data-testid="seats-total-input" type="number" min={0} step={1} max={10000} value={seatsTotal} onChange={(e) => setSeatsTotal(e.target.value)} className="w-32 px-3 py-2 border border-slate-300 text-sm font-mono" />
-          <button data-testid="seats-save" onClick={saveSeats} className="text-xs bg-[#0F2847] text-white px-3 py-2 hover:bg-slate-800">Update capacity</button>
+          <Input data-testid="seats-total-input" type="number" min={0} step={1} max={10000} value={seatsTotal} onChange={(e) => setSeatsTotal(e.target.value)} className="font-mono" wrapperClassName="w-32" />
+          <Button data-testid="seats-save" size="sm" onClick={saveSeats}>Update capacity</Button>
           <span className="text-[10px] font-mono text-slate-400">Seats apply to sponsored + institution-owned assignments.</span>
         </div>
-      </section>
+      </Card>
 
       {/* Marketplace + Collab snapshot */}
       <section className="grid md:grid-cols-2 gap-5">
         {mktActivity && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline mb-3">Marketplace activity</div>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <Stat k="Expertise open"      v={mktActivity.expertise_open} />
@@ -571,10 +559,10 @@ function GovernTab({ id, inst, onChanged }) {
               <Stat k="Invitations accepted" v={mktActivity.invitations_accepted} />
             </div>
             <div className="text-[10px] font-mono text-slate-500 mt-3">Success rate: {(mktActivity.match_success_rate * 100).toFixed(0)}%</div>
-          </div>
+          </Card>
         )}
         {collab && (
-          <div className="border border-slate-200 bg-white p-5">
+          <Card padding="lg">
             <div className="overline mb-3">Collaboration</div>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <Stat k="Internal collabs" v={collab.internal} />
@@ -593,12 +581,12 @@ function GovernTab({ id, inst, onChanged }) {
                 </div>
               </>
             )}
-          </div>
+          </Card>
         )}
       </section>
 
       {/* Member governance */}
-      <section className="border border-slate-200 bg-white p-5" data-testid="govern-members">
+      <Card padding="lg" data-testid="govern-members">
         <div className="overline mb-3">Members</div>
         {members === null && <LoadingBlock />}
         {members && members.length === 0 && <div className="text-xs text-slate-500">No members.</div>}
@@ -609,37 +597,41 @@ function GovernTab({ id, inst, onChanged }) {
                 {m.user?.full_name || m.user_id}
                 {m.user?.email && <span className="text-[10px] font-mono text-slate-400 ml-2">{m.user.email}</span>}
               </Link>
-              <span className={`overline px-1.5 py-0.5 border ${
-                m.status === "approved" ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                : m.status === "pending" ? "border-amber-300 bg-amber-50 text-amber-800"
-                : "border-slate-200 bg-slate-50 text-slate-500"
-              }`}>{m.status}</span>
+              <Badge variant={
+                m.status === "approved" ? "success" : m.status === "pending" ? "warning" : "neutral"
+              } size="sm">{m.status}</Badge>
               {m.status === "pending" && (
                 <>
-                  <button data-testid={`approve-${m.user_id}`} onClick={() => decide(m.user_id, "approved")} className="text-[10px] bg-[#0F2847] text-white px-2 py-1 inline-flex items-center gap-1"><Check size={9} strokeWidth={1.5} /> Approve</button>
-                  <button data-testid={`deny-${m.user_id}`} onClick={() => decide(m.user_id, "denied")} className="text-[10px] border border-red-200 text-red-700 px-2 py-1 inline-flex items-center gap-1"><X size={9} strokeWidth={1.5} /> Deny</button>
+                  <Button data-testid={`approve-${m.user_id}`} onClick={() => decide(m.user_id, "approved")} size="sm">
+                    <Check size={9} strokeWidth={1.5} /> Approve
+                  </Button>
+                  <Button data-testid={`deny-${m.user_id}`} onClick={() => decide(m.user_id, "denied")} variant="ghost" size="sm">
+                    <X size={9} strokeWidth={1.5} /> Deny
+                  </Button>
                 </>
               )}
               {m.status === "approved" && m.role !== "owner" && (
                 <>
-                  <select data-testid={`role-${m.user_id}`} value={m.role} onChange={(e) => setRole(m.user_id, e.target.value)} className="text-[10px] border border-slate-300 px-1 py-1">
+                  <FormSelect data-testid={`role-${m.user_id}`} value={m.role} onChange={(e) => setRole(m.user_id, e.target.value)} size="sm" wrapperClassName="w-auto">
                     {["admin", "unit_admin", "research_lead", "researcher"].map((r) => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                  <select data-testid={`seat-${m.user_id}`} value={m.seat_type || "personal"} onChange={(e) => setSeat(m.user_id, e.target.value)} className="text-[10px] border border-slate-300 px-1 py-1">
+                  </FormSelect>
+                  <FormSelect data-testid={`seat-${m.user_id}`} value={m.seat_type || "personal"} onChange={(e) => setSeat(m.user_id, e.target.value)} size="sm" wrapperClassName="w-auto">
                     <option value="personal">personal</option>
                     <option value="sponsored">sponsored</option>
                     <option value="institution_owned">institution_owned</option>
-                  </select>
-                  <button data-testid={`revoke-${m.user_id}`} onClick={() => revoke(m.user_id)} className="text-[10px] text-red-600 hover:text-red-700"><Trash2 size={11} strokeWidth={1.5} /></button>
+                  </FormSelect>
+                  <Button data-testid={`revoke-${m.user_id}`} onClick={() => revoke(m.user_id)} variant="ghost" size="icon" aria-label="Revoke access" className="text-red-600 hover:text-red-700">
+                    <Trash2 size={11} strokeWidth={1.5} />
+                  </Button>
                 </>
               )}
             </div>
           ))}
         </div>
-      </section>
+      </Card>
 
       {/* Audit */}
-      <section className="border border-slate-200 bg-white p-5" data-testid="govern-audit">
+      <Card padding="lg" data-testid="govern-audit">
         <div className="flex items-center gap-2 mb-3">
           <ScrollText size={12} strokeWidth={1.5} className="text-[#0F2847]" />
           <div className="overline">Audit log</div>
@@ -656,7 +648,7 @@ function GovernTab({ id, inst, onChanged }) {
             </div>
           ))}
         </div>
-      </section>
+      </Card>
     </div>
   );
 }
@@ -712,12 +704,12 @@ function CollaborationTab({ id, inst, isAdmin }) {
   };
 
   const KIND_COLORS = {
-    research_initiative: "bg-violet-50 text-violet-700",
-    strategic_project:   "bg-blue-50 text-blue-700",
-    faculty_recruitment: "bg-amber-50 text-amber-700",
-    student_project:     "bg-emerald-50 text-emerald-700",
-    grant_team:          "bg-orange-50 text-orange-700",
-    teaching_collab:     "bg-sky-50 text-sky-700",
+    research_initiative: "#7C3AED",
+    strategic_project:   "#2563EB",
+    faculty_recruitment: "#B45309",
+    student_project:     "#059669",
+    grant_team:          "#EA580C",
+    teaching_collab:     "#0284C7",
   };
 
   return (
@@ -730,86 +722,64 @@ function CollaborationTab({ id, inst, isAdmin }) {
           { to: "/network/collaborations",  label: "Open Opportunities",   icon: Network,         desc: "Network-wide search" },
           { to: "/teams",                   label: "Research Teams",        icon: Users,           desc: "Build interdisciplinary teams" },
         ].map(({ to, label, icon: Icon, desc }) => (
-          <Link key={to} to={to} className="border border-slate-200 bg-white p-4 hover:border-[#0F2847] transition-colors group">
+          <Card key={to} to={to} padding="md" className="group">
             <Icon size={16} strokeWidth={1.5} className="text-[#0F2847] mb-2" />
             <div className="text-sm font-medium text-slate-900 group-hover:text-[#0F2847] transition-colors">{label}</div>
             <div className="text-xs text-slate-500 mt-0.5">{desc}</div>
-          </Link>
+          </Card>
         ))}
       </div>
 
       {/* Post new collaboration call */}
-      <div className="border border-slate-200 bg-white">
+      <Card padding="none">
         <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
           <div className="overline flex items-center gap-2">
             <Handshake size={12} strokeWidth={1.5} className="text-[#0F2847]" />
             Institution Collaboration Calls
           </div>
-          <button
-            onClick={() => setFormOpen((o) => !o)}
-            className="text-xs bg-[#0F2847] text-white px-3 py-1.5 hover:bg-slate-800 inline-flex items-center gap-1"
-          >
+          <Button size="sm" onClick={() => setFormOpen((o) => !o)}>
             <Plus size={11} strokeWidth={1.5} />
             Post call
-          </button>
+          </Button>
         </div>
 
         {formOpen && (
           <div className="px-5 py-4 border-b border-slate-200 bg-slate-50 space-y-3" data-testid="collab-form">
             <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <div className="overline mb-1">Title</div>
-                <input
-                  value={form.title}
-                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                  placeholder="Collaboration call title"
-                  className="w-full px-3 py-2 border border-slate-300 text-sm"
-                />
-              </div>
-              <div>
-                <div className="overline mb-1">Type</div>
-                <select
-                  value={form.kind}
-                  onChange={(e) => setForm((f) => ({ ...f, kind: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 text-sm"
-                >
-                  {Object.entries(KIND_LABELS).map(([v, l]) => (
-                    <option key={v} value={v}>{l}</option>
-                  ))}
-                </select>
-              </div>
+              <Input
+                label="Title"
+                value={form.title}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                placeholder="Collaboration call title"
+              />
+              <FormSelect
+                label="Type"
+                value={form.kind}
+                onChange={(e) => setForm((f) => ({ ...f, kind: e.target.value }))}
+              >
+                {Object.entries(KIND_LABELS).map(([v, l]) => (
+                  <option key={v} value={v}>{l}</option>
+                ))}
+              </FormSelect>
             </div>
-            <div>
-              <div className="overline mb-1">Description</div>
-              <textarea
-                rows={2}
-                value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="Goals, expectations, who should apply…"
-                className="w-full px-3 py-2 border border-slate-300 text-sm"
+            <Textarea
+              label="Description"
+              rows={2}
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              placeholder="Goals, expectations, who should apply…"
+            />
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Input
+                label="Deadline (optional)"
+                type="date"
+                value={form.deadline}
+                onChange={(e) => setForm((f) => ({ ...f, deadline: e.target.value }))}
               />
             </div>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div>
-                <div className="overline mb-1">Deadline (optional)</div>
-                <input
-                  type="date"
-                  value={form.deadline}
-                  onChange={(e) => setForm((f) => ({ ...f, deadline: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 text-sm"
-                />
-              </div>
-            </div>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setFormOpen(false)} className="text-xs text-slate-600 px-3 py-2">Cancel</button>
-              <button
-                disabled={posting}
-                onClick={post}
-                className="text-xs bg-[#0F2847] text-white px-4 py-2 hover:bg-slate-800 disabled:opacity-50 inline-flex items-center gap-1"
-              >
-                {posting && <Loader2 size={11} className="animate-spin" />}
-                Post
-              </button>
+              <Button variant="ghost" size="sm" onClick={() => setFormOpen(false)}>Cancel</Button>
+              <Button size="sm" disabled={posting} loading={posting} onClick={post}>Post</Button>
             </div>
           </div>
         )}
@@ -817,15 +787,12 @@ function CollaborationTab({ id, inst, isAdmin }) {
         <div className="divide-y divide-slate-100">
           {collabs === null && <div className="px-5 py-4"><SkeletonCard rows={2} /></div>}
           {collabs !== null && collabs.length === 0 && (
-            <div className="px-5 py-8 text-center">
-              <Handshake size={24} strokeWidth={1.5} className="text-slate-200 mx-auto mb-2" />
-              <div className="text-sm text-slate-500">No collaboration calls posted yet</div>
-              <button
-                onClick={() => setFormOpen(true)}
-                className="mt-3 text-xs text-[#0F2847] border-b border-[#0F2847]"
-              >
-                Post the first call
-              </button>
+            <div className="px-5 py-8">
+              <EmptyState
+                icon={<Handshake />}
+                title="No collaboration calls posted yet"
+                action={<Button variant="link" onClick={() => setFormOpen(true)}>Post the first call</Button>}
+              />
             </div>
           )}
           {(collabs || []).map((c) => (
@@ -841,9 +808,9 @@ function CollaborationTab({ id, inst, isAdmin }) {
                 )}
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   {c.type && (
-                    <span className={`text-[10px] px-1.5 py-0.5 ${KIND_COLORS[c.type] || "bg-slate-100 text-slate-600"}`}>
+                    <Badge size="sm" color={KIND_COLORS[c.type]}>
                       {KIND_LABELS[c.type] || c.type}
-                    </span>
+                    </Badge>
                   )}
                   {c.deadline && (
                     <span className="text-[10px] font-mono text-slate-400 inline-flex items-center gap-1">
@@ -857,11 +824,11 @@ function CollaborationTab({ id, inst, isAdmin }) {
             </Link>
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* Active members quick view */}
       {members.length > 0 && (
-        <div className="border border-slate-200 bg-white">
+        <Card padding="none">
           <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
             <div className="overline flex items-center gap-2">
               <Users size={12} strokeWidth={1.5} className="text-[#0F2847]" />
@@ -889,7 +856,7 @@ function CollaborationTab({ id, inst, isAdmin }) {
               </Link>
             ))}
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );

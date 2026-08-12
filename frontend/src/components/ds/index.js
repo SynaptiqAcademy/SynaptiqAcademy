@@ -23,8 +23,10 @@
  *   Data display       DataTable, Pagination, StatCard, StatGrid
  *   Lists              List, ListItem, ListSeparator, ListHeader, ListFooter
  *   Notifications      NotificationItem
+ *   Activity           ActivityFeed, ActivityFeedItem
  *   Search & filters   SearchBar, FilterBar, FilterChip
  *   States             EmptyState, ErrorState, Skeleton*, Spinner, LoadingOverlay
+ *   Full-page states   ErrorPage, SuccessPage
  *   Overlays           Modal, Dialog, Drawer
  *   Charts             Sparkline, SparkArea, MiniBar, BarChart, DonutChart, LineChart, ChartLegend
  *   Cards              WorkspaceCard, ResearchCard, PublicationCard, PersonCard,
@@ -111,6 +113,11 @@ export { List, ListItem, ListSeparator, ListHeader, ListFooter } from "./List";
 // an admin activity feed, or any future notification-like list.
 export { NotificationItem }                from "./NotificationItem";
 
+// ── Activity feed ─────────────────────────────────────────────────────────────
+// The one canonical "actor did verb to object" feed row — for the research
+// feed, a dashboard activity strip, or an admin audit-style feed.
+export { ActivityFeed, ActivityFeedItem }  from "./ActivityFeed";
+
 // ── App shell navigation ──────────────────────────────────────────────────────
 // The one canonical Sidebar — variant="app" (default, full research/teaching
 // OS sidebar) or variant="admin" (Admin OS sidebar).
@@ -137,6 +144,13 @@ export {
   Spinner,
   LoadingOverlay,
 }                                          from "./LoadingState";
+
+// ── Full-page states ─────────────────────────────────────────────────────────
+// The one 404/500/offline template and the one confirmation/success template
+// — every full-page error or success state renders one of these instead of
+// hand-rolling its own min-h-screen wrapper.
+export { ErrorPage }                       from "./ErrorPage";
+export { SuccessPage }                     from "./SuccessPage";
 
 // ── Modals & overlays ─────────────────────────────────────────────────────────
 export { Modal, Dialog }                   from "./Modal";

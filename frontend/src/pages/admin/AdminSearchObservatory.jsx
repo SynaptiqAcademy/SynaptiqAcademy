@@ -2,8 +2,9 @@ import React, { useState, useCallback, useEffect } from "react";
 import { RefreshCw, Search, BarChart3, TrendingUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import api from "@/lib/api";
-import { NAVY } from "@/lib/tokens";
+import { NAVY, EMERALD, AMBER, CRIMSON } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
+import { Card, Button, FormSelect, StatCard, StatGrid, Tag, TagGroup } from "@/components/ds";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -30,7 +31,7 @@ export default function AdminSearchObservatory() {
   const keywords = (kw?.items || []).slice(0, 30);
   const byModule = (o.by_module || []).slice(0, 10);
 
-  const qualColor = o.search_quality_score >= 75 ? "text-green-400" : o.search_quality_score >= 50 ? "text-yellow-400" : "text-red-400";
+  const qualColor = o.search_quality_score >= 75 ? EMERALD : o.search_quality_score >= 50 ? AMBER : CRIMSON;
 
   return (
     <AdministrationLayout
@@ -38,112 +39,102 @@ export default function AdminSearchObservatory() {
       subtitle="Keyword analytics, empty result detection, module usage"
       actions={
         <div className="flex gap-2">
-          <select value={days} onChange={e => setDays(Number(e.target.value))}
-            className="text-xs bg-[#0F2847] border border-[#1a3050] text-slate-300 px-2 py-1.5">
+          <FormSelect value={days} onChange={e => setDays(Number(e.target.value))} wrapperClassName="!mb-0" size="sm">
             {[7, 14, 30, 90].map(d => <option key={d} value={d}>Last {d}d</option>)}
-          </select>
-          <button onClick={refetchAll} className="p-1.5 bg-[#0F2847] border border-[#1a3050] text-slate-400 hover:text-white">
+          </FormSelect>
+          <Button variant="ghost" size="icon" onClick={refetchAll} aria-label="Refresh">
             <RefreshCw size={14} className={(ovL || kwL) ? "animate-spin" : ""} />
-          </button>
+          </Button>
         </div>
       }
     >
+      <div className="flex flex-col gap-6">
+        {/* KPI row */}
+        <StatGrid cols={6}>
+          <StatCard label="Search Quality" value={`${o.search_quality_score ?? 0}`} />
+          <StatCard label="Total Searches" value={(o.total_searches || 0).toLocaleString()} />
+          <StatCard label="Unique Users" value={o.unique_users ?? 0} />
+          <StatCard label="Unique Queries" value={o.unique_queries ?? 0} />
+          <StatCard label="Empty Results" value={o.empty_results ?? 0} />
+          <StatCard label="Empty Rate" value={`${o.empty_rate_pct ?? 0}%`} />
+        </StatGrid>
 
-      {/* KPI row */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {[
-          { label: "Search Quality", value: `${o.search_quality_score ?? 0}`, color: qualColor },
-          { label: "Total Searches", value: (o.total_searches || 0).toLocaleString(), color: "text-white" },
-          { label: "Unique Users", value: o.unique_users ?? 0, color: "text-blue-400" },
-          { label: "Unique Queries", value: o.unique_queries ?? 0, color: "text-purple-400" },
-          { label: "Empty Results", value: o.empty_results ?? 0, color: "text-red-400" },
-          { label: "Empty Rate", value: `${o.empty_rate_pct ?? 0}%`, color: o.empty_rate_pct > 20 ? "text-red-400" : "text-yellow-400" },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="bg-[#0F2847] border border-[#1a3050] p-4">
-            <div className={`text-xl font-bold ${color}`}>{value}</div>
-            <div className="text-xs text-slate-400">{label}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* By module */}
-        {byModule.length > 0 && (
-          <div className="bg-[#0F2847] border border-[#1a3050] p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <BarChart3 size={14} className="text-blue-400" />
-              <span className="text-sm font-semibold text-white">Searches by Module</span>
-            </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={byModule} layout="vertical" margin={{ left: 20, right: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1a3050" horizontal={false} />
-                <XAxis type="number" tick={{ fill: "#64748b", fontSize: 10 }} />
-                <YAxis type="category" dataKey="module" tick={{ fill: "#94a3b8", fontSize: 10 }} width={110} />
-                <Tooltip contentStyle={{ background: "#0B1C35", border: "1px solid #1a3050", fontSize: 11 }} />
-                <Bar dataKey="count" fill="#3b82f6" radius={[0, 2, 2, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {/* Empty results modules */}
-        <div className="bg-[#0F2847] border border-[#1a3050] p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Search size={14} className="text-yellow-400" />
-            <span className="text-sm font-semibold text-white">Module Performance</span>
-          </div>
-          <div className="space-y-2 overflow-y-auto max-h-[220px]">
-            {byModule.map(m => (
-              <div key={m.module} className="flex items-center justify-between text-xs">
-                <span className="text-slate-300 truncate flex-1">{m.module}</span>
-                <span className="text-white mx-3">{m.count}</span>
-                <div className="text-right">
-                  <span className="text-slate-500">avg {m.avg_results} results</span>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* By module */}
+          {byModule.length > 0 && (
+            <Card padding="md">
+              <div className="flex items-center gap-2 mb-3">
+                <BarChart3 size={14} className="text-blue-500" />
+                <span className="text-sm font-semibold text-slate-800">Searches by Module</span>
               </div>
-            ))}
-            {byModule.length === 0 && <div className="text-xs text-slate-500">No search data yet for this period</div>}
-          </div>
-        </div>
-      </div>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={byModule} layout="vertical" margin={{ left: 20, right: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
+                  <XAxis type="number" tick={{ fill: "#64748b", fontSize: 10 }} />
+                  <YAxis type="category" dataKey="module" tick={{ fill: "#64748b", fontSize: 10 }} width={110} />
+                  <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #e2e8f0", fontSize: 11 }} />
+                  <Bar dataKey="count" fill="#0F2847" radius={[0, 2, 2, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          )}
 
-      {/* Top keywords */}
-      <div className="bg-[#0F2847] border border-[#1a3050]">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a3050]">
-          <div className="flex items-center gap-2">
-            <TrendingUp size={14} className="text-green-400" />
-            <span className="text-sm font-semibold text-white">Top Search Keywords</span>
-          </div>
-          <select value={kwLimit} onChange={e => setKwLimit(Number(e.target.value))}
-            className="text-[10px] bg-[#0B1C35] border border-[#1a3050] text-slate-400 px-1.5 py-1">
-            <option value={20}>Top 20</option>
-            <option value={30}>Top 30</option>
-            <option value={50}>Top 50</option>
-          </select>
-        </div>
-        <div className="p-4">
-          {keywords.length === 0 ? (
-            <div className="text-xs text-slate-500 text-center py-4">No search queries logged yet</div>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {keywords.map((kw, i) => {
-                const maxCount = keywords[0]?.count || 1;
-                const size = Math.max(10, Math.min(16, 10 + (kw.count / maxCount) * 6));
-                return (
-                  <span key={i} className={`px-2 py-1 bg-[#0B1C35] border border-[#1a3050] text-slate-300
-                    ${kw.avg_results === 0 ? "border-red-700/50 text-red-400" : ""}`}
-                    style={{ fontSize: size }}>
-                    {kw.query}
-                    <span className="text-slate-500 text-[10px] ml-1">({kw.count})</span>
-                  </span>
-                );
-              })}
+          {/* Empty results modules */}
+          <Card padding="md">
+            <div className="flex items-center gap-2 mb-3">
+              <Search size={14} className="text-amber-500" />
+              <span className="text-sm font-semibold text-slate-800">Module Performance</span>
             </div>
-          )}
-          {keywords.some(k => k.avg_results === 0) && (
-            <div className="mt-3 text-[10px] text-red-400">Red keywords returned 0 results — improve search coverage for these terms</div>
-          )}
+            <div className="space-y-2 overflow-y-auto max-h-[220px]">
+              {byModule.map(m => (
+                <div key={m.module} className="flex items-center justify-between text-xs">
+                  <span className="text-slate-600 truncate flex-1">{m.module}</span>
+                  <span className="text-slate-900 mx-3">{m.count}</span>
+                  <div className="text-right">
+                    <span className="text-slate-400">avg {m.avg_results} results</span>
+                  </div>
+                </div>
+              ))}
+              {byModule.length === 0 && <div className="text-xs text-slate-400">No search data yet for this period</div>}
+            </div>
+          </Card>
         </div>
+
+        {/* Top keywords */}
+        <Card padding="none">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <TrendingUp size={14} className="text-emerald-500" />
+              <span className="text-sm font-semibold text-slate-800">Top Search Keywords</span>
+            </div>
+            <FormSelect value={kwLimit} onChange={e => setKwLimit(Number(e.target.value))} wrapperClassName="!mb-0" size="sm">
+              <option value={20}>Top 20</option>
+              <option value={30}>Top 30</option>
+              <option value={50}>Top 50</option>
+            </FormSelect>
+          </div>
+          <div className="p-4">
+            {keywords.length === 0 ? (
+              <div className="text-xs text-slate-400 text-center py-4">No search queries logged yet</div>
+            ) : (
+              <TagGroup gap={8}>
+                {keywords.map((kw, i) => {
+                  const maxCount = keywords[0]?.count || 1;
+                  const size = Math.max(10, Math.min(16, 10 + (kw.count / maxCount) * 6));
+                  return (
+                    <Tag key={i} color={kw.avg_results === 0 ? CRIMSON : undefined} style={{ fontSize: size }}>
+                      {kw.query}
+                      <span className="text-[10px] opacity-70 ml-1">({kw.count})</span>
+                    </Tag>
+                  );
+                })}
+              </TagGroup>
+            )}
+            {keywords.some(k => k.avg_results === 0) && (
+              <div className="mt-3 text-[10px] text-red-600">Red keywords returned 0 results — improve search coverage for these terms</div>
+            )}
+          </div>
+        </Card>
       </div>
     </AdministrationLayout>
   );

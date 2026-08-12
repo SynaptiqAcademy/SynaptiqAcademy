@@ -22,7 +22,13 @@ import { streamExecute, getWorkflows } from "../services/copilotEngine";
 import AgentCard from "../components/copilot/AgentCard";
 import OrchestrationMap from "../components/copilot/OrchestrationMap";
 import { NAVY, ACCENT, WARM } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { EmptyState } from "@/components/ds/EmptyState";
+import { Alert } from "@/components/ds/Alert";
+import { List, ListItem } from "@/components/ds/List";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -244,26 +250,21 @@ export default function Copilot() {
   const isEmpty = messages.length === 0;
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="Research Copilot"
       subtitle="Describe your research goal. A team of specialized AI agents will collaborate to help you."
       actions={
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowAgentMap(v => !v)}
-            className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 border border-slate-200 text-slate-500 hover:text-slate-800 transition-colors"
-          >
+          <Button onClick={() => setShowAgentMap(v => !v)} variant="ghost" size="sm">
             <BarChart2 size={10} strokeWidth={1.5} />
             {showAgentMap ? "Hide" : "Show"} agent map
-          </button>
+          </Button>
           {!isEmpty && (
-            <button
-              onClick={newSession}
-              className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 border border-slate-200 text-slate-500 hover:text-slate-800 transition-colors"
-            >
+            <Button onClick={newSession} variant="ghost" size="sm">
               <RefreshCw size={10} strokeWidth={1.5} />
               New session
-            </button>
+            </Button>
           )}
         </div>
       }
@@ -285,14 +286,15 @@ export default function Copilot() {
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg">
                 {STARTERS.map(({ icon: Icon, text }) => (
-                  <button
+                  <Card
                     key={text}
                     onClick={() => handleStarter(text)}
-                    className="flex items-center gap-2.5 px-4 py-3 border border-slate-200 bg-white text-left hover:border-slate-400 hover:bg-slate-50 transition-all text-[12px] text-slate-600 font-medium"
+                    padding="md"
+                    className="flex items-center gap-2.5 text-left text-[12px] text-slate-600 font-medium"
                   >
                     <Icon size={12} strokeWidth={1.5} style={{ color: NAVY, flexShrink: 0 }} />
                     {text}
-                  </button>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -343,18 +345,18 @@ export default function Copilot() {
               />
               <div className="absolute bottom-2 right-2 text-[10px] text-slate-300">Shift+Enter for newline</div>
             </div>
-            <button
+            <Button
               type="submit"
               disabled={running || !input.trim()}
-              className="flex items-center gap-2 px-4 py-3 text-[13px] font-semibold text-white transition-colors disabled:opacity-40"
-              style={{ background: running ? "#64748B" : NAVY }}
+              variant="primary"
+              size="lg"
             >
               {running
                 ? <RefreshCw size={13} strokeWidth={1.5} className="animate-spin" />
                 : <Send size={13} strokeWidth={1.5} />
               }
               {running ? "Working…" : "Send"}
-            </button>
+            </Button>
           </form>
 
           <p className="text-[10px] text-slate-400 mt-2">
@@ -370,14 +372,11 @@ export default function Copilot() {
           >
             {/* Orchestration map */}
             {currentPlan ? (
-              <div className="border border-slate-200 bg-white px-4 py-3">
+              <Card padding="md">
                 <OrchestrationMap plan={currentPlan} statuses={agentStatuses} />
-              </div>
+              </Card>
             ) : (
-              <div className="border border-dashed border-slate-200 px-4 py-5 text-center">
-                <BarChart2 size={20} strokeWidth={1} className="text-slate-200 mx-auto mb-2" />
-                <p className="text-[11px] text-slate-400 m-0">Agent orchestration map appears here</p>
-              </div>
+              <EmptyState size="sm" icon={<BarChart2 />} title="Agent orchestration map appears here" />
             )}
 
             {/* Agent status cards */}
@@ -406,32 +405,30 @@ export default function Copilot() {
 
             {/* Workflow shortcuts */}
             {!running && workflows.length > 0 && (
-              <div className="border border-slate-200 bg-white px-4 py-3">
+              <Card padding="md">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
                   Quick workflows
                 </div>
-                {workflows.slice(0, 6).map(wf => (
-                  <button
-                    key={wf.id}
-                    onClick={() => handleStarter(wf.phrases?.[0] || wf.label)}
-                    className="w-full text-left text-[11px] text-slate-500 hover:text-slate-900 py-1 border-b border-slate-50 last:border-0 transition-colors"
-                  >
-                    {wf.label.split(":")[0]}
-                  </button>
-                ))}
-              </div>
+                <List border={false} divided>
+                  {workflows.slice(0, 6).map(wf => (
+                    <ListItem
+                      key={wf.id}
+                      compact
+                      onClick={() => handleStarter(wf.phrases?.[0] || wf.label)}
+                      title={wf.label.split(":")[0]}
+                    />
+                  ))}
+                </List>
+              </Card>
             )}
 
             {/* Evidence policy note */}
-            <div className="flex items-start gap-2 px-3 py-2.5 border border-slate-100 bg-slate-50">
-              <Info size={10} strokeWidth={1.5} className="text-slate-400 shrink-0 mt-0.5" />
-              <p className="text-[10px] text-slate-400 m-0 leading-relaxed">
-                All agents follow the Academic Reliability Policy. Every recommendation traces to verified evidence. No statistics are fabricated.
-              </p>
-            </div>
+            <Alert variant="neutral" icon={Info}>
+              All agents follow the Academic Reliability Policy. Every recommendation traces to verified evidence. No statistics are fabricated.
+            </Alert>
           </aside>
         )}
       </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
   );
 }

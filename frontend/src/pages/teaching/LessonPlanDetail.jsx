@@ -3,7 +3,6 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { Sparkles, Download, Edit2, Check, X, Trash2, Plus } from "lucide-react";
 import api from "../../lib/api";
 import { toast } from "sonner";
-import { NAVY } from "@/lib/tokens";
 import { SkeletonPage } from "../../components/ds/LoadingState";
 import { Button } from "@/components/ds/Button";
 import { Card } from "@/components/ds/Card";
@@ -38,7 +37,7 @@ function PhaseRow({ phase, index, onChange, onDelete }) {
           <Input value={phase.activity} onChange={(e) => onChange(index, "activity", e.target.value)}
             placeholder="Activity description"
             wrapperClassName="flex-1" />
-          <Button type="button" variant="ghost" size="icon" onClick={() => onDelete(index)} className="text-slate-400 hover:text-red-500">
+          <Button type="button" variant="ghost" size="icon" onClick={() => onDelete(index)} aria-label="Remove phase" className="text-slate-400 hover:text-red-500">
             <X size={14} strokeWidth={1.5} />
           </Button>
         </div>
@@ -191,64 +190,60 @@ export default function LessonPlanDetail() {
   const d = editing ? draft : lesson;
   const totalDuration = (d.outline || []).reduce((s, p) => s + (p.duration_minutes || 0), 0);
 
-  return (
-    <ResearchLayout>
-    <div className="max-w-4xl space-y-8">
-      {/* Header */}
-      <header className="border-b border-slate-200 pb-6">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex-1 min-w-0">
-            {editing
-              ? <input value={d.title} onChange={(e) => setDraft({ ...d, title: e.target.value })}
-                  className="w-full font-serif text-3xl text-slate-900 border-b border-slate-300 focus:outline-none focus:border-[#0F2847] bg-transparent pb-1" />
-              : <h1 className="font-serif text-3xl text-slate-900">{d.title}</h1>
-            }
-            <div className="flex items-center gap-3 mt-2 flex-wrap">
-              <span className="text-sm text-slate-500">{d.subject}</span>
-              <span className="text-slate-300">·</span>
-              <span className="text-sm text-slate-500">{d.duration_minutes} min</span>
-              {d.level && <><span className="text-slate-300">·</span><span className="text-sm text-slate-500">{d.level}</span></>}
-              {d.ai_generated && (
-                <span className="inline-flex items-center gap-1 text-[10px] text-[#0F2847]/60">
-                  <Sparkles size={9} strokeWidth={1.5} /> AI-generated
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {editing ? (
-              <>
-                <Button onClick={save} loading={saving}>
-                  <Check size={14} strokeWidth={1.5} />{saving ? "Saving…" : "Save"}
-                </Button>
-                <Button variant="ghost" onClick={() => { setDraft(lesson); setEditing(false); }}>
-                  Cancel
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button variant="ghost" size="sm" onClick={exportAsText} title="Export as text">
-                  <Download size={13} strokeWidth={1.5} /> Export
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
-                  <Edit2 size={13} strokeWidth={1.5} /> Edit
-                </Button>
-                <Button variant="ghost" size="icon" onClick={handleDelete} title="Delete lesson" className="text-slate-400 hover:text-red-500">
-                  <Trash2 size={15} strokeWidth={1.5} />
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
+  const headerActions = editing ? (
+    <>
+      <Button onClick={save} loading={saving}>
+        <Check size={14} strokeWidth={1.5} />{saving ? "Saving…" : "Save"}
+      </Button>
+      <Button variant="ghost" onClick={() => { setDraft(lesson); setEditing(false); }}>
+        Cancel
+      </Button>
+    </>
+  ) : (
+    <>
+      <Button variant="ghost" size="sm" onClick={exportAsText} title="Export as text">
+        <Download size={13} strokeWidth={1.5} /> Export
+      </Button>
+      <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+        <Edit2 size={13} strokeWidth={1.5} /> Edit
+      </Button>
+      <Button variant="ghost" size="icon" onClick={handleDelete} title="Delete lesson" className="text-slate-400 hover:text-red-500">
+        <Trash2 size={15} strokeWidth={1.5} />
+      </Button>
+    </>
+  );
 
-        {/* Tabs */}
+  return (
+    <ResearchLayout
+      title={d.title}
+      actions={headerActions}
+      nav={
         <NavTabs
-          className="mt-6 -mb-6"
           tabs={["overview", "outline", "assessment"].map((t) => ({ id: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))}
           active={tab}
           onChange={setTab}
         />
-      </header>
+      }
+    >
+    <div className="max-w-4xl space-y-8">
+      <div className="border-b border-slate-200 pb-6">
+        {editing && (
+          <input value={d.title} onChange={(e) => setDraft({ ...d, title: e.target.value })}
+            placeholder="Lesson title"
+            className="w-full font-serif text-2xl text-slate-900 border-b border-slate-300 focus:outline-none focus:border-[#0F2847] bg-transparent pb-1 mb-3" />
+        )}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-sm text-slate-500">{d.subject}</span>
+          <span className="text-slate-300">·</span>
+          <span className="text-sm text-slate-500">{d.duration_minutes} min</span>
+          {d.level && <><span className="text-slate-300">·</span><span className="text-sm text-slate-500">{d.level}</span></>}
+          {d.ai_generated && (
+            <span className="inline-flex items-center gap-1 text-[10px] text-[#0F2847]/60">
+              <Sparkles size={9} strokeWidth={1.5} /> AI-generated
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* Overview tab */}
       {tab === "overview" && (
@@ -307,7 +302,7 @@ export default function LessonPlanDetail() {
                     : <span className="text-sm text-slate-700 leading-relaxed">{obj}</span>
                   }
                   {editing && (
-                    <Button variant="ghost" size="icon" onClick={() => removeListItem("learning_objectives", i)} className="text-slate-300 hover:text-red-400 shrink-0">
+                    <Button variant="ghost" size="icon" onClick={() => removeListItem("learning_objectives", i)} aria-label="Remove objective" className="text-slate-300 hover:text-red-400 shrink-0">
                       <X size={12} strokeWidth={1.5} />
                     </Button>
                   )}
@@ -335,7 +330,7 @@ export default function LessonPlanDetail() {
                     : <span className="text-sm text-slate-700">{m}</span>
                   }
                   {editing && (
-                    <Button variant="ghost" size="icon" onClick={() => removeListItem("materials", i)} className="text-slate-300 hover:text-red-400 shrink-0">
+                    <Button variant="ghost" size="icon" onClick={() => removeListItem("materials", i)} aria-label="Remove material" className="text-slate-300 hover:text-red-400 shrink-0">
                       <X size={12} strokeWidth={1.5} />
                     </Button>
                   )}
@@ -360,7 +355,7 @@ export default function LessonPlanDetail() {
                     : <span className="text-sm text-slate-700 leading-relaxed">{s}</span>
                   }
                   {editing && (
-                    <Button variant="ghost" size="icon" onClick={() => removeListItem("differentiation_strategies", i)} className="text-slate-300 hover:text-red-400 shrink-0">
+                    <Button variant="ghost" size="icon" onClick={() => removeListItem("differentiation_strategies", i)} aria-label="Remove strategy" className="text-slate-300 hover:text-red-400 shrink-0">
                       <X size={12} strokeWidth={1.5} />
                     </Button>
                   )}

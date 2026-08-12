@@ -9,7 +9,7 @@ import { Button } from "@/components/ds/Button";
 import { Input } from "@/components/ds/Input";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { Tag, TagGroup } from "@/components/ds/Tag";
-import { DiscoveryLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 
 const AREAS = ["Artificial Intelligence", "Healthcare", "Management", "Economics", "Education", "Public Health", "Cybersecurity", "Engineering", "Psychology"];
 
@@ -37,7 +37,7 @@ export default function Funding() {
   useEffect(() => { loadRef.current(); }, []);
 
   return (
-    <DiscoveryLayout
+    <ResearchLayout
       title="Funding"
       subtitle="A searchable database of funding opportunities — grants, fellowships, and programmes."
     >
@@ -91,7 +91,7 @@ export default function Funding() {
           </Card>
         ))}
       </div>
-    </DiscoveryLayout>
+    </ResearchLayout>
   );
 }
 

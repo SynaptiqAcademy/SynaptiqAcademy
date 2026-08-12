@@ -9,7 +9,16 @@ import {
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { WARM } from "@/lib/tokens";
-import { AIWorkspaceLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
+import { AI_NAV_ITEMS } from "@/lib/navItems";
+import { Button } from "@/components/ds/Button";
+import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
+import { Tag as DsTag } from "@/components/ds/Tag";
+import { Input } from "@/components/ds/Input";
+import { Textarea } from "@/components/ds/Textarea";
+import { NavTabs } from "@/components/ds/NavTabs";
+import { InlineError } from "@/components/ds/Alert";
 
 
 
@@ -25,11 +34,7 @@ function SectionHeader({ icon: Icon, label, color = "#0F2847" }) {
 }
 
 function Tag({ children, className = "" }) {
-  return (
-    <span className={`inline-block border border-slate-200 text-slate-600 text-xs px-2 py-0.5 ${className}`}>
-      {children}
-    </span>
-  );
+  return <DsTag size="sm" className={className}>{children}</DsTag>;
 }
 
 function BulletList({ items }) {
@@ -60,7 +65,7 @@ function ExpandCard({ title, subtitle, badge, badgeColor, children, defaultOpen 
   const [open, setOpen] = useState(defaultOpen);
   const Chev = open ? ChevronUp : ChevronDown;
   return (
-    <div className="border border-slate-200 bg-white">
+    <Card padding="none">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-start justify-between gap-4 px-5 py-4 text-left hover:bg-slate-50 transition-colors"
@@ -71,12 +76,9 @@ function ExpandCard({ title, subtitle, badge, badgeColor, children, defaultOpen 
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {badge && (
-            <span className="text-xs px-2 py-0.5 border font-mono"
-              style={badgeColor
-                ? { borderColor: badgeColor, color: badgeColor }
-                : { borderColor: "#e2e8f0", color: "#64748b" }}>
+            <Badge color={badgeColor || "#64748b"} size="sm" className="font-mono">
               {badge}
-            </span>
+            </Badge>
           )}
           <Chev size={15} strokeWidth={1.5} className="text-slate-400" />
         </div>
@@ -86,7 +88,7 @@ function ExpandCard({ title, subtitle, badge, badgeColor, children, defaultOpen 
           {children}
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -124,10 +126,9 @@ function VerdictBadge({ verdict }) {
   };
   const cfg = map[verdict?.toLowerCase()] || { color: "#64748b" };
   return (
-    <span className="text-xs px-2 py-0.5 border font-mono capitalize"
-      style={{ borderColor: cfg.color, color: cfg.color }}>
+    <Badge color={cfg.color} size="sm" className="font-mono capitalize">
       {verdict?.replace(/_/g, " ")}
-    </span>
+    </Badge>
   );
 }
 
@@ -138,10 +139,9 @@ function SeverityBadge({ severity }) {
   };
   const color = map[severity?.toLowerCase()] || "#64748b";
   return (
-    <span className="text-xs px-2 py-0.5 border font-mono capitalize"
-      style={{ borderColor: color, color }}>
+    <Badge color={color} size="sm" className="font-mono capitalize">
       {severity}
-    </span>
+    </Badge>
   );
 }
 
@@ -188,10 +188,7 @@ function PriorityIcon({ level }) {
 
 function GateView() {
   return (
-    <div className="min-h-screen bg-[#F4F6FA]">
-      <div style={{ background: "#F4F6FA", padding: "13px 32px", borderBottom: "1px solid rgba(15,23,42,0.08)" }}>
-      </div>
-      <div className="flex items-center justify-center p-8" style={{ minHeight: "calc(100vh - 50px)" }}>
+    <div className="flex items-center justify-center py-16">
       <div className="max-w-md w-full text-center space-y-6">
         <div className="w-14 h-14 border-2 border-slate-900 flex items-center justify-center mx-auto">
           <Lock size={22} strokeWidth={1.5} />
@@ -203,7 +200,7 @@ function GateView() {
             Get expert-level statistical critique before you submit to a journal.
           </p>
         </div>
-        <div className="border border-slate-200 bg-white p-4 text-left space-y-2">
+        <Card padding="md" className="text-left space-y-2">
           <div className="text-xs overline text-slate-500 mb-3">Included in this review</div>
           {[
             "Analysis appropriateness assessment",
@@ -219,15 +216,11 @@ function GateView() {
               {f}
             </div>
           ))}
-        </div>
-        <Link
-          to="/pricing"
-          className="inline-block w-full bg-[#0F2847] text-white text-sm font-medium py-3 px-6 hover:bg-[#1a3a5c] transition-colors"
-        >
+        </Card>
+        <Button as={Link} to="/pricing" variant="primary" size="lg" className="w-full">
           Upgrade to Pro Researcher
-        </Link>
+        </Button>
         <p className="text-xs text-slate-500">25 credits per review · Refunded if review fails</p>
-      </div>
       </div>
     </div>
   );
@@ -311,83 +304,54 @@ function InputView({ onResult }) {
   if (isGated) return <GateView />;
 
   return (
-    <div className="min-h-screen bg-[#F4F6FA]">
-      <div style={{ background: "#F4F6FA", padding: "13px 32px", borderBottom: "1px solid rgba(15,23,42,0.08)" }}>
-      </div>
-      <div className="max-w-2xl mx-auto py-12 px-6">
+    <div>
+      <div className="max-w-2xl mx-auto">
         {/* header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 border-2 border-[#0F2847] flex items-center justify-center">
-              <BarChart2 size={18} strokeWidth={1.5} className="text-[#0F2847]" />
-            </div>
-            <div>
-              <h1 className="font-serif text-2xl text-slate-900">AI Statistical Review</h1>
-              <p className="text-xs text-slate-500 mt-0.5">Pro Researcher · 25 credits per review</p>
-            </div>
-          </div>
-          <p className="text-slate-600 text-sm leading-relaxed">
-            Submit your statistical output for an expert critique — assumptions, interpretation,
-            validity threats, simulated reviewer feedback, and a prioritised revision roadmap
-            before you submit to a journal.
-          </p>
+          <p className="text-xs text-slate-500">Pro Researcher · 25 credits per review</p>
         </div>
 
         <form onSubmit={submit} data-testid={TID.statisticalReviewForm} className="space-y-5">
           {/* topic */}
-          <div>
-            <label className="overline block mb-1.5">Research Topic *</label>
-            <input
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="e.g. Impact of digital literacy on academic performance in higher education"
-              className="w-full border border-slate-300 px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-              maxLength={300}
-              data-testid={TID.statisticalReviewTopic}
-            />
-          </div>
+          <Input
+            label="Research Topic *"
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            placeholder="e.g. Impact of digital literacy on academic performance in higher education"
+            maxLength={300}
+            data-testid={TID.statisticalReviewTopic}
+          />
 
           {/* research question */}
-          <div>
-            <label className="overline block mb-1.5">Research Question *</label>
-            <textarea
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="e.g. Does digital literacy significantly predict academic performance when controlling for socioeconomic status and prior academic achievement?"
-              rows={3}
-              className="w-full border border-slate-300 px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors resize-none"
-              maxLength={1000}
-              data-testid={TID.statisticalReviewQuestion}
-            />
-          </div>
+          <Textarea
+            label="Research Question *"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="e.g. Does digital literacy significantly predict academic performance when controlling for socioeconomic status and prior academic achievement?"
+            rows={3}
+            resize={false}
+            maxLength={1000}
+            data-testid={TID.statisticalReviewQuestion}
+          />
 
           {/* input mode selector */}
           <div>
             <label className="overline block mb-1.5">Statistical Output Type *</label>
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {INPUT_MODES.map((mode) => (
-                <button
-                  key={mode.id}
-                  type="button"
-                  onClick={() => setInputMode(mode.id)}
-                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 border transition-colors ${
-                    inputMode === mode.id
-                      ? "bg-[#0F2847] border-[#0F2847] text-white"
-                      : "border-slate-300 text-slate-600 hover:border-[#0F2847] hover:text-[#0F2847]"
-                  }`}
-                >
-                  <mode.icon size={11} strokeWidth={1.5} />
-                  {mode.label}
-                </button>
-              ))}
+            <div className="mb-3">
+              <NavTabs
+                variant="pill"
+                active={inputMode}
+                onChange={setInputMode}
+                tabs={INPUT_MODES.map((m) => ({ id: m.id, label: m.label, icon: m.icon }))}
+              />
             </div>
 
-            <textarea
+            <Textarea
               value={results}
               onChange={(e) => setResults(e.target.value)}
               placeholder={currentMode.placeholder}
               rows={12}
-              className="w-full border border-slate-300 px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors resize-y font-mono"
+              className="font-mono"
               maxLength={80000}
               data-testid={TID.statisticalReviewResults}
             />
@@ -419,85 +383,64 @@ function InputView({ onResult }) {
           </button>
 
           {showOptional && (
-            <div className="border border-slate-200 bg-white p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="overline block mb-1.5">Methodology</label>
-                  <input
-                    value={methodology}
-                    onChange={(e) => setMethodology(e.target.value)}
-                    placeholder="e.g. Cross-sectional survey"
-                    className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-                    maxLength={300}
-                  />
-                </div>
-                <div>
-                  <label className="overline block mb-1.5">Sample Size</label>
-                  <input
-                    value={sampleSize}
-                    onChange={(e) => setSampleSize(e.target.value)}
-                    placeholder="e.g. 342 undergraduates"
-                    className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-                    maxLength={100}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="overline block mb-1.5">Variables</label>
-                <input
-                  value={variables}
-                  onChange={(e) => setVariables(e.target.value)}
-                  placeholder="e.g. IV: digital literacy score; DV: GPA; Controls: SES, prior achievement"
-                  className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-                  maxLength={500}
+            <Card padding="lg" className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label="Methodology"
+                  value={methodology}
+                  onChange={(e) => setMethodology(e.target.value)}
+                  placeholder="e.g. Cross-sectional survey"
+                  maxLength={300}
+                />
+                <Input
+                  label="Sample Size"
+                  value={sampleSize}
+                  onChange={(e) => setSampleSize(e.target.value)}
+                  placeholder="e.g. 342 undergraduates"
+                  maxLength={100}
                 />
               </div>
-              <div>
-                <label className="overline block mb-1.5">Hypotheses</label>
-                <textarea
-                  value={hypotheses}
-                  onChange={(e) => setHypotheses(e.target.value)}
-                  placeholder="e.g. H1: Digital literacy positively predicts GPA (β > 0, p < .05)"
-                  rows={3}
-                  className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors resize-none"
-                  maxLength={2000}
-                />
-              </div>
-              <div>
-                <label className="overline block mb-1.5">Analysis Technique</label>
-                <input
-                  value={analysisType}
-                  onChange={(e) => setAnalysisType(e.target.value)}
-                  placeholder="e.g. Hierarchical multiple regression, PLS-SEM, one-way ANOVA"
-                  className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#0F2847] bg-white transition-colors"
-                  maxLength={200}
-                />
-              </div>
-            </div>
+              <Input
+                label="Variables"
+                value={variables}
+                onChange={(e) => setVariables(e.target.value)}
+                placeholder="e.g. IV: digital literacy score; DV: GPA; Controls: SES, prior achievement"
+                maxLength={500}
+              />
+              <Textarea
+                label="Hypotheses"
+                value={hypotheses}
+                onChange={(e) => setHypotheses(e.target.value)}
+                placeholder="e.g. H1: Digital literacy positively predicts GPA (β > 0, p < .05)"
+                rows={3}
+                resize={false}
+                maxLength={2000}
+              />
+              <Input
+                label="Analysis Technique"
+                value={analysisType}
+                onChange={(e) => setAnalysisType(e.target.value)}
+                placeholder="e.g. Hierarchical multiple regression, PLS-SEM, one-way ANOVA"
+                maxLength={200}
+              />
+            </Card>
           )}
 
           {error && !isGated && (
-            <div className="border border-red-200 bg-red-50 p-3 flex gap-2.5">
-              <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">{error.message}</p>
-            </div>
+            <InlineError>{error.message}</InlineError>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={loading}
+            loading={loading}
             data-testid={TID.statisticalReviewSubmitBtn}
-            className="w-full bg-[#0F2847] text-white text-sm font-medium py-3 px-6 hover:bg-[#1a3a5c] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            variant="primary"
+            size="lg"
+            className="w-full"
           >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <RotateCcw size={14} className="animate-spin" />
-                Reviewing statistical output… (up to 3 min)
-              </span>
-            ) : (
-              "Review Statistics — 25 Credits"
-            )}
-          </button>
+            {loading ? "Reviewing statistical output… (up to 3 min)" : "Review Statistics — 25 Credits"}
+          </Button>
         </form>
       </div>
     </div>
@@ -513,11 +456,11 @@ function ValiditySection({ threats, label, color }) {
       <div className="text-xs overline mb-2" style={{ color }}>{label}</div>
       <div className="space-y-3">
         {threats.map((t, i) => (
-          <div key={i} className="border border-slate-100 bg-slate-50 p-4 space-y-2">
+          <Card key={i} padding="md" variant="ghost" className="!bg-slate-50 border border-slate-100 space-y-2">
             <div className="font-medium text-sm text-slate-900">{t.threat}</div>
             <LabelValue label="Description" value={t.description} />
             <LabelValue label="Mitigation" value={t.mitigation} />
-          </div>
+          </Card>
         ))}
       </div>
     </div>
@@ -534,7 +477,7 @@ function ImprovementList({ items, level }) {
   return (
     <div className="space-y-2">
       {items.map((item, i) => (
-        <div key={i} className={`border ${cfg.border} ${cfg.bg} p-4 space-y-1.5`}>
+        <Card key={i} padding="md" variant="ghost" className={`${cfg.border} ${cfg.bg} space-y-1.5`}>
           <div className="flex items-start gap-2">
             <PriorityIcon level={level} />
             <div className="font-medium text-sm text-slate-900">{item.action}</div>
@@ -542,7 +485,7 @@ function ImprovementList({ items, level }) {
           {item.reason && (
             <p className="text-xs text-slate-500 leading-relaxed ml-5">{item.reason}</p>
           )}
-        </div>
+        </Card>
       ))}
     </div>
   );
@@ -566,42 +509,35 @@ function ResultView({ data, onReset }) {
   const potColor = (pubReady.score >= 80) ? "#16a34a" : (pubReady.score >= 60) ? "#d97706" : "#dc2626";
 
   return (
-    <div className="min-h-screen bg-[#F4F6FA]" data-testid={TID.statisticalReviewResult}>
-      <div style={{ background: "#F4F6FA", padding: "13px 32px", borderBottom: "1px solid rgba(15,23,42,0.08)" }}>
-      </div>
-      {/* sticky header */}
-      <div className="border-b border-slate-200 bg-white sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+    <div data-testid={TID.statisticalReviewResult}>
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* meta bar */}
+        <div className="flex items-center justify-between gap-4 pb-6 border-b border-slate-200 flex-wrap">
           <div className="min-w-0">
-            <h1 className="font-serif text-lg text-slate-900 truncate">{data.topic}</h1>
+            <div className="text-sm font-semibold text-slate-900 truncate">{data.topic}</div>
             <p className="text-xs text-slate-500 mt-0.5 truncate">{data.research_question}</p>
           </div>
-          <button
-            onClick={onReset}
-            className="shrink-0 flex items-center gap-1.5 text-sm text-slate-600 border border-slate-300 px-3 py-1.5 hover:border-[#0F2847] hover:text-[#0F2847] transition-colors"
-          >
+          <Button onClick={onReset} variant="outline" size="sm" className="shrink-0">
             <RotateCcw size={13} />
             New Review
-          </button>
+          </Button>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
 
         {/* executive assessment + score */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2 border border-slate-200 bg-white p-6 space-y-4">
+          <Card padding="xl" className="md:col-span-2 space-y-4">
             <SectionHeader icon={BarChart2} label="Executive Statistical Assessment" />
             <div className="flex flex-wrap gap-2">
               {exec.overall_verdict && <VerdictBadge verdict={exec.overall_verdict} />}
               {exec.output_completeness && (
-                <span className="text-xs border border-slate-200 px-2 py-0.5 text-slate-500 font-mono">
+                <Badge variant="outline" size="sm" className="font-mono">
                   {exec.output_completeness}
-                </span>
+                </Badge>
               )}
             </div>
             {exec.summary && <p className="text-sm text-slate-700 leading-relaxed">{exec.summary}</p>}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {exec.key_strengths?.length > 0 && (
                 <div>
                   <div className="text-xs overline text-[#16a34a] mb-2">Key Strengths</div>
@@ -615,35 +551,31 @@ function ResultView({ data, onReset }) {
                 </div>
               )}
             </div>
-          </div>
+          </Card>
 
           {/* publication readiness ring */}
-          <div className="border border-slate-200 bg-white p-6 flex flex-col items-center justify-center text-center gap-3">
+          <Card padding="xl" className="flex flex-col items-center justify-center text-center gap-3">
             <div className="overline text-slate-500">Publication Readiness</div>
             <ScoreRing score={pubReady.score || 0} />
             {pubReady.most_critical_barrier && (
               <p className="text-xs text-slate-500 leading-snug">{pubReady.most_critical_barrier}</p>
             )}
-          </div>
+          </Card>
         </div>
 
         {/* analysis appropriateness */}
-        <div className="border border-slate-200 bg-white p-6 space-y-4">
+        <Card padding="xl" className="space-y-4">
           <SectionHeader icon={CheckCircle2} label="Analysis Appropriateness" color="#2563eb" />
           <div className="flex flex-wrap gap-2">
             {appropriateness.method_used && (
-              <span className="text-xs border border-[#0F2847] px-2 py-0.5 text-[#0F2847] font-mono">
+              <Badge color="#0F2847" size="sm" className="font-mono">
                 {appropriateness.method_used}
-              </span>
+              </Badge>
             )}
             {appropriateness.is_appropriate != null && (
-              <span className={`text-xs border px-2 py-0.5 font-mono ${
-                appropriateness.is_appropriate
-                  ? "border-green-300 text-green-700"
-                  : "border-red-300 text-red-700"
-              }`}>
+              <Badge variant={appropriateness.is_appropriate ? "success" : "danger"} size="sm" className="font-mono">
                 {appropriateness.is_appropriate ? "Appropriate" : "Questionable"}
-              </span>
+              </Badge>
             )}
           </div>
           {appropriateness.appropriateness_rationale && (
@@ -666,10 +598,10 @@ function ResultView({ data, onReset }) {
           {appropriateness.reporting_standard_compliance && (
             <LabelValue label="Reporting Standard Compliance" value={appropriateness.reporting_standard_compliance} />
           )}
-        </div>
+        </Card>
 
         {/* assumption review */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={ClipboardList} label="Assumption Review" color="#7c3aed" />
           {assumptions.overall_assumption_verdict && (
             <div className="mb-4">
@@ -697,10 +629,10 @@ function ResultView({ data, onReset }) {
               </ExpandCard>
             ))}
           </div>
-        </div>
+        </Card>
 
         {/* results interpretation */}
-        <div className="border border-slate-200 bg-white p-6 space-y-4">
+        <Card padding="xl" className="space-y-4">
           <SectionHeader icon={FileText} label="Results Interpretation" color="#0F2847" />
           {interpretation.narrative_interpretation && (
             <p className="text-sm text-slate-700 leading-relaxed">{interpretation.narrative_interpretation}</p>
@@ -719,7 +651,7 @@ function ResultView({ data, onReset }) {
               <div className="text-xs overline text-slate-500 mb-2">Effect Sizes</div>
               <div className="space-y-2">
                 {interpretation.effect_sizes.map((es, i) => (
-                  <div key={i} className="border border-slate-100 bg-slate-50 p-3 flex items-start gap-4">
+                  <Card key={i} padding="sm" variant="ghost" className="!bg-slate-50 border border-slate-100 flex items-start gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium text-slate-900">{es.measure}</div>
                       {es.context && <p className="text-xs text-slate-500 mt-0.5">{es.context}</p>}
@@ -730,16 +662,16 @@ function ResultView({ data, onReset }) {
                         <span className="text-xs capitalize text-slate-500">{es.interpretation}</span>
                       )}
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
           )}
-        </div>
+        </Card>
 
         {/* hypothesis evaluation */}
         {hypotheses.length > 0 && (
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="xl">
             <SectionHeader icon={Lightbulb} label="Hypothesis Evaluation" color="#16a34a" />
             <div className="space-y-3">
               {hypotheses.map((h, i) => (
@@ -761,12 +693,12 @@ function ResultView({ data, onReset }) {
                 </ExpandCard>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
         {/* statistical weaknesses */}
         {weaknesses.length > 0 && (
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="xl">
             <SectionHeader icon={AlertTriangle} label="Statistical Weaknesses" color="#dc2626" />
             <div className="space-y-3">
               {weaknesses.map((w, i) => (
@@ -788,11 +720,11 @@ function ResultView({ data, onReset }) {
                 </ExpandCard>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
         {/* threats to validity */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={Shield} label="Threats to Validity" color="#dc2626" />
           <div className="space-y-6">
             <ValiditySection threats={validity.statistical_conclusion_validity} label="Statistical Conclusion Validity" color="#7c3aed" />
@@ -800,17 +732,17 @@ function ResultView({ data, onReset }) {
             <ValiditySection threats={validity.external_validity} label="External Validity" color="#d97706" />
             <ValiditySection threats={validity.construct_validity} label="Construct Validity" color="#2563eb" />
           </div>
-        </div>
+        </Card>
 
         {/* publication risk */}
-        <div className="border border-slate-200 bg-white p-6 space-y-5">
+        <Card padding="xl" className="space-y-5">
           <SectionHeader icon={AlertTriangle} label="Publication Risk Assessment" color="#ea580c" />
           {pubRisk.major_concerns?.length > 0 && (
             <div>
               <div className="text-xs overline text-[#dc2626] mb-2">Major Concerns</div>
               <div className="space-y-2">
                 {pubRisk.major_concerns.map((c, i) => (
-                  <div key={i} className="border border-red-100 bg-red-50 p-4 space-y-2">
+                  <Card key={i} padding="md" variant="ghost" className="!bg-red-50 border border-red-100 space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="font-medium text-sm text-slate-900">{c.concern}</div>
                       {c.likelihood_of_rejection && (
@@ -818,7 +750,7 @@ function ResultView({ data, onReset }) {
                       )}
                     </div>
                     {c.action_required && <p className="text-xs text-slate-600">{c.action_required}</p>}
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -828,10 +760,10 @@ function ResultView({ data, onReset }) {
               <div className="text-xs overline text-[#d97706] mb-2">Moderate Concerns</div>
               <div className="space-y-2">
                 {pubRisk.moderate_concerns.map((c, i) => (
-                  <div key={i} className="border border-amber-100 bg-amber-50 p-3 space-y-1">
+                  <Card key={i} padding="sm" variant="ghost" className="!bg-amber-50 border border-amber-100 space-y-1">
                     <div className="font-medium text-sm text-slate-900">{c.concern}</div>
                     {c.action_required && <p className="text-xs text-slate-600">{c.action_required}</p>}
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -841,47 +773,47 @@ function ResultView({ data, onReset }) {
               <div className="text-xs overline text-slate-500 mb-2">Minor Concerns</div>
               <div className="space-y-2">
                 {pubRisk.minor_concerns.map((c, i) => (
-                  <div key={i} className="border border-slate-100 bg-slate-50 p-3 space-y-1">
+                  <Card key={i} padding="sm" variant="ghost" className="!bg-slate-50 border border-slate-100 space-y-1">
                     <div className="font-medium text-sm text-slate-900">{c.concern}</div>
                     {c.action_required && <p className="text-xs text-slate-600">{c.action_required}</p>}
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
           )}
-        </div>
+        </Card>
 
         {/* recommended additional analyses */}
         {additionalAnalyses.length > 0 && (
-          <div className="border border-slate-200 bg-white p-6">
+          <Card padding="xl">
             <SectionHeader icon={TrendingUp} label="Recommended Additional Analyses" color="#2563eb" />
             <div className="space-y-3">
               {additionalAnalyses.map((a, i) => (
-                <div key={i} className="border border-slate-100 bg-slate-50 p-4 space-y-2">
+                <Card key={i} padding="md" variant="ghost" className="!bg-slate-50 border border-slate-100 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="font-medium text-sm text-slate-900">{a.analysis}</div>
-                    <span className={`text-xs border px-2 py-0.5 font-mono shrink-0 ${
-                      a.priority === "essential" ? "border-red-300 text-red-700" :
-                      a.priority === "recommended" ? "border-amber-300 text-amber-700" :
-                      "border-slate-200 text-slate-500"
-                    }`}>{a.priority}</span>
+                    <Badge
+                      variant={a.priority === "essential" ? "danger" : a.priority === "recommended" ? "warning" : "outline"}
+                      size="sm"
+                      className="font-mono shrink-0"
+                    >{a.priority}</Badge>
                   </div>
                   <LabelValue label="Rationale" value={a.rationale} />
                   {a.software_guidance && <LabelValue label="Software" value={a.software_guidance} />}
-                </div>
+                </Card>
               ))}
             </div>
-          </div>
+          </Card>
         )}
 
         {/* reviewer perspective */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={MessageSquare} label="Reviewer Perspective" color="#7c3aed" />
           {reviewer.editorial_assessment && (
-            <div className="border border-slate-100 bg-slate-50 p-4 mb-4">
+            <Card padding="md" variant="ghost" className="!bg-slate-50 border border-slate-100 mb-4">
               <div className="text-xs overline text-slate-500 mb-1">Editorial Assessment</div>
               <p className="text-sm text-slate-700 leading-relaxed italic">"{reviewer.editorial_assessment}"</p>
-            </div>
+            </Card>
           )}
           <div className="space-y-3">
             {(reviewer.likely_criticisms || []).map((c, i) => (
@@ -895,10 +827,10 @@ function ResultView({ data, onReset }) {
                 }
               >
                 <div className="space-y-3">
-                  <div className="border border-slate-200 bg-slate-50 p-3">
+                  <Card padding="sm" variant="ghost" className="!bg-slate-50 border border-slate-200">
                     <div className="text-xs overline text-slate-500 mb-1">Reviewer Comment</div>
                     <p className="text-sm text-slate-700 italic">"{c.reviewer_comment}"</p>
-                  </div>
+                  </Card>
                   {c.suggested_response && (
                     <div>
                       <div className="text-xs overline text-[#0F2847] mb-1">Suggested Author Response</div>
@@ -909,32 +841,32 @@ function ResultView({ data, onReset }) {
               </ExpandCard>
             ))}
           </div>
-        </div>
+        </Card>
 
         {/* publication readiness detail */}
-        <div className="border border-slate-200 bg-white p-6 space-y-4">
+        <Card padding="xl" className="space-y-4">
           <SectionHeader icon={TrendingUp} label="Publication Readiness Assessment" color={potColor} />
           {pubReady.assessment && (
             <p className="text-sm text-slate-700 leading-relaxed">{pubReady.assessment}</p>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {pubReady.strongest_statistical_element && (
-              <div className="border border-[#16a34a] bg-green-50 p-4">
+              <Card padding="md" variant="ghost" className="!bg-green-50 border border-[#16a34a]">
                 <div className="text-xs overline text-[#16a34a] mb-1">Strongest Element</div>
                 <p className="text-sm text-slate-700">{pubReady.strongest_statistical_element}</p>
-              </div>
+              </Card>
             )}
             {pubReady.most_critical_barrier && (
-              <div className="border border-[#dc2626] bg-red-50 p-4">
+              <Card padding="md" variant="ghost" className="!bg-red-50 border border-[#dc2626]">
                 <div className="text-xs overline text-[#dc2626] mb-1">Most Critical Barrier</div>
                 <p className="text-sm text-slate-700">{pubReady.most_critical_barrier}</p>
-              </div>
+              </Card>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* revision roadmap */}
-        <div className="border border-slate-200 bg-white p-6">
+        <Card padding="xl">
           <SectionHeader icon={ListChecks} label="Revision Roadmap" color="#0F2847" />
           <div className="space-y-6">
             {roadmap.high_priority?.length > 0 && (
@@ -956,10 +888,10 @@ function ResultView({ data, onReset }) {
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* footer */}
-        <div className="border border-slate-100 bg-white px-6 py-4 flex items-center justify-between text-xs text-slate-400">
+        <Card padding="none" className="px-6 py-4 flex items-center justify-between text-xs text-slate-400">
           <div className="flex items-center gap-3">
             <Clock size={11} />
             <span>Reviewed {new Date(data.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
@@ -969,7 +901,7 @@ function ResultView({ data, onReset }) {
             <AlertTriangle size={11} />
             <span>This is an AI review — not a substitute for a qualified statistician</span>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
 
@@ -980,17 +912,18 @@ function ResultView({ data, onReset }) {
 
 function HistoryItem({ item, onSelect }) {
   return (
-    <button
+    <Card
       onClick={() => onSelect(item.id)}
       data-testid={TID.statisticalReviewHistoryItem(item.id)}
-      className="w-full text-left border border-slate-200 bg-white hover:border-[#0F2847] transition-colors p-4 space-y-2"
+      padding="md"
+      className="w-full text-left space-y-2"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="font-serif text-sm text-slate-900 line-clamp-1">{item.topic}</div>
         {item.publication_score != null && (
-          <span className="shrink-0 text-xs font-mono border border-slate-200 px-1.5 py-0.5 text-slate-500">
+          <Badge variant="outline" size="sm" className="shrink-0 font-mono">
             {item.publication_score}/100
-          </span>
+          </Badge>
         )}
       </div>
       <p className="text-xs text-slate-500 line-clamp-2">{item.research_question}</p>
@@ -1001,7 +934,7 @@ function HistoryItem({ item, onSelect }) {
         <Clock size={10} />
         {new Date(item.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
       </div>
-    </button>
+    </Card>
   );
 }
 
@@ -1041,6 +974,11 @@ export default function StatisticalReview() {
 
   if (view === "result" && result) {
     return (
+      <ResearchLayout
+        navItems={AI_NAV_ITEMS}
+        title="Statistical Review"
+        subtitle="AI-powered statistical analysis review — methodology, assumptions, and reporting quality."
+      >
       <div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden" }}>
         <div className="flex-1 overflow-y-auto">
           <ResultView data={result} onReset={handleReset} />
@@ -1058,11 +996,13 @@ export default function StatisticalReview() {
           </aside>
         )}
       </div>
+      </ResearchLayout>
     );
   }
 
   return (
-    <AIWorkspaceLayout
+    <ResearchLayout
+      navItems={AI_NAV_ITEMS}
       title="Statistical Review"
       subtitle="AI-powered statistical analysis review — methodology, assumptions, and reporting quality."
     >
@@ -1083,7 +1023,7 @@ export default function StatisticalReview() {
         </aside>
       )}
     </div>
-    </AIWorkspaceLayout>
+    </ResearchLayout>
 
   );
 }
