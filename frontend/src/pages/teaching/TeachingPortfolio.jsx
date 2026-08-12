@@ -241,7 +241,7 @@ export default function TeachingPortfolio() {
     <ResearchLayout
       title="Teaching Portfolio"
       subtitle="Document your teaching philosophy, course designs, achievements, and evidence of impact. Build a portfolio that speaks for itself."
-      icon={Award}
+      icon={<Award size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
       actions={
         <Button
           variant={showAdd ? "primary" : "outline"}

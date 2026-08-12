@@ -117,7 +117,7 @@ export default function AssessmentBuilder() {
     <ResearchLayout
       title="Assessment Builder"
       subtitle="Design quizzes, exams, rubrics, and assignments. Use AI to generate complete, aligned assessments in seconds."
-      icon={ClipboardCheck}
+      icon={<ClipboardCheck size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
       actions={
         <div className="flex gap-2">
           <Button

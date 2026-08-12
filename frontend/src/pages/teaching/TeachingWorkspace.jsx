@@ -84,7 +84,7 @@ export default function TeachingWorkspace() {
     <ResearchLayout
       title="Teaching Workspaces"
       subtitle="Course-level workspaces where you can organize lesson plans, assessments, and get support from the AI Teaching Assistant."
-      icon={FolderOpen}
+      icon={<FolderOpen size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
       actions={
         <Button
           variant={showCreate ? "primary" : "outline"}

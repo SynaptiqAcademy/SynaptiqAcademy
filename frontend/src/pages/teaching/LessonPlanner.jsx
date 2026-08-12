@@ -95,7 +95,7 @@ export default function LessonPlanner() {
     <ResearchLayout
       title="Lesson Planner"
       subtitle="Create structured lesson plans with AI assistance — objectives, activities, materials, and differentiation strategies."
-      icon={BookOpen}
+      icon={<BookOpen size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
       actions={
         <div className="flex gap-2">
           <Button

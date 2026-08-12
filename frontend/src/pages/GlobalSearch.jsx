@@ -296,7 +296,7 @@ export default function GlobalSearch() {
     <ResearchLayout
       title="Search"
       subtitle="Search across researchers, projects, teams, publications, grants, journals, and institutions."
-      icon={Search}
+      icon={<Search size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
     >
       {/* Search input — kept hand-rolled: ds Input isn't forwardRef'd, and this
           field relies on imperative inputRef.current.focus() on mount and

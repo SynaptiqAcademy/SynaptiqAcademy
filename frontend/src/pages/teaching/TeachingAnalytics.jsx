@@ -203,7 +203,7 @@ export default function TeachingAnalytics() {
     <ResearchLayout
       title="Teaching Analytics"
       subtitle="Intelligence derived from your real platform activity"
-      icon={BarChart2}
+      icon={<BarChart2 size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
       toolbar={
         <NavTabs
           variant="segment"

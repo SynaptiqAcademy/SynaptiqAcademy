@@ -94,7 +94,7 @@ export default function FacultyProfile() {
     <ResearchLayout
       title={profile.full_name}
       subtitle={[profile.position, profile.institution].filter(Boolean).join(" · ")}
-      icon={User}
+      icon={<User size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
     >
       {/* Back */}
       <div className="mb-6">

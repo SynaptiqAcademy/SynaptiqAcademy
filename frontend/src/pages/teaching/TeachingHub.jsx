@@ -94,7 +94,7 @@ export default function TeachingHub() {
     <ResearchLayout
       title={`Welcome, ${firstName}`}
       subtitle="Your central workspace for teaching — lesson planning, assessment design, portfolio building, and AI-assisted pedagogy support."
-      icon={GraduationCap}
+      icon={<GraduationCap size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
     >
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mb-8">

@@ -86,7 +86,7 @@ export default function InstitutionReports() {
     <AnalyticsLayout
       title="Institution Reports"
       subtitle="Generate and download executive intelligence reports"
-      icon={FileText}
+      icon={<FileText size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
       actions={
         <Button variant="primary" onClick={generate} disabled={generating} loading={generating}>
           {!generating && <RefreshCw size={14} />} Generate Report
