@@ -169,11 +169,11 @@ export const NAV_SECTIONS = {
     items: [
       { to: "/manuscripts",        label: "Manuscripts",          icon: FileText,       testid: TID.navManuscripts },
       { to: "/reviews",            label: "Reviews",              icon: ClipboardCheck, testid: TID.navReviews },
-      { to: "/publication-hub",    label: "Publication Hub",      icon: Layers,         testid: TID.navPublicationHub },
       { to: "/journals",           label: "Journals",             icon: BookOpen,       testid: TID.navJournals },
       { to: "/conferences",        label: "Conferences",          icon: CalendarDays,   testid: TID.navConferences },
-      { to: "/grant-applications", label: "Applications",         icon: ClipboardList,  testid: null },
-      { to: "/citation-monitoring",label: "Citation Monitoring",  icon: Eye,            testid: TID.navCitationMonitoring },
+      // Secondary — reachable via the sidebar filter / ⌘K, not shown by default
+      { to: "/publication-hub",    label: "Publication Hub",      icon: Layers,         testid: TID.navPublicationHub, sidebarHidden: true },
+      { to: "/citation-monitoring",label: "Citation Monitoring",  icon: Eye,            testid: TID.navCitationMonitoring, sidebarHidden: true },
       // Impact subgroup
       {
         _type: "subgroup",
@@ -193,7 +193,7 @@ export const NAV_SECTIONS = {
     ],
     routes: [
       "/manuscripts", "/reviews", "/publication-hub", "/journals", "/conferences",
-      "/grant-applications", "/citation-monitoring",
+      "/citation-monitoring",
       "/research-impact", "/impact-dashboard", "/citations", "/analytics",
       "/leaderboards", "/reputation", "/verification",
     ],
@@ -208,7 +208,7 @@ export const NAV_SECTIONS = {
       { to: "/grants",                  label: "Grants",                 icon: BadgeDollarSign, testid: TID.navGrants },
       { to: "/funding",                 label: "Funding Opportunities",  icon: Coins,           testid: TID.navFunding },
       { to: "/grant-collaboration-hub", label: "Grant AI",               icon: BrainCircuit,    testid: null },
-      { to: "/grant-applications",      label: "Grant Applications",     icon: ClipboardList,   testid: null, sidebarHidden: true },
+      { to: "/grant-applications",      label: "Applications",           icon: ClipboardList,   testid: null },
     ],
     routes: ["/grants", "/funding", "/grant-applications", "/grant-collaboration-hub"],
   },

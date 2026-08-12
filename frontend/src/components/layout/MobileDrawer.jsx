@@ -263,7 +263,7 @@ export default function MobileDrawer({ open, onClose }) {
   const panelRef = useRef(null);
 
   const dashboardMode   = getDashboardMode(user);
-  const showInstitution = Boolean(user?.institution_id);
+  const showInstitution = ["institution_admin", "admin", "super_admin"].includes(user?.role);
   const showAdmin       = Boolean(user?.is_super_admin);
 
   const sections = getOrderedSections(dashboardMode, showInstitution);

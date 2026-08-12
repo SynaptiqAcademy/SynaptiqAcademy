@@ -117,7 +117,7 @@ function AppSidebarBody() {
   const { total: unreadTotal } = useUnread();
 
   const dashboardMode   = getDashboardMode(user);
-  const showInstitution = Boolean(user?.institution_id);
+  const showInstitution = ["institution_admin", "admin", "super_admin"].includes(user?.role);
 
   const sections = useMemo(
     () => getOrderedSections(dashboardMode, showInstitution),
