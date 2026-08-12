@@ -17,10 +17,9 @@ import { ACCENT, NAVY, WARM, BRD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import {
   Plus, FolderOpen, Users, ChevronRight, Search,
-  Globe, Lock, Layers, BookOpen, Target, Microscope,
-  BarChart2, ArrowRight, BrainCircuit, Sparkles,
-  FileText, TrendingUp, Clock, CheckCircle2, Zap,
-  FlaskConical, BookMarked, Activity,
+  Globe, Lock, Target,
+  BarChart2, ArrowRight, BrainCircuit,
+  TrendingUp,
 } from "lucide-react";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
@@ -327,9 +326,6 @@ export default function Projects() {
       {items.length > 0 && (
         <ResearchLifecycleGuide projects={filtered} />
       )}
-
-      {/* ── QUICK ACTIONS ────────────────────────────────────────────────── */}
-      <QuickActions />
     </ResearchLayout>
   );
 }
@@ -472,40 +468,6 @@ function ResearchLifecycleGuide({ projects }) {
             </React.Fragment>
           );
         })}
-      </div>
-    </div>
-  );
-}
-
-// ─── Quick Actions ────────────────────────────────────────────────────────────
-
-function QuickActions() {
-  const actions = [
-    { label: "AI Research Assistant",  to: "/ai",                         icon: BrainCircuit, desc: "Chat with Synaptiq AI about your research" },
-    { label: "Literature Review",      to: "/literature-review",          icon: BookMarked,   desc: "AI-powered literature synthesis" },
-    { label: "Research Gap Finder",    to: "/research-gap-finder",        icon: Target,       desc: "Identify gaps in your field" },
-    { label: "Find Collaborators",     to: "/collaboration-intelligence", icon: Users,        desc: "AI-matched co-author suggestions" },
-    { label: "Manuscript Review",      to: "/manuscript-review",          icon: FileText,     desc: "Get structured feedback on your paper" },
-    { label: "Research Workspaces",    to: "/workspaces",                 icon: Layers,       desc: "Shared workspaces for your team" },
-  ];
-
-  return (
-    <div style={{ marginTop: 36, paddingTop: 24, borderTop: `1px solid ${BORDER}` }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 14 }}>
-        Research Tools
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-        {actions.map(({ label, to, icon: Icon, desc }) => (
-          <Card key={to} to={to} padding="md" style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-            <div style={{ width: 30, height: 30, background: WARM, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <Icon size={13} strokeWidth={1.5} style={{ color: NAVY }} />
-            </div>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", marginBottom: 3 }}>{label}</div>
-              <div style={{ fontSize: 11, color: "#94A3B8", lineHeight: 1.4 }}>{desc}</div>
-            </div>
-          </Card>
-        ))}
       </div>
     </div>
   );

@@ -350,8 +350,6 @@ export default function Workspaces() {
         )}
       </div>
 
-      {/* ── QUICK ACTIONS ────────────────────────────────────────────────── */}
-      {items.length > 0 && <WorkspaceQuickActions />}
     </ResearchLayout>
   );
 }
@@ -515,35 +513,4 @@ function WorkspaceEmptyState({ onNew }) {
   );
 }
 
-// ─── Quick Actions ────────────────────────────────────────────────────────────
-
-function WorkspaceQuickActions() {
-  return (
-    <div style={{ marginTop: 36, paddingTop: 24, borderTop: `1px solid ${BORDER}` }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 14 }}>
-        Research Tools
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-        {[
-          { label: "Synaptiq AI",              to: "/ai",                         icon: BrainCircuit, desc: "AI research assistant for every workspace" },
-          { label: "Literature Review",         to: "/literature-review",          icon: BookMarked,   desc: "AI synthesis of academic literature" },
-          { label: "Find Collaborators",        to: "/collaboration-intelligence", icon: Users,        desc: "AI-matched co-investigator suggestions" },
-          { label: "Manuscript Review",         to: "/manuscript-review",          icon: FileText,     desc: "Structured AI feedback on your paper" },
-          { label: "Research Projects",         to: "/projects",                   icon: FolderOpen,   desc: "Manage your research project portfolio" },
-          { label: "Collaboration Requests",    to: "/collaboration-requests",     icon: Users2,       desc: "Manage sent and received invitations" },
-        ].map(({ label, to, icon: Icon, desc }) => (
-          <Card key={to} to={to} padding="md" style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-            <div style={{ width: 30, height: 30, background: WARM, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <Icon size={13} strokeWidth={1.5} style={{ color: NAVY }} />
-            </div>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", marginBottom: 3 }}>{label}</div>
-              <div style={{ fontSize: 11, color: "#94A3B8", lineHeight: 1.4 }}>{desc}</div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
 
