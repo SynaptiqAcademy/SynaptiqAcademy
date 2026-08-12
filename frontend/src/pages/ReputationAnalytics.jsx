@@ -274,7 +274,7 @@ export default function ReputationAnalytics() {
           <div className="flex flex-col md:flex-row md:items-center gap-6">
             <div className="flex-shrink-0">
               <div className="overline text-[#0F2847] mb-1">Reputation Score</div>
-              <div className="font-serif text-7xl text-[#0F2847] tracking-tight leading-none">{rep.overall_score}</div>
+              <div className="font-serif text-6xl text-[#0F2847] tracking-tight leading-none">{rep.overall_score}</div>
               <div className="text-xs text-slate-400 mt-1 font-mono">pts</div>
             </div>
             <div className="flex-1 min-w-0">

@@ -662,7 +662,7 @@ export default function VerificationCenter() {
           <div className="flex flex-col md:flex-row md:items-center gap-8">
             <div className="flex-shrink-0 text-center md:text-left">
               <div className="overline text-[#0F2847] mb-2">Trust Score</div>
-              <div className="font-serif text-7xl text-[#0F2847] tracking-tight leading-none">{score}</div>
+              <div className="font-serif text-6xl text-[#0F2847] tracking-tight leading-none">{score}</div>
               <div className="text-xs text-slate-400 mt-1 font-mono">/1000</div>
             </div>
             <div className="flex-1">
