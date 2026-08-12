@@ -8,11 +8,10 @@ import { toast } from "sonner";
 import { ACCENT, EMERALD, NAVY, WARM } from "@/lib/tokens";
 import { Avatar, Button, Input, Checkbox, NavTabs } from "@/components/ds";
 import {
-  Search, X, ChevronDown, ChevronLeft, ChevronRight, ArrowRight,
+  Search, X, ChevronDown, ArrowRight,
   Users, Globe, Building2, MapPin, BookOpen, Award, TrendingUp,
-  Bookmark, BookmarkCheck, Sparkles, BarChart2, UserPlus, GraduationCap,
-  FlaskConical, Lightbulb, CheckCircle, AlertCircle, Star, Clock,
-  ExternalLink, RefreshCw, Activity,
+  Bookmark, BookmarkCheck, Sparkles, BarChart2, UserPlus,
+  FlaskConical, Lightbulb, CheckCircle, Activity,
 } from "lucide-react";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -64,17 +63,15 @@ export default function Researchers() {
   const [aiRecs,        setAiRecs]        = useState(null);
   const [aiRecsLoading, setAiRecsLoading] = useState(true);
 
-  // Recently viewed
-  const [recentlyViewed, setRecentlyViewed] = useState([]);
-
   // Saved
   const [savedIds, setSavedIds] = useState(new Set());
   const [savedMap, setSavedMap] = useState(new Map());
 
   // Explorer (search + filter)
-  const [q,          setQ]          = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
-  const [filters,    setFilters]    = useState({});
+  const [q,           setQ]           = useState("");
+  const [debouncedQ,  setDebouncedQ]  = useState("");
+  const [filters,     setFilters]     = useState({});
+  const [showFilters, setShowFilters] = useState(false);
   const [items,      setItems]      = useState([]);
   const [cursor,     setCursor]     = useState(null);
   const [hasMore,    setHasMore]    = useState(false);
@@ -104,10 +101,6 @@ export default function Researchers() {
 
     api.get("/researchers/saved/ids")
       .then((r) => setSavedIds(new Set(r.data?.ids || [])))
-      .catch(() => {});
-
-    api.get("/researchers/recently-viewed?limit=8")
-      .then((r) => setRecentlyViewed(Array.isArray(r.data) ? r.data : []))
       .catch(() => {});
 
     api.get("/recommendations/researchers?limit=8")
@@ -261,74 +254,54 @@ export default function Researchers() {
           </div>
         ))}
       </div>
-      {/* ── Recently Viewed ───────────────────────────────────────────────── */}
-      {recentlyViewed.length > 0 && (
-        <RecentlyViewedStrip researchers={recentlyViewed} isSaved={isSaved} toggleSave={toggleSave} />
-      )}
       {/* ── AI Recommendations ────────────────────────────────────────────── */}
       {(aiRecsLoading || aiRecs) && (
         <AiRecsPanel recs={aiRecs} loading={aiRecsLoading} isSaved={isSaved} toggleSave={toggleSave} compareList={compareList} toggleCompare={toggleCompare} />
       )}
-      {/* ── Discovery Sections ────────────────────────────────────────────── */}
-      <DiscoverySections
-        sections={sections}
-        loading={sectionsLoading}
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
-        isSaved={isSaved}
-        toggleSave={toggleSave}
-        compareList={compareList}
-        toggleCompare={toggleCompare}
-        user={user}
-      />
-      {/* ── Explorer ──────────────────────────────────────────────────────── */}
-      <div ref={explorerRef} style={{ marginTop: 48 }}>
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>
-            Researcher Explorer
+
+      {/* ── Find Researchers — one unified browse/search area ──────────────── */}
+      <div ref={explorerRef} style={{ marginTop: 32 }}>
+        <h2 style={{ fontFamily: "Georgia, serif", fontSize: 24, color: NAVY, fontWeight: 400, marginBottom: 14 }}>
+          Find Researchers
+        </h2>
+
+        {/* Search + filter toggle */}
+        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+          <div style={{ flex: 1 }}>
+            <Input
+              data-testid={TID.discoverySearch}
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search by name, institution, country, research area, ORCID…"
+              prefix={<Search size={14} strokeWidth={1.5} />}
+              suffix={q && (
+                <button
+                  type="button"
+                  onClick={() => setQ("")}
+                  aria-label="Clear search"
+                  style={{ color: "#94A3B8", display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", pointerEvents: "auto" }}
+                >
+                  <X size={13} strokeWidth={1.5} />
+                </button>
+              )}
+            />
           </div>
-          <h2 style={{ fontFamily: "Georgia, serif", fontSize: 28, color: NAVY, fontWeight: 400 }}>
-            Search the Global Research Community
-          </h2>
-          <p style={{ fontSize: 13, color: "#64748B", marginTop: 6, lineHeight: 1.6 }}>
-            Search by name, institution, country, research area, methods, ORCID — or apply filters.
-          </p>
+          <Button
+            variant={showFilters ? "primary" : "outline"}
+            onClick={() => setShowFilters((v) => !v)}
+          >
+            Filters{Object.values(filters).some(Boolean) ? ` (${Object.values(filters).filter(Boolean).length})` : ""}
+          </Button>
         </div>
 
-        <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
-          {/* Filter sidebar */}
-          <aside style={{ width: 220, flexShrink: 0, position: "sticky", top: 24 }}>
+        {showFilters && (
+          <div style={{ marginBottom: 16 }}>
             <FilterPanel filters={filters} setFilter={setFilter} clearAll={clearSearch} />
-          </aside>
+          </div>
+        )}
 
-          {/* Results */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {/* Search input */}
-            <div style={{ marginBottom: 12 }}>
-              <Input
-                data-testid={TID.discoverySearch}
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search name, institution, research area, ORCID, keywords…"
-                prefix={<Search size={14} strokeWidth={1.5} />}
-                suffix={q && (
-                  <button
-                    type="button"
-                    onClick={() => setQ("")}
-                    aria-label="Clear search"
-                    style={{ color: "#94A3B8", display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", pointerEvents: "auto" }}
-                  >
-                    <X size={13} strokeWidth={1.5} />
-                  </button>
-                )}
-              />
-            </div>
-
-            {/* Results */}
-            {!searched && !hasSearch && (
-              <ExplorerPlaceholder onExplore={() => setFilter("available_for_collaboration", true)} />
-            )}
-
+        {hasSearch ? (
+          <>
             {loading && (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 12 }}>
                 {Array.from({ length: 9 }).map((_, i) => <ResearcherSkeleton key={i} />)}
@@ -371,11 +344,21 @@ export default function Researchers() {
                 )}
               </>
             )}
-          </div>
-        </div>
+          </>
+        ) : (
+          <DiscoverySections
+            sections={sections}
+            loading={sectionsLoading}
+            activeSection={activeSection}
+            setActiveSection={setActiveSection}
+            isSaved={isSaved}
+            toggleSave={toggleSave}
+            compareList={compareList}
+            toggleCompare={toggleCompare}
+            user={user}
+          />
+        )}
       </div>
-      {/* ── CTA strip ─────────────────────────────────────────────────────── */}
-      <CollaborationStrip />
       {/* ── Compare panel ─────────────────────────────────────────────────── */}
       {compareList.length >= 2 && (
         <ComparePanel
@@ -385,35 +368,6 @@ export default function Researchers() {
         />
       )}
     </ResearchLayout>
-  );
-}
-
-// ── Recently Viewed strip ─────────────────────────────────────────────────────
-function RecentlyViewedStrip({ researchers, isSaved, toggleSave }) {
-  return (
-    <div style={{ margin: "20px 0 0", padding: "14px 0 16px", borderBottom: `1px solid ${BORDER}` }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-        <Clock size={11} strokeWidth={1.5} style={{ color: "#94A3B8" }} />
-        <span style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em" }}>Recently Viewed</span>
-      </div>
-      <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
-        {researchers.map((r) => (
-          <Link
-            key={r.id}
-            to={profileUrl(r)}
-            style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 12px", border: `1px solid ${BORDER}`, background: "white", textDecoration: "none", flexShrink: 0, transition: "border-color 150ms" }}
-            onMouseEnter={(e) => e.currentTarget.style.borderColor = NAVY}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = BORDER}
-          >
-            <AvatarCircle r={r} size={28} />
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, whiteSpace: "nowrap" }}>{r.full_name}</div>
-              <div style={{ fontSize: 10, color: "#94A3B8", whiteSpace: "nowrap" }}>{r.institution || r.country || "Researcher"}</div>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -470,20 +424,7 @@ function DiscoverySections({ sections, loading, activeSection, setActiveSection,
   const hasData = activeSectionData.length > 0;
 
   return (
-    <div style={{ marginTop: 32 }}>
-      {/* Section title */}
-      <div style={{ marginBottom: 16, display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
-        <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 5 }}>Research Network</div>
-          <h2 style={{ fontFamily: "Georgia, serif", fontSize: 28, color: NAVY, fontWeight: 400 }}>Curated for You</h2>
-        </div>
-        {!loading && sections && (
-          <span style={{ fontSize: 12, color: "#94A3B8" }}>
-            {SECTION_TABS.find((t) => t.key === activeSection)?.desc}
-          </span>
-        )}
-      </div>
-
+    <div>
       {/* Tab strip */}
       <div style={{ overflowX: "auto", marginBottom: 20 }}>
         <NavTabs
@@ -926,42 +867,6 @@ function SectionEmptyState({ activeSection, user }) {
   );
 }
 
-// ── Explorer placeholder ──────────────────────────────────────────────────────
-function ExplorerPlaceholder({ onExplore }) {
-  const TIPS = [
-    { Icon: Search,     text: 'Search by name — e.g. "Sarah Johnson"' },
-    { Icon: Building2,  text: 'Filter by institution or department' },
-    { Icon: Globe,      text: 'Find researchers in a specific country' },
-    { Icon: FlaskConical, text: 'Discover methodology experts' },
-    { Icon: CheckCircle, text: 'Filter by open-to-collaborate' },
-    { Icon: Award,      text: 'Filter by minimum h-index' },
-  ];
-
-  return (
-    <div style={{ border: `1px dashed ${BORDER}`, padding: "40px 32px", textAlign: "center" }}>
-      <Search size={40} strokeWidth={1} style={{ color: "#E2E8F0", margin: "0 auto 16px", display: "block" }} />
-      <h3 style={{ fontFamily: "Georgia, serif", fontSize: 20, color: "#1E293B", marginBottom: 6, fontWeight: 400 }}>
-        Search the Research Community
-      </h3>
-      <p style={{ fontSize: 13, color: "#64748B", maxWidth: 420, margin: "0 auto 24px", lineHeight: 1.65 }}>
-        Use the search bar to find researchers by name, institution, keywords, or research area.
-        Use the filters for more specific discovery.
-      </p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8, maxWidth: 500, margin: "0 auto 24px" }}>
-        {TIPS.map(({ Icon, text }) => (
-          <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: "#64748B", textAlign: "left", padding: "6px 8px", background: WARM, border: `1px solid ${BORDER}` }}>
-            <Icon size={12} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0, marginTop: 2 }} />
-            {text}
-          </div>
-        ))}
-      </div>
-      <Button onClick={onExplore}>
-        <UserPlus size={12} strokeWidth={2} /> Show Available Collaborators
-      </Button>
-    </div>
-  );
-}
-
 // ── Search empty state ────────────────────────────────────────────────────────
 function SearchEmptyState({ q }) {
   return (
@@ -974,51 +879,6 @@ function SearchEmptyState({ q }) {
         Try searching by a different term — institution name, research area, city, or keywords.
         Profiles are public only when researchers opt in.
       </p>
-    </div>
-  );
-}
-
-// ── Collaboration CTA strip ───────────────────────────────────────────────────
-function CollaborationStrip() {
-  const ACTIONS = [
-    { label: "Send Collaboration Request", desc: "Propose a joint research project", to: "/collaboration-requests", icon: UserPlus },
-    { label: "Collab Intelligence",        desc: "AI-powered team matching",         to: "/collaboration-intelligence", icon: Sparkles },
-    { label: "Reviewer Marketplace",       desc: "Find peer reviewers for your work",to: "/reviewer-marketplace",      icon: CheckCircle },
-    { label: "Grant Collaboration Hub",    desc: "Build research consortia",         to: "/grant-collaboration-hub",   icon: Award },
-    { label: "Research Network",           desc: "Visualise your connections",       to: "/network",                   icon: Activity },
-    { label: "Invite to Workspace",        desc: "Collaborate in a shared space",    to: "/workspaces",                icon: Users },
-  ];
-
-  return (
-    <div style={{ margin: "48px -24px 0", background: WARM, borderTop: `1px solid ${BORDER}`, padding: "36px 56px" }}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>Collaboration Tools</div>
-          <h2 style={{ fontFamily: "Georgia, serif", fontSize: 26, color: NAVY, fontWeight: 400 }}>Start Collaborating</h2>
-          <p style={{ fontSize: 13, color: "#64748B", marginTop: 6, maxWidth: 480, lineHeight: 1.6 }}>
-            Synaptiq supports every stage of academic collaboration — from discovering partners to running joint projects.
-          </p>
-        </div>
-        <Link to="/network" style={{ fontSize: 13, fontWeight: 700, color: NAVY, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 18px", border: `1.5px solid ${NAVY}`, alignSelf: "flex-start", whiteSpace: "nowrap" }}>
-          My Research Network <ArrowRight size={13} strokeWidth={2} />
-        </Link>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))", gap: 12 }}>
-        {ACTIONS.map(({ label, desc, to, icon: Icon }) => (
-          <Link
-            key={label}
-            to={to}
-            style={{ display: "flex", flexDirection: "column", gap: 8, padding: 16, background: "white", border: `1px solid ${BORDER}`, textDecoration: "none", transition: "border-color 150ms, box-shadow 150ms" }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = NAVY; e.currentTarget.style.boxShadow = "0 2px 8px rgba(15,40,71,0.07)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
-          >
-            <Icon size={18} strokeWidth={1.5} style={{ color: NAVY }} />
-            <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{label}</div>
-            <div style={{ fontSize: 11, color: "#64748B", lineHeight: 1.5 }}>{desc}</div>
-          </Link>
-        ))}
-      </div>
     </div>
   );
 }
