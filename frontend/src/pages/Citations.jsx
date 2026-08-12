@@ -736,25 +736,6 @@ export default function Citations() {
             Delta tracking starts from your first snapshot.
           </DataNote>
 
-          {/* ── Research Intelligence Quick Links ── */}
-          <section>
-            <h2 className="overline mb-5">Continue in Research Intelligence</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
-              {[
-                { to: "/analytics",           label: "Analytics Overview"    },
-                { to: "/citation-monitoring", label: "Citation Monitoring"   },
-                { to: "/research-impact",     label: "Research Impact"       },
-                { to: "/reputation",          label: "Reputation Score"      },
-                { to: "/verification",        label: "Verification Center"   },
-              ].map(({ to, label }) => (
-                <Card key={to} to={to} padding="md" className="group">
-                  <div className="text-xs font-medium text-slate-700 group-hover:text-[#0F2847] transition-colors flex items-center justify-between">
-                    {label} <ChevronRight size={12} className="text-slate-300 group-hover:text-[#0F2847]" />
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </section>
         </>
       )}
       </div>

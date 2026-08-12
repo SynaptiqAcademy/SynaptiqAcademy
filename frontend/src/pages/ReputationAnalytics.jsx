@@ -22,8 +22,8 @@ import { ErrorState } from "@/components/ds/ErrorState";
 import { EmptyState } from "@/components/ds/EmptyState";
 import { SkeletonCard as DsSkeletonCard } from "@/components/ds/LoadingState";
 import {
-  TrendingUp, Award, BarChart2, Users, BookOpen, Star,
-  ArrowRight, ChevronRight, Target,
+  Star,
+  ArrowRight, ChevronRight,
 } from "lucide-react";
 
 // ── Research Intelligence Nav ─────────────────────────────────────────────────
@@ -228,31 +228,6 @@ function PercentileDisplay({ percentile }) {
         You score higher than {pct.toFixed(1)}% of all researchers on the platform.
       </p>
     </div>
-  );
-}
-
-// ── Quick actions ─────────────────────────────────────────────────────────────
-
-function QuickActions() {
-  const actions = [
-    { to: "/analytics",          label: "Research Analytics",    icon: BarChart2 },
-    { to: "/research-impact",    label: "Impact Dashboard",      icon: TrendingUp },
-    { to: "/verification",       label: "Verification Center",   icon: Award },
-    { to: "/leaderboards",       label: "Global Leaderboards",   icon: Star },
-    { to: "/collaboration-intelligence", label: "Find Collaborators", icon: Users },
-  ];
-  return (
-    <section>
-      <SectionHeader label="Continue in Research Intelligence" />
-      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
-        {actions.map(({ to, label, icon: Icon }) => (
-          <Card key={to} to={to} padding="md" className="group">
-            <Icon size={14} strokeWidth={1.5} className="text-slate-300 group-hover:text-[#0F2847] mb-2 transition-colors" />
-            <div className="text-xs font-medium text-slate-700 group-hover:text-[#0F2847] transition-colors">{label}</div>
-          </Card>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -678,9 +653,6 @@ export default function ReputationAnalytics() {
           {activeTab === "Rankings"  && renderRankings()}
           {activeTab === "Badges"    && renderBadges()}
         </div>
-
-        {/* Quick actions */}
-        <QuickActions />
 
       </div>
     </ResearchLayout>

@@ -19,9 +19,9 @@ import { FormSelect } from "@/components/ds/FormSelect";
 import { Alert } from "@/components/ds/Alert";
 import {
   Search, Plus, Handshake, Users, Check, X, ArrowRight,
-  BrainCircuit, Coins, Calendar, FolderOpen, MessageSquare, Send,
-  Activity, Globe, FileText, Layers, Zap,
-  AlertCircle, Clock, TrendingUp, Sparkles, ChevronRight,
+  BrainCircuit, Calendar, FolderOpen, MessageSquare, Send,
+  Activity,
+  AlertCircle, Clock, Sparkles, ChevronRight,
 } from "lucide-react";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
@@ -354,45 +354,27 @@ export default function Collaborations() {
             </div>
           )}
 
-          {/* Quick Actions */}
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#64748B", marginBottom: 12, paddingBottom: 10, borderBottom: `1px solid ${BORDER}` }}>
-              Quick Actions
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-              {[
-                { label: "Collaboration Intelligence",  to: "/collaboration-intelligence", icon: BrainCircuit, desc: "AI-matched co-author suggestions" },
-                { label: "Browse Researchers",          to: "/network",                    icon: Users,       desc: "Explore the research network" },
-                { label: "Collaboration Requests",      to: "/collaboration-requests",     icon: Send,        desc: "Manage sent & received invitations", badge: pendingCount > 0 ? pendingCount : null },
-                { label: "Shared Workspaces",           to: "/workspaces",                 icon: Layers,      desc: "Collaborative project workspaces" },
-                { label: "Research Projects",           to: "/projects",                   icon: FolderOpen,  desc: "Manage your active projects" },
-                { label: "Research Gap Finder",         to: "/research-gap-finder",        icon: Sparkles,    desc: "Find gaps to drive collaborations" },
-              ].map(({ label, to, icon: Icon, desc, badge }) => (
-                <Card
-                  key={to}
-                  to={to}
-                  variant="ghost"
-                  padding="sm"
-                  className="border-b border-slate-200 rounded-none"
-                  style={{ display: "flex", alignItems: "center", gap: 10 }}
-                >
-                  <div style={{ width: 30, height: 30, background: WARM, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Icon size={13} strokeWidth={1.5} style={{ color: NAVY }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", display: "flex", alignItems: "center", gap: 6 }}>
-                      {label}
-                      {badge && (
-                        <Badge color={ACCENT} size="sm">{badge}</Badge>
-                      )}
-                    </div>
-                    <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>{desc}</div>
-                  </div>
-                  <ArrowRight size={11} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} />
-                </Card>
-              ))}
-            </div>
-          </div>
+          {/* Pending requests shortcut (only when there's something to act on) */}
+          {pendingCount > 0 && (
+            <Card
+              to="/collaboration-requests"
+              variant="ghost"
+              padding="sm"
+              style={{ display: "flex", alignItems: "center", gap: 10, background: WARM, border: `1px solid ${BORDER}` }}
+            >
+              <div style={{ width: 30, height: 30, background: "white", border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Send size={13} strokeWidth={1.5} style={{ color: NAVY }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", display: "flex", alignItems: "center", gap: 6 }}>
+                  Collaboration Requests
+                  <Badge color={ACCENT} size="sm">{pendingCount}</Badge>
+                </div>
+                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>Pending invitations to review</div>
+              </div>
+              <ArrowRight size={11} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} />
+            </Card>
+          )}
 
           {/* My Collaborations Panel */}
           {!hubLoading && (mine.pending?.length > 0 || mine.completed?.length > 0) && (

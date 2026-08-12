@@ -6,7 +6,7 @@ import {
   Shield, Star, Award, CheckCircle, Circle, RefreshCw,
   ArrowUp, ArrowDown, FileText, ChevronRight,
   BookOpen, Users, Briefcase, GraduationCap, BarChart2,
-  Clock, AlertCircle, Loader, TrendingUp,
+  Clock, AlertCircle, Loader,
 } from "lucide-react";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
@@ -196,31 +196,6 @@ function SectionHeader({ label, action }) {
       <h2 className="overline">{label}</h2>
       {action}
     </div>
-  );
-}
-
-// ── Quick actions ─────────────────────────────────────────────────────────────
-
-function QuickActions() {
-  const actions = [
-    { to: "/reputation",      label: "Reputation Score",   icon: Star       },
-    { to: "/analytics",       label: "Research Analytics", icon: BarChart2  },
-    { to: "/research-impact", label: "Impact Dashboard",   icon: TrendingUp },
-    { to: "/academic-passport", label: "Academic Passport", icon: Users    },
-    { to: "/settings",        label: "Settings",           icon: Shield     },
-  ];
-  return (
-    <section>
-      <SectionHeader label="Continue in Research Intelligence" />
-      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
-        {actions.map(({ to, label, icon: Icon }) => (
-          <Card key={to} to={to} padding="md" className="group">
-            <Icon size={14} strokeWidth={1.5} className="text-slate-300 group-hover:text-[#0F2847] mb-2 transition-colors" />
-            <div className="text-xs font-medium text-slate-700 group-hover:text-[#0F2847] transition-colors">{label}</div>
-          </Card>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -757,9 +732,6 @@ export default function VerificationCenter() {
           {activeTab === "evidence" && renderEvidence()}
           {activeTab === "history"  && renderHistory()}
         </div>
-
-        {/* ── Quick Actions ── */}
-        <QuickActions />
 
       </div>
     </ResearchLayout>
