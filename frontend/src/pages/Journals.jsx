@@ -9,8 +9,8 @@ import { NAVY, WARM } from "@/lib/tokens";
 import {
   Search, X, ChevronLeft, ChevronRight, Lock,
   BookOpen, Globe, ExternalLink, Scale, ArrowRight,
-  ChevronDown, ChevronUp, Clock, CheckCircle2,
-  Zap, Award, Target, Eye, Gauge, Sparkles,
+  ChevronDown, ChevronUp, Clock,
+  Zap, Target, Eye, Gauge, Sparkles,
 } from "lucide-react";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
@@ -316,29 +316,6 @@ export default function Journals() {
             />
           ))}
 
-          {/* Publishing quick-filters */}
-          <div style={{ marginTop: 14, padding: "14px 12px", background: NAVY + "07", border: `1px solid ${NAVY}12` }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: NAVY + "CC", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
-              Quick Filters
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {[
-                { label: "Open Access only",  action: () => setFilter("open_access", true), icon: CheckCircle2, color: "#059669" },
-                { label: "Q1 journals",       action: () => setFilter("quartile", "Q1"),    icon: Award,        color: "#1E3A8A" },
-                { label: "Q2 journals",       action: () => setFilter("quartile", "Q2"),    icon: Award,        color: "#0369A1" },
-              ].map(({ label, action, icon: Icon, color }) => (
-                <button
-                  key={label}
-                  onClick={action}
-                  style={{ display: "flex", alignItems: "center", gap: 7, background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: "4px 2px" }}
-                >
-                  <Icon size={11} strokeWidth={1.5} style={{ color, flexShrink: 0 }} />
-                  <span style={{ fontSize: 11, color: "#374151" }}>{label}</span>
-                  <ArrowRight size={9} strokeWidth={1.5} style={{ color: "#CBD5E1", marginLeft: "auto" }} />
-                </button>
-              ))}
-            </div>
-          </div>
         </aside>
 
         {/* RIGHT CONTENT AREA ──────────────────────────────────────────── */}

@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Users, Building2, Layers, Handshake, Calendar,
-  MessageSquare, UserCheck, Brain, Search, ArrowRight, TrendingUp,
+  MessageSquare, UserCheck, Brain, Search, ArrowRight,
 } from "lucide-react";
-import { NAVY, ACCENT, EMERALD, WHITE, TEXT_SECONDARY } from "@/lib/tokens";
+import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Input, StatCard, StatGrid } from "@/components/ds";
 
@@ -37,26 +37,20 @@ export default function DiscoveryHome() {
   return (
     <ResearchLayout
       title="Academic Network"
-      subtitle="Discover researchers, institutions, projects and opportunities. Quality and relevance over engagement."
-    >
-      {/* Hero */}
-      <div style={{
-        background: `linear-gradient(135deg, ${NAVY} 0%, #3730a3 100%)`,
-        borderRadius: 20, padding: "40px 36px", color: WHITE, marginBottom: 28,
-      }}>
-        <form onSubmit={handleSearch} style={{ display: "flex", gap: 10, maxWidth: 560 }}>
+      subtitle="Discover researchers, institutions, projects and opportunities."
+      actions={
+        <form onSubmit={handleSearch} style={{ display: "flex", gap: 8 }}>
           <Input
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search researchers, topics, expertise..."
-            prefix={<Search size={16} />}
-            style={{ height: 44, borderRadius: 10, fontSize: 14 }}
-            wrapperClassName="flex-1"
+            placeholder="Search researchers, topics, expertise…"
+            prefix={<Search size={14} />}
+            wrapperClassName="w-64"
           />
-          <Button type="submit" variant="primary" size="lg">Search</Button>
+          <Button type="submit" variant="primary" size="sm">Search</Button>
         </form>
-      </div>
-
+      }
+    >
       {/* Stats */}
       {stats && (
         <div style={{ marginBottom: 28 }}>
@@ -87,20 +81,6 @@ export default function DiscoveryHome() {
           </Card>
         ))}
       </div>
-
-      {/* AI Recommendations CTA */}
-      <Card padding="lg" style={{ background: `${ACCENT}08`, borderColor: `${ACCENT}30`, display: "flex", alignItems: "center", gap: 16 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: `${ACCENT}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <TrendingUp size={22} color={ACCENT} />
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: NAVY }}>AI-Powered Recommendations</div>
-          <div style={{ fontSize: 13, color: TEXT_SECONDARY }}>Get personalised collaborator, community and grant team recommendations based on your research profile.</div>
-        </div>
-        <Button variant="primary" onClick={() => navigate("/network/recommendations")}>
-          View Recommendations <ArrowRight size={13} />
-        </Button>
-      </Card>
     </ResearchLayout>
   );
 }
