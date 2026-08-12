@@ -3,8 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   GraduationCap, BookOpen, ClipboardCheck, Award, FolderOpen, ArrowRight,
-  BarChart2, FlaskConical, Users, Archive, FileText, Target, Network,
-  Building2, Lightbulb, BookMarked, Layers, Globe, ChevronRight,
+  BarChart2,
 } from "lucide-react";
 import api from "../../lib/api";
 import { useAuth } from "../../contexts/AuthContext";
@@ -118,85 +117,6 @@ export default function TeachingHub() {
                 {action} <ArrowRight size={11} strokeWidth={1.5} />
               </div>
             </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Research Integration */}
-      <Card variant="flush" as="section">
-        <div className="px-6 py-4 border-b border-slate-200">
-          <div className="overline flex items-center gap-2">
-            <FlaskConical size={12} strokeWidth={1.5} className="text-[#0F2847]" />
-            Research Integration
-          </div>
-          <p className="text-xs text-slate-500 mt-1">Connect your teaching practice to your active research work.</p>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-200">
-          {[
-            { to: "/workspaces",         label: "Research Workspaces",  icon: Layers,     desc: "Link course content to live research projects" },
-            { to: "/projects",           label: "Research Projects",     icon: FolderOpen, desc: "Involve students in ongoing research projects" },
-            { to: "/repository",         label: "Publication Repository",icon: Archive,    desc: "Share your publications with students" },
-            { to: "/collaborations",     label: "Collaborations",        icon: Users,      desc: "Build research-teaching collaboration calls" },
-            { to: "/publication-hub",    label: "Publication Hub",       icon: FileText,   desc: "Guide student publications from your courses" },
-            { to: "/literature-review",  label: "Literature Review",     icon: BookMarked, desc: "AI-assisted review tool for teaching seminars" },
-          ].map(({ to, label, icon: Icon, desc }) => (
-            <Link key={to} to={to} className="bg-white p-5 hover:bg-slate-50 transition-colors group flex items-start gap-3">
-              <Icon size={16} strokeWidth={1.5} className="text-[#0F2847] mt-0.5 shrink-0" />
-              <div className="min-w-0">
-                <div className="text-sm font-medium text-slate-900 group-hover:text-[#0F2847] transition-colors">{label}</div>
-                <div className="text-xs text-slate-500 mt-0.5 leading-relaxed">{desc}</div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </Card>
-
-      {/* Student Research Pathway */}
-      <Card variant="flush" as="section">
-        <div className="px-6 py-4 border-b border-slate-200">
-          <div className="overline flex items-center gap-2">
-            <Target size={12} strokeWidth={1.5} className="text-[#0F2847]" />
-            Student Research Pathway
-          </div>
-          <p className="text-xs text-slate-500 mt-1">Tools for guiding students from coursework into independent research.</p>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-slate-200">
-          {[
-            { to: "/workspaces?type=Doctoral+Thesis",  label: "Thesis Supervision",     icon: GraduationCap, desc: "Doctoral & master's thesis workspaces" },
-            { to: "/teams",                             label: "Student Research Teams",  icon: Users,         desc: "Form teams around research questions" },
-            { to: "/research-gap-finder",               label: "Gap Discovery",           icon: Lightbulb,     desc: "Help students find research opportunities" },
-            { to: "/network/teaching",                  label: "Teaching Communities",    icon: Network,       desc: "Connect with peers for teaching exchange" },
-          ].map(({ to, label, icon: Icon, desc }) => (
-            <Link key={to} to={to} className="bg-white p-5 hover:bg-slate-50 transition-colors group">
-              <Icon size={18} strokeWidth={1.5} className="text-[#0F2847] mb-3" />
-              <div className="text-sm font-medium text-slate-900 group-hover:text-[#0F2847] transition-colors">{label}</div>
-              <div className="text-xs text-slate-500 mt-1 leading-relaxed">{desc}</div>
-            </Link>
-          ))}
-        </div>
-      </Card>
-
-      {/* Cross-module navigation */}
-      <section>
-        <div className="overline mb-3">Connected modules</div>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { to: "/institution-hub",    label: "Institution Hub",    icon: Building2 },
-            { to: "/institution/departments", label: "Departments",   icon: Globe },
-            { to: "/network",            label: "Academic Network",   icon: Network },
-            { to: "/grants",             label: "Funding & Grants",   icon: Award },
-            { to: "/workspaces",         label: "Research Workspaces",icon: Layers },
-            { to: "/publication-hub",    label: "Publication Hub",    icon: BookOpen },
-          ].map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              className="inline-flex items-center gap-1.5 text-xs border border-slate-200 bg-white text-slate-700 hover:border-[#0F2847] hover:text-[#0F2847] px-3 py-1.5 transition-colors"
-            >
-              <Icon size={11} strokeWidth={1.5} />
-              {label}
-              <ChevronRight size={10} strokeWidth={1.5} className="text-slate-400" />
-            </Link>
           ))}
         </div>
       </section>
