@@ -815,53 +815,61 @@ function TransparencySection() {
     },
   ];
 
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <div style={{ margin: "48px -24px 0", background: "#0B1E38", padding: "40px 56px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+    <div style={{ margin: "48px -24px 0", background: "#0B1E38", padding: expanded ? "28px 56px 40px" : "18px 56px" }}>
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+      >
         <Shield size={13} strokeWidth={1.5} style={{ color: "rgba(255,255,255,0.35)" }} />
-        <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
-          How Rankings Work
+        <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)" }}>
+          How are rankings calculated?
         </span>
-      </div>
-      <h2 style={{ fontFamily: "Georgia, serif", fontSize: 26, color: "white", fontWeight: 400, marginBottom: 10 }}>
-        Transparent, Evidence-Based Rankings
-      </h2>
-      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", maxWidth: 580, lineHeight: 1.7, marginBottom: 32 }}>
-        Every ranking on Synaptiq is computed from real platform activity — no hidden algorithms, no purchased rankings, no popularity metrics.
-        The factors below are the only inputs to your reputation score.
-      </p>
+        <ChevronDown size={13} strokeWidth={1.5} style={{ color: "rgba(255,255,255,0.35)", transform: expanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 200ms" }} />
+      </button>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
-        {FACTORS.map(({ Icon, title, color, items }) => (
-          <div key={title} style={{ padding: "16px 18px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
-              <Icon size={14} strokeWidth={1.5} style={{ color }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.8)" }}>{title}</span>
+      {expanded && (
+        <>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", maxWidth: 580, lineHeight: 1.7, marginTop: 14, marginBottom: 24 }}>
+            Every ranking on Synaptiq is computed from real platform activity — no hidden algorithms, no purchased rankings, no popularity metrics.
+            The factors below are the only inputs to your reputation score.
+          </p>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
+            {FACTORS.map(({ Icon, title, color, items }) => (
+              <div key={title} style={{ padding: "16px 18px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
+                  <Icon size={14} strokeWidth={1.5} style={{ color }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.8)" }}>{title}</span>
+                </div>
+                <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+                  {items.map((item, i) => (
+                    <li key={i} style={{ display: "flex", gap: 6, fontSize: 10, color: "rgba(255,255,255,0.38)", lineHeight: 1.6, marginBottom: 4 }}>
+                      <span style={{ color, flexShrink: 0, marginTop: 2 }}>·</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: 28, padding: "14px 20px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", maxWidth: 640 }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <Lightbulb size={13} strokeWidth={1.5} style={{ color: "#FCD34D", flexShrink: 0, marginTop: 1 }} />
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.7)", marginBottom: 4 }}>Institution & Country Rankings</div>
+                <p style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", lineHeight: 1.65, margin: 0 }}>
+                  Institutions and countries are ranked by the aggregate reputation scores of their Synaptiq members, not by external metrics, journal rankings, or third-party sources.
+                  These rankings reflect community activity on Synaptiq only.
+                </p>
+              </div>
             </div>
-            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-              {items.map((item, i) => (
-                <li key={i} style={{ display: "flex", gap: 6, fontSize: 10, color: "rgba(255,255,255,0.38)", lineHeight: 1.6, marginBottom: 4 }}>
-                  <span style={{ color, flexShrink: 0, marginTop: 2 }}>·</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
           </div>
-        ))}
-      </div>
-
-      <div style={{ marginTop: 28, padding: "14px 20px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", maxWidth: 640 }}>
-        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-          <Lightbulb size={13} strokeWidth={1.5} style={{ color: "#FCD34D", flexShrink: 0, marginTop: 1 }} />
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.7)", marginBottom: 4 }}>Institution & Country Rankings</div>
-            <p style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", lineHeight: 1.65, margin: 0 }}>
-              Institutions and countries are ranked by the aggregate reputation scores of their Synaptiq members, not by external metrics, journal rankings, or third-party sources.
-              These rankings reflect community activity on Synaptiq only.
-            </p>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

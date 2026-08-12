@@ -10,7 +10,7 @@ import {
   Search, X, ChevronLeft, ChevronRight, Lock,
   BookOpen, Globe, ExternalLink, Scale, ArrowRight,
   ChevronDown, ChevronUp, Clock, CheckCircle2,
-  Zap, Award, Target, Eye, Gauge, Sparkles, TrendingUp,
+  Zap, Award, Target, Eye, Gauge, Sparkles,
 } from "lucide-react";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
@@ -406,11 +406,6 @@ export default function Journals() {
             </div>
           )}
 
-          {/* ── Publishing Insights (shown when not loading, below results) */}
-          {!loading && items.length > 0 && (
-            <PublishingInsights />
-          )}
-
           {/* Bottom padding to clear compare panel */}
           {showCompare && compareList.length > 0 && <div style={{ height: 280 }} />}
         </div>
@@ -662,77 +657,6 @@ function RecommendationCard({ rec, rank }) {
         )}
       </div>
     </Link>
-  );
-}
-
-// ─── Publishing Insights panel ────────────────────────────────────────────────
-const INSIGHTS = [
-  {
-    icon: BookOpen,
-    title: "Open Access Publishing",
-    color: "#059669",
-    bg: "#F0FDF4",
-    border: "#A7F3D0",
-    points: [
-      "Diamond OA — free for authors and readers",
-      "Gold OA — author pays APC, reader reads freely",
-      "Hybrid OA — subscribe or pay per article",
-      "Green OA — post preprint to repository",
-    ],
-  },
-  {
-    icon: Clock,
-    title: "Peer Review Models",
-    color: "#0369A1",
-    bg: "#F0F9FF",
-    border: "#BAE6FD",
-    points: [
-      "Single-blind — authors unknown, reviewers known",
-      "Double-blind — both parties anonymous",
-      "Open review — identities disclosed post-acceptance",
-      "Post-publication — community review after publishing",
-    ],
-  },
-  {
-    icon: TrendingUp,
-    title: "Impact & Rankings",
-    color: "#7C3AED",
-    bg: "#FDF4FF",
-    border: "#DDD6FE",
-    points: [
-      "Q1 = top 25% by citation impact in subject area",
-      "h-index measures sustained citation productivity",
-      "JIF (Journal Impact Factor) — 2-year citation average",
-      "CiteScore (Scopus) uses 4-year citation window",
-    ],
-  },
-];
-
-function PublishingInsights() {
-  return (
-    <div style={{ marginTop: 28, paddingTop: 24, borderTop: `1px solid ${BORDER}` }}>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#94A3B8", marginBottom: 14 }}>
-        Publishing Intelligence
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-        {INSIGHTS.map(({ icon: Icon, title, color, bg, border, points }) => (
-          <div key={title} style={{ background: bg, border: `1px solid ${border}`, padding: "14px 14px 12px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
-              <Icon size={13} strokeWidth={1.5} style={{ color }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{title}</span>
-            </div>
-            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
-              {points.map((p) => (
-                <li key={p} style={{ fontSize: 11, color: "#374151", display: "flex", alignItems: "flex-start", gap: 6, lineHeight: 1.45 }}>
-                  <span style={{ width: 4, height: 4, background: color, borderRadius: "50%", flexShrink: 0, marginTop: 5 }} />
-                  {p}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
 

@@ -5,13 +5,12 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { useAuth } from "../contexts/AuthContext";
-import { ACCENT, EMERALD, NAVY, WARM } from "@/lib/tokens";
+import { ACCENT, EMERALD, NAVY } from "@/lib/tokens";
 import {
   Search, X, ChevronDown, ChevronLeft, ChevronRight, ArrowRight,
   CalendarDays, MapPin, Monitor, Wifi, Globe, Clock, Timer,
-  Sparkles, AlertCircle, BarChart2, FileText, Award, Target,
-  LayoutGrid, List, Building2, TrendingUp, Users, Lightbulb,
-  CheckCircle, Zap,
+  Sparkles, AlertCircle, BarChart2, FileText, Target,
+  LayoutGrid, List, Lightbulb,
 } from "lucide-react";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -404,8 +403,6 @@ export default function Conferences() {
           )}
         </div>
       </div>
-      {/* ── Submission prep strip ────────────────────────────────────────── */}
-      <SubmissionPrepStrip />
       {/* ── Compare panel ────────────────────────────────────────────────── */}
       {compareList.length >= 2 && (
         <ComparePanel
@@ -1005,51 +1002,6 @@ function GatedState() {
       <Link to="/settings/billing" style={{ padding: "9px 22px", background: NAVY, color: "white", fontSize: 13, fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}>
         View plans <ArrowRight size={13} strokeWidth={1.5} />
       </Link>
-    </div>
-  );
-}
-
-// ── Submission prep strip ─────────────────────────────────────────────────────
-function SubmissionPrepStrip() {
-  const TOOLS = [
-    { label: "Abstract Generator",  desc: "Draft a conference-ready abstract",      to: "/ai/abstract",       icon: Sparkles },
-    { label: "Manuscript Review",   desc: "AI review before submission",            to: "/manuscript-review", icon: FileText },
-    { label: "Rewriting",           desc: "Sharpen your academic writing",          to: "/ai/rewrite",        icon: Zap },
-    { label: "Literature Review",   desc: "Situate your contribution",              to: "/literature-review", icon: Award },
-    { label: "Collab Intelligence", desc: "Find co-authors and collaborators",      to: "/collaboration-intelligence", icon: Users },
-    { label: "Research Gaps",       desc: "Identify novelty and originality",       to: "/research-gap-finder", icon: Target },
-  ];
-
-  return (
-    <div style={{ margin: "48px -24px 0", background: WARM, borderTop: `1px solid ${BORDER}`, padding: "36px 56px" }}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>Submission Preparation</div>
-          <h2 style={{ fontFamily: "Georgia, serif", fontSize: 26, color: NAVY, fontWeight: 400 }}>Prepare a Competitive Submission</h2>
-          <p style={{ fontSize: 13, color: "#64748B", marginTop: 6, maxWidth: 480, lineHeight: 1.6 }}>
-            Synaptiq AI supports every stage of your conference submission — abstract to reviewer response.
-          </p>
-        </div>
-        <Link to="/ai" style={{ fontSize: 13, fontWeight: 700, color: NAVY, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 18px", border: `1.5px solid ${NAVY}`, alignSelf: "flex-start", whiteSpace: "nowrap" }}>
-          Open Synaptiq AI <ArrowRight size={13} strokeWidth={2} />
-        </Link>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))", gap: 12 }}>
-        {TOOLS.map(({ label, desc, to, icon: Icon }) => (
-          <Link
-            key={label}
-            to={to}
-            style={{ display: "flex", flexDirection: "column", gap: 8, padding: 16, background: "white", border: `1px solid ${BORDER}`, textDecoration: "none", transition: "border-color 150ms, box-shadow 150ms" }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = NAVY; e.currentTarget.style.boxShadow = "0 2px 8px rgba(15,40,71,0.07)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
-          >
-            <Icon size={18} strokeWidth={1.5} style={{ color: NAVY }} />
-            <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{label}</div>
-            <div style={{ fontSize: 11, color: "#64748B", lineHeight: 1.5 }}>{desc}</div>
-          </Link>
-        ))}
-      </div>
     </div>
   );
 }

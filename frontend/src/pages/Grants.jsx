@@ -6,14 +6,14 @@ import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
-import { ACCENT, EMERALD, NAVY, WARM } from "@/lib/tokens";
+import { ACCENT, EMERALD, NAVY } from "@/lib/tokens";
 import {
   Search, X, ChevronDown, ChevronLeft, ChevronRight, ArrowRight,
   Bookmark, BookmarkCheck, BadgeDollarSign, Coins, Globe, Calendar,
-  Clock, Building2, BarChart2, TrendingUp, Sparkles, Lightbulb,
-  Users, ExternalLink, FileText, Target, LayoutGrid, List,
-  AlertCircle, Timer, Filter, Award, Trophy,
-  CheckCircle, Zap, Plus,
+  Clock, Building2, BarChart2, Sparkles, Lightbulb,
+  Target, LayoutGrid, List,
+  AlertCircle, Timer, Filter,
+  Plus,
 } from "lucide-react";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -442,8 +442,6 @@ export default function Grants() {
           )}
         </div>
       </div>
-      {/* ── Application prep strip ───────────────────────────────────────── */}
-      <ApplicationPrepStrip />
       {/* ── Compare panel ────────────────────────────────────────────────── */}
       {compareList.length >= 2 && (
         <ComparePanel
@@ -1166,69 +1164,6 @@ function GatedState() {
 }
 
 // ── Application prep strip ────────────────────────────────────────────────────
-function ApplicationPrepStrip() {
-  const TOOLS = [
-    { label: "Proposal Outline",   desc: "AI-generated structure for any call", to: "/ai",                     icon: FileText },
-    { label: "Impact Statement",   desc: "Articulate your research impact",      to: "/ai",                     icon: TrendingUp },
-    { label: "Literature Review",  desc: "Situate your work in the field",       to: "/literature-review",      icon: Award },
-    { label: "Methodology Review", desc: "Strengthen your approach",             to: "/manuscript-review",      icon: Target },
-    { label: "Gap Analysis",       desc: "Identify and frame research gaps",      to: "/research-gap-finder",    icon: Lightbulb },
-    { label: "Team Builder",       desc: "Find qualified co-applicants",          to: "/collaboration-intelligence", icon: Users },
-  ];
-
-  return (
-    <div
-      style={{
-        margin: "48px -24px 0",
-        background: WARM,
-        borderTop: `1px solid ${BORDER}`,
-        padding: "36px 56px",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>Application Preparation</div>
-          <h2 style={{ fontFamily: "Georgia, serif", fontSize: 26, color: NAVY, fontWeight: 400 }}>Prepare a Competitive Application</h2>
-          <p style={{ fontSize: 13, color: "#64748B", marginTop: 6, maxWidth: 480, lineHeight: 1.6 }}>
-            Synaptiq AI supports every stage of your funding application — from proposal structure to risk assessment.
-          </p>
-        </div>
-        <Link
-          to="/ai"
-          style={{ fontSize: 13, fontWeight: 700, color: NAVY, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 18px", border: `1.5px solid ${NAVY}`, alignSelf: "flex-start", whiteSpace: "nowrap" }}
-        >
-          Open Synaptiq AI <ArrowRight size={13} strokeWidth={2} />
-        </Link>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))", gap: 12 }}>
-        {TOOLS.map(({ label, desc, to, icon: Icon }) => (
-          <Link
-            key={label}
-            to={to}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-              padding: 16,
-              background: "white",
-              border: `1px solid ${BORDER}`,
-              textDecoration: "none",
-              transition: "border-color 150ms, box-shadow 150ms",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = NAVY; e.currentTarget.style.boxShadow = "0 2px 8px rgba(15,40,71,0.07)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
-          >
-            <Icon size={18} strokeWidth={1.5} style={{ color: NAVY }} />
-            <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, lineHeight: 1.3 }}>{label}</div>
-            <div style={{ fontSize: 11, color: "#64748B", lineHeight: 1.5 }}>{desc}</div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ── Compare panel ─────────────────────────────────────────────────────────────
 function ComparePanel({ grants, onRemove, onClose }) {
   const METRICS = [

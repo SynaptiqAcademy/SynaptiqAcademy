@@ -12,11 +12,11 @@ import {
 } from "@/components/ds";
 import { Pagination } from "@/components/ds/DataTable";
 import {
-  Search, X, ChevronDown, ChevronLeft, ChevronRight, ArrowRight,
-  CheckCircle, Award, Shield, Globe, Building2, MapPin, BookOpen,
-  Users, Sparkles, BarChart2, FileText, FlaskConical, Star, Clock,
-  UserCheck, TrendingUp, Plus, GraduationCap, Lightbulb, AlertCircle,
-  Microscope, ClipboardCheck,
+  Search, X, ChevronDown, ArrowRight,
+  CheckCircle, Shield, Globe, Building2, MapPin,
+  Users, Sparkles, BarChart2, Star,
+  UserCheck, Plus, Lightbulb,
+  ClipboardCheck,
 } from "lucide-react";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -69,18 +69,6 @@ const AVAIL_CONFIG = {
   unavailable: { dot: "#94A3B8", text: "Unavailable", bg: "#F8FAFC", border: "#CBD5E1" },
 };
 
-// ── Review type config ─────────────────────────────────────────────────────────
-const REVIEW_TYPES_LIST = [
-  { value: "manuscript",   label: "Journal Manuscript",    icon: FileText },
-  { value: "conference",   label: "Conference Paper",      icon: Users },
-  { value: "grant",        label: "Grant Proposal",        icon: Award },
-  { value: "thesis",       label: "Doctoral Thesis",       icon: GraduationCap },
-  { value: "dissertation", label: "Master's Dissertation", icon: BookOpen },
-  { value: "methodology",  label: "Methodology Review",    icon: FlaskConical },
-  { value: "statistical",  label: "Statistical Review",    icon: BarChart2 },
-  { value: "custom",       label: "Custom Review",         icon: ClipboardCheck },
-];
-
 const PAGE_SIZE = 20;
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -114,6 +102,9 @@ export default function ReviewerMarketplace() {
 
   // Create request modal
   const [showCreate, setShowCreate] = useState(false);
+
+  // Filter panel visibility
+  const [showFilters, setShowFilters] = useState(false);
 
   // Compare panel (client-side)
   const [compareList, setCompareList] = useState([]);
@@ -261,72 +252,79 @@ export default function ReviewerMarketplace() {
         <OpenRequestsStrip requests={openRequests} onPost={() => setShowCreate(true)} />
       )}
       {/* ── Reviewer Explorer ─────────────────────────────────────────────── */}
-      <div ref={explorerRef} style={{ marginTop: 36, display: "flex", gap: 24, alignItems: "flex-start" }}>
-
-        {/* Filter sidebar */}
-        <aside style={{ width: 228, flexShrink: 0, position: "sticky", top: 24, maxHeight: "calc(100vh - 80px)", overflowY: "auto" }}>
-          <FilterPanel filters={filters} setFilter={setFilter} onClear={() => setFilters({})} />
-        </aside>
-
-        {/* Main panel */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {/* Search + sort bar */}
-          <div style={{ display: "flex", gap: 10, marginBottom: 14, alignItems: "center" }}>
-            <div style={{ flex: 1 }}>
-              <SearchBar
-                data-testid={TID.discoverySearch}
-                value={q}
-                onChange={setQ}
-                placeholder="Search reviewers by name, institution, research area, method…"
-                onClear={() => setQ("")}
-              />
-            </div>
-            <Button onClick={() => setShowCreate(true)} className="shrink-0">
-              <Plus size={13} strokeWidth={2} /> Post Request
-            </Button>
+      <div ref={explorerRef} style={{ marginTop: 36 }}>
+        {/* Search + filter toggle + post request */}
+        <div style={{ display: "flex", gap: 10, marginBottom: 14, alignItems: "center" }}>
+          <div style={{ flex: 1 }}>
+            <SearchBar
+              data-testid={TID.discoverySearch}
+              value={q}
+              onChange={setQ}
+              placeholder="Search reviewers by name, institution, research area, method…"
+              onClear={() => setQ("")}
+            />
           </div>
-
-          {/* Count */}
-          {!loading && !gated && (
-            <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 14, fontFamily: "monospace" }}>
-              {total.toLocaleString()} reviewers in marketplace
-            </div>
-          )}
-
-          {/* Cards */}
-          {gated ? (
-            <GatedState />
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(256px, 1fr))", gap: 14 }}>
-              {loading
-                ? Array.from({ length: 8 }).map((_, i) => <ReviewerSkeleton key={i} />)
-                : items.map((r) => (
-                    <ReviewerCard
-                      key={r.user_id || r._id}
-                      r={r}
-                      isCompared={compareList.some((x) => x.user_id === r.user_id)}
-                      onCompare={toggleCompare}
-                      onInvite={() => setShowCreate(true)}
-                    />
-                  ))
-              }
-            </div>
-          )}
-
-          {!loading && !gated && items.length === 0 && <EmptyState />}
-
-          {/* Pagination */}
-          {!loading && !gated && pages > 1 && (
-            <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
-              <Pagination page={page} totalPages={pages} onPage={setPage} />
-            </div>
-          )}
+          <Button
+            variant={showFilters ? "primary" : "outline"}
+            onClick={() => setShowFilters((v) => !v)}
+            className="shrink-0"
+          >
+            Filters{Object.values(filters).some(Boolean) ? ` (${Object.values(filters).filter(Boolean).length})` : ""}
+          </Button>
+          <Button onClick={() => setShowCreate(true)} className="shrink-0">
+            <Plus size={13} strokeWidth={2} /> Post Request
+          </Button>
         </div>
+
+        {showFilters && (
+          <div style={{ marginBottom: 14 }}>
+            <FilterPanel filters={filters} setFilter={setFilter} onClear={() => setFilters({})} />
+          </div>
+        )}
+
+        {/* Count */}
+        {!loading && !gated && (
+          <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 14, fontFamily: "monospace" }}>
+            {total.toLocaleString()} reviewers in marketplace
+          </div>
+        )}
+
+        {/* Cards */}
+        {gated ? (
+          <GatedState />
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(256px, 1fr))", gap: 14 }}>
+            {loading
+              ? Array.from({ length: 8 }).map((_, i) => <ReviewerSkeleton key={i} />)
+              : items.map((r) => (
+                  <ReviewerCard
+                    key={r.user_id || r._id}
+                    r={r}
+                    isCompared={compareList.some((x) => x.user_id === r.user_id)}
+                    onCompare={toggleCompare}
+                    onInvite={() => setShowCreate(true)}
+                  />
+                ))
+            }
+          </div>
+        )}
+
+        {!loading && !gated && items.length === 0 && <EmptyState />}
+
+        {/* Pagination */}
+        {!loading && !gated && pages > 1 && (
+          <div style={{ marginTop: 24, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
+            <Pagination page={page} totalPages={pages} onPage={setPage} />
+          </div>
+        )}
+
+        {/* Integrity note — compact footnote, not its own section */}
+        <p style={{ marginTop: 24, fontSize: 11, color: "#94A3B8", lineHeight: 1.6, maxWidth: 640 }}>
+          <Shield size={11} strokeWidth={1.5} style={{ display: "inline", marginRight: 4, verticalAlign: -1 }} />
+          Review invitations include conflict-of-interest checks. Synaptiq does not endorse or guarantee
+          journal acceptance; reviews are conducted with confidentiality as agreed between parties.
+        </p>
       </div>
-      {/* ── Review Services strip ─────────────────────────────────────────── */}
-      <ReviewServicesStrip onPost={() => setShowCreate(true)} />
-      {/* ── Academic Integrity note ───────────────────────────────────────── */}
-      <IntegrityNote />
       {/* ── Compare panel ─────────────────────────────────────────────────── */}
       {compareList.length >= 2 && (
         <ComparePanel
@@ -791,59 +789,6 @@ function FilterPanel({ filters, setFilter, onClear }) {
         />
       </div>
     </Card>
-  );
-}
-
-// ── Review Services strip ─────────────────────────────────────────────────────
-function ReviewServicesStrip({ onPost }) {
-  return (
-    <div style={{ margin: "48px -24px 0", background: WARM, borderTop: `1px solid ${BORDER}`, padding: "36px 56px" }}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>Peer Review Services</div>
-          <h2 style={{ fontFamily: "Georgia, serif", fontSize: 26, color: NAVY, fontWeight: 400 }}>Supported Review Types</h2>
-          <p style={{ fontSize: 13, color: "#64748B", marginTop: 6, maxWidth: 480, lineHeight: 1.6 }}>
-            Post a review request and let AI match you with the most qualified reviewer for your work.
-          </p>
-        </div>
-        <Button variant="outline" onClick={onPost} className="self-start whitespace-nowrap">
-          <Plus size={13} strokeWidth={2} /> Post Review Request
-        </Button>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))", gap: 12 }}>
-        {REVIEW_TYPES_LIST.map(({ value, label, icon: Icon }) => (
-          <Card
-            key={value}
-            padding="md"
-            style={{ display: "flex", flexDirection: "column", gap: 8 }}
-          >
-            <Icon size={18} strokeWidth={1.5} style={{ color: NAVY }} />
-            <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{label}</div>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Academic Integrity note ───────────────────────────────────────────────────
-function IntegrityNote() {
-  return (
-    <div style={{ margin: "0 -24px", background: `${NAVY}04`, borderTop: `1px solid ${BORDER}`, padding: "20px 56px" }}>
-      <Alert
-        variant="neutral"
-        icon={Shield}
-        title="Academic Integrity & Ethics"
-        style={{ maxWidth: 760, background: "transparent", border: "none", padding: 0 }}
-      >
-        Synaptiq Reviewer Marketplace facilitates connections between researchers and peer reviewers.
-        All review invitations include conflict-of-interest checks. Reviewers are selected for
-        academic expertise — not to guarantee specific outcomes. Synaptiq does not endorse
-        or guarantee journal acceptance. Reviews are conducted with full confidentiality
-        as agreed between parties.
-      </Alert>
-    </div>
   );
 }
 
