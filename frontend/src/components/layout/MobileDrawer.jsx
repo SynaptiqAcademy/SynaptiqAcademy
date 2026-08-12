@@ -14,7 +14,6 @@ import { NAVY } from "@/lib/tokens";
 import {
   getOrderedSections,
   findSectionForPath,
-  findSubGroupForPath,
 } from "../../config/navigation";
 
 // ─── DrawerNavItem ────────────────────────────────────────────────────────────
@@ -82,7 +81,7 @@ function DrawerSubItem({ to, label, icon: Icon, badge, onClick, exact }) {
 
 // ─── DrawerSection (accordion section) ───────────────────────────────────────
 
-function DrawerSection({ section, isOpen, onOpen, openSubGroup, onSubGroupToggle, onClose, unreadTotal, pathname }) {
+function DrawerSection({ section, isOpen, onOpen, onClose, unreadTotal, pathname }) {
   const SectionIcon = section.icon;
   const isSectionActive = section.routes.some(
     (r) => pathname === r || pathname.startsWith(r + "/")
@@ -132,8 +131,6 @@ function DrawerSection({ section, isOpen, onOpen, openSubGroup, onSubGroupToggle
                 <DrawerSubGroup
                   key={item.id}
                   subGroup={item}
-                  isOpen={Boolean(openSubGroup[item.id])}
-                  onToggle={() => onSubGroupToggle(item.id)}
                   onClose={onClose}
                   pathname={pathname}
                 />
@@ -158,7 +155,7 @@ function DrawerSection({ section, isOpen, onOpen, openSubGroup, onSubGroupToggle
 
 // ─── DrawerSubGroup ───────────────────────────────────────────────────────────
 
-function DrawerSubGroup({ subGroup, isOpen, onToggle, onClose, pathname }) {
+function DrawerSubGroup({ subGroup, onClose, pathname }) {
   const SubIcon = subGroup.icon;
   const isActive = subGroup.items.some(
     (i) => pathname === i.to || pathname.startsWith(i.to + "/")
@@ -166,50 +163,26 @@ function DrawerSubGroup({ subGroup, isOpen, onToggle, onClose, pathname }) {
 
   return (
     <div>
-      <button
-        onClick={onToggle}
-        aria-expanded={isOpen}
+      <div
         className={`
-          w-full flex items-center justify-between px-4 py-2 text-left
-          transition-colors duration-150 hover:bg-slate-50
-          ${isActive ? "text-[#0F2847]" : "text-slate-500 hover:text-slate-800"}
+          w-full flex items-center gap-2.5 px-4 py-2 text-left
+          ${isActive ? "text-[#0F2847]" : "text-slate-500"}
         `}
       >
-        <div className="flex items-center gap-2.5">
-          <SubIcon size={13} strokeWidth={1.5} className="shrink-0" />
-          <span className="text-[12px] font-medium">{subGroup.label}</span>
-        </div>
-        <ChevronRight
-          size={10}
-          strokeWidth={2}
-          style={{
-            transition: "transform 160ms cubic-bezier(0.16,1,0.3,1)",
-            transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
-            flexShrink: 0,
-          }}
-        />
-      </button>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateRows: isOpen ? "1fr" : "0fr",
-          transition: "grid-template-rows 160ms cubic-bezier(0.16,1,0.3,1)",
-        }}
-      >
-        <div style={{ overflow: "hidden" }}>
-          {subGroup.items.map((item) => (
-            <DrawerSubItem
-              key={item.to}
-              to={item.to}
-              label={item.label}
-              icon={item.icon}
-              exact={item.exact}
-              onClick={onClose}
-            />
-          ))}
-        </div>
+        <SubIcon size={13} strokeWidth={1.5} className="shrink-0" />
+        <span className="text-[12px] font-medium">{subGroup.label}</span>
       </div>
+
+      {subGroup.items.map((item) => (
+        <DrawerSubItem
+          key={item.to}
+          to={item.to}
+          label={item.label}
+          icon={item.icon}
+          exact={item.exact}
+          onClick={onClose}
+        />
+      ))}
     </div>
   );
 }
@@ -281,26 +254,11 @@ export default function MobileDrawer({ open, onClose }) {
     setOpenSection((prev) => (prev === id ? null : id));
   }, []);
 
-  // ── Sub-group open state ─────────────────────────────────────────────────
-  const [openSubGroup, setOpenSubGroup] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("sq_nav_v2_subgroup") || "{}");
-    } catch { return {}; }
-  });
-
-  const handleSubGroupToggle = useCallback((id) => {
-    setOpenSubGroup((prev) => ({ ...prev, [id]: !prev[id] }));
-  }, []);
-
   // ── Sync open section with current route on open ──────────────────────────
   useEffect(() => {
     if (!open) return;
     const sectionId = findSectionForPath(location.pathname);
-    if (sectionId) {
-      setOpenSection(sectionId);
-      const subGroupId = findSubGroupForPath(sectionId, location.pathname);
-      if (subGroupId) setOpenSubGroup((prev) => ({ ...prev, [subGroupId]: true }));
-    }
+    if (sectionId) setOpenSection(sectionId);
   }, [open, location.pathname]);
 
   // ── Close on Escape ──────────────────────────────────────────────────────
@@ -376,8 +334,6 @@ export default function MobileDrawer({ open, onClose }) {
               section={section}
               isOpen={openSection === section.id}
               onOpen={() => handleSectionOpen(section.id)}
-              openSubGroup={openSubGroup}
-              onSubGroupToggle={handleSubGroupToggle}
               onClose={onClose}
               unreadTotal={msgUnread}
               pathname={location.pathname}

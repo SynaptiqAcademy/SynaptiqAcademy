@@ -19,7 +19,7 @@ import { useUnread } from "@/contexts/UnreadContext";
 import { TID } from "@/lib/testIds";
 import { getDashboardMode } from "@/lib/dashboardConfig";
 import api from "@/lib/api";
-import { getOrderedSections, findSectionForPath, findSubGroupForPath } from "@/config/navigation";
+import { getOrderedSections, findSectionForPath } from "@/config/navigation";
 import { ADMIN_SECTIONS } from "@/config/adminNavigation";
 import { SIDEBAR_W, SIDEBAR_W_COLLAPSED, HEADER_H } from "@/lib/tokens";
 
@@ -51,7 +51,6 @@ export default Sidebar;
 const LS = {
   COLLAPSED: "sq_sidebar_collapsed",
   SECTION:   "sq_nav_v2_section",
-  SUBGROUP:  "sq_nav_v2_subgroup",
   FAVORITES: "sq_nav_favorites",
   EXPERT:    "sq_expert_mode",
 };
@@ -160,19 +159,6 @@ function AppSidebarBody() {
     });
   }, []);
 
-  const [openSubGroup, setOpenSubGroup] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(LS.SUBGROUP) || "{}"); }
-    catch { return {}; }
-  });
-
-  const handleSubGroupToggle = useCallback((id) => {
-    setOpenSubGroup((prev) => {
-      const next = { ...prev, [id]: !prev[id] };
-      try { localStorage.setItem(LS.SUBGROUP, JSON.stringify(next)); } catch {}
-      return next;
-    });
-  }, []);
-
   const [searchQuery, setSearchQuery] = useState("");
   const searchRef = useRef(null);
 
@@ -200,16 +186,6 @@ function AppSidebarBody() {
       try { localStorage.setItem(LS.SECTION, sectionId); } catch {}
       return sectionId;
     });
-
-    const subGroupId = findSubGroupForPath(sectionId, location.pathname);
-    if (subGroupId) {
-      setOpenSubGroup((prev) => {
-        if (prev[subGroupId]) return prev;
-        const next = { ...prev, [subGroupId]: true };
-        try { localStorage.setItem(LS.SUBGROUP, JSON.stringify(next)); } catch {}
-        return next;
-      });
-    }
   }, [location.pathname]);
 
   useEffect(() => {
@@ -376,8 +352,6 @@ function AppSidebarBody() {
               isOpen={openSection === section.id}
               onToggle={() => handleSectionToggle(section.id)}
               onExpand={() => handleExpandAndOpen(section.id)}
-              openSubGroup={openSubGroup}
-              onSubGroupToggle={handleSubGroupToggle}
               unreadTotal={unreadTotal}
               pathname={location.pathname}
               sectionFavorites={favorites[section.id] || []}
@@ -525,7 +499,6 @@ const SearchResultItem = memo(function SearchResultItem({ item, query, onNavigat
 
 const SidebarSection = memo(function SidebarSection({
   section, collapsed, isOpen, onToggle, onExpand,
-  openSubGroup, onSubGroupToggle,
   unreadTotal, pathname,
   sectionFavorites,
   onToggleFavorite,
@@ -652,8 +625,6 @@ const SidebarSection = memo(function SidebarSection({
                     <SubGroup
                       key={item.id}
                       subGroup={item}
-                      isOpen={Boolean(openSubGroup[item.id])}
-                      onToggle={() => onSubGroupToggle(item.id)}
                       pathname={pathname}
                     />
                   ) : (
@@ -687,7 +658,11 @@ function MiniDivider() {
   return <div className="mx-3.5 my-1.5 border-t border-slate-100" />;
 }
 
-const SubGroup = memo(function SubGroup({ subGroup, isOpen, onToggle, pathname }) {
+// Visible subgroups (Research > AI Tools/Workspace, Publishing > Impact) are
+// always expanded — they're a label for grouping, not a second click layer.
+// Only sidebarHidden subgroups ever collapsed, and those never reach this
+// component (filtered out before render), so there's nothing left to toggle.
+const SubGroup = memo(function SubGroup({ subGroup, pathname }) {
   const SubIcon          = subGroup.icon;
   const isSubGroupActive = subGroup.items.some(
     (i) => pathname === i.to || pathname.startsWith(i.to + "/")
@@ -695,46 +670,22 @@ const SubGroup = memo(function SubGroup({ subGroup, isOpen, onToggle, pathname }
 
   return (
     <div>
-      <button
-        onClick={onToggle}
+      <div
         data-testid={subGroup.testid}
-        aria-expanded={isOpen}
-        aria-label={`${isOpen ? "Collapse" : "Expand"} ${subGroup.label}`}
         className={`
-          w-full flex items-center justify-between px-3.5 py-[5px]
-          text-[12px] font-medium transition-colors duration-150 hover:bg-slate-50
-          ${isSubGroupActive ? "text-[#0F2847]" : "text-slate-500 hover:text-slate-800"}
+          w-full flex items-center gap-2 px-3.5 py-[5px]
+          text-[12px] font-medium
+          ${isSubGroupActive ? "text-[#0F2847]" : "text-slate-500"}
         `}
       >
-        <div className="flex items-center gap-2">
-          <SubIcon size={13} strokeWidth={1.5} className="shrink-0" />
-          <span>{subGroup.label}</span>
-        </div>
-        <ChevronRight
-          size={9}
-          strokeWidth={2}
-          style={{
-            transition: "transform 160ms cubic-bezier(0.16,1,0.3,1)",
-            transform: isOpen ? "rotate(90deg)" : "rotate(0deg)",
-            flexShrink: 0,
-          }}
-        />
-      </button>
+        <SubIcon size={13} strokeWidth={1.5} className="shrink-0" />
+        <span>{subGroup.label}</span>
+      </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateRows: isOpen ? "1fr" : "0fr",
-          transition: "grid-template-rows 160ms cubic-bezier(0.16,1,0.3,1)",
-        }}
-      >
-        <div style={{ overflow: "hidden" }}>
-          <div className="ml-3.5 pl-3 border-l border-slate-100 mb-0.5 mt-0.5">
-            {subGroup.items.map((item) => (
-              <SubGroupItem key={item.to} item={item} />
-            ))}
-          </div>
-        </div>
+      <div className="ml-3.5 pl-3 border-l border-slate-100 mb-0.5 mt-0.5">
+        {subGroup.items.map((item) => (
+          <SubGroupItem key={item.to} item={item} />
+        ))}
       </div>
     </div>
   );

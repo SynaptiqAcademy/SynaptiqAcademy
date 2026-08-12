@@ -515,6 +515,26 @@ export default function ResearchImpact() {
     window.open("/api/research-impact/export", "_blank");
   };
 
+  // Brand-new account, nothing to show yet — one clear next step beats a
+  // dashboard shell full of zeroes.
+  if (kpi?.has_citations_data === false) {
+    return (
+      <ResearchLayout title="Research Impact" subtitle="Publication output, citation growth, collaboration network, and research score in one view.">
+        <EmptyState
+          icon={<Activity strokeWidth={1} />}
+          title="No citation data yet"
+          description="Import your publications via ORCID, then sync with Citation Tracker to populate this dashboard."
+          action={
+            <Button as={Link} to="/citations" variant="primary">
+              Import Publications
+            </Button>
+          }
+          size="lg"
+        />
+      </ResearchLayout>
+    );
+  }
+
   return (
     <ResearchLayout
       title="Research Impact"
@@ -536,12 +556,6 @@ export default function ResearchImpact() {
       }
     >
     <div data-testid={TID.researchImpactPage}>
-
-      {kpi?.has_citations_data === false && (
-        <Callout variant="warning" style={{ marginBottom: 24 }}>
-          No citation data yet. Import publications via ORCID then sync via Citation Tracker to populate this dashboard.
-        </Callout>
-      )}
 
       <div className="space-y-14">
 
@@ -870,26 +884,6 @@ export default function ResearchImpact() {
         Department heads and institutional admins will be able to aggregate impact scores across
         their research groups. Your individual data feeds directly into those institutional views.
       </Callout>
-
-      {/* ── Research Intelligence Quick Links ── */}
-      <section>
-        <h2 className="overline mb-5">Continue in Research Intelligence</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {[
-            { to: "/analytics",           label: "Analytics Overview"   },
-            { to: "/citations",           label: "Citation Tracker"     },
-            { to: "/citation-monitoring", label: "Citation Monitoring"  },
-            { to: "/reputation",          label: "Reputation Score"     },
-            { to: "/impact-dashboard",    label: "Impact Dashboard"     },
-          ].map(({ to, label }) => (
-            <Card key={to} to={to} padding="md" className="group">
-              <div className="text-xs font-medium text-slate-700 group-hover:text-[#0F2847] transition-colors flex items-center justify-between">
-                {label} <ChevronRight size={12} className="text-slate-300 group-hover:text-[#0F2847]" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      </section>
 
     </div>
     </div>
