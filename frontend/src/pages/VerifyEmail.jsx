@@ -7,7 +7,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { CheckCircle2, AlertTriangle, Loader2, Mail, ArrowRight } from "lucide-react";
 import api from "../lib/api";
 import {
-  AuthLayout, AuthCard, AuthHeader, AuthButton, NAVY, T_MID, T_FAINT, BORDER,
+  AuthLayout, AuthCard, AuthHeader, AuthButton, AuthInput, NAVY, T_MID, T_FAINT, BORDER,
 } from "../components/auth/AuthShared";
 
 export default function VerifyEmail() {
@@ -17,6 +17,8 @@ export default function VerifyEmail() {
   const [errorMsg, setErrorMsg] = useState("");
   const [resending,setResending]= useState(false);
   const [resentTo, setResentTo] = useState("");
+  const [resendEmail, setResendEmail] = useState("");
+  const [showResendForm, setShowResendForm] = useState(false);
 
   useEffect(function() {
     if (!token) { setState("error"); setErrorMsg("No verification token provided."); return; }
@@ -31,13 +33,13 @@ export default function VerifyEmail() {
     })();
   }, [token]);
 
-  async function resend() {
-    const email = window.prompt("Enter your account email to resend verification:");
-    if (!email) return;
+  async function resend(e) {
+    e?.preventDefault?.();
+    if (!resendEmail.trim()) return;
     setResending(true);
     try {
-      await api.post("/auth/resend-verification", { email });
-      setResentTo(email);
+      await api.post("/auth/resend-verification", { email: resendEmail.trim() });
+      setResentTo(resendEmail.trim());
     } catch (_) {}
     finally { setResending(false); }
   }
@@ -113,20 +115,41 @@ export default function VerifyEmail() {
               <p style={{ fontSize: "0.875rem", color: T_MID, lineHeight: 1.7, marginBottom: 24 }}>
                 {errorMsg}
               </p>
-              <button
-                onClick={resend}
-                disabled={resending}
-                data-testid="verify-resend-btn"
-                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", height: 52, background: NAVY, color: "#fff", border: "none", borderRadius: 10, fontSize: "0.9rem", fontWeight: 600, cursor: resending ? "not-allowed" : "pointer", marginBottom: 12 }}
-              >
-                {resending && <Loader2 size={14} strokeWidth={2} style={{ animation: "auth-spin 1s linear infinite" }} />}
-                {resending ? "Sending…" : "Resend verification email"}
-              </button>
-              {resentTo && (
+
+              {resentTo ? (
                 <p data-testid="verify-resend-toast" style={{ fontSize: "0.78rem", color: T_FAINT, margin: "0 0 12px" }}>
                   If an account exists for <span style={{ fontFamily: "monospace" }}>{resentTo}</span>, a new link has been sent.
                 </p>
+              ) : showResendForm ? (
+                <form onSubmit={resend} style={{ textAlign: "left", marginBottom: 12 }}>
+                  <AuthInput
+                    label="Account email"
+                    type="email"
+                    value={resendEmail}
+                    onChange={(e) => setResendEmail(e.target.value)}
+                    placeholder="you@university.edu"
+                    autoComplete="email"
+                  />
+                  <button
+                    type="submit"
+                    disabled={resending || !resendEmail.trim()}
+                    data-testid="verify-resend-btn"
+                    style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", height: 52, background: NAVY, color: "#fff", border: "none", borderRadius: 10, fontSize: "0.9rem", fontWeight: 600, cursor: resending ? "not-allowed" : "pointer", marginTop: 14 }}
+                  >
+                    {resending && <Loader2 size={14} strokeWidth={2} style={{ animation: "auth-spin 1s linear infinite" }} />}
+                    {resending ? "Sending…" : "Send verification email"}
+                  </button>
+                </form>
+              ) : (
+                <button
+                  onClick={() => setShowResendForm(true)}
+                  data-testid="verify-resend-btn"
+                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", height: 52, background: NAVY, color: "#fff", border: "none", borderRadius: 10, fontSize: "0.9rem", fontWeight: 600, cursor: "pointer", marginBottom: 12 }}
+                >
+                  Resend verification email
+                </button>
               )}
+
               <Link to="/login" style={{ fontSize: "0.84rem", color: NAVY, textDecoration: "none", fontWeight: 500 }}>
                 Back to Sign In
               </Link>

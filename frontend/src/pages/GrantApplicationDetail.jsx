@@ -19,7 +19,7 @@ import { NavTabs } from "@/components/ds/NavTabs";
 import { StatCard, StatGrid } from "@/components/ds/StatCard";
 import { ProgressBar } from "@/components/ds/Progress";
 import { ResearchLayout } from "@/layouts";
-import { confirmDialog } from "@/lib/confirm";
+import { confirmDialog, promptDialog } from "@/lib/confirm";
 
 // ── constants ──────────────────────────────────────────────────────────────────
 
@@ -283,7 +283,7 @@ export default function GrantApplicationDetail() {
   };
 
   const snapshotVersion = async () => {
-    const summary = window.prompt("Version summary (optional):") || "";
+    const summary = (await promptDialog({ title: "Version summary", placeholder: "Optional summary for this version" })) || "";
     try {
       await api.post(`/grant-applications/${id}/versions`, { summary });
       toast.success("Version snapshot created");

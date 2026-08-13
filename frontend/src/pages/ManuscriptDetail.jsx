@@ -21,7 +21,7 @@ import {
   CheckCircle2, Circle, Star, Save, Send, ListChecks, FileCheck2,
   ClipboardCheck, UserPlus, Search, Sparkles,
 } from "lucide-react";
-import { confirmDialog } from "@/lib/confirm";
+import { confirmDialog, promptDialog } from "@/lib/confirm";
 
 const STATUSES = [
   { value: "draft",                label: "Drafting"             },
@@ -539,7 +539,7 @@ export default function ManuscriptDetail() {
   };
 
   const snapshot = async () => {
-    const summary = prompt("Optional summary for this version:") || "";
+    const summary = (await promptDialog({ title: "Version summary", placeholder: "Optional summary for this version" })) || "";
     try {
       await api.post(`/manuscripts/${id}/versions`, { summary });
       toast.success("Version snapshot created");

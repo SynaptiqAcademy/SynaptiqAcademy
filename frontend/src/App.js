@@ -23,7 +23,7 @@ import Unsubscribed from "@/pages/Unsubscribed";
 import { Toaster } from "@/components/ui/sonner";
 import CookieConsentBanner from "@/components/consent/CookieConsentBanner";
 import UpgradeModal from "@/components/billing/UpgradeModal";
-import { ConfirmDialogHost } from "@/components/ds/ConfirmDialog";
+import { ConfirmDialogHost, PromptDialogHost } from "@/components/ds/ConfirmDialog";
 
 // All remaining pages loaded on demand — each route only pays for its own JS
 const Onboarding = lazy(() => import("@/pages/Onboarding"));
@@ -656,6 +656,7 @@ function App() {
           <CookieConsentBanner />
           <UpgradeModal />
           <ConfirmDialogHost />
+          <PromptDialogHost />
         </BrowserRouter>
         <Toaster position="top-right" richColors />
       </UnreadProvider>

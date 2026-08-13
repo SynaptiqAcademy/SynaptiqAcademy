@@ -18,6 +18,7 @@ import {
   ChevronRight, Loader2, BookmarkPlus,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { confirmDialog } from "@/lib/confirm";
 import { NAVY } from "@/lib/tokens";
 
 const FREQ_LABEL = { off: "No digest", daily: "Daily digest", weekly: "Weekly digest" };
@@ -189,7 +190,7 @@ function ManageSearchesDrawer({ kind, onClose, onMutated }) {
   };
 
   const del = async (sid) => {
-    if (!confirm("Delete this saved search?")) return;
+    if (!(await confirmDialog({ title: "Delete this saved search?", danger: true }))) return;
     try { await api.delete(`/searches/${sid}`); load(); onMutated?.(); }
     catch (e) { toast.error("Failed"); }
   };

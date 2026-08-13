@@ -10,6 +10,7 @@ import { Button } from "@/components/ds/Button";
 import { Drawer } from "@/components/ds/Drawer";
 import { EmptyState } from "@/components/ds/EmptyState";
 import { BRD, TEXT_PRIMARY, TEXT_MUTED, TEXT_SECONDARY, NAVY, RADIUS_MD } from "@/lib/tokens";
+import { confirmDialog } from "@/lib/confirm";
 
 function fmtDate(iso) {
   if (!iso) return "";
@@ -104,7 +105,7 @@ export default function WikiPanel({ workspaceId, members = [], onTypingChange })
   };
 
   const deletePage = async (page) => {
-    if (!window.confirm(`Delete "${page.title}"? This can be restored by a workspace admin.`)) return;
+    if (!(await confirmDialog({ title: `Delete "${page.title}"?`, description: "This can be restored by a workspace admin.", danger: true }))) return;
     try {
       await api.delete(`/items/${page.id}`);
       setPages((prev) => prev.filter((p) => p.id !== page.id));

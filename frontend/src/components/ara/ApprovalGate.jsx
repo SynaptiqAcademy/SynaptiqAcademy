@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ShieldCheck, ShieldX, AlertTriangle } from "lucide-react";
 import { approveAction, rejectAction } from "../../services/araEngine";
+import { toast } from "sonner";
 
 export default function ApprovalGate({ approval, onResolved }) {
   const [loading, setLoading] = useState(false);
@@ -13,7 +14,7 @@ export default function ApprovalGate({ approval, onResolved }) {
       await approveAction(approval._id);
       onResolved && onResolved("approved");
     } catch (e) {
-      alert("Could not approve: " + (e?.response?.data?.detail || e.message));
+      toast.error("Could not approve: " + (e?.response?.data?.detail || e.message));
     } finally {
       setLoading(false);
     }
@@ -25,7 +26,7 @@ export default function ApprovalGate({ approval, onResolved }) {
       await rejectAction(approval._id, reason);
       onResolved && onResolved("rejected");
     } catch (e) {
-      alert("Could not reject: " + (e?.response?.data?.detail || e.message));
+      toast.error("Could not reject: " + (e?.response?.data?.detail || e.message));
     } finally {
       setLoading(false);
     }

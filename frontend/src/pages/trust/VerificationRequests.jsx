@@ -4,6 +4,7 @@ import { FileSearch, Upload } from "lucide-react";
 import { NAVY, EMERALD, ACCENT, TEXT_SECONDARY } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, FormSelect, Textarea, Badge, EmptyState, InlineError, LoadingOverlay } from "@/components/ds";
+import { promptDialog } from "@/lib/confirm";
 
 const API = "/api/trust";
 
@@ -57,7 +58,7 @@ export default function VerificationRequests() {
   };
 
   const appeal = async (reqId) => {
-    const notes = window.prompt("Describe why this decision should be reconsidered:");
+    const notes = await promptDialog({ title: "Appeal this decision", description: "Describe why this decision should be reconsidered." });
     if (!notes) return;
     await fetch(API + `/requests/${reqId}/appeal`, {
       method: "POST", credentials: "include",

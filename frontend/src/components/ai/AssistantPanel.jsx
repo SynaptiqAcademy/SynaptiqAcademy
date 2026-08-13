@@ -16,6 +16,7 @@ import api from "../../lib/api";
 import { toast } from "sonner";
 import { useAuth } from "../../contexts/AuthContext";
 import { NAVY } from "@/lib/tokens";
+import { confirmDialog } from "@/lib/confirm";
 import {
   Sparkles, X, Send, Loader2, Trash2, History, Plus,
   BookOpen, Lightbulb, Beaker, HelpCircle, Pencil, BadgeCheck,
@@ -144,7 +145,7 @@ export default function AssistantPanel({ open, onClose, entityKind, entityId, en
   }, [busy, balance, ensureSession, capability, loadCredits, refreshMe]);
 
   const deleteSession = useCallback(async (sid) => {
-    if (!confirm("Delete this conversation? This cannot be undone.")) return;
+    if (!(await confirmDialog({ title: "Delete this conversation?", description: "This cannot be undone.", danger: true }))) return;
     try {
       await api.delete(`/assistant/sessions/${sid}`);
       setSessions((s) => s.filter((x) => x.id !== sid));

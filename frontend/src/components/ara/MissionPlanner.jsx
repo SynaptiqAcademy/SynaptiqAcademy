@@ -4,6 +4,7 @@ import {
   Clock, Play,
 } from "lucide-react";
 import { approvePlan, refinePlan } from "../../services/araEngine";
+import { toast } from "sonner";
 
 const STEP_TYPE_META = {
   safe:     { icon: CheckCircle, color: "text-green-500",  label: "Auto" },
@@ -53,7 +54,7 @@ export default function MissionPlanner({ mission, steps, onApproved, onCancelled
       await approvePlan(mission._id || mission.mission_id || mission.id);
       onApproved && onApproved();
     } catch (e) {
-      alert("Could not start mission: " + (e?.response?.data?.detail || e.message));
+      toast.error("Could not start mission: " + (e?.response?.data?.detail || e.message));
     } finally {
       setLoading(false);
     }

@@ -11,7 +11,7 @@ import {
   RelatedEntityPanel, SmartActionsBar, Timeline, TimelineItem, Banner,
 } from "@/components/ds";
 import { useAdminRealtime } from "@/contexts/AdminRealtimeContext";
-import { confirmDialog } from "@/lib/confirm";
+import { confirmDialog, promptDialog } from "@/lib/confirm";
 
 const TABS = ["Overview", "Timeline", "Actions"];
 
@@ -213,8 +213,8 @@ export default function AdminUserDetail() {
             label: "Suspend",
             variant: "outline",
             disabled: user.status === "suspended",
-            onClick: () => {
-              const r = window.prompt("Reason for suspension (optional):", "");
+            onClick: async () => {
+              const r = await promptDialog({ title: "Reason for suspension", placeholder: "Optional" });
               if (r !== null) action("suspend", { reason: r });
             },
           },
@@ -228,8 +228,8 @@ export default function AdminUserDetail() {
             label: "Ban",
             variant: "danger",
             disabled: user.status === "banned",
-            onClick: () => {
-              const r = window.prompt("Reason for ban:", "");
+            onClick: async () => {
+              const r = await promptDialog({ title: "Reason for ban" });
               if (r !== null) action("ban", { reason: r });
             },
           },

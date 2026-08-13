@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import PreviewDrawer from "./PreviewDrawer";
 import { NAVY } from "@/lib/tokens";
+import { confirmDialog } from "@/lib/confirm";
 
 const TYPE_ICON = {
   pdf: FileText, docx: FileText, doc: FileText,
@@ -80,7 +81,7 @@ export default function FilePanel({ entityKind, entityId }) {
   };
 
   const del = async (f) => {
-    if (!confirm(`Delete "${f.filename}"?`)) return;
+    if (!(await confirmDialog({ title: `Delete "${f.filename}"?`, danger: true }))) return;
     try {
       await api.delete(`/files/${f.id}`);
       toast.success("Deleted");

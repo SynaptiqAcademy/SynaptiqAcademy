@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWikiCollab } from "@/hooks/useWikiCollab";
 import { BRD, TEXT_MUTED, TEXT_SECONDARY, NAVY, RADIUS_SM, WHITE, EMERALD, AMBER } from "@/lib/tokens";
 import { transition } from "@/lib/motion";
+import { promptDialog } from "@/lib/confirm";
 
 function ToolbarButton({ active, onClick, disabled, label, children }) {
   return (
@@ -119,8 +120,8 @@ export default function WikiEditor({ pageId, content, onSave, onTypingChange, ed
 
   if (!editor) return null;
 
-  const setLink = () => {
-    const url = window.prompt("Link URL");
+  const setLink = async () => {
+    const url = await promptDialog({ title: "Link URL", placeholder: "https://…" });
     if (url === null) return;
     if (url === "") { editor.chain().focus().unsetLink().run(); return; }
     editor.chain().focus().setLink({ href: url }).run();

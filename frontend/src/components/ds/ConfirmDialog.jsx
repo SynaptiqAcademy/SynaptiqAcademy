@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Modal } from "./Modal";
 import { Button } from "./Button";
-import { registerConfirmHandler } from "@/lib/confirm";
+import { Input } from "./Input";
+import { registerConfirmHandler, registerPromptHandler } from "@/lib/confirm";
 
 /**
  * Mounted once at the app root. Renders confirmations requested via
@@ -41,5 +42,55 @@ export function ConfirmDialogHost() {
         </>
       }
     />
+  );
+}
+
+/**
+ * Mounted once at the app root, alongside ConfirmDialogHost. Renders
+ * single-value text prompts requested via promptDialog() so they get the
+ * same styled modal instead of the browser's native prompt() popup.
+ */
+export function PromptDialogHost() {
+  const [state, setState] = useState(null);
+  const [value, setValue] = useState("");
+
+  useEffect(() => {
+    registerPromptHandler((opts) => new Promise((resolve) => {
+      setValue(opts.defaultValue || "");
+      setState({ ...opts, resolve });
+    }));
+    return () => registerPromptHandler(null);
+  }, []);
+
+  if (!state) return null;
+
+  const close = (result) => {
+    state.resolve(result);
+    setState(null);
+  };
+
+  return (
+    <Modal
+      open
+      onClose={() => close(null)}
+      title={state.title || "Enter a value"}
+      description={state.description}
+      size="sm"
+      footer={
+        <>
+          <Button variant="ghost" onClick={() => close(null)}>{state.cancelLabel || "Cancel"}</Button>
+          <Button variant="primary" onClick={() => close(value)}>{state.confirmLabel || "Save"}</Button>
+        </>
+      }
+    >
+      <form onSubmit={(e) => { e.preventDefault(); close(value); }}>
+        <Input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder={state.placeholder}
+          autoFocus
+        />
+      </form>
+    </Modal>
   );
 }

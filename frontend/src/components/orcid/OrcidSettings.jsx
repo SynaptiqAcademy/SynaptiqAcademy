@@ -15,6 +15,7 @@ import { Section } from "@/components/ds/Section";
 import { Button } from "@/components/ds/Button";
 import { Badge } from "@/components/ds/Badge";
 import { TYPE, NAVY, WARM, BRD, TEXT_MUTED, TEXT_SECONDARY, EMERALD } from "@/lib/tokens";
+import { confirmDialog } from "@/lib/confirm";
 import {
   CheckCircle2, RefreshCw, Loader2, Link as LinkIcon, Unplug, Sparkles, AlertCircle, Clock,
 } from "lucide-react";
@@ -78,7 +79,7 @@ export default function OrcidSettings() {
   };
 
   const disconnect = async () => {
-    if (!confirm("Disconnect ORCID? Imported publications will be retained.")) return;
+    if (!(await confirmDialog({ title: "Disconnect ORCID?", description: "Imported publications will be retained.", danger: true }))) return;
     try {
       await api.post("/orcid/disconnect");
       toast.success("ORCID disconnected");

@@ -424,7 +424,7 @@ export default function TeachingWorkspaceDetail() {
     const confirmMsg = isLeave
       ? "Leave this workspace? You will lose access unless re-invited."
       : `Remove ${memberName} from this workspace?`;
-    if (!window.confirm(confirmMsg)) return;
+    if (!(await confirmDialog({ title: confirmMsg, danger: true }))) return;
     try {
       await api.delete(`/teaching/workspaces/${workspaceId}/members/${memberId}`);
       if (isLeave) {
