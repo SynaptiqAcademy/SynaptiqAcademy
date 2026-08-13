@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Mail, Plus, Edit2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import { confirmDialog } from "@/lib/confirm";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import {
@@ -155,6 +156,7 @@ export default function AdminEmailCenter() {
   };
 
   const deleteTemplate = async (id) => {
+    if (!(await confirmDialog({ title: "Delete this template?", danger: true }))) return;
     try {
       await api.delete(`/admin/email/templates/${id}`);
       toast.success("Template deleted");

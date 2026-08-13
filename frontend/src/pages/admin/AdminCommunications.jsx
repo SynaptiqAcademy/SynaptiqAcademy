@@ -8,6 +8,7 @@ import {
   Button, Card, StatCard, StatGrid, Badge, DataTable,
   Input, Textarea, FormSelect, EmptyState, Spinner,
 } from "@/components/ds";
+import { confirmDialog } from "@/lib/confirm";
 
 function useAOS(path) {
   const [data, setData] = useState(null);
@@ -51,6 +52,7 @@ export default function AdminCommunications() {
   };
 
   const deleteBanner = async (id) => {
+    if (!(await confirmDialog({ title: "Delete this banner?", danger: true }))) return;
     try {
       await api.delete(`/admin/aos/banners/${id}`);
       refBanners();
