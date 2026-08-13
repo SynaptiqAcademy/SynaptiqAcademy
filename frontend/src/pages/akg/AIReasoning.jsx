@@ -4,6 +4,7 @@ import { Brain, GitBranch, Users, Zap, ChevronRight } from "lucide-react";
 import { NAVY, WARM, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Tag, Input, Badge, InlineError, EmptyState } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = (p) => `/api/akg${p}`;
 
@@ -51,12 +52,12 @@ export default function AIReasoning() {
       else if (activeQuery === "partners") url = API(`/inference/grant-partners/${entityId}`);
       else if (activeQuery === "path") {
         if (!entityIdB.trim()) { setError("Target entity ID is required for path query"); setLoading(false); return; }
-        const data = await fetch(API("/path"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ from_id: entityId, to_id: entityIdB }) }).then(r => r.json());
+        const data = await fetchApi(API("/path"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ from_id: entityId, to_id: entityIdB }) }).then(r => r.json());
         setResults(data);
         setLoading(false);
         return;
       }
-      const data = await fetch(url).then(r => r.json());
+      const data = await fetchApi(url).then(r => r.json());
       setResults(data);
     } catch {
       setError("Request failed. Check the entity ID.");

@@ -1,9 +1,11 @@
 /* eslint-disable */
 import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Search, ZoomIn, ZoomOut, Maximize2, Info, Network } from "lucide-react";
 import { NAVY, WARM, BRD, ACCENT, TEXT_SECONDARY, WHITE } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Input, FormSelect, Badge, EmptyState } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = (p) => `/api/akg${p}`;
 
@@ -80,6 +82,7 @@ function useForceLayout(nodes, edges) {
 }
 
 export default function GraphExplorer() {
+  const [searchParams] = useSearchParams();
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -93,22 +96,35 @@ export default function GraphExplorer() {
   useEffect(() => {
     if (query.length < 2) { setSuggestions([]); return; }
     const t = setTimeout(() => {
-      fetch(API(`/entities/suggestions?prefix=${encodeURIComponent(query)}&limit=6`))
+      fetchApi(API(`/entities/suggestions?prefix=${encodeURIComponent(query)}&limit=6`))
         .then(r => r.json()).then(data => setSuggestions(Array.isArray(data) ? data : [])).catch(() => {});
     }, 250);
     return () => clearTimeout(t);
   }, [query]);
 
   const loadGraph = useCallback(async (entityId) => {
-    const data = await fetch(API(`/traverse/${entityId}?depth=${depth}`)).then(r => r.json()).catch(() => ({}));
+    const data = await fetchApi(API(`/traverse/${entityId}?depth=${depth}`)).then(r => r.json()).catch(() => ({}));
     setGraph({ nodes: data.nodes || [], edges: data.edges || [] });
     setSelected(entityId);
   }, [depth]);
 
   const showDetail = async (entityId) => {
-    const data = await fetch(API(`/entities/${entityId}`)).then(r => r.json()).catch(() => null);
+    const data = await fetchApi(API(`/entities/${entityId}`)).then(r => r.json()).catch(() => null);
     setDetail(data);
+    if (data?.label) setQuery(data.label);
+    return data;
   };
+
+  // Deep-link support: EntityDetail's "Explore in Graph" navigates here with
+  // ?id=<entityId> — load that entity's neighborhood on arrival.
+  useEffect(() => {
+    const id = searchParams.get("id");
+    if (id) {
+      loadGraph(id);
+      showDetail(id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleSuggestionClick = (s) => {
     setQuery(s.label || s);

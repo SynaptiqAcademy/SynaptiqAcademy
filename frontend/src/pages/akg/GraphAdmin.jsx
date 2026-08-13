@@ -4,6 +4,8 @@ import { Shield, RefreshCw, Layers, GitBranch, Users, Database, Trash2 } from "l
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Card, Button, Input, Alert, List, ListItem, DataTable, StatGrid, StatCard, EmptyState } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
+import { confirmDialog } from "@/lib/confirm";
 
 const API = (p) => `/api/admin/akg${p}`;
 
@@ -16,8 +18,8 @@ export default function GraphAdmin() {
 
   useEffect(() => {
     Promise.all([
-      fetch(API("/stats")).then(r => r.json()),
-      fetch(API("/audit?limit=30")).then(r => r.json()),
+      fetchApi(API("/stats")).then(r => r.json()),
+      fetchApi(API("/audit?limit=30")).then(r => r.json()),
     ]).then(([s, a]) => {
       setStats(s.error ? null : s);
       setAudit(Array.isArray(a) ? a : []);
@@ -26,13 +28,18 @@ export default function GraphAdmin() {
 
   const runSync = async () => {
     setSyncing(true);
-    await fetch(API("/sync/full"), { method: "POST" });
+    await fetchApi(API("/sync/full"), { method: "POST" });
     setTimeout(() => setSyncing(false), 2000);
   };
 
   const deleteEntity = async () => {
     if (!deleteId.trim()) return;
-    const res = await fetch(API(`/entity/${deleteId}`), { method: "DELETE" }).then(r => r.json()).catch(() => ({}));
+    if (!(await confirmDialog({
+      title: `Permanently delete entity "${deleteId.trim()}"?`,
+      description: "This removes the entity and all its relationships from the graph. This cannot be undone.",
+      danger: true,
+    }))) return;
+    const res = await fetchApi(API(`/entity/${deleteId}`), { method: "DELETE" }).then(r => r.json()).catch(() => ({}));
     setDeleteMsg(res.deleted ? "Entity deleted." : (res.error || "Failed to delete."));
     setDeleteId("");
   };

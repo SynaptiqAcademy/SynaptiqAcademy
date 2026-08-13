@@ -4,6 +4,7 @@ import { Network, Search, TrendingUp, BarChart2, Lightbulb, RefreshCw, Layers, U
 import { NAVY, WARM, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, StatGrid, StatCard } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = (p) => `/api/akg${p}`;
 
@@ -22,12 +23,12 @@ export default function KnowledgeGraphHome() {
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
-    fetch(API("/analytics/overview")).then(r => r.json()).then(setOverview).catch(() => {});
+    fetchApi(API("/analytics/overview")).then(r => r.json()).then(setOverview).catch(() => {});
   }, []);
 
   const triggerSync = async () => {
     setSyncing(true);
-    await fetch(API("/sync/trigger"), { method: "POST" });
+    await fetchApi(API("/sync/trigger"), { method: "POST" });
     setTimeout(() => setSyncing(false), 2000);
   };
 

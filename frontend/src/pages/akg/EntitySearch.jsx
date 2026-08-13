@@ -5,6 +5,7 @@ import { Search, Filter, ExternalLink } from "lucide-react";
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Badge, Tag, SearchBar, EmptyState, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = (p) => `/api/akg${p}`;
 
@@ -36,7 +37,7 @@ export default function EntitySearch() {
     setSearched(true);
     try {
       const typeParam = selectedTypes.length ? `&entity_types=${selectedTypes.join(",")}` : "";
-      const data = await fetch(API(`/entities/search?q=${encodeURIComponent(query)}&limit=30${typeParam}`)).then(r => r.json());
+      const data = await fetchApi(API(`/entities/search?q=${encodeURIComponent(query)}&limit=30${typeParam}`)).then(r => r.json());
       setResults(Array.isArray(data) ? data : []);
     } finally {
       setLoading(false);

@@ -4,6 +4,7 @@ import { RefreshCw, CheckCircle, AlertCircle, Clock, Database } from "lucide-rea
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Card, Button, EmptyState, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = (p) => `/api/akg${p}`;
 
@@ -34,7 +35,7 @@ export default function SyncCenter() {
   const [loading, setLoading] = useState(true);
 
   const loadStatus = async () => {
-    const data = await fetch(API("/sync/status")).then(r => r.json()).catch(() => []);
+    const data = await fetchApi(API("/sync/status")).then(r => r.json()).catch(() => []);
     setLogs(Array.isArray(data) ? data : []);
     setLoading(false);
   };
@@ -43,7 +44,7 @@ export default function SyncCenter() {
 
   const triggerSync = async () => {
     setSyncing(true);
-    await fetch(API("/sync/trigger"), { method: "POST" });
+    await fetchApi(API("/sync/trigger"), { method: "POST" });
     setTimeout(async () => {
       await loadStatus();
       setSyncing(false);

@@ -4,6 +4,7 @@ import { BarChart2, Network, Users, Layers, Activity } from "lucide-react";
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, NavTabs, StatGrid, StatCard, ProgressBar, EmptyState } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = (p) => `/api/akg${p}`;
 
@@ -16,10 +17,10 @@ export default function GraphAnalytics() {
 
   useEffect(() => {
     Promise.all([
-      fetch(API("/analytics/overview")).then(r => r.json()),
-      fetch(API("/analytics/centrality?top_n=15")).then(r => r.json()),
-      fetch(API("/analytics/influence?top_n=15")).then(r => r.json()),
-      fetch(API("/analytics/communities")).then(r => r.json()),
+      fetchApi(API("/analytics/overview")).then(r => r.json()),
+      fetchApi(API("/analytics/centrality?top_n=15")).then(r => r.json()),
+      fetchApi(API("/analytics/influence?top_n=15")).then(r => r.json()),
+      fetchApi(API("/analytics/communities")).then(r => r.json()),
     ]).then(([ov, cent, inf, comm]) => {
       setOverview(ov);
       setCentrality(Array.isArray(cent) ? cent : []);

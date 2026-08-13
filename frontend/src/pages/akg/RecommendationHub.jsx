@@ -5,6 +5,7 @@ import { Lightbulb, RefreshCw, Users, Building2, Tag, Cpu, ShoppingBag, BookOpen
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Badge, Tag as ChipTag, EmptyState, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = (p) => `/api/akg${p}`;
 
@@ -46,14 +47,14 @@ export default function RecommendationHub() {
 
   const loadRecs = async () => {
     setLoading(true);
-    const data = await fetch(API("/me/recommendations")).then(r => r.json()).catch(() => null);
+    const data = await fetchApi(API("/me/recommendations")).then(r => r.json()).catch(() => null);
     setRecs(data?.recommendations || data || null);
     setLoading(false);
   };
 
   const refresh = async () => {
     setRefreshing(true);
-    await fetch(API("/me/recommendations"), { method: "POST" }).catch(() => {});
+    await fetchApi(API("/me/recommendations"), { method: "POST" }).catch(() => {});
     setTimeout(async () => {
       await loadRecs();
       setRefreshing(false);

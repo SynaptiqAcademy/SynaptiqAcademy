@@ -4,6 +4,7 @@ import { Network, GitBranch, Users, Lightbulb, ExternalLink } from "lucide-react
 import { NAVY, BRD, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Badge, NavTabs, EmptyState } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = (p) => `/api/akg${p}`;
 
@@ -48,9 +49,9 @@ export default function EntityDetail() {
   useEffect(() => {
     if (!entityId) return;
     Promise.all([
-      fetch(API(`/entities/${entityId}`)).then(r => r.json()),
-      fetch(API(`/relationships/${entityId}?direction=both`)).then(r => r.json()),
-      fetch(API(`/inference/related/${entityId}`)).then(r => r.json()).catch(() => []),
+      fetchApi(API(`/entities/${entityId}`)).then(r => r.json()),
+      fetchApi(API(`/relationships/${entityId}?direction=both`)).then(r => r.json()),
+      fetchApi(API(`/inference/related/${entityId}`)).then(r => r.json()).catch(() => []),
     ]).then(([e, r, s]) => {
       setEntity(e.error ? null : e);
       setRels(Array.isArray(r) ? r : []);

@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, Minus, Building2, Users, RefreshCw } from "lu
 import { NAVY, WARM, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Badge, ProgressBar, EmptyState, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = (p) => `/api/akg${p}`;
 
@@ -17,7 +18,7 @@ export default function TrendDiscovery() {
 
   const loadReport = async () => {
     setLoading(true);
-    const data = await fetch(API("/trends")).then(r => r.json()).catch(() => ({}));
+    const data = await fetchApi(API("/trends")).then(r => r.json()).catch(() => ({}));
     setReport(data);
     setLoading(false);
   };
