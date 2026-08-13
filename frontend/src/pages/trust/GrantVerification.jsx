@@ -53,7 +53,7 @@ export default function GrantVerification() {
     <ResearchLayout
       title="Grant Verification"
       subtitle="Verify grant participation and funding roles"
-      icon={<BadgeDollarSign size={22} color={NAVY} />}
+      icon={<BadgeDollarSign size={15} strokeWidth={1.5} color={NAVY} />}
     >
       {status?.status === "verified" && (
         <Alert variant="success" icon={CheckCircle2} style={{ marginBottom: 20 }}>

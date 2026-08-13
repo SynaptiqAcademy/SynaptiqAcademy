@@ -72,7 +72,7 @@ export default function TrustOverview() {
     <ResearchLayout
       title="Trust & Verification"
       subtitle="Your verified academic identity — measurable, shareable, and trusted."
-      icon={<ShieldCheck size={24} color={NAVY} />}
+      icon={<ShieldCheck size={15} strokeWidth={1.5} color={NAVY} />}
     >
       {loading ? (
           <LoadingOverlay text="Loading…" />

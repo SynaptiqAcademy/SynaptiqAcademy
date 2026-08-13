@@ -50,7 +50,7 @@ export default function PublicationVerification() {
     <ResearchLayout
       title="Publication Verification"
       subtitle="Verify authorship via DOI — CrossRef + OpenAlex"
-      icon={<FileText size={22} color={NAVY} />}
+      icon={<FileText size={15} strokeWidth={1.5} color={NAVY} />}
     >
       {/* DOI form */}
       <Card padding="lg" style={{ marginBottom: 20 }}>

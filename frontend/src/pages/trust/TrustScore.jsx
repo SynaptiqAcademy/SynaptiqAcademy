@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import { NAVY, BRD, EMERALD, ACCENT, TEXT_SECONDARY } from "../../lib/tokens";
-import { AnalyticsLayout } from "@/layouts";
+import { ResearchLayout } from "@/layouts";
 import { Card, Button, Badge, LoadingOverlay } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
@@ -90,7 +90,7 @@ export default function TrustScore() {
   const levelColor = LEVEL_COLORS[data?.level] || ACCENT;
 
   return (
-    <AnalyticsLayout
+    <ResearchLayout
       title="Trust Score"
       subtitle="14-factor weighted breakdown of your academic trust"
       actions={
@@ -147,6 +147,6 @@ export default function TrustScore() {
           </>
         )}
       </div>
-    </AnalyticsLayout>
+    </ResearchLayout>
   );
 }

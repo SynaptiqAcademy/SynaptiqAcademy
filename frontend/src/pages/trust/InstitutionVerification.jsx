@@ -48,7 +48,7 @@ export default function InstitutionVerification() {
     <ResearchLayout
       title="Institution Verification"
       subtitle="Verify your institutional affiliation"
-      icon={<Building2 size={22} color={NAVY} />}
+      icon={<Building2 size={15} strokeWidth={1.5} color={NAVY} />}
     >
       {!loading && status?.status === "verified" && (
         <Alert variant="success" icon={CheckCircle2} style={{ marginBottom: 20 }}>

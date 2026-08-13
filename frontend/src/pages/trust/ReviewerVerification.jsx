@@ -46,7 +46,7 @@ export default function ReviewerVerification() {
     <ResearchLayout
       title="Reviewer Verification"
       subtitle="Verified peer review activity on Synaptiq"
-      icon={<UserCheck size={22} color={NAVY} />}
+      icon={<UserCheck size={15} strokeWidth={1.5} color={NAVY} />}
     >
       {status?.status === "verified" && (
         <Alert variant="success" icon={CheckCircle2} style={{ marginBottom: 20 }}>
