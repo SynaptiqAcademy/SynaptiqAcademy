@@ -151,7 +151,7 @@ export default function FacultyProfile() {
             {isSelf ? (
               <Button as={Link} to="/academic-passport" size="sm">Edit Profile</Button>
             ) : (
-              <Button as={Link} to={`/messages?to=${id}`} size="sm">Message</Button>
+              <Button as={Link} to={`/messages/${id}`} size="sm">Message</Button>
             )}
             {profile.orcid_id && (
               <Button

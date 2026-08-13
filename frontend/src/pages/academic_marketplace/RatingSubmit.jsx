@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Star } from "lucide-react";
 import { ResearchLayout } from "@/layouts";
 import { Card, Textarea, Checkbox, Button, Alert, LoadingOverlay } from "@/components/ds";
@@ -8,7 +9,8 @@ const API = "/api/acad-market";
 const DIMS = ["communication", "quality", "expertise", "timeliness", "value"];
 
 export default function RatingSubmit() {
-  const orderId = window.location.pathname.split("/").pop();
+  const { id: orderId } = useParams();
+  const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [form, setForm] = useState({ communication: 5, quality: 5, expertise: 5, timeliness: 5, value: 5, review_text: "", would_recommend: true });
   const [submitting, setSubmitting] = useState(false);
@@ -26,7 +28,7 @@ export default function RatingSubmit() {
     });
     const d = await r.json();
     if (d.error) { setMsg({ type: "error", text: d.error }); setSubmitting(false); }
-    else { window.location.href = `/academic-marketplace/orders/${orderId}`; }
+    else { navigate(`/academic-marketplace/orders/${orderId}`); }
   };
 
   if (!order) return <LoadingOverlay text="Loading..." />;

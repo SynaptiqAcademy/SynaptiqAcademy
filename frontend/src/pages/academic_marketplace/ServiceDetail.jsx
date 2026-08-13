@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
 import { Star, ShieldCheck, Clock, CheckCircle } from "lucide-react";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, NavTabs, H1, H3, Caption, LoadingOverlay, ErrorState } from "@/components/ds";
@@ -7,7 +8,7 @@ import { fetchApi } from "@/lib/api";
 const API = "/api/acad-market";
 
 export default function ServiceDetail() {
-  const id = window.location.pathname.split("/").pop();
+  const { id } = useParams();
   const [service, setService] = useState(null);
   const [ratings, setRatings] = useState([]);
   const [quality, setQuality] = useState(null);
@@ -34,6 +35,7 @@ export default function ServiceDetail() {
 
   return (
     <ResearchLayout
+      title={service.title}
       sidebar={
         <div className="p-5">
           {service.packages?.length > 0 && (
@@ -66,10 +68,10 @@ export default function ServiceDetail() {
             </>
           )}
 
-          <Button as="a" href={`/academic-marketplace/order/${id}?pkg=${service.packages?.[selectedPkg]?.tier || "basic"}`} size="lg" className="w-full mb-3">
+          <Button as={Link} to={`/academic-marketplace/order/${id}?pkg=${service.packages?.[selectedPkg]?.tier || "basic"}`} size="lg" className="w-full mb-3">
             Place Order
           </Button>
-          <Button as="a" href={`/academic-marketplace/providers/${service.provider_user_id}`} variant="link" className="w-full justify-center" style={{ color: "#8A1538" }}>
+          <Button as={Link} to={`/academic-marketplace/providers/${service.provider_user_id}`} variant="link" className="w-full justify-center" style={{ color: "#8A1538" }}>
             View Provider Profile
           </Button>
 

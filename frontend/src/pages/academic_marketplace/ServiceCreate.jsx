@@ -1,5 +1,6 @@
 /* eslint-disable */
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { CheckCircle } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -18,6 +19,7 @@ const CATEGORIES = [
 const emptyPkg = (tier) => ({ tier, description: "", price: "", delivery_days: 7, revisions: 1, features: [] });
 
 export default function ServiceCreate() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     title: "", description: "", category: "", tags: [], methodology: "",
     deliverables: [], faqs: [], packages: [emptyPkg("basic")], requirements_from_client: "",
@@ -41,7 +43,7 @@ export default function ServiceCreate() {
     const r = await fetchApi(`${API}/services`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
     const d = await r.json();
     if (d.error) { setMsg({ type: "error", text: d.error }); setSaving(false); }
-    else { window.location.href = `/academic-marketplace/services/${d.id}`; }
+    else { navigate(`/academic-marketplace/services/${d.id}`); }
   };
 
   const input = (key, label, placeholder, type = "text") => (

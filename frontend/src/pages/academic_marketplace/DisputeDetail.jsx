@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useParams } from "react-router-dom";
 import { ResearchLayout } from "@/layouts";
 import { ACCENT } from "@/lib/tokens";
 import { Card, H3, Caption, Input, Textarea, Button, LoadingOverlay, ErrorState } from "@/components/ds";
@@ -7,7 +8,7 @@ import { fetchApi } from "@/lib/api";
 const API = "/api/acad-market";
 
 export default function DisputeDetail() {
-  const id = window.location.pathname.split("/").pop();
+  const { id } = useParams();
   const [dispute, setDispute] = useState(null);
   const [loading, setLoading] = useState(true);
   const [msgText, setMsgText] = useState("");

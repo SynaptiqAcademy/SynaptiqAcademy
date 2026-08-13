@@ -5,7 +5,7 @@
  * credit-aware button. Powered by /api/marketplace/{search,rerank,reverse,analytics}.
  */
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
@@ -34,6 +34,7 @@ const ROLES = [
 const RERANK_COST = 5;
 
 export default function Marketplace() {
+  const navigate = useNavigate();
   const { user, refreshMe } = useAuth();
   const [role, setRole] = useState(null);
   const [q, setQ] = useState("");
@@ -101,7 +102,7 @@ export default function Marketplace() {
 
   const onMessage = (m) => {
     // Open chat with user (navigates to messages)
-    window.location.href = `/messages?to=${m.user.id}`;
+    navigate(`/messages/${m.user.id}`);
   };
 
   const activeFilters = [availability, country, institution].filter(Boolean).length;
