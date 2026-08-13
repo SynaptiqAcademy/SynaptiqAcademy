@@ -12,7 +12,7 @@ const STEPS = [
   { icon: "3", title: "Research Roadmap", desc: "Generate a full 18-stage research plan.", url: "/sie/planning", color: ACCENT },
   { icon: "4", title: "Manuscript Review", desc: "AI feedback on your draft before submission.", url: "/manuscript-review", color: "#f59e0b" },
   { icon: "5", title: "Statistical Review", desc: "Verify your statistical methodology.", url: "/statistical-review", color: "#14b8a6" },
-  { icon: "6", title: "Publishing Intelligence", desc: "Match your paper to the best target journal.", url: "/publishing-intelligence", color: "#ec4899" },
+  { icon: "6", title: "Journal Matching", desc: "Match your paper to the best target journal.", url: "/journals", color: "#ec4899" },
 ];
 
 export default function PublicationRoadmap() {

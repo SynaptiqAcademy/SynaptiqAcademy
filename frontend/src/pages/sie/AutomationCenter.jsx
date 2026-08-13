@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Zap, Play, Trash2 } from "lucide-react";
+import { Zap, Play, Trash2, Plus } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
-import { Card, Tag, Button, Modal, Input, FormSelect, Alert, Spinner } from "@/components/ds";
+import { Card, Tag, Button, Modal, Input, FormSelect, Alert, Spinner, EmptyState } from "@/components/ds";
 import { confirmDialog } from "@/lib/confirm";
 import { fetchApi } from "@/lib/api";
 
@@ -15,6 +15,17 @@ const AUTOMATION_TYPES = [
   "deadline_reminder","weekly_report","goal_check","recommendation_refresh",
 ];
 const TYPE_COLOR = { deadline_reminder: "#f97316", goal_check: ACCENT, weekly_report: "#8b5cf6", recommendation_refresh: EMERALD, monitor_journal: "#0ea5e9", monitor_grant: "#ec4899", monitor_citation: "#f59e0b", monitor_collaborator: "#14b8a6" };
+
+function describeRunResult(run) {
+  const r = run?.result || {};
+  switch (run?.type) {
+    case "deadline_reminder": return `Found ${r.deadlines_found ?? 0} upcoming deadline${r.deadlines_found === 1 ? "" : "s"}.`;
+    case "goal_check": return `${r.active_goals ?? 0} active goal${r.active_goals === 1 ? "" : "s"}, ${r.pending_missions ?? 0} pending mission${r.pending_missions === 1 ? "" : "s"}.`;
+    case "recommendation_refresh": return `Generated ${r.recommendations_generated ?? 0} new recommendation${r.recommendations_generated === 1 ? "" : "s"}.`;
+    case "weekly_report": return "Weekly report generated.";
+    default: return r.message || "Completed successfully.";
+  }
+}
 
 function AutomationCard({ auto, onToggle, onRun, onDelete }) {
   const color = TYPE_COLOR[auto.type] || ACCENT;
@@ -168,16 +179,32 @@ export default function AutomationCenter() {
       title="Automation Center"
       subtitle="Automate repetitive research tasks with AI workflows."
       navItems={SIE_NAV_ITEMS}
+      actions={
+        <Button onClick={() => setShowNew(true)} size="sm" style={{ background: ACCENT }}>
+          <Plus size={13} /> New Automation
+        </Button>
+      }
     >
 
       {runResult && (
         <Alert variant="success" title="Automation ran successfully" onDismiss={() => setRunResult(null)} style={{ marginBottom: 16 }}>
-          {JSON.stringify(runResult.result)}
+          {describeRunResult(runResult)}
         </Alert>
       )}
 
       {loading ? (
         <div style={{ textAlign: "center", padding: 40 }}><Spinner size={28} color={ACCENT} /></div>
+      ) : automations.length === 0 ? (
+        <EmptyState
+          icon={<Zap />}
+          title="No automations yet"
+          description="Automate deadline reminders, weekly reports, and monitoring tasks."
+          action={
+            <Button onClick={() => setShowNew(true)} style={{ background: ACCENT }}>
+              <Plus size={13} /> New Automation
+            </Button>
+          }
+        />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {automations.map(a => (

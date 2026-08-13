@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Target, Trash2, Pencil, ChevronDown, ChevronUp } from "lucide-react";
+import { Target, Trash2, Pencil, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { NAVY, WARM, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
@@ -233,6 +233,11 @@ export default function GoalManager() {
       title="Research Goals"
       subtitle="Set, track, and achieve your research goals with AI guidance."
       navItems={SIE_NAV_ITEMS}
+      actions={
+        <Button onClick={() => setShowNew(true)} size="sm">
+          <Plus size={13} /> New Goal
+        </Button>
+      }
     >
 
       <div style={{ marginBottom: 16 }}>
@@ -249,9 +254,9 @@ export default function GoalManager() {
       ) : displayed.length === 0 ? (
         <EmptyState
           icon={<Target />}
-          title="No goals yet"
-          description="Define your first research goal to unlock AI planning."
-          action={<Button onClick={() => setShowNew(true)}>Create First Goal</Button>}
+          title={goals.length === 0 ? "No goals yet" : `No ${filter} goals`}
+          description={goals.length === 0 ? "Define your first research goal to unlock AI planning." : "Try a different filter, or create a new goal."}
+          action={<Button onClick={() => setShowNew(true)}>{goals.length === 0 ? "Create First Goal" : "New Goal"}</Button>}
         />
       ) : (
         displayed.map(g => (

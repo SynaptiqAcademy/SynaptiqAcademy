@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { ChevronRight, CheckCircle } from "lucide-react";
+import { ChevronRight, CheckCircle, Pencil } from "lucide-react";
 import { NAVY, WARM, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
-import { Card, Badge, Input, FormSelect, Button, NavTabs, Spinner, H4 } from "@/components/ds";
+import { Card, Badge, Input, FormSelect, Button, NavTabs, Spinner, H4, EmptyState } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
@@ -84,6 +84,13 @@ export default function CareerPlanner() {
       title="Career Planner"
       subtitle="AI-powered academic career planning and progression tracker."
       navItems={SIE_NAV_ITEMS}
+      actions={
+        !editing && (
+          <Button onClick={() => setEditing(true)} size="sm">
+            <Pencil size={13} /> {profile?.current_position ? "Edit Profile" : "Set Up Profile"}
+          </Button>
+        )
+      }
     >
 
       {editing && (
@@ -120,9 +127,14 @@ export default function CareerPlanner() {
               </div>
             ))}
           </div>
-          <Button onClick={save} loading={saving} disabled={saving}>
-            {saving ? "Saving…" : "Save Profile"}
-          </Button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Button onClick={save} loading={saving} disabled={saving}>
+              {saving ? "Saving…" : "Save Profile"}
+            </Button>
+            <Button onClick={() => { setForm(profile || {}); setEditing(false); }} variant="ghost" disabled={saving}>
+              Cancel
+            </Button>
+          </div>
         </Card>
       )}
 
@@ -137,6 +149,15 @@ export default function CareerPlanner() {
           onChange={setTab}
         />
       </div>
+
+      {!readiness && !roadmap && !editing && (
+        <EmptyState
+          icon={<Pencil />}
+          title="Set up your career profile"
+          description="Add your current and target position to see promotion readiness and a personalised career roadmap."
+          action={<Button onClick={() => setEditing(true)}>Set Up Profile</Button>}
+        />
+      )}
 
       {tab === "readiness" && readiness && (
         <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 20 }}>

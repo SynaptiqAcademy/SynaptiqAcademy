@@ -6,8 +6,6 @@ import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Tag, StatCard, StatGrid, Spinner } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
-const API = process.env.REACT_APP_API_URL || "";
-const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
 
 const TYPE_COLOR = {
   writing: ACCENT, literature_review: "#8b5cf6", data_collection: "#0ea5e9",
@@ -52,7 +50,7 @@ export default function WeeklyPlanner() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetchApi(`${API}/api/sie/agenda/weekly`, { headers: authH() });
+      const r = await fetchApi("/api/sie/agenda/weekly");
       if (r.ok) setPlan(await r.json());
     } catch (_) {}
     setLoading(false);
@@ -63,7 +61,7 @@ export default function WeeklyPlanner() {
   const refresh = async () => {
     setRefreshing(true);
     try {
-      const r = await fetchApi(`${API}/api/sie/agenda/weekly/refresh`, { method: "POST", headers: authH() });
+      const r = await fetchApi("/api/sie/agenda/weekly/refresh", { method: "POST" });
       if (r.ok) setPlan(await r.json());
     } catch (_) {}
     setRefreshing(false);
