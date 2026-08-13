@@ -4,6 +4,7 @@ import { NAVY, WARM, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Badge, Button, Modal, Input, FormSelect, NavTabs, EmptyState, Spinner } from "@/components/ds";
+import { confirmDialog } from "@/lib/confirm";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -217,7 +218,7 @@ export default function GoalManager() {
   useEffect(() => { load(); }, [load]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this goal?")) return;
+    if (!(await confirmDialog({ title: "Delete this goal?", danger: true }))) return;
     await fetch(`${API}/api/sie/goals/${id}`, { method: "DELETE", headers: authH() });
     setGoals(g => g.filter(x => x.id !== id));
   };

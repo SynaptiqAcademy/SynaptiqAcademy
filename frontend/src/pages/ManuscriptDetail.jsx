@@ -21,6 +21,7 @@ import {
   CheckCircle2, Circle, Star, Save, Send, ListChecks, FileCheck2,
   ClipboardCheck, UserPlus, Search, Sparkles,
 } from "lucide-react";
+import { confirmDialog } from "@/lib/confirm";
 
 const STATUSES = [
   { value: "draft",                label: "Drafting"             },
@@ -100,7 +101,7 @@ function VersionTimeline({ mid, currentVersion, onRestored }) {
   useEffect(() => { load(); }, [mid, currentVersion, load]);
 
   const restore = async (v) => {
-    if (!confirm(`Restore version v${v}? Current draft will be snapshotted first.`)) return;
+    if (!(await confirmDialog({ title: `Restore version v${v}? Current draft will be snapshotted first.`, danger: false }))) return;
     try {
       await api.post(`/manuscripts/${mid}/versions/${v}/restore`);
       toast.success(`Restored to v${v}`);

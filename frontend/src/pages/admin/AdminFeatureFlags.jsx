@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { EMERALD, AMBER, CRIMSON } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Modal, Button, Input, FormSelect, Checkbox, Alert, StatCard, StatGrid } from "@/components/ds";
+import { confirmDialog } from "@/lib/confirm";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -111,7 +112,7 @@ function FlagRow({ flag, onToggle, onDelete }) {
   };
 
   const del = async () => {
-    if (!window.confirm(`Delete flag "${flag.name}"?`)) return;
+    if (!(await confirmDialog({ title: `Delete flag "${flag.name}"?`, danger: true }))) return;
     try { await api.delete(`/admin/x/feature-flags/${flag.name}`); onDelete(); }
     catch (e) { console.error(e); }
   };

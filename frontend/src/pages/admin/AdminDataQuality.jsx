@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { EMERALD, AMBER, CRIMSON, INFO } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Button, Card, Badge, MiniBar, Alert } from "@/components/ds";
+import { confirmDialog } from "@/lib/confirm";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -151,7 +152,7 @@ export default function AdminDataQuality() {
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => { if (window.confirm(`Run "${label}" for real?`)) remediate(action, false); }}
+                  onClick={async () => { if (await confirmDialog({ title: `Run "${label}" for real?` })) remediate(action, false); }}
                   disabled={remediating}
                 >
                   Apply

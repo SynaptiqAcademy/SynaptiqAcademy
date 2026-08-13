@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
+import { toast } from "sonner";
 import { ACCENT, EMERALD, NAVY, WARM } from "@/lib/tokens";
 import { Badge } from "@/components/ds/Badge";
 import { Tag } from "@/components/ds/Tag";
@@ -26,6 +27,7 @@ import { Modal } from "@/components/ds/Modal";
 import { ProgressBar } from "@/components/ds/Progress";
 import { Checkbox } from "@/components/ds/Form";
 import { StatCard, StatGrid } from "@/components/ds/StatCard";
+import { confirmDialog } from "@/lib/confirm";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -247,12 +249,12 @@ function TeamTab({ data, collabId, isLead, onRefresh }) {
   };
 
   const handleRemove = async (userId) => {
-    if (!window.confirm("Remove this member from the collaboration?")) return;
+    if (!(await confirmDialog({ title: "Remove this member from the collaboration?", danger: true }))) return;
     try {
       await api.delete(`/grant-hub/${collabId}/team/${userId}`);
       onRefresh("team");
     } catch (e) {
-      alert(e?.response?.data?.error || "Failed to remove member.");
+      toast.error(e?.response?.data?.error || "Failed to remove member.");
     }
   };
 
@@ -390,12 +392,12 @@ function ConsortiumTab({ data, collabId, isLead, onRefresh }) {
   };
 
   const handleRemovePartner = async (partnerId) => {
-    if (!window.confirm("Remove this partner institution?")) return;
+    if (!(await confirmDialog({ title: "Remove this partner institution?", danger: true }))) return;
     try {
       await api.delete(`/grant-hub/${collabId}/consortium/partners/${partnerId}`);
       onRefresh("consortium");
     } catch (e) {
-      alert(e?.response?.data?.error || "Failed to remove partner.");
+      toast.error(e?.response?.data?.error || "Failed to remove partner.");
     }
   };
 
@@ -520,7 +522,7 @@ function PositionsTab({ data, collabId, isLead, onRefresh }) {
       await api.patch(`/grant-hub/${collabId}/positions/${posId}`, { status: "filled" });
       onRefresh("positions");
     } catch (e) {
-      alert(e?.response?.data?.error || "Failed to mark position as filled.");
+      toast.error(e?.response?.data?.error || "Failed to mark position as filled.");
     }
   };
 
@@ -605,7 +607,7 @@ function MatchesTab({ data, collabId, onRefresh }) {
       await api.post(`/grant-hub/${collabId}/matches/refresh`);
       onRefresh("matches");
     } catch (e) {
-      alert(e?.response?.data?.error || "Failed to refresh matches.");
+      toast.error(e?.response?.data?.error || "Failed to refresh matches.");
     } finally {
       setRefreshing(false);
     }
@@ -618,7 +620,7 @@ function MatchesTab({ data, collabId, onRefresh }) {
       setInlineInvite(null);
       setInviteForm({ role: "", message: "" });
     } catch (e) {
-      alert(e?.response?.data?.error || "Failed to send invitation.");
+      toast.error(e?.response?.data?.error || "Failed to send invitation.");
     } finally {
       setInviting(false);
     }
@@ -705,7 +707,7 @@ function GapAnalysisTab({ data, collabId, onRefresh }) {
       await api.post(`/grant-hub/${collabId}/gaps/refresh`);
       onRefresh("gaps");
     } catch (e) {
-      alert(e?.response?.data?.error || "Failed to refresh gap analysis.");
+      toast.error(e?.response?.data?.error || "Failed to refresh gap analysis.");
     } finally {
       setRefreshing(false);
     }
@@ -922,7 +924,7 @@ function WorkPackagesTab({ data, collabId, onRefresh }) {
       setTaskForms(prev => ({ ...prev, [wpId]: {} }));
       onRefresh("work-packages");
     } catch (e) {
-      alert(e?.response?.data?.error || "Failed to create task.");
+      toast.error(e?.response?.data?.error || "Failed to create task.");
     } finally {
       setCreatingTask(prev => ({ ...prev, [wpId]: false }));
     }
@@ -933,7 +935,7 @@ function WorkPackagesTab({ data, collabId, onRefresh }) {
       await api.patch(`/grant-hub/${collabId}/work-packages/${wpId}/tasks/${taskId}`, { status: "completed" });
       onRefresh("work-packages");
     } catch (e) {
-      alert(e?.response?.data?.error || "Failed to update task.");
+      toast.error(e?.response?.data?.error || "Failed to update task.");
     }
   };
 
@@ -1090,7 +1092,7 @@ function ProposalTab({ data, collabId, onRefresh }) {
       setEditingId(null);
       onRefresh("proposal");
     } catch (e) {
-      alert(e?.response?.data?.error || "Failed to save section.");
+      toast.error(e?.response?.data?.error || "Failed to save section.");
     } finally {
       setSaving(false);
     }
@@ -1383,25 +1385,25 @@ export default function GrantOpportunityWorkspace() {
       await api.post(`/grant-hub/${id}/matches/refresh`);
       handleTabRefresh("matches");
     } catch (e) {
-      alert(e?.response?.data?.error || "Failed to refresh matches.");
+      toast.error(e?.response?.data?.error || "Failed to refresh matches.");
     }
   };
 
   const handleClose = async () => {
-    if (!window.confirm("Close this collaboration? This cannot be undone.")) return;
+    if (!(await confirmDialog({ title: "Close this collaboration? This cannot be undone.", danger: true }))) return;
     setClosing(true);
     try {
       await api.patch(`/grant-hub/${id}`, { status: "closed" });
       setCollab(prev => ({ ...prev, status: "closed" }));
     } catch (e) {
-      alert(e?.response?.data?.error || "Failed to close collaboration.");
+      toast.error(e?.response?.data?.error || "Failed to close collaboration.");
     } finally {
       setClosing(false);
     }
   };
 
   const handleShare = () => {
-    navigator.clipboard?.writeText(window.location.href).then(() => alert("Link copied to clipboard!"));
+    navigator.clipboard?.writeText(window.location.href).then(() => toast.success("Link copied to clipboard!"));
   };
 
   if (loading) {

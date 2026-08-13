@@ -4,6 +4,7 @@ import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Tag, Button, Modal, Input, FormSelect, Alert, Spinner } from "@/components/ds";
+import { confirmDialog } from "@/lib/confirm";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -154,7 +155,7 @@ export default function AutomationCenter() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this automation?")) return;
+    if (!(await confirmDialog({ title: "Delete this automation?", danger: true }))) return;
     await fetch(`${API}/api/sie/automations/${id}`, { method: "DELETE", headers: authH() });
     setAutomations(as => as.filter(a => a.id !== id));
   };

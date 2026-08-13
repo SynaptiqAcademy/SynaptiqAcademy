@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ds/Textarea";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { Checkbox } from "@/components/ds/Form";
 import { ResearchLayout } from "@/layouts";
+import { confirmDialog } from "@/lib/confirm";
 
 const SUBJECTS   = ["Mathematics","Economics","Management","Computer Science","Medicine","Engineering","Psychology","Education","Sciences","Humanities","Law","Business","Other"];
 const ITEM_TYPES = ["lesson","course","assessment","achievement","award","reflection","resource","publication"];
@@ -215,7 +216,7 @@ export default function TeachingPortfolio() {
   };
 
   const handleDelete = async (item) => {
-    if (!window.confirm("Remove this portfolio item?")) return;
+    if (!(await confirmDialog({ title: "Remove this portfolio item?", danger: true }))) return;
     try {
       await api.delete(`/teaching/portfolio/${item.id}`);
       toast.success("Item removed");

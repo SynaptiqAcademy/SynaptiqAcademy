@@ -27,6 +27,7 @@ import {
   useDeptRankings, useDeptCollaboration, useDeptPublications,
   useDeptFunding, useDeptMutations,
 } from "../hooks/useDepartments";
+import { confirmDialog } from "@/lib/confirm";
 
 // ─────────────────────────── shared primitives ────────────────────────────────
 
@@ -318,7 +319,7 @@ function ProjectsTab({ did, isAdmin }) {
   }, [did, linkInput, linkProject, refetch]);
 
   const handleUnlink = useCallback(async (pid) => {
-    if (!window.confirm("Unlink this project from the department?")) return;
+    if (!(await confirmDialog({ title: "Unlink this project from the department?", danger: true }))) return;
     try {
       await unlinkProject(did, pid);
       toast.success("Project unlinked");

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
+import { toast } from "sonner";
 import { ACCENT, NAVY, WARM } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Badge } from "@/components/ds/Badge";
@@ -334,9 +335,9 @@ export default function GrantCollaborationHub() {
     try {
       await api.post(`/grant-hub/${collabId}/express-interest`);
       await fetchMyInvitations();
-      alert("Interest expressed! The collaboration lead will review your request.");
+      toast.success("Interest expressed! The collaboration lead will review your request.");
     } catch (e) {
-      alert(e?.response?.data?.error || "Failed to express interest.");
+      toast.error(e?.response?.data?.error || "Failed to express interest.");
     }
   };
 
@@ -347,7 +348,7 @@ export default function GrantCollaborationHub() {
       await fetchMyInvitations();
       await fetchMyCollabs();
     } catch (e) {
-      alert(e?.response?.data?.error || "Failed to respond to invitation.");
+      toast.error(e?.response?.data?.error || "Failed to respond to invitation.");
     } finally {
       setRespondingId(null);
     }

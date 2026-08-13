@@ -10,6 +10,7 @@ import { Badge } from "@/components/ds/Badge";
 import { Textarea } from "@/components/ds/Textarea";
 import { NavTabs } from "@/components/ds/NavTabs";
 import { ResearchLayout } from "@/layouts";
+import { confirmDialog } from "@/lib/confirm";
 
 const TYPE_BADGE_VARIANT = {
   quiz: "info",
@@ -120,7 +121,7 @@ export default function AssessmentDetail() {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Delete this assessment? This cannot be undone.")) return;
+    if (!(await confirmDialog({ title: "Delete this assessment? This cannot be undone.", danger: true }))) return;
     try {
       await api.delete(`/teaching/assessments/${assessmentId}`);
       toast.success("Assessment deleted");

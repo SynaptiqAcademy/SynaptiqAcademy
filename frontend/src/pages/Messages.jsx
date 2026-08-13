@@ -59,6 +59,7 @@ import { useUnread } from "../contexts/UnreadContext";
 import { usePersistentSet } from "@/hooks/usePersistentSet";
 import { ShortcutsModal } from "@/components/shared/ShortcutsModal";
 import { ACCENT, NAVY, WARM, WHITE } from "@/lib/tokens";
+import { confirmDialog } from "@/lib/confirm";
 
 // ─── Palette — no per-type rainbow, one accent only ──────────────────────────
 const INK     = "#1C2333";
@@ -1272,7 +1273,7 @@ export default function Messages() {
   const startReply = (m) => { setReplyingTo({ id: m.id, snippet: (m.content || "📎 Attachment").slice(0, 140), sender_name: m.sender?.full_name || "" }); setEditingMessage(null); };
 
   const deleteMessage = async (msgId) => {
-    if (!window.confirm("Delete this message?")) return;
+    if (!(await confirmDialog({ title: "Delete this message?", danger: true }))) return;
     try {
       await api.delete(`/conversations/${activeId}/messages/${msgId}`);
       setMessages(prev => prev.filter(m => m.id !== msgId));
@@ -1290,7 +1291,7 @@ export default function Messages() {
   };
 
   const leaveConversation = async (convId) => {
-    if (!window.confirm("Leave this conversation? You won't receive new messages.")) return;
+    if (!(await confirmDialog({ title: "Leave this conversation? You won't receive new messages.", danger: true }))) return;
     try {
       await api.post(`/conversations/${convId}/leave`);
       navigate("/messages");

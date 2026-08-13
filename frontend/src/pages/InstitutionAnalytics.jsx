@@ -11,6 +11,7 @@ import {
   GraduationCap, Briefcase, Download, Clock, AlertTriangle,
 } from "lucide-react";
 import api from "@/lib/api";
+import { toast } from "sonner";
 import { userTypeLabel } from "@/lib/userTypes";
 import { NAVY } from "@/lib/tokens";
 import {
@@ -980,7 +981,7 @@ function ExportButton() {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      alert("Export failed — please try again.");
+      toast.error("Export failed — please try again.");
     } finally {
       setLoading(false);
     }

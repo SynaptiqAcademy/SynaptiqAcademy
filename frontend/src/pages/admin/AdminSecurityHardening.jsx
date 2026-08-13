@@ -12,6 +12,7 @@ import {
   Card, Button, Input, Textarea, FormSelect, Badge, Alert,
   NavTabs, DataTable, StatCard, StatGrid, ProgressBar,
 } from "@/components/ds";
+import { confirmDialog } from "@/lib/confirm";
 
 // ── data hook ─────────────────────────────────────────────────────────────────
 function useApi(path) {
@@ -47,7 +48,7 @@ function DevicesTab() {
     fetch();
   };
   const revokeAll = async () => {
-    if (!window.confirm("Revoke ALL trusted devices? You will need to complete MFA on next login from every device.")) return;
+    if (!(await confirmDialog({ title: "Revoke ALL trusted devices? You will need to complete MFA on next login from every device.", danger: true }))) return;
     await api.delete("/admin/hardening/devices");
     fetch();
   };
@@ -104,12 +105,12 @@ function SessionsTab() {
     fetch();
   };
   const terminateAll = async () => {
-    if (!window.confirm("Terminate all active sessions? You will be logged out.")) return;
+    if (!(await confirmDialog({ title: "Terminate all active sessions? You will be logged out.", danger: false }))) return;
     await api.post("/admin/hardening/sessions/terminate-all");
     fetch();
   };
   const emergencyLogout = async () => {
-    if (!window.confirm("Emergency logout will revoke ALL sessions AND all trusted devices. Proceed?")) return;
+    if (!(await confirmDialog({ title: "Emergency logout will revoke ALL sessions AND all trusted devices. Proceed?", danger: true }))) return;
     await api.post("/admin/hardening/sessions/emergency-logout");
     window.location.href = "/login";
   };

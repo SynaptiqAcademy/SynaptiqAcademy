@@ -12,6 +12,7 @@ import {
   getMonitorAlerts, runMonitors, listSchedules,
   createMission,
 } from "../services/araEngine";
+import { toast } from "sonner";
 import MissionCard from "../components/ara/MissionCard";
 import MissionPlanner from "../components/ara/MissionPlanner";
 import ApprovalGate from "../components/ara/ApprovalGate";
@@ -65,7 +66,7 @@ function NewMissionForm({ onCreated, onClose }) {
       const res = await createMission(form);
       onCreated && onCreated(res.data);
     } catch (err) {
-      alert("Failed to create mission: " + (err?.response?.data?.detail || err.message));
+      toast.error("Failed to create mission: " + (err?.response?.data?.detail || err.message));
     } finally {
       setLoading(false);
     }

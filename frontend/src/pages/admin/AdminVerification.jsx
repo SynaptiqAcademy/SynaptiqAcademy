@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "@/lib/api";
+import { toast } from "sonner";
 import { ShieldCheck, AlertTriangle, CheckCircle, Clock, Users } from "lucide-react";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
@@ -40,7 +41,7 @@ export default function AdminVerification() {
       await api.post(`/verification/admin/request/${rid}/decide`, { decision, notes: "" });
       setQueue((q) => q.filter((r) => r.id !== rid));
     } catch (e) {
-      alert(e?.response?.data?.detail || "Failed");
+      toast.error(e?.response?.data?.detail || "Failed");
     }
   };
 

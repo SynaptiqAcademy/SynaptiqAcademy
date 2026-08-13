@@ -22,6 +22,7 @@ import { Spinner } from "@/components/ds/LoadingState";
 import { Modal } from "@/components/ds/Modal";
 import { NavTabs } from "@/components/ds/NavTabs";
 import { Callout, InlineError, Alert } from "@/components/ds/Alert";
+import { confirmDialog } from "@/lib/confirm";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -1083,7 +1084,7 @@ function SettingsTab({ requestId, request, user, onUpdate }) {
   };
 
   const handleArchive = async () => {
-    if (!window.confirm("Archive this review request? This cannot be undone.")) return;
+    if (!(await confirmDialog({ title: "Archive this review request? This cannot be undone.", danger: true }))) return;
     setArchiving(true);
     try {
       const res = await api.patch(`/reviewer-marketplace/requests/${requestId}`, { status: "archived" });
@@ -1245,7 +1246,7 @@ export default function ReviewWorkspace() {
   };
 
   const handleCloseRequest = async () => {
-    if (!window.confirm("Close this review request?")) return;
+    if (!(await confirmDialog({ title: "Close this review request?", danger: true }))) return;
     setClosing(true);
     try {
       const res = await api.patch(`/reviewer-marketplace/requests/${id}`, { status: "completed" });

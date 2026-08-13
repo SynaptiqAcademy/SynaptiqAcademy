@@ -35,6 +35,7 @@ import {
   BrainCircuit, BookMarked, Microscope, PenLine, AlignLeft, Sparkles,
   Coins, ArrowRight, Info, AlertTriangle, Clock, GitBranch, ListTodo,
 } from "lucide-react";
+import { confirmDialog } from "@/lib/confirm";
 
 const TABS = [
   { key: "overview",      label: "Overview"      },
@@ -316,7 +317,7 @@ export default function WorkspaceDetail() {
   };
 
   const removeMember = async (uid) => {
-    if (!confirm("Remove this member from the workspace?")) return;
+    if (!(await confirmDialog({ title: "Remove this member from the workspace?", danger: true }))) return;
     try {
       await api.delete(`/workspaces/${id}/members/${uid}`);
       toast.success("Member removed"); load();
@@ -324,7 +325,7 @@ export default function WorkspaceDetail() {
   };
 
   const leaveWorkspace = async () => {
-    if (!confirm("Leave this workspace? You'll lose access unless re-invited.")) return;
+    if (!(await confirmDialog({ title: "Leave this workspace? You'll lose access unless re-invited.", danger: true }))) return;
     try {
       await api.post(`/workspaces/${id}/leave`);
       toast.success("You left the workspace");
@@ -334,7 +335,7 @@ export default function WorkspaceDetail() {
 
   const transferOwnership = async () => {
     if (!transferTarget) { toast.error("Select a member"); return; }
-    if (!confirm(`Transfer ownership to ${(ws?.members_info || []).find((m) => m.id === transferTarget)?.full_name}?`)) return;
+    if (!(await confirmDialog({ title: `Transfer ownership to ${(ws?.members_info || []).find((m) => m.id === transferTarget)?.full_name}?`, danger: false }))) return;
     try {
       await api.post(`/workspaces/${id}/transfer`, { new_owner_id: transferTarget });
       toast.success("Ownership transferred"); setShowTransfer(false); load();

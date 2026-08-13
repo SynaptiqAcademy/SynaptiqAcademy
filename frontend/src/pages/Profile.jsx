@@ -37,6 +37,7 @@ import {
   USER_TYPE_LABELS, PRIMARY_DOMAIN_LABELS,
   USER_TYPE_OPTIONS, PRIMARY_DOMAIN_OPTIONS,
 } from "../lib/userTypes";
+import { confirmDialog } from "@/lib/confirm";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const BORDER = "#E4E8EF";
@@ -1637,8 +1638,8 @@ function EditProfile({ profile, onClose }) {
         </Button>
         <Button
           variant="outline"
-          onClick={() => {
-            if (dirty && !window.confirm("Discard unsaved changes?")) return;
+          onClick={async () => {
+            if (dirty && !(await confirmDialog({ title: "Discard unsaved changes?", danger: true }))) return;
             onClose();
           }}
         >

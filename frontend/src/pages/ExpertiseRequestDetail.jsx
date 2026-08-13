@@ -19,6 +19,7 @@ import { Tag } from "@/components/ds/Tag";
 import { Button } from "@/components/ds/Button";
 import { Textarea } from "@/components/ds/Textarea";
 import { Modal } from "@/components/ds/Modal";
+import { confirmDialog } from "@/lib/confirm";
 
 const KIND_LABEL = {
   co_author: "Co-author", statistician: "Statistician", methodology: "Methodology expert",
@@ -68,7 +69,7 @@ export default function ExpertiseRequestDetail() {
   };
 
   const close = async () => {
-    if (!confirm("Close this request?")) return;
+    if (!(await confirmDialog({ title: "Close this request?", danger: true }))) return;
     try {
       await api.post(`/expertise/${id}/close`);
       toast.success("Closed");
@@ -77,7 +78,7 @@ export default function ExpertiseRequestDetail() {
   };
 
   const del = async () => {
-    if (!confirm("Delete this request? This cannot be undone.")) return;
+    if (!(await confirmDialog({ title: "Delete this request? This cannot be undone.", danger: true }))) return;
     try {
       await api.delete(`/expertise/${id}`);
       toast.success("Deleted");
@@ -290,7 +291,7 @@ function AttachmentsSection({ requestId, isOwner }) {
   };
 
   const detach = async (fileId) => {
-    if (!confirm("Remove this attachment from the request?")) return;
+    if (!(await confirmDialog({ title: "Remove this attachment from the request?", danger: true }))) return;
     try { await api.delete(`/expertise/${requestId}/attachments/${fileId}`); toast.success("Removed"); load(); }
     catch { toast.error("Failed"); }
   };

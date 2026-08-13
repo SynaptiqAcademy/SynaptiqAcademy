@@ -19,6 +19,7 @@ import { NavTabs } from "@/components/ds/NavTabs";
 import { StatCard, StatGrid } from "@/components/ds/StatCard";
 import { ProgressBar } from "@/components/ds/Progress";
 import { ResearchLayout } from "@/layouts";
+import { confirmDialog } from "@/lib/confirm";
 
 // ── constants ──────────────────────────────────────────────────────────────────
 
@@ -293,7 +294,7 @@ export default function GrantApplicationDetail() {
   };
 
   const restoreVersion = async (v) => {
-    if (!window.confirm(`Restore to version ${v}? Current state will be auto-snapshotted.`)) return;
+    if (!(await confirmDialog({ title: `Restore to version ${v}? Current state will be auto-snapshotted.`, danger: false }))) return;
     try {
       await api.post(`/grant-applications/${id}/versions/${v}/restore`);
       toast.success(`Restored to v${v}`);
@@ -302,7 +303,7 @@ export default function GrantApplicationDetail() {
   };
 
   const deleteApplication = async () => {
-    if (!window.confirm("Permanently delete this application? This cannot be undone.")) return;
+    if (!(await confirmDialog({ title: "Permanently delete this application? This cannot be undone.", danger: true }))) return;
     try {
       await api.delete(`/grant-applications/${id}`);
       toast.success("Application deleted");

@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ds/Textarea";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { NavTabs } from "@/components/ds/NavTabs";
 import { ResearchLayout } from "@/layouts";
+import { confirmDialog } from "@/lib/confirm";
 
 const SUBJECTS = ["Mathematics","Economics","Management","Computer Science","Medicine","Engineering","Psychology","Education","Sciences","Humanities","Law","Business","History","Literature","Physics","Chemistry","Biology","Sociology","Political Science","Philosophy"];
 const LEVELS   = ["secondary","undergraduate","graduate","professional","adult","other"];
@@ -98,7 +99,7 @@ export default function LessonPlanDetail() {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Delete this lesson plan? This cannot be undone.")) return;
+    if (!(await confirmDialog({ title: "Delete this lesson plan? This cannot be undone.", danger: true }))) return;
     try {
       await api.delete(`/teaching/lessons/${lessonId}`);
       toast.success("Lesson deleted");

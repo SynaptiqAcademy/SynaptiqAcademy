@@ -21,6 +21,7 @@ import { List, ListItem } from "@/components/ds/List";
 import { StatCard } from "@/components/ds/StatCard";
 import { EvidencePanel } from "@/components/ds/AIComponents";
 import { Spinner } from "@/components/ds/LoadingState";
+import { confirmDialog } from "@/lib/confirm";
 
 // ── Tabs ─────────────────────────────────────────────────────────────────────
 
@@ -371,7 +372,7 @@ function SettingsTab({ twin, onRefresh }) {
   }
 
   async function handleReset() {
-    if (!window.confirm("Reset all learned preferences? This cannot be undone.")) return;
+    if (!(await confirmDialog({ title: "Reset all learned preferences? This cannot be undone.", danger: true }))) return;
     setResetting(true);
     try {
       await resetPreferences();

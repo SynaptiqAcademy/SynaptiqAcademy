@@ -11,6 +11,7 @@ import {
   RelatedEntityPanel, SmartActionsBar, Timeline, TimelineItem, Banner,
 } from "@/components/ds";
 import { useAdminRealtime } from "@/contexts/AdminRealtimeContext";
+import { confirmDialog } from "@/lib/confirm";
 
 const TABS = ["Overview", "Timeline", "Actions"];
 
@@ -241,8 +242,8 @@ export default function AdminUserDetail() {
           {
             label: "Force Sign Out",
             variant: "ghost",
-            onClick: () => {
-              if (window.confirm("Force sign out all sessions for this user?")) action("force-logout");
+            onClick: async () => {
+              if (await confirmDialog({ title: "Force sign out all sessions for this user?" })) action("force-logout");
             },
           },
           { label: "Grant Credits", variant: "ghost", onClick: () => jumpToAction("action-credits") },

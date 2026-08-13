@@ -20,6 +20,7 @@ import { FormSelect } from "@/components/ds/FormSelect";
 import { NavTabs } from "@/components/ds/NavTabs";
 import { List, ListItem } from "@/components/ds/List";
 import { ResearchLayout } from "@/layouts";
+import { confirmDialog } from "@/lib/confirm";
 
 // ─── Role display helpers ─────────────────────────────────────────────────────
 
@@ -453,7 +454,7 @@ export default function TeachingWorkspaceDetail() {
 
   // ── Delete workspace ──────────────────────────────────────────────────────
   const handleDelete = async () => {
-    if (!window.confirm("Delete this workspace and all its data? This cannot be undone.")) return;
+    if (!(await confirmDialog({ title: "Delete this workspace and all its data? This cannot be undone.", danger: true }))) return;
     try {
       await api.delete(`/teaching/workspaces/${workspaceId}`);
       toast.success("Workspace deleted");

@@ -22,6 +22,7 @@ import {
   FileText, Activity, BookOpen, Eye, MoreHorizontal,
   Trash2, PenLine, UserCheck, Clock,
 } from "lucide-react";
+import { confirmDialog } from "@/lib/confirm";
 
 const BORDER = "#E4E8EF";
 
@@ -102,7 +103,7 @@ export default function TeamHome() {
   };
 
   const handleLeave = async () => {
-    if (!window.confirm("Leave this team?")) return;
+    if (!(await confirmDialog({ title: "Leave this team?", danger: true }))) return;
     setBusy(true);
     try {
       await api.post(`/network/groups/${id}/leave`);

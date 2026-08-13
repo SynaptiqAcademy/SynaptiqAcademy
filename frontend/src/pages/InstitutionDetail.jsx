@@ -20,6 +20,7 @@ import {
   SkeletonCard, Card, Button, Badge, StatCard, StatGrid,
   EmptyState, Modal, Input, FormSelect, Textarea,
 } from "@/components/ds";
+import { confirmDialog } from "@/lib/confirm";
 
 const TAB_LIST = ["overview", "researchers", "units", "publications", "funding", "reputation", "collaboration", "govern"];
 const TAB_LABEL = {
@@ -519,7 +520,7 @@ function GovernTab({ id, inst, onChanged }) {
     } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
   };
   const revoke = async (uid) => {
-    if (!confirm("Revoke this member?")) return;
+    if (!(await confirmDialog({ title: "Revoke this member?", danger: true }))) return;
     await api.post(`/institutions/${id}/members/${uid}/revoke`);
     toast.success("Revoked"); load();
   };
