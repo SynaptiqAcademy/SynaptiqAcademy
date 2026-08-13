@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { Save, CheckCircle } from "lucide-react";
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -24,14 +24,14 @@ export default function NetworkSettings() {
 
   useEffect(() => {
     setLoading(true);
-    axios.get("/api/network/settings").then(r => setSettings(r.data)).catch(() => {}).finally(() => setLoading(false));
+    api.get("/network/settings").then(r => setSettings(r.data)).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const handleSave = async () => {
     if (!settings) return;
     setSaving(true);
     try {
-      await axios.put("/api/network/settings", settings);
+      await api.put("/network/settings", settings);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch { } finally { setSaving(false); }

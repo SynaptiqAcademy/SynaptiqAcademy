@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { Search } from "lucide-react";
 import { NAVY, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -31,7 +31,7 @@ export default function ProjectsDiscovery() {
     setLoading(true);
     try {
       const params = { page: pg, limit: 20, ...Object.fromEntries(Object.entries(f).filter(([, v]) => v)) };
-      const r = await axios.get("/api/network/projects", { params });
+      const r = await api.get("/network/projects", { params });
       setResults(r.data.results || []);
       setTotal(r.data.total || 0);
       setPages(r.data.pages || 1);

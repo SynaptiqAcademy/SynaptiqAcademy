@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { MessageSquare, Plus, Users, ChevronRight, Send } from "lucide-react";
 import { NAVY, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -55,7 +55,7 @@ function CommunityDetail({ community, onClose }) {
 
   const fetchPosts = useCallback(async () => {
     try {
-      const r = await axios.get(`/api/network/communities/${community.id}/posts`);
+      const r = await api.get(`/network/communities/${community.id}/posts`);
       setPosts(r.data.results || []);
     } catch { }
   }, [community.id]);
@@ -66,7 +66,7 @@ function CommunityDetail({ community, onClose }) {
     if (!form.content.trim()) return;
     setPosting(true);
     try {
-      await axios.post("/api/network/communities/posts", { ...form, community_id: community.id });
+      await api.post("/network/communities/posts", { ...form, community_id: community.id });
       setForm(f => ({ ...f, content: "", title: "" }));
       fetchPosts();
     } catch { } finally { setPosting(false); }
@@ -122,7 +122,7 @@ function CreateCommunityModal({ onClose, onCreate }) {
   const handleSubmit = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
-    try { await axios.post("/api/network/communities", form); onCreate(); onClose(); }
+    try { await api.post("/network/communities", form); onCreate(); onClose(); }
     catch { setSaving(false); }
   };
 
@@ -177,14 +177,14 @@ export default function Communities() {
       const params = { limit: 30 };
       if (q) params.q = q;
       if (topicFilter) params.topic = topicFilter;
-      const r = await axios.get("/api/network/communities", { params });
+      const r = await api.get("/network/communities", { params });
       setResults(r.data.results || []);
       setTotal(r.data.total || 0);
     } catch { } finally { setLoading(false); }
   }, [q, topicFilter]);
 
   const fetchMyCommunities = useCallback(async () => {
-    try { const r = await axios.get("/api/network/communities/mine"); setMyCommunities(r.data || []); } catch { }
+    try { const r = await api.get("/network/communities/mine"); setMyCommunities(r.data || []); } catch { }
   }, []);
 
   // Only auto-fetch on mount; subsequent searches are user-triggered (Enter / Search button).
@@ -192,8 +192,8 @@ export default function Communities() {
   useEffect(() => { fetchCommunitiesRef.current = fetchCommunities; }, [fetchCommunities]);
   useEffect(() => { fetchCommunitiesRef.current(); fetchMyCommunities(); }, [fetchMyCommunities]);
 
-  const handleJoin = async id => { await axios.post(`/api/network/communities/${id}/join`); fetchCommunities(); fetchMyCommunities(); };
-  const handleLeave = async id => { await axios.post(`/api/network/communities/${id}/leave`); fetchCommunities(); fetchMyCommunities(); };
+  const handleJoin = async id => { await api.post(`/network/communities/${id}/join`); fetchCommunities(); fetchMyCommunities(); };
+  const handleLeave = async id => { await api.post(`/network/communities/${id}/leave`); fetchCommunities(); fetchMyCommunities(); };
 
   return (
     <ResearchLayout

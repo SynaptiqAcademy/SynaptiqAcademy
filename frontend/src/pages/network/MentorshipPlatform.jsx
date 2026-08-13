@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { UserCheck, Star, X } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -65,7 +65,7 @@ function RequestModal({ mentor, onClose, onSuccess }) {
   const handleSubmit = async () => {
     setSaving(true); setError("");
     try {
-      const r = await axios.post("/api/network/mentors/request", form);
+      const r = await api.post("/network/mentors/request", form);
       if (r.data.error) { setError(r.data.error); setSaving(false); return; }
       onSuccess(); onClose();
     } catch (e) { setError(e.response?.data?.detail || "Failed to send request"); setSaving(false); }
@@ -131,7 +131,7 @@ function BecomeMentorModal({ onClose, onSuccess }) {
 
   const handleSubmit = async () => {
     setSaving(true);
-    try { await axios.post("/api/network/mentors/me", form); onSuccess(); onClose(); }
+    try { await api.post("/network/mentors/me", form); onSuccess(); onClose(); }
     catch { setSaving(false); }
   };
 
@@ -206,7 +206,7 @@ export default function MentorshipPlatform() {
     setLoading(true);
     try {
       const params = { limit: 20, ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)) };
-      const r = await axios.get("/api/network/mentors", { params });
+      const r = await api.get("/network/mentors", { params });
       setMentors(r.data.results || []);
       setTotal(r.data.total || 0);
     } catch { } finally { setLoading(false); }
@@ -214,14 +214,14 @@ export default function MentorshipPlatform() {
 
   const fetchMyRequests = useCallback(async () => {
     try {
-      const r = await axios.get("/api/network/mentors/requests?role=mentee");
+      const r = await api.get("/network/mentors/requests?role=mentee");
       setMyRequests(r.data || []);
     } catch { }
   }, []);
 
   const fetchMyProfile = useCallback(async () => {
     try {
-      const r = await axios.get("/api/network/mentors/me");
+      const r = await api.get("/network/mentors/me");
       setMyProfile(r.data);
     } catch { }
   }, []);

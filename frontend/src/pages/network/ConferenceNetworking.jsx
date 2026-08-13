@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { Plus, MapPin, Clock, Users, CheckCircle } from "lucide-react";
 import { NAVY, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -54,7 +54,7 @@ function CreateEventModal({ onClose, onCreate }) {
   const handleSubmit = async () => {
     if (!form.title.trim()) return;
     setSaving(true);
-    try { await axios.post("/api/network/events", { ...form, capacity: Number(form.capacity) }); onCreate(); onClose(); }
+    try { await api.post("/network/events", { ...form, capacity: Number(form.capacity) }); onCreate(); onClose(); }
     catch { setSaving(false); }
   };
 
@@ -155,7 +155,7 @@ export default function ConferenceNetworking() {
     try {
       const params = { limit: 30 };
       if (typeFilter) params.type = typeFilter;
-      const r = await axios.get("/api/network/events", { params });
+      const r = await api.get("/network/events", { params });
       setEvents(r.data.results || []);
       setTotal(r.data.total || 0);
     } catch { } finally { setLoading(false); }
@@ -163,7 +163,7 @@ export default function ConferenceNetworking() {
 
   const fetchMyEvents = useCallback(async () => {
     try {
-      const r = await axios.get("/api/network/events/mine");
+      const r = await api.get("/network/events/mine");
       setMyEvents(r.data || { registered: [], organized: [] });
       setRegisteredIds(new Set((r.data?.registered || []).map(e => e.id)));
     } catch { }
@@ -173,8 +173,8 @@ export default function ConferenceNetworking() {
   useEffect(() => { fetchEventsRef.current = fetchEvents; }, [fetchEvents]);
   useEffect(() => { fetchEventsRef.current(); fetchMyEvents(); }, [fetchMyEvents]);
 
-  const handleRegister = async id => { await axios.post(`/api/network/events/${id}/register`); fetchEvents(); fetchMyEvents(); };
-  const handleUnregister = async id => { await axios.post(`/api/network/events/${id}/unregister`); fetchEvents(); fetchMyEvents(); };
+  const handleRegister = async id => { await api.post(`/network/events/${id}/register`); fetchEvents(); fetchMyEvents(); };
+  const handleUnregister = async id => { await api.post(`/network/events/${id}/unregister`); fetchEvents(); fetchMyEvents(); };
 
   return (
     <ResearchLayout

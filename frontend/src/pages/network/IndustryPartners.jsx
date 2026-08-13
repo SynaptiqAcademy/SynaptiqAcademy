@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { Search, ArrowRight } from "lucide-react";
 import { NAVY, WARM, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -25,7 +25,7 @@ export default function IndustryPartners() {
     try {
       const params = { page: pg, limit: 20, type: "industry" };
       if (q) params.q = q;
-      const r = await axios.get("/api/network/institutions", { params });
+      const r = await api.get("/network/institutions", { params });
       setResults(r.data.results || []);
       setTotal(r.data.total || 0);
     } catch { setResults([]); } finally { setLoading(false); }

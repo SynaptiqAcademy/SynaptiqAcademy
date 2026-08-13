@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { Plus, Search, Clock } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -60,7 +60,7 @@ function ApplyModal({ collab, onClose, onSuccess }) {
   const handleSubmit = async () => {
     setSaving(true); setError("");
     try {
-      const r = await axios.post(`/api/network/collaborations/${collab.id}/apply`, form);
+      const r = await api.post(`/network/collaborations/${collab.id}/apply`, form);
       if (r.data.error) { setError(r.data.error); setSaving(false); return; }
       onSuccess();
       onClose();
@@ -129,7 +129,7 @@ function CreateCollabModal({ onClose, onCreate }) {
     if (!form.title.trim()) return;
     setSaving(true);
     try {
-      await axios.post("/api/network/collaborations", form);
+      await api.post("/network/collaborations", form);
       onCreate(); onClose();
     } catch { setSaving(false); }
   };
@@ -214,7 +214,7 @@ export default function OpenCollaborations() {
       const params = { limit: 30 };
       if (q) params.q = q;
       if (typeFilter) params.type = typeFilter;
-      const r = await axios.get("/api/network/collaborations", { params });
+      const r = await api.get("/network/collaborations", { params });
       setResults(r.data.results || []);
       setTotal(r.data.total || 0);
     } catch { } finally { setLoading(false); }
@@ -222,7 +222,7 @@ export default function OpenCollaborations() {
 
   const fetchMine = useCallback(async () => {
     try {
-      const r = await axios.get("/api/network/collaborations/mine");
+      const r = await api.get("/network/collaborations/mine");
       setMine(r.data || { owned: [], applied: [] });
     } catch { }
   }, []);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { Brain, RefreshCw, X, ArrowRight, Loader } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -53,7 +53,7 @@ export default function NetworkRecommendations() {
     setLoading(true);
     try {
       const params = catFilter ? { category: catFilter } : {};
-      const r = await axios.get("/api/network/recommendations", { params });
+      const r = await api.get("/network/recommendations", { params });
       setRecs(r.data || []);
     } catch { } finally { setLoading(false); }
   }, [catFilter]);
@@ -63,13 +63,13 @@ export default function NetworkRecommendations() {
   const handleGenerate = async () => {
     setGenerating(true);
     try {
-      await axios.post("/api/network/recommendations/generate");
+      await api.post("/network/recommendations/generate");
       setTimeout(() => { setGenerating(false); fetchRecs(); }, 2500);
     } catch { setGenerating(false); }
   };
 
   const handleDismiss = async id => {
-    await axios.post(`/api/network/recommendations/${id}/dismiss`);
+    await api.post(`/network/recommendations/${id}/dismiss`);
     setRecs(r => r.filter(x => x.id !== id));
   };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { Plus, Users, Search, Lock } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -64,7 +64,7 @@ function CreateModal({ onClose, onCreate }) {
     if (!form.name.trim()) return;
     setSaving(true);
     try {
-      await axios.post("/api/network/groups", form);
+      await api.post("/network/groups", form);
       onCreate();
       onClose();
     } catch { setSaving(false); }
@@ -135,7 +135,7 @@ export default function ResearchGroups() {
       const params = { limit: 30 };
       if (q) params.q = q;
       if (typeFilter) params.type = typeFilter;
-      const r = await axios.get("/api/network/groups", { params });
+      const r = await api.get("/network/groups", { params });
       setResults(r.data.results || []);
       setTotal(r.data.total || 0);
     } catch { } finally { setLoading(false); }
@@ -143,7 +143,7 @@ export default function ResearchGroups() {
 
   const fetchMyGroups = useCallback(async () => {
     try {
-      const r = await axios.get("/api/network/groups/mine");
+      const r = await api.get("/network/groups/mine");
       setMyGroups(r.data || []);
     } catch { }
   }, []);
@@ -153,12 +153,12 @@ export default function ResearchGroups() {
   useEffect(() => { fetchGroupsRef.current(); fetchMyGroups(); }, [fetchMyGroups]);
 
   const handleJoin = async (id) => {
-    await axios.post(`/api/network/groups/${id}/join`);
+    await api.post(`/network/groups/${id}/join`);
     fetchGroups(); fetchMyGroups();
   };
 
   const handleLeave = async (id) => {
-    await axios.post(`/api/network/groups/${id}/leave`);
+    await api.post(`/network/groups/${id}/leave`);
     fetchGroups(); fetchMyGroups();
   };
 

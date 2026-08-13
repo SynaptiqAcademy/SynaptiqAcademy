@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   Users, Building2, Layers, Handshake, Calendar,
   MessageSquare, UserCheck, Brain, Search, ArrowRight,
@@ -26,7 +26,7 @@ export default function DiscoveryHome() {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    axios.get("/api/network/stats").then(r => setStats(r.data)).catch(() => {});
+    api.get("/network/stats").then(r => setStats(r.data)).catch(() => {});
   }, []);
 
   const handleSearch = e => {

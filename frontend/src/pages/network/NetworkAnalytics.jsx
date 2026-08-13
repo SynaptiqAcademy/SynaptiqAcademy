@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { Users, Handshake, Layers, MessageSquare, Calendar, Award } from "lucide-react";
 import { NAVY, WARM, ACCENT, EMERALD, WHITE, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -58,10 +58,10 @@ export default function NetworkAnalytics() {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      axios.get("/api/network/analytics/overview"),
-      axios.get("/api/network/analytics/platform"),
-      axios.get("/api/network/analytics/collaborations"),
-      axios.get("/api/network/analytics/groups"),
+      api.get("/network/analytics/overview"),
+      api.get("/network/analytics/platform"),
+      api.get("/network/analytics/collaborations"),
+      api.get("/network/analytics/groups"),
     ]).then(([o, p, c, g]) => {
       setOverview(o.data);
       setPlatform(p.data);

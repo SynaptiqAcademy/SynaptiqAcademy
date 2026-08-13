@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { Radio, Plus, BookOpen, Trophy, Handshake, Calendar, Star, Layers, Megaphone, Globe } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -61,7 +61,7 @@ function PostActivityModal({ onClose, onSuccess }) {
   const handleSubmit = async () => {
     if (!form.title.trim()) return;
     setSaving(true);
-    try { await axios.post("/api/network/activity", form); onSuccess(); onClose(); }
+    try { await api.post("/network/activity", form); onSuccess(); onClose(); }
     catch { setSaving(false); }
   };
 
@@ -113,14 +113,14 @@ export default function ActivityCenter() {
   const fetchFeed = async (pg = 1) => {
     setLoading(true);
     try {
-      const r = await axios.get("/api/network/activity", { params: { page: pg, limit: 30 } });
+      const r = await api.get("/network/activity", { params: { page: pg, limit: 30 } });
       setFeed(r.data.results || []);
       setTotal(r.data.total || 0);
     } catch { } finally { setLoading(false); }
   };
 
   const fetchMyActivity = async () => {
-    try { const r = await axios.get("/api/network/activity/mine"); setMyActivity(r.data.results || []); } catch { }
+    try { const r = await api.get("/network/activity/mine"); setMyActivity(r.data.results || []); } catch { }
   };
 
   useEffect(() => { fetchFeed(); fetchMyActivity(); }, []);

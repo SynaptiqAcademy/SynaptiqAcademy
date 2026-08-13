@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { BookOpen, Plus, Users } from "lucide-react";
 import { NAVY, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -15,7 +15,7 @@ export default function TeachingCommunities() {
   const fetchGroups = async () => {
     setLoading(true);
     try {
-      const r = await axios.get("/api/network/groups", { params: { type: "teaching_community", limit: 30 } });
+      const r = await api.get("/network/groups", { params: { type: "teaching_community", limit: 30 } });
       setGroups(r.data.results || []);
     } catch { } finally { setLoading(false); }
   };
@@ -26,13 +26,13 @@ export default function TeachingCommunities() {
     if (!form.name.trim()) return;
     setSaving(true);
     try {
-      await axios.post("/api/network/groups", { ...form, type: "teaching_community" });
+      await api.post("/network/groups", { ...form, type: "teaching_community" });
       fetchGroups(); setShowCreate(false); setForm({ name: "", description: "", discipline: "", visibility: "public" });
     } catch { } finally { setSaving(false); }
   };
 
-  const handleJoin = async id => { await axios.post(`/api/network/groups/${id}/join`); fetchGroups(); };
-  const handleLeave = async id => { await axios.post(`/api/network/groups/${id}/leave`); fetchGroups(); };
+  const handleJoin = async id => { await api.post(`/network/groups/${id}/join`); fetchGroups(); };
+  const handleLeave = async id => { await api.post(`/network/groups/${id}/leave`); fetchGroups(); };
 
   return (
     <ResearchLayout

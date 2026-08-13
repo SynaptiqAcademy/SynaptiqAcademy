@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { Bookmark, Trash2, FileText, Building2, Layers, MessageSquare, Handshake, Calendar } from "lucide-react";
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -49,7 +49,7 @@ export default function SavedOpportunities() {
     setLoading(true);
     try {
       const params = typeFilter ? { item_type: typeFilter } : {};
-      const r = await axios.get("/api/network/saved", { params });
+      const r = await api.get("/network/saved", { params });
       setSaved(r.data || { items: [], by_type: {}, total: 0 });
     } catch { } finally { setLoading(false); }
   }, [typeFilter]);
@@ -57,7 +57,7 @@ export default function SavedOpportunities() {
   useEffect(() => { fetchSaved(); }, [fetchSaved]);
 
   const handleUnsave = async item => {
-    await axios.delete("/api/network/saved", { data: { item_type: item.item_type, item_id: item.item_id } });
+    await api.delete("/network/saved", { data: { item_type: item.item_type, item_id: item.item_id } });
     fetchSaved();
   };
 
