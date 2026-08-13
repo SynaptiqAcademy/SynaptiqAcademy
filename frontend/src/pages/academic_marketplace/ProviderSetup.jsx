@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { ResearchLayout } from "@/layouts";
 import { Card, Input, Textarea, FormSelect, Tag, TagGroup, Button, Alert } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
@@ -116,10 +117,10 @@ export default function ProviderSetup() {
 
           {existing && (
             <div className="mt-4 flex gap-3">
-              <Button as="a" href="/academic-marketplace/services/create" variant="ghost" className="flex-1">
+              <Button as={Link} to="/academic-marketplace/services/create" variant="ghost" className="flex-1">
                 Create a Service
               </Button>
-              <Button as="a" href="/academic-marketplace/dashboard" variant="ghost" className="flex-1">
+              <Button as={Link} to="/academic-marketplace/dashboard" variant="ghost" className="flex-1">
                 My Dashboard
               </Button>
             </div>

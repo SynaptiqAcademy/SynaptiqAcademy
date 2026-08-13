@@ -73,6 +73,8 @@ async def list_services(db, filters: dict, page: int = 1, limit: int = 20) -> di
         query["languages"] = lang
     if max_price := filters.get("max_price"):
         query["packages"] = {"$elemMatch": {"price": {"$lte": float(max_price)}}}
+    if provider_user_id := filters.get("provider_user_id"):
+        query["provider_user_id"] = provider_user_id
 
     sort_map = {"rating": ("average_rating", -1), "popular": ("order_count", -1),
                 "newest": ("created_at", -1), "price_asc": ("packages.0.price", 1)}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Package, ChevronRight } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -35,7 +36,7 @@ export default function OrderList() {
     <ResearchLayout
       title="My Orders"
       actions={
-        <Button as="a" href="/academic-marketplace/services">
+        <Button as={Link} to="/academic-marketplace/services">
           Browse Services
         </Button>
       }

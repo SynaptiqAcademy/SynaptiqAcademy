@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams, useSearchParams, useNavigate, Link } from "react-router-dom";
 import { ShieldCheck, Clock } from "lucide-react";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Alert, Textarea, H2, Caption, LoadingOverlay } from "@/components/ds";
@@ -7,9 +8,9 @@ import { fetchApi } from "@/lib/api";
 const API = "/api/acad-market";
 
 export default function OrderPlace() {
-  const parts = window.location.pathname.split("/");
-  const serviceId = parts[parts.length - 1];
-  const params = new URLSearchParams(window.location.search);
+  const { id: serviceId } = useParams();
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
   const pkgTier = params.get("pkg") || "basic";
 
   const [service, setService] = useState(null);
@@ -34,7 +35,7 @@ export default function OrderPlace() {
     });
     const d = await r.json();
     if (d.error) { setMsg({ type: "error", text: d.error }); setPlacing(false); }
-    else { window.location.href = `/academic-marketplace/orders/${d.id}`; }
+    else { navigate(`/academic-marketplace/orders/${d.id}`); }
   };
 
   if (!service) return <LoadingOverlay text="Loading..." />;
@@ -42,7 +43,7 @@ export default function OrderPlace() {
   return (
     <ResearchLayout title="Place Order">
         <div className="mb-2">
-          <a href={`/academic-marketplace/services/${serviceId}`} className="text-crimson-600 text-[13px] no-underline">← Back to Service</a>
+          <Link to={`/academic-marketplace/services/${serviceId}`} className="text-crimson-600 text-[13px] no-underline">← Back to Service</Link>
         </div>
 
         {msg && (

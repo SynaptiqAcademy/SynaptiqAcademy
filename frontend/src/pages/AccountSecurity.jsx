@@ -16,6 +16,7 @@
  * other 2 (uppercase, special char) aren't real server-side rules.
  */
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Lock, ShieldCheck, Monitor, Smartphone, Activity, CheckCircle2, Circle,
@@ -362,9 +363,9 @@ export default function AccountSecurity() {
             <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: 0, lineHeight: 1.5 }}>
               Visit our Help Center or contact support.
             </p>
-            <a href="/help-center" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600, color: NAVY, textDecoration: "none", marginTop: 12 }}>
+            <Link to="/help-center" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600, color: NAVY, textDecoration: "none", marginTop: 12 }}>
               Open Help Center <ArrowRight size={11} />
-            </a>
+            </Link>
           </Card>
         </div>
       </div>

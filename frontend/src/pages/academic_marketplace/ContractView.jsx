@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
 import { CheckCircle, AlertCircle, ShieldCheck } from "lucide-react";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Alert, LoadingOverlay, ErrorState, Caption } from "@/components/ds";
@@ -7,7 +8,7 @@ import { fetchApi } from "@/lib/api";
 const API = "/api/acad-market";
 
 export default function ContractView() {
-  const orderId = window.location.pathname.split("/").pop();
+  const { id: orderId } = useParams();
   const [contract, setContract] = useState(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
@@ -34,7 +35,7 @@ export default function ContractView() {
   return (
     <ResearchLayout title="Academic Services Agreement">
         <div className="mb-2">
-          <a href={`/academic-marketplace/orders/${orderId}`} className="text-crimson-600 text-[13px] no-underline">← Back to Order</a>
+          <Link to={`/academic-marketplace/orders/${orderId}`} className="text-crimson-600 text-[13px] no-underline">← Back to Order</Link>
         </div>
 
         {msg && (

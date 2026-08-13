@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
 import { Star, ShieldCheck } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -8,7 +9,7 @@ import { fetchApi } from "@/lib/api";
 const API = "/api/acad-market";
 
 export default function ProviderProfile() {
-  const userId = window.location.pathname.split("/").pop();
+  const { id: userId } = useParams();
   const [portfolio, setPortfolio] = useState(null);
   const [ratings, setRatings] = useState({ results: [], total: 0 });
   const [summary, setSummary] = useState(null);
@@ -20,13 +21,12 @@ export default function ProviderProfile() {
       fetchApi(`${API}/providers/${userId}/portfolio`).then(r => r.json()),
       fetchApi(`${API}/ratings/providers/${userId}?limit=5`).then(r => r.json()),
       fetchApi(`${API}/ratings/providers/${userId}/summary`).then(r => r.json()),
-      fetchApi(`${API}/services?limit=6`).then(r => r.json()),
+      fetchApi(`${API}/services?provider_user_id=${userId}&limit=6`).then(r => r.json()),
     ]).then(([port, rat, sum, svcs]) => {
       setPortfolio(port);
       setRatings(rat);
       setSummary(sum);
-      const filtered = (svcs.results || []).filter(s => s.provider_user_id === userId);
-      setServices(filtered);
+      setServices(svcs.results || []);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [userId]);
@@ -48,7 +48,7 @@ export default function ProviderProfile() {
   return (
     <ResearchLayout title={p?.display_name || "Provider Profile"} subtitle={p?.headline}>
         <div className="mb-2">
-          <a href="/academic-marketplace/providers" className="text-crimson-600 text-[13px] no-underline">← Back to Providers</a>
+          <Link to="/academic-marketplace/providers" className="text-crimson-600 text-[13px] no-underline">← Back to Providers</Link>
         </div>
 
         {/* Header */}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Briefcase, Star, Package, TrendingUp, DollarSign, AlertCircle, ChevronRight, Zap } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -29,7 +30,7 @@ export default function ProviderDashboard() {
     <EmptyState
       icon={<Briefcase />}
       title="No provider profile yet"
-      action={<Button as="a" href="/academic-marketplace/provider/setup" variant="link" style={{ color: "#8A1538" }}>Set up your provider profile →</Button>}
+      action={<Button as={Link} to="/academic-marketplace/provider/setup" variant="link" style={{ color: "#8A1538" }}>Set up your provider profile →</Button>}
     />
   );
 
@@ -47,10 +48,10 @@ export default function ProviderDashboard() {
       title="Provider Dashboard"
       actions={
         <>
-          <Button as="a" href="/academic-marketplace/services/create">
+          <Button as={Link} to="/academic-marketplace/services/create">
             + Create Service
           </Button>
-          <Button as="a" href="/academic-marketplace/orders?role=provider" variant="ghost">
+          <Button as={Link} to="/academic-marketplace/orders?role=provider" variant="ghost">
             View Orders
           </Button>
         </>
@@ -67,7 +68,7 @@ export default function ProviderDashboard() {
           <Alert variant="warning">
             <div className="flex items-center justify-between gap-3 w-full">
               <span>You have {data.orders.pending} pending order{data.orders.pending !== 1 ? "s" : ""} waiting for your response.</span>
-              <a href="/academic-marketplace/orders?role=provider&status=pending" className="text-[13px] no-underline shrink-0" style={{ color: "#D97706" }}>View →</a>
+              <Link to="/academic-marketplace/orders?role=provider&status=pending" className="text-[13px] no-underline shrink-0" style={{ color: "#D97706" }}>View →</Link>
             </div>
           </Alert>
         )}
@@ -76,14 +77,14 @@ export default function ProviderDashboard() {
           <Card padding="lg" className="mt-5">
             <div className="flex justify-between items-center mb-4">
               <H2 className="m-0" style={{ fontSize: "1.0625rem" }}>Recent Orders</H2>
-              <a href="/academic-marketplace/orders?role=provider" className="text-crimson-600 text-[13px] no-underline">View all →</a>
+              <Link to="/academic-marketplace/orders?role=provider" className="text-crimson-600 text-[13px] no-underline">View all →</Link>
             </div>
             {data.recent_orders.map((o, i) => {
               const c = STATUS_COLORS[o.status] || "#475569";
               return (
-                <a
+                <Link
                   key={o.id}
-                  href={`/academic-marketplace/orders/${o.id}`}
+                  to={`/academic-marketplace/orders/${o.id}`}
                   className={`flex items-center gap-3 pb-3.5 mb-3.5 no-underline ${i < data.recent_orders.length - 1 ? "border-b border-hairline" : ""}`}
                 >
                   <div className="flex-1">
@@ -94,7 +95,7 @@ export default function ProviderDashboard() {
                     {o.status?.replace(/_/g, " ")}
                   </Badge>
                   <ChevronRight size={14} className="text-slate-500" />
-                </a>
+                </Link>
               );
             })}
           </Card>
@@ -105,7 +106,7 @@ export default function ProviderDashboard() {
             <Alert variant="error">
               <div className="flex items-center justify-between gap-3 w-full">
                 <span>{data.disputes.open} open dispute{data.disputes.open !== 1 ? "s" : ""} need attention.</span>
-                <a href="/academic-marketplace/disputes" className="text-crimson-600 text-[13px] no-underline shrink-0">View →</a>
+                <Link to="/academic-marketplace/disputes" className="text-crimson-600 text-[13px] no-underline shrink-0">View →</Link>
               </div>
             </Alert>
           </div>

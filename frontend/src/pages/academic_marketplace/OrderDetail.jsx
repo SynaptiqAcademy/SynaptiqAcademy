@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useParams, Link } from "react-router-dom";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -14,7 +15,7 @@ const STATUS_COLORS = {
 };
 
 export default function OrderDetail() {
-  const id = window.location.pathname.split("/").pop();
+  const { id } = useParams();
   const [order, setOrder] = useState(null);
   const [contract, setContract] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -194,17 +195,17 @@ export default function OrderDetail() {
                 </Button>
               )}
               {order.status === "completed" && (
-                <Button as="a" href={`/academic-marketplace/rate/${id}`} size="sm" className="w-full">
+                <Button as={Link} to={`/academic-marketplace/rate/${id}`} size="sm" className="w-full">
                   Leave a Review
                 </Button>
               )}
               {["accepted", "in_progress", "under_review", "revision_requested"].includes(order.status) && (
-                <a
-                  href={`/academic-marketplace/disputes/new?order=${id}`}
+                <Link
+                  to={`/academic-marketplace/disputes?order=${id}`}
                   className="block text-center border border-crimson-600 text-crimson-600 rounded-md py-2.5 text-[13px] no-underline mt-2"
                 >
                   Open Dispute
-                </a>
+                </Link>
               )}
             </Card>
 
@@ -214,7 +215,7 @@ export default function OrderDetail() {
                 <div className="text-[13px] text-slate-600 mb-2.5">
                   Status: <span className="text-emerald-600 font-semibold">{contract.status}</span>
                 </div>
-                <Button as="a" href={`/academic-marketplace/contracts/${id}`} variant="ghost" size="sm" className="w-full">
+                <Button as={Link} to={`/academic-marketplace/contracts/${id}`} variant="ghost" size="sm" className="w-full">
                   View Contract
                 </Button>
               </Card>

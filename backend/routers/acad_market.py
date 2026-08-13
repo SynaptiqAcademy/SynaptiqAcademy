@@ -227,12 +227,14 @@ async def create_service(data: ServiceIn, user=Depends(get_current_user), db=Dep
 @router.get("/services")
 async def list_services(q: Optional[str] = None, category: Optional[str] = None,
                          language: Optional[str] = None, max_price: Optional[float] = None,
+                         provider_user_id: Optional[str] = None,
                          sort: Optional[str] = "rating",
                          page: int = 1, limit: int = 20,
                          user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     filters = {k: v for k, v in {
-        "q": q, "category": category, "language": language, "max_price": max_price, "sort": sort
+        "q": q, "category": category, "language": language, "max_price": max_price,
+        "provider_user_id": provider_user_id, "sort": sort,
     }.items() if v is not None}
     return await service_engine.list_services(db, filters, page, limit)
 

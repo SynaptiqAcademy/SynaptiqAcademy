@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { ShoppingBag, Star, TrendingUp, Users, Zap, ChevronRight, Award } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { ShoppingBag, Star, TrendingUp, Zap, ChevronRight, Award } from "lucide-react";
 import { NAVY, ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
-import { Card, Grid, StatGrid, StatCard, SearchBar, Button, H2, Caption } from "@/components/ds";
+import { Card, Grid, SearchBar, Button, H2, Caption } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
 export default function MarketplaceHome() {
+  const navigate = useNavigate();
   const [featured, setFeatured] = useState([]);
   const [trending, setTrending] = useState([]);
-  const [stats, setStats] = useState(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +37,7 @@ export default function MarketplaceHome() {
     { key: "research_consulting", label: "Research Consulting", color: NAVY },
   ];
 
-  const runSearch = () => window.location.assign(`/academic-marketplace/services?q=${encodeURIComponent(search)}`);
+  const runSearch = () => navigate(`/academic-marketplace/services?q=${encodeURIComponent(search)}`);
 
   return (
     <ResearchLayout
@@ -58,20 +59,6 @@ export default function MarketplaceHome() {
             <Button onClick={runSearch}>Search</Button>
           </div>
         </div>
-
-        {/* Stats bar */}
-        {stats && (
-          <StatGrid cols={4} className="mb-10">
-            {[
-              { label: "Verified Providers", value: stats.providers, icon: <Users /> },
-              { label: "Active Services", value: stats.services, icon: <ShoppingBag /> },
-              { label: "Completed Orders", value: stats.orders?.completed, icon: <Award /> },
-              { label: "Platform Revenue", value: `$${stats.platform_revenue?.toLocaleString()}`, icon: <TrendingUp /> },
-            ].map(({ label, value, icon }) => (
-              <StatCard key={label} label={label} value={value ?? "—"} icon={icon} />
-            ))}
-          </StatGrid>
-        )}
 
         {/* Categories */}
         <div className="mb-12">
@@ -97,7 +84,7 @@ export default function MarketplaceHome() {
                 <TrendingUp size={18} className="mr-2 align-middle inline" />
                 Trending Services
               </H2>
-              <a href="/academic-marketplace/services" className="text-crimson-600 text-sm font-medium no-underline">View all →</a>
+              <Link to="/academic-marketplace/services" className="text-crimson-600 text-sm font-medium no-underline">View all →</Link>
             </div>
             <Grid cols={3} gap="md">
               {trending.slice(0, 6).map(svc => (
@@ -129,7 +116,7 @@ export default function MarketplaceHome() {
                 <Award size={18} className="mr-2 align-middle inline" />
                 Featured Experts
               </H2>
-              <a href="/academic-marketplace/providers" className="text-crimson-600 text-sm font-medium no-underline">View all →</a>
+              <Link to="/academic-marketplace/providers" className="text-crimson-600 text-sm font-medium no-underline">View all →</Link>
             </div>
             <Grid cols={4} gap="md">
               {featured.map(p => (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { ShoppingBag, AlertCircle, TrendingUp, DollarSign, Users, BarChart3 } from "lucide-react";
 import { AdministrationLayout } from "@/layouts";
 import { Card, H2, StatGrid, StatCard, MiniBar, EmptyState, LoadingOverlay, Caption } from "@/components/ds";
@@ -81,7 +82,7 @@ export default function AdminMarketplace() {
                   <div className="text-sm font-semibold text-navy-700">{d.reason?.replace(/_/g, " ")?.replace(/\b\w/g, l => l.toUpperCase())}</div>
                   <Caption>Order {d.order_id?.slice(-8)?.toUpperCase()} · Opened {new Date(d.opened_at).toLocaleDateString()}</Caption>
                 </div>
-                <a href={`/academic-marketplace/disputes/${d.id}`} className="text-crimson-600 text-[13px] no-underline">Resolve →</a>
+                <Link to={`/academic-marketplace/disputes/${d.id}`} className="text-crimson-600 text-[13px] no-underline">Resolve →</Link>
               </div>
             ))
           )}
