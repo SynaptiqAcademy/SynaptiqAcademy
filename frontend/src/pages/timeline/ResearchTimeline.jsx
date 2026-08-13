@@ -8,7 +8,8 @@ import {
 } from "lucide-react";
 import { NAVY, WARM, BRD, EMERALD, ACCENT, TEXT_SECONDARY, WHITE } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
-import { fetchApi } from "@/lib/api";
+import { fetchApi, BACKEND_URL } from "@/lib/api";
+import { confirmDialog } from "@/lib/confirm";
 
 const API = "/api/timeline";
 
@@ -362,6 +363,7 @@ export default function ResearchTimeline() {
   };
 
   const handleDelete = async (id) => {
+    if (!(await confirmDialog({ title: "Delete this timeline event?", danger: true }))) return;
     await fetchApi(`${API}/events/${id}`, { method: "DELETE", credentials: "include" });
     setEvents(prev => prev.filter(e => e._id !== id));
   };
@@ -415,7 +417,7 @@ export default function ResearchTimeline() {
         <RefreshCw size={13} style={{ animation: syncing ? "spin 1s linear infinite" : "none" }} />
         {syncing ? "Syncing…" : "Sync"}
       </button>
-      <a href={`${API}/export/csv`}
+      <a href={`${BACKEND_URL || "https://api.synaptiq.academy"}${API}/export/csv`}
         style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px",
           borderRadius: 7, background: WHITE, border: `1px solid ${BRD}`,
           color: NAVY, fontSize: 12, fontWeight: 600, textDecoration: "none" }}>
