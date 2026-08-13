@@ -4,6 +4,7 @@ import api from "../lib/api";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 import { Users, Plus, X, Layers, Check, Clock } from "lucide-react";
+import { ResearchLayout } from "@/layouts";
 import { Card } from "@/components/ds/Card";
 import { Button } from "@/components/ds/Button";
 import { Input } from "@/components/ds/Input";
@@ -62,28 +63,31 @@ export default function ConferenceTeam() {
 
   if (error) {
     return (
-      <div className="p-6 text-sm text-slate-500">
-        {error} <Link to="/conferences" className="underline">Back to conferences</Link>
-      </div>
+      <ResearchLayout title="Team not found">
+        <div className="text-sm text-slate-500">
+          {error} <Link to="/conferences" className="underline">Back to conferences</Link>
+        </div>
+      </ResearchLayout>
     );
   }
-  if (!team) return <div className="p-6"><SkeletonCard rows={4} /></div>;
+  if (!team) return <ResearchLayout title="Submission Team"><SkeletonCard rows={4} /></ResearchLayout>;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 p-6">
-      <Link to={`/conferences/${team.conference_id}`} className="text-sm text-slate-500 hover:text-slate-900">
-        ← Back to conference
-      </Link>
-
-      <header className="border-b border-slate-200 pb-5">
-        <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
-          <Users size={12} strokeWidth={1.5} />
-          Submission team
-          <Badge variant={team.status === "forming" ? "warning" : "success"} size="sm">{team.status}</Badge>
-        </div>
-        <h1 className="font-serif text-3xl text-slate-900">{team.title}</h1>
-        {team.description && <p className="mt-2 text-sm text-slate-600">{team.description}</p>}
-      </header>
+    <ResearchLayout
+      title={team.title}
+      subtitle={
+        <span className="inline-flex items-center gap-2">
+          Submission team <Badge variant={team.status === "forming" ? "warning" : "success"} size="sm">{team.status}</Badge>
+        </span>
+      }
+      actions={
+        <Button as={Link} to={`/conferences/${team.conference_id}`} variant="ghost" size="sm">
+          ← Back to conference
+        </Button>
+      }
+    >
+      <div className="max-w-3xl space-y-6">
+      {team.description && <p className="text-sm text-slate-600">{team.description}</p>}
 
       {team.workspace_id && (
         <Card padding="sm" className="flex items-center justify-between">
@@ -136,6 +140,7 @@ export default function ConferenceTeam() {
           </div>
         </Card>
       )}
-    </div>
+      </div>
+    </ResearchLayout>
   );
 }

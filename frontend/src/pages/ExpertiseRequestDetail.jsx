@@ -8,10 +8,11 @@ import api from "../lib/api";
 import { toast } from "sonner";
 import { userTypeLabel } from "../lib/userTypes";
 import {
-  ArrowLeft, Check, X, Trash2, Send, MessageSquare, Briefcase, Building2,
+  ArrowLeft, Check, X, Trash2, Send,
   Calendar, Award, Clock, Paperclip, Eye, Download, Plus,
 } from "lucide-react";
 import PreviewDrawer from "../components/files/PreviewDrawer";
+import { ResearchLayout } from "@/layouts";
 import { Spinner } from "@/components/ds/LoadingState";
 import { Card } from "@/components/ds/Card";
 import { Badge } from "@/components/ds/Badge";
@@ -86,182 +87,171 @@ export default function ExpertiseRequestDetail() {
     } catch (e) { toast.error("Failed"); }
   };
 
-  if (!r) return <div className="py-2 flex justify-center"><Spinner size={14} /></div>;
+  if (!r) return <ResearchLayout title="Expertise Request"><div className="py-2 flex justify-center"><Spinner size={14} /></div></ResearchLayout>;
+
+  const sidebar = (
+    <div className="space-y-4">
+      <Card padding="md">
+        <div className="overline mb-2">Required skills</div>
+        <div className="flex flex-wrap gap-1">
+          {(r.required_skills || []).map((s, i) => (
+            <Tag key={i} size="sm">{s}</Tag>
+          ))}
+          {(r.required_skills || []).length === 0 && <span className="text-xs text-slate-400">None specified</span>}
+        </div>
+      </Card>
+      <Card padding="md">
+        <div className="overline mb-2">Research areas</div>
+        <div className="flex flex-wrap gap-1">
+          {(r.research_areas || []).map((s, i) => (
+            <Badge key={i} variant="default" size="sm">{s}</Badge>
+          ))}
+          {(r.research_areas || []).length === 0 && <span className="text-xs text-slate-400">None specified</span>}
+        </div>
+      </Card>
+      {(r.duration || r.compensation || r.deadline) && (
+        <Card padding="md">
+          <div className="overline mb-2">Engagement</div>
+          <div className="space-y-1.5 text-xs">
+            {r.duration && <div className="inline-flex items-center gap-1.5"><Clock size={11} strokeWidth={1.5} /> {r.duration}</div>}
+            {r.compensation && <div className="inline-flex items-center gap-1.5"><Award size={11} strokeWidth={1.5} /> {r.compensation.replace("_", " ")}</div>}
+            {r.deadline && <div className="inline-flex items-center gap-1.5"><Calendar size={11} strokeWidth={1.5} /> Apply by {r.deadline}</div>}
+          </div>
+        </Card>
+      )}
+      {r.entity && (
+        <Card padding="md">
+          <div className="overline mb-2">Linked {r.entity_kind}</div>
+          <Link to={`/${r.entity_kind}s/${r.entity.id}`} className="text-sm text-[#0F2847] hover:underline">
+            {r.entity.title}
+          </Link>
+        </Card>
+      )}
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
-      <Link to="/expertise" className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-[#0F2847]">
-        <ArrowLeft size={11} strokeWidth={1.5} /> All expertise requests
-      </Link>
+    <ResearchLayout
+      title={r.title}
+      subtitle={
+        <span className="inline-flex items-center gap-2">
+          {KIND_LABEL[r.kind] || r.kind}
+          <Badge variant={r.status === "open" ? "success" : r.status === "filled" ? "default" : "neutral"} size="sm">{r.status}</Badge>
+          {r.owner && <>· {r.owner.full_name}{r.owner.institution ? ` (${r.owner.institution})` : ""}</>}
+        </span>
+      }
+      actions={
+        <>
+          <Button as={Link} to="/expertise" variant="ghost" size="sm">
+            <ArrowLeft size={11} strokeWidth={1.5} /> All requests
+          </Button>
+          {r.i_am_owner && r.status === "open" && (
+            <Button variant="ghost" size="sm" data-testid="close-request-btn" onClick={close}>
+              Close request
+            </Button>
+          )}
+          {r.i_am_owner && (
+            <Button
+              variant="ghost"
+              size="sm"
+              data-testid="delete-request-btn"
+              onClick={del}
+              className="border-red-200 text-red-700 hover:bg-red-50"
+            >
+              <Trash2 size={11} strokeWidth={1.5} /> Delete
+            </Button>
+          )}
+        </>
+      }
+      sidebar={sidebar}
+    >
+      <div className="space-y-6">
+        {/* Description */}
+        <Card padding="lg">
+          <div className="overline mb-2">Description</div>
+          <p className="font-serif text-base text-slate-800 leading-relaxed whitespace-pre-wrap">{r.description}</p>
+        </Card>
 
-      <header className="border-b border-slate-200 pb-6">
-        <div className="flex items-start justify-between gap-6">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="overline text-[#0F2847]">{KIND_LABEL[r.kind] || r.kind}</span>
-              <Badge variant={r.status === "open" ? "success" : r.status === "filled" ? "default" : "neutral"} size="sm">{r.status}</Badge>
-            </div>
-            <h1 className="font-serif text-4xl text-slate-900 mt-2 leading-tight">{r.title}</h1>
-            {r.owner && (
-              <div className="text-xs text-slate-500 mt-2 inline-flex items-center gap-3 flex-wrap">
-                <Link to={`/profile/${r.owner.id}`} className="hover:text-[#0F2847] inline-flex items-center gap-1">
-                  <Briefcase size={10} strokeWidth={1.5} /> {r.owner.full_name}
-                </Link>
-                {r.owner.institution && <span className="inline-flex items-center gap-1"><Building2 size={10} strokeWidth={1.5} /> {r.owner.institution}</span>}
-                <span className="font-mono">Posted {new Date(r.created_at).toLocaleDateString()}</span>
-              </div>
+        <AttachmentsSection requestId={id} isOwner={r.i_am_owner} />
+
+        {/* Apply form */}
+        {!r.i_am_owner && r.status === "open" && (
+          <Card padding="lg" data-testid="apply-section">
+            <div className="overline mb-2">Apply</div>
+            {r.i_have_applied ? (
+              <div className="text-sm text-emerald-700 inline-flex items-center gap-1.5"><Check size={12} strokeWidth={1.5} /> You've already applied.</div>
+            ) : (
+              <>
+                <Textarea
+                  data-testid="apply-message"
+                  rows={4}
+                  value={msg} onChange={(e) => setMsg(e.target.value)}
+                  placeholder="Briefly explain your relevant experience, fit, and timeline."
+                />
+                <div className="flex items-center justify-end mt-2">
+                  <Button size="sm" data-testid="apply-submit" disabled={applying || !msg.trim()} loading={applying} onClick={apply}>
+                    <Send size={11} strokeWidth={1.5} />
+                    Send application
+                  </Button>
+                </div>
+              </>
             )}
-          </div>
-          {r.i_am_owner && (
-            <div className="flex flex-col gap-2 shrink-0">
-              {r.status === "open" && (
-                <Button variant="ghost" size="sm" data-testid="close-request-btn" onClick={close}>
-                  Close request
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                data-testid="delete-request-btn"
-                onClick={del}
-                className="border-red-200 text-red-700 hover:bg-red-50"
-              >
-                <Trash2 size={11} strokeWidth={1.5} /> Delete
-              </Button>
-            </div>
-          )}
-        </div>
-      </header>
-
-      <div className="grid lg:grid-cols-[1fr_320px] gap-8">
-        <main className="space-y-6">
-          {/* Description */}
-          <Card padding="lg">
-            <div className="overline mb-2">Description</div>
-            <p className="font-serif text-base text-slate-800 leading-relaxed whitespace-pre-wrap">{r.description}</p>
           </Card>
+        )}
 
-          <AttachmentsSection requestId={id} isOwner={r.i_am_owner} />
-
-          {/* Apply form */}
-          {!r.i_am_owner && r.status === "open" && (
-            <Card padding="lg" data-testid="apply-section">
-              <div className="overline mb-2">Apply</div>
-              {r.i_have_applied ? (
-                <div className="text-sm text-emerald-700 inline-flex items-center gap-1.5"><Check size={12} strokeWidth={1.5} /> You've already applied.</div>
-              ) : (
-                <>
-                  <Textarea
-                    data-testid="apply-message"
-                    rows={4}
-                    value={msg} onChange={(e) => setMsg(e.target.value)}
-                    placeholder="Briefly explain your relevant experience, fit, and timeline."
-                  />
-                  <div className="flex items-center justify-end mt-2">
-                    <Button size="sm" data-testid="apply-submit" disabled={applying || !msg.trim()} loading={applying} onClick={apply}>
-                      <Send size={11} strokeWidth={1.5} />
-                      Send application
-                    </Button>
-                  </div>
-                </>
-              )}
-            </Card>
-          )}
-
-          {/* Applicants (owner view) */}
-          {r.i_am_owner && (
-            <Card padding="lg" data-testid="applicants-section">
-              <div className="flex items-center justify-between mb-3">
-                <div className="overline">Applicants ({(r.applicants || []).length})</div>
-              </div>
-              {(r.applicants || []).length === 0 && (
-                <div className="text-sm text-slate-500">No applicants yet.</div>
-              )}
-              <div className="space-y-3">
-                {(r.applicants || []).map((a) => (
-                  <Card key={a.user_id} padding="sm" data-testid={`applicant-${a.user_id}`}>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        {a.user ? (
-                          <Link to={`/profile/${a.user_id}`} className="font-serif text-base text-slate-900 hover:text-[#0F2847]">
-                            {a.user.full_name}
-                          </Link>
-                        ) : <span className="font-mono text-xs">{a.user_id}</span>}
-                        <div className="text-[11px] text-slate-500 mt-0.5">
-                          {userTypeLabel(a.user)} · {a.user?.institution}
-                        </div>
-                        <p className="text-sm text-slate-700 mt-2 font-serif italic">"{a.message}"</p>
+        {/* Applicants (owner view) */}
+        {r.i_am_owner && (
+          <Card padding="lg" data-testid="applicants-section">
+            <div className="flex items-center justify-between mb-3">
+              <div className="overline">Applicants ({(r.applicants || []).length})</div>
+            </div>
+            {(r.applicants || []).length === 0 && (
+              <div className="text-sm text-slate-500">No applicants yet.</div>
+            )}
+            <div className="space-y-3">
+              {(r.applicants || []).map((a) => (
+                <Card key={a.user_id} padding="sm" data-testid={`applicant-${a.user_id}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      {a.user ? (
+                        <Link to={`/profile/${a.user_id}`} className="font-serif text-base text-slate-900 hover:text-[#0F2847]">
+                          {a.user.full_name}
+                        </Link>
+                      ) : <span className="font-mono text-xs">{a.user_id}</span>}
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        {userTypeLabel(a.user)} · {a.user?.institution}
                       </div>
-                      <div className="flex flex-col gap-1 shrink-0">
-                        <Badge variant={a.status === "accepted" ? "success" : a.status === "rejected" ? "danger" : "neutral"} size="sm">
-                          {a.status}
-                        </Badge>
-                        {a.status === "pending" && (
-                          <>
-                            <Button size="sm" data-testid={`accept-${a.user_id}`} onClick={() => decide(a.user_id, "accepted")} className="text-[10px]">
-                              <Check size={9} strokeWidth={1.5} /> Accept
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              data-testid={`reject-${a.user_id}`}
-                              onClick={() => decide(a.user_id, "rejected")}
-                              className="text-[10px] border-red-200 text-red-700 hover:bg-red-50"
-                            >
-                              <X size={9} strokeWidth={1.5} /> Reject
-                            </Button>
-                          </>
-                        )}
-                      </div>
+                      <p className="text-sm text-slate-700 mt-2 font-serif italic">"{a.message}"</p>
                     </div>
-                  </Card>
-                ))}
-              </div>
-            </Card>
-          )}
-        </main>
-
-        {/* Sidebar */}
-        <aside className="space-y-4">
-          <Card padding="md">
-            <div className="overline mb-2">Required skills</div>
-            <div className="flex flex-wrap gap-1">
-              {(r.required_skills || []).map((s, i) => (
-                <Tag key={i} size="sm">{s}</Tag>
+                    <div className="flex flex-col gap-1 shrink-0">
+                      <Badge variant={a.status === "accepted" ? "success" : a.status === "rejected" ? "danger" : "neutral"} size="sm">
+                        {a.status}
+                      </Badge>
+                      {a.status === "pending" && (
+                        <>
+                          <Button size="sm" data-testid={`accept-${a.user_id}`} onClick={() => decide(a.user_id, "accepted")} className="text-[10px]">
+                            <Check size={9} strokeWidth={1.5} /> Accept
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            data-testid={`reject-${a.user_id}`}
+                            onClick={() => decide(a.user_id, "rejected")}
+                            className="text-[10px] border-red-200 text-red-700 hover:bg-red-50"
+                          >
+                            <X size={9} strokeWidth={1.5} /> Reject
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </Card>
               ))}
-              {(r.required_skills || []).length === 0 && <span className="text-xs text-slate-400">None specified</span>}
             </div>
           </Card>
-          <Card padding="md">
-            <div className="overline mb-2">Research areas</div>
-            <div className="flex flex-wrap gap-1">
-              {(r.research_areas || []).map((s, i) => (
-                <Badge key={i} variant="default" size="sm">{s}</Badge>
-              ))}
-              {(r.research_areas || []).length === 0 && <span className="text-xs text-slate-400">None specified</span>}
-            </div>
-          </Card>
-          {(r.duration || r.compensation || r.deadline) && (
-            <Card padding="md">
-              <div className="overline mb-2">Engagement</div>
-              <div className="space-y-1.5 text-xs">
-                {r.duration && <div className="inline-flex items-center gap-1.5"><Clock size={11} strokeWidth={1.5} /> {r.duration}</div>}
-                {r.compensation && <div className="inline-flex items-center gap-1.5"><Award size={11} strokeWidth={1.5} /> {r.compensation.replace("_", " ")}</div>}
-                {r.deadline && <div className="inline-flex items-center gap-1.5"><Calendar size={11} strokeWidth={1.5} /> Apply by {r.deadline}</div>}
-              </div>
-            </Card>
-          )}
-          {r.entity && (
-            <Card padding="md">
-              <div className="overline mb-2">Linked {r.entity_kind}</div>
-              <Link to={`/${r.entity_kind}s/${r.entity.id}`} className="text-sm text-[#0F2847] hover:underline">
-                {r.entity.title}
-              </Link>
-            </Card>
-          )}
-        </aside>
+        )}
       </div>
-    </div>
+    </ResearchLayout>
   );
 }
 
