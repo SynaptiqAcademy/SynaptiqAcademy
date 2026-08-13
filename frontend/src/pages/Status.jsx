@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import MarketingLayout from "../components/layout/MarketingLayout";
+import { fetchApi } from "@/lib/api";
 import {
   CheckCircle2, AlertTriangle, XCircle, Clock,
   RefreshCw, Mail, ArrowRight,
@@ -111,8 +112,8 @@ export default function Status() {
     setFetchError(false);
     try {
       const [sr, hr] = await Promise.all([
-        fetch("/api/status"),
-        fetch("/api/status/history?days=90"),
+        fetchApi("/api/status"),
+        fetchApi("/api/status/history?days=90"),
       ]);
       if (sr.ok) { setStatusData(await sr.json()); setLastChecked(new Date()); }
       else        { setFetchError(true); }

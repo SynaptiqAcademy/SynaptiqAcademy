@@ -109,6 +109,7 @@ _CSRF_EXEMPT_PATHS = frozenset({
     "/api/google/callback",
     "/api/billing/webhook",   # Stripe server-to-server — no browser session
     "/api/unsubscribe",       # Email unsubscribe link — may be clicked without session
+    "/api/contact",           # Public contact form — no session exists for anonymous visitors
     "/api/",
 })
 

@@ -4,6 +4,7 @@ import MarketingLayout from "../components/layout/MarketingLayout";
 import { toast } from "sonner";
 import { Mail, ArrowRight, Send, CheckCircle2, ChevronDown } from "lucide-react";
 import { TID } from "../lib/testIds";
+import { fetchApi } from "@/lib/api";
 
 /* ─── Design tokens ──────────────────────────────────────────────────────── */
 const NAVY   = "#0F2847";
@@ -215,7 +216,7 @@ export default function Contact() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch("/api/contact", {
+      const res = await fetchApi("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -239,7 +240,7 @@ export default function Contact() {
     e.preventDefault();
     setDemoSubmitting(true);
     try {
-      const res = await fetch("/api/contact", {
+      const res = await fetchApi("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
