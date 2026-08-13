@@ -4,6 +4,7 @@ import { RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import { NAVY, BRD, EMERALD, ACCENT, TEXT_SECONDARY } from "../../lib/tokens";
 import { AnalyticsLayout } from "@/layouts";
 import { Card, Button, Badge, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/trust";
 
@@ -78,7 +79,7 @@ export default function TrustScore() {
 
   const load = (refresh = false) => {
     setRefreshing(true);
-    fetch(API + "/score" + (refresh ? "?refresh=true" : ""), { credentials: "include" })
+    fetchApi(API + "/score" + (refresh ? "?refresh=true" : ""), { credentials: "include" })
       .then(r => r.ok ? r.json() : null)
       .then(d => setData(d))
       .finally(() => { setLoading(false); setRefreshing(false); });

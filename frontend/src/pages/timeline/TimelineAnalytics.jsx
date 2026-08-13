@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BarChart2, TrendingUp, TrendingDown, Lightbulb, Trophy, Activity, CalendarDays } from "lucide-react";
 import { NAVY, WARM, BRD, EMERALD, ACCENT, TEXT_SECONDARY, WHITE } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/timeline";
 
@@ -74,9 +75,9 @@ export default function TimelineAnalytics() {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      fetch(`${API}/analytics?months=${period}`, { credentials: "include" }).then(r => r.json()).catch(() => null),
-      fetch(`${API}/milestones`, { credentials: "include" }).then(r => r.json()).catch(() => []),
-      fetch(`${API}/insights`, { credentials: "include" }).then(r => r.json()).catch(() => []),
+      fetchApi(`${API}/analytics?months=${period}`, { credentials: "include" }).then(r => r.json()).catch(() => null),
+      fetchApi(`${API}/milestones`, { credentials: "include" }).then(r => r.json()).catch(() => []),
+      fetchApi(`${API}/insights`, { credentials: "include" }).then(r => r.json()).catch(() => []),
     ]).then(([a, m, i]) => {
       setAnalytics(a);
       setMilestones(m || []);

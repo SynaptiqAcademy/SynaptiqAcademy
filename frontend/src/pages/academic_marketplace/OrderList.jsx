@@ -3,6 +3,7 @@ import { Package, ChevronRight } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, NavTabs, FormSelect, EmptyState, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -23,7 +24,7 @@ export default function OrderList() {
     setLoading(true);
     const qs = new URLSearchParams({ role });
     if (statusFilter) qs.set("status", statusFilter);
-    fetch(`${API}/orders?${qs}`).then(r => r.json()).then(d => {
+    fetchApi(`${API}/orders?${qs}`).then(r => r.json()).then(d => {
       setOrders(d.results || []);
       setTotal(d.total || 0);
       setLoading(false);

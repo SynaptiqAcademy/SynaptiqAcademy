@@ -4,6 +4,7 @@ import { CheckCircle } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Input, Textarea, FormSelect, Tag, TagGroup, NavTabs, Button, Alert, H2 } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -37,7 +38,7 @@ export default function ServiceCreate() {
   const save = async () => {
     if (!form.title || !form.category) { setMsg({ type: "error", text: "Title and category are required." }); return; }
     setSaving(true);
-    const r = await fetch(`${API}/services`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    const r = await fetchApi(`${API}/services`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
     const d = await r.json();
     if (d.error) { setMsg({ type: "error", text: d.error }); setSaving(false); }
     else { window.location.href = `/academic-marketplace/services/${d.id}`; }

@@ -5,6 +5,7 @@ import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Badge, Button, Modal, Input, FormSelect, NavTabs, EmptyState, Spinner } from "@/components/ds";
 import { confirmDialog } from "@/lib/confirm";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -22,7 +23,7 @@ function GoalCard({ goal, onUpdate, onDelete }) {
   const saveProgress = async () => {
     setSaving(true);
     try {
-      const r = await fetch(`${API}/api/sie/goals/${goal.id}`, {
+      const r = await fetchApi(`${API}/api/sie/goals/${goal.id}`, {
         method: "PUT",
         headers: { ...authH(), "Content-Type": "application/json" },
         body: JSON.stringify({ progress }),
@@ -143,7 +144,7 @@ function NewGoalModal({ onClose, onCreate }) {
     if (!form.title.trim()) return;
     setSaving(true);
     try {
-      const r = await fetch(`${API}/api/sie/goals`, {
+      const r = await fetchApi(`${API}/api/sie/goals`, {
         method: "POST",
         headers: { ...authH(), "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -209,7 +210,7 @@ export default function GoalManager() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/sie/goals`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/sie/goals`, { headers: authH() });
       if (r.ok) setGoals(await r.json());
     } catch (_) {}
     setLoading(false);
@@ -219,7 +220,7 @@ export default function GoalManager() {
 
   const handleDelete = async (id) => {
     if (!(await confirmDialog({ title: "Delete this goal?", danger: true }))) return;
-    await fetch(`${API}/api/sie/goals/${id}`, { method: "DELETE", headers: authH() });
+    await fetchApi(`${API}/api/sie/goals/${id}`, { method: "DELETE", headers: authH() });
     setGoals(g => g.filter(x => x.id !== id));
   };
 

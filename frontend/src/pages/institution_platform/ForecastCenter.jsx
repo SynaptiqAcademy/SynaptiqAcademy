@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { Card, NavTabs, Tag, Callout, Spinner } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -87,10 +88,10 @@ export default function ForecastCenter() {
     setLoading(true);
     try {
       const [pr, gr, fr, cr] = await Promise.all([
-        fetch(`${API}/api/iip/forecasts/publications?horizon=${horizon}`, { headers: authH() }),
-        fetch(`${API}/api/iip/forecasts/grants?horizon=${horizon}`, { headers: authH() }),
-        fetch(`${API}/api/iip/forecasts/faculty?horizon=${horizon}`, { headers: authH() }),
-        fetch(`${API}/api/iip/forecasts/citations?horizon=${horizon}`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/forecasts/publications?horizon=${horizon}`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/forecasts/grants?horizon=${horizon}`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/forecasts/faculty?horizon=${horizon}`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/forecasts/citations?horizon=${horizon}`, { headers: authH() }),
       ]);
       if (pr.ok) setPubF(await pr.json());
       if (gr.ok) setGrantF(await gr.json());

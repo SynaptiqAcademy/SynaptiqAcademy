@@ -8,6 +8,7 @@ import {
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { Card, Button, StatCard, StatGrid, ErrorState, Spinner } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -73,7 +74,7 @@ export default function ExecutiveDashboard() {
     setLoading(true);
     setErr(null);
     try {
-      const r = await fetch(`${API}/api/iip/executive/overview`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/iip/executive/overview`, { headers: authH() });
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
         throw new Error(d.detail || `HTTP ${r.status}`);

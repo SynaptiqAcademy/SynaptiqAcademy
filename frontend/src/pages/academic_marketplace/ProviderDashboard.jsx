@@ -3,6 +3,7 @@ import { Briefcase, Star, Package, TrendingUp, DollarSign, AlertCircle, ChevronR
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, StatGrid, StatCard, Alert, Badge, Button, LoadingOverlay, EmptyState, H2, Caption } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -17,7 +18,7 @@ export default function ProviderDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API}/analytics/provider`).then(r => r.json()).then(d => {
+    fetchApi(`${API}/analytics/provider`).then(r => r.json()).then(d => {
       setData(d.error ? null : d);
       setLoading(false);
     }).catch(() => setLoading(false));

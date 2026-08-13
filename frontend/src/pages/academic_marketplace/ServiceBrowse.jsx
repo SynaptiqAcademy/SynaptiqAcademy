@@ -3,6 +3,7 @@ import { Star, Package, Tag as TagIcon } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Grid, SearchBar, FormSelect, Button, EmptyState, LoadingOverlay, Caption } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -25,7 +26,7 @@ export default function ServiceBrowse() {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    fetch(`${API}/services/categories`).then(r => r.json()).then(d => setCategories(d.categories || []));
+    fetchApi(`${API}/services/categories`).then(r => r.json()).then(d => setCategories(d.categories || []));
   }, []);
 
   const fetchServices = useCallback(() => {
@@ -33,7 +34,7 @@ export default function ServiceBrowse() {
     const qs = new URLSearchParams({ page, sort });
     if (q) qs.set("q", q);
     if (category) qs.set("category", category);
-    fetch(`${API}/services?${qs}`).then(r => r.json()).then(d => {
+    fetchApi(`${API}/services?${qs}`).then(r => r.json()).then(d => {
       setResults(d.results || []);
       setTotal(d.total || 0);
       setLoading(false);

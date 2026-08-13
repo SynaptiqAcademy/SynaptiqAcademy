@@ -4,6 +4,7 @@ import { UserCheck, CheckCircle2, RefreshCw } from "lucide-react";
 import { NAVY, BRD, TEXT_SECONDARY } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Alert } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/trust";
 
@@ -14,7 +15,7 @@ export default function ReviewerVerification() {
   const [message, setMessage] = useState({ text: "", ok: true });
 
   useEffect(() => {
-    fetch(API + "/verifications", { credentials: "include" })
+    fetchApi(API + "/verifications", { credentials: "include" })
       .then(r => r.json())
       .then(list => {
         setStatus((list || []).find(v => v.verification_type === "reviewer_activity") || null);
@@ -25,7 +26,7 @@ export default function ReviewerVerification() {
   const verify = async () => {
     setRunning(true);
     setMessage({ text: "", ok: true });
-    const r = await fetch(API + "/verify/reviewer", { method: "POST", credentials: "include" });
+    const r = await fetchApi(API + "/verify/reviewer", { method: "POST", credentials: "include" });
     if (r.ok) {
       const d = await r.json();
       setStatus(d);

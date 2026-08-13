@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ShoppingBag, AlertCircle, TrendingUp, DollarSign, Users, BarChart3 } from "lucide-react";
 import { AdministrationLayout } from "@/layouts";
 import { Card, H2, StatGrid, StatCard, MiniBar, EmptyState, LoadingOverlay, Caption } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/admin/acad-market";
 
@@ -12,8 +13,8 @@ export default function AdminMarketplace() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${API}/stats`).then(r => r.json()),
-      fetch(`${API}/disputes?status=open`).then(r => r.json()),
+      fetchApi(`${API}/stats`).then(r => r.json()),
+      fetchApi(`${API}/disputes?status=open`).then(r => r.json()),
     ]).then(([s, d]) => {
       setStats(s.error ? null : s);
       setDisputes(d.results || []);

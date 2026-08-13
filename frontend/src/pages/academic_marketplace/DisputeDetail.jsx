@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { ResearchLayout } from "@/layouts";
 import { ACCENT } from "@/lib/tokens";
 import { Card, H3, Caption, Input, Textarea, Button, LoadingOverlay, ErrorState } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -15,7 +16,7 @@ export default function DisputeDetail() {
   const [sending, setSending] = useState(false);
 
   const load = useCallback(() => {
-    fetch(`${API}/disputes/${id}`).then(r => r.json()).then(d => {
+    fetchApi(`${API}/disputes/${id}`).then(r => r.json()).then(d => {
       setDispute(d.error ? null : d);
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -26,7 +27,7 @@ export default function DisputeDetail() {
   const sendMsg = async () => {
     if (!msgText.trim()) return;
     setSending(true);
-    const r = await fetch(`${API}/disputes/${id}/messages`, {
+    const r = await fetchApi(`${API}/disputes/${id}/messages`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: msgText }),
     });
     const d = await r.json();
@@ -36,7 +37,7 @@ export default function DisputeDetail() {
   const addEvidence = async () => {
     if (!evidContent.trim()) return;
     setSending(true);
-    const r = await fetch(`${API}/disputes/${id}/evidence`, {
+    const r = await fetchApi(`${API}/disputes/${id}/evidence`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: evidTitle, content: evidContent, type: "statement" }),
     });

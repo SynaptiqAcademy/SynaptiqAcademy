@@ -9,6 +9,7 @@ import { NAVY, WARM, BRD, ACCENT, EMERALD, WHITE, TEXT_SECONDARY } from "@/lib/t
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Badge, Tag, Button, Input, Callout, StatCard, StatGrid, Spinner, H4 } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -55,7 +56,7 @@ export default function ResearchCommandCenter() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/sie/overview`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/sie/overview`, { headers: authH() });
       if (r.ok) setOverview(await r.json());
     } catch (_) {}
     setLoading(false);
@@ -70,7 +71,7 @@ export default function ResearchCommandCenter() {
     setCmdResult(null);
     setCommand(q);
     try {
-      const r = await fetch(`${API}/api/sie/command`, {
+      const r = await fetchApi(`${API}/api/sie/command`, {
         method: "POST",
         headers: { ...authH(), "Content-Type": "application/json" },
         body: JSON.stringify({ command: q }),

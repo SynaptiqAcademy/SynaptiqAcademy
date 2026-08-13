@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ShieldCheck, Clock } from "lucide-react";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Alert, Textarea, H2, Caption, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -18,7 +19,7 @@ export default function OrderPlace() {
   const [msg, setMsg] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/services/${serviceId}`).then(r => r.json()).then(svc => {
+    fetchApi(`${API}/services/${serviceId}`).then(r => r.json()).then(svc => {
       setService(svc);
       const p = (svc.packages || []).find(x => x.tier === pkgTier) || svc.packages?.[0];
       setPkg(p);
@@ -27,7 +28,7 @@ export default function OrderPlace() {
 
   const place = async () => {
     setPlacing(true);
-    const r = await fetch(`${API}/orders`, {
+    const r = await fetchApi(`${API}/orders`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ service_id: serviceId, package_tier: pkg?.tier || pkgTier, requirements: form.requirements }),
     });

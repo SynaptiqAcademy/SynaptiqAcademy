@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { CheckCircle, AlertCircle, ShieldCheck } from "lucide-react";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Alert, LoadingOverlay, ErrorState, Caption } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -13,7 +14,7 @@ export default function ContractView() {
   const [msg, setMsg] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/contracts/${orderId}`).then(r => r.json()).then(d => {
+    fetchApi(`${API}/contracts/${orderId}`).then(r => r.json()).then(d => {
       setContract(d.error ? null : d);
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -21,7 +22,7 @@ export default function ContractView() {
 
   const accept = async () => {
     setAccepting(true);
-    const r = await fetch(`${API}/contracts/${orderId}/accept`, { method: "POST" });
+    const r = await fetchApi(`${API}/contracts/${orderId}/accept`, { method: "POST" });
     const d = await r.json();
     if (d.error) { setMsg({ type: "error", text: d.error }); setAccepting(false); }
     else { setContract(d); setMsg({ type: "success", text: "Contract accepted!" }); setAccepting(false); }

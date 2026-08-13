@@ -3,6 +3,7 @@ import { RefreshCw, TrendingUp, TrendingDown } from "lucide-react";
 import { NAVY, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { Card, Button, BarChart, Alert, Spinner } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -69,8 +70,8 @@ export default function InstitutionHealth() {
     setLoading(true);
     try {
       const [hr, hhr] = await Promise.all([
-        fetch(`${API}/api/iip/health/score`, { headers: authH() }),
-        fetch(`${API}/api/iip/health/history?days=90`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/health/score`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/health/history?days=90`, { headers: authH() }),
       ]);
       if (hr.ok) setHealth(await hr.json());
       if (hhr.ok) setHistory(await hhr.json());

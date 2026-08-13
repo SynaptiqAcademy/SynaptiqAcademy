@@ -3,6 +3,7 @@ import { ShieldCheck, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { NAVY, WARM, BRD, EMERALD, ACCENT, TEXT_SECONDARY, WHITE } from "../../lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Card, Button, StatCard, StatGrid, StatusDot } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/trust";
 
@@ -15,17 +16,17 @@ export default function AdminTrustCenter() {
   const [reviewLoading, setReviewLoading] = useState({});
 
   useEffect(() => {
-    fetch(API + "/admin/stats", { credentials: "include" })
+    fetchApi(API + "/admin/stats", { credentials: "include" })
       .then(r => r.ok ? r.json() : null)
       .then(d => { setStats(d); setLoadingStats(false); })
       .catch(() => setLoadingStats(false));
 
-    fetch(API + "/requests/pending?limit=20", { credentials: "include" })
+    fetchApi(API + "/requests/pending?limit=20", { credentials: "include" })
       .then(r => r.ok ? r.json() : [])
       .then(d => { setPending(d || []); setLoadingPending(false); })
       .catch(() => setLoadingPending(false));
 
-    fetch(API + "/audit/admin?limit=20", { credentials: "include" })
+    fetchApi(API + "/audit/admin?limit=20", { credentials: "include" })
       .then(r => r.ok ? r.json() : [])
       .then(d => setAuditLog(d || []))
       .catch(() => {});
@@ -33,7 +34,7 @@ export default function AdminTrustCenter() {
 
   const review = async (reqId, action) => {
     setReviewLoading(p => ({ ...p, [reqId]: action }));
-    const r = await fetch(API + `/requests/${reqId}/review`, {
+    const r = await fetchApi(API + `/requests/${reqId}/review`, {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action }),

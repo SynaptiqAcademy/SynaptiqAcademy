@@ -4,6 +4,7 @@ import { NAVY, WARM, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Tag, Button, Modal, Input, EmptyState, Spinner } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -85,7 +86,7 @@ function GenerateModal({ onClose, onCreate }) {
     setSaving(true);
     try {
       const payload = { ...form, research_questions: form.research_questions.filter(q => q.trim()) };
-      const r = await fetch(`${API}/api/sie/roadmaps/generate`, {
+      const r = await fetchApi(`${API}/api/sie/roadmaps/generate`, {
         method: "POST", headers: { ...authH(), "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -153,7 +154,7 @@ export default function ResearchPlanning() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/sie/roadmaps`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/sie/roadmaps`, { headers: authH() });
       if (r.ok) setRoadmaps(await r.json());
     } catch (_) {}
     setLoading(false);
@@ -162,13 +163,13 @@ export default function ResearchPlanning() {
   useEffect(() => { load(); }, [load]);
 
   const loadDetail = async (rm) => {
-    const r = await fetch(`${API}/api/sie/roadmaps/${rm.id}`, { headers: authH() });
+    const r = await fetchApi(`${API}/api/sie/roadmaps/${rm.id}`, { headers: authH() });
     if (r.ok) setSelected(await r.json());
   };
 
   const advance = async (stageKey, completion) => {
     if (!selected) return;
-    const r = await fetch(`${API}/api/sie/roadmaps/${selected.id}/stage`, {
+    const r = await fetchApi(`${API}/api/sie/roadmaps/${selected.id}/stage`, {
       method: "PUT", headers: { ...authH(), "Content-Type": "application/json" },
       body: JSON.stringify({ stage_key: stageKey, completion }),
     });

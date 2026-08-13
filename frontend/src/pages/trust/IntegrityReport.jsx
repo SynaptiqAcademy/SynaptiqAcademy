@@ -4,6 +4,7 @@ import { RefreshCw, AlertTriangle, CheckCircle2, XCircle, ShieldAlert } from "lu
 import { NAVY, BRD, EMERALD, ACCENT, TEXT_SECONDARY } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Badge, Callout, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/trust";
 
@@ -27,7 +28,7 @@ export default function IntegrityReport() {
 
   const load = (refresh = false) => {
     setRefreshing(true);
-    fetch(API + "/integrity" + (refresh ? "?refresh=true" : ""), { credentials: "include" })
+    fetchApi(API + "/integrity" + (refresh ? "?refresh=true" : ""), { credentials: "include" })
       .then(r => r.ok ? r.json() : null)
       .then(d => setReport(d))
       .finally(() => { setLoading(false); setRefreshing(false); });

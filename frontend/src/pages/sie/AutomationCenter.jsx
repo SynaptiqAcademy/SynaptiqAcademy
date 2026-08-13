@@ -5,6 +5,7 @@ import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Tag, Button, Modal, Input, FormSelect, Alert, Spinner } from "@/components/ds";
 import { confirmDialog } from "@/lib/confirm";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -72,7 +73,7 @@ function NewAutoModal({ onClose, onCreate }) {
   const submit = async () => {
     setSaving(true);
     try {
-      const r = await fetch(`${API}/api/sie/automations`, {
+      const r = await fetchApi(`${API}/api/sie/automations`, {
         method: "POST", headers: { ...authH(), "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
@@ -133,7 +134,7 @@ export default function AutomationCenter() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/sie/automations`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/sie/automations`, { headers: authH() });
       if (r.ok) setAutomations(await r.json());
     } catch (_) {}
     setLoading(false);
@@ -142,7 +143,7 @@ export default function AutomationCenter() {
   useEffect(() => { load(); }, [load]);
 
   const handleToggle = async (id, enabled) => {
-    const r = await fetch(`${API}/api/sie/automations/${id}`, {
+    const r = await fetchApi(`${API}/api/sie/automations/${id}`, {
       method: "PUT", headers: { ...authH(), "Content-Type": "application/json" },
       body: JSON.stringify({ enabled }),
     });
@@ -150,13 +151,13 @@ export default function AutomationCenter() {
   };
 
   const handleRun = async (id) => {
-    const r = await fetch(`${API}/api/sie/automations/${id}/run`, { method: "POST", headers: authH() });
+    const r = await fetchApi(`${API}/api/sie/automations/${id}/run`, { method: "POST", headers: authH() });
     if (r.ok) { setRunResult(await r.json()); load(); }
   };
 
   const handleDelete = async (id) => {
     if (!(await confirmDialog({ title: "Delete this automation?", danger: true }))) return;
-    await fetch(`${API}/api/sie/automations/${id}`, { method: "DELETE", headers: authH() });
+    await fetchApi(`${API}/api/sie/automations/${id}`, { method: "DELETE", headers: authH() });
     setAutomations(as => as.filter(a => a.id !== id));
   };
 

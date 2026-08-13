@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Lightbulb, Star, RefreshCw, X, TrendingUp } from "lucide-react";
 import { WARM } from "@/lib/tokens";
 import { Card, Grid, Button, H1, H2, Caption, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -16,8 +17,8 @@ export default function Recommendations() {
     setLoading(true);
     const qs = cat ? `?category=${cat}` : "";
     Promise.all([
-      fetch(`${API}/recommendations${qs}`).then(r => r.json()),
-      fetch(`${API}/trending`).then(r => r.json()),
+      fetchApi(`${API}/recommendations${qs}`).then(r => r.json()),
+      fetchApi(`${API}/trending`).then(r => r.json()),
     ]).then(([r, t]) => {
       setRecs(Array.isArray(r) ? r : []);
       setTrending(Array.isArray(t) ? t : []);
@@ -29,13 +30,13 @@ export default function Recommendations() {
 
   const refresh = async () => {
     setRefreshing(true);
-    await fetch(`${API}/recommendations/refresh`, { method: "POST" });
+    await fetchApi(`${API}/recommendations/refresh`, { method: "POST" });
     load(catFilter);
     setRefreshing(false);
   };
 
   const dismiss = async (serviceId) => {
-    await fetch(`${API}/recommendations/${serviceId}`, { method: "DELETE" });
+    await fetchApi(`${API}/recommendations/${serviceId}`, { method: "DELETE" });
     setRecs(prev => prev.filter(r => r.service_id !== serviceId));
   };
 

@@ -3,6 +3,7 @@ import { AlertTriangle, TrendingUp, BarChart2, ChevronDown, ChevronUp } from "lu
 import { NAVY, WARM, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { Card, StatCard, StatGrid, Spinner } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -72,10 +73,10 @@ export default function StrategicPlanning() {
     setLoading(true);
     try {
       const [rr, br, pr, gr] = await Promise.all([
-        fetch(`${API}/api/iip/risks`, { headers: authH() }),
-        fetch(`${API}/api/iip/benchmarks/overview`, { headers: authH() }),
-        fetch(`${API}/api/iip/forecasts/publications?horizon=3`, { headers: authH() }),
-        fetch(`${API}/api/iip/forecasts/grants?horizon=3`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/risks`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/benchmarks/overview`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/forecasts/publications?horizon=3`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/forecasts/grants?horizon=3`, { headers: authH() }),
       ]);
       if (rr.ok) setRisks(await rr.json());
       if (br.ok) setBench(await br.json());

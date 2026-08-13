@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Star } from "lucide-react";
 import { ResearchLayout } from "@/layouts";
 import { Card, Textarea, Checkbox, Button, Alert, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 const DIMS = ["communication", "quality", "expertise", "timeliness", "value"];
@@ -14,12 +15,12 @@ export default function RatingSubmit() {
   const [msg, setMsg] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/orders/${orderId}`).then(r => r.json()).then(d => setOrder(d.error ? null : d));
+    fetchApi(`${API}/orders/${orderId}`).then(r => r.json()).then(d => setOrder(d.error ? null : d));
   }, [orderId]);
 
   const submit = async () => {
     setSubmitting(true);
-    const r = await fetch(`${API}/ratings`, {
+    const r = await fetchApi(`${API}/ratings`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ order_id: orderId, ...form }),
     });

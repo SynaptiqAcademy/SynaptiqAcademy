@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { NAVY, WARM, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { Card, StatCard, StatGrid, List, ListItem, DataTable, Badge, Spinner } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -26,8 +27,8 @@ export default function GrantIntelligence() {
     setLoading(true);
     try {
       const [gr, pr] = await Promise.all([
-        fetch(`${API}/api/iip/grants/overview`, { headers: authH() }),
-        fetch(`${API}/api/iip/grants/pipeline`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/grants/overview`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/grants/pipeline`, { headers: authH() }),
       ]);
       if (gr.ok) setGrants(await gr.json());
       if (pr.ok) setPipeline(await pr.json());

@@ -6,6 +6,7 @@ import {
 import { NAVY, WARM, BRD, ACCENT, EMERALD, WHITE, TEXT_SECONDARY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { StatCard, StatGrid, Card, Badge, FormSelect, Button, DataTable, Pagination, Spinner, H3 } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const token = () => localStorage.getItem("token");
@@ -42,7 +43,7 @@ export default function AdminIntegrityCenter() {
 
   const loadStats = useCallback(async () => {
     try {
-      const r = await fetch(`${API}/api/admin/integrity/stats`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/admin/integrity/stats`, { headers: authH() });
       if (r.ok) setStats(await r.json());
     } catch (_) {}
   }, []);
@@ -52,7 +53,7 @@ export default function AdminIntegrityCenter() {
       const params = new URLSearchParams({ skip: pg * LIMIT, limit: LIMIT });
       if (grade) params.append("grade", grade);
       if (critical !== "") params.append("has_critical", critical);
-      const r = await fetch(`${API}/api/admin/integrity/reports?${params}`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/admin/integrity/reports?${params}`, { headers: authH() });
       if (r.ok) {
         const d = await r.json();
         setReports(d.reports || []);
@@ -70,7 +71,7 @@ export default function AdminIntegrityCenter() {
   }, [loadStats, loadReports]);
 
   const handleTriggerUser = async (uid) => {
-    await fetch(`${API}/api/admin/integrity/analyze/${uid}`, {
+    await fetchApi(`${API}/api/admin/integrity/analyze/${uid}`, {
       method: "POST", headers: authH(),
     });
     loadStats();

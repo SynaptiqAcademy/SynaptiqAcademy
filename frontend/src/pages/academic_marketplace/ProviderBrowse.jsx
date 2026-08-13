@@ -3,6 +3,7 @@ import { Star, ShieldCheck, Users } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Grid, Badge, Tag, TagGroup, SearchBar, FormSelect, Button, EmptyState, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -17,7 +18,7 @@ export default function ProviderBrowse() {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    fetch(`${API}/services/categories`).then(r => r.json()).then(d => setCategories(d.categories || []));
+    fetchApi(`${API}/services/categories`).then(r => r.json()).then(d => setCategories(d.categories || []));
   }, []);
 
   const fetchProviders = useCallback(() => {
@@ -26,7 +27,7 @@ export default function ProviderBrowse() {
     if (q) qs.set("q", q);
     if (category) qs.set("category", category);
     if (minRating) qs.set("min_rating", minRating);
-    fetch(`${API}/providers/search?${qs}`).then(r => r.json()).then(d => {
+    fetchApi(`${API}/providers/search?${qs}`).then(r => r.json()).then(d => {
       setResults(d.results || []);
       setTotal(d.total || 0);
       setLoading(false);

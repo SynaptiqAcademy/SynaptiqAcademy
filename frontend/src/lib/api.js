@@ -127,6 +127,36 @@ api.interceptors.response.use(
 
 export default api;
 
+/**
+ * fetchApi — drop-in native fetch() replacement for the handful of pages
+ * that call fetch() directly instead of the axios `api` client above.
+ *
+ * Those calls used bare relative paths (e.g. fetch(`/api/acad-market/...`))
+ * or `process.env.REACT_APP_API_URL` — a variable that does not exist
+ * anywhere in this repo (only REACT_APP_BACKEND_URL does), so it always
+ * resolved to "". Both forms resolve relative to the current page origin,
+ * which only reaches the backend if the frontend happens to be served
+ * through a same-origin /api proxy — it silently hits the wrong host
+ * otherwise. They also never sent the CSRF header the backend requires on
+ * every non-GET request. This resolves against the real backend origin
+ * and attaches the same credentials + CSRF header the axios client does,
+ * while keeping the exact fetch() signature (same Response object, same
+ * .json()/.ok/.status) so call sites don't need to change.
+ */
+export function fetchApi(path, options = {}) {
+  const origin = BACKEND_URL || "https://api.synaptiq.academy";
+  const url = /^https?:\/\//.test(path) ? path : `${origin}${path}`;
+  const token = getCsrfToken();
+  return fetch(url, {
+    ...options,
+    credentials: options.credentials || "include",
+    headers: {
+      ...(options.headers || {}),
+      ...(token ? { "X-CSRF-Token": token } : {}),
+    },
+  });
+}
+
 export function formatApiError(detail) {
   if (detail == null) return "";
   if (typeof detail === "string") return detail;

@@ -3,6 +3,7 @@ import { Globe } from "lucide-react";
 import { NAVY, BRD, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { Card, StatCard, StatGrid, Spinner } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -14,7 +15,7 @@ export default function CollaborationIntelligence() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/iip/collaborations/overview`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/iip/collaborations/overview`, { headers: authH() });
       if (r.ok) setCollab(await r.json());
     } catch (_) {}
     setLoading(false);

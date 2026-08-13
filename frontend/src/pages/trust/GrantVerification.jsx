@@ -4,6 +4,7 @@ import { BadgeDollarSign, CheckCircle2, Upload } from "lucide-react";
 import { NAVY } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Input, Textarea, Button, Alert } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/trust";
 
@@ -15,7 +16,7 @@ export default function GrantVerification() {
   const [message, setMessage] = useState({ text: "", ok: true });
 
   useEffect(() => {
-    fetch(API + "/verifications", { credentials: "include" })
+    fetchApi(API + "/verifications", { credentials: "include" })
       .then(r => r.json())
       .then(list => {
         setStatus((list || []).find(v => v.verification_type === "grant_participation") || null);
@@ -27,7 +28,7 @@ export default function GrantVerification() {
     e.preventDefault();
     setSubmitting(true);
     setMessage({ text: "", ok: true });
-    const r = await fetch(API + "/verify/grant", {
+    const r = await fetchApi(API + "/verify/grant", {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),

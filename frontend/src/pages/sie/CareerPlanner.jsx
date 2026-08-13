@@ -4,6 +4,7 @@ import { NAVY, WARM, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Badge, Input, FormSelect, Button, NavTabs, Spinner, H4 } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -44,9 +45,9 @@ export default function CareerPlanner() {
     setLoading(true);
     try {
       const [pr, rr, rm] = await Promise.all([
-        fetch(`${API}/api/sie/career/profile`, { headers: authH() }),
-        fetch(`${API}/api/sie/career/readiness`, { headers: authH() }),
-        fetch(`${API}/api/sie/career/roadmap`, { headers: authH() }),
+        fetchApi(`${API}/api/sie/career/profile`, { headers: authH() }),
+        fetchApi(`${API}/api/sie/career/readiness`, { headers: authH() }),
+        fetchApi(`${API}/api/sie/career/roadmap`, { headers: authH() }),
       ]);
       if (pr.ok) { const d = await pr.json(); setProfile(d); setForm(d); }
       if (rr.ok) setReadiness(await rr.json());
@@ -60,7 +61,7 @@ export default function CareerPlanner() {
   const save = async () => {
     setSaving(true);
     try {
-      const r = await fetch(`${API}/api/sie/career/profile`, {
+      const r = await fetchApi(`${API}/api/sie/career/profile`, {
         method: "PUT", headers: { ...authH(), "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });

@@ -5,6 +5,7 @@ import { NAVY, EMERALD, ACCENT, TEXT_SECONDARY } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, FormSelect, Textarea, Badge, EmptyState, InlineError, LoadingOverlay } from "@/components/ds";
 import { promptDialog } from "@/lib/confirm";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/trust";
 
@@ -27,8 +28,8 @@ export default function VerificationRequests() {
 
   useEffect(() => {
     Promise.all([
-      fetch(API + "/requests", { credentials: "include" }).then(r => r.json()),
-      fetch(API + "/verifications/types", { credentials: "include" }).then(r => r.json()),
+      fetchApi(API + "/requests", { credentials: "include" }).then(r => r.json()),
+      fetchApi(API + "/verifications/types", { credentials: "include" }).then(r => r.json()),
     ]).then(([reqs, ts]) => {
       setRequests(reqs || []);
       setTypes(ts || []);
@@ -41,7 +42,7 @@ export default function VerificationRequests() {
     if (!form.verification_type) { setError("Please select a verification type."); return; }
     setSubmitting(true);
     setError("");
-    const r = await fetch(API + "/requests", {
+    const r = await fetchApi(API + "/requests", {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ verification_type: form.verification_type, notes: form.notes, payload: {} }),
@@ -60,7 +61,7 @@ export default function VerificationRequests() {
   const appeal = async (reqId) => {
     const notes = await promptDialog({ title: "Appeal this decision", description: "Describe why this decision should be reconsidered." });
     if (!notes) return;
-    await fetch(API + `/requests/${reqId}/appeal`, {
+    await fetchApi(API + `/requests/${reqId}/appeal`, {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notes }),

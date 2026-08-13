@@ -8,6 +8,7 @@ import {
 import { NAVY, BRD, EMERALD, ACCENT, TEXT_SECONDARY } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/trust";
 
@@ -61,7 +62,7 @@ export default function TrustOverview() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(API + "/overview", { credentials: "include" })
+    fetchApi(API + "/overview", { credentials: "include" })
       .then(r => r.ok ? r.json() : null)
       .then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));

@@ -4,6 +4,7 @@ import { FileText, CheckCircle2, Search } from "lucide-react";
 import { NAVY, BRD, EMERALD, TEXT_SECONDARY } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Input, Button, Alert, EmptyState, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/trust";
 
@@ -15,7 +16,7 @@ export default function PublicationVerification() {
   const [message, setMessage] = useState({ text: "", ok: true });
 
   useEffect(() => {
-    fetch(API + "/verifications", { credentials: "include" })
+    fetchApi(API + "/verifications", { credentials: "include" })
       .then(r => r.json())
       .then(list => {
         setVerified((list || []).filter(v => ["doi", "publication"].includes(v.verification_type)));
@@ -28,7 +29,7 @@ export default function PublicationVerification() {
     if (!doi.trim()) return;
     setSubmitting(true);
     setMessage({ text: "", ok: true });
-    const r = await fetch(API + "/verify/publication", {
+    const r = await fetchApi(API + "/verify/publication", {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ doi: doi.trim() }),

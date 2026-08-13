@@ -3,6 +3,7 @@ import { CheckCircle, AlertCircle } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Alert, Textarea, H2, H3, Caption, LoadingOverlay, ErrorState } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -23,8 +24,8 @@ export default function OrderDetail() {
 
   const load = useCallback(() => {
     Promise.all([
-      fetch(`${API}/orders/${id}`).then(r => r.json()),
-      fetch(`${API}/contracts/${id}`).then(r => r.json()),
+      fetchApi(`${API}/orders/${id}`).then(r => r.json()),
+      fetchApi(`${API}/contracts/${id}`).then(r => r.json()),
     ]).then(([o, c]) => {
       setOrder(o.error ? null : o);
       setContract(c.error ? null : c);
@@ -36,7 +37,7 @@ export default function OrderDetail() {
 
   const transition = async (status, note = "") => {
     setActionLoading(true);
-    const r = await fetch(`${API}/orders/${id}/transition`, {
+    const r = await fetchApi(`${API}/orders/${id}/transition`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status, note }),
     });
     const d = await r.json();
@@ -47,7 +48,7 @@ export default function OrderDetail() {
 
   const submitRevNote = async () => {
     if (!revNote.trim()) return;
-    const r = await fetch(`${API}/orders/${id}/revision-notes`, {
+    const r = await fetchApi(`${API}/orders/${id}/revision-notes`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ note: revNote }),
     });
     const d = await r.json();

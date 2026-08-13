@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle, RefreshCw, ChevronDown, ChevronUp } from "l
 import { NAVY, WARM, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { Card, Button, NavTabs, EmptyState, Spinner } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -56,7 +57,7 @@ export default function RiskIntelligence() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/iip/risks`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/iip/risks`, { headers: authH() });
       if (r.ok) setData(await r.json());
     } catch (_) {}
     setLoading(false);

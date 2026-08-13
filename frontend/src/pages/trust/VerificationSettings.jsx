@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Save } from "lucide-react";
 import { ResearchLayout } from "@/layouts";
 import { Button, List, ListItem, Switch, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/trust";
 
@@ -19,7 +20,7 @@ export default function VerificationSettings() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    fetch(API + "/settings", { credentials: "include" })
+    fetchApi(API + "/settings", { credentials: "include" })
       .then(r => r.json())
       .then(d => { setSettings(d || {}); setLoading(false); })
       .catch(() => setLoading(false));
@@ -27,7 +28,7 @@ export default function VerificationSettings() {
 
   const save = async () => {
     setSaving(true);
-    await fetch(API + "/settings", {
+    await fetchApi(API + "/settings", {
       method: "PATCH", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(settings),

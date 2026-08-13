@@ -4,6 +4,7 @@ import { History } from "lucide-react";
 import { NAVY, EMERALD, ACCENT, TEXT_SECONDARY } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { FormSelect, List, ListItem, Badge, EmptyState, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/trust";
 
@@ -34,7 +35,7 @@ export default function VerificationHistory() {
   const [limit, setLimit] = useState(50);
 
   useEffect(() => {
-    fetch(API + `/audit?limit=${limit}`, { credentials: "include" })
+    fetchApi(API + `/audit?limit=${limit}`, { credentials: "include" })
       .then(r => r.json())
       .then(d => { setEvents(d || []); setLoading(false); })
       .catch(() => setLoading(false));

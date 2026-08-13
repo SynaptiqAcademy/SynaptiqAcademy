@@ -3,6 +3,7 @@ import { ShoppingBag, Star, TrendingUp, Users, Zap, ChevronRight, Award } from "
 import { NAVY, ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Grid, StatGrid, StatCard, SearchBar, Button, H2, Caption } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -15,8 +16,8 @@ export default function MarketplaceHome() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${API}/featured-providers`).then(r => r.json()),
-      fetch(`${API}/trending`).then(r => r.json()),
+      fetchApi(`${API}/featured-providers`).then(r => r.json()),
+      fetchApi(`${API}/trending`).then(r => r.json()),
     ]).then(([fp, tr]) => {
       setFeatured(fp || []);
       setTrending(Array.isArray(tr) ? tr : []);

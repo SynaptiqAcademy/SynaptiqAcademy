@@ -4,6 +4,7 @@ import { Building2, CheckCircle2, Upload } from "lucide-react";
 import { NAVY, TEXT_SECONDARY } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Input, Textarea, Button, Alert } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/trust";
 
@@ -15,7 +16,7 @@ export default function InstitutionVerification() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    fetch(API + "/verifications?status=verified", { credentials: "include" })
+    fetchApi(API + "/verifications?status=verified", { credentials: "include" })
       .then(r => r.json())
       .then(list => {
         const inst = list.find(v => v.verification_type === "institution_affiliation");
@@ -28,7 +29,7 @@ export default function InstitutionVerification() {
     e.preventDefault();
     setSubmitting(true);
     setMessage("");
-    const r = await fetch(API + "/verify/institution", {
+    const r = await fetchApi(API + "/verify/institution", {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),

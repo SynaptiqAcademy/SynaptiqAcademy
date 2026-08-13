@@ -3,6 +3,7 @@ import { AlertCircle, ChevronRight, MessageSquare } from "lucide-react";
 import { EMERALD, ACCENT } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Alert, Input, Textarea, FormSelect, EmptyState, LoadingOverlay, Badge, H2, Caption } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -33,7 +34,7 @@ export default function DisputeCenter() {
   const [msg, setMsg] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/disputes`).then(r => r.json()).then(d => {
+    fetchApi(`${API}/disputes`).then(r => r.json()).then(d => {
       setDisputes(Array.isArray(d) ? d : []);
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -41,7 +42,7 @@ export default function DisputeCenter() {
 
   const submit = async () => {
     setSubmitting(true);
-    const r = await fetch(`${API}/disputes`, {
+    const r = await fetchApi(`${API}/disputes`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(newForm),
     });
     const d = await r.json();

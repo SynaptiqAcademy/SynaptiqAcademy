@@ -3,6 +3,7 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { NAVY, WARM, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { NavTabs, DataTable, Badge, Spinner } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -52,8 +53,8 @@ export default function BenchmarkCenter() {
     setLoading(true);
     try {
       const [br, dr] = await Promise.all([
-        fetch(`${API}/api/iip/benchmarks/overview`, { headers: authH() }),
-        fetch(`${API}/api/iip/benchmarks/departments`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/benchmarks/overview`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/benchmarks/departments`, { headers: authH() }),
       ]);
       if (br.ok) setBench(await br.json());
       if (dr.ok) setDeptBench(await dr.json());

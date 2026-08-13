@@ -3,6 +3,7 @@ import { BrainCircuit, Send, Loader2, Clock, ChevronDown, ChevronUp } from "luci
 import { NAVY, WARM, BRD, ACCENT, WHITE, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { Button, Card, NavTabs, Textarea, Tag, EmptyState } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -85,7 +86,7 @@ export default function AIExecutiveAssistant() {
 
   const loadHistory = useCallback(async () => {
     try {
-      const r = await fetch(`${API}/api/iip/assistant/history`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/iip/assistant/history`, { headers: authH() });
       if (r.ok) setHistory(await r.json());
     } catch (_) {}
   }, []);
@@ -99,7 +100,7 @@ export default function AIExecutiveAssistant() {
     setMessages(m => [...m, { role: "user", text: q }]);
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/iip/assistant/query`, {
+      const r = await fetchApi(`${API}/api/iip/assistant/query`, {
         method: "POST",
         headers: { ...authH(), "Content-Type": "application/json" },
         body: JSON.stringify({ query: q }),

@@ -3,6 +3,7 @@ import { AlertTriangle, Star, TrendingUp, ChevronDown, ChevronUp } from "lucide-
 import { NAVY, WARM, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { Card, NavTabs, DataTable, StatCard, StatGrid, ProgressBar, List, ListItem, Badge, Spinner } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -62,10 +63,10 @@ export default function FacultyIntelligence() {
     setLoading(true);
     try {
       const [or, tr, ar, pr] = await Promise.all([
-        fetch(`${API}/api/iip/faculty/overview`, { headers: authH() }),
-        fetch(`${API}/api/iip/faculty/top-performers?limit=20`, { headers: authH() }),
-        fetch(`${API}/api/iip/faculty/at-risk`, { headers: authH() }),
-        fetch(`${API}/api/iip/faculty/promotion-candidates`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/faculty/overview`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/faculty/top-performers?limit=20`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/faculty/at-risk`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/faculty/promotion-candidates`, { headers: authH() }),
       ]);
       if (or.ok) setOverview(await or.json());
       if (tr.ok) setTop(await tr.json());

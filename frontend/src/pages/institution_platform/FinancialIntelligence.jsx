@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { Card, StatCard, StatGrid, Alert, List, ListItem, Spinner } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -15,8 +16,8 @@ export default function FinancialIntelligence() {
     setLoading(true);
     try {
       const [fr, dr] = await Promise.all([
-        fetch(`${API}/api/iip/financial/overview`, { headers: authH() }),
-        fetch(`${API}/api/iip/financial/by-department`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/financial/overview`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/financial/by-department`, { headers: authH() }),
       ]);
       if (fr.ok) setFin(await fr.json());
       if (dr.ok) setByDept(await dr.json());

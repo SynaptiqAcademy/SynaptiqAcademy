@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ResearchLayout } from "@/layouts";
 import { Card, Input, Textarea, FormSelect, Tag, TagGroup, Button, Alert } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -17,7 +18,7 @@ export default function ProviderSetup() {
   const [msg, setMsg] = useState(null);
 
   useEffect(() => {
-    fetch(`${API}/providers/me`).then(r => r.json()).then(d => {
+    fetchApi(`${API}/providers/me`).then(r => r.json()).then(d => {
       if (!d.error) {
         setExisting(d);
         setForm(f => ({ ...f, ...d }));
@@ -32,7 +33,7 @@ export default function ProviderSetup() {
   const save = async () => {
     setSaving(true);
     const method = existing ? "PUT" : "POST";
-    const r = await fetch(`${API}/providers/me`, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    const r = await fetchApi(`${API}/providers/me`, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
     const d = await r.json();
     if (d.error) setMsg({ type: "error", text: d.error });
     else { setExisting(d); setMsg({ type: "success", text: existing ? "Profile updated!" : "Provider profile created!" }); }

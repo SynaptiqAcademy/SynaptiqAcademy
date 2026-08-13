@@ -4,6 +4,7 @@ import { NAVY, WARM, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Badge, StatCard, StatGrid, EmptyState, LoadingOverlay, H4 } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -48,7 +49,7 @@ export default function DailyAgenda() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/sie/agenda/daily`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/sie/agenda/daily`, { headers: authH() });
       if (r.ok) setAgenda(await r.json());
     } catch (_) {}
     setLoading(false);
@@ -59,7 +60,7 @@ export default function DailyAgenda() {
   const refresh = async () => {
     setRefreshing(true);
     try {
-      const r = await fetch(`${API}/api/sie/agenda/daily/refresh`, { method: "POST", headers: authH() });
+      const r = await fetchApi(`${API}/api/sie/agenda/daily/refresh`, { method: "POST", headers: authH() });
       if (r.ok) setAgenda(await r.json());
     } catch (_) {}
     setRefreshing(false);

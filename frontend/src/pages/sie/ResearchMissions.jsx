@@ -4,6 +4,7 @@ import { NAVY, BRD, ACCENT, EMERALD, WHITE, TEXT_SECONDARY } from "@/lib/tokens"
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Button, Modal, Input, FormSelect, NavTabs, EmptyState, Spinner } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -17,7 +18,7 @@ function MissionCard({ mission, onComplete, onUpdate }) {
   const color = STATUS_COLOR[mission.status] || "#94a3b8";
 
   const save = async () => {
-    const r = await fetch(`${API}/api/sie/missions/${mission.id}`, {
+    const r = await fetchApi(`${API}/api/sie/missions/${mission.id}`, {
       method: "PUT", headers: { ...authH(), "Content-Type": "application/json" },
       body: JSON.stringify({ completion: progress }),
     });
@@ -97,7 +98,7 @@ function NewMissionModal({ onClose, onCreate }) {
     if (!form.title.trim()) return;
     setSaving(true);
     try {
-      const r = await fetch(`${API}/api/sie/missions`, {
+      const r = await fetchApi(`${API}/api/sie/missions`, {
         method: "POST", headers: { ...authH(), "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
@@ -172,7 +173,7 @@ export default function ResearchMissions() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/sie/missions`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/sie/missions`, { headers: authH() });
       if (r.ok) setMissions(await r.json());
     } catch (_) {}
     setLoading(false);
@@ -181,7 +182,7 @@ export default function ResearchMissions() {
   useEffect(() => { load(); }, [load]);
 
   const handleComplete = async (id) => {
-    const r = await fetch(`${API}/api/sie/missions/${id}/complete`, { method: "POST", headers: authH() });
+    const r = await fetchApi(`${API}/api/sie/missions/${id}/complete`, { method: "POST", headers: authH() });
     if (r.ok) setMissions(ms => ms.map(m => m.id === id ? { ...m, status: "completed", completion: 100 } : m));
   };
 

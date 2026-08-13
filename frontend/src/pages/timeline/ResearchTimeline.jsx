@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { NAVY, WARM, BRD, EMERALD, ACCENT, TEXT_SECONDARY, WHITE } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/timeline";
 
@@ -177,7 +178,7 @@ function AddEventModal({ catalogue, onClose, onAdd }) {
     if (!form.event_type || !form.title) { setError("Type and title are required."); return; }
     setSaving(true);
     setError("");
-    const r = await fetch(API + "/events", {
+    const r = await fetchApi(API + "/events", {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -322,11 +323,11 @@ export default function ResearchTimeline() {
   const loadInitial = useCallback(async () => {
     setLoading(true);
     const [evRes, hmRes, stRes, catRes, insRes] = await Promise.all([
-      fetch(`${API}?limit=${LIMIT}&skip=0${category ? "&category=" + category : ""}${search ? "&search=" + encodeURIComponent(search) : ""}`, { credentials: "include" }).then(r => r.json()).catch(() => []),
-      fetch(`${API}/heatmap`, { credentials: "include" }).then(r => r.json()).catch(() => null),
-      fetch(`${API}/stats`, { credentials: "include" }).then(r => r.json()).catch(() => null),
-      fetch(`${API}/catalogue`, { credentials: "include" }).then(r => r.json()).catch(() => ({})),
-      fetch(`${API}/insights`, { credentials: "include" }).then(r => r.json()).catch(() => []),
+      fetchApi(`${API}?limit=${LIMIT}&skip=0${category ? "&category=" + category : ""}${search ? "&search=" + encodeURIComponent(search) : ""}`, { credentials: "include" }).then(r => r.json()).catch(() => []),
+      fetchApi(`${API}/heatmap`, { credentials: "include" }).then(r => r.json()).catch(() => null),
+      fetchApi(`${API}/stats`, { credentials: "include" }).then(r => r.json()).catch(() => null),
+      fetchApi(`${API}/catalogue`, { credentials: "include" }).then(r => r.json()).catch(() => ({})),
+      fetchApi(`${API}/insights`, { credentials: "include" }).then(r => r.json()).catch(() => []),
     ]);
     setEvents(evRes || []);
     setHeatmap(hmRes);
@@ -341,13 +342,13 @@ export default function ResearchTimeline() {
   useEffect(() => {
     loadInitial();
     // Load milestones separately
-    fetch(`${API}/milestones`, { credentials: "include" })
+    fetchApi(`${API}/milestones`, { credentials: "include" })
       .then(r => r.json()).then(d => setMilestones(d || [])).catch(() => {});
   }, [loadInitial]);
 
   const loadMore = async () => {
     const url = `${API}?limit=${LIMIT}&skip=${skip}${category ? "&category=" + category : ""}${search ? "&search=" + encodeURIComponent(search) : ""}`;
-    const more = await fetch(url, { credentials: "include" }).then(r => r.json()).catch(() => []);
+    const more = await fetchApi(url, { credentials: "include" }).then(r => r.json()).catch(() => []);
     setEvents(prev => [...prev, ...(more || [])]);
     setHasMore((more || []).length === LIMIT);
     setSkip(s => s + LIMIT);
@@ -355,13 +356,13 @@ export default function ResearchTimeline() {
 
   const sync = async () => {
     setSyncing(true);
-    await fetch(API + "/sync", { method: "POST", credentials: "include" });
+    await fetchApi(API + "/sync", { method: "POST", credentials: "include" });
     setSyncing(false);
     loadInitial();
   };
 
   const handleDelete = async (id) => {
-    await fetch(`${API}/events/${id}`, { method: "DELETE", credentials: "include" });
+    await fetchApi(`${API}/events/${id}`, { method: "DELETE", credentials: "include" });
     setEvents(prev => prev.filter(e => e._id !== id));
   };
 

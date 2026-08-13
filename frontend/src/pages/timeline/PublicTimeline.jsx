@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { Globe, Activity, CalendarDays, Trophy, BookOpen, GraduationCap, DollarSign, Users, FileCheck, ShieldCheck, Award, Eye, Sparkles } from "lucide-react";
 import { NAVY, WARM, BRD, EMERALD, TEXT_SECONDARY, WHITE } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/timeline";
 
@@ -26,7 +27,7 @@ export default function PublicTimeline() {
 
   useEffect(() => {
     if (!userId) return;
-    fetch(`${API}/public/${userId}?limit=50`, { credentials: "include" })
+    fetchApi(`${API}/public/${userId}?limit=50`, { credentials: "include" })
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => { setError(true); setLoading(false); });

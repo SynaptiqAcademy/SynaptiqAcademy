@@ -4,6 +4,7 @@ import { RefreshCw, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { NAVY, BRD, EMERALD, ACCENT, TEXT_SECONDARY } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, FilterChip, EmptyState, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/trust";
 
@@ -50,8 +51,8 @@ export default function MyVerifications() {
 
   useEffect(() => {
     Promise.all([
-      fetch(API + "/verifications", { credentials: "include" }).then(r => r.json()),
-      fetch(API + "/verifications/types", { credentials: "include" }).then(r => r.json()),
+      fetchApi(API + "/verifications", { credentials: "include" }).then(r => r.json()),
+      fetchApi(API + "/verifications/types", { credentials: "include" }).then(r => r.json()),
     ]).then(([v, t]) => {
       setItems(v || []);
       setTypes(t || []);
@@ -61,7 +62,7 @@ export default function MyVerifications() {
 
   const runAuto = async (vType) => {
     setRunning(p => ({ ...p, [vType]: true }));
-    const r = await fetch(API + "/verifications/run", {
+    const r = await fetchApi(API + "/verifications/run", {
       method: "POST", credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ verification_type: vType, payload: {} }),

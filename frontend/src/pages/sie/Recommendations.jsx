@@ -5,6 +5,7 @@ import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Badge, Tag, Button, Spinner, EmptyState, TypeSectionLabel } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -84,7 +85,7 @@ export default function Recommendations() {
     setLoading(true);
     try {
       const url = category !== "all" ? `${API}/api/sie/recommendations?category=${category}` : `${API}/api/sie/recommendations`;
-      const r = await fetch(url, { headers: authH() });
+      const r = await fetchApi(url, { headers: authH() });
       if (r.ok) setRecs(await r.json());
     } catch (_) {}
     setLoading(false);
@@ -95,14 +96,14 @@ export default function Recommendations() {
   const refresh = async () => {
     setRefreshing(true);
     try {
-      await fetch(`${API}/api/sie/recommendations/refresh`, { method: "POST", headers: authH() });
+      await fetchApi(`${API}/api/sie/recommendations/refresh`, { method: "POST", headers: authH() });
       load();
     } catch (_) {}
     setRefreshing(false);
   };
 
   const dismiss = async (id) => {
-    await fetch(`${API}/api/sie/recommendations/${id}/dismiss`, { method: "POST", headers: authH() });
+    await fetchApi(`${API}/api/sie/recommendations/${id}/dismiss`, { method: "POST", headers: authH() });
     setRecs(rs => rs.filter(r => r.id !== id));
   };
 

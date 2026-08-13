@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Star, ShieldCheck, Clock, CheckCircle } from "lucide-react";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, NavTabs, H1, H3, Caption, LoadingOverlay, ErrorState } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -15,9 +16,9 @@ export default function ServiceDetail() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${API}/services/${id}`).then(r => r.json()),
-      fetch(`${API}/ratings/services/${id}`).then(r => r.json()),
-      fetch(`${API}/services/${id}/quality`).then(r => r.json()),
+      fetchApi(`${API}/services/${id}`).then(r => r.json()),
+      fetchApi(`${API}/ratings/services/${id}`).then(r => r.json()),
+      fetchApi(`${API}/services/${id}/quality`).then(r => r.json()),
     ]).then(([svc, rat, q]) => {
       setService(svc);
       setRatings(rat.results || []);

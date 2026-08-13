@@ -3,6 +3,7 @@ import { DollarSign, TrendingUp, Receipt, ShieldCheck } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Grid, StatGrid, StatCard, H2, Caption, EmptyState, LoadingOverlay } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -13,8 +14,8 @@ export default function WalletCenter() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${API}/wallet`).then(r => r.json()),
-      fetch(`${API}/wallet/transactions`).then(r => r.json()),
+      fetchApi(`${API}/wallet`).then(r => r.json()),
+      fetchApi(`${API}/wallet/transactions`).then(r => r.json()),
     ]).then(([w, t]) => {
       setWallet(w);
       setTxns((t.results || []));

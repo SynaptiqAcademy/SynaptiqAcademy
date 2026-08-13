@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { NAVY, WARM, BRD, ACCENT, EMERALD, WHITE, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const token = () => localStorage.getItem("token");
@@ -146,14 +147,14 @@ export default function IntegrityCenter() {
 
   const loadStatus = useCallback(async () => {
     try {
-      const r = await fetch(`${API}/api/integrity/status`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/integrity/status`, { headers: authH() });
       if (r.ok) setStatus(await r.json());
     } catch (_) {}
   }, []);
 
   const loadReport = useCallback(async () => {
     try {
-      const r = await fetch(`${API}/api/integrity/report`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/integrity/report`, { headers: authH() });
       if (r.ok) {
         const d = await r.json();
         if (d.status !== "not_started" && d.status !== "pending" && d.status !== "running") {
@@ -185,7 +186,7 @@ export default function IntegrityCenter() {
     setRunning(true);
     setErr(null);
     try {
-      const r = await fetch(`${API}/api/integrity/analyze`, {
+      const r = await fetchApi(`${API}/api/integrity/analyze`, {
         method: "POST",
         headers: { ...authH(), "Content-Type": "application/json" },
         body: JSON.stringify({ force_refresh: force }),

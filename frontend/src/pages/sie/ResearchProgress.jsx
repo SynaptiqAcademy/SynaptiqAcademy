@@ -4,6 +4,7 @@ import { NAVY, WARM, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Button, StatCard, StatGrid, DataTable, EmptyState, Spinner, MiniBar as DsMiniBar, H4 } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -28,7 +29,7 @@ export default function ResearchProgress() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/sie/progress/overview`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/sie/progress/overview`, { headers: authH() });
       if (r.ok) setOverview(await r.json());
     } catch (_) {}
     setLoading(false);
@@ -38,7 +39,7 @@ export default function ResearchProgress() {
 
   const takeSnapshot = async () => {
     setSnapping(true);
-    await fetch(`${API}/api/sie/progress/snapshot`, { method: "POST", headers: authH() });
+    await fetchApi(`${API}/api/sie/progress/snapshot`, { method: "POST", headers: authH() });
     setSnapping(false);
     load();
   };

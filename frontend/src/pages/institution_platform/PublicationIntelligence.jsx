@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { Card, StatCard, StatGrid, List, ListItem, Spinner } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -15,8 +16,8 @@ export default function PublicationIntelligence() {
     setLoading(true);
     try {
       const [pr, tr] = await Promise.all([
-        fetch(`${API}/api/iip/publications/overview`, { headers: authH() }),
-        fetch(`${API}/api/iip/publications/trends?years=6`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/publications/overview`, { headers: authH() }),
+        fetchApi(`${API}/api/iip/publications/trends?years=6`, { headers: authH() }),
       ]);
       if (pr.ok) setPubs(await pr.json());
       if (tr.ok) setTrends(await tr.json());

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { Card, Badge, Modal, StatCard, StatGrid, BarChart, List, ListItem, Spinner } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -99,7 +100,7 @@ export default function DepartmentIntelligence() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/iip/departments/overview`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/iip/departments/overview`, { headers: authH() });
       if (r.ok) setDepts(await r.json());
     } catch (_) {}
     setLoading(false);
@@ -111,7 +112,7 @@ export default function DepartmentIntelligence() {
     setSelected(dept);
     setDetail(null);
     try {
-      const r = await fetch(`${API}/api/iip/departments/${encodeURIComponent(dept.department)}`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/iip/departments/${encodeURIComponent(dept.department)}`, { headers: authH() });
       if (r.ok) setDetail(await r.json());
     } catch (_) {}
   };

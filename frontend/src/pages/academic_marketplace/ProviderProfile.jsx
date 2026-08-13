@@ -3,6 +3,7 @@ import { Star, ShieldCheck } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Tag, TagGroup, MiniBar, Button, StatusDot, H1, H2, H3, Caption, LoadingOverlay, ErrorState } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
 
@@ -16,10 +17,10 @@ export default function ProviderProfile() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${API}/providers/${userId}/portfolio`).then(r => r.json()),
-      fetch(`${API}/ratings/providers/${userId}?limit=5`).then(r => r.json()),
-      fetch(`${API}/ratings/providers/${userId}/summary`).then(r => r.json()),
-      fetch(`${API}/services?limit=6`).then(r => r.json()),
+      fetchApi(`${API}/providers/${userId}/portfolio`).then(r => r.json()),
+      fetchApi(`${API}/ratings/providers/${userId}?limit=5`).then(r => r.json()),
+      fetchApi(`${API}/ratings/providers/${userId}/summary`).then(r => r.json()),
+      fetchApi(`${API}/services?limit=6`).then(r => r.json()),
     ]).then(([port, rat, sum, svcs]) => {
       setPortfolio(port);
       setRatings(rat);

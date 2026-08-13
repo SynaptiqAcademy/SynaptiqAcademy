@@ -4,6 +4,7 @@ import { ACCENT } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Tag, TagGroup, Input, FormSelect, Textarea, Button, Spinner, H4, Label } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -54,7 +55,7 @@ export default function AIMemory() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/sie/memory`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/sie/memory`, { headers: authH() });
       if (r.ok) { const d = await r.json(); setMemory(d); setForm(d); }
     } catch (_) {}
     setLoading(false);
@@ -65,7 +66,7 @@ export default function AIMemory() {
   const save = async () => {
     setSaving(true);
     try {
-      const r = await fetch(`${API}/api/sie/memory`, {
+      const r = await fetchApi(`${API}/api/sie/memory`, {
         method: "PUT", headers: { ...authH(), "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
@@ -76,7 +77,7 @@ export default function AIMemory() {
 
   const enrich = async () => {
     setEnriching(true);
-    await fetch(`${API}/api/sie/memory/enrich`, { method: "POST", headers: authH() });
+    await fetchApi(`${API}/api/sie/memory/enrich`, { method: "POST", headers: authH() });
     setTimeout(() => { load(); setEnriching(false); }, 2000);
   };
 

@@ -3,6 +3,7 @@ import { FileText, Download, RefreshCw } from "lucide-react";
 import { NAVY, WARM, ACCENT, EMERALD, WHITE, TEXT_SECONDARY } from "@/lib/tokens";
 import { AnalyticsLayout } from "@/layouts";
 import { Card, Button, Alert, DataTable, Badge } from "@/components/ds";
+import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
@@ -41,7 +42,7 @@ export default function InstitutionReports() {
   const loadReports = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/iip/reports/list`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/iip/reports/list`, { headers: authH() });
       if (r.ok) setReports(await r.json());
     } catch (_) {}
     setLoading(false);
@@ -53,7 +54,7 @@ export default function InstitutionReports() {
     setGenerating(true);
     setSuccess("");
     try {
-      const r = await fetch(`${API}/api/iip/reports/generate`, {
+      const r = await fetchApi(`${API}/api/iip/reports/generate`, {
         method: "POST", headers: { ...authH(), "Content-Type": "application/json" },
         body: JSON.stringify({ report_type: "executive_summary" }),
       });
@@ -68,7 +69,7 @@ export default function InstitutionReports() {
   const download = async (fmt) => {
     setDownloading(true);
     try {
-      const r = await fetch(`${API}/api/iip/reports/download/${fmt}`, { headers: authH() });
+      const r = await fetchApi(`${API}/api/iip/reports/download/${fmt}`, { headers: authH() });
       if (r.ok) {
         const blob = await r.blob();
         const url = URL.createObjectURL(blob);
