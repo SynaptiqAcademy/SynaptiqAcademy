@@ -6,19 +6,10 @@ import api, { getErrorMessage } from "../lib/api";
 import { TID } from "../lib/testIds";
 import {
   AuthLayout, AuthCard, AuthHeader, AuthTitle, AuthInput, PasswordInput,
-  AuthSelect, AuthButton, AuthDivider, SocialButtons, ErrorBanner,
+  AuthButton, AuthDivider, SocialButtons, ErrorBanner,
   AuthFooter, AuthLink, AuthCheckbox, PasswordStrength, TermsNote,
   NAVY, T_MID, T_FAINT, BORDER,
 } from "../components/auth/AuthShared";
-
-const ROLES = [
-  { value: "student",     label: "Student"                   },
-  { value: "master",      label: "Master Student"            },
-  { value: "phd",         label: "PhD Candidate"             },
-  { value: "researcher",  label: "Researcher"                },
-  { value: "professor",   label: "Professor"                 },
-  { value: "admin",       label: "Institution Administrator" },
-];
 
 export default function Register() {
   useEffect(() => {
@@ -27,11 +18,9 @@ export default function Register() {
   }, []);
   const { register, user } = useAuth();
   const [fullName,    setFullName]    = useState("");
-  const [institution, setInstitution] = useState("");
   const [email,       setEmail]       = useState("");
   const [password,    setPassword]    = useState("");
   const [confirm,     setConfirm]     = useState("");
-  const [role,        setRole]        = useState("");
   const [agreed,      setAgreed]      = useState(false);
   const [err,         setErr]         = useState("");
   const [loading,     setLoading]     = useState(false);
@@ -107,25 +96,15 @@ export default function Register() {
         />
 
         <form onSubmit={onSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {/* Row: Full Name + Institution */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <AuthInput
-              label="Full Name"
-              value={fullName}
-              onChange={function(e) { setFullName(e.target.value); }}
-              placeholder="Dr. Jane Doe"
-              required
-              autoComplete="name"
-              testId={TID.registerName}
-            />
-            <AuthInput
-              label="Institution"
-              value={institution}
-              onChange={function(e) { setInstitution(e.target.value); }}
-              placeholder="University or organisation"
-              autoComplete="organization"
-            />
-          </div>
+          <AuthInput
+            label="Full Name"
+            value={fullName}
+            onChange={function(e) { setFullName(e.target.value); }}
+            placeholder="Dr. Jane Doe"
+            required
+            autoComplete="name"
+            testId={TID.registerName}
+          />
 
           <AuthInput
             label="Email"
@@ -137,17 +116,6 @@ export default function Register() {
             autoComplete="email"
             testId={TID.registerEmail}
           />
-
-          <AuthSelect
-            label="Academic Role"
-            value={role}
-            onChange={function(e) { setRole(e.target.value); }}
-          >
-            <option value="" disabled>Select your role</option>
-            {ROLES.map(function(r) {
-              return <option key={r.value} value={r.value}>{r.label}</option>;
-            })}
-          </AuthSelect>
 
           {/* Password + strength */}
           <div>
