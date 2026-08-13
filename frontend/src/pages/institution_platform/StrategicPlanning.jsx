@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { AlertTriangle, TrendingUp, BarChart2, ChevronDown, ChevronUp } from "lucide-react";
 import { NAVY, WARM, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
-import { Card, StatCard, StatGrid, Spinner } from "@/components/ds";
+import { Card, Spinner } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
@@ -150,16 +150,13 @@ export default function StrategicPlanning() {
     <InstitutionLayout
       title="Strategic Planning"
       subtitle={bench ? `${bench.institution} · ${priorities.length} strategic priorities · ${criticalCount} critical · ${highCount} high` : "Strategic priorities derived from risk, benchmark, and forecast analysis"}
+      stats={[
+        { label: "Total Priorities", value: priorities.length },
+        { label: "Critical", value: criticalCount },
+        { label: "High Priority", value: highCount },
+        { label: "Benchmark Gaps", value: belowNational.length },
+      ]}
     >
-
-      {/* Summary strip — StatCard has no per-tile value-color override, so
-          the original color-coded KPI values are flattened. */}
-      <StatGrid cols={4} className="mb-5">
-        <StatCard label="Total Priorities" value={priorities.length} />
-        <StatCard label="Critical" value={criticalCount} />
-        <StatCard label="High Priority" value={highCount} />
-        <StatCard label="Benchmark Gaps" value={belowNational.length} />
-      </StatGrid>
 
       {/* Strategic Priorities */}
       <Section icon={AlertTriangle} title="Strategic Priority List" color={ACCENT}>

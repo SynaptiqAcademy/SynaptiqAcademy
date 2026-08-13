@@ -39,7 +39,7 @@ export default function TrendDiscovery() {
       title="Trend Discovery"
       subtitle="Emerging topics, growth signals, and declining research areas — powered by the knowledge graph."
       actions={
-        <Button variant="outline" onClick={loadReport}>
+        <Button variant="hero" onClick={loadReport}>
           <RefreshCw size={14} /> Refresh
         </Button>
       }

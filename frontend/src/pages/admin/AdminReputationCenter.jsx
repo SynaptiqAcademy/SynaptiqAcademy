@@ -3,11 +3,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/api";
 import { toast } from "sonner";
+import { Award, TrendingUp, AlertTriangle } from "lucide-react";
 import { getResearchLevel } from "@/hooks/useReputation";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import {
-  Card, Button, Alert, NavTabs, StatCard, StatGrid,
+  Card, Button, Alert, NavTabs,
   DataTable, ProgressBar, SkeletonLine,
 } from "@/components/ds";
 
@@ -202,14 +203,6 @@ export default function AdminReputationCenter() {
           activity. Score manipulation is not supported.
         </Alert>
 
-        {/* KPI cards */}
-        <StatGrid cols={4}>
-          <StatCard label="Users with Scores" value={isLoading ? "…" : (stats?.total_users_with_scores?.toLocaleString() ?? "—")} />
-          <StatCard label="Total Events" value={isLoading ? "…" : (stats?.total_events?.toLocaleString() ?? "—")} />
-          <StatCard label="Average Score" value={isLoading ? "…" : (stats?.avg_score != null ? stats.avg_score.toFixed(1) : "—")} />
-          <StatCard label="Level Distribution" value={isLoading ? "…" : (stats?.level_distribution?.length ?? "—")} sub="levels tracked" />
-        </StatGrid>
-
         {/* Level distribution chart */}
         <Card padding="lg">
           <h3 className="font-semibold text-slate-900 mb-4">Level Distribution</h3>
@@ -392,6 +385,13 @@ export default function AdminReputationCenter() {
     <AdministrationLayout
       title="Reputation Center"
       subtitle="Platform-wide reputation analytics and monitoring"
+      stats={[
+        { label: "Users with Scores", value: loading.stats ? "…" : (stats?.total_users_with_scores?.toLocaleString() ?? "—") },
+        { label: "Total Events",      value: loading.stats ? "…" : (stats?.total_events?.toLocaleString() ?? "—") },
+        { label: "Average Score",     value: loading.stats ? "…" : (stats?.avg_score != null ? stats.avg_score.toFixed(1) : "—") },
+        { label: "Levels Tracked",    value: loading.stats ? "…" : (stats?.level_distribution?.length ?? "—") },
+      ]}
+      sidebar={<ReputationCenterSidebar badgeDist={badgeDist} levelDistribution={stats?.level_distribution} fraudAlerts={fraudAlerts} navigate={navigate} />}
       actions={
         <span className="text-xs text-slate-400 bg-white border border-slate-200 px-3 py-1.5 rounded-lg">
           Admin view — read-only scores
@@ -415,5 +415,74 @@ export default function AdminReputationCenter() {
           {activeTab === "fastest" && renderFastest()}
         </div>
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — badge & level breakdown, real data already fetched above ─────
+function ReputationCenterSidebar({ badgeDist, levelDistribution, fraudAlerts, navigate }) {
+  const topBadges = [...(badgeDist || [])].sort((a, b) => (b.count || 0) - (a.count || 0)).slice(0, 5);
+  const topLevel = levelDistribution && levelDistribution.length > 0
+    ? [...levelDistribution].sort((a, b) => (b.count || 0) - (a.count || 0))[0]
+    : null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Award size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Badge Distribution</div>
+        </div>
+        {topBadges.length === 0 ? (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No badge data yet.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {topBadges.map((b) => (
+              <div key={b.badge_code || b.badge_label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 11.5, color: "#374151" }}>{b.badge_label || b.badge_code}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", fontFamily: "monospace" }}>{(b.count || 0).toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <TrendingUp size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Most Populous Level</div>
+        </div>
+        {topLevel ? (
+          <div>
+            <span className="font-serif" style={{ fontSize: 22, color: "#0f172a" }}>Lv {topLevel.level}</span>
+            <span style={{ fontSize: 12, color: "#64748B", marginLeft: 8 }}>{topLevel.label}</span>
+            <p style={{ fontSize: 11.5, color: "#94A3B8", margin: "6px 0 0" }}>
+              {(topLevel.count || 0).toLocaleString()} researchers at this level
+            </p>
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No level data yet.</p>
+        )}
+      </Card>
+
+      {fraudAlerts.length > 0 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <AlertTriangle size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Fraud Alerts</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {fraudAlerts.slice(0, 4).map((a) => (
+              <div
+                key={a.user_id}
+                onClick={() => navigate(`/admin/users/${a.user_id}`)}
+                style={{ fontSize: 11.5, color: "#374151", cursor: "pointer" }}
+              >
+                {a.full_name || a.user_id} — <span style={{ color: "#DC2626" }}>{a.total_events_7d ?? "—"} events/7d</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

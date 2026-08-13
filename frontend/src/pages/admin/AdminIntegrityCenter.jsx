@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  Shield, AlertTriangle, CheckCircle, XCircle, RefreshCw,
-  Users, BarChart2, Activity, Search, ChevronDown,
+  Shield, CheckCircle, XCircle, RefreshCw,
+  Users, Search, ChevronDown,
 } from "lucide-react";
 import { NAVY, WARM, BRD, ACCENT, EMERALD, WHITE, TEXT_SECONDARY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
-import { StatCard, StatGrid, Card, Badge, FormSelect, Button, DataTable, Pagination, Spinner, H3 } from "@/components/ds";
+import { Card, Badge, FormSelect, Button, DataTable, Pagination, Spinner, H3 } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
@@ -133,19 +133,15 @@ export default function AdminIntegrityCenter() {
       title="Integrity Admin Center"
       subtitle="Platform-wide integrity scores, risk flags, provider health, and job queue"
       icon={<Shield size={22} />}
+      stats={stats ? [
+        { label: "Total Reports", value: stats.total_reports },
+        { label: "Pending Jobs", value: stats.pending_jobs },
+        { label: "Complete", value: stats.complete_jobs },
+        { label: "Errors", value: stats.error_jobs },
+        { label: "Critical Risks", value: stats.critical_reports },
+        { label: "High Risks", value: stats.high_risk_reports },
+      ] : undefined}
     >
-
-      {/* Stats grid */}
-      {stats && (
-        <StatGrid cols={6} className="mb-6">
-          <StatCard label="Total Reports" value={stats.total_reports} icon={<BarChart2 style={{ color: NAVY }} />} />
-          <StatCard label="Pending Jobs" value={stats.pending_jobs} icon={<Activity style={{ color: "#f59e0b" }} />} />
-          <StatCard label="Complete" value={stats.complete_jobs} icon={<CheckCircle style={{ color: EMERALD }} />} />
-          <StatCard label="Errors" value={stats.error_jobs} icon={<XCircle style={{ color: ACCENT }} />} />
-          <StatCard label="Critical Risks" value={stats.critical_reports} icon={<AlertTriangle style={{ color: "#dc2626" }} />} />
-          <StatCard label="High Risks" value={stats.high_risk_reports} icon={<AlertTriangle style={{ color: "#f97316" }} />} />
-        </StatGrid>
-      )}
 
       {/* Score stats */}
       {stats?.score_stats && (

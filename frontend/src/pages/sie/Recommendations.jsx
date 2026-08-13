@@ -113,7 +113,7 @@ export default function Recommendations() {
       subtitle={`${recs.length} active recommendations personalised to your research profile.`}
       navItems={SIE_NAV_ITEMS}
       actions={
-        <Button onClick={refresh} loading={refreshing} disabled={refreshing} variant="primary" size="sm" style={{ background: "#0F2847" }}>
+        <Button onClick={refresh} loading={refreshing} disabled={refreshing} variant="hero" size="sm">
           {!refreshing && <RefreshCw size={13} />}
           Refresh
         </Button>

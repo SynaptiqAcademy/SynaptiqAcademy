@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ds";
 import {
-  Activity, CalendarDays, Search, Plus, RefreshCw, Download,
+  Activity, Search, Plus, RefreshCw, Download,
   Star, X, ChevronDown, ChevronUp, BookOpen, GraduationCap,
   DollarSign, Users, FileCheck, ShieldCheck, Award, Eye,
-  Sparkles, Clock, Trophy, CheckCircle2, Filter,
+  Sparkles, Trophy, CheckCircle2, Filter,
 } from "lucide-react";
 import { NAVY, WARM, BRD, EMERALD, ACCENT, TEXT_SECONDARY, WHITE } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
@@ -425,8 +425,8 @@ export default function ResearchTimeline() {
       </a>
       <button onClick={() => setShowAdd(true)}
         style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px",
-          borderRadius: 7, background: NAVY, color: WHITE,
-          border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+          borderRadius: 7, background: "rgba(255,255,255,0.12)", color: WHITE,
+          border: "1px solid rgba(255,255,255,0.24)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
         <Plus size={13} /> Add Event
       </button>
     </div>
@@ -438,37 +438,43 @@ export default function ResearchTimeline() {
       subtitle="Your complete academic activity record"
       icon={<Activity size={18} />}
       actions={actions}
-    >
-      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-
-        {/* Stats row */}
-        {stats && (
-          <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
-            {[
-              { label: "Total Events", value: stats.total_events || 0, icon: Activity, color: NAVY },
-              { label: "Milestones",   value: stats.milestone_count || 0, icon: Trophy, color: "#D97706" },
-              { label: "Active Days",  value: heatmap?.active_days || 0, icon: CalendarDays, color: "#0369A1" },
-              { label: "Day Streak",   value: heatmap?.current_streak || 0, icon: Clock, color: EMERALD },
-            ].map(s => {
-              const Icon = s.icon;
-              return (
-                <div key={s.label} style={{
-                  flex: "1 1 120px", background: WHITE, border: `1px solid ${BRD}`,
-                  borderRadius: 10, padding: "14px 18px", display: "flex", alignItems: "center", gap: 12,
-                }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: s.color + "12",
-                    display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Icon size={16} color={s.color} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: NAVY }}>{s.value}</div>
-                    <div style={{ fontSize: 11, color: TEXT_SECONDARY }}>{s.label}</div>
+      stats={stats ? [
+        { label: "Total Events", value: stats.total_events || 0 },
+        { label: "Milestones",   value: stats.milestone_count || 0 },
+        { label: "Active Days",  value: heatmap?.active_days || 0 },
+        { label: "Day Streak",   value: heatmap?.current_streak || 0 },
+      ] : undefined}
+      sidebar={insights.length > 0 ? (
+        <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, marginBottom: 12 }}>
+            Timeline Insights
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {insights.slice(0, 3).map(ins => (
+              <div key={ins.key} style={{
+                display: "flex", gap: 12, padding: "10px 14px",
+                borderRadius: 8, border: `1px solid ${BRD}`,
+                background: ins.type === "positive" ? EMERALD + "06"
+                  : ins.type === "warning" ? "#D97706" + "06" : WARM,
+              }}>
+                <CheckCircle2 size={15} color={
+                  ins.type === "positive" ? EMERALD
+                    : ins.type === "warning" ? "#D97706" : TEXT_SECONDARY
+                } style={{ flexShrink: 0, marginTop: 1 }} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: NAVY }}>{ins.title}</div>
+                  <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginTop: 2 }}>{ins.body}</div>
+                  <div style={{ fontSize: 11, color: "#0369A1", marginTop: 4, fontWeight: 500 }}>
+                    → {ins.action}
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
-        )}
+        </div>
+      ) : undefined}
+    >
+      <div style={{ maxWidth: 1000, margin: "0 auto" }}>
 
         {/* Activity Heatmap */}
         {heatmap && heatmap.cells && (
@@ -489,38 +495,6 @@ export default function ResearchTimeline() {
             <HeatmapGrid cells={heatmap.cells} />
             <div style={{ fontSize: 11, color: TEXT_SECONDARY, marginTop: 8 }}>
               ★ = milestone day &nbsp;·&nbsp; Hover cells for details
-            </div>
-          </div>
-        )}
-
-        {/* AI Insights */}
-        {insights.length > 0 && (
-          <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12,
-            padding: 20, marginBottom: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, marginBottom: 12 }}>
-              Timeline Insights
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {insights.slice(0, 3).map(ins => (
-                <div key={ins.key} style={{
-                  display: "flex", gap: 12, padding: "10px 14px",
-                  borderRadius: 8, border: `1px solid ${BRD}`,
-                  background: ins.type === "positive" ? EMERALD + "06"
-                    : ins.type === "warning" ? "#D97706" + "06" : WARM,
-                }}>
-                  <CheckCircle2 size={15} color={
-                    ins.type === "positive" ? EMERALD
-                      : ins.type === "warning" ? "#D97706" : TEXT_SECONDARY
-                  } style={{ flexShrink: 0, marginTop: 1 }} />
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: NAVY }}>{ins.title}</div>
-                    <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginTop: 2 }}>{ins.body}</div>
-                    <div style={{ fontSize: 11, color: "#0369A1", marginTop: 4, fontWeight: 500 }}>
-                      → {ins.action}
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         )}

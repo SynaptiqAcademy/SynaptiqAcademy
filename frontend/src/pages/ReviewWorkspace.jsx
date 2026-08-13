@@ -1300,7 +1300,7 @@ export default function ReviewWorkspace() {
             onClick={handleCloseRequest}
             disabled={closing}
             loading={closing}
-            variant="outline"
+            variant="hero"
             className="flex-shrink-0"
           >
             <XCircle size={13} />

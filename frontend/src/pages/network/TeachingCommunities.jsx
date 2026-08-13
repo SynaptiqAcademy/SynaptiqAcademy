@@ -38,7 +38,7 @@ export default function TeachingCommunities() {
     <ResearchLayout
       title="Teaching Communities"
       subtitle="Collaborative spaces for educators — share pedagogy, resources, and teaching strategies."
-      actions={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={15} />Create</Button>}
+      actions={<Button variant="hero" onClick={() => setShowCreate(true)}><Plus size={15} />Create</Button>}
     >
 
       {loading ? <LoadingOverlay text="Loading…" /> : (

@@ -66,7 +66,7 @@ export default function AdminCommandMap() {
       title="Platform Command Map"
       subtitle={`Real-time health status of all ${d.module_count || 20} platform modules`}
       actions={
-        <Button variant="ghost" size="icon" onClick={refetch} aria-label="Refresh">
+        <Button variant="hero" size="icon" onClick={refetch} aria-label="Refresh">
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
         </Button>
       }

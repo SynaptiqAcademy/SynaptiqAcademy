@@ -309,6 +309,7 @@ export default function AISuite() {
     .slice(-7);
 
   const totalUsed30d = (usage?.last_30d || []).reduce((s, d) => s + (d.credits || 0), 0);
+  const topKind = (usage?.by_kind || []).slice().sort((a, b) => (b.credits || 0) - (a.credits || 0))[0];
 
   const firstName = user?.full_name?.split(" ")[0] || "there";
 
@@ -317,6 +318,9 @@ export default function AISuite() {
       navItems={AI_NAV_ITEMS}
       title="Research AI Suite"
       subtitle="AI tools designed to enhance existing research work — not replace it."
+      sidebar={!loading ? (
+        <AISuiteSidebar balance={balance} recentActivity={recentActivity} topKind={topKind} />
+      ) : undefined}
     >
       <div className="space-y-10">
 
@@ -359,5 +363,51 @@ export default function AISuite() {
 
       </div>
     </ResearchLayout>
+  );
+}
+
+// ─── Right rail — credit balance and usage already loaded by this page ────────
+function AISuiteSidebar({ balance, recentActivity, topKind }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <Card padding="lg">
+        <div className="flex items-center gap-1.5 mb-2">
+          <Coins size={13} strokeWidth={1.5} className="text-[#0F2847]" />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Available Credits</div>
+        </div>
+        <div className="font-serif text-3xl text-slate-900">{(balance ?? 0).toLocaleString()}</div>
+        <Link to="/ai-credits" className="text-xs text-[#0F2847] border-b border-[#0F2847] inline-block mt-2 hover:opacity-70">
+          Manage credits
+        </Link>
+      </Card>
+
+      {recentActivity.length > 0 && (
+        <Card padding="lg">
+          <div className="flex items-center gap-1.5 mb-3">
+            <Activity size={13} strokeWidth={1.5} className="text-[#0F2847]" />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Recent Activity</div>
+          </div>
+          <div className="flex flex-col gap-2">
+            {recentActivity.map((d) => (
+              <div key={d._id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                <span style={{ color: "#64748B" }}>{d._id}</span>
+                <span style={{ color: "#374151", fontFamily: "monospace" }}>{d.credits} cr</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {topKind && (
+        <Card padding="lg">
+          <div className="flex items-center gap-1.5 mb-2">
+            <TrendingUp size={13} strokeWidth={1.5} className="text-[#0F2847]" />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Most Used Tool</div>
+          </div>
+          <p className="text-sm text-slate-700 capitalize">{(topKind._id || "").replace(/_/g, " ")}</p>
+          <p className="text-xs text-slate-400 mt-1">{topKind.credits} credits in last 30 days</p>
+        </Card>
+      )}
+    </div>
   );
 }

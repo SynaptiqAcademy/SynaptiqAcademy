@@ -157,14 +157,14 @@ export default function Projects() {
       subtitle={`${getGreeting()}, ${firstName}. From question to publication — every study starts here.`}
       actions={
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <Button as={Link} to="/collaboration-intelligence" variant="ghost" size="sm">
+          <Button as={Link} to="/collaboration-intelligence" variant="hero" size="sm">
             <BrainCircuit size={12} strokeWidth={1.5} />
             Find Collaborators
           </Button>
           <Button
             data-testid={TID.projectCreateBtn}
             onClick={() => setShowNew((v) => !v)}
-            variant="primary"
+            variant="hero"
             size="sm"
           >
             <Plus size={13} strokeWidth={2} />

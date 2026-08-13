@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import api from "@/lib/api";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Building2, Tags } from "lucide-react";
+import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
-import { SearchBar, DataTable, LoadingOverlay, ErrorState } from "@/components/ds";
+import { SearchBar, DataTable, LoadingOverlay, ErrorState, Card } from "@/components/ds";
 
 export default function AdminProfiles() {
   const [profiles, setProfiles] = useState([]);
@@ -56,6 +57,7 @@ export default function AdminProfiles() {
     <AdministrationLayout
       title="Public Research Profiles"
       subtitle={`All researcher public profiles — ${profiles.length} total`}
+      sidebar={profiles.length > 0 ? <ProfilesSidebar profiles={profiles} /> : undefined}
     >
       <div className="flex flex-col gap-4">
         <SearchBar
@@ -69,5 +71,60 @@ export default function AdminProfiles() {
         <DataTable columns={columns} rows={filtered} />
       </div>
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — computed from the profiles already fetched above ─────────────
+function ProfilesSidebar({ profiles }) {
+  const topN = (counts, n) => Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, n);
+
+  const institutionCounts = profiles.reduce((acc, p) => {
+    if (p.institution) acc[p.institution] = (acc[p.institution] || 0) + 1;
+    return acc;
+  }, {});
+  const areaCounts = profiles.reduce((acc, p) => {
+    (p.research_areas || []).forEach((a) => { acc[a] = (acc[a] || 0) + 1; });
+    return acc;
+  }, {});
+
+  const topInstitutions = topN(institutionCounts, 5);
+  const topAreas = topN(areaCounts, 5);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {topInstitutions.length > 0 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Building2 size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Institutions</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {topInstitutions.map(([name, count]) => (
+              <div key={name} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 12, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", flexShrink: 0 }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {topAreas.length > 0 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Tags size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Research Areas</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {topAreas.map(([area, count]) => (
+              <div key={area} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 12, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{area}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", flexShrink: 0 }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

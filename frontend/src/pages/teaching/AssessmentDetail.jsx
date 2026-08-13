@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Sparkles, Download, Edit2, Check, X, Trash2, Plus, CheckCircle } from "lucide-react";
+import { Sparkles, Download, Edit2, Check, X, Trash2, Plus, CheckCircle, ClipboardCheck, Layers } from "lucide-react";
 import api from "../../lib/api";
 import { toast } from "sonner";
 import { SkeletonPage } from "../../components/ds/LoadingState";
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ds/Textarea";
 import { NavTabs } from "@/components/ds/NavTabs";
 import { ResearchLayout } from "@/layouts";
 import { confirmDialog } from "@/lib/confirm";
+import { NAVY } from "@/lib/tokens";
 
 const TYPE_BADGE_VARIANT = {
   quiz: "info",
@@ -185,22 +186,22 @@ export default function AssessmentDetail() {
 
   const headerActions = editing ? (
     <>
-      <Button onClick={save} loading={saving}>
+      <Button variant="hero" onClick={save} loading={saving}>
         <Check size={14} strokeWidth={1.5} />{saving ? "Saving…" : "Save"}
       </Button>
-      <Button variant="ghost" onClick={() => { setDraft(assessment); setEditing(false); }}>
+      <Button variant="hero" onClick={() => { setDraft(assessment); setEditing(false); }}>
         Cancel
       </Button>
     </>
   ) : (
     <>
-      <Button variant="ghost" size="sm" onClick={exportAsText}>
+      <Button variant="hero" size="sm" onClick={exportAsText}>
         <Download size={13} strokeWidth={1.5} /> Export
       </Button>
-      <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+      <Button variant="hero" size="sm" onClick={() => setEditing(true)}>
         <Edit2 size={13} strokeWidth={1.5} /> Edit
       </Button>
-      <Button variant="ghost" size="icon" onClick={handleDelete} aria-label="Delete assessment" className="text-slate-400 hover:text-red-500">
+      <Button variant="hero" size="icon" onClick={handleDelete} aria-label="Delete assessment" className="text-slate-400 hover:text-red-500">
         <Trash2 size={15} strokeWidth={1.5} />
       </Button>
     </>
@@ -217,6 +218,7 @@ export default function AssessmentDetail() {
           onChange={setTab}
         />
       }
+      sidebar={<AssessmentDetailSidebar assessment={d} totalQMarks={totalQMarks} />}
     >
     <div className="max-w-4xl space-y-8">
       <div className="border-b border-slate-200 pb-6">
@@ -342,5 +344,55 @@ export default function AssessmentDetail() {
       )}
     </div>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — marks coverage + content breakdown, real data already loaded above ──
+function AssessmentDetailSidebar({ assessment, totalQMarks }) {
+  const qCount = (assessment.questions || []).length;
+  const rubricCount = (assessment.rubric_criteria || []).length;
+  const objectivesCount = (assessment.learning_objectives || []).length;
+  const fullyAllocated = qCount > 0 && totalQMarks === assessment.total_marks;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <ClipboardCheck size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Marks Coverage</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+          {totalQMarks} <span style={{ fontSize: 15, fontWeight: 400, color: "#94A3B8" }}>/ {assessment.total_marks}</span>
+        </div>
+        <p style={{ fontSize: 12, color: qCount === 0 ? "#94A3B8" : (fullyAllocated ? "#64748B" : "#B45309"), margin: "4px 0 0", lineHeight: 1.5 }}>
+          {qCount === 0
+            ? "No questions added yet."
+            : fullyAllocated
+              ? "Fully allocated across questions."
+              : "Marks don't yet match the assessment total."}
+        </p>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <Layers size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Content Breakdown</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 12.5, color: "#374151" }}>Questions</span>
+            <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>{qCount}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 12.5, color: "#374151" }}>Rubric criteria</span>
+            <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>{rubricCount}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 12.5, color: "#374151" }}>Learning objectives</span>
+            <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>{objectivesCount}</span>
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 }

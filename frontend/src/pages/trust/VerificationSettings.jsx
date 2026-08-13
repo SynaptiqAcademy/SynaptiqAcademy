@@ -51,7 +51,7 @@ export default function VerificationSettings() {
       title="Trust Settings"
       subtitle="Manage your verification preferences and privacy"
       actions={
-        <Button onClick={save} disabled={saving}>
+        <Button variant="hero" onClick={save} disabled={saving}>
           <Save size={14} />
           {saving ? "Saving…" : saved ? "Saved!" : "Save Settings"}
         </Button>

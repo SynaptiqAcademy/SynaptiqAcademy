@@ -551,7 +551,7 @@ export default function DigitalTwin() {
       actions={
         <div className="flex items-center gap-3">
           {syncMsg && <p className="text-[11px] text-blue-600">{syncMsg}</p>}
-          <Button onClick={handleSync} disabled={syncing} variant="primary" size="sm">
+          <Button onClick={handleSync} disabled={syncing} variant="hero" size="sm">
             <RefreshCw size={12} className={syncing ? "animate-spin" : ""} />
             {syncing ? "Syncing…" : "Sync Twin"}
           </Button>

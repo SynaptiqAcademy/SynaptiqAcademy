@@ -1,10 +1,10 @@
 /* eslint-disable */
 import React, { useState, useCallback, useEffect } from "react";
-import { RefreshCw, Search, Building2, ChevronRight, X } from "lucide-react";
+import { RefreshCw, Search, Building2, ChevronRight, X, TrendingUp } from "lucide-react";
 import api from "@/lib/api";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
-import { Drawer, Modal, Button, Input, FormSelect, Badge, StatCard, Alert } from "@/components/ds";
+import { Drawer, Modal, Button, Input, FormSelect, Badge, StatCard, Alert, Card } from "@/components/ds";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -132,6 +132,7 @@ export default function AdminInstitutionCenter() {
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
         </button>
       }
+      sidebar={!loading && items.length > 0 ? <InstitutionCenterSidebar items={items} total={total} /> : undefined}
     >
 
       {/* Search */}
@@ -222,5 +223,41 @@ export default function AdminInstitutionCenter() {
       {selected && <DetailPanel instId={selected} onClose={() => setSelected(null)} />}
       {editInst && <PatchModal inst={editInst} onClose={() => setEditInst(null)} onSaved={() => { setEditInst(null); refetch(); }} />}
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — computed from the institutions already loaded on this page ───
+function InstitutionCenterSidebar({ items, total }) {
+  const activeCount = items.filter((i) => (i.status || "active") === "active").length;
+  const topByEngagement = [...items].sort((a, b) => (b.engagement_score || 0) - (a.engagement_score || 0)).slice(0, 3);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Building2 size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Directory</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 24, color: "#0f172a" }}>{total}</div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0" }}>
+          {activeCount} of {items.length} on this page are active
+        </p>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <TrendingUp size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top by Engagement</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {topByEngagement.map((i) => (
+            <div key={i.id} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{i.name}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", flexShrink: 0 }}>{i.engagement_score}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
   );
 }

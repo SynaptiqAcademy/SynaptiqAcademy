@@ -62,7 +62,7 @@ export default function ResearchProgress() {
       subtitle={`Cross-platform activity snapshot · ${overview?.generated_at?.slice(0, 10) || ""}`}
       navItems={SIE_NAV_ITEMS}
       actions={
-        <Button onClick={takeSnapshot} loading={snapping} disabled={snapping} size="sm">
+        <Button onClick={takeSnapshot} loading={snapping} disabled={snapping} variant="hero" size="sm">
           {!snapping && <Camera size={13} />}
           Save Snapshot
         </Button>

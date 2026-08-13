@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { AlertTriangle, Star, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import { NAVY, WARM, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
-import { Card, NavTabs, DataTable, StatCard, StatGrid, ProgressBar, List, ListItem, Badge, Spinner } from "@/components/ds";
+import { Card, NavTabs, DataTable, ProgressBar, List, ListItem, Badge, Spinner } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
@@ -94,19 +94,15 @@ export default function FacultyIntelligence() {
     <InstitutionLayout
       title="Faculty Intelligence"
       subtitle={overview?.institution ?? ""}
+      stats={overview ? [
+        { label: "Total Faculty", value: overview.total },
+        { label: "Active Researchers", value: overview.active },
+        { label: "Inactive", value: overview.inactive },
+        { label: "Engagement Rate", value: `${overview.engagement_rate ?? 0}%` },
+        { label: "Departments", value: overview.departments?.length ?? 0 },
+      ] : undefined}
+      sidebar={<FacultyIntelligenceSidebar top={top} atRisk={atRisk} promo={promo} />}
     >
-      {/* Overview stats — StatCard has no per-tile value-color override, so the
-          original color-coded KPI values are flattened to StatCard's fixed navy. */}
-      {overview && (
-        <StatGrid cols={5} className="mb-5">
-          <StatCard label="Total Faculty" value={overview.total} />
-          <StatCard label="Active Researchers" value={overview.active} />
-          <StatCard label="Inactive" value={overview.inactive} />
-          <StatCard label="Engagement Rate" value={`${overview.engagement_rate ?? 0}%`} />
-          <StatCard label="Departments" value={overview.departments?.length ?? 0} />
-        </StatGrid>
-      )}
-
       {/* Department breakdown */}
       {overview?.departments?.length > 0 && (
         <Card padding="lg" className="mb-5">
@@ -163,5 +159,55 @@ export default function FacultyIntelligence() {
       )}
       {tab === "promo" && <FacultyTable data={promo} title="Promotion Candidates" />}
     </InstitutionLayout>
+  );
+}
+
+// ── Right rail — faculty lists already fetched by this page ───────────────────
+function FacultyIntelligenceSidebar({ top, atRisk, promo }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Star size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Performer</div>
+        </div>
+        {top.length > 0 ? (
+          <>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{top[0].name || "—"}</div>
+            <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+              {top[0].department} · {top[0].publications_recent ?? 0} recent publications
+            </p>
+          </>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No top performers identified yet.</p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <TrendingUp size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Promotion Ready</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+          {promo.length}
+        </div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          {promo.length > 0 ? "Researchers flagged as promotion candidates." : "No promotion candidates flagged right now."}
+        </p>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <AlertTriangle size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>At Risk</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+          {atRisk.length}
+        </div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          {atRisk.length > 0 ? "Researchers with no publications in 3+ years." : "No researchers currently flagged as at risk."}
+        </p>
+      </Card>
+    </div>
   );
 }

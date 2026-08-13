@@ -86,7 +86,7 @@ export default function CareerPlanner() {
       navItems={SIE_NAV_ITEMS}
       actions={
         !editing && (
-          <Button onClick={() => setEditing(true)} size="sm">
+          <Button onClick={() => setEditing(true)} variant="hero" size="sm">
             <Pencil size={13} /> {profile?.current_position ? "Edit Profile" : "Set Up Profile"}
           </Button>
         )

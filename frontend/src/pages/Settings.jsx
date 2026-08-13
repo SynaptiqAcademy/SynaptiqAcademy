@@ -74,7 +74,7 @@ export default function Settings() {
       title={activeMeta?.label}
       subtitle="Configure how Synaptiq behaves. These preferences customize your experience across the platform."
       actions={
-        <Button variant="ghost" size="sm" onClick={handleResetAll}>
+        <Button variant="hero" size="sm" onClick={handleResetAll}>
           <RotateCcw size={12} /> Reset all preferences
         </Button>
       }

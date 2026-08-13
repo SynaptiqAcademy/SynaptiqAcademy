@@ -3,12 +3,12 @@ import api from "@/lib/api";
 import { toast } from "sonner";
 import { NAVY } from "@/lib/tokens";
 import {
-  Activity, Users, ThumbsUp, XCircle, Percent,
+  Percent, TrendingUp,
   RefreshCw, AlertCircle, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { AdministrationLayout } from "@/layouts";
 import {
-  Card, Button, Badge, ErrorState, Skeleton, StatCard, StatGrid,
+  Card, Button, Badge, ErrorState, Skeleton,
   DataTable, Pagination, ProgressBar,
 } from "@/components/ds";
 
@@ -496,40 +496,21 @@ export default function AdminRecommendationCenter() {
     <AdministrationLayout
       title="Recommendation Center"
       subtitle="Read-only analytics dashboard for the academic recommendation engine."
+      stats={[
+        { label: "Total Interactions", value: statsLoading ? "…" : (totalInteractions != null ? totalInteractions.toLocaleString() : "—") },
+        { label: "Acceptance Rate",    value: statsLoading ? "…" : (acceptanceRate != null ? `${acceptanceRate}%` : "—") },
+        { label: "Profile Coverage",   value: coverageLoading ? "…" : (coveragePct != null ? `${Math.round(coveragePct)}%` : "—") },
+        { label: "Dismissal Rate",     value: statsLoading ? "…" : (dismissalRate != null ? `${dismissalRate}%` : "—") },
+      ]}
+      sidebar={<RecommendationCenterSidebar qualityItems={qualityItems} qualityLoading={qualityLoading} topAreas={topAreas} topAreasLoading={topAreasLoading} />}
     >
-      {/* ── Top metric cards ──────────────────────────────────── */}
-      <section>
-        <div className="overline mb-3">Platform Overview</div>
-        {statsError ? (
+      {/* ── Platform Overview errors ──────────────────────────── */}
+      {statsError && (
+        <section>
+          <div className="overline mb-3">Platform Overview</div>
           <ErrorCard message={statsError} onRetry={fetchStats} />
-        ) : (
-          <StatGrid cols={4}>
-            <StatCard
-              icon={<Activity />}
-              label="Total Interactions"
-              value={statsLoading ? "…" : (totalInteractions != null ? totalInteractions.toLocaleString() : "—")}
-            />
-            <StatCard
-              icon={<ThumbsUp />}
-              label="Acceptance Rate"
-              value={statsLoading ? "…" : (acceptanceRate != null ? `${acceptanceRate}%` : "—")}
-              sub={totalAccepted != null ? `${totalAccepted.toLocaleString()} accepted` : undefined}
-            />
-            <StatCard
-              icon={<Users />}
-              label="Profile Coverage"
-              value={coverageLoading ? "…" : (coveragePct != null ? `${Math.round(coveragePct)}%` : "—")}
-              sub={coverage?.total_users != null ? `${coverage.total_users.toLocaleString()} users` : undefined}
-            />
-            <StatCard
-              icon={<XCircle />}
-              label="Dismissal Rate"
-              value={statsLoading ? "…" : (dismissalRate != null ? `${dismissalRate}%` : "—")}
-              sub={totalDismissals != null ? `${totalDismissals.toLocaleString()} dismissed` : undefined}
-            />
-          </StatGrid>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* ── Charts section ────────────────────────────────────── */}
       <section>
@@ -684,5 +665,58 @@ export default function AdminRecommendationCenter() {
         </Card>
       </section>
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — quality signals & top areas, real data already fetched above ──
+function RecommendationCenterSidebar({ qualityItems, qualityLoading, topAreas, topAreasLoading }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Percent size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Quality Signals</div>
+        </div>
+        {qualityLoading ? (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0 }}>Loading…</p>
+        ) : qualityItems.length === 0 ? (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No quality metrics available yet.
+          </p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {qualityItems.slice(0, 5).map((q) => (
+              <div key={q.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 11.5, color: "#64748B" }}>{q.label}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{q.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <TrendingUp size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Research Areas</div>
+        </div>
+        {topAreasLoading ? (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0 }}>Loading…</p>
+        ) : topAreas.length === 0 ? (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No area data yet.
+          </p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {topAreas.slice(0, 5).map((d, i) => (
+              <div key={d.area || d.name || i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 11.5, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.area || d.name || "Unknown"}</span>
+                <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>{(d.count || 0).toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }

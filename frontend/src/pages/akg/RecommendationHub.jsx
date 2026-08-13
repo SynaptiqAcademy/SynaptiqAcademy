@@ -74,7 +74,7 @@ export default function RecommendationHub() {
       subtitle="Algorithmic recommendations powered by your knowledge graph neighborhood. No LLM."
       icon={<Lightbulb size={22} color={ACCENT} />}
       actions={
-        <Button variant="outline" onClick={refresh} disabled={refreshing} loading={refreshing}>
+        <Button variant="hero" onClick={refresh} disabled={refreshing} loading={refreshing}>
           {!refreshing && <RefreshCw size={14} />}
           {refreshing ? "Refreshing…" : "Refresh"}
         </Button>

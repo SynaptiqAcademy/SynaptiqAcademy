@@ -874,7 +874,7 @@ export default function Recommendations() {
       title="Academic Recommendations"
       subtitle="Personalized for your research profile"
       actions={
-        <Button onClick={handleRefresh} disabled={refreshDisabled} variant="outline" size="sm">
+        <Button onClick={handleRefresh} disabled={refreshDisabled} variant="hero" size="sm">
           <RefreshCw size={14} strokeWidth={1.5} className={refreshing ? "animate-spin" : ""} />
           {refreshing ? "Refreshing…" : refreshDisabled ? "Refresh (wait 30s)" : "Refresh"}
         </Button>

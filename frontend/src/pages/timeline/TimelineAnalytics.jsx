@@ -124,50 +124,77 @@ export default function TimelineAnalytics() {
       subtitle="Research productivity and career progression analysis"
       icon={<BarChart2 size={18} />}
       actions={periodPicker}
+      stats={[
+        { label: "3-Month Trend",  value: `${trend >= 0 ? "+" : ""}${trend}%` },
+        { label: "Total Events",   value: totalEvents },
+        { label: "Milestones",     value: milestones.length },
+      ]}
+      sidebar={(insights.length > 0 || milestones.length > 0) ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {insights.length > 0 && (
+            <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                <Lightbulb size={14} color="#D97706" /> Timeline Insights
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {insights.map(ins => (
+                  <div key={ins.key} style={{
+                    display: "flex", gap: 12, padding: "12px 16px",
+                    borderRadius: 9, border: `1px solid ${BRD}`,
+                    background: ins.type === "positive" ? EMERALD + "06"
+                      : ins.type === "warning" ? "#D97706" + "06" : WARM,
+                  }}>
+                    <div style={{
+                      width: 8, height: 8, borderRadius: "50%", flexShrink: 0, marginTop: 5,
+                      background: ins.type === "positive" ? EMERALD
+                        : ins.type === "warning" ? "#D97706" : TEXT_SECONDARY,
+                    }} />
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: NAVY }}>{ins.title}</div>
+                      <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginTop: 3 }}>{ins.body}</div>
+                      <div style={{ fontSize: 11, color: "#0369A1", marginTop: 5, fontWeight: 500 }}>→ {ins.action}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {milestones.length > 0 && (
+            <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                <Trophy size={14} color="#D97706" /> Career Milestones
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {milestones.map((m, i) => (
+                  <div key={m.milestone_key} style={{
+                    display: "flex", gap: 14, alignItems: "flex-start",
+                    paddingBottom: i < milestones.length - 1 ? 10 : 0,
+                    borderBottom: i < milestones.length - 1 ? `1px solid ${BRD}` : "none",
+                  }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: "50%",
+                      background: "#D97706" + "14",
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    }}>
+                      <Trophy size={13} color="#D97706" />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: NAVY }}>{m.label}</div>
+                      <div style={{ fontSize: 11, color: TEXT_SECONDARY, marginTop: 2 }}>
+                        {m.achieved_at ? new Date(m.achieved_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                        &nbsp;·&nbsp; {m.category}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : undefined}
     >
       <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-
-        {/* Trend card */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
-          <div style={{ flex: "1 1 200px", background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20 }}>
-            <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginBottom: 6 }}>Recent 3-Month Trend</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {trend >= 0
-                ? <TrendingUp size={22} color={EMERALD} />
-                : <TrendingDown size={22} color={ACCENT} />
-              }
-              <span style={{ fontSize: 28, fontWeight: 800, color: trend >= 0 ? EMERALD : ACCENT }}>
-                {trend >= 0 ? "+" : ""}{trend}%
-              </span>
-            </div>
-            <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginTop: 4 }}>
-              {analytics?.recent_3_months || 0} events vs {analytics?.prior_3_months || 0} prior
-            </div>
-          </div>
-
-          <div style={{ flex: "1 1 200px", background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20 }}>
-            <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginBottom: 6 }}>Total Events (Period)</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: NAVY }}>{totalEvents}</div>
-            {analytics?.peak_month && (
-              <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginTop: 4 }}>
-                Peak: {analytics.peak_month.label} ({analytics.peak_month.total})
-              </div>
-            )}
-          </div>
-
-          <div style={{ flex: "1 1 200px", background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20 }}>
-            <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginBottom: 6 }}>Milestones Reached</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Trophy size={22} color="#D97706" />
-              <span style={{ fontSize: 28, fontWeight: 800, color: "#D97706" }}>{milestones.length}</span>
-            </div>
-            {milestones[0] && (
-              <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginTop: 4 }}>
-                Latest: {milestones[0].label}
-              </div>
-            )}
-          </div>
-        </div>
 
         <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
           {/* Monthly bar chart */}
@@ -221,68 +248,6 @@ export default function TimelineAnalytics() {
           </div>
         </div>
 
-        {/* Insights */}
-        {insights.length > 0 && (
-          <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20, marginTop: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
-              <Lightbulb size={14} color="#D97706" /> Timeline Insights
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {insights.map(ins => (
-                <div key={ins.key} style={{
-                  display: "flex", gap: 12, padding: "12px 16px",
-                  borderRadius: 9, border: `1px solid ${BRD}`,
-                  background: ins.type === "positive" ? EMERALD + "06"
-                    : ins.type === "warning" ? "#D97706" + "06" : WARM,
-                }}>
-                  <div style={{
-                    width: 8, height: 8, borderRadius: "50%", flexShrink: 0, marginTop: 5,
-                    background: ins.type === "positive" ? EMERALD
-                      : ins.type === "warning" ? "#D97706" : TEXT_SECONDARY,
-                  }} />
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: NAVY }}>{ins.title}</div>
-                    <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginTop: 3 }}>{ins.body}</div>
-                    <div style={{ fontSize: 11, color: "#0369A1", marginTop: 5, fontWeight: 500 }}>→ {ins.action}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Career milestones timeline */}
-        {milestones.length > 0 && (
-          <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20, marginTop: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
-              <Trophy size={14} color="#D97706" /> Career Milestones
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {milestones.map((m, i) => (
-                <div key={m.milestone_key} style={{
-                  display: "flex", gap: 14, alignItems: "flex-start",
-                  paddingBottom: i < milestones.length - 1 ? 10 : 0,
-                  borderBottom: i < milestones.length - 1 ? `1px solid ${BRD}` : "none",
-                }}>
-                  <div style={{
-                    width: 28, height: 28, borderRadius: "50%",
-                    background: "#D97706" + "14",
-                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                  }}>
-                    <Trophy size={13} color="#D97706" />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: NAVY }}>{m.label}</div>
-                    <div style={{ fontSize: 11, color: TEXT_SECONDARY, marginTop: 2 }}>
-                      {m.achieved_at ? new Date(m.achieved_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
-                      &nbsp;·&nbsp; {m.category}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </ResearchLayout>
   );

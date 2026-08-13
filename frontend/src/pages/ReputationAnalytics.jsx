@@ -628,7 +628,7 @@ export default function ReputationAnalytics() {
       subtitle="Your academic reputation score, earned badges, and relative rankings — all computed from real platform activity."
       nav={<IntelNav current="/reputation" />}
       actions={
-        <Button as={Link} to="/leaderboards" variant="outline" size="sm">
+        <Button as={Link} to="/leaderboards" variant="hero" size="sm">
           <Star size={12} strokeWidth={1.5} /> Leaderboards
         </Button>
       }

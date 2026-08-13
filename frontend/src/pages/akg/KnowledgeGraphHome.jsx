@@ -1,9 +1,9 @@
 /* eslint-disable */
 import React, { useEffect, useState } from "react";
-import { Network, Search, TrendingUp, BarChart2, Lightbulb, RefreshCw, Layers, Users, GitBranch } from "lucide-react";
+import { Network, Search, TrendingUp, BarChart2, Lightbulb, RefreshCw } from "lucide-react";
 import { NAVY, WARM, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
-import { Card, Button, StatGrid, StatCard } from "@/components/ds";
+import { Card, Button } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = (p) => `/api/akg${p}`;
@@ -36,21 +36,20 @@ export default function KnowledgeGraphHome() {
     <ResearchLayout
       title="Academic Knowledge Graph"
       subtitle="The semantic intelligence layer powering every AI capability across Synaptiq."
-      icon={<Network size={24} color={ACCENT} />}
+      icon={<Network size={15} strokeWidth={1.5} color={ACCENT} />}
+      stats={overview ? [
+        { label: "Total Entities",  value: overview.total_entities?.toLocaleString() ?? 0 },
+        { label: "Relationships",   value: overview.total_relationships?.toLocaleString() ?? 0 },
+        { label: "Avg Degree",      value: overview.avg_degree ?? "—" },
+        { label: "Collab Density",  value: overview.collaboration_density?.density_label ?? "—" },
+      ] : undefined}
       actions={
-        <Button variant="primary" onClick={triggerSync} disabled={syncing} loading={syncing}>
+        <Button variant="hero" onClick={triggerSync} disabled={syncing} loading={syncing}>
           {!syncing && <RefreshCw size={16} />}
           {syncing ? "Syncing…" : "Sync Now"}
         </Button>
       }
     >
-
-      <StatGrid cols={4} className="mb-8">
-        <StatCard label="Total Entities" value={overview?.total_entities?.toLocaleString()} icon={<Layers />} />
-        <StatCard label="Relationships" value={overview?.total_relationships?.toLocaleString()} icon={<GitBranch />} />
-        <StatCard label="Avg Degree" value={overview?.avg_degree} icon={<Network />} />
-        <StatCard label="Collab Density" value={overview?.collaboration_density?.density_label} icon={<Users />} />
-      </StatGrid>
 
       <h2 style={{ fontSize: 16, fontWeight: 700, color: NAVY, marginBottom: 16 }}>Explore the Graph</h2>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 32 }}>

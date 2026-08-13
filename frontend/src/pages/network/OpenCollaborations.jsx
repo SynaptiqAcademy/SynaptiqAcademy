@@ -234,7 +234,7 @@ export default function OpenCollaborations() {
   return (
     <ResearchLayout
       title="Open Collaborations"
-      actions={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={15} />Post</Button>}
+      actions={<Button variant="hero" onClick={() => setShowCreate(true)}><Plus size={15} />Post</Button>}
       nav={
         <NavTabs
           variant="pill"

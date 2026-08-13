@@ -54,7 +54,7 @@ export default function AdminRevenuePage() {
             <option value={90}>90 days</option>
           </FormSelect>
           <Button
-            variant="ghost"
+            variant="hero"
             size="icon"
             onClick={() => { refMetrics(); refCountry(); refForecast(); }}
             aria-label="Refresh"

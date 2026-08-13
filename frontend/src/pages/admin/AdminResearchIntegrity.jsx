@@ -77,7 +77,7 @@ export default function AdminResearchIntegrity() {
       title="Research Integrity Center"
       subtitle="Duplicate detection, anomaly analysis, ORCID coverage, manuscript health"
       actions={
-        <Button variant="ghost" size="icon" onClick={refetchAll} aria-label="Refresh">
+        <Button variant="hero" size="icon" onClick={refetchAll} aria-label="Refresh">
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
         </Button>
       }

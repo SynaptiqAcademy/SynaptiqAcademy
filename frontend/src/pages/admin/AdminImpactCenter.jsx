@@ -240,7 +240,7 @@ export default function AdminImpactCenter() {
           {refreshMsg && (
             <span className="text-xs animate-pulse" style={{ color: TEAL }}>{refreshMsg}</span>
           )}
-          <Button variant="primary" size="md" onClick={handleRefreshAll} loading={refreshingAll}>
+          <Button variant="hero" size="md" onClick={handleRefreshAll} loading={refreshingAll}>
             <RefreshCw size={12} className={refreshingAll ? "animate-spin" : ""} />
             {refreshingAll ? "Triggering…" : "Refresh All Impact Scores"}
           </Button>

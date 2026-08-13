@@ -231,7 +231,7 @@ export default function Teams() {
       title="Research Teams"
       subtitle="Find, create and manage research teams across all academic disciplines."
       actions={
-        <Button onClick={() => navigate("/teams/create")}>
+        <Button onClick={() => navigate("/teams/create")} variant="hero">
           <Plus size={14} strokeWidth={2} />
           Create Team
         </Button>

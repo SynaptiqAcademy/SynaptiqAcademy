@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Star, Package, Tag as TagIcon } from "lucide-react";
-import { ACCENT, EMERALD } from "@/lib/tokens";
+import { NAVY, ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
-import { Card, Grid, SearchBar, FormSelect, Button, EmptyState, LoadingOverlay, Caption } from "@/components/ds";
+import { Card, Grid, SearchBar, FormSelect, Button, EmptyState, LoadingOverlay, Caption, Tag, TagGroup } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
@@ -13,6 +13,57 @@ const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
   { value: "price_asc", label: "Price: Low to High" },
 ];
+
+// ── Right rail — fetched categories as quick filters + the top-rated result ────
+// on the current page; no data invented, nothing fetched just for the rail ────
+function ServiceBrowseSidebar({ categories, category, onSelectCategory, results }) {
+  const topRated = results.length > 0
+    ? results.reduce((best, s) => (s.average_rating || 0) > (best.average_rating || 0) ? s : best, results[0])
+    : null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {categories.length > 0 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <TagIcon size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Categories</div>
+          </div>
+          <TagGroup gap={6}>
+            {categories.map((c) => (
+              <Tag
+                key={c}
+                size="sm"
+                variant={category === c ? "active" : "default"}
+                onClick={() => onSelectCategory(category === c ? "" : c)}
+              >
+                {c.replace(/_/g, " ")}
+              </Tag>
+            ))}
+          </TagGroup>
+        </Card>
+      )}
+
+      {topRated && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Star size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Rated on This Page</div>
+          </div>
+          <a href={`/academic-marketplace/services/${topRated.id}`} style={{ textDecoration: "none" }}>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a" }}>{topRated.title}</div>
+          </a>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4 }}>
+            <Star size={10} style={{ color: "#F59E0B" }} fill="#F59E0B" />
+            <span style={{ fontSize: 11, color: "#64748B" }}>
+              {topRated.average_rating > 0 ? topRated.average_rating.toFixed(1) : "New"} ({topRated.rating_count})
+            </span>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
 
 export default function ServiceBrowse() {
   const params = new URLSearchParams(window.location.search);
@@ -44,7 +95,18 @@ export default function ServiceBrowse() {
   useEffect(() => { fetchServices(); }, [fetchServices]);
 
   return (
-    <ResearchLayout title="Browse Services" subtitle={`${total} services available`}>
+    <ResearchLayout
+      title="Browse Services"
+      subtitle={`${total} services available`}
+      sidebar={!loading ? (
+        <ServiceBrowseSidebar
+          categories={categories}
+          category={category}
+          onSelectCategory={(c) => { setCategory(c); setPage(1); }}
+          results={results}
+        />
+      ) : undefined}
+    >
 
         {/* Filters */}
         <div className="flex gap-3 mb-6 flex-wrap items-center">

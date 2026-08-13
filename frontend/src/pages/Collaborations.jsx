@@ -161,17 +161,25 @@ export default function Collaborations() {
     <ResearchLayout
       title="Collaborations"
       subtitle="Build your research network. Collaborate globally. Publish together."
+      stats={[
+        { label: "Active",   value: hubLoading ? "—" : activeCount },
+        { label: "Pending",  value: hubLoading ? "—" : pendingCount },
+        { label: "Accepted", value: hubLoading ? "—" : (acceptedCount ?? "—") },
+        { label: "Projects", value: hubLoading ? "—" : (totalProjects ?? "—") },
+      ]}
+      sidebar={<CollaborationsSidebar mine={mine} hubLoading={hubLoading} />}
       actions={
         <>
-          <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} size="sm">
+          <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} variant="hero" size="sm">
             <Search size={13} strokeWidth={2} /> Find Collaborations
           </Button>
-          <Button as={Link} to="/collaboration-intelligence" variant="ghost" size="sm">
+          <Button as={Link} to="/collaboration-intelligence" variant="hero" size="sm">
             <BrainCircuit size={12} strokeWidth={1.5} /> Find Researchers
           </Button>
           <Button
             data-testid={TID.collabCreateBtn}
             onClick={() => navigate("/collaborations/new")}
+            variant="hero"
             size="sm"
           >
             <Plus size={13} strokeWidth={2} /> Post Collaboration
@@ -179,21 +187,6 @@ export default function Collaborations() {
         </>
       }
     >
-      {/* ── Stats strip ───────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mb-8">
-        {[
-          { label: "Active",   value: hubLoading ? "—" : activeCount },
-          { label: "Pending",  value: hubLoading ? "—" : pendingCount },
-          { label: "Accepted", value: hubLoading ? "—" : (acceptedCount ?? "—") },
-          { label: "Projects", value: hubLoading ? "—" : (totalProjects ?? "—") },
-        ].map(({ label, value }) => (
-          <div key={label} className="text-center">
-            <div className="font-serif text-3xl text-slate-900">{value}</div>
-            <div className="overline mt-1 text-xs">{label}</div>
-          </div>
-        ))}
-      </div>
-
       {/* ── PRIORITY INVITATIONS ───────────────────────────────────────────── */}
       {requests.length > 0 && (
         <Alert
@@ -352,6 +345,46 @@ export default function Collaborations() {
         </div>
       </div>
     </ResearchLayout>
+  );
+}
+
+// ─── Right rail — pending/completed collaborations already loaded by this page ─
+
+function CollaborationsSidebar({ mine, hubLoading }) {
+  const pending = mine.pending || [];
+  const completed = mine.completed || [];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 10 }}>Pending Collaborations</div>
+        {hubLoading ? (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0 }}>Loading…</p>
+        ) : pending.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {pending.slice(0, 4).map((c) => (
+              <Link key={c.id} to={`/collaborations/${c.id}`} style={{ textDecoration: "none" }}>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
+                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>{c.collab_type}</div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No collaborations awaiting confirmation right now.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>Completed</div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+          {hubLoading ? "—" : completed.length}
+        </div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          {completed.length > 0 ? "Collaborations you've wrapped up." : "Completed collaborations will show up here."}
+        </p>
+      </Card>
+    </div>
   );
 }
 

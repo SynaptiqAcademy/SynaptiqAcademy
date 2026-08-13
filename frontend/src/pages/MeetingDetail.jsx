@@ -77,15 +77,15 @@ export default function MeetingDetail() {
 
   const headerActions = (
     <div style={{ display: "flex", gap: 8 }}>
-      <Button variant="ghost" size="sm" onClick={togglePin}>
+      <Button variant="hero" size="sm" onClick={togglePin}>
         {meeting.pinned ? <PinOff size={13} /> : <Pin size={13} />} {meeting.pinned ? "Unpin" : "Pin"}
       </Button>
       {meeting.video_link && (
-        <Button size="sm" onClick={() => window.open(meeting.video_link, "_blank", "noopener,noreferrer")}>
+        <Button variant="hero" size="sm" onClick={() => window.open(meeting.video_link, "_blank", "noopener,noreferrer")}>
           <Video size={13} /> Join
         </Button>
       )}
-      <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)}>
+      <Button variant="hero" size="sm" onClick={() => setConfirmDelete(true)}>
         <Trash2 size={13} /> Delete
       </Button>
     </div>

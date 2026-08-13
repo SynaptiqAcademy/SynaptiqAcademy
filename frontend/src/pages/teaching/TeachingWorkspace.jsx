@@ -1,7 +1,7 @@
 /* eslint-disable */
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FolderOpen, Plus, BookOpen, ClipboardCheck, Users } from "lucide-react";
+import { FolderOpen, Plus, BookOpen, ClipboardCheck, Users, Layers } from "lucide-react";
 import api from "../../lib/api";
 import { toast } from "sonner";
 import { EmptyState } from "../../components/ds/EmptyState";
@@ -13,6 +13,7 @@ import { Input } from "@/components/ds/Input";
 import { Textarea } from "@/components/ds/Textarea";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { ResearchLayout } from "@/layouts";
+import { NAVY } from "@/lib/tokens";
 
 const SUBJECTS = ["Mathematics","Economics","Management","Computer Science","Medicine","Engineering","Psychology","Education","Sciences","Humanities","Law","Business","History","Literature","Physics","Chemistry","Biology","Other"];
 const LEVELS   = ["secondary","undergraduate","graduate","professional","adult","other"];
@@ -80,14 +81,25 @@ export default function TeachingWorkspace() {
     }
   };
 
+  const activeCount    = workspaces.filter((ws) => ws.status === "active").length;
+  const totalLessons   = workspaces.reduce((s, ws) => s + (ws.linked_lesson_ids || []).length, 0);
+  const totalAssessments = workspaces.reduce((s, ws) => s + (ws.linked_assessment_ids || []).length, 0);
+
   return (
     <ResearchLayout
       title="Teaching Workspaces"
       subtitle="Course-level workspaces where you can organize lesson plans, assessments, and get support from the AI Teaching Assistant."
       icon={<FolderOpen size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
+      stats={!loading ? [
+        { label: "Workspaces",   value: workspaces.length },
+        { label: "Active",       value: activeCount },
+        { label: "Lessons",      value: totalLessons },
+        { label: "Assessments",  value: totalAssessments },
+      ] : undefined}
+      sidebar={!loading && workspaces.length > 0 ? <TeachingWorkspaceSidebar workspaces={workspaces} /> : undefined}
       actions={
         <Button
-          variant={showCreate ? "primary" : "outline"}
+          variant="hero"
           onClick={() => setShowCreate(!showCreate)}
         >
           <Plus size={14} strokeWidth={1.5} /> New workspace
@@ -229,5 +241,57 @@ export default function TeachingWorkspace() {
         ))}
       </div>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — subject breakdown + average team size, real data already loaded above ──
+function TeachingWorkspaceSidebar({ workspaces }) {
+  const bySubject = new Map();
+  workspaces.forEach((ws) => {
+    if (!ws.subject) return;
+    bySubject.set(ws.subject, (bySubject.get(ws.subject) || 0) + 1);
+  });
+  const topSubjects = Array.from(bySubject.entries()).sort((a, b) => b[1] - a[1]).slice(0, 4);
+
+  const avgMembers = workspaces.length > 0
+    ? Math.round((workspaces.reduce((s, ws) => s + (ws.member_count || 1), 0) / workspaces.length) * 10) / 10
+    : 0;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <Layers size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>By Subject</div>
+        </div>
+        {topSubjects.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {topSubjects.map(([subject, count]) => (
+              <div key={subject} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 12.5, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subject}</span>
+                <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace", flexShrink: 0 }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            Subjects will appear here as you add workspaces.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Users size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Average Team Size</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+          {avgMembers}
+        </div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          Members per workspace, across {workspaces.length}.
+        </p>
+      </Card>
+    </div>
   );
 }

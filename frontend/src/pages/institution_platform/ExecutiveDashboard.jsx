@@ -118,7 +118,7 @@ export default function ExecutiveDashboard() {
       title="Executive Dashboard"
       subtitle={data.institution}
       actions={
-        <Button variant="primary" size="md" onClick={load}>
+        <Button variant="hero" size="md" onClick={load}>
           <RefreshCw size={14} /> Refresh
         </Button>
       }

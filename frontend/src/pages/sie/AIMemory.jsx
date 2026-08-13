@@ -91,11 +91,11 @@ export default function AIMemory() {
 
   const actions = (
     <div style={{ display: "flex", gap: 8 }}>
-      <Button onClick={enrich} loading={enriching} disabled={enriching} variant="ghost" size="sm">
+      <Button onClick={enrich} loading={enriching} disabled={enriching} variant="hero" size="sm">
         {!enriching && <RefreshCw size={13} />}
         Auto-enrich
       </Button>
-      <Button onClick={save} loading={saving} disabled={saving} variant="primary" size="sm">
+      <Button onClick={save} loading={saving} disabled={saving} variant="hero" size="sm">
         {!saving && <Save size={13} />}
         {saved ? "Saved!" : "Save"}
       </Button>

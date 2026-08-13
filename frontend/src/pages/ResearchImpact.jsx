@@ -546,10 +546,10 @@ export default function ResearchImpact() {
       }
       actions={
         <div style={{ display: "flex", gap: 8 }}>
-          <Button onClick={handleExport} variant="outline" size="sm">
+          <Button onClick={handleExport} variant="hero" size="sm">
             <Download size={12} strokeWidth={1.5} /> Export CSV
           </Button>
-          <Button onClick={() => window.print()} variant="primary" size="sm">
+          <Button onClick={() => window.print()} variant="hero" size="sm">
             <FileText size={12} strokeWidth={1.5} /> Print / PDF
           </Button>
         </div>

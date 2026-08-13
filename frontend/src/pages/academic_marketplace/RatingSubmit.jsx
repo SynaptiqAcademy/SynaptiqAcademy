@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Star } from "lucide-react";
+import { Star, Receipt } from "lucide-react";
+import { NAVY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Textarea, Checkbox, Button, Alert, LoadingOverlay } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
@@ -34,7 +35,7 @@ export default function RatingSubmit() {
   if (!order) return <LoadingOverlay text="Loading..." />;
 
   return (
-    <ResearchLayout title="Leave a Review" subtitle={order.service_title}>
+    <ResearchLayout title="Leave a Review" subtitle={order.service_title} sidebar={<RatingSubmitSidebar order={order} />}>
 
         {msg && (
           <Alert variant={msg.type === "error" ? "error" : "success"} style={{ marginBottom: 16 }}>
@@ -82,5 +83,35 @@ export default function RatingSubmit() {
           </Button>
         </Card>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — order being reviewed, already loaded above ────────────────────
+function RatingSubmitSidebar({ order }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Receipt size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Order Summary</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+            <span style={{ color: "#94A3B8" }}>Package</span>
+            <span style={{ color: "#374151", fontWeight: 600, textTransform: "capitalize" }}>{order.package_tier}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+            <span style={{ color: "#94A3B8" }}>Price</span>
+            <span style={{ color: "#374151", fontWeight: 600 }}>${order.price?.toFixed(2)}</span>
+          </div>
+          {order.completed_at && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+              <span style={{ color: "#94A3B8" }}>Completed</span>
+              <span style={{ color: "#374151", fontWeight: 600 }}>{new Date(order.completed_at).toLocaleDateString()}</span>
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
   );
 }

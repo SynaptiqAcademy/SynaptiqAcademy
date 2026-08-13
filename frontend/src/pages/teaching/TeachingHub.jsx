@@ -95,15 +95,14 @@ export default function TeachingHub() {
       title={`Welcome, ${firstName}`}
       subtitle="Your central workspace for teaching — lesson planning, assessment design, portfolio building, and AI-assisted pedagogy support."
       icon={<GraduationCap size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
+      stats={!loading ? [
+        { label: "Lessons",     value: stats?.lessons ?? 0 },
+        { label: "Assessments", value: stats?.assessments ?? 0 },
+        { label: "Portfolio",   value: stats?.portfolio_items ?? 0 },
+        { label: "Workspaces",  value: stats?.workspaces ?? 0 },
+      ] : undefined}
+      sidebar={<TeachingHubSidebar loading={loading} recentLessons={recentLessons} recentAssessments={recentAssessments} />}
     >
-      {/* Stats bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mb-8">
-        <StatPill label="Lessons"     value={stats?.lessons}         loading={loading} />
-        <StatPill label="Assessments" value={stats?.assessments}     loading={loading} />
-        <StatPill label="Portfolio"   value={stats?.portfolio_items} loading={loading} />
-        <StatPill label="Workspaces"  value={stats?.workspaces}      loading={loading} />
-      </div>
-
       {/* Module cards */}
       <section>
         <div className="overline mb-4">Teaching Modules</div>
@@ -120,10 +119,15 @@ export default function TeachingHub() {
           ))}
         </div>
       </section>
+    </ResearchLayout>
+  );
+}
 
-      {/* Recent activity */}
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Recent lessons */}
+// ── Right rail — recent lessons/assessments, real data already loaded above ───
+function TeachingHubSidebar({ loading, recentLessons, recentAssessments }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="none">
         <List>
           <ListHeader
             title="Recent lessons"
@@ -163,8 +167,9 @@ export default function TeachingHub() {
             />
           ))}
         </List>
+      </Card>
 
-        {/* Recent assessments */}
+      <Card padding="none">
         <List>
           <ListHeader
             title="Recent assessments"
@@ -204,7 +209,7 @@ export default function TeachingHub() {
             />
           ))}
         </List>
-      </div>
-    </ResearchLayout>
+      </Card>
+    </div>
   );
 }

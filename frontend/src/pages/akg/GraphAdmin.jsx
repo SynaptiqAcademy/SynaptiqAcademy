@@ -1,9 +1,9 @@
 /* eslint-disable */
 import React, { useEffect, useState } from "react";
-import { Shield, RefreshCw, Layers, GitBranch, Users, Database, Trash2 } from "lucide-react";
+import { Shield, RefreshCw, Layers, Trash2, Activity } from "lucide-react";
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
-import { Card, Button, Input, Alert, List, ListItem, DataTable, StatGrid, StatCard, EmptyState } from "@/components/ds";
+import { Card, Button, Input, Alert, List, ListItem, DataTable, EmptyState } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 import { confirmDialog } from "@/lib/confirm";
 
@@ -56,6 +56,13 @@ export default function GraphAdmin() {
       title="Graph Administration"
       subtitle="Admin-only controls for the Academic Knowledge Graph."
       icon={<Shield size={22} color="#dc2626" />}
+      stats={stats ? [
+        { label: "Total Entities", value: stats.total_entities?.toLocaleString() ?? 0 },
+        { label: "Relationships",  value: stats.total_relationships?.toLocaleString() ?? 0 },
+        { label: "Avg Degree",     value: stats.avg_degree ?? "—" },
+        { label: "Collab Density", value: stats.collaboration_density?.density_label ?? "—" },
+      ] : undefined}
+      sidebar={(stats?.entities_by_type || audit.length > 0) ? <GraphAdminSidebar stats={stats} audit={audit} /> : undefined}
       actions={
         <Button variant="danger" onClick={runSync} disabled={syncing} loading={syncing}>
           {!syncing && <RefreshCw size={16} />}
@@ -63,15 +70,6 @@ export default function GraphAdmin() {
         </Button>
       }
     >
-
-      {stats && (
-        <StatGrid cols={4} className="mb-7">
-          <StatCard label="Total Entities"    value={stats.total_entities?.toLocaleString()}      icon={<Layers />} />
-          <StatCard label="Relationships"     value={stats.total_relationships?.toLocaleString()} icon={<GitBranch />} />
-          <StatCard label="Avg Degree"        value={stats.avg_degree}                            icon={<Database />} />
-          <StatCard label="Collab Density"    value={stats.collaboration_density?.density_label}  icon={<Users />} />
-        </StatGrid>
-      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
         {stats?.entities_by_type && (
@@ -121,5 +119,51 @@ export default function GraphAdmin() {
         />
       </Card>
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — real data already loaded by this page, never fabricated ──────
+function GraphAdminSidebar({ stats, audit }) {
+  const topType = stats?.entities_by_type
+    ? Object.entries(stats.entities_by_type).sort((a, b) => b[1] - a[1])[0]
+    : null;
+  const recentAudit = (audit || []).slice(0, 4);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Layers size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Most Common Entity Type</div>
+        </div>
+        {topType ? (
+          <>
+            <div style={{ fontFamily: "Georgia, serif", fontSize: 26, color: NAVY }}>{topType[1].toLocaleString()}</div>
+            <div style={{ fontSize: 12, color: "#64748B" }}>{topType[0].replace(/_/g, " ")} entities</div>
+          </>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No entity data yet.</p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Activity size={13} style={{ color: ACCENT }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Recent Admin Activity</div>
+        </div>
+        {recentAudit.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {recentAudit.map((a, i) => (
+              <div key={i} style={{ fontSize: 12, color: "#374151" }}>
+                <span style={{ fontWeight: 600, color: NAVY }}>{a.action}</span>
+                {a.target && <span style={{ color: "#64748B" }}> · {a.target}</span>}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No audit entries yet.</p>
+        )}
+      </Card>
+    </div>
   );
 }

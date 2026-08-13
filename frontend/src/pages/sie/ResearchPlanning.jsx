@@ -182,7 +182,7 @@ export default function ResearchPlanning() {
       subtitle={`${roadmaps.length} roadmap${roadmaps.length !== 1 ? "s" : ""} · 18-stage AI-generated plans`}
       navItems={SIE_NAV_ITEMS}
       actions={
-        <Button onClick={() => setShowNew(true)} size="sm">
+        <Button onClick={() => setShowNew(true)} variant="hero" size="sm">
           <Plus size={13} /> Generate Roadmap
         </Button>
       }

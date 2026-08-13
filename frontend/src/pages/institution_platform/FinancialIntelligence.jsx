@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { Coins, Building2 } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
-import { Card, StatCard, StatGrid, Alert, List, ListItem, Spinner } from "@/components/ds";
+import { Card, Alert, List, ListItem, Spinner } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
@@ -39,16 +40,14 @@ export default function FinancialIntelligence() {
     <InstitutionLayout
       title="Financial Intelligence"
       subtitle={`Income ${growthPos ? "+" : ""}${fin?.income_growth_pct ?? 0}% year-on-year`}
+      stats={[
+        { label: "Total Research Income", value: `€${((fin?.total_research_income || 0) / 1000).toFixed(0)}k` },
+        { label: "Current Year", value: `€${((fin?.current_year_income || 0) / 1000).toFixed(0)}k` },
+        { label: "Active Grants", value: fin?.active_grants_count ?? 0 },
+        { label: "Avg Grant Size", value: `€${((fin?.avg_grant_size || 0) / 1000).toFixed(0)}k` },
+      ]}
+      sidebar={<FinancialIntelligenceSidebar fin={fin} byDept={byDept} />}
     >
-      {/* StatCard has no per-tile value-color override, so the original
-          color-coded KPI values (emerald/navy/blue/purple) are flattened. */}
-      <StatGrid cols={4} className="mb-5">
-        <StatCard label="Total Research Income" value={`€${((fin?.total_research_income || 0) / 1000).toFixed(0)}k`} />
-        <StatCard label="Current Year" value={`€${((fin?.current_year_income || 0) / 1000).toFixed(0)}k`} />
-        <StatCard label="Active Grants" value={fin?.active_grants_count ?? 0} />
-        <StatCard label="Avg Grant Size" value={`€${((fin?.avg_grant_size || 0) / 1000).toFixed(0)}k`} />
-      </StatGrid>
-
       {fin?.funding_dependency_risk === "high" && (
         <Alert variant="warning" style={{ marginBottom: 16 }}>
           High funding concentration risk (index: {fin.funding_concentration_index?.toFixed(2)}).
@@ -94,5 +93,43 @@ export default function FinancialIntelligence() {
         </Card>
       </div>
     </InstitutionLayout>
+  );
+}
+
+// ── Right rail — funding data already fetched by this page ────────────────────
+function FinancialIntelligenceSidebar({ fin, byDept }) {
+  const topFunder = (fin?.top_funding_sources || [])[0];
+  const topDept = byDept && byDept.length > 0 ? byDept[0] : null;
+
+  if (!topFunder && !topDept) return null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {topFunder && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Coins size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Funding Source</div>
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{topFunder.funder}</div>
+          <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+            €{(topFunder.income / 1000).toFixed(0)}k in research income
+          </p>
+        </Card>
+      )}
+
+      {topDept && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Building2 size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Leading Department</div>
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{topDept.department}</div>
+          <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+            €{(topDept.total_income / 1000).toFixed(0)}k in research income
+          </p>
+        </Card>
+      )}
+    </div>
   );
 }

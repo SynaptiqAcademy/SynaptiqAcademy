@@ -68,7 +68,7 @@ export default function AdminStorageGovernance() {
       title="Storage & File Governance Center"
       subtitle="Orphan detection, large file analysis, and cleanup recommendations"
       actions={
-        <Button variant="ghost" size="icon" onClick={refetchAll} aria-label="Refresh">
+        <Button variant="hero" size="icon" onClick={refetchAll} aria-label="Refresh">
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
         </Button>
       }

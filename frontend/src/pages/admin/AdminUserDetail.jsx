@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, User, FolderOpen, FileText, Users2, BookOpen, RadioTower } from "lucide-react";
+import { ArrowLeft, User, FolderOpen, FileText, Users2, BookOpen, RadioTower, ShieldCheck, Activity } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import { NAVY } from "@/lib/tokens";
+import { AdministrationLayout } from "@/layouts";
+import { Card } from "@/components/ds/Card";
 import { Spinner } from "@/components/ds/LoadingState";
 import { ErrorState } from "@/components/ds/ErrorState";
 import { NavTabs } from "@/components/ds/NavTabs";
@@ -184,19 +187,28 @@ export default function AdminUserDetail() {
   ];
 
   return (
-    <div className="p-8">
-      {/* Header */}
-      <div className="flex items-start gap-4 mb-4">
-        <Link to="/admin/users" className="mt-1 text-slate-400 hover:text-slate-700"><ArrowLeft size={18} /></Link>
-        <div className="flex-1">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="font-serif text-3xl text-slate-900">{user.full_name || user.email}</h1>
-            <PlanBadge plan={user.plan_code} />
-            <StatusBadge status={user.status} />
-          </div>
-          <p className="text-sm text-slate-500 mt-1">{user.email}</p>
-        </div>
-      </div>
+    <AdministrationLayout
+      title={user.full_name || user.email}
+      subtitle={user.email}
+      actions={
+        <>
+          <PlanBadge plan={user.plan_code} />
+          <StatusBadge status={user.status} />
+        </>
+      }
+      nav={
+        <NavTabs
+          tabs={TABS.map((t) => ({ id: t, label: t }))}
+          active={tab}
+          onChange={setTab}
+          variant="underline"
+        />
+      }
+      sidebar={<UserDetailSidebar user={user} s={s} />}
+    >
+      <Link to="/admin/users" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900 mb-4">
+        <ArrowLeft size={14} /> All Users
+      </Link>
 
       {liveBanner && (
         <div className="mb-4">
@@ -253,16 +265,6 @@ export default function AdminUserDetail() {
           { label: "Delete", variant: "danger", onClick: () => jumpToAction("action-delete") },
         ]}
       />
-
-      {/* Tabs */}
-      <div className="mb-6">
-        <NavTabs
-          tabs={TABS.map((t) => ({ id: t, label: t }))}
-          active={tab}
-          onChange={setTab}
-          variant="underline"
-        />
-      </div>
 
       {/* Overview */}
       {tab === "Overview" && (
@@ -457,6 +459,71 @@ export default function AdminUserDetail() {
           </ActionCard>
         </div>
       )}
+    </AdministrationLayout>
+  );
+}
+
+// ── Right rail — account status & activity snapshot, real data already fetched
+function UserDetailSidebar({ user, s }) {
+  const activityItems = [
+    { label: "Projects",       value: s.projects_count },
+    { label: "Workspaces",     value: s.workspaces_count },
+    { label: "Collaborations", value: s.collabs_count },
+    { label: "Manuscripts",    value: s.manuscripts_count },
+    { label: "Publications",   value: s.publications_count },
+  ].filter((i) => i.value != null);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <ShieldCheck size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Account</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <span style={{ fontSize: 11.5, color: "#64748B" }}>Role</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{user.role || "user"}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <span style={{ fontSize: 11.5, color: "#64748B" }}>Email verified</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{user.email_verified ? "Yes" : "No"}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <span style={{ fontSize: 11.5, color: "#64748B" }}>Onboarded</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{user.onboarded ? "Yes" : "No"}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <span style={{ fontSize: 11.5, color: "#64748B" }}>Joined</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{fmtDateTime(user.created_at)}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <span style={{ fontSize: 11.5, color: "#64748B" }}>Credits</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>
+              {(user.credits_balance ?? 0)} + {(user.credits_pack_balance ?? 0)} pack
+            </span>
+          </div>
+        </div>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Activity size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Activity Snapshot</div>
+        </div>
+        {activityItems.length === 0 ? (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No activity data yet.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {activityItems.map((i) => (
+              <div key={i.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 11.5, color: "#64748B" }}>{i.label}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", fontFamily: "monospace" }}>{i.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

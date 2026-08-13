@@ -1,11 +1,63 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Star, ShieldCheck, Users } from "lucide-react";
-import { ACCENT, EMERALD } from "@/lib/tokens";
+import { Star, ShieldCheck, Users, Filter } from "lucide-react";
+import { NAVY, ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Grid, Badge, Tag, TagGroup, SearchBar, FormSelect, Button, EmptyState, LoadingOverlay } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
+
+// ── Right rail — fetched specialties as quick filters + the top-rated expert ──
+// on the current page; no data invented, nothing fetched just for the rail ────
+function ProviderBrowseSidebar({ categories, category, onSelectCategory, results }) {
+  const topRated = results.length > 0
+    ? results.reduce((best, p) => (p.average_rating || 0) > (best.average_rating || 0) ? p : best, results[0])
+    : null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {categories.length > 0 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Filter size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Specialties</div>
+          </div>
+          <TagGroup gap={6}>
+            {categories.map((c) => (
+              <Tag
+                key={c}
+                size="sm"
+                variant={category === c ? "active" : "default"}
+                onClick={() => onSelectCategory(category === c ? "" : c)}
+              >
+                {c.replace(/_/g, " ")}
+              </Tag>
+            ))}
+          </TagGroup>
+        </Card>
+      )}
+
+      {topRated && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Star size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Rated on This Page</div>
+          </div>
+          <a href={`/academic-marketplace/providers/${topRated.user_id}`} style={{ textDecoration: "none" }}>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a" }}>{topRated.display_name}</div>
+          </a>
+          <div style={{ fontSize: 11, color: "#94A3B8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{topRated.headline}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4 }}>
+            <Star size={10} style={{ color: "#F59E0B" }} fill="#F59E0B" />
+            <span style={{ fontSize: 11, color: "#64748B" }}>
+              {topRated.average_rating > 0 ? topRated.average_rating.toFixed(1) : "New"} ({topRated.completed_orders} completed)
+            </span>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
 
 export default function ProviderBrowse() {
   const [results, setResults] = useState([]);
@@ -45,7 +97,18 @@ export default function ProviderBrowse() {
   };
 
   return (
-    <ResearchLayout title="Find Experts" subtitle={`${total} verified academic professionals`}>
+    <ResearchLayout
+      title="Find Experts"
+      subtitle={`${total} verified academic professionals`}
+      sidebar={!loading ? (
+        <ProviderBrowseSidebar
+          categories={categories}
+          category={category}
+          onSelectCategory={(c) => { setCategory(c); setPage(1); }}
+          results={results}
+        />
+      ) : undefined}
+    >
 
         <div className="flex gap-3 mb-6 flex-wrap items-center">
           <SearchBar

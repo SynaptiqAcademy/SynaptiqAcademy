@@ -1,7 +1,7 @@
 /* eslint-disable */
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ClipboardCheck, Plus, Sparkles, FileText } from "lucide-react";
+import { ClipboardCheck, Plus, Sparkles, FileText, Layers, Award } from "lucide-react";
 import api from "../../lib/api";
 import { toast } from "sonner";
 import { EmptyState } from "../../components/ds/EmptyState";
@@ -13,6 +13,7 @@ import { Tag } from "@/components/ds/Tag";
 import { Input } from "@/components/ds/Input";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { ResearchLayout } from "@/layouts";
+import { NAVY } from "@/lib/tokens";
 
 const SUBJECTS      = ["Mathematics","Economics","Management","Computer Science","Medicine","Engineering","Psychology","Education","Sciences","Humanities","Law","Business","History","Literature","Physics","Chemistry","Biology","Sociology","Political Science","Philosophy"];
 const LEVELS        = ["secondary","undergraduate","graduate","professional","adult","other"];
@@ -113,21 +114,32 @@ export default function AssessmentBuilder() {
     setGenForm({ ...genForm, learning_objectives: objs });
   };
 
+  const aiCount    = assessments.filter((a) => a.ai_generated).length;
+  const quizCount  = assessments.filter((a) => a.assessment_type === "quiz").length;
+  const examCount  = assessments.filter((a) => a.assessment_type === "exam").length;
+
   return (
     <ResearchLayout
       title="Assessment Builder"
       subtitle="Design quizzes, exams, rubrics, and assignments. Use AI to generate complete, aligned assessments in seconds."
       icon={<ClipboardCheck size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
+      stats={!loading ? [
+        { label: "Assessments",  value: assessments.length },
+        { label: "AI-Generated", value: aiCount },
+        { label: "Quizzes",      value: quizCount },
+        { label: "Exams",        value: examCount },
+      ] : undefined}
+      sidebar={!loading && assessments.length > 0 ? <AssessmentBuilderSidebar assessments={assessments} /> : undefined}
       actions={
         <div className="flex gap-2">
           <Button
-            variant={showGenerate ? "primary" : "outline"}
+            variant="hero"
             onClick={() => { setShowGenerate(!showGenerate); setShowCreate(false); }}
           >
             <Sparkles size={14} strokeWidth={1.5} /> AI Generate
           </Button>
           <Button
-            variant={showCreate ? "primary" : "ghost"}
+            variant="hero"
             onClick={() => { setShowCreate(!showCreate); setShowGenerate(false); }}
           >
             <Plus size={14} strokeWidth={1.5} /> New assessment
@@ -355,5 +367,55 @@ export default function AssessmentBuilder() {
         </div>
       </div>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — type breakdown + total marks, real data already loaded above ──
+function AssessmentBuilderSidebar({ assessments }) {
+  const byType = new Map();
+  assessments.forEach((a) => {
+    if (!a.assessment_type) return;
+    byType.set(a.assessment_type, (byType.get(a.assessment_type) || 0) + 1);
+  });
+  const topTypes = Array.from(byType.entries()).sort((a, b) => b[1] - a[1]);
+
+  const totalMarks = assessments.reduce((s, a) => s + (a.total_marks || 0), 0);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <Layers size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>By Type</div>
+        </div>
+        {topTypes.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {topTypes.map(([type, count]) => (
+              <div key={type} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 12.5, color: "#374151", textTransform: "capitalize" }}>{type}</span>
+                <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace", flexShrink: 0 }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            Types will appear here as you add assessments.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Award size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Total Marks</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+          {totalMarks}
+        </div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          Across {assessments.length} assessment{assessments.length !== 1 ? "s" : ""}.
+        </p>
+      </Card>
+    </div>
   );
 }

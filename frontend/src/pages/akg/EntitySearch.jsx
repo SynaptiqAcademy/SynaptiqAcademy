@@ -50,6 +50,7 @@ export default function EntitySearch() {
     <ResearchLayout
       title="Semantic Entity Search"
       subtitle="TF-IDF cosine similarity search across all knowledge graph entities. No LLM — pure rule-based intelligence."
+      sidebar={!loading && results.length > 0 ? <EntitySearchSidebar results={results} /> : undefined}
     >
 
       <Card padding="lg" className="mb-6">
@@ -123,5 +124,46 @@ export default function EntitySearch() {
         </div>
       )}
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — real data already loaded by this page, never fabricated ──────
+function EntitySearchSidebar({ results }) {
+  const byType = {};
+  results.forEach(r => {
+    const t = r.entity_type || "other";
+    byType[t] = (byType[t] || 0) + 1;
+  });
+  const sortedTypes = Object.entries(byType).sort((a, b) => b[1] - a[1]);
+  const avgScore = results.reduce((sum, r) => sum + (r.score || 0), 0) / results.length;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Filter size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Results by Type</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {sortedTypes.map(([type, count]) => (
+            <div key={type} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+              <span style={{ color: "#374151" }}>{type.replace(/_/g, " ")}</span>
+              <span style={{ color: "#64748B", fontWeight: 600 }}>{count}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Search size={13} style={{ color: ACCENT }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Match Quality</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, color: NAVY }}>{(avgScore * 100).toFixed(0)}%</div>
+        <div style={{ fontSize: 11, color: "#64748B" }}>
+          Average relevance across {results.length} result{results.length !== 1 ? "s" : ""}
+        </div>
+      </Card>
+    </div>
   );
 }

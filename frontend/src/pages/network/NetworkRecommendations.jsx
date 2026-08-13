@@ -99,6 +99,7 @@ export default function NetworkRecommendations() {
           ))}
         </div>
       }
+      sidebar={visible.length > 0 ? <NetworkRecommendationsSidebar recs={visible} /> : undefined}
     >
       {loading ? (
         <LoadingOverlay text="Loading…" />
@@ -121,5 +122,44 @@ export default function NetworkRecommendations() {
         </div>
       )}
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — breakdown of the recommendations already loaded by this page ──
+function NetworkRecommendationsSidebar({ recs }) {
+  const byCategory = recs.reduce((acc, r) => {
+    acc[r.category] = (acc[r.category] || 0) + 1;
+    return acc;
+  }, {});
+  const entries = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Brain size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Active Recommendations</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{recs.length}</div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          Personalised suggestions currently on your list.
+        </p>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>By Category</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {entries.map(([cat, count]) => (
+            <div key={cat} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12 }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 6, color: "#374151" }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: CAT_COLOR[cat] || ACCENT, flexShrink: 0 }} />
+                {CAT_LABEL[cat] || cat}
+              </span>
+              <span style={{ fontWeight: 700, color: NAVY }}>{count}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
   );
 }

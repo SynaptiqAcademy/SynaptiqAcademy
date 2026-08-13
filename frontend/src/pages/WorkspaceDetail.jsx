@@ -354,52 +354,59 @@ export default function WorkspaceDetail() {
   const linkedManuscripts = dash?.manuscripts || [];
 
   return (
-    <ResearchLayout>
-    <div className="space-y-8">
-      <header className="border-b border-slate-200 pb-6">
-        <div className="flex items-start justify-between gap-6">
-          <div className="min-w-0">
-            <div className="flex items-center gap-3">
-              <div className="overline">Workspace</div>
-              <Badge variant="warning" size="sm">{ws.status || "active"}</Badge>
-              <Badge variant="default" size="sm" data-testid={TID.workspaceYourRole}>
-                <ShieldCheck size={11} strokeWidth={1.5} /> Your role: {myRole}
-              </Badge>
-              <PresenceBar peers={presencePeers} />
-            </div>
-            <h1 className="text-[1.4rem] font-semibold text-slate-900 tracking-tight mt-2 leading-snug">{ws.name}</h1>
-            {ws.description && <p className="text-[13px] text-slate-500 mt-2 max-w-3xl leading-relaxed">{ws.description}</p>}
-          </div>
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            <AssistantLauncher entityKind="workspace" entityId={id} entityTitle={ws.name} />
+    <ResearchLayout
+      eyebrow="Workspace"
+      title={ws.name}
+      subtitle={ws.description}
+      ring={{ value: health, label: "Research Health" }}
+      stats={[
+        { label: "Members",             value: counts.members },
+        { label: "Active Projects",     value: counts.active_projects },
+        { label: "Active Manuscripts",  value: counts.active_manuscripts },
+        { label: "Milestones",          value: `${counts.milestones_completed}/${counts.milestones_total}` },
+      ]}
+      actions={
+        <>
+          <AssistantLauncher entityKind="workspace" entityId={id} entityTitle={ws.name} />
+          <Button
+            data-testid={TID.openChatBtn}
+            onClick={() => navigate("/messages", { state: { openContext: { type: "workspace", id } } })}
+            variant="hero"
+            size="sm"
+          >
+            <MessageSquare size={12} strokeWidth={1.5} /> Open chat
+          </Button>
+          {isAdmin && (
             <Button
-              data-testid={TID.openChatBtn}
-              onClick={() => navigate("/messages", { state: { openContext: { type: "workspace", id } } })}
-              variant="outline"
+              data-testid={TID.workspaceInviteBtn}
+              onClick={() => setShowInvite(true)}
+              variant="subtle"
               size="sm"
             >
-              <MessageSquare size={12} strokeWidth={1.5} /> Open chat
+              <UserPlus size={12} strokeWidth={1.5} /> Invite member
             </Button>
-            {isAdmin && (
-              <Button
-                data-testid={TID.workspaceInviteBtn}
-                onClick={() => setShowInvite(true)}
-                size="sm"
-              >
-                <UserPlus size={12} strokeWidth={1.5} /> Invite member
-              </Button>
-            )}
-            {myRole === "Owner" && (
-              <Button variant="ghost" size="sm" onClick={() => setShowTransfer(!showTransfer)}>
-                <ArrowRightLeft size={12} strokeWidth={1.5} /> Transfer ownership
-              </Button>
-            )}
-            {myRole !== "Owner" && (
-              <Button variant="ghost" size="sm" onClick={leaveWorkspace} className="border-red-200 text-red-600 hover:bg-red-50">
-                <LogOut size={12} strokeWidth={1.5} /> Leave workspace
-              </Button>
-            )}
-          </div>
+          )}
+          {myRole === "Owner" && (
+            <Button variant="hero" size="sm" onClick={() => setShowTransfer(!showTransfer)}>
+              <ArrowRightLeft size={12} strokeWidth={1.5} /> Transfer ownership
+            </Button>
+          )}
+          {myRole !== "Owner" && (
+            <Button variant="danger" size="sm" onClick={leaveWorkspace}>
+              <LogOut size={12} strokeWidth={1.5} /> Leave workspace
+            </Button>
+          )}
+        </>
+      }
+    >
+    <div className="space-y-8">
+      <header className="pb-2">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Badge variant="warning" size="sm">{ws.status || "active"}</Badge>
+          <Badge variant="default" size="sm" data-testid={TID.workspaceYourRole}>
+            <ShieldCheck size={11} strokeWidth={1.5} /> Your role: {myRole}
+          </Badge>
+          <PresenceBar peers={presencePeers} />
         </div>
 
         {/* Transfer ownership panel */}

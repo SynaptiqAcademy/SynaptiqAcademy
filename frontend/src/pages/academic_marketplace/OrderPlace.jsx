@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams, useNavigate, Link } from "react-router-dom";
-import { ShieldCheck, Clock } from "lucide-react";
+import { ShieldCheck, Clock, Star, Package } from "lucide-react";
+import { NAVY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Alert, Textarea, H2, Caption, LoadingOverlay } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
@@ -41,7 +42,10 @@ export default function OrderPlace() {
   if (!service) return <LoadingOverlay text="Loading..." />;
 
   return (
-    <ResearchLayout title="Place Order">
+    <ResearchLayout
+      title="Place Order"
+      sidebar={<OrderPlaceSidebar service={service} pkg={pkg} serviceId={serviceId} />}
+    >
         <div className="mb-2">
           <Link to={`/academic-marketplace/services/${serviceId}`} className="text-crimson-600 text-[13px] no-underline">← Back to Service</Link>
         </div>
@@ -116,5 +120,56 @@ export default function OrderPlace() {
           By placing this order you agree to the Synaptiq Academic Services Agreement.
         </Caption>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — service reputation and other packages, already fetched above ─
+function OrderPlaceSidebar({ service, pkg, serviceId }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Star size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>About This Service</div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: "#0f172a" }}>
+            {service.average_rating > 0 ? service.average_rating.toFixed(1) : "New"}
+          </span>
+          <span style={{ fontSize: 12, color: "#94A3B8" }}>({service.rating_count || 0} reviews)</span>
+        </div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "0 0 10px", lineHeight: 1.5 }}>
+          {service.order_count || 0} order{service.order_count === 1 ? "" : "s"} completed
+        </p>
+        <Link to={`/academic-marketplace/services/${serviceId}`}>
+          <Button as="span" size="sm" variant="ghost" style={{ width: "100%" }}>
+            View full service
+          </Button>
+        </Link>
+      </Card>
+
+      {service.packages?.length > 1 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <Package size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Other Packages</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {service.packages.map((p) => (
+              <Link
+                key={p.tier}
+                to={`/academic-marketplace/order/${serviceId}?pkg=${p.tier}`}
+                style={{ display: "flex", justifyContent: "space-between", textDecoration: "none", padding: "6px 0", borderBottom: "1px solid #F1F5F9" }}
+              >
+                <span style={{ fontSize: 12.5, fontWeight: p.tier === pkg?.tier ? 700 : 500, color: p.tier === pkg?.tier ? NAVY : "#374151", textTransform: "capitalize" }}>
+                  {p.tier}
+                </span>
+                <span style={{ fontSize: 12, color: "#64748B" }}>${p.price?.toFixed(2)}</span>
+              </Link>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

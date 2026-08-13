@@ -649,7 +649,7 @@ export default function VerificationCenter() {
       title="Verification Center"
       subtitle="Your academic identity, trust score, and verification status — evidence-based credentials for the research community."
       actions={
-        <Button onClick={recompute} disabled={computing} loading={computing}>
+        <Button onClick={recompute} disabled={computing} loading={computing} variant="hero">
           {!computing && <RefreshCw className="w-4 h-4" />}
           {computing ? "Recomputing…" : "Recompute Status"}
         </Button>

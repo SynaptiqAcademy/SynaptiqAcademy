@@ -179,7 +179,7 @@ export default function ConferenceNetworking() {
   return (
     <ResearchLayout
       title="Events & Conferences"
-      actions={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={15} />Create Event</Button>}
+      actions={<Button variant="hero" onClick={() => setShowCreate(true)}><Plus size={15} />Create Event</Button>}
       nav={
         <NavTabs
           variant="pill"

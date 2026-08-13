@@ -17,7 +17,6 @@ import { SearchBar, FilterChip } from "@/components/ds/SearchBar";
 import { Button } from "@/components/ds/Button";
 import { Card } from "@/components/ds/Card";
 import { Badge } from "@/components/ds/Badge";
-import { StatCard } from "@/components/ds/StatCard";
 import { Input } from "@/components/ds/Input";
 import { Textarea } from "@/components/ds/Textarea";
 import { FormSelect } from "@/components/ds/FormSelect";
@@ -311,16 +310,16 @@ export default function Manuscripts() {
 
   const actions = (
     <div style={{ display: "flex", gap: 8 }}>
-      <Button as={Link} to="/manuscript-review" variant="outline" size="sm">
+      <Button as={Link} to="/manuscript-review" variant="hero" size="sm">
         <Microscope size={12} strokeWidth={1.5} /> AI Review
       </Button>
-      <Button as={Link} to="/publication-hub" variant="outline" size="sm">
+      <Button as={Link} to="/publication-hub" variant="hero" size="sm">
         <Layers size={12} strokeWidth={1.5} /> Publication Hub
       </Button>
       <Button
         data-testid={TID.manuscriptCreateBtn}
         onClick={() => setShowNew(true)}
-        variant="primary"
+        variant="hero"
         size="sm"
       >
         <Plus size={13} strokeWidth={1.5} /> New Manuscript
@@ -328,11 +327,21 @@ export default function Manuscripts() {
     </div>
   );
 
+  const drafts = items.filter((m) => m.status === "draft");
+
   return (
     <ResearchLayout
       title="Manuscripts"
       subtitle="From blank page to publication. Track every manuscript through drafting, review, revision, and acceptance."
       nav={<LifecycleNav current="/manuscripts" />}
+      stats={[
+        { label: "Total",     value: counts.total },
+        { label: "Drafting",  value: counts.drafts },
+        { label: "Active",    value: counts.active },
+        { label: "Accepted",  value: counts.accepted },
+        { label: "Published", value: counts.published },
+      ]}
+      sidebar={<ManuscriptsSidebar drafts={drafts} projects={projects} workspaces={workspaces} />}
       actions={actions}
     >
       <style>{`
@@ -341,15 +350,6 @@ export default function Manuscripts() {
         .rl-action:hover{text-decoration:underline}
       `}</style>
       <div style={{ padding: "0 0 64px" }}>
-        {/* ── Stats ─────────────────────────────────────────────────────── */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginBottom: 28 }}>
-          <StatCard label="Total"     value={counts.total}     icon={<FileText size={13} strokeWidth={1.5} style={{ color: "#CBD5E1" }} />} />
-          <StatCard label="Drafting"  value={counts.drafts}    icon={<BookMarked size={13} strokeWidth={1.5} style={{ color: "#CBD5E1" }} />} />
-          <StatCard label="Active"    value={counts.active}    icon={<Send size={13} strokeWidth={1.5} style={{ color: "#B45309" }} />} />
-          <StatCard label="Accepted"  value={counts.accepted}  icon={<CheckCircle2 size={13} strokeWidth={1.5} style={{ color: EMRL }} />} />
-          <StatCard label="Published" value={counts.published} icon={<CheckCircle2 size={13} strokeWidth={1.5} style={{ color: EMRL }} />} />
-        </div>
-
         {/* ── New manuscript form ────────────────────────────────────────── */}
         {showNew && (
           <div style={{ marginBottom: 28 }}>
@@ -452,5 +452,50 @@ export default function Manuscripts() {
 
       </div>
     </ResearchLayout>
+  );
+}
+
+// ─── Right rail — drafts + linked projects/workspaces, real data already loaded ─
+function ManuscriptsSidebar({ drafts, projects, workspaces }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <BookMarked size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Drafts</div>
+        </div>
+        {drafts.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {drafts.slice(0, 4).map((m) => (
+              <Link key={m.id} to={`/manuscripts/${m.id}`} style={{ textDecoration: "none" }}>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.title || "Untitled"}</div>
+                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>{m.manuscript_type}</div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No drafts in progress right now.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <FolderOpen size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Organize</div>
+        </div>
+        <div style={{ display: "flex", gap: 20 }}>
+          <div>
+            <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{projects.length}</div>
+            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Projects</div>
+          </div>
+          <div>
+            <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{workspaces.length}</div>
+            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Workspaces</div>
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 }

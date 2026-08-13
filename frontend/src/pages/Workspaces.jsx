@@ -174,11 +174,11 @@ export default function Workspaces() {
       subtitle={`${getGreeting()}, ${firstName}. Your research headquarters — projects, manuscripts, team and AI in one place.`}
       actions={
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <Button as={Link} to="/collaboration-requests" variant="ghost" size="sm">
+          <Button as={Link} to="/collaboration-requests" variant="hero" size="sm">
             <Users size={12} strokeWidth={1.5} />
             Find Collaborators
           </Button>
-          <Button data-testid={TID.workspaceCreateBtn} onClick={() => setShowNew((v) => !v)} size="sm">
+          <Button data-testid={TID.workspaceCreateBtn} onClick={() => setShowNew((v) => !v)} variant="hero" size="sm">
             <Plus size={13} strokeWidth={2} />
             New Workspace
           </Button>

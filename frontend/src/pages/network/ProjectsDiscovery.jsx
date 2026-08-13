@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import api from "@/lib/api";
-import { Search } from "lucide-react";
+import { Search, FolderKanban } from "lucide-react";
 import { NAVY, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Input, EmptyState, LoadingOverlay, Pagination } from "@/components/ds";
@@ -44,7 +44,7 @@ export default function ProjectsDiscovery() {
   const handleSearch = e => { e.preventDefault(); setPage(1); search(filters, 1); };
 
   return (
-    <ResearchLayout title="Research Projects">
+    <ResearchLayout title="Research Projects" sidebar={<ProjectsDiscoverySidebar results={results} total={total} />}>
 
       <form onSubmit={handleSearch} style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         <Input
@@ -90,5 +90,44 @@ export default function ProjectsDiscovery() {
         </div>
       )}
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — real search results already loaded by this page ─────────────
+function ProjectsDiscoverySidebar({ results, total }) {
+  const statusCounts = results.reduce((acc, p) => {
+    const s = p.status || "unspecified";
+    acc[s] = (acc[s] || 0) + 1;
+    return acc;
+  }, {});
+  const statusEntries = Object.entries(statusCounts).sort((a, b) => b[1] - a[1]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <FolderKanban size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Projects Found</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{total}</div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          Matching your current search and filters.
+        </p>
+      </Card>
+
+      {statusEntries.length > 0 && (
+        <Card padding="lg">
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>By Status</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {statusEntries.map(([status, count]) => (
+              <div key={status} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
+                <span style={{ textTransform: "capitalize" }}>{status.replace("_", " ")}</span>
+                <span style={{ fontWeight: 700, color: NAVY }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

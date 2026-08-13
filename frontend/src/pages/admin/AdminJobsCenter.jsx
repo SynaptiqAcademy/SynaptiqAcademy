@@ -144,7 +144,7 @@ export default function AdminJobsCenter() {
       title="Background Jobs & Automation Center"
       subtitle="Visibility into all background processing, retry and cancel controls"
       actions={
-        <Button variant="ghost" size="icon" onClick={refetchAll} aria-label="Refresh">
+        <Button variant="hero" size="icon" onClick={refetchAll} aria-label="Refresh">
           <RefreshCw size={14} className={(sLoading || jLoading) ? "animate-spin" : ""} />
         </Button>
       }

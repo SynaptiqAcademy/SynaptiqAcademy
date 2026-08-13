@@ -18,6 +18,7 @@ import {
 import { TID } from "../lib/testIds";
 import { userTypeLabel } from "../lib/userTypes";
 import { NAVY } from "@/lib/tokens";
+import { ResearchLayout } from "@/layouts";
 import {
   Spinner, Card, StatCard, StatGrid, Button, Modal, Input, FormSelect,
   EmptyState as DsEmptyState, DataTable, Callout,
@@ -749,52 +750,56 @@ export default function DepartmentDetail() {
 
   if (deptLoading) {
     return (
-      <div className="text-sm text-slate-500 font-mono py-16 text-center flex items-center justify-center gap-2">
-        <Spinner size={14} />Loading department…
-      </div>
+      <ResearchLayout title="Department" eyebrow="Department">
+        <div className="text-sm text-slate-500 font-mono py-16 text-center flex items-center justify-center gap-2">
+          <Spinner size={14} />Loading department…
+        </div>
+      </ResearchLayout>
     );
   }
 
   if (!dept) {
     return (
-      <div className="border border-red-100 bg-red-50 p-6 text-sm text-red-700">
-        Department not found or you don't have access.
-      </div>
+      <ResearchLayout title="Department" eyebrow="Department">
+        <div className="border border-red-100 bg-red-50 p-6 text-sm text-red-700">
+          Department not found or you don't have access.
+        </div>
+      </ResearchLayout>
     );
   }
 
   const iid = dept.institution_id;
 
   return (
-    <div className="space-y-6" data-testid={TID.deptDetailPage(did)}>
+    <ResearchLayout
+      title={<span data-testid={TID.deptName}>{dept.name}</span>}
+      eyebrow="Department"
+      subtitle={dept.institution?.name}
+      actions={isAdmin && (
+        <Button variant="hero" size="sm" onClick={() => setShowEdit(true)} data-testid={TID.deptEditBtn}>
+          <Edit3 size={11} /> Edit
+        </Button>
+      )}
+    >
+      <div className="space-y-6" data-testid={TID.deptDetailPage(did)}>
 
-      {/* Breadcrumb */}
-      <nav className="text-xs text-slate-500 flex items-center gap-1 flex-wrap">
-        <Link to={`/institutions/${iid}`} className="hover:text-[#0F2847]">
-          {dept.institution?.name || "Institution"}
-        </Link>
-        <ChevronRight size={10} strokeWidth={1.5} />
-        <Link to="/institution/departments" className="hover:text-[#0F2847]">Departments</Link>
-        <ChevronRight size={10} strokeWidth={1.5} />
-        <span className="text-slate-900">{dept.name}</span>
-      </nav>
+        {/* Breadcrumb */}
+        <nav className="text-xs text-slate-500 flex items-center gap-1 flex-wrap">
+          <Link to={`/institutions/${iid}`} className="hover:text-[#0F2847]">
+            {dept.institution?.name || "Institution"}
+          </Link>
+          <ChevronRight size={10} strokeWidth={1.5} />
+          <Link to="/institution/departments" className="hover:text-[#0F2847]">Departments</Link>
+          <ChevronRight size={10} strokeWidth={1.5} />
+          <span className="text-slate-900">{dept.name}</span>
+        </nav>
 
-      {/* Header */}
-      <header className="border-b border-slate-200 pb-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="overline text-[#0F2847] mb-1">Department</div>
-            <h1 className="font-serif text-4xl text-slate-900 leading-tight" data-testid={TID.deptName}>
-              {dept.name}
-            </h1>
-            {dept.institution?.name && (
-              <Link to={`/institutions/${iid}`}
-                className="text-sm text-slate-500 hover:text-[#0F2847] mt-1 block">
-                {dept.institution.name}
-              </Link>
-            )}
+        {/* Head + research areas — real fetched data kept visible, just no longer
+            inside a bespoke <header>. */}
+        {(dept.head || (dept.research_areas || []).length > 0) && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pb-4 border-b border-slate-100">
             {dept.head && (
-              <p className="text-sm text-slate-600 mt-2">
+              <p className="text-sm text-slate-600">
                 Head: <Link to={`/profile/${dept.head.id}`} className="font-medium hover:text-[#0F2847]">
                   {dept.head.full_name}
                 </Link>
@@ -802,58 +807,53 @@ export default function DepartmentDetail() {
               </p>
             )}
             {(dept.research_areas || []).length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-3">
+              <div className="flex flex-wrap gap-1.5">
                 {dept.research_areas.map((a) => <ResearchTag key={a} label={a} />)}
               </div>
             )}
           </div>
-          {isAdmin && (
-            <Button variant="ghost" size="sm" onClick={() => setShowEdit(true)} data-testid={TID.deptEditBtn} className="shrink-0">
-              <Edit3 size={11} /> Edit
-            </Button>
-          )}
+        )}
+
+        {/* Tabs — kept hand-rolled: ds NavTabs doesn't support per-tab data-testid,
+            and tests address individual tabs via TID.deptTab(t). */}
+        <div className="flex items-center gap-0.5 border-b border-slate-200 overflow-x-auto" data-testid={TID.deptTabs}>
+          {TAB_LIST.map((t) => {
+            const { label, icon: Icon } = TAB_META[t];
+            return (
+              <button key={t} onClick={() => setTab(t)}
+                data-testid={TID.deptTab(t)}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm -mb-px border-b-2 transition-colors whitespace-nowrap ${
+                  tab === t
+                    ? "border-[#0F2847] text-[#0F2847]"
+                    : "border-transparent text-slate-500 hover:text-slate-900"
+                }`}>
+                <Icon size={12} strokeWidth={1.5} />
+                {label}
+              </button>
+            );
+          })}
         </div>
-      </header>
 
-      {/* Tabs — kept hand-rolled: ds NavTabs doesn't support per-tab data-testid,
-          and tests address individual tabs via TID.deptTab(t). */}
-      <div className="flex items-center gap-0.5 border-b border-slate-200 overflow-x-auto" data-testid={TID.deptTabs}>
-        {TAB_LIST.map((t) => {
-          const { label, icon: Icon } = TAB_META[t];
-          return (
-            <button key={t} onClick={() => setTab(t)}
-              data-testid={TID.deptTab(t)}
-              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm -mb-px border-b-2 transition-colors whitespace-nowrap ${
-                tab === t
-                  ? "border-[#0F2847] text-[#0F2847]"
-                  : "border-transparent text-slate-500 hover:text-slate-900"
-              }`}>
-              <Icon size={12} strokeWidth={1.5} />
-              {label}
-            </button>
-          );
-        })}
+        {/* Tab content */}
+        <div>
+          {tab === "overview"    && <OverviewTab dept={dept} metrics={metrics} metricsLoading={metricsLoading} onRefreshMetrics={handleRefreshMetrics} isAdmin={isAdmin} />}
+          {tab === "faculty"     && <FacultyTab did={did} iid={iid} isAdmin={isAdmin} />}
+          {tab === "projects"    && <ProjectsTab did={did} isAdmin={isAdmin} />}
+          {tab === "outputs"     && <OutputsTab did={did} />}
+          {tab === "funding"     && <FundingTab did={did} />}
+          {tab === "statistics"  && <StatisticsTab metrics={metrics} />}
+          {tab === "rankings"    && <RankingsTab did={did} />}
+          {tab === "network"     && <NetworkTab did={did} />}
+        </div>
+
+        {showEdit && (
+          <EditDepartmentModal
+            dept={dept}
+            onClose={() => setShowEdit(false)}
+            onUpdated={() => { refetchDept(); handleRefreshMetrics(); }}
+          />
+        )}
       </div>
-
-      {/* Tab content */}
-      <div>
-        {tab === "overview"    && <OverviewTab dept={dept} metrics={metrics} metricsLoading={metricsLoading} onRefreshMetrics={handleRefreshMetrics} isAdmin={isAdmin} />}
-        {tab === "faculty"     && <FacultyTab did={did} iid={iid} isAdmin={isAdmin} />}
-        {tab === "projects"    && <ProjectsTab did={did} isAdmin={isAdmin} />}
-        {tab === "outputs"     && <OutputsTab did={did} />}
-        {tab === "funding"     && <FundingTab did={did} />}
-        {tab === "statistics"  && <StatisticsTab metrics={metrics} />}
-        {tab === "rankings"    && <RankingsTab did={did} />}
-        {tab === "network"     && <NetworkTab did={did} />}
-      </div>
-
-      {showEdit && (
-        <EditDepartmentModal
-          dept={dept}
-          onClose={() => setShowEdit(false)}
-          onUpdated={() => { refetchDept(); handleRefreshMetrics(); }}
-        />
-      )}
-    </div>
+    </ResearchLayout>
   );
 }

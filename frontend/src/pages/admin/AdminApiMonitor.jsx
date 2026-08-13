@@ -75,7 +75,7 @@ export default function AdminApiMonitor() {
           <FormSelect value={days} onChange={e => setDays(Number(e.target.value))} size="sm" wrapperClassName="w-28">
             {[1, 7, 14, 30, 90].map(d => <option key={d} value={d}>Last {d}d</option>)}
           </FormSelect>
-          <Button variant="ghost" size="icon" onClick={refetchAll} aria-label="Refresh">
+          <Button variant="hero" size="icon" onClick={refetchAll} aria-label="Refresh">
             <RefreshCw size={14} className={(ovL || alL) ? "animate-spin" : ""} />
           </Button>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Button, Input, FormSelect, Tag, TagGroup, EmptyState, Checkbox, NavTabs } from "@/components/ds";
+import { Button, Input, FormSelect, Tag, TagGroup, EmptyState, Checkbox, NavTabs, Card } from "@/components/ds";
 import { ResearchLayout } from "@/layouts";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
@@ -235,16 +235,31 @@ export default function Grants() {
     .sort((a, b) => daysUntil(a.deadline) - daysUntil(b.deadline))
     .slice(0, 8);
 
+  // Grant discovery quota for this calendar month (real data from /discovery/quota)
+  const grantQuota = quota?.quota?.grant;
+  const quotaText = !grantQuota
+    ? "—"
+    : grantQuota.limit == null
+    ? "Unlimited"
+    : `${Math.max(0, grantQuota.limit - grantQuota.used)} left`;
+
   return (
     <ResearchLayout
       title="Grants"
       subtitle="Profile-matched grants, fellowships, scholarships and calls aggregated from OpenAIRE, NIH, NSF, ERC, Horizon Europe and 40+ international agencies."
+      stats={[
+        { label: "Opportunities", value: loading ? "—" : total.toLocaleString() },
+        { label: "For You",       value: matchesLoading ? "—" : (matches?.length ?? 0) },
+        { label: "Closing Soon",  value: upcoming.length },
+        { label: "Quota",         value: quotaText },
+      ]}
+      sidebar={<GrantsSidebar grantQuota={grantQuota} upcoming={upcoming} compareList={compareList} />}
       actions={
         <>
-          <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} size="sm">
+          <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} variant="hero" size="sm">
             Find Matching Grants
           </Button>
-          <Button as={Link} to="/ai" variant="ghost" size="sm">
+          <Button as={Link} to="/ai" variant="hero" size="sm">
             Prepare Application
           </Button>
         </>
@@ -451,6 +466,81 @@ export default function Grants() {
         />
       )}
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — quota, real upcoming deadlines, and live compare selection ───
+function GrantsSidebar({ grantQuota, upcoming, compareList }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Clock size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Discovery Quota</div>
+        </div>
+        {grantQuota ? (
+          grantQuota.limit == null ? (
+            <p style={{ fontSize: 12, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
+              Unlimited grant discovery on your plan.
+            </p>
+          ) : (
+            <>
+              <div style={{ fontFamily: "Georgia, serif", fontSize: 24, fontWeight: 700, color: "#0f172a" }}>
+                {grantQuota.used} / {grantQuota.limit}
+              </div>
+              <p style={{ fontSize: 11, color: "#94A3B8", margin: "2px 0 0" }}>Grant searches used this month</p>
+            </>
+          )
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>Loading quota…</p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Timer size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Upcoming Deadlines</div>
+        </div>
+        {upcoming.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {upcoming.slice(0, 4).map((g) => {
+              const ul = urgencyLabel(g.deadline);
+              return (
+                <Link key={g.id} to={`/grants/${g.id}`} style={{ textDecoration: "none" }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.title}</div>
+                  {ul && <div style={{ fontSize: 11, color: ul.color, marginTop: 1, fontWeight: 600 }}>{ul.text}</div>}
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No deadlines in the next 60 days among currently loaded results.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <BarChart2 size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Comparing</div>
+        </div>
+        {compareList.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {compareList.map((g) => (
+              <div key={g.id} style={{ fontSize: 12, color: "#374151" }}>{g.title}</div>
+            ))}
+            {compareList.length < 2 && (
+              <p style={{ fontSize: 11, color: "#94A3B8", margin: "6px 0 0" }}>Add one more to compare.</p>
+            )}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            Select up to 3 grants below to compare them side by side.
+          </p>
+        )}
+      </Card>
+    </div>
   );
 }
 

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { ResponsiveContainer, Cell, PieChart, Pie, Tooltip } from "recharts";
+import { TrendingUp, Sparkles } from "lucide-react";
 import api from "@/lib/api";
 import { SkeletonPage } from "@/components/ds/LoadingState";
 import { ErrorState } from "@/components/ds/ErrorState";
-import { Card, StatCard, StatGrid, DataTable, H2 } from "@/components/ds";
+import { Card, DataTable, H2 } from "@/components/ds";
+import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 
 const PLAN_COLORS = { free: "#94a3b8", researcher: "#3b82f6", pro_researcher: "#6366f1", institution: "#a855f7" };
@@ -46,10 +48,26 @@ export default function AdminAnalytics() {
   ];
   const featureRows = Object.entries(featureAdoption).map(([key, value]) => ({ feature: key, usage: value }));
 
+  const engagementStats = Object.entries(engagement)
+    .filter(([k]) => k !== "plan_distribution")
+    .map(([key, value]) => ({
+      label: key.replace(/_/g, " "),
+      value: typeof value === "number" ? value.toLocaleString() : String(value),
+    }));
+
+  const topPlan = planChartData.length > 0
+    ? planChartData.reduce((a, b) => (b.value > a.value ? b : a))
+    : null;
+  const topFeature = featureRows.length > 0
+    ? featureRows.reduce((a, b) => (b.usage > a.usage ? b : a))
+    : null;
+
   return (
     <AdministrationLayout
       title="Platform Analytics"
       subtitle="Derived from real platform activity"
+      stats={engagementStats.length > 0 ? engagementStats : undefined}
+      sidebar={(topPlan || topFeature) ? <AnalyticsSidebar topPlan={topPlan} topFeature={topFeature} /> : undefined}
     >
       {/* Plan Distribution */}
       {planChartData.length > 0 && (
@@ -79,22 +97,6 @@ export default function AdminAnalytics() {
         </Card>
       )}
 
-      {/* Engagement */}
-      {Object.keys(engagement).length > 0 && (
-        <Card padding="lg" className="mt-4">
-          <H2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Engagement Overview</H2>
-          <StatGrid cols={3}>
-            {Object.entries(engagement).filter(([k]) => k !== "plan_distribution").map(([key, value]) => (
-              <StatCard
-                key={key}
-                label={key.replace(/_/g, " ")}
-                value={typeof value === "number" ? value.toLocaleString() : String(value)}
-              />
-            ))}
-          </StatGrid>
-        </Card>
-      )}
-
       {/* Feature Adoption */}
       {Object.keys(featureAdoption).length > 0 && (
         <Card padding="lg" className="mt-4">
@@ -103,5 +105,43 @@ export default function AdminAnalytics() {
         </Card>
       )}
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — derived from data already fetched above, never fabricated ────
+function AnalyticsSidebar({ topPlan, topFeature }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {topPlan && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Sparkles size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Leading Plan</div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div className="w-3 h-3 flex-shrink-0" style={{ background: PLAN_COLORS[topPlan.name] || "#94a3b8" }} />
+            <div style={{ fontFamily: "Georgia, serif", fontSize: 20, color: "#0f172a", textTransform: "capitalize" }}>{topPlan.name?.replace("_", " ")}</div>
+          </div>
+          <p style={{ fontSize: 12, color: "#64748B", margin: "6px 0 0" }}>
+            {topPlan.value?.toLocaleString()} user{topPlan.value !== 1 ? "s" : ""} on this plan
+          </p>
+        </Card>
+      )}
+
+      {topFeature && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <TrendingUp size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Most-Used Feature</div>
+          </div>
+          <div style={{ fontFamily: "Georgia, serif", fontSize: 16, color: "#0f172a", textTransform: "capitalize" }}>
+            {topFeature.feature?.replace(/_/g, " ")}
+          </div>
+          <p style={{ fontSize: 12, color: "#64748B", margin: "6px 0 0" }}>
+            {typeof topFeature.usage === "number" ? topFeature.usage.toLocaleString() : topFeature.usage} uses
+          </p>
+        </Card>
+      )}
+    </div>
   );
 }

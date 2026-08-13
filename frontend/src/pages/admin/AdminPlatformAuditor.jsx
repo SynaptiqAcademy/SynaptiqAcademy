@@ -89,11 +89,11 @@ export default function AdminPlatformAuditor() {
       actions={
         <div className="flex items-center gap-2">
           {runMsg && <span className="text-xs text-slate-500">{runMsg}</span>}
-          <Button variant="primary" size="sm" onClick={runAudit} loading={running}>
+          <Button variant="hero" size="sm" onClick={runAudit} loading={running}>
             <Play size={12} />
             {running ? "Running Audit..." : "Run Audit"}
           </Button>
-          <Button variant="ghost" size="icon" onClick={refetch} aria-label="Refresh">
+          <Button variant="hero" size="icon" onClick={refetch} aria-label="Refresh">
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </Button>
         </div>

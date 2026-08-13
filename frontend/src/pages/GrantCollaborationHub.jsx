@@ -248,6 +248,81 @@ function CreateModal({ open, onClose, onCreate }) {
   );
 }
 
+// ─── Right rail — invitations, teams, and acceptance rate already loaded above ─
+
+function GrantCollaborationHubSidebar({ myInvitations, myLead, myParticipating, analytics, onViewTab }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Mail size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Pending Invitations</div>
+        </div>
+        {myInvitations.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {myInvitations.slice(0, 3).map((inv) => (
+              <button
+                key={inv._id}
+                onClick={() => onViewTab("invitations")}
+                style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+              >
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {inv.collaboration_title || inv.collab?.title || "Untitled Collaboration"}
+                </div>
+                {inv.invited_by_name && (
+                  <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>Invited by {inv.invited_by_name}</div>
+                )}
+              </button>
+            ))}
+            <Button onClick={() => onViewTab("invitations")} size="sm" variant="ghost" style={{ width: "100%" }}>
+              View all <ArrowRight size={11} strokeWidth={2} />
+            </Button>
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No pending invitations right now.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <Users size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>My Teams</div>
+        </div>
+        <div style={{ display: "flex", gap: 20 }}>
+          <div>
+            <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{myLead.length}</div>
+            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Leading</div>
+          </div>
+          <div>
+            <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{myParticipating.length}</div>
+            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Participating</div>
+          </div>
+        </div>
+        <Button onClick={() => onViewTab("my-hub")} size="sm" variant="ghost" style={{ width: "100%", marginTop: 10 }}>
+          Open My Hub <ArrowRight size={11} strokeWidth={2} />
+        </Button>
+      </Card>
+
+      {analytics?.invitations_sent > 0 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <BarChart2 size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Acceptance Rate</div>
+          </div>
+          <div style={{ fontFamily: "Georgia, serif", fontSize: 24, fontWeight: 700, color: "#0f172a" }}>
+            {Math.round(((analytics.invitations_accepted || 0) / analytics.invitations_sent) * 100)}%
+          </div>
+          <p style={{ fontSize: 11, color: "#94A3B8", margin: "2px 0 0" }}>
+            {analytics.invitations_accepted || 0} of {analytics.invitations_sent} invitations accepted
+          </p>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 // ─── main component ──────────────────────────────────────────────────────────
 
 export default function GrantCollaborationHub() {
@@ -380,26 +455,26 @@ export default function GrantCollaborationHub() {
     <ResearchLayout
       title="Grant Collaboration Hub"
       subtitle="Discover funding teams · Build consortia · Win grants together"
+      stats={[
+        { label: "Active Collaborations", value: total },
+        { label: "My Collaborations",     value: myCollabs.length },
+        { label: "Pending Invitations",   value: myInvitations.length },
+      ]}
+      sidebar={
+        <GrantCollaborationHubSidebar
+          myInvitations={myInvitations}
+          myLead={myLead}
+          myParticipating={myParticipating}
+          analytics={analytics}
+          onViewTab={setActiveTab}
+        />
+      }
       actions={
-        <Button onClick={() => setShowCreateModal(true)} className="shrink-0">
+        <Button onClick={() => setShowCreateModal(true)} variant="hero" className="shrink-0">
           <Plus size={15} /> New Collaboration
         </Button>
       }
     >
-      {/* ── Stats strip ───────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 max-w-md mb-8">
-        {[
-          { label: "Active Collaborations", value: total },
-          { label: "My Collaborations",     value: myCollabs.length },
-          { label: "Pending Invitations",   value: myInvitations.length },
-        ].map(({ label, value }) => (
-          <div key={label} className="text-center">
-            <div className="font-serif text-3xl text-slate-900">{value}</div>
-            <div className="overline mt-1 text-xs">{label}</div>
-          </div>
-        ))}
-      </div>
-
       {/* Tab bar */}
       <div className="bg-white border-b border-slate-200 -mx-6 px-6 mb-6">
         <NavTabs

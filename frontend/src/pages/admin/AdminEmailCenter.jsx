@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Mail, Plus, Edit2, Trash2 } from "lucide-react";
+import { Mail, Plus, Edit2, Trash2, Send } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import { confirmDialog } from "@/lib/confirm";
@@ -186,6 +186,7 @@ export default function AdminEmailCenter() {
     <AdministrationLayout
       title="Email Center"
       subtitle="Send communications and manage email templates"
+      sidebar={(templates.length > 0 || campaigns.length > 0) ? <EmailCenterSidebar templates={templates} campaigns={campaigns} fmt={fmt} /> : undefined}
     >
       <NavTabs
         tabs={TABS.map((t) => ({ id: t, label: t }))}
@@ -367,5 +368,44 @@ export default function AdminEmailCenter() {
         )
       )}
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — templates and campaigns already fetched by their tabs above ──
+function EmailCenterSidebar({ templates, campaigns, fmt }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {templates.length > 0 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Mail size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Email Templates</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {templates.slice(0, 3).map((tpl) => (
+              <div key={tpl.id} style={{ fontSize: 12, color: "#374151" }}>{tpl.name}</div>
+            ))}
+          </div>
+          <p style={{ fontSize: 11, color: "#94A3B8", margin: "8px 0 0" }}>{templates.length} template{templates.length !== 1 ? "s" : ""} saved</p>
+        </Card>
+      )}
+
+      {campaigns.length > 0 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Send size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Recent Campaigns</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {campaigns.slice(0, 3).map((c) => (
+              <div key={c.id}>
+                <div style={{ fontSize: 12, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.subject}</div>
+                <div style={{ fontSize: 11, color: "#94A3B8" }}>{fmt(c.created_at)} · {c.sent_count} sent</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

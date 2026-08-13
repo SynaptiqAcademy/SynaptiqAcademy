@@ -750,11 +750,11 @@ export default function ProfileSetup() {
           subtitle="Complete your profile to join the Synaptiq community"
           actions={
             <>
-              <Button variant="ghost" size="md" onClick={() => handleSave(false)} disabled={saving}>
+              <Button variant="hero" size="md" onClick={() => handleSave(false)} disabled={saving}>
                 <Save size={14} /> Save
               </Button>
               <Button
-                variant={unlocked ? "primary" : "subtle"}
+                variant={unlocked ? "hero" : "subtle"}
                 size="md"
                 onClick={() => handleSave(true)}
                 disabled={saving || !unlocked}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingBag, AlertCircle, TrendingUp, DollarSign, Users, BarChart3 } from "lucide-react";
+import { AlertCircle, TrendingUp } from "lucide-react";
+import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
-import { Card, H2, StatGrid, StatCard, MiniBar, EmptyState, LoadingOverlay, Caption } from "@/components/ds";
+import { Card, H2, MiniBar, EmptyState, LoadingOverlay, Caption } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = "/api/admin/acad-market";
@@ -25,26 +26,30 @@ export default function AdminMarketplace() {
 
   if (loading) return <LoadingOverlay text="Loading admin data..." />;
 
+  const oldestDispute = disputes.length > 0
+    ? [...disputes].sort((a, b) => new Date(a.opened_at) - new Date(b.opened_at))[0]
+    : null;
+  const topCategory = stats?.top_categories?.[0] || null;
+
   return (
-    <AdministrationLayout title="Marketplace Admin Center" subtitle="Platform health, transactions, and dispute management">
+    <AdministrationLayout
+      title="Marketplace Admin Center"
+      subtitle="Platform health, transactions, and dispute management"
+      stats={stats ? [
+        { label: "Active Providers", value: stats.providers ?? "—" },
+        { label: "Active Services", value: stats.services ?? "—" },
+        { label: "Total Orders", value: stats.orders?.total ?? "—" },
+        { label: "Completion Rate", value: `${stats.orders?.completion_rate?.toFixed(1)}%` },
+        { label: "Platform Revenue", value: `$${stats.platform_revenue?.toFixed(2)}` },
+        { label: "GMV", value: `$${stats.gmv?.toFixed(2)}` },
+        { label: "Unique Buyers", value: stats.buyers ?? "—" },
+        { label: "Dispute Rate", value: `${stats.disputes?.rate?.toFixed(1)}%` },
+      ] : undefined}
+      sidebar={<AdminMarketplaceSidebar oldestDispute={oldestDispute} topCategory={topCategory} />}
+    >
 
         {stats && (
           <>
-            <StatGrid cols={4} className="mb-7">
-              {[
-                { label: "Active Providers", value: stats.providers, icon: <Users /> },
-                { label: "Active Services", value: stats.services, icon: <ShoppingBag /> },
-                { label: "Total Orders", value: stats.orders?.total, icon: <BarChart3 /> },
-                { label: "Completion Rate", value: `${stats.orders?.completion_rate?.toFixed(1)}%`, icon: <TrendingUp /> },
-                { label: "Platform Revenue", value: `$${stats.platform_revenue?.toFixed(2)}`, icon: <DollarSign /> },
-                { label: "GMV", value: `$${stats.gmv?.toFixed(2)}`, icon: <DollarSign /> },
-                { label: "Unique Buyers", value: stats.buyers, icon: <Users /> },
-                { label: "Dispute Rate", value: `${stats.disputes?.rate?.toFixed(1)}%`, icon: <AlertCircle /> },
-              ].map(({ label, value, icon }) => (
-                <StatCard key={label} label={label} value={value ?? "—"} icon={icon} />
-              ))}
-            </StatGrid>
-
             {/* Top categories */}
             {stats.top_categories?.length > 0 && (
               <Card padding="lg" className="mb-6">
@@ -88,5 +93,49 @@ export default function AdminMarketplace() {
           )}
         </Card>
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — priority dispute and top category, derived from data above ───
+function AdminMarketplaceSidebar({ oldestDispute, topCategory }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <AlertCircle size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Oldest Open Dispute</div>
+        </div>
+        {oldestDispute ? (
+          <>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a" }}>
+              {oldestDispute.reason?.replace(/_/g, " ")?.replace(/\b\w/g, l => l.toUpperCase())}
+            </div>
+            <p style={{ fontSize: 11, color: "#94A3B8", margin: "4px 0 10px" }}>
+              Order {oldestDispute.order_id?.slice(-8)?.toUpperCase()} · Opened {new Date(oldestDispute.opened_at).toLocaleDateString()}
+            </p>
+            <Link to={`/academic-marketplace/disputes/${oldestDispute.id}`} style={{ fontSize: 12, fontWeight: 600, color: NAVY, textDecoration: "none" }}>
+              Resolve now →
+            </Link>
+          </>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No open disputes right now.</p>
+        )}
+      </Card>
+
+      {topCategory && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <TrendingUp size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Category</div>
+          </div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", textTransform: "capitalize" }}>
+            {topCategory.category?.replace(/_/g, " ")}
+          </div>
+          <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0" }}>
+            {topCategory.count} order{topCategory.count === 1 ? "" : "s"}
+          </p>
+        </Card>
+      )}
+    </div>
   );
 }

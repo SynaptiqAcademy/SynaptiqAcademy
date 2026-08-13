@@ -229,7 +229,7 @@ export default function Departments() {
       title="Departments"
       subtitle="Manage academic departments, faculty, research outputs, and funding for your institution."
       actions={isAdmin && (
-        <Button onClick={() => setShowCreate(true)} data-testid={TID.deptCreateBtn}>
+        <Button onClick={() => setShowCreate(true)} data-testid={TID.deptCreateBtn} variant="hero">
           <Plus size={12} /> New Department
         </Button>
       )}

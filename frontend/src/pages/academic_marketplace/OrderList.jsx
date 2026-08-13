@@ -36,7 +36,7 @@ export default function OrderList() {
     <ResearchLayout
       title="My Orders"
       actions={
-        <Button as={Link} to="/academic-marketplace/services">
+        <Button as={Link} to="/academic-marketplace/services" variant="hero">
           Browse Services
         </Button>
       }

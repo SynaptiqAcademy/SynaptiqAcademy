@@ -153,7 +153,7 @@ export default function AdminSubscriptions() {
       title="Subscription Control Center"
       subtitle="Manage all user subscriptions"
       actions={
-        <Button variant="ghost" size="icon" onClick={refetch} aria-label="Refresh">
+        <Button variant="hero" size="icon" onClick={refetch} aria-label="Refresh">
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
         </Button>
       }

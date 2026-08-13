@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { NAVY, WARM, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
-import { Card, StatCard, StatGrid, List, ListItem, DataTable, Badge, Spinner } from "@/components/ds";
+import { Card, List, ListItem, DataTable, Badge, Spinner } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
@@ -48,17 +48,14 @@ export default function GrantIntelligence() {
     <InstitutionLayout
       title="Grant Intelligence"
       subtitle={grants ? `Success rate: ${grants.success_rate ?? 0}% · Total funding: €${(grants.total_funding || 0).toLocaleString()}` : "Grant funding overview and pipeline analysis"}
+      stats={[
+        { label: "Total Applications", value: grants?.total ?? 0 },
+        { label: "Approved", value: grants?.approved ?? 0 },
+        { label: "In Pipeline", value: grants?.submitted ?? 0 },
+        { label: "Rejected", value: grants?.rejected ?? 0 },
+        { label: "Avg Grant Size", value: `€${((grants?.avg_grant_size || 0) / 1000).toFixed(0)}k` },
+      ]}
     >
-      {/* StatCard has no per-tile value-color override, so the original
-          color-coded KPI values are flattened. */}
-      <StatGrid cols={5} className="mb-5">
-        <StatCard label="Total Applications" value={grants?.total ?? 0} />
-        <StatCard label="Approved" value={grants?.approved ?? 0} />
-        <StatCard label="In Pipeline" value={grants?.submitted ?? 0} />
-        <StatCard label="Rejected" value={grants?.rejected ?? 0} />
-        <StatCard label="Avg Grant Size" value={`€${((grants?.avg_grant_size || 0) / 1000).toFixed(0)}k`} />
-      </StatGrid>
-
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
         {/* Top funders */}
         <Card padding="lg">

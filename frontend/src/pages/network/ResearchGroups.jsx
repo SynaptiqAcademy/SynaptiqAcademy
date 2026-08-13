@@ -165,7 +165,7 @@ export default function ResearchGroups() {
   return (
     <ResearchLayout
       title="Research Groups"
-      actions={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={15} />Create</Button>}
+      actions={<Button variant="hero" onClick={() => setShowCreate(true)}><Plus size={15} />Create</Button>}
       nav={
         <NavTabs
           variant="pill"

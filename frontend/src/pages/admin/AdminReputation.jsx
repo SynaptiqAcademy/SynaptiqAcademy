@@ -10,7 +10,7 @@ import { Award, Users, BarChart2, RefreshCw, Shield } from "lucide-react";
 import { getLevel } from "../../hooks/useReputation";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
-import { Card, Button, Input, StatCard, StatGrid, ProgressBar, Badge, SkeletonCard } from "@/components/ds";
+import { Card, Button, Input, ProgressBar, Badge, SkeletonCard } from "@/components/ds";
 
 export default function AdminReputation() {
   const [data, setData]     = useState(null);
@@ -60,15 +60,14 @@ export default function AdminReputation() {
     <AdministrationLayout
       title="Reputation Analytics"
       subtitle="Read-only audit of the platform-wide reputation system. Scores derive entirely from verified platform activity. No manual score editing is possible."
+      stats={[
+        { label: "Users with scores", value: totalScored.toLocaleString() },
+        { label: "Stale (>7 days)",   value: stale.toLocaleString() },
+        { label: "Badges awarded",    value: badgeDist.reduce((a, b) => a + b.count, 0).toLocaleString() },
+      ]}
+      sidebar={<ReputationSidebar topUsers={topUsers} badgeDist={badgeDist} />}
     >
       <div className="flex flex-col gap-8">
-        {/* Summary stats */}
-        <StatGrid cols={3}>
-          <StatCard label="Users with scores" value={totalScored.toLocaleString()} />
-          <StatCard label="Stale (>7 days)" value={stale.toLocaleString()} sub="Scores older than 7 days" />
-          <StatCard label="Badges awarded" value={badgeDist.reduce((a, b) => a + b.count, 0).toLocaleString()} />
-        </StatGrid>
-
         {/* Score distribution */}
         <section>
           <h2 className="font-serif text-2xl text-slate-900 mb-5 border-b border-slate-200 pb-3">Score Distribution</h2>
@@ -169,5 +168,54 @@ export default function AdminReputation() {
         </Card>
       </div>
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — top contributor & badge leaders, real data already loaded ────
+function ReputationSidebar({ topUsers, badgeDist }) {
+  const top = topUsers?.[0];
+  const topLevel = top ? getLevel(top.overall) : null;
+  const topBadges = [...(badgeDist || [])].sort((a, b) => (b.count || 0) - (a.count || 0)).slice(0, 5);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Award size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Contributor</div>
+        </div>
+        {top ? (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{top.full_name || "—"}</div>
+            <div style={{ fontSize: 11, color: "#64748B", marginBottom: 8 }}>{top.institution || ""}</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <span className="font-serif" style={{ fontSize: 26, color: "#0f172a" }}>{Math.round(top.overall)}</span>
+              {topLevel && <span className={`overline border px-1.5 py-0.5 text-[10px] ${topLevel.tone}`}>{topLevel.short}</span>}
+            </div>
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No contributor data yet.</p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <BarChart2 size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Most Awarded Badges</div>
+        </div>
+        {topBadges.length === 0 ? (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No badges awarded yet.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {topBadges.map((b) => (
+              <div key={b._id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 11.5, color: "#374151", textTransform: "capitalize" }}>{b._id?.replace(/_/g, " ") || "—"}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", fontFamily: "monospace" }}>{b.count}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }

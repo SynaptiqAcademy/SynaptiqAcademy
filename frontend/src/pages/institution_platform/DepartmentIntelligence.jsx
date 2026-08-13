@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { Award, AlertTriangle } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { Card, Badge, Modal, StatCard, StatGrid, BarChart, List, ListItem, Spinner } from "@/components/ds";
@@ -127,6 +128,7 @@ export default function DepartmentIntelligence() {
     <InstitutionLayout
       title="Department Intelligence"
       subtitle={`${depts.length} departments · Click any card for details`}
+      sidebar={<DepartmentIntelligenceSidebar depts={depts} />}
     >
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
         {depts.map((d, i) => <DeptCard key={i} dept={d} onClick={() => openDetail(d)} />)}
@@ -136,5 +138,48 @@ export default function DepartmentIntelligence() {
         <DeptDetail dept={selected} data={detail} onClose={() => { setSelected(null); setDetail(null); }} />
       )}
     </InstitutionLayout>
+  );
+}
+
+// ── Right rail — department metrics already fetched by this page ──────────────
+function DepartmentIntelligenceSidebar({ depts }) {
+  if (!depts || depts.length === 0) return null;
+  const top = [...depts].sort((a, b) => (b.health_score || 0) - (a.health_score || 0))[0];
+  const atRisk = depts.filter(d => (d.health_score || 0) < 50);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Award size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Performing Department</div>
+        </div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{top.department}</div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          Health score {top.health_score} (Grade {top.health_grade}) · {top.faculty_count} faculty
+        </p>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <AlertTriangle size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Needs Attention</div>
+        </div>
+        {atRisk.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {atRisk.slice(0, 4).map((d, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 12.5, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.department}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: ACCENT }}>{d.health_score}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No department is currently below a health score of 50.
+          </p>
+        )}
+      </Card>
+    </div>
   );
 }

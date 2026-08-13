@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { Button, Input, FormSelect, Tag, TagGroup, EmptyState, NavTabs } from "@/components/ds";
+import { Button, Input, FormSelect, Tag, TagGroup, EmptyState, NavTabs, Card } from "@/components/ds";
 import { ResearchLayout } from "@/layouts";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
@@ -172,15 +172,16 @@ export default function Journals() {
       subtitle="9,000+ journals indexed from OpenAlex, Crossref, and DOAJ — with quartile rankings, open access status, impact metrics, and subject coverage."
       actions={
         <>
-          <Button onClick={focusSearch} size="sm">
+          <Button onClick={focusSearch} variant="hero" size="sm">
             Find Best Journal
           </Button>
-          <Button onClick={() => setShowCompare((s) => !s)} variant="ghost" size="sm">
+          <Button onClick={() => setShowCompare((s) => !s)} variant="hero" size="sm">
             <Scale size={12} strokeWidth={1.5} />
             Compare{compareList.length > 0 ? ` (${compareList.length})` : ""}
           </Button>
         </>
       }
+      sidebar={<JournalsSidebar compareList={compareList} />}
       nav={
         <NavTabs
           tabs={tabLinks.map(({ to, label, testid }) => ({ id: to, label, "data-testid": testid }))}
@@ -398,6 +399,34 @@ export default function Journals() {
         />
       )}
     </ResearchLayout>
+  );
+}
+
+// ─── Right rail — live compare selection, real data already loaded ───────────
+function JournalsSidebar({ compareList }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Scale size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Comparing</div>
+        </div>
+        {compareList.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {compareList.map((j) => (
+              <div key={j.id} style={{ fontSize: 12, color: "#374151" }}>{j.title}</div>
+            ))}
+            {compareList.length < 2 && (
+              <p style={{ fontSize: 11, color: "#94A3B8", margin: "6px 0 0" }}>Add one more to compare.</p>
+            )}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            Select up to 3 journals below to compare them side by side.
+          </p>
+        )}
+      </Card>
+    </div>
   );
 }
 

@@ -299,10 +299,10 @@ export default function CitationMonitoring() {
       nav={<IntelNav current="/citation-monitoring" />}
       actions={
         <>
-          <Button onClick={handleSync} disabled={syncing} data-testid={TID.citationMonitoringSyncBtn} variant="outline" size="sm">
+          <Button onClick={handleSync} disabled={syncing} data-testid={TID.citationMonitoringSyncBtn} variant="hero" size="sm">
             <RefreshCw size={12} strokeWidth={1.5} className={syncing ? "animate-spin" : ""} />{syncing ? "Syncing…" : "Sync OpenAlex"}
           </Button>
-          <Button onClick={handleExport} disabled={exporting || !hasData} data-testid={TID.citationMonitoringExportBtn} variant="primary" size="sm">
+          <Button onClick={handleExport} disabled={exporting || !hasData} data-testid={TID.citationMonitoringExportBtn} variant="hero" size="sm">
             <Download size={12} strokeWidth={1.5} />{exporting ? "Exporting…" : "Export CSV"}
           </Button>
         </>

@@ -20,7 +20,7 @@ import { Sparkles } from "lucide-react";
  * just compose it themselves and pass it via `toolbar`.
  */
 export function ResearchLayout({
-  title, subtitle, icon, actions, nav, toolbar, sidebar,
+  title, subtitle, icon, actions, stats, ring, nav, toolbar, sidebar,
   navItems, activePath, customHero, noPad, children,
 }) {
   const location = useLocation();
@@ -43,6 +43,8 @@ export function ResearchLayout({
       subtitle={subtitle}
       icon={resolvedIcon}
       actions={actions}
+      stats={stats}
+      ring={ring}
       nav={resolvedNav}
       toolbar={toolbar}
       aside={sidebar}

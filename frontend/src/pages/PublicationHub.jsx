@@ -401,10 +401,10 @@ export default function PublicationHub() {
 
   const pubHubActions = (
     <div style={{ display: "flex", gap: 8 }}>
-      <Button as={Link} to="/manuscripts" variant="ghost" size="sm">
+      <Button as={Link} to="/manuscripts" variant="hero" size="sm">
         <FileText size={12} strokeWidth={1.5} /> Manuscripts
       </Button>
-      <Button as={Link} to="/journals" variant="ghost" size="sm">
+      <Button as={Link} to="/journals" variant="hero" size="sm">
         <BookOpen size={12} strokeWidth={1.5} /> Browse Journals
       </Button>
     </div>

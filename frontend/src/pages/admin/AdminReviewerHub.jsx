@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import api from "@/lib/api";
-import { Star, UserCheck, Award, BarChart2 } from "lucide-react";
+import { Award, BarChart2 } from "lucide-react";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
-import { Card, Button, Input, StatCard, StatGrid, ErrorState, Spinner } from "@/components/ds";
+import { Card, Button, Input, ErrorState, Spinner } from "@/components/ds";
 
 export default function AdminReviewerHub() {
   const [stats, setStats] = useState(null);
@@ -38,15 +38,15 @@ export default function AdminReviewerHub() {
     <AdministrationLayout
       title="Reviewer Hub Admin"
       subtitle="Peer review marketplace overview and certification management"
+      stats={[
+        { label: "Total Reviewers", value: stats?.total_reviewers ?? "—" },
+        { label: "Active Reviews",  value: stats?.active_reviews ?? "—" },
+        { label: "Certified",       value: stats?.certified_reviewers ?? "—" },
+        { label: "Avg Quality",     value: stats?.avg_quality_score ? stats.avg_quality_score.toFixed(1) : "—" },
+      ]}
+      sidebar={<ReviewerHubSidebar stats={stats} />}
     >
       <div className="flex flex-col gap-4">
-        <StatGrid cols={4}>
-          <StatCard label="Total Reviewers" value={stats?.total_reviewers} icon={<UserCheck />} />
-          <StatCard label="Active Reviews" value={stats?.active_reviews} icon={<Star />} />
-          <StatCard label="Certified" value={stats?.certified_reviewers} icon={<Award />} />
-          <StatCard label="Avg Quality" value={stats?.avg_quality_score ? `${stats.avg_quality_score.toFixed(1)}` : "—"} icon={<BarChart2 />} />
-        </StatGrid>
-
         <Card padding="md">
           <div className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">Grant Certification</div>
           <form onSubmit={handleCertify} className="flex gap-2 items-start">
@@ -78,5 +78,53 @@ export default function AdminReviewerHub() {
         )}
       </div>
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — certification rate & top areas, real data already fetched ────
+function ReviewerHubSidebar({ stats }) {
+  const total = stats?.total_reviewers || 0;
+  const certified = stats?.certified_reviewers || 0;
+  const certRate = total > 0 ? Math.round((certified / total) * 100) : null;
+  const topAreas = (stats?.top_areas || []).slice(0, 3);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Award size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Certification Rate</div>
+        </div>
+        {certRate != null ? (
+          <div>
+            <span className="font-serif" style={{ fontSize: 26, color: "#0f172a" }}>{certRate}%</span>
+            <p style={{ fontSize: 11.5, color: "#94A3B8", margin: "6px 0 0" }}>
+              {certified.toLocaleString()} of {total.toLocaleString()} reviewers certified
+            </p>
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No reviewer data yet.</p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <BarChart2 size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Review Areas</div>
+        </div>
+        {topAreas.length === 0 ? (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No area data yet.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {topAreas.map((a) => (
+              <div key={a.area} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 11.5, color: "#374151" }}>{a.area}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", fontFamily: "monospace" }}>{a.count}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }

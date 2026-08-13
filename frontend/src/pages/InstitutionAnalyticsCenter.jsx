@@ -1305,7 +1305,7 @@ export default function InstitutionAnalyticsCenter() {
           <Button as={Link} to={`/institution-hub/${id}`} variant="link">
             <ChevronLeft size={15} /> Institution Hub
           </Button>
-          <Button variant="ghost" onClick={handleRefreshKpis} disabled={refreshing} loading={refreshing}>
+          <Button variant="hero" onClick={handleRefreshKpis} disabled={refreshing} loading={refreshing}>
             {!refreshing && <RefreshCw size={14} />}
             {refreshing ? "Refreshing…" : "Refresh KPIs"}
           </Button>

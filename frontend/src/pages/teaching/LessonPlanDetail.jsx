@@ -1,17 +1,19 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Sparkles, Download, Edit2, Check, X, Trash2, Plus } from "lucide-react";
+import { Sparkles, Download, Edit2, Check, X, Trash2, Plus, Clock, Layers, CheckCircle } from "lucide-react";
 import api from "../../lib/api";
 import { toast } from "sonner";
 import { SkeletonPage } from "../../components/ds/LoadingState";
 import { Button } from "@/components/ds/Button";
 import { Card } from "@/components/ds/Card";
+import { Badge } from "@/components/ds/Badge";
 import { Input } from "@/components/ds/Input";
 import { Textarea } from "@/components/ds/Textarea";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { NavTabs } from "@/components/ds/NavTabs";
 import { ResearchLayout } from "@/layouts";
 import { confirmDialog } from "@/lib/confirm";
+import { NAVY } from "@/lib/tokens";
 
 const SUBJECTS = ["Mathematics","Economics","Management","Computer Science","Medicine","Engineering","Psychology","Education","Sciences","Humanities","Law","Business","History","Literature","Physics","Chemistry","Biology","Sociology","Political Science","Philosophy"];
 const LEVELS   = ["secondary","undergraduate","graduate","professional","adult","other"];
@@ -193,22 +195,22 @@ export default function LessonPlanDetail() {
 
   const headerActions = editing ? (
     <>
-      <Button onClick={save} loading={saving}>
+      <Button variant="hero" onClick={save} loading={saving}>
         <Check size={14} strokeWidth={1.5} />{saving ? "Saving…" : "Save"}
       </Button>
-      <Button variant="ghost" onClick={() => { setDraft(lesson); setEditing(false); }}>
+      <Button variant="hero" onClick={() => { setDraft(lesson); setEditing(false); }}>
         Cancel
       </Button>
     </>
   ) : (
     <>
-      <Button variant="ghost" size="sm" onClick={exportAsText} title="Export as text">
+      <Button variant="hero" size="sm" onClick={exportAsText} title="Export as text">
         <Download size={13} strokeWidth={1.5} /> Export
       </Button>
-      <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+      <Button variant="hero" size="sm" onClick={() => setEditing(true)}>
         <Edit2 size={13} strokeWidth={1.5} /> Edit
       </Button>
-      <Button variant="ghost" size="icon" onClick={handleDelete} title="Delete lesson" className="text-slate-400 hover:text-red-500">
+      <Button variant="hero" size="icon" onClick={handleDelete} title="Delete lesson" className="text-slate-400 hover:text-red-500">
         <Trash2 size={15} strokeWidth={1.5} />
       </Button>
     </>
@@ -225,6 +227,7 @@ export default function LessonPlanDetail() {
           onChange={setTab}
         />
       }
+      sidebar={<LessonPlanDetailSidebar lesson={d} totalDuration={totalDuration} />}
     >
     <div className="max-w-4xl space-y-8">
       <div className="border-b border-slate-200 pb-6">
@@ -448,5 +451,66 @@ export default function LessonPlanDetail() {
       )}
     </div>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — status + outline coverage, real data already loaded above ──
+function LessonPlanDetailSidebar({ lesson, totalDuration }) {
+  const objectivesCount = (lesson.learning_objectives || []).length;
+  const materialsCount  = (lesson.materials || []).length;
+  const phaseCount      = (lesson.outline || []).length;
+  const onTarget = phaseCount > 0 && totalDuration === lesson.duration_minutes;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <CheckCircle size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Status</div>
+        </div>
+        <Badge variant={lesson.status === "published" ? "success" : "neutral"} size="sm">
+          {lesson.status}
+        </Badge>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "8px 0 0", lineHeight: 1.5 }}>
+          {lesson.status === "published"
+            ? "Visible as a completed lesson plan."
+            : "Still a draft — not yet marked complete."}
+        </p>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Clock size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Outline Coverage</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+          {totalDuration} <span style={{ fontSize: 15, fontWeight: 400, color: "#94A3B8" }}>/ {lesson.duration_minutes} min</span>
+        </div>
+        <p style={{ fontSize: 12, color: phaseCount === 0 ? "#94A3B8" : (onTarget ? "#64748B" : "#B45309"), margin: "4px 0 0", lineHeight: 1.5 }}>
+          {phaseCount === 0
+            ? "No outline phases added yet."
+            : onTarget
+              ? "Outline matches the target duration."
+              : "Outline time doesn't match the target duration."}
+        </p>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <Layers size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Content</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 12.5, color: "#374151" }}>Learning objectives</span>
+            <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>{objectivesCount}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 12.5, color: "#374151" }}>Materials</span>
+            <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>{materialsCount}</span>
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 }

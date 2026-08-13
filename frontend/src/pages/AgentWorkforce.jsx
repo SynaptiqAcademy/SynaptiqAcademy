@@ -391,10 +391,10 @@ export default function AgentWorkforce() {
 
   const pageActions = (
     <>
-      <Button onClick={() => loadTab(tab)} variant="ghost" size="icon" aria-label="Refresh">
+      <Button onClick={() => loadTab(tab)} variant="hero" size="icon" aria-label="Refresh">
         <RefreshCw size={15} />
       </Button>
-      <Button onClick={() => setShowNew(v => !v)} variant="primary" size="sm">
+      <Button onClick={() => setShowNew(v => !v)} variant="hero" size="sm">
         <Plus size={15} />
         New Mission
       </Button>

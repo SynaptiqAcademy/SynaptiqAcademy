@@ -3,7 +3,7 @@ import React from "react";
 /**
  * Button — unified design system button.
  *
- * Variants: primary | ghost | danger | outline | subtle
+ * Variants: primary | ghost | danger | outline | subtle | link | hero (for navy PageLayout hero actions)
  * Sizes:    sm | md (default) | lg | icon
  *
  * Replaces local BTN_PRIMARY / BTN_GHOST constants.
@@ -31,6 +31,8 @@ const VARIANTS = {
     "bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300",
   link:
     "bg-transparent text-navy-700 underline-offset-2 hover:underline p-0 h-auto font-medium",
+  hero:
+    "bg-white/10 text-white border border-white/20 hover:bg-white/20 active:bg-white/25",
 };
 
 const SIZES = {

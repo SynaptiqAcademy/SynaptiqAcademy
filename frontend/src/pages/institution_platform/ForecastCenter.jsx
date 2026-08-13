@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { TrendingUp } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
 import { Card, NavTabs, Tag, Callout, Spinner } from "@/components/ds";
@@ -119,6 +120,7 @@ export default function ForecastCenter() {
           />
         </div>
       }
+      sidebar={!loading ? <ForecastCenterSidebar pubF={pubF} grantF={grantF} facF={facF} citF={citF} /> : undefined}
     >
       {loading ? (
         <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
@@ -138,5 +140,46 @@ export default function ForecastCenter() {
         These projections are indicative and should inform — not replace — expert strategic judgement.
       </Callout>
     </InstitutionLayout>
+  );
+}
+
+// ── Right rail — next-year forecast values already fetched by this page ───────
+function forecastValue(item, valueKey) {
+  return item[`projected_${valueKey}`] ?? item.projected ?? item.projected_faculty ?? item.projected_approved ?? item.projected_citations ?? 0;
+}
+
+function ForecastCenterSidebar({ pubF, grantF, facF, citF }) {
+  const rows = [
+    { label: "Publications",     data: pubF,   key: "total",     color: EMERALD },
+    { label: "Grant Approvals",  data: grantF, key: "approved",  color: "#8b5cf6" },
+    { label: "Faculty",          data: facF,   key: "faculty",   color: "#0ea5e9" },
+    { label: "Citations",        data: citF,   key: "citations", color: "#f59e0b" },
+  ].filter(r => r.data?.forecasts?.length > 0);
+
+  if (rows.length === 0) return null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <TrendingUp size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Next-Year Outlook</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {rows.map((r) => {
+            const f = r.data.forecasts[0];
+            const val = forecastValue(f, r.key);
+            return (
+              <div key={r.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                <span style={{ fontSize: 12.5, color: "#374151" }}>{r.label}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: r.color }}>
+                  {val.toLocaleString()} <span style={{ fontSize: 10, fontWeight: 400, color: "#94A3B8" }}>({f.confidence_pct}%)</span>
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+    </div>
   );
 }

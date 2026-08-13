@@ -145,16 +145,17 @@ export default function TeamHome() {
           <>
             {myRole && roleBadge(myRole)}
             {isOwner && (
-              <Button variant="outline" size="sm">
+              <Button variant="hero" size="sm">
                 <Settings size={12} strokeWidth={1.5} />Settings
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={handleLeave} disabled={busy}>
+            <Button variant="hero" size="sm" onClick={handleLeave} disabled={busy}>
               <LogOut size={12} strokeWidth={1.5} />Leave
             </Button>
           </>
         ) : (
           <Button
+            variant="hero"
             onClick={group.visibility === "private" ? undefined : handleJoin}
             disabled={busy || group.visibility === "private"}
             loading={busy}

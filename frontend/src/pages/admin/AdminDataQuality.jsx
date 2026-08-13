@@ -67,7 +67,7 @@ export default function AdminDataQuality() {
       title="Data Governance Center"
       subtitle="Completeness, accuracy, and consistency scoring with automated remediation"
       actions={
-        <Button variant="ghost" size="icon" onClick={refetchAll} aria-label="Refresh">
+        <Button variant="hero" size="icon" onClick={refetchAll} aria-label="Refresh">
           <RefreshCw size={14} className={(sL || iL) ? "animate-spin" : ""} />
         </Button>
       }

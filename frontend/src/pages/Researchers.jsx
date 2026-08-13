@@ -6,7 +6,7 @@ import { TID } from "../lib/testIds";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import { ACCENT, EMERALD, NAVY, WARM } from "@/lib/tokens";
-import { Avatar, Button, Input, Checkbox, NavTabs } from "@/components/ds";
+import { Avatar, Button, Input, Checkbox, NavTabs, Card } from "@/components/ds";
 import {
   Search, X, ChevronDown, ArrowRight,
   Users, Globe, Building2, MapPin, BookOpen, Award, TrendingUp,
@@ -222,12 +222,19 @@ export default function Researchers() {
     <ResearchLayout
       title="Researchers"
       subtitle="AI-powered matching — find collaborators, mentors, reviewers, and research partners worldwide."
+      stats={[
+        { label: "Researchers",  value: totalInPlatform != null ? `${totalInPlatform}+` : "—" },
+        { label: "Countries",    value: "50+" },
+        { label: "Institutions", value: "100+" },
+        { label: "AI Matched",   value: "Always" },
+      ]}
+      sidebar={<ResearchersSidebar savedCount={savedIds.size} compareList={compareList} topMatch={(aiRecs || [])[0]} />}
       actions={
         <>
-          <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} size="sm">
+          <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} variant="hero" size="sm">
             <Search size={13} strokeWidth={2} /> Find Researchers
           </Button>
-          <Button as={Link} to="/collaboration-requests" variant="ghost" size="sm">
+          <Button as={Link} to="/collaboration-requests" variant="hero" size="sm">
             <UserPlus size={13} strokeWidth={1.5} /> Invite Collaborator
           </Button>
         </>
@@ -240,20 +247,6 @@ export default function Researchers() {
         }
         .sq-pulse { animation: sq-pulse 1.8s ease-in-out infinite; }
       `}</style>
-      {/* ── Stats strip ───────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mb-8">
-        {[
-          { label: "Researchers",  value: totalInPlatform != null ? `${totalInPlatform}+` : "—" },
-          { label: "Countries",    value: "50+" },
-          { label: "Institutions", value: "100+" },
-          { label: "AI Matched",   value: "Always" },
-        ].map(({ label, value }) => (
-          <div key={label} className="text-center">
-            <div className="font-serif text-3xl text-slate-900">{value}</div>
-            <div className="overline mt-1 text-xs">{label}</div>
-          </div>
-        ))}
-      </div>
       {/* ── AI Recommendations ────────────────────────────────────────────── */}
       {(aiRecsLoading || aiRecs) && (
         <AiRecsPanel recs={aiRecs} loading={aiRecsLoading} isSaved={isSaved} toggleSave={toggleSave} compareList={compareList} toggleCompare={toggleCompare} />
@@ -368,6 +361,81 @@ export default function Researchers() {
         />
       )}
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — real data already loaded by this page, never fabricated ──────
+function ResearchersSidebar({ savedCount, compareList, topMatch }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Bookmark size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Saved Researchers</div>
+        </div>
+        {savedCount > 0 ? (
+          <>
+            <p style={{ fontSize: 12, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
+              You've saved {savedCount} researcher{savedCount !== 1 ? "s" : ""} for later.
+            </p>
+            <Link to="/network/saved">
+              <Button as="span" size="sm" variant="ghost" style={{ width: "100%", marginTop: 10 }}>
+                View saved <ArrowRight size={11} strokeWidth={2} />
+              </Button>
+            </Link>
+          </>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            Bookmark researchers you want to revisit — they'll show up here.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <BarChart2 size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Comparing</div>
+        </div>
+        {compareList.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {compareList.map((r) => (
+              <div key={r.id} style={{ fontSize: 12, color: "#374151" }}>{r.full_name}</div>
+            ))}
+            {compareList.length < 2 && (
+              <p style={{ fontSize: 11, color: "#94A3B8", margin: "6px 0 0" }}>Add one more to compare.</p>
+            )}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            Select up to 3 researchers below to compare them side by side.
+          </p>
+        )}
+      </Card>
+
+      {topMatch && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <Sparkles size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Your Top Match</div>
+          </div>
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <AvatarCircle r={topMatch} size={36} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{topMatch.full_name}</div>
+              <div style={{ fontSize: 11, color: "#64748B" }}>{topMatch.institution || topMatch.country || ""}</div>
+            </div>
+          </div>
+          {topMatch.explanation && (
+            <p style={{ fontSize: 11.5, color: "#64748B", fontStyle: "italic", margin: "10px 0 0", lineHeight: 1.5 }}>{topMatch.explanation}</p>
+          )}
+          <Link to={profileUrl(topMatch)}>
+            <Button as="span" size="sm" variant="ghost" style={{ width: "100%", marginTop: 10 }}>
+              View profile <ArrowRight size={11} strokeWidth={2} />
+            </Button>
+          </Link>
+        </Card>
+      )}
+    </div>
   );
 }
 

@@ -81,7 +81,7 @@ export default function ConferenceTeam() {
         </span>
       }
       actions={
-        <Button as={Link} to={`/conferences/${team.conference_id}`} variant="ghost" size="sm">
+        <Button as={Link} to={`/conferences/${team.conference_id}`} variant="hero" size="sm">
           ← Back to conference
         </Button>
       }

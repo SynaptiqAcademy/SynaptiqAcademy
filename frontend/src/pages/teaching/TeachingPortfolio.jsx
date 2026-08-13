@@ -1,7 +1,7 @@
 /* eslint-disable */
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Award, Plus, Star, Edit2, Trash2 } from "lucide-react";
+import { Award, Plus, Star, Edit2, Trash2, Layers } from "lucide-react";
 import api from "../../lib/api";
 import { toast } from "sonner";
 import { EmptyState } from "../../components/ds/EmptyState";
@@ -16,6 +16,7 @@ import { FormSelect } from "@/components/ds/FormSelect";
 import { Checkbox } from "@/components/ds/Form";
 import { ResearchLayout } from "@/layouts";
 import { confirmDialog } from "@/lib/confirm";
+import { NAVY } from "@/lib/tokens";
 
 const SUBJECTS   = ["Mathematics","Economics","Management","Computer Science","Medicine","Engineering","Psychology","Education","Sciences","Humanities","Law","Business","Other"];
 const ITEM_TYPES = ["lesson","course","assessment","achievement","award","reflection","resource","publication"];
@@ -237,15 +238,24 @@ export default function TeachingPortfolio() {
 
   const featured = items.filter((i) => i.featured);
   const rest     = items.filter((i) => !i.featured);
+  const distinctTypes = new Set(items.map((i) => i.item_type).filter(Boolean)).size;
+  const evidenceCount = items.filter((i) => i.evidence_url).length;
 
   return (
     <ResearchLayout
       title="Teaching Portfolio"
       subtitle="Document your teaching philosophy, course designs, achievements, and evidence of impact. Build a portfolio that speaks for itself."
       icon={<Award size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
+      stats={!loading ? [
+        { label: "Items",     value: items.length },
+        { label: "Featured",  value: featured.length },
+        { label: "Types",     value: distinctTypes },
+        { label: "Evidence",  value: evidenceCount },
+      ] : undefined}
+      sidebar={!loading && items.length > 0 ? <TeachingPortfolioSidebar items={items} /> : undefined}
       actions={
         <Button
-          variant={showAdd ? "primary" : "outline"}
+          variant="hero"
           onClick={() => { setShowAdd(!showAdd); setEditItem(null); }}
         >
           <Plus size={14} strokeWidth={1.5} /> Add item
@@ -334,5 +344,58 @@ export default function TeachingPortfolio() {
         </div>
       )}
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — type breakdown + subjects covered, real data already loaded above ──
+function TeachingPortfolioSidebar({ items }) {
+  const byType = new Map();
+  items.forEach((i) => {
+    if (!i.item_type) return;
+    byType.set(i.item_type, (byType.get(i.item_type) || 0) + 1);
+  });
+  const topTypes = Array.from(byType.entries()).sort((a, b) => b[1] - a[1]);
+
+  const subjects = Array.from(new Set(items.map((i) => i.subject).filter(Boolean))).slice(0, 8);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <Layers size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>By Type</div>
+        </div>
+        {topTypes.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {topTypes.map(([type, count]) => (
+              <div key={type} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 12.5, color: "#374151", textTransform: "capitalize" }}>{type}</span>
+                <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace", flexShrink: 0 }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            Item types will appear here as you build your portfolio.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <Award size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Subjects Covered</div>
+        </div>
+        {subjects.length > 0 ? (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+            {subjects.map((s) => <Tag key={s} size="sm">{s}</Tag>)}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            Subjects will appear here once you tag portfolio items.
+          </p>
+        )}
+      </Card>
+    </div>
   );
 }

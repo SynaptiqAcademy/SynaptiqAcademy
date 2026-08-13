@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import { FileText } from "lucide-react";
 import { ResearchLayout } from "@/layouts";
-import { ACCENT } from "@/lib/tokens";
+import { ACCENT, NAVY } from "@/lib/tokens";
 import { Card, H3, Caption, Input, Textarea, Button, LoadingOverlay, ErrorState } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
@@ -55,6 +56,7 @@ export default function DisputeDetail() {
     <ResearchLayout
       title={`Dispute #${id.slice(-8).toUpperCase()}`}
       subtitle={`Order: ${dispute.order_id?.slice(-8)?.toUpperCase()} · Opened ${new Date(dispute.opened_at).toLocaleDateString()}`}
+      sidebar={<DisputeDetailSidebar dispute={dispute} />}
     >
       <div className="max-w-[800px]">
         {/* Status */}
@@ -148,5 +150,34 @@ export default function DisputeDetail() {
         )}
       </div>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — dispute overview, already loaded above ────────────────────────
+function DisputeDetailSidebar({ dispute }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <FileText size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Dispute Overview</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+            <span style={{ color: "#94A3B8" }}>Evidence</span>
+            <span style={{ color: "#374151", fontWeight: 600 }}>{dispute.evidence?.length || 0}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+            <span style={{ color: "#94A3B8" }}>Messages</span>
+            <span style={{ color: "#374151", fontWeight: 600 }}>{dispute.messages?.length || 0}</span>
+          </div>
+        </div>
+        <Link to={`/academic-marketplace/orders/${dispute.order_id}`}>
+          <Button as="span" size="sm" variant="ghost" style={{ width: "100%" }}>
+            View Order
+          </Button>
+        </Link>
+      </Card>
+    </div>
   );
 }

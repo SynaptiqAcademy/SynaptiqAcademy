@@ -142,21 +142,20 @@ export default function ExpertiseRequestDetail() {
       }
       actions={
         <>
-          <Button as={Link} to="/expertise" variant="ghost" size="sm">
+          <Button as={Link} to="/expertise" variant="hero" size="sm">
             <ArrowLeft size={11} strokeWidth={1.5} /> All requests
           </Button>
           {r.i_am_owner && r.status === "open" && (
-            <Button variant="ghost" size="sm" data-testid="close-request-btn" onClick={close}>
+            <Button variant="hero" size="sm" data-testid="close-request-btn" onClick={close}>
               Close request
             </Button>
           )}
           {r.i_am_owner && (
             <Button
-              variant="ghost"
+              variant="danger"
               size="sm"
               data-testid="delete-request-btn"
               onClick={del}
-              className="border-red-200 text-red-700 hover:bg-red-50"
             >
               <Trash2 size={11} strokeWidth={1.5} /> Delete
             </Button>

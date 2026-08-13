@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Award, Building2 } from "lucide-react";
 import { NAVY, WARM, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
-import { NavTabs, DataTable, Badge, Spinner } from "@/components/ds";
+import { NavTabs, DataTable, Badge, Card, Spinner } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
@@ -100,6 +100,7 @@ export default function BenchmarkCenter() {
     <InstitutionLayout
       title="Benchmark Center"
       subtitle={`${bench?.institution ?? ""} · Above sector average in ${aboveSector}/${total} metrics · Health Score: ${bench?.overall_health ?? "—"}/100 (Grade ${bench?.overall_grade ?? "—"})`}
+      sidebar={<BenchmarkCenterSidebar bench={bench} deptBench={deptBench} aboveSector={aboveSector} total={total} />}
     >
       <div style={{ marginBottom: 16 }}>
         <NavTabs
@@ -128,5 +129,39 @@ export default function BenchmarkCenter() {
         <DataTable columns={deptColumns} rows={deptBench} />
       )}
     </InstitutionLayout>
+  );
+}
+
+// ── Right rail — real benchmark data already fetched by this page ─────────────
+function BenchmarkCenterSidebar({ bench, deptBench, aboveSector, total }) {
+  const topDept = deptBench && deptBench.length > 0 ? deptBench[0] : null;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Award size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Overall Grade</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+          {bench?.overall_grade ?? "—"}
+        </div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          Health score {bench?.overall_health ?? "—"}/100 · above sector average in {aboveSector}/{total} metrics.
+        </p>
+      </Card>
+
+      {topDept && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Building2 size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Department</div>
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{topDept.department}</div>
+          <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+            Health score {topDept.health_score} · rank #{topDept.institution_rank}
+          </p>
+        </Card>
+      )}
+    </div>
   );
 }

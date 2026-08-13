@@ -75,7 +75,7 @@ export default function AdminCommunications() {
       title="Communications Center"
       subtitle="Platform banners, announcements, and campaign analytics"
       actions={
-        <Button variant="ghost" size="icon" onClick={() => { refStats(); refBanners(); }} aria-label="Refresh">
+        <Button variant="hero" size="icon" onClick={() => { refStats(); refBanners(); }} aria-label="Refresh">
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
         </Button>
       }

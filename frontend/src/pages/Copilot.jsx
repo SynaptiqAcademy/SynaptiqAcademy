@@ -256,12 +256,12 @@ export default function Copilot() {
       subtitle="Describe your research goal. A team of specialized AI agents will collaborate to help you."
       actions={
         <div className="flex items-center gap-2">
-          <Button onClick={() => setShowAgentMap(v => !v)} variant="ghost" size="sm">
+          <Button onClick={() => setShowAgentMap(v => !v)} variant="hero" size="sm">
             <BarChart2 size={10} strokeWidth={1.5} />
             {showAgentMap ? "Hide" : "Show"} agent map
           </Button>
           {!isEmpty && (
-            <Button onClick={newSession} variant="ghost" size="sm">
+            <Button onClick={newSession} variant="hero" size="sm">
               <RefreshCw size={10} strokeWidth={1.5} />
               New session
             </Button>

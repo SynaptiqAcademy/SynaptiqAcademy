@@ -353,7 +353,7 @@ export default function AdminAICenter() {
       title="AI Operating System Center"
       subtitle="Usage analytics, cost tracking, and operational intelligence for Synaptiq AI OS"
       actions={
-        <Button variant="ghost" size="sm" onClick={refetchAll}>
+        <Button variant="hero" size="sm" onClick={refetchAll}>
           <RefreshCw size={12} />
           Refresh All
         </Button>

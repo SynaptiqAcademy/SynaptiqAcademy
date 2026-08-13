@@ -254,12 +254,13 @@ export default function Repository() {
 
   const repoActions = (
     <div style={{ display: "flex", gap: 8 }}>
-      <Button as={Link} to="/manuscripts" variant="ghost" size="sm">
+      <Button as={Link} to="/manuscripts" variant="hero" size="sm">
         <FileText size={12} strokeWidth={1.5} /> Manuscripts
       </Button>
       <Button
         data-testid={TID.repositoryCreateBtn}
         onClick={() => setShowNew(!showNew)}
+        variant="hero"
         size="sm"
       >
         <Plus size={13} strokeWidth={1.5} /> Add Item

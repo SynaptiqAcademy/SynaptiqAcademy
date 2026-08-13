@@ -229,7 +229,7 @@ export default function Conferences() {
       title="Conferences"
       subtitle="Track submission windows, acceptance notifications and conference dates worldwide — aggregated from WikiCFP and curated with CORE rankings."
       actions={
-        <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} size="sm">
+        <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} variant="hero" size="sm">
           Find Best Conference
         </Button>
       }

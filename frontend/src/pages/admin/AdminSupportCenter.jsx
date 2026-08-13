@@ -155,13 +155,13 @@ export default function AdminSupportCenter() {
       subtitle="Ticket management, assignment, escalation, and SLA tracking"
       actions={
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={exportCSV}>
+          <Button variant="hero" size="sm" onClick={exportCSV}>
             <Download size={12} /> Export CSV
           </Button>
           <FormSelect value={days} onChange={e => setDays(Number(e.target.value))} size="sm" wrapperClassName="!mb-0">
             {[7, 14, 30, 90].map(d => <option key={d} value={d}>Last {d}d</option>)}
           </FormSelect>
-          <Button variant="ghost" size="icon" onClick={refetchAll} aria-label="Refresh">
+          <Button variant="hero" size="icon" onClick={refetchAll} aria-label="Refresh">
             <RefreshCw size={14} className={(sL || tL) ? "animate-spin" : ""} />
           </Button>
         </div>

@@ -166,11 +166,11 @@ export default function AdminErrorCenter() {
       subtitle="Detect, triage, and resolve platform errors"
       actions={
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={() => window.open("/api/admin/aos/errors/export", "_blank")}>
+          <Button variant="hero" size="sm" onClick={() => window.open("/api/admin/aos/errors/export", "_blank")}>
             <Download size={12} />
             Export CSV
           </Button>
-          <Button variant="ghost" size="icon" onClick={refresh} aria-label="Refresh">
+          <Button variant="hero" size="icon" onClick={refresh} aria-label="Refresh">
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </Button>
         </div>

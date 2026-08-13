@@ -49,7 +49,7 @@ export default function AdminDatabaseOps() {
       title="Database Operations Center"
       subtitle="MongoDB cluster health, collection stats, and integrity"
       actions={
-        <Button variant="ghost" size="icon" onClick={refetchAll} aria-label="Refresh">
+        <Button variant="hero" size="icon" onClick={refetchAll} aria-label="Refresh">
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
         </Button>
       }

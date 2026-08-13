@@ -227,7 +227,7 @@ export default function CitationDetail() {
       subtitle={pub.journal ? (pub.year ? `${pub.journal} · ${pub.year}` : pub.journal) : undefined}
       actions={
         <>
-          <Button onClick={handleSync} disabled={syncing} variant="outline" size="sm">
+          <Button onClick={handleSync} disabled={syncing} variant="hero" size="sm">
             <RefreshCw size={13} className={syncing ? "animate-spin" : ""} />
             {syncing ? "Syncing…" : "Sync This Paper"}
           </Button>

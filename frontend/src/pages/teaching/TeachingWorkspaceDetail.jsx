@@ -504,6 +504,15 @@ export default function TeachingWorkspaceDetail() {
     <ResearchLayout
       title={workspace.title}
       actions={headerActions}
+      sidebar={
+        <TeachingWorkspaceSidebar
+          workspace={workspace}
+          members={members}
+          activity={activity}
+          actLoaded={actLoaded}
+          onViewTab={setTab}
+        />
+      }
       nav={
         <NavTabs
           className="overflow-x-auto scrollbar-none"
@@ -1030,5 +1039,82 @@ export default function TeachingWorkspaceDetail() {
       )}
     </div>
     </ResearchLayout>
+  );
+}
+
+// ─── Right rail — course facts, team, and recent activity already loaded ──────
+
+function TeachingWorkspaceSidebar({ workspace, members, activity, actLoaded, onViewTab }) {
+  const facts = [
+    ["Code", workspace.course_code],
+    ["Subject", workspace.subject],
+    ["Level", workspace.level],
+    ["Semester", workspace.semester],
+  ].filter(([, v]) => v);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {facts.length > 0 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <BookOpen size={13} strokeWidth={1.5} style={{ color: "#0F2847" }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Course Details</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {facts.map(([label, value]) => (
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                <span style={{ color: "#94A3B8" }}>{label}</span>
+                <span style={{ color: "#374151", fontWeight: 600 }}>{value}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <Users size={13} strokeWidth={1.5} style={{ color: "#0F2847" }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Team ({members.length})</div>
+        </div>
+        {members.length > 0 ? (
+          <>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {members.slice(0, 5).map((m) => (
+                <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                  <span style={{ fontSize: 12, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.full_name || "—"}</span>
+                  <span style={{ fontSize: 10, color: "#94A3B8", flexShrink: 0 }}>{ROLE_LABELS[m.role] || m.role}</span>
+                </div>
+              ))}
+            </div>
+            {members.length > 5 && (
+              <Button variant="link" size="sm" onClick={() => onViewTab("members")} style={{ marginTop: 8, padding: 0 }}>
+                +{members.length - 5} more →
+              </Button>
+            )}
+          </>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0 }}>No other members yet.</p>
+        )}
+      </Card>
+
+      {actLoaded && activity.length > 0 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <Activity size={13} strokeWidth={1.5} style={{ color: "#0F2847" }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Recent Activity</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {activity.slice(0, 4).map((a) => (
+              <div key={a.id} style={{ fontSize: 11.5, color: "#64748B", lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 600, color: "#374151" }}>{a.actor_name}</span> {a.message}
+              </div>
+            ))}
+          </div>
+          <Button variant="link" size="sm" onClick={() => onViewTab("activity")} style={{ marginTop: 8, padding: 0 }}>
+            View all activity →
+          </Button>
+        </Card>
+      )}
+    </div>
   );
 }

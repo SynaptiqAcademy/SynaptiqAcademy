@@ -24,7 +24,6 @@ import { Spinner, SkeletonCard } from "@/components/ds/LoadingState";
 import { Card } from "@/components/ds/Card";
 import { Button } from "@/components/ds/Button";
 import { Badge } from "@/components/ds/Badge";
-import { StatCard } from "@/components/ds/StatCard";
 import { BarChart } from "@/components/ds/Chart";
 import { List, ListItem } from "@/components/ds/List";
 import { ResearchLayout } from "@/layouts";
@@ -95,14 +94,31 @@ export default function AICredits() {
 
   const credits    = sub?.credits || {};
   const totalUsed  = (usage?.last_30d || []).reduce((s, d) => s + (d.credits || 0), 0);
-  const topKind    = (usage?.by_kind || []).sort((a, b) => (b.credits || 0) - (a.credits || 0))[0];
+  const byKind     = (usage?.by_kind || []).slice().sort((a, b) => (b.credits || 0) - (a.credits || 0));
+  const topKind    = byKind[0];
   const planLabel  = sub?.plan?.name || "Free";
+  const lastPurchase = purchases[0];
 
   return (
     <ResearchLayout
       navItems={AI_NAV_ITEMS}
       title="Research Credits"
       subtitle="Credits unlock AI tools. Subscriptions unlock collaboration. Two separate economies."
+      stats={!loading ? [
+        { label: "Monthly Credits", value: (credits.monthly_balance ?? 0).toLocaleString() },
+        { label: "Pack Credits",    value: (credits.pack_balance ?? 0).toLocaleString() },
+        { label: "Total Available", value: (credits.balance ?? 0).toLocaleString() },
+        { label: "Plan",            value: planLabel },
+      ] : undefined}
+      sidebar={!loading ? (
+        <AICreditsSidebar byKind={byKind} lastPurchase={lastPurchase} planLabel={planLabel} monthlyAllowance={credits.monthly_allowance} />
+      ) : undefined}
+      actions={
+        <Button as={Link} to="/settings/billing" variant="hero" size="sm">
+          <CreditCard size={12} strokeWidth={1.5} />
+          Buy more
+        </Button>
+      }
     >
       <div className="space-y-8">
 
@@ -110,34 +126,6 @@ export default function AICredits() {
           <div className="space-y-4"><SkeletonCard rows={3} /></div>
         ) : (
           <>
-            {/* ── Credit balance ─────────────────────────────────────── */}
-            <div className="grid sm:grid-cols-3 gap-3">
-              <StatCard
-                label="Monthly credits"
-                icon={<Coins />}
-                value={(credits.monthly_balance ?? 0).toLocaleString()}
-                sub={`of ${(credits.monthly_allowance ?? 0).toLocaleString()} · refreshes each month · ${planLabel} plan`}
-              />
-              <StatCard
-                label="Pack credits"
-                icon={<Package />}
-                value={(credits.pack_balance ?? 0).toLocaleString()}
-                sub="never expire"
-              />
-              <Card padding="lg" style={{ background: "#0F2847", borderColor: "#0F2847", color: "#fff" }}>
-                <div className="overline" style={{ color: "#94a3b8" }}>Total available</div>
-                <div className="font-serif text-4xl mt-2">{(credits.balance ?? 0).toLocaleString()}</div>
-                <div className="text-xs mt-1 flex items-center gap-1 text-slate-300">
-                  <Sparkles size={11} strokeWidth={1.5} />
-                  Research Credits
-                </div>
-                <Button as={Link} to="/settings/billing" variant="ghost" size="sm" className="mt-3 !text-white !border-white/30 hover:!bg-white/10">
-                  <CreditCard size={10} strokeWidth={1.5} />
-                  Buy more
-                </Button>
-              </Card>
-            </div>
-
             {/* ── 30-day trend ───────────────────────────────────────── */}
             <Card padding="lg">
               <div className="flex items-center justify-between mb-4">
@@ -259,5 +247,57 @@ export default function AICredits() {
 
       </div>
     </ResearchLayout>
+  );
+}
+
+// ─── Right rail — usage breakdown, plan, and latest purchase already loaded ───
+
+function AICreditsSidebar({ byKind, lastPurchase, planLabel, monthlyAllowance }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div className="flex items-center gap-1.5 mb-2">
+          <Coins size={13} strokeWidth={1.5} className="text-[#0F2847]" />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Your Plan</div>
+        </div>
+        <div className="font-serif text-2xl text-slate-900">{planLabel}</div>
+        <p className="text-xs text-slate-500 mt-1">
+          {(monthlyAllowance ?? 0).toLocaleString()} credits/month allowance
+        </p>
+        <Link to="/pricing" className="text-xs text-[#0F2847] border-b border-[#0F2847] inline-block mt-2 hover:opacity-70">
+          Compare plans
+        </Link>
+      </Card>
+
+      {byKind.length > 0 && (
+        <Card padding="lg">
+          <div className="flex items-center gap-1.5 mb-3">
+            <TrendingUp size={13} strokeWidth={1.5} className="text-[#0F2847]" />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Usage by Tool</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {byKind.slice(0, 3).map((k) => (
+              <div key={k._id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                <span style={{ color: "#374151" }}>{(k._id || "").replace(/_/g, " ")}</span>
+                <span style={{ color: "#94A3B8", fontFamily: "monospace" }}>{k.credits} cr</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {lastPurchase && (
+        <Card padding="lg">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Package size={13} strokeWidth={1.5} className="text-[#0F2847]" />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Latest Purchase</div>
+          </div>
+          <p className="text-xs text-slate-600">
+            +{lastPurchase.credits} credits · {(lastPurchase.pack_code || "").replace("_", " ")}
+          </p>
+          <p className="text-[10px] text-slate-400 font-mono mt-1">{(lastPurchase.created_at || "").slice(0, 10)}</p>
+        </Card>
+      )}
+    </div>
   );
 }

@@ -180,7 +180,7 @@ export default function AutomationCenter() {
       subtitle="Automate repetitive research tasks with AI workflows."
       navItems={SIE_NAV_ITEMS}
       actions={
-        <Button onClick={() => setShowNew(true)} size="sm" style={{ background: ACCENT }}>
+        <Button onClick={() => setShowNew(true)} variant="hero" size="sm">
           <Plus size={13} /> New Automation
         </Button>
       }

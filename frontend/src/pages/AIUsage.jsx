@@ -12,7 +12,6 @@ import { Spinner } from "@/components/ds/LoadingState";
 import { Card } from "@/components/ds/Card";
 import { Badge } from "@/components/ds/Badge";
 import { Button } from "@/components/ds/Button";
-import { StatCard, StatGrid } from "@/components/ds/StatCard";
 import { BarChart, MiniBar } from "@/components/ds/Chart";
 import { List, ListItem } from "@/components/ds/List";
 import {
@@ -104,11 +103,27 @@ export default function AIUsage() {
   // Combine assistant sessions: prefer chat_sessions count from analytics, fallback to ai_requests calls.
   const assistantSessions = analytics?.assistant_sessions ?? (byKind.find((k) => k._id === "assistant_message")?.calls || 0);
 
+  const topVenue = [
+    ...topJournals.map((v) => ({ ...v, kind: "journal" })),
+    ...topConferences.map((v) => ({ ...v, kind: "conference" })),
+    ...topGrants.map((v) => ({ ...v, kind: "grant" })),
+  ].sort((a, b) => (b.n || 0) - (a.n || 0))[0];
+  const topFeature = byKind.slice().sort((a, b) => (b.credits || 0) - (a.credits || 0))[0];
+
   return (
     <ResearchLayout
       navItems={AI_NAV_ITEMS}
       title="AI Usage"
       subtitle={isAdmin ? "Platform-wide intelligence consumption, popular venues, and top users." : "Your Research Credit consumption, AI feature usage, and trends."}
+      stats={!loading ? [
+        { label: "Credits Remaining",                              value: (usage?.credits_balance ?? 0).toLocaleString() },
+        { label: "Credits Used",                                   value: (totals.credits || 0).toLocaleString() },
+        { label: "Assistant Sessions",                             value: assistantSessions.toLocaleString() },
+        { label: isAdmin ? "Platform Cost (est.)" : "Est. Cost",    value: `$${(usage?.cost_usd_estimate ?? 0).toFixed(2)}` },
+      ] : undefined}
+      sidebar={!loading ? (
+        <AIUsageSidebar topFeature={topFeature} topVenue={topVenue} isAdmin={isAdmin} topUsers={topUsers} />
+      ) : undefined}
     >
     <div className="space-y-8">
       <div className="border-b border-slate-200 pb-6 flex items-start justify-between gap-6">
@@ -128,36 +143,6 @@ export default function AIUsage() {
 
       {!loading && (
         <>
-          {/* Top KPI row */}
-          <section data-testid="ai-usage-kpis">
-            <StatGrid cols={4}>
-              <StatCard
-                label="Credits remaining"
-                value={(usage?.credits_balance ?? 0).toLocaleString()}
-                sub={`${(usage?.plan_code || "free").toString().toUpperCase()} plan`}
-                icon={<Coins />}
-              />
-              <StatCard
-                label="Credits used"
-                value={(totals.credits || 0).toLocaleString()}
-                sub={`${(totals.calls || 0).toLocaleString()} total calls`}
-                icon={<TrendingUp />}
-              />
-              <StatCard
-                label="Assistant sessions"
-                value={assistantSessions.toLocaleString()}
-                sub="Conversations with Copilot"
-                icon={<MessageSquare />}
-              />
-              <StatCard
-                label={isAdmin ? "Platform cost (est.)" : "Estimated cost"}
-                value={`$${(usage?.cost_usd_estimate ?? 0).toFixed(2)}`}
-                sub="LLM inference estimate"
-                icon={<BarChart3 />}
-              />
-            </StatGrid>
-          </section>
-
           {/* 30-day trend */}
           <Card as="section" padding="lg">
             <div className="flex items-center justify-between mb-4">
@@ -325,6 +310,47 @@ export default function AIUsage() {
       )}
     </div>
     </ResearchLayout>
+  );
+}
+
+// ─── Right rail — top feature, top venue, top consumer already loaded ─────────
+function AIUsageSidebar({ topFeature, topVenue, isAdmin, topUsers }) {
+  const topUser = isAdmin ? (topUsers || [])[0] : null;
+  return (
+    <div className="flex flex-col gap-4">
+      {topFeature && (
+        <Card padding="lg">
+          <div className="flex items-center gap-1.5 mb-2">
+            <TrendingUp size={13} strokeWidth={1.5} className="text-[#0F2847]" />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top AI Feature</div>
+          </div>
+          <p className="text-sm text-slate-700 capitalize">{(KIND_META[topFeature._id]?.label || topFeature._id || "").toString()}</p>
+          <p className="text-xs text-slate-400 mt-1">{topFeature.credits} credits · {topFeature.calls} calls</p>
+        </Card>
+      )}
+
+      {topVenue && (
+        <Card padding="lg">
+          <div className="flex items-center gap-1.5 mb-2">
+            <BarChart3 size={13} strokeWidth={1.5} className="text-[#0F2847]" />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Most Matched Venue</div>
+          </div>
+          <p className="text-sm text-slate-700">{topVenue.title || topVenue.name || "Untitled"}</p>
+          <p className="text-xs text-slate-400 mt-1 capitalize">{topVenue.kind} · {topVenue.n} match{topVenue.n === 1 ? "" : "es"}</p>
+        </Card>
+      )}
+
+      {topUser && (
+        <Card padding="lg">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Users size={13} strokeWidth={1.5} className="text-[#0F2847]" />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Credit Consumer</div>
+          </div>
+          <p className="text-sm text-slate-700">{topUser.full_name || topUser._id}</p>
+          <p className="text-xs text-slate-400 mt-1">{topUser.credits} credits · {topUser.calls} calls</p>
+        </Card>
+      )}
+    </div>
   );
 }
 

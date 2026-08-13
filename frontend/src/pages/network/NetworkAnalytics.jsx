@@ -1,28 +1,9 @@
 import React, { useState, useEffect } from "react";
 import api from "@/lib/api";
-import { Users, Handshake, Layers, MessageSquare, Calendar, Award } from "lucide-react";
+import { Layers, Users } from "lucide-react";
 import { NAVY, WARM, ACCENT, EMERALD, WHITE, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, LoadingOverlay } from "@/components/ds";
-
-// Hand-rolled rather than ds/StatCard: StatCard hardcodes icon-badge/value colors
-// (WARM+TEXT_TERTIARY, or NAVY when highlighted) with no per-instance color prop,
-// so it can't reproduce the per-metric brand-color coding (purple/orange/emerald/…)
-// this page relies on to visually separate metric categories at a glance.
-function MetricCard({ label, value, sub, icon: Icon, color }) {
-  return (
-    <Card padding="md" style={{ flex: 1, minWidth: 120 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: `${color}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Icon size={16} color={color} />
-        </div>
-        <span style={{ fontSize: 12, color: TEXT_SECONDARY }}>{label}</span>
-      </div>
-      <div style={{ fontSize: 28, fontWeight: 800, color }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: TEXT_SECONDARY, marginTop: 2 }}>{sub}</div>}
-    </Card>
-  );
-}
 
 // Hand-rolled rather than ds/ProgressRing: ProgressRing only offers NAVY (fixed) or
 // an auto 4-step value-based color scale (colorByValue) — no custom-color override —
@@ -73,7 +54,18 @@ export default function NetworkAnalytics() {
   if (loading) return <ResearchLayout title="Network Analytics"><LoadingOverlay text="Loading analytics…" /></ResearchLayout>;
 
   return (
-    <ResearchLayout title="Network Analytics">
+    <ResearchLayout
+      title="Network Analytics"
+      stats={overview ? [
+        { label: "Groups",         value: overview.groups || 0 },
+        { label: "Communities",    value: overview.communities || 0 },
+        { label: "Collabs Posted", value: overview.collaborations_created || 0 },
+        { label: "Applications",   value: overview.collaborations_applied || 0 },
+        { label: "Events",         value: overview.events_attended || 0 },
+        { label: "Mentorships",    value: overview.mentorship_connections || 0 },
+      ] : undefined}
+      sidebar={groupAnalytics ? <NetworkAnalyticsSidebar groupAnalytics={groupAnalytics} /> : undefined}
+    >
 
       {/* Network Score */}
       {overview && (
@@ -95,18 +87,6 @@ export default function NetworkAnalytics() {
               ))}
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Personal metrics */}
-      {overview && (
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 24 }}>
-          <MetricCard label="Groups" value={overview.groups} icon={Layers} color="#8b5cf6" />
-          <MetricCard label="Communities" value={overview.communities} icon={MessageSquare} color="#f97316" />
-          <MetricCard label="Collaborations Posted" value={overview.collaborations_created} icon={Handshake} color={EMERALD} />
-          <MetricCard label="Applications Sent" value={overview.collaborations_applied} icon={Users} color={ACCENT} />
-          <MetricCard label="Events Attended" value={overview.events_attended} icon={Calendar} color="#06b6d4" />
-          <MetricCard label="Mentorship Links" value={overview.mentorship_connections} icon={Award} color="#ec4899" />
         </div>
       )}
 
@@ -158,5 +138,42 @@ export default function NetworkAnalytics() {
         </Card>
       )}
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — group analytics already fetched by this page, not shown elsewhere ─
+function NetworkAnalyticsSidebar({ groupAnalytics }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Layers size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Your Groups</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
+            <span>Groups created</span>
+            <span style={{ fontWeight: 700, color: NAVY }}>{groupAnalytics.groups_created || 0}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
+            <span>Groups joined</span>
+            <span style={{ fontWeight: 700, color: NAVY }}>{groupAnalytics.groups_joined || 0}</span>
+          </div>
+        </div>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Users size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Group Reach</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+          {groupAnalytics.total_members_in_groups || 0}
+        </div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          Members across the groups you own.
+        </p>
+      </Card>
+    </div>
   );
 }

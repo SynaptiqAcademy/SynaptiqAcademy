@@ -33,34 +33,6 @@ const FACTOR_LABELS = {
   activity: "Activity",
 };
 
-function ScoreRing({ score, grade }) {
-  const radius = 54;
-  const circ = 2 * Math.PI * radius;
-  const progress = ((score || 0) / 100) * circ;
-  const color = GRADE_COLOR[grade] || ACCENT;
-  return (
-    <div style={{ position: "relative", width: 140, height: 140 }}>
-      <svg width={140} height={140} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={70} cy={70} r={radius} fill="none" stroke={`${color}22`} strokeWidth={10} />
-        <circle
-          cx={70} cy={70} r={radius} fill="none"
-          stroke={color} strokeWidth={10}
-          strokeDasharray={`${progress} ${circ}`}
-          strokeLinecap="round"
-          style={{ transition: "stroke-dasharray 0.8s ease" }}
-        />
-      </svg>
-      <div style={{
-        position: "absolute", inset: 0, display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-      }}>
-        <span style={{ fontSize: 28, fontWeight: 800, color: NAVY, lineHeight: 1 }}>{score ?? "—"}</span>
-        <span style={{ fontSize: 14, fontWeight: 700, color }}>Grade {grade || "—"}</span>
-      </div>
-    </div>
-  );
-}
-
 function RiskFlag({ flag, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
   const color = LEVEL_COLOR[flag.level] || "#6b7280";
@@ -214,14 +186,20 @@ export default function IntegrityCenter() {
     <ResearchLayout
       title="Integrity Engine"
       subtitle="Academic integrity analysis across identity, publications, citations, and grants"
+      ring={report ? {
+        value: report.integrity_score ?? 0,
+        label: "Integrity Score",
+        sublabel: `Grade ${report.grade || "—"}`,
+        color: GRADE_COLOR[report.grade] || ACCENT,
+      } : undefined}
       actions={
         <button
           onClick={() => handleAnalyze(!report)}
           disabled={running || isAnalyzing}
           style={{
-            background: running || isAnalyzing ? NAVY : WHITE,
-            color: running || isAnalyzing ? WHITE : NAVY,
-            border: `1px solid ${NAVY}`, borderRadius: 8, padding: "8px 18px",
+            background: running || isAnalyzing ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.1)",
+            color: WHITE,
+            border: "1px solid rgba(255,255,255,0.24)", borderRadius: 8, padding: "8px 18px",
             fontWeight: 700, fontSize: 13, cursor: running || isAnalyzing ? "not-allowed" : "pointer",
             display: "flex", alignItems: "center", gap: 6, opacity: running || isAnalyzing ? 0.6 : 1,
           }}
@@ -277,21 +255,14 @@ export default function IntegrityCenter() {
 
       {report && (
         <>
-          {/* Score + Grade */}
-          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 24, marginBottom: 24 }}>
-            <div style={{
-              background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12,
-              padding: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-            }}>
-              <ScoreRing score={report.integrity_score} grade={report.grade} />
-              <span style={{ fontSize: 12, color: TEXT_SECONDARY }}>
-                Integrity Score
-              </span>
-              <span style={{ fontSize: 11, color: TEXT_SECONDARY }}>
-                {report.generated_at ? new Date(report.generated_at).toLocaleDateString() : ""}
-              </span>
-            </div>
+          {/* Score Breakdown */}
+          <div style={{ marginBottom: 24 }}>
             <Section title="Score Breakdown" icon={Activity}>
+              {report.generated_at && (
+                <p style={{ fontSize: 11, color: TEXT_SECONDARY, margin: "0 0 12px" }}>
+                  Last analyzed {new Date(report.generated_at).toLocaleDateString()}
+                </p>
+              )}
               {Object.entries(report.score_factors || {}).map(([k, v]) => (
                 <FactorBar
                   key={k}

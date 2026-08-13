@@ -8,7 +8,7 @@ import {
 import { NAVY, WARM, BRD, ACCENT, EMERALD, WHITE, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
-import { Card, Badge, Tag, Button, Input, Callout, StatCard, StatGrid, Spinner, H4 } from "@/components/ds";
+import { Card, Badge, Tag, Button, Input, Callout, Spinner, H4 } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
@@ -89,6 +89,55 @@ export default function ResearchCommandCenter() {
       title="Synaptiq Intelligence Engine"
       subtitle={ctx ? `Welcome, ${ctx.user?.name || "Researcher"}. Your AI research partner is active.` : "Your AI academic operating system."}
       navItems={SIE_NAV_ITEMS}
+      stats={ctx ? [
+        { label: "Publications",       value: ctx.research?.total_publications ?? 0 },
+        { label: "Grants Approved",    value: ctx.grants?.approved ?? 0 },
+        { label: "Active Goals",       value: ctx.sie?.active_goals ?? 0 },
+        { label: "Pending Missions",   value: ctx.sie?.pending_missions ?? 0 },
+      ] : undefined}
+      sidebar={
+        loading ? (
+          <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
+            <Spinner size={24} color={ACCENT} />
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <Card padding="lg">
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+                <Star size={14} color="#f59e0b" />
+                <H4>Platform Summary</H4>
+              </div>
+              {ctx && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {[
+                    { label: "Institution", value: ctx.user?.institution || "Not set" },
+                    { label: "Integrity Score", value: `${ctx.integrity?.score ?? 0}/100 (${ctx.integrity?.grade ?? "N/A"})` },
+                    { label: "Grant Success", value: `${ctx.grants?.success_rate_pct ?? 0}%` },
+                    { label: "Collaborations", value: ctx.research?.total_collaborations ?? 0 },
+                    { label: "AI Memory", value: ctx.sie?.memory_configured ? "Configured" : "Not configured" },
+                  ].map(({ label, value }) => (
+                    <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "4px 0", borderBottom: `1px solid ${BRD}` }}>
+                      <span style={{ color: TEXT_SECONDARY }}>{label}</span>
+                      <span style={{ fontWeight: 600, color: NAVY }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+
+            <Button
+              onClick={() => navigate("/sie/daily")}
+              className="w-full"
+              style={{ background: `linear-gradient(135deg, ${EMERALD}, #059669)` }}
+            >
+              <Calendar size={16} /> View Today's Agenda
+            </Button>
+            <Button variant="ghost" onClick={load} className="w-full">
+              <RefreshCw size={13} /> Refresh
+            </Button>
+          </div>
+        )
+      }
     >
       {/* AI Command input */}
       <div style={{ marginBottom: 20, display: "flex", gap: 8, padding: "14px 16px", background: WHITE, border: `1px solid ${BRD}` }}>
@@ -155,100 +204,36 @@ export default function ResearchCommandCenter() {
         </Card>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 20 }}>
-        <div>
-          {/* Stats */}
-          {ctx && (
-            <div style={{ marginBottom: 20 }}>
-              <StatGrid cols={4}>
-                <StatCard label="Publications" value={ctx.research?.total_publications ?? 0} />
-                <StatCard label="Grants Approved" value={ctx.grants?.approved ?? 0} />
-                <StatCard label="Active Goals" value={ctx.sie?.active_goals ?? 0} />
-                <StatCard label="Pending Missions" value={ctx.sie?.pending_missions ?? 0} />
-              </StatGrid>
-            </div>
-          )}
+      {/* Platform insights */}
+      {insights.length > 0 && (
+        <Card padding="lg" style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+            <Sparkles size={15} color={ACCENT} />
+            <H4>AI Insights</H4>
+          </div>
+          {insights.map((ins, i) => <InsightBadge key={i} insight={ins} />)}
+        </Card>
+      )}
 
-          {/* Platform insights */}
-          {insights.length > 0 && (
-            <Card padding="lg" style={{ marginBottom: 20 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-                <Sparkles size={15} color={ACCENT} />
-                <H4>AI Insights</H4>
-              </div>
-              {insights.map((ins, i) => <InsightBadge key={i} insight={ins} />)}
+      {/* Navigation grid */}
+      <Card padding="lg">
+        <H4 style={{ marginBottom: 14 }}>Intelligence Modules</H4>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+          {NAV_ITEMS.map(({ to, label, icon: Icon, color }) => (
+            <Card
+              key={to}
+              onClick={() => navigate(to)}
+              padding="md"
+              style={{ background: WARM, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}
+              onMouseOver={e => e.currentTarget.style.background = `${color}10`}
+              onMouseOut={e => e.currentTarget.style.background = WARM}
+            >
+              <Icon size={20} color={color} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: NAVY }}>{label}</span>
             </Card>
-          )}
-
-          {/* Navigation grid */}
-          <Card padding="lg">
-            <H4 style={{ marginBottom: 14 }}>Intelligence Modules</H4>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-              {NAV_ITEMS.map(({ to, label, icon: Icon, color }) => (
-                <Card
-                  key={to}
-                  onClick={() => navigate(to)}
-                  padding="md"
-                  style={{ background: WARM, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}
-                  onMouseOver={e => e.currentTarget.style.background = `${color}10`}
-                  onMouseOut={e => e.currentTarget.style.background = WARM}
-                >
-                  <Icon size={20} color={color} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: NAVY }}>{label}</span>
-                </Card>
-              ))}
-            </div>
-          </Card>
+          ))}
         </div>
-
-        {/* Right column */}
-        <div>
-          {loading ? (
-            <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
-              <Spinner size={24} color={ACCENT} />
-            </div>
-          ) : (
-            <>
-              <Card padding="lg" style={{ marginBottom: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-                  <Star size={14} color="#f59e0b" />
-                  <H4>Platform Summary</H4>
-                </div>
-                {/* Compact label/value summary rows: kept hand-rolled —
-                    ds/ListItem's built-in padding (12px+ per row) would
-                    triple the height of this deliberately dense 4px-row list */}
-                {ctx && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {[
-                      { label: "Institution", value: ctx.user?.institution || "Not set" },
-                      { label: "Integrity Score", value: `${ctx.integrity?.score ?? 0}/100 (${ctx.integrity?.grade ?? "N/A"})` },
-                      { label: "Grant Success", value: `${ctx.grants?.success_rate_pct ?? 0}%` },
-                      { label: "Collaborations", value: ctx.research?.total_collaborations ?? 0 },
-                      { label: "AI Memory", value: ctx.sie?.memory_configured ? "Configured" : "Not configured" },
-                    ].map(({ label, value }) => (
-                      <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "4px 0", borderBottom: `1px solid ${BRD}` }}>
-                        <span style={{ color: TEXT_SECONDARY }}>{label}</span>
-                        <span style={{ fontWeight: 600, color: NAVY }}>{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
-
-              <Button
-                onClick={() => navigate("/sie/daily")}
-                className="w-full"
-                style={{ background: `linear-gradient(135deg, ${EMERALD}, #059669)` }}
-              >
-                <Calendar size={16} /> View Today's Agenda
-              </Button>
-              <Button variant="ghost" onClick={load} className="w-full" style={{ marginTop: 8 }}>
-                <RefreshCw size={13} /> Refresh
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
+      </Card>
     </ResearchLayout>
   );
 }

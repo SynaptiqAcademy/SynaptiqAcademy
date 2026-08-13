@@ -46,14 +46,17 @@ export default function AdminGrantHub() {
   ];
 
   return (
-    <AdministrationLayout title="Grant Collaboration Hub" subtitle="Consortium builder and grant collaboration platform overview">
-      <StatGrid cols={4}>
-        <StatCard label="Total Collaborations" value={stats?.total_collaborations} icon={<GitBranch />} />
-        <StatCard label="Active Partners" value={stats?.active_partners} icon={<Users />} />
-        <StatCard label="Funding Sought" value={stats?.total_funding_sought} icon={<TrendingUp />} />
-        <StatCard label="Avg Readiness" value={stats?.avg_readiness_score ? `${stats.avg_readiness_score}%` : "—"} icon={<Activity />} />
-      </StatGrid>
-
+    <AdministrationLayout
+      title="Grant Collaboration Hub"
+      subtitle="Consortium builder and grant collaboration platform overview"
+      stats={[
+        { label: "Total Collaborations", value: stats?.total_collaborations ?? 0 },
+        { label: "Active Partners", value: stats?.active_partners ?? 0 },
+        { label: "Funding Sought", value: stats?.total_funding_sought ?? 0 },
+        { label: "Avg Readiness", value: stats?.avg_readiness_score ? `${stats.avg_readiness_score}%` : "—" },
+      ]}
+      sidebar={collabs.length > 0 ? <GrantHubSidebar collabs={collabs} /> : undefined}
+    >
       <Card padding="none" className="mt-4">
         <div className="px-4 py-3 border-b border-slate-100 text-xs font-semibold uppercase tracking-widest text-slate-500">
           Recent Grant Collaborations
@@ -65,5 +68,48 @@ export default function AdminGrantHub() {
         />
       </Card>
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — computed from the collaborations already loaded above ────────
+function GrantHubSidebar({ collabs }) {
+  const statusCounts = collabs.reduce((acc, c) => {
+    const s = c.status || "draft";
+    acc[s] = (acc[s] || 0) + 1;
+    return acc;
+  }, {});
+  const latest = collabs[0];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Activity size={13} style={{ color: "#0F2847" }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>By Status</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {Object.entries(statusCounts).map(([status, count]) => (
+            <div key={status} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Badge variant={status === "active" ? "success" : "neutral"} size="sm">{status}</Badge>
+              <span style={{ fontSize: 12, color: "#374151" }}>{count}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {latest && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <GitBranch size={13} style={{ color: "#0F2847" }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Latest Collaboration</div>
+          </div>
+          <div style={{ fontFamily: "Georgia, serif", fontSize: 14, color: "#0f172a" }}>{latest.title || "Untitled"}</div>
+          <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0" }}>
+            {latest.partner_count ?? latest.partners?.length ?? 0} partner{(latest.partner_count ?? latest.partners?.length ?? 0) !== 1 ? "s" : ""}
+            {latest.created_at ? ` · ${new Date(latest.created_at).toLocaleDateString()}` : ""}
+          </p>
+        </Card>
+      )}
+    </div>
   );
 }

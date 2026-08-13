@@ -47,7 +47,7 @@ function useFetch(path) {
 // ── Status card ───────────────────────────────────────────────────────────────
 function MFAStatusCard({ status, onRefresh }) {
   if (!status) return null;
-  const { enabled, configured_at, last_used_at, use_count, recovery_codes_remaining, enrollment_pending } = status;
+  const { enabled, enrollment_pending } = status;
   return (
     <Card accent={enabled ? EMERALD : AMBER} padding="lg">
       <div className="flex items-center justify-between mb-4">
@@ -64,29 +64,6 @@ function MFAStatusCard({ status, onRefresh }) {
           <RefreshCw className="w-3 h-3" /> Refresh
         </Button>
       </div>
-
-      {enabled && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-          <div>
-            <div className="text-xs text-slate-500">Configured</div>
-            <div className="font-medium text-slate-800">{configured_at ? configured_at.slice(0, 10) : "—"}</div>
-          </div>
-          <div>
-            <div className="text-xs text-slate-500">Last Used</div>
-            <div className="font-medium text-slate-800">{last_used_at ? new Date(last_used_at).toLocaleString() : "—"}</div>
-          </div>
-          <div>
-            <div className="text-xs text-slate-500">Total Verifications</div>
-            <div className="font-medium text-slate-800">{use_count}</div>
-          </div>
-          <div>
-            <div className={`text-xs ${recovery_codes_remaining < 3 ? "text-red-500" : "text-slate-500"}`}>Recovery Codes Left</div>
-            <div className={`font-bold ${recovery_codes_remaining < 3 ? "text-red-700" : "text-slate-800"}`}>
-              {recovery_codes_remaining} / 10
-            </div>
-          </div>
-        </div>
-      )}
 
       {!enabled && !enrollment_pending && (
         <p className="text-sm text-amber-800">
@@ -367,7 +344,16 @@ export default function AdminMFACenter() {
   const refresh = () => { fetch(); setView("status"); };
 
   return (
-    <AdministrationLayout title="MFA Center" subtitle="Multi-factor authentication for admin@synaptiq.academy">
+    <AdministrationLayout
+      title="MFA Center"
+      subtitle="Multi-factor authentication for admin@synaptiq.academy"
+      stats={status?.enabled ? [
+        { label: "Configured", value: status.configured_at ? status.configured_at.slice(0, 10) : "—" },
+        { label: "Last Used", value: status.last_used_at ? new Date(status.last_used_at).toLocaleString() : "—" },
+        { label: "Verifications", value: status.use_count },
+        { label: "Recovery Codes Left", value: `${status.recovery_codes_remaining} / 10` },
+      ] : undefined}
+    >
       {/* Status */}
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-slate-400">

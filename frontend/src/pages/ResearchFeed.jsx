@@ -157,7 +157,7 @@ export default function ResearchFeed() {
       subtitle="Academic updates, publications, grants, collaborations and milestones from your network."
       actions={
         <Button
-          variant="ghost"
+          variant="hero"
           size="sm"
           onClick={() => loadFeed(true)}
           disabled={loading || refreshing}

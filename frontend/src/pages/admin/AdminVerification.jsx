@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { toast } from "sonner";
-import { ShieldCheck, AlertTriangle, CheckCircle, Clock, Users } from "lucide-react";
+import { AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import {
-  Card, Button, Badge, StatCard, StatGrid, DataTable, ProgressBar,
+  Card, Button, Badge, DataTable, ProgressBar,
   EmptyState, ErrorState, Spinner,
 } from "@/components/ds";
 
@@ -67,15 +67,15 @@ export default function AdminVerification() {
     <AdministrationLayout
       title="Verification Admin Center"
       subtitle="Identity verification, trust scores, and fraud detection"
+      stats={[
+        { label: "Total Profiles",    value: stats?.total_profiles ?? "—" },
+        { label: "Verified (≥L2)",    value: stats?.verified_count ?? "—" },
+        { label: "Pending Reviews",   value: queue.length },
+        { label: "Fraud Flags",       value: fraud?.flagged_count ?? 0 },
+      ]}
+      sidebar={<VerificationSidebar fraud={fraud} queue={queue} />}
     >
       <div className="flex flex-col gap-6">
-        <StatGrid cols={4}>
-          <StatCard label="Total Profiles" value={stats?.total_profiles} icon={<Users />} />
-          <StatCard label="Verified (≥L2)" value={stats?.verified_count} icon={<ShieldCheck />} />
-          <StatCard label="Pending Reviews" value={queue.length} icon={<Clock />} />
-          <StatCard label="Fraud Flags" value={fraud?.flagged_count ?? 0} icon={<AlertTriangle />} />
-        </StatGrid>
-
         {/* Level distribution */}
         {stats?.level_distribution && (
           <Card padding="md">
@@ -110,5 +110,64 @@ export default function AdminVerification() {
         </Card>
       </div>
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — fraud breakdown & queue composition, real data already fetched
+function VerificationSidebar({ fraud, queue }) {
+  const byType = {};
+  queue.forEach((r) => { byType[r.request_type] = (byType[r.request_type] || 0) + 1; });
+  const typeEntries = Object.entries(byType).sort((a, b) => b[1] - a[1]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <AlertTriangle size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Fraud Overview (30d)</div>
+        </div>
+        {fraud ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+              <span className="font-serif" style={{ fontSize: 22, color: "#0f172a" }}>{fraud.flag_rate_pct ?? 0}%</span>
+              <span style={{ fontSize: 11, color: "#94A3B8" }}>flag rate</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              <span style={{ fontSize: 11.5, color: "#64748B" }}>Flagged users</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{fraud.total_flagged_users_30d ?? 0}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              <span style={{ fontSize: 11.5, color: "#64748B" }}>Review recommended</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{fraud.review_recommended_count ?? 0}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              <span style={{ fontSize: 11.5, color: "#64748B" }}>Manual review required</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{fraud.manual_review_required_count ?? 0}</span>
+            </div>
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No fraud data yet.</p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Clock size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Queue by Type</div>
+        </div>
+        {typeEntries.length === 0 ? (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>Queue is clear.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {typeEntries.map(([type, count]) => (
+              <div key={type} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 11.5, color: "#374151" }}>{type}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", fontFamily: "monospace" }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }

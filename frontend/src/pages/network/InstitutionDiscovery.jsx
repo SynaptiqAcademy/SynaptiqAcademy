@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import api from "@/lib/api";
-import { Building2, Search } from "lucide-react";
+import { Building2, Search, Layers } from "lucide-react";
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Input, FormSelect, EmptyState, LoadingOverlay, Pagination } from "@/components/ds";
@@ -55,7 +55,7 @@ export default function InstitutionDiscovery() {
   const handleSearch = e => { e.preventDefault(); setPage(1); search(filters, 1); };
 
   return (
-    <ResearchLayout title="Find Institutions">
+    <ResearchLayout title="Find Institutions" sidebar={<InstitutionDiscoverySidebar results={results} total={total} pages={pages} />}>
 
       <form onSubmit={handleSearch} style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         <Input
@@ -106,5 +106,47 @@ export default function InstitutionDiscovery() {
         </div>
       )}
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — real search results already loaded by this page ─────────────
+function InstitutionDiscoverySidebar({ results, total, pages }) {
+  const typeCounts = results.reduce((acc, inst) => {
+    const t = inst.type || "unspecified";
+    acc[t] = (acc[t] || 0) + 1;
+    return acc;
+  }, {});
+  const typeEntries = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Building2 size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Institutions Found</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{total}</div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          {pages > 1 ? `Across ${pages} pages of results.` : "Matching your current search."}
+        </p>
+      </Card>
+
+      {typeEntries.length > 0 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Layers size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Types in View</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {typeEntries.map(([type, count]) => (
+              <div key={type} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
+                <span style={{ textTransform: "capitalize" }}>{type.replace("_", " ")}</span>
+                <span style={{ fontWeight: 700, color: NAVY }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

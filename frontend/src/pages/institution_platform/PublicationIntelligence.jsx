@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
-import { Card, StatCard, StatGrid, List, ListItem, Spinner } from "@/components/ds";
+import { Card, List, ListItem, Spinner } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
@@ -40,18 +40,15 @@ export default function PublicationIntelligence() {
     <InstitutionLayout
       title="Publication Intelligence"
       subtitle={pubs ? `Growth: ${growthPositive ? "+" : ""}${pubs.growth_rate_pct ?? 0}% year-on-year · ${pubs.total ?? 0} total publications` : "Research output and citation analytics"}
+      stats={[
+        { label: "Total Publications", value: pubs?.total ?? 0 },
+        { label: "Q1/Q2 Publications", value: pubs?.q1q2_count ?? 0 },
+        { label: "Open Access", value: pubs?.open_access_count ?? 0 },
+        { label: "Total Citations", value: pubs?.total_citations ?? 0 },
+        { label: "Avg Citations", value: pubs?.avg_citations ?? 0 },
+        { label: "Highly Cited (10+)", value: pubs?.high_cited_count ?? 0 },
+      ]}
     >
-      {/* StatCard has no per-tile value-color override, so the original
-          color-coded KPI values are flattened. */}
-      <StatGrid cols={6} className="mb-5">
-        <StatCard label="Total Publications" value={pubs?.total ?? 0} />
-        <StatCard label="Q1/Q2 Publications" value={pubs?.q1q2_count ?? 0} sub={`${pubs?.q1q2_pct ?? 0}% of total`} />
-        <StatCard label="Open Access" value={pubs?.open_access_count ?? 0} sub={`${pubs?.open_access_pct ?? 0}%`} />
-        <StatCard label="Total Citations" value={pubs?.total_citations ?? 0} />
-        <StatCard label="Avg Citations" value={pubs?.avg_citations ?? 0} />
-        <StatCard label="Highly Cited (10+)" value={pubs?.high_cited_count ?? 0} />
-      </StatGrid>
-
       {/* Publication trend chart — stacked/overlaid bars (total translucent
           navy with a Q1/Q2 emerald overlay per year) have no equivalent in
           BarChart (single value per bar, no stacking) — left hand-rolled. */}

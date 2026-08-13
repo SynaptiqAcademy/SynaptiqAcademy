@@ -198,7 +198,7 @@ export default function Communities() {
   return (
     <ResearchLayout
       title="Academic Communities"
-      actions={<Button variant="primary" onClick={() => setShowCreate(true)}><Plus size={15} />Create</Button>}
+      actions={<Button variant="hero" onClick={() => setShowCreate(true)}><Plus size={15} />Create</Button>}
       nav={
         <NavTabs
           variant="pill"
@@ -210,6 +210,7 @@ export default function Communities() {
           onChange={setTab}
         />
       }
+      sidebar={<CommunitiesSidebar myCommunities={myCommunities} total={total} />}
     >
 
       {tab === "discover" && (

@@ -185,12 +185,18 @@ export default function Leaderboards() {
     <ResearchLayout
       title="Rankings"
       subtitle="Transparent, evidence-based rankings that celebrate genuine academic contributions — research activity, collaboration, peer review, mentoring and teaching."
+      stats={!myRepLoading && myRep ? [
+        { label: "Reputation Points", value: fmtPts(myRep.overall_score || 0) },
+        { label: myRep.reputation_label || "Research Explorer", value: myRep.reputation_level || 1 },
+        { label: "Global Rank",       value: myRep.rank_global ? `#${myRep.rank_global}` : "—" },
+        { label: "Percentile",        value: myRep.percentile_global > 0 ? `${myRep.percentile_global.toFixed(1)}%` : "—" },
+      ] : undefined}
       actions={
         <>
-          <Button as={Link} to="/settings#profile" size="sm">
+          <Button as={Link} to="/settings#profile" variant="hero" size="sm">
             <UserCheck size={12} strokeWidth={2} /> Improve My Profile
           </Button>
-          <Button variant="ghost" size="sm" onClick={scrollToMain}>
+          <Button variant="hero" size="sm" onClick={scrollToMain}>
             <Award size={12} strokeWidth={1.5} /> Explore Rankings
           </Button>
         </>
@@ -202,28 +208,6 @@ export default function Leaderboards() {
         @keyframes slide-up { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
         .slide-up { animation: slide-up 350ms ease both; }
       `}</style>
-
-      {/* ── My standing snapshot ──────────────────────────────────────────── */}
-      {!myRepLoading && myRep && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mb-8">
-          <div>
-            <div className="font-serif text-3xl" style={{ color: NAVY }}>{fmtPts(myRep.overall_score || 0)}</div>
-            <div className="text-xs text-slate-500 mt-1">Reputation Points</div>
-          </div>
-          <div>
-            <div className="font-serif text-3xl" style={{ color: NAVY }}>{myRep.reputation_level || 1}</div>
-            <div className="text-xs text-slate-500 mt-1">{myRep.reputation_label || "Research Explorer"}</div>
-          </div>
-          <div>
-            <div className="font-serif text-3xl" style={{ color: NAVY }}>{myRep.rank_global ? `#${myRep.rank_global}` : "—"}</div>
-            <div className="text-xs text-slate-500 mt-1">Global Rank</div>
-          </div>
-          <div>
-            <div className="font-serif text-3xl" style={{ color: NAVY }}>{myRep.percentile_global > 0 ? `${myRep.percentile_global.toFixed(1)}%` : "—"}</div>
-            <div className="text-xs text-slate-500 mt-1">Percentile</div>
-          </div>
-        </div>
-      )}
 
       {/* ── My Academic Standing ────────────────────────────────────────── */}
       {(myRepLoading || myRep) && (

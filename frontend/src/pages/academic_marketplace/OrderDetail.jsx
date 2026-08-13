@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { CheckCircle, AlertCircle } from "lucide-react";
-import { ACCENT, EMERALD } from "@/lib/tokens";
+import { CheckCircle, AlertCircle, Settings, FileText } from "lucide-react";
+import { ACCENT, EMERALD, NAVY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Alert, Textarea, H2, H3, Caption, LoadingOverlay, ErrorState } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
@@ -72,6 +72,15 @@ export default function OrderDetail() {
           {order.status?.replace(/_/g, " ")}
         </Badge>
       }
+      sidebar={
+        <OrderDetailSidebar
+          order={order}
+          id={id}
+          contract={contract}
+          actionLoading={actionLoading}
+          transition={transition}
+        />
+      }
     >
       <div className="max-w-[900px]">
         {msg && (
@@ -80,9 +89,8 @@ export default function OrderDetail() {
           </Alert>
         )}
 
-        <div className="grid grid-cols-[1fr_280px] gap-5">
-          <div>
-            {/* Order info */}
+        <div>
+          {/* Order info */}
             <Card padding="lg" className="mb-4">
               <H2 className="mb-1">{order.service_title}</H2>
               <Caption className="capitalize mb-4">
@@ -177,52 +185,64 @@ export default function OrderDetail() {
                 </div>
               ))}
             </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div>
-            <Card padding="md" className="mb-4">
-              <H3 className="mb-3">Actions</H3>
-              {order.status === "pending" && (
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => transition("cancelled", "Cancelled by buyer")}
-                  disabled={actionLoading}
-                  className="w-full"
-                >
-                  Cancel Order
-                </Button>
-              )}
-              {order.status === "completed" && (
-                <Button as={Link} to={`/academic-marketplace/rate/${id}`} size="sm" className="w-full">
-                  Leave a Review
-                </Button>
-              )}
-              {["accepted", "in_progress", "under_review", "revision_requested"].includes(order.status) && (
-                <Link
-                  to={`/academic-marketplace/disputes?order=${id}`}
-                  className="block text-center border border-crimson-600 text-crimson-600 rounded-md py-2.5 text-[13px] no-underline mt-2"
-                >
-                  Open Dispute
-                </Link>
-              )}
-            </Card>
-
-            {contract && (
-              <Card padding="md">
-                <H3 className="mb-2">Contract</H3>
-                <div className="text-[13px] text-slate-600 mb-2.5">
-                  Status: <span className="text-emerald-600 font-semibold">{contract.status}</span>
-                </div>
-                <Button as={Link} to={`/academic-marketplace/contracts/${id}`} variant="ghost" size="sm" className="w-full">
-                  View Contract
-                </Button>
-              </Card>
-            )}
-          </div>
         </div>
       </div>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — order actions and contract status, already loaded above ──────
+function OrderDetailSidebar({ order, id, contract, actionLoading, transition }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Settings size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Actions</div>
+        </div>
+        {order.status === "pending" && (
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => transition("cancelled", "Cancelled by buyer")}
+            disabled={actionLoading}
+            className="w-full"
+          >
+            Cancel Order
+          </Button>
+        )}
+        {order.status === "completed" && (
+          <Button as={Link} to={`/academic-marketplace/rate/${id}`} size="sm" className="w-full">
+            Leave a Review
+          </Button>
+        )}
+        {["accepted", "in_progress", "under_review", "revision_requested"].includes(order.status) && (
+          <Link
+            to={`/academic-marketplace/disputes?order=${id}`}
+            className="block text-center border border-crimson-600 text-crimson-600 rounded-md py-2.5 text-[13px] no-underline mt-2"
+          >
+            Open Dispute
+          </Link>
+        )}
+        {order.status !== "pending" && order.status !== "completed" && !["accepted", "in_progress", "under_review", "revision_requested"].includes(order.status) && (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No actions available for this order status.</p>
+        )}
+      </Card>
+
+      {contract && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <FileText size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Contract</div>
+          </div>
+          <p style={{ fontSize: 12, color: "#64748B", margin: "0 0 10px", lineHeight: 1.5 }}>
+            Status: <span style={{ color: EMERALD, fontWeight: 600 }}>{contract.status}</span>
+          </p>
+          <Button as={Link} to={`/academic-marketplace/contracts/${id}`} variant="ghost" size="sm" className="w-full">
+            View Contract
+          </Button>
+        </Card>
+      )}
+    </div>
   );
 }

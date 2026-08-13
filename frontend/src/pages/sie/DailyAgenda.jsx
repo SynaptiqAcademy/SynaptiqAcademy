@@ -3,7 +3,7 @@ import { Calendar, Zap, AlertTriangle, CheckSquare, Sparkles, Target } from "luc
 import { NAVY, WARM, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
-import { Card, Badge, StatCard, StatGrid, EmptyState, LoadingOverlay, H4 } from "@/components/ds";
+import { Card, Badge, EmptyState, LoadingOverlay, H4 } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
@@ -77,20 +77,26 @@ export default function DailyAgenda() {
       title="Daily Agenda"
       subtitle="Your AI-generated daily research schedule and priorities."
       navItems={SIE_NAV_ITEMS}
-    >
-
-      {/* Stats strip */}
-      <div style={{ marginBottom: 20 }}>
-        <StatGrid cols={3}>
-          {[
-            { label: "Active Goals", value: agenda?.active_goals ?? 0 },
-            { label: "Pending Missions", value: agenda?.pending_missions ?? 0 },
-            { label: "Upcoming Deadlines", value: agenda?.upcoming_deadlines ?? 0 },
-          ].map(({ label, value }) => (
-            <StatCard key={label} label={label} value={value} />
+      stats={[
+        { label: "Active Goals",        value: agenda?.active_goals ?? 0 },
+        { label: "Pending Missions",    value: agenda?.pending_missions ?? 0 },
+        { label: "Upcoming Deadlines",  value: agenda?.upcoming_deadlines ?? 0 },
+      ]}
+      sidebar={(agenda?.ai_recommendations || []).length > 0 ? (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+            <Sparkles size={15} color={ACCENT} />
+            <H4>AI Recommendations</H4>
+          </div>
+          {agenda.ai_recommendations.map((rec, i) => (
+            <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+              <span style={{ color: ACCENT, fontSize: 14 }}>→</span>
+              <span style={{ fontSize: 13, color: "#334155" }}>{rec}</span>
+            </div>
           ))}
-        </StatGrid>
-      </div>
+        </Card>
+      ) : undefined}
+    >
 
       {/* Today's priorities */}
       <Card padding="none" style={{ marginBottom: 20, overflow: "hidden" }}>
@@ -110,22 +116,6 @@ export default function DailyAgenda() {
           )}
         </div>
       </Card>
-
-      {/* AI Recommendations */}
-      {(agenda?.ai_recommendations || []).length > 0 && (
-        <Card padding="lg">
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-            <Sparkles size={15} color={ACCENT} />
-            <H4>AI Recommendations</H4>
-          </div>
-          {(agenda.ai_recommendations || []).map((rec, i) => (
-            <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
-              <span style={{ color: ACCENT, fontSize: 14 }}>→</span>
-              <span style={{ fontSize: 13, color: "#334155" }}>{rec}</span>
-            </div>
-          ))}
-        </Card>
-      )}
     </ResearchLayout>
   );
 }

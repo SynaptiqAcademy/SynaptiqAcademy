@@ -141,11 +141,11 @@ export default function AdminPromotions() {
             <option value={30}>30 days</option>
             <option value={90}>90 days</option>
           </FormSelect>
-          <Button variant="primary" size="sm" onClick={() => setShowCreate(true)}>
+          <Button variant="hero" size="sm" onClick={() => setShowCreate(true)}>
             <Plus size={12} />
             New Campaign
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => { refStats(); refCampaigns(); }} aria-label="Refresh">
+          <Button variant="hero" size="icon" onClick={() => { refStats(); refCampaigns(); }} aria-label="Refresh">
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </Button>
         </div>

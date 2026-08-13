@@ -3,7 +3,7 @@ import { RefreshCw, Send, Cpu, FileText, ChevronDown, ChevronRight } from "lucid
 import api from "@/lib/api";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
-import { Modal } from "@/components/ds";
+import { Modal, Card } from "@/components/ds";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -123,6 +123,7 @@ export default function AdminAICopilot() {
           <RefreshCw size={14} className={bL ? "animate-spin" : ""} />
         </button>
       }
+      sidebar={<AICopilotSidebar items={items} messages={messages} />}
     >
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -249,5 +250,58 @@ export default function AdminAICopilot() {
 
       {viewBrief && <BriefingModal brief={viewBrief} onClose={() => setViewBrief(null)} />}
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — real data already loaded above, never fabricated ─────────────
+function AICopilotSidebar({ items, messages }) {
+  const kindCounts = items.reduce((acc, b) => {
+    const k = b.kind || "other";
+    acc[k] = (acc[k] || 0) + 1;
+    return acc;
+  }, {});
+  const userQuestions = messages.filter((m) => m.role === "user").length;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <FileText size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Briefing Activity</div>
+        </div>
+        {items.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ fontFamily: "Georgia, serif", fontSize: 24, color: "#0f172a" }}>{items.length}</div>
+            <p style={{ fontSize: 11, color: "#94A3B8", margin: 0 }}>total briefings generated</p>
+            {Object.entries(kindCounts).map(([kind, count]) => (
+              <div key={kind} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
+                <span style={{ textTransform: "capitalize" }}>{kind}</span>
+                <span>{count}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No briefings generated yet — use the panel to create your first one.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Send size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>This Session</div>
+        </div>
+        {userQuestions > 0 ? (
+          <p style={{ fontSize: 12, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
+            You've asked {userQuestions} question{userQuestions !== 1 ? "s" : ""} to the platform AI this session.
+          </p>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            Ask the AI about platform health, users, or revenue to see activity here.
+          </p>
+        )}
+      </Card>
+    </div>
   );
 }

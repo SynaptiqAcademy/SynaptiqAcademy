@@ -40,6 +40,7 @@ export default function Funding() {
     <ResearchLayout
       title="Funding"
       subtitle="A searchable database of funding opportunities — grants, fellowships, and programmes."
+      stats={!loading ? [{ label: "Opportunities", value: items.length }] : undefined}
     >
       <div className="grid sm:grid-cols-4 gap-3">
         <Input

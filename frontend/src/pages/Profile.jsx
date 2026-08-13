@@ -235,8 +235,8 @@ export default function Profile() {
         { label: "h-index",     value: hIndex > 0 ? hIndex : "—" },
         { label: "Connections", value: connCount > 0 ? connCount : "—" },
       ].map(({ label, value }) => (
-        <span key={label} style={{ fontSize: 12, color: "#64748B" }}>
-          <strong style={{ fontWeight: 700, color: "#0f172a", fontFamily: "monospace", marginRight: 4 }}>{value}</strong>
+        <span key={label} style={{ fontSize: 12, color: "rgba(255,255,255,0.65)" }}>
+          <strong style={{ fontWeight: 700, color: "#FFFFFF", fontFamily: "monospace", marginRight: 4 }}>{value}</strong>
           {label}
         </span>
       ))}
@@ -245,11 +245,11 @@ export default function Profile() {
 
   const profileActions = isMe ? (
     <>
-      <Button data-testid={TID.profileEditBtn} onClick={() => setEditing(true)} size="sm">
+      <Button variant="subtle" data-testid={TID.profileEditBtn} onClick={() => setEditing(true)} size="sm">
         <Edit size={12} strokeWidth={1.5} /> Edit Profile
       </Button>
       <Button
-        variant="outline"
+        variant="hero"
         size="sm"
         onClick={() => {
           const profileUrl = `${window.location.origin}/profile/${profile.id}`;
@@ -265,13 +265,13 @@ export default function Profile() {
     </>
   ) : (
     <>
-      <Button data-testid={TID.profileMessageBtn} onClick={() => navigate(`/messages/${profile.id}`)} size="sm">
+      <Button variant="subtle" data-testid={TID.profileMessageBtn} onClick={() => navigate(`/messages/${profile.id}`)} size="sm">
         <MessageSquare size={12} strokeWidth={1.5} /> Message
       </Button>
-      <Button variant="outline" size="sm" data-testid={TID.profileConnectBtn} onClick={connect}>
+      <Button variant="hero" size="sm" data-testid={TID.profileConnectBtn} onClick={connect}>
         <UserPlus size={12} strokeWidth={1.5} /> Connect
       </Button>
-      <Button variant="outline" size="sm" data-testid="profile-invite-btn" onClick={() => setInviting(true)}>
+      <Button variant="hero" size="sm" data-testid="profile-invite-btn" onClick={() => setInviting(true)}>
         <Sparkles size={12} strokeWidth={1.5} /> Invite
       </Button>
     </>
@@ -644,14 +644,14 @@ function ProfileNav({ profile, pubs }) {
   ];
 
   return (
-    <nav style={{ display: "flex", gap: 0, borderBottom: `1px solid ${BORDER}`, marginBottom: 28, overflowX: "auto" }}>
+    <nav style={{ display: "flex", gap: 0, borderTop: "1px solid rgba(255,255,255,0.12)", marginTop: 4, overflowX: "auto" }}>
       {navItems.filter((n) => n.show).map(({ href, label }) => (
         <a
           key={href}
           href={href}
-          style={{ display: "block", padding: "10px 14px", fontSize: 11, fontWeight: 600, color: "#64748B", textDecoration: "none", whiteSpace: "nowrap", borderBottom: "2px solid transparent", letterSpacing: "0.02em", textTransform: "uppercase", transition: "color 0.12s" }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = NAVY; e.currentTarget.style.borderBottomColor = NAVY; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = "#64748B"; e.currentTarget.style.borderBottomColor = "transparent"; }}
+          style={{ display: "block", padding: "10px 14px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)", textDecoration: "none", whiteSpace: "nowrap", borderBottom: "2px solid transparent", letterSpacing: "0.02em", textTransform: "uppercase", transition: "color 0.12s" }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "#FFFFFF"; e.currentTarget.style.borderBottomColor = "#38BDF8"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; e.currentTarget.style.borderBottomColor = "transparent"; }}
         >
           {label}
         </a>

@@ -8,7 +8,7 @@ import { NAVY } from "@/lib/tokens";
 import { Building2 } from "lucide-react";
 
 /** InstitutionLayout — institution_platform/* pages with auto-driven nav. */
-export function InstitutionLayout({ title, subtitle, actions, toolbar, sidebar, children, activePath }) {
+export function InstitutionLayout({ title, subtitle, actions, stats, ring, toolbar, sidebar, children, activePath }) {
   const location = useLocation();
   const navigate = useNavigate();
   const active = activePath ?? location.pathname;
@@ -19,6 +19,8 @@ export function InstitutionLayout({ title, subtitle, actions, toolbar, sidebar, 
       subtitle={subtitle}
       icon={<Building2 size={15} style={{ color: NAVY }} />}
       actions={actions}
+      stats={stats}
+      ring={ring}
       nav={
         <NavTabs
           items={INSTITUTION_NAV_ITEMS.map(i => ({ id: i.id, label: i.label }))}

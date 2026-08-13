@@ -1,7 +1,7 @@
 /* eslint-disable */
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Plus, Sparkles, Clock, Users } from "lucide-react";
+import { BookOpen, Plus, Sparkles, Clock, Users, Layers } from "lucide-react";
 import api from "../../lib/api";
 import { toast } from "sonner";
 import { EmptyState } from "../../components/ds/EmptyState";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ds/Badge";
 import { Input } from "@/components/ds/Input";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { ResearchLayout } from "@/layouts";
+import { NAVY } from "@/lib/tokens";
 
 const SUBJECTS = ["Mathematics","Economics","Management","Computer Science","Medicine","Engineering","Psychology","Education","Sciences","Humanities","Law","Business","History","Literature","Physics","Chemistry","Biology","Sociology","Political Science","Philosophy"];
 const LEVELS   = ["secondary","undergraduate","graduate","professional","adult","other"];
@@ -91,21 +92,32 @@ export default function LessonPlanner() {
     }
   };
 
+  const publishedCount = lessons.filter((l) => l.status === "published").length;
+  const draftCount     = lessons.filter((l) => l.status === "draft").length;
+  const aiCount        = lessons.filter((l) => l.ai_generated).length;
+
   return (
     <ResearchLayout
       title="Lesson Planner"
       subtitle="Create structured lesson plans with AI assistance — objectives, activities, materials, and differentiation strategies."
       icon={<BookOpen size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
+      stats={!loading ? [
+        { label: "Lessons",      value: lessons.length },
+        { label: "Published",    value: publishedCount },
+        { label: "Drafts",       value: draftCount },
+        { label: "AI-Generated", value: aiCount },
+      ] : undefined}
+      sidebar={!loading && lessons.length > 0 ? <LessonPlannerSidebar lessons={lessons} /> : undefined}
       actions={
         <div className="flex gap-2">
           <Button
-            variant={showGenerate ? "primary" : "outline"}
+            variant="hero"
             onClick={() => { setShowGenerate(!showGenerate); setShowCreate(false); }}
           >
             <Sparkles size={14} strokeWidth={1.5} /> AI Generate
           </Button>
           <Button
-            variant={showCreate ? "primary" : "ghost"}
+            variant="hero"
             onClick={() => { setShowCreate(!showCreate); setShowGenerate(false); }}
           >
             <Plus size={14} strokeWidth={1.5} /> New lesson
@@ -289,5 +301,57 @@ export default function LessonPlanner() {
         </div>
       </div>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — subject breakdown + average duration, real data already loaded above ──
+function LessonPlannerSidebar({ lessons }) {
+  const bySubject = new Map();
+  lessons.forEach((l) => {
+    if (!l.subject) return;
+    bySubject.set(l.subject, (bySubject.get(l.subject) || 0) + 1);
+  });
+  const topSubjects = Array.from(bySubject.entries()).sort((a, b) => b[1] - a[1]).slice(0, 4);
+
+  const avgDuration = lessons.length > 0
+    ? Math.round(lessons.reduce((s, l) => s + (l.duration_minutes || 0), 0) / lessons.length)
+    : 0;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <Layers size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Subjects</div>
+        </div>
+        {topSubjects.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {topSubjects.map(([subject, count]) => (
+              <div key={subject} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 12.5, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subject}</span>
+                <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace", flexShrink: 0 }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            Subjects will appear here as you add lessons.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Clock size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Average Duration</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+          {avgDuration} <span style={{ fontSize: 13, fontWeight: 400, color: "#64748B" }}>min</span>
+        </div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          Across {lessons.length} lesson{lessons.length !== 1 ? "s" : ""}.
+        </p>
+      </Card>
+    </div>
   );
 }

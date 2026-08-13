@@ -33,6 +33,16 @@ const ROLES = [
 
 const RERANK_COST = 5;
 
+function MarketplaceSidebar({ reverse, analytics }) {
+  return (
+    <div className="space-y-5">
+      <SidebarReverse reverse={reverse} />
+      <SidebarAnalytics analytics={analytics} />
+      <SidebarReputation />
+    </div>
+  );
+}
+
 export default function Marketplace() {
   const navigate = useNavigate();
   const { user, refreshMe } = useAuth();
@@ -111,6 +121,7 @@ export default function Marketplace() {
     <ResearchLayout
       title="Find collaborators"
       subtitle="People-first discovery across the network. Search by expertise, then use AI to surface the best fits with explanations."
+      sidebar={<MarketplaceSidebar reverse={reverse} analytics={analytics} />}
       actions={
         <div className="flex flex-col items-end gap-2">
           <Link to="/expertise" className="text-xs inline-flex items-center gap-1.5 border border-slate-300 px-3 py-2 hover:border-[#0F2847]" data-testid="open-expertise-requests">
@@ -189,53 +200,43 @@ export default function Marketplace() {
         </Card>
       )}
 
-      {/* Layout: results + side widgets */}
-      <div className="grid lg:grid-cols-[1fr_320px] gap-6">
-        {/* Results */}
-        <main className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="overline">
-              {loading ? "Searching…" : `${results.length} match${results.length === 1 ? "" : "es"}`}
-              {reranked && <span className="ml-2 text-amber-700"> · AI reranked</span>}
-            </div>
-            {results.length > 0 && (
-              <Link to="/ai-usage" className="text-[10px] font-mono text-slate-400 hover:text-[#0F2847]">
-                Track AI spend ↗
-              </Link>
-            )}
+      {/* Results */}
+      <main className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="overline">
+            {loading ? "Searching…" : `${results.length} match${results.length === 1 ? "" : "es"}`}
+            {reranked && <span className="ml-2 text-amber-700"> · AI reranked</span>}
           </div>
-          {loading && (
-            <div className="flex items-center gap-2 py-4">
-              <Spinner size={14} />
-              <span className="text-sm text-slate-500">Loading matches…</span>
-            </div>
+          {results.length > 0 && (
+            <Link to="/ai-usage" className="text-[10px] font-mono text-slate-400 hover:text-[#0F2847]">
+              Track AI spend ↗
+            </Link>
           )}
-          {!loading && results.length === 0 && (
-            <EmptyState
-              icon={<Users />}
-              title="No matches yet"
-              description="Try a broader role or clear filters."
-              size="md"
-              dashed={true}
-            />
-          )}
-          {!loading && results.map((m) => (
-            <MatchCard
-              key={m.user.id + (reranked ? "-r" : "")}
-              match={m}
-              onInvite={() => setInviting(m)}
-              onMessage={onMessage}
-            />
-          ))}
-        </main>
-
-        {/* Sidebar — reverse matches + analytics */}
-        <aside className="space-y-5">
-          <SidebarReverse reverse={reverse} />
-          <SidebarAnalytics analytics={analytics} />
-          <SidebarReputation />
-        </aside>
-      </div>
+        </div>
+        {loading && (
+          <div className="flex items-center gap-2 py-4">
+            <Spinner size={14} />
+            <span className="text-sm text-slate-500">Loading matches…</span>
+          </div>
+        )}
+        {!loading && results.length === 0 && (
+          <EmptyState
+            icon={<Users />}
+            title="No matches yet"
+            description="Try a broader role or clear filters."
+            size="md"
+            dashed={true}
+          />
+        )}
+        {!loading && results.map((m) => (
+          <MatchCard
+            key={m.user.id + (reranked ? "-r" : "")}
+            match={m}
+            onInvite={() => setInviting(m)}
+            onMessage={onMessage}
+          />
+        ))}
+      </main>
 
       {inviting && (
         <InviteModal

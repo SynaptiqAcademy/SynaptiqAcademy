@@ -10,12 +10,13 @@ import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import {
-  Building2, Globe, Users, Sparkles, BookOpen, Coins, Award, Layers,
+  Globe, Users, Sparkles, BookOpen, Coins, Award, Layers,
   UserPlus, ShieldCheck, ScrollText, Trash2, Check, X, Plus, ChevronRight,
   Handshake, Target, Network, Calendar,
 } from "lucide-react";
 import { userTypeLabel } from "../lib/userTypes";
 import { NAVY } from "@/lib/tokens";
+import { ResearchLayout } from "@/layouts";
 import {
   SkeletonCard, Card, Button, Badge, StatCard, StatGrid,
   EmptyState, Modal, Input, FormSelect, Textarea,
@@ -49,98 +50,98 @@ export default function InstitutionDetail() {
     return ["owner", "admin"].includes(inst.my_membership?.role);
   }, [inst, user]);
 
-  if (!inst) return <div className="p-6"><SkeletonCard rows={4} /></div>;
+  if (!inst) {
+    return (
+      <ResearchLayout title="Institution" eyebrow="Institution">
+        <div className="p-6"><SkeletonCard rows={4} /></div>
+      </ResearchLayout>
+    );
+  }
 
   const visibleTabs = isAdmin ? TAB_LIST : TAB_LIST.filter((t) => t !== "govern");
-
-  return (
-    <div className="space-y-6">
-      <Header inst={inst} onChanged={load} isAdmin={isAdmin} />
-
-      {/* Tabs — kept hand-rolled: ds NavTabs doesn't support per-tab data-testid,
-          and tests address individual tabs via data-testid={`inst-tab-${t}`}. */}
-      <div className="flex items-center gap-1 border-b border-slate-200 overflow-x-auto" data-testid="inst-tabs">
-        {visibleTabs.map((t) => (
-          <button
-            key={t}
-            data-testid={`inst-tab-${t}`}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm -mb-px border-b-2 transition-colors whitespace-nowrap ${tab === t ? "border-[#0F2847] text-[#0F2847]" : "border-transparent text-slate-500 hover:text-slate-900"}`}
-          >
-            {TAB_LABEL[t]}
-          </button>
-        ))}
-      </div>
-
-      {tab === "overview"     && <OverviewTab id={id} />}
-      {tab === "researchers"  && <ResearchersTab id={id} isAdmin={isAdmin} />}
-      {tab === "units"        && <UnitsTab id={id} isAdmin={isAdmin} />}
-      {tab === "publications" && <PublicationsTab id={id} />}
-      {tab === "funding"      && <FundingTab id={id} />}
-      {tab === "reputation"    && <ReputationTab id={id} />}
-      {tab === "collaboration" && <CollaborationTab id={id} inst={inst} isAdmin={isAdmin} />}
-      {tab === "govern" && isAdmin && <GovernTab id={id} inst={inst} onChanged={load} />}
-    </div>
-  );
-}
-
-/* ============================== HEADER ===================================== */
-function Header({ inst, onChanged, isAdmin }) {
   const status = inst.my_membership?.status;
+
   const claim = async () => {
     try {
       const { data } = await api.post(`/institutions/${inst.id}/claim`, { note: null });
       toast.success(data.status === "approved" ? "Joined!" : "Request submitted — pending admin approval");
-      onChanged?.();
+      load();
     } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
   };
+
+  const subtitle = [(inst.type || "").replace("_", " "), inst.country].filter(Boolean).join(" · ");
+
   return (
-    <header className="border-b border-slate-200 pb-6">
-      <div className="flex items-start gap-5">
-        <div className="w-20 h-20 shrink-0 bg-[#0F2847]/5 border border-[#0F2847]/20 flex items-center justify-center">
-          {inst.logo_url
-            ? <img src={inst.logo_url} alt="" className="w-full h-full object-cover" />
-            : <Building2 size={28} strokeWidth={1.5} className="text-[#0F2847]" />}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="overline">{(inst.type || "").replace("_", " ")}</span>
-            {inst.country && <span className="overline text-slate-500">· {inst.country}</span>}
+    <ResearchLayout
+      title={<span data-testid="institution-name">{inst.name}</span>}
+      eyebrow="Institution"
+      subtitle={subtitle || undefined}
+      stats={inst.member_count != null ? [{ label: "Researchers", value: inst.member_count }] : undefined}
+      actions={!status && (
+        <Button data-testid="claim-institution-btn" variant="hero" size="sm" onClick={claim}>
+          <UserPlus size={11} strokeWidth={1.5} /> Request to join
+        </Button>
+      )}
+    >
+      <div className="space-y-6">
+        {/* Description / links / membership status — real fetched data kept
+            visible, just no longer inside a bespoke <header>. */}
+        {(inst.description || inst.website || (inst.email_domains || []).length > 0 || status || isAdmin) && (
+          <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-5">
+            <div className="flex-1 min-w-0 space-y-2">
+              {inst.description && <p className="text-sm text-slate-600 max-w-3xl">{inst.description}</p>}
+              <div className="flex items-center gap-4 text-xs text-slate-500 flex-wrap">
+                {inst.website && (
+                  <a href={inst.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-[#0F2847]">
+                    <Globe size={11} strokeWidth={1.5} /> {inst.website.replace(/^https?:\/\//, "")}
+                  </a>
+                )}
+                {(inst.email_domains || []).length > 0 && (
+                  <span className="font-mono text-[10px] text-slate-400">@ {(inst.email_domains || []).join(", ")}</span>
+                )}
+              </div>
+            </div>
+            <div className="shrink-0 flex flex-col gap-2 items-end">
+              {status === "pending" && (
+                <Badge variant="warning">Pending approval</Badge>
+              )}
+              {status === "approved" && (
+                <Badge variant="success">{inst.my_membership?.role} · member</Badge>
+              )}
+              {isAdmin && (
+                <Badge variant="default">
+                  <ShieldCheck size={10} strokeWidth={1.5} /> Admin
+                </Badge>
+              )}
+            </div>
           </div>
-          <h1 className="font-serif text-4xl text-slate-900 mt-1 leading-tight" data-testid="institution-name">{inst.name}</h1>
-          {inst.description && <p className="text-sm text-slate-600 mt-2 max-w-3xl">{inst.description}</p>}
-          <div className="flex items-center gap-4 mt-3 text-xs text-slate-500 flex-wrap">
-            <span className="inline-flex items-center gap-1"><Users size={11} strokeWidth={1.5} /> {inst.member_count} researchers</span>
-            {inst.website && (
-              <a href={inst.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-[#0F2847]">
-                <Globe size={11} strokeWidth={1.5} /> {inst.website.replace(/^https?:\/\//, "")}
-              </a>
-            )}
-            {(inst.email_domains || []).length > 0 && (
-              <span className="font-mono text-[10px] text-slate-400">@ {(inst.email_domains || []).join(", ")}</span>
-            )}
-          </div>
+        )}
+
+        {/* Tabs — kept hand-rolled: ds NavTabs doesn't support per-tab data-testid,
+            and tests address individual tabs via data-testid={`inst-tab-${t}`}. */}
+        <div className="flex items-center gap-1 border-b border-slate-200 overflow-x-auto" data-testid="inst-tabs">
+          {visibleTabs.map((t) => (
+            <button
+              key={t}
+              data-testid={`inst-tab-${t}`}
+              onClick={() => setTab(t)}
+              className={`px-4 py-2 text-sm -mb-px border-b-2 transition-colors whitespace-nowrap ${tab === t ? "border-[#0F2847] text-[#0F2847]" : "border-transparent text-slate-500 hover:text-slate-900"}`}
+            >
+              {TAB_LABEL[t]}
+            </button>
+          ))}
         </div>
-        <div className="shrink-0 flex flex-col gap-2 items-end">
-          {!status && (
-            <Button data-testid="claim-institution-btn" size="sm" onClick={claim}>
-              <UserPlus size={11} strokeWidth={1.5} /> Request to join
-            </Button>
-          )}
-          {status === "pending" && (
-            <Badge variant="warning">Pending approval</Badge>
-          )}
-          {status === "approved" && (
-            <Badge variant="success">{inst.my_membership?.role} · member</Badge>
-          )}
-          {isAdmin && (
-            <Badge variant="default">
-              <ShieldCheck size={10} strokeWidth={1.5} /> Admin
-            </Badge>
-          )}
-        </div>
+
+        {tab === "overview"     && <OverviewTab id={id} />}
+        {tab === "researchers"  && <ResearchersTab id={id} isAdmin={isAdmin} />}
+        {tab === "units"        && <UnitsTab id={id} isAdmin={isAdmin} />}
+        {tab === "publications" && <PublicationsTab id={id} />}
+        {tab === "funding"      && <FundingTab id={id} />}
+        {tab === "reputation"    && <ReputationTab id={id} />}
+        {tab === "collaboration" && <CollaborationTab id={id} inst={inst} isAdmin={isAdmin} />}
+        {tab === "govern" && isAdmin && <GovernTab id={id} inst={inst} onChanged={load} />}
       </div>
-    </header>
+    </ResearchLayout>
   );
 }
 

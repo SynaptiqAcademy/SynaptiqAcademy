@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { DollarSign, TrendingUp, Receipt, ShieldCheck } from "lucide-react";
-import { ACCENT, EMERALD } from "@/lib/tokens";
+import { DollarSign, Receipt } from "lucide-react";
+import { ACCENT, EMERALD, NAVY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
-import { Card, Grid, StatGrid, StatCard, H2, Caption, EmptyState, LoadingOverlay } from "@/components/ds";
+import { Card, H2, Caption, EmptyState, LoadingOverlay } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
@@ -28,30 +28,17 @@ export default function WalletCenter() {
   const TX_COLORS = { deposit: EMERALD, provider_payout: EMERALD, refund: EMERALD, credit_purchase: ACCENT, escrow_refund: EMERALD, escrow_hold: "#F59E0B", credit_spend: "#DC2626", platform_fee: "#475569" };
 
   return (
-    <ResearchLayout title="Wallet">
-
-        {/* Balance cards */}
-        <StatGrid cols={3} className="mb-7">
-          {[
-            { label: "Available Balance", value: `$${wallet?.balance?.toFixed(2) || "0.00"}`, icon: <DollarSign /> },
-            { label: "In Escrow", value: `$${wallet?.escrow_held?.toFixed(2) || "0.00"}`, icon: <ShieldCheck /> },
-            { label: "Credits", value: wallet?.credits || 0, icon: <TrendingUp /> },
-          ].map(({ label, value, icon }) => (
-            <StatCard key={label} label={label} value={value} icon={icon} />
-          ))}
-        </StatGrid>
-
-        {/* Stats */}
-        <Grid cols={2} gap="md" className="mb-7">
-          <Card padding="md">
-            <Caption className="mb-1">Total Spent (as Buyer)</Caption>
-            <div className="text-xl font-bold text-navy-700">${wallet?.total_spent?.toFixed(2) || "0.00"}</div>
-          </Card>
-          <Card padding="md">
-            <Caption className="mb-1">Total Earned (as Provider)</Caption>
-            <div className="text-xl font-bold text-emerald-600">${wallet?.total_earned?.toFixed(2) || "0.00"}</div>
-          </Card>
-        </Grid>
+    <ResearchLayout
+      title="Wallet"
+      stats={[
+        { label: "Available Balance", value: `$${wallet?.balance?.toFixed(2) || "0.00"}` },
+        { label: "In Escrow", value: `$${wallet?.escrow_held?.toFixed(2) || "0.00"}` },
+        { label: "Credits", value: wallet?.credits || 0 },
+        { label: "Total Spent", value: `$${wallet?.total_spent?.toFixed(2) || "0.00"}` },
+        { label: "Total Earned", value: `$${wallet?.total_earned?.toFixed(2) || "0.00"}` },
+      ]}
+      sidebar={<WalletCenterSidebar txns={txns} txColors={TX_COLORS} />}
+    >
 
         {/* Transaction history */}
         <Card padding="lg">
@@ -88,5 +75,58 @@ export default function WalletCenter() {
           )}
         </Card>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — derived from the transaction list already fetched above ──────
+function WalletCenterSidebar({ txns, txColors }) {
+  const latest = txns[0];
+  const counts = txns.reduce((acc, t) => {
+    acc[t.type] = (acc[t.type] || 0) + 1;
+    return acc;
+  }, {});
+  const typeEntries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <DollarSign size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Latest Transaction</div>
+        </div>
+        {latest ? (
+          <>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", textTransform: "capitalize" }}>
+              {latest.type?.replace(/_/g, " ")}
+            </div>
+            {latest.amount > 0 && (
+              <div style={{ fontSize: 20, fontWeight: 700, color: txColors[latest.type] || "#475569", fontFamily: "Georgia, serif", marginTop: 4 }}>
+                ${latest.amount?.toFixed(2)}
+              </div>
+            )}
+            <p style={{ fontSize: 11, color: "#94A3B8", margin: "4px 0 0" }}>{new Date(latest.created_at).toLocaleString()}</p>
+          </>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No transactions yet.</p>
+        )}
+      </Card>
+
+      {typeEntries.length > 0 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <Receipt size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Transaction Types</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {typeEntries.map(([type, count]) => (
+              <div key={type} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                <span style={{ color: "#374151", textTransform: "capitalize" }}>{type.replace(/_/g, " ")}</span>
+                <span style={{ color: "#94A3B8", fontWeight: 600 }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import api from "@/lib/api";
-import { Search, ArrowRight } from "lucide-react";
+import { Search, ArrowRight, Building2 } from "lucide-react";
 import { NAVY, WARM, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Input, EmptyState, LoadingOverlay } from "@/components/ds";
@@ -41,6 +41,7 @@ export default function IndustryPartners() {
     <ResearchLayout
       title="Industry Partners"
       subtitle="Discover industry organisations for applied research, technology transfer, and co-funded projects."
+      sidebar={<IndustryPartnersSidebar results={results} total={total} q={q} />}
     >
 
       {/* Search */}
@@ -89,5 +90,40 @@ export default function IndustryPartners() {
         </Button>
       </Card>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — real search results already loaded by this page ─────────────
+function IndustryPartnersSidebar({ results, total, q }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Building2 size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Search Results</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{total}</div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          {q ? `Industry partners matching "${q}".` : "Industry partners on the platform."}
+        </p>
+      </Card>
+
+      {results.length > 0 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Search size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Matches</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {results.slice(0, 5).map((inst, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{inst.name}</div>
+                <div style={{ fontSize: 11, color: "#94A3B8" }}>{inst.country}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

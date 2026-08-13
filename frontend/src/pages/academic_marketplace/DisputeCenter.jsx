@@ -54,7 +54,7 @@ export default function DisputeCenter() {
     <ResearchLayout
       title="Dispute Center"
       actions={
-        <Button variant={showNew ? "ghost" : "primary"} onClick={() => setShowNew(!showNew)}>
+        <Button variant="hero" onClick={() => setShowNew(!showNew)}>
           {showNew ? "Cancel" : "Open Dispute"}
         </Button>
       }

@@ -74,7 +74,7 @@ export default function VerificationRequests() {
       title="Verification Requests"
       subtitle="Submit evidence for manual admin review"
       actions={
-        <Button onClick={() => setShowForm(!showForm)}>
+        <Button variant="hero" onClick={() => setShowForm(!showForm)}>
           <Upload size={14} /> New Request
         </Button>
       }

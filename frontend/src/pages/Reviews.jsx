@@ -267,10 +267,10 @@ export default function Reviews() {
 
   const actions = (
     <div style={{ display: "flex", gap: 8 }}>
-      <Button as={Link} to="/manuscripts" variant="ghost" size="sm">
+      <Button as={Link} to="/manuscripts" variant="hero" size="sm">
         <FileText size={12} strokeWidth={1.5} /> My Manuscripts
       </Button>
-      <Button as={Link} to="/reviewer-marketplace" variant="ghost" size="sm">
+      <Button as={Link} to="/reviewer-marketplace" variant="hero" size="sm">
         <ClipboardCheck size={12} strokeWidth={1.5} /> Reviewer Marketplace
       </Button>
     </div>
@@ -293,6 +293,7 @@ export default function Reviews() {
           </div>
         </>
       }
+      sidebar={<ReviewsSidebar buckets={buckets} loaded={loaded} />}
       actions={actions}
     >
       <div data-testid={TID.reviewsDashboard} style={{ maxWidth: 840, paddingBottom: 64 }}>
@@ -327,5 +328,52 @@ export default function Reviews() {
 
       </div>
     </ResearchLayout>
+  );
+}
+
+// ─── Right rail — in-progress reviews + completed count, real data already loaded ─
+function ReviewsSidebar({ buckets, loaded }) {
+  const inProgress = buckets.accepted || [];
+  const completed = buckets.completed || [];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <ClipboardCheck size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>In Progress</div>
+        </div>
+        {!loaded ? (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0 }}>Loading…</p>
+        ) : inProgress.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {inProgress.slice(0, 4).map((rr) => (
+              <Link key={rr.id} to={`/manuscripts/${rr.manuscript_id}`} style={{ textDecoration: "none" }}>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {rr.manuscript?.title || "Untitled Manuscript"}
+                </div>
+                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>Verdict pending</div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No reviews currently in progress.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <CheckCircle2 size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Completed</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+          {!loaded ? "—" : completed.length}
+        </div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          {completed.length > 0 ? "Reviews you've completed." : "Completed reviews will show up here."}
+        </p>
+      </Card>
+    </div>
   );
 }

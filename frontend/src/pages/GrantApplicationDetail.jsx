@@ -7,8 +7,9 @@ import { SkeletonCard } from "@/components/ds/LoadingState";
 import {
   ChevronDown, Users, DollarSign, ClipboardList, Save,
   GitBranch, Trash2, Plus, Check, X, FileText, AlertTriangle,
-  CheckCircle2, Calendar,
+  CheckCircle2, Calendar, ArrowRight,
 } from "lucide-react";
+import { NAVY } from "@/lib/tokens";
 import { Badge } from "@/components/ds/Badge";
 import { Button } from "@/components/ds/Button";
 import { Card } from "@/components/ds/Card";
@@ -113,6 +114,59 @@ function ChecklistItem({ label, done }) {
     <div className="flex items-center gap-2 text-sm">
       {done ? <CheckCircle2 size={14} className="text-emerald-600 shrink-0" /> : <AlertTriangle size={14} className="text-amber-500 shrink-0" />}
       <span className={done ? "text-slate-700" : "text-slate-500"}>{label}</span>
+    </div>
+  );
+}
+
+// ── Right rail — grant/budget/team facts already loaded for this application ────
+function GrantApplicationDetailSidebar({ app, isPi, onDelete }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <Calendar size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Grant Details</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {app.grant?.deadline && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+              <span style={{ color: "#94A3B8" }}>Deadline</span>
+              <span style={{ color: "#0f172a", fontFamily: "monospace" }}>{app.grant.deadline}</span>
+            </div>
+          )}
+          {app.grant?.funding_amount?.amount && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+              <span style={{ color: "#94A3B8" }}>Available budget</span>
+              <span style={{ color: "#0f172a" }}>{fmtBudget(app.grant.funding_amount.amount, app.grant.funding_amount.currency)}</span>
+            </div>
+          )}
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+            <span style={{ color: "#94A3B8" }}>Your request</span>
+            <span style={{ color: "#059669", fontWeight: 600 }}>{fmtBudget(app.requested_budget, app.currency)}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+            <span style={{ color: "#94A3B8" }}>Team</span>
+            <span style={{ color: "#0f172a" }}>{(app.team || []).length + 1} members</span>
+          </div>
+        </div>
+      </Card>
+
+      {(app.grant?.id || isPi) && (
+        <Card padding="lg">
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {app.grant?.id && (
+              <Button as={Link} to={`/grants/${app.grant.id}`} variant="outline" size="sm" style={{ width: "100%" }}>
+                View grant opportunity <ArrowRight size={11} strokeWidth={2} />
+              </Button>
+            )}
+            {isPi && (
+              <Button onClick={onDelete} variant="ghost" size="sm" style={{ width: "100%", color: "#E11D48" }}>
+                <Trash2 size={12} strokeWidth={1.5} /> Delete application
+              </Button>
+            )}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
@@ -337,6 +391,7 @@ export default function GrantApplicationDetail() {
           onChange={loadTab}
         />
       }
+      sidebar={<GrantApplicationDetailSidebar app={app} isPi={isPi} onDelete={deleteApplication} />}
     >
     <div className="space-y-6">
       <Link to="/grant-applications" className="text-sm text-slate-500 hover:text-slate-900">← My Applications</Link>
@@ -363,8 +418,8 @@ export default function GrantApplicationDetail() {
 
       {/* ── OVERVIEW ─────────────────────────────────────────────────── */}
       {tab === "overview" && (
-        <div className="grid lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-8 space-y-6">
+        <div>
+          <div className="space-y-6">
             {dash && (
               <>
                 <StatGrid cols={3}>
@@ -403,26 +458,6 @@ export default function GrantApplicationDetail() {
               </>
             )}
           </div>
-
-          <aside className="lg:col-span-4 space-y-4">
-            <Card padding="lg" className="space-y-2 text-sm">
-              <div className="overline">Grant details</div>
-              {app.grant?.deadline && <div className="flex justify-between"><span className="text-slate-500">Deadline</span><span className="font-mono text-slate-900">{app.grant.deadline}</span></div>}
-              {app.grant?.funding_amount?.amount && <div className="flex justify-between"><span className="text-slate-500">Available budget</span><span className="text-slate-900">{fmtBudget(app.grant.funding_amount.amount, app.grant.funding_amount.currency)}</span></div>}
-              <div className="flex justify-between"><span className="text-slate-500">Your request</span><span className="text-emerald-700">{fmtBudget(app.requested_budget, app.currency)}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Team</span><span>{(app.team || []).length + 1} members</span></div>
-            </Card>
-            {app.grant?.id && (
-              <Button as={Link} to={`/grants/${app.grant.id}`} variant="outline" className="w-full">
-                View grant opportunity →
-              </Button>
-            )}
-            {isPi && (
-              <Button onClick={deleteApplication} variant="danger" className="w-full !bg-transparent !text-rose-600 !border !border-rose-200 hover:!bg-rose-50">
-                <Trash2 size={13} /> Delete application
-              </Button>
-            )}
-          </aside>
         </div>
       )}
 

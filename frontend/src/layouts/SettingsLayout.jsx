@@ -48,7 +48,7 @@ function SettingsNav({ active }) {
 }
 
 /** SettingsLayout — settings pages with left section nav. */
-export function SettingsLayout({ title = "Settings", subtitle, actions, children, activePath }) {
+export function SettingsLayout({ title = "Settings", subtitle, actions, stats, ring, children, activePath }) {
   const location = useLocation();
   const active = activePath ?? location.pathname;
 
@@ -58,6 +58,8 @@ export function SettingsLayout({ title = "Settings", subtitle, actions, children
       subtitle={subtitle}
       icon={<Settings size={15} style={{ color: NAVY }} />}
       actions={actions}
+      stats={stats}
+      ring={ring}
       aside={<SettingsNav active={active} />}
       asideWidth={200}
       asideLeft

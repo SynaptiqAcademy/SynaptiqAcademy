@@ -78,7 +78,7 @@ export default function RiskIntelligence() {
       title="Risk Intelligence"
       subtitle={data ? `${data.total ?? 0} flags · ${data.critical ?? 0} critical · ${data.high ?? 0} high` : "Institutional risk monitoring and flag management"}
       actions={
-        <Button variant="ghost" size="md" onClick={load}>
+        <Button variant="hero" size="md" onClick={load}>
           <RefreshCw size={14} /> Refresh
         </Button>
       }

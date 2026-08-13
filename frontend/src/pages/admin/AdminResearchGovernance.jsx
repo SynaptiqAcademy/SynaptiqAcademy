@@ -88,7 +88,7 @@ export default function AdminResearchGovernance() {
             <option value={60}>60 days stale</option>
             <option value={90}>90 days stale</option>
           </FormSelect>
-          <Button variant="ghost" size="icon" onClick={refetchAll} aria-label="Refresh">
+          <Button variant="hero" size="icon" onClick={refetchAll} aria-label="Refresh">
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </Button>
         </div>

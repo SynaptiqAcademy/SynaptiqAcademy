@@ -209,10 +209,10 @@ export default function AdminReleases() {
       subtitle="Deployment history, feature tracking, rollback status"
       actions={
         <div className="flex gap-2">
-          <Button variant="primary" size="sm" onClick={() => setShowCreate(true)}>
+          <Button variant="hero" size="sm" onClick={() => setShowCreate(true)}>
             <Plus size={12} /> Log Release
           </Button>
-          <Button variant="ghost" size="icon" onClick={refetch} aria-label="Refresh">
+          <Button variant="hero" size="icon" onClick={refetch} aria-label="Refresh">
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </Button>
         </div>

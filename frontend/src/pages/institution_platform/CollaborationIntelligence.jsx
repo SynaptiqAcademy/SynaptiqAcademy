@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Globe } from "lucide-react";
+import { Globe, Network } from "lucide-react";
 import { NAVY, BRD, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { InstitutionLayout } from "@/layouts";
-import { Card, StatCard, StatGrid, Spinner } from "@/components/ds";
+import { Card, Spinner } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
@@ -33,18 +33,15 @@ export default function CollaborationIntelligence() {
     <InstitutionLayout
       title="Collaboration Intelligence"
       subtitle={`${collab?.international_pct ?? 0}% international · Network density ${collab?.network_density ?? 0}`}
+      stats={[
+        { label: "Total Collaborations", value: collab?.total ?? 0 },
+        { label: "Active", value: collab?.active ?? 0 },
+        { label: "International", value: collab?.international ?? 0 },
+        { label: "Internal", value: collab?.internal ?? 0 },
+        { label: "Avg per Researcher", value: collab?.avg_per_researcher ?? 0 },
+      ]}
+      sidebar={<CollaborationIntelligenceSidebar collab={collab} />}
     >
-      {/* Note: StatCard's value text is a fixed navy — the per-tile value
-          color-coding (emerald/blue/purple/amber) from the original hand-rolled
-          tiles has no color-override prop on StatCard, so it is flattened. */}
-      <StatGrid cols={5} className="mb-5">
-        <StatCard label="Total Collaborations" value={collab?.total ?? 0} />
-        <StatCard label="Active" value={collab?.active ?? 0} />
-        <StatCard label="International" value={collab?.international ?? 0} />
-        <StatCard label="Internal" value={collab?.internal ?? 0} />
-        <StatCard label="Avg per Researcher" value={collab?.avg_per_researcher ?? 0} />
-      </StatGrid>
-
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <Card padding="lg">
           <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 700, color: NAVY }}>
@@ -88,5 +85,54 @@ export default function CollaborationIntelligence() {
         </Card>
       </div>
     </InstitutionLayout>
+  );
+}
+
+// ── Right rail — partner/type data already fetched by this page ───────────────
+function CollaborationIntelligenceSidebar({ collab }) {
+  const partners = (collab?.top_partner_institutions || []).slice(0, 4);
+  const typeEntries = Object.entries(collab?.type_distribution || {});
+  const topType = typeEntries.length > 0
+    ? typeEntries.reduce((a, b) => (b[1] > a[1] ? b : a))
+    : null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Globe size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Partner Institutions</div>
+        </div>
+        {partners.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {partners.map((p, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 12.5, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.institution}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#94A3B8" }}>{p.count}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No external partner data recorded yet.
+          </p>
+        )}
+      </Card>
+
+      {topType && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Network size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Most Common Type</div>
+          </div>
+          <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+            {topType[1]}
+          </div>
+          <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5, textTransform: "capitalize" }}>
+            {topType[0].replace(/_/g, " ")} collaborations
+          </p>
+        </Card>
+      )}
+    </div>
   );
 }

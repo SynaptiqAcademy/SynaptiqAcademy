@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import api from "@/lib/api";
-import { UserCheck, Star, X } from "lucide-react";
+import { UserCheck, Star, X, ClipboardList } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import {

@@ -138,6 +138,7 @@ export default function AdminSecurity() {
     <AdministrationLayout
       title="Security Center"
       subtitle="Monitor threats and manage platform access"
+      sidebar={<SecuritySidebar failedLogins={failedLogins} blockedIps={blockedIps} hours={hours} fmt={fmt} />}
     >
       {/* Failed Logins */}
       <Section title="Failed Login Attempts">
@@ -202,5 +203,56 @@ export default function AdminSecurity() {
         )}
       </Card>
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — failed-login & blocked-IP snapshot, real data already fetched
+function SecuritySidebar({ failedLogins, blockedIps, hours, fmt }) {
+  const totalAttempts = failedLogins.reduce((a, f) => a + (f.count || 0), 0);
+  const mostRecentBlock = blockedIps.length > 0
+    ? [...blockedIps].sort((a, b) => new Date(b.blocked_at || 0) - new Date(a.blocked_at || 0))[0]
+    : null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <AlertTriangle size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Failed Logins</div>
+        </div>
+        {failedLogins.length === 0 ? (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No failed login attempts in the last {hours}h.
+          </p>
+        ) : (
+          <div>
+            <span className="font-serif" style={{ fontSize: 26, color: "#0f172a" }}>{totalAttempts.toLocaleString()}</span>
+            <p style={{ fontSize: 11.5, color: "#94A3B8", margin: "6px 0 0" }}>
+              attempts from {failedLogins.length} IP{failedLogins.length !== 1 ? "s" : ""} in the last {hours}h
+            </p>
+          </div>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Lock size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Blocked IPs</div>
+        </div>
+        {blockedIps.length === 0 ? (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No IPs currently blocked.</p>
+        ) : (
+          <div>
+            <span className="font-serif" style={{ fontSize: 26, color: "#0f172a" }}>{blockedIps.length}</span>
+            <p style={{ fontSize: 11.5, color: "#94A3B8", margin: "6px 0 0" }}>currently blocked</p>
+            {mostRecentBlock && (
+              <p style={{ fontSize: 11, color: "#64748B", margin: "8px 0 0", fontFamily: "monospace" }}>
+                Latest: {mostRecentBlock.ip} ({fmt(mostRecentBlock.blocked_at)})
+              </p>
+            )}
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }

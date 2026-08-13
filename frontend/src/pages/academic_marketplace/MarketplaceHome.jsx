@@ -6,6 +6,67 @@ import { ResearchLayout } from "@/layouts";
 import { Card, Grid, SearchBar, Button, H2, Caption } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
+// ── Right rail — top trending service + top featured expert, real data ────────
+// already fetched by this page (never a new request just for the sidebar) ─────
+function MarketplaceHomeSidebar({ trending, featured }) {
+  const topTrending = trending?.[0];
+  const topFeatured = featured?.[0];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {topTrending && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <TrendingUp size={14} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Trending Now</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {trending.slice(0, 3).map((svc) => (
+              <Link key={svc.id} to={`/academic-marketplace/services/${svc.id}`} style={{ textDecoration: "none" }}>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{svc.title}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 1 }}>
+                  <Star size={9} style={{ color: "#F59E0B" }} fill="#F59E0B" />
+                  <span style={{ fontSize: 11, color: "#94A3B8" }}>{svc.average_rating?.toFixed(1) || "New"}</span>
+                  {svc.recent_orders > 0 && (
+                    <span style={{ fontSize: 11, color: EMERALD }}>· {svc.recent_orders} recent orders</span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {topFeatured && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <Award size={14} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Featured Expert</div>
+          </div>
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: ACCENT + "22" }}>
+              <span className="text-sm font-bold text-crimson-600">{(topFeatured.display_name || "?")[0]}</span>
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{topFeatured.display_name}</div>
+              <div style={{ fontSize: 11, color: "#64748B", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{topFeatured.headline}</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 8 }}>
+            <Star size={10} style={{ color: "#F59E0B" }} fill="#F59E0B" />
+            <span style={{ fontSize: 11, color: "#64748B" }}>{topFeatured.average_rating?.toFixed(1)} ({topFeatured.completed_orders} orders)</span>
+          </div>
+          <Link to={`/academic-marketplace/providers/${topFeatured.user_id}`}>
+            <Button as="span" size="sm" variant="ghost" style={{ width: "100%", marginTop: 10 }}>
+              View profile
+            </Button>
+          </Link>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 const API = "/api/acad-market";
 
 export default function MarketplaceHome() {
@@ -43,6 +104,7 @@ export default function MarketplaceHome() {
     <ResearchLayout
       title="Academic Services Marketplace"
       subtitle="Connect with verified academic experts. Every service is transparent, every transaction is traceable."
+      sidebar={!loading && (featured.length > 0 || trending.length > 0) ? <MarketplaceHomeSidebar trending={trending} featured={featured} /> : undefined}
     >
 
         {/* Search */}

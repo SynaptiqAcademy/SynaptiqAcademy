@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Globe, Activity, CalendarDays, Trophy, BookOpen, GraduationCap, DollarSign, Users, FileCheck, ShieldCheck, Award, Eye, Sparkles } from "lucide-react";
+import { Globe, Activity, BookOpen, GraduationCap, DollarSign, Users, FileCheck, ShieldCheck, Award, Eye, Sparkles } from "lucide-react";
 import { NAVY, WARM, BRD, EMERALD, TEXT_SECONDARY, WHITE } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { fetchApi } from "@/lib/api";
@@ -67,37 +67,17 @@ export default function PublicTimeline() {
   const years = Object.keys(grouped).sort((a, b) => b - a);
 
   return (
-    <ResearchLayout title="Research Activity Timeline" subtitle="Public Academic Timeline" icon={<Globe size={18} />}>
+    <ResearchLayout
+      title="Research Activity Timeline"
+      subtitle="Public Academic Timeline"
+      icon={<Globe size={18} />}
+      stats={[
+        { label: "Total Events", value: stats.total_events || 0 },
+        { label: "Milestones",   value: stats.milestone_count || 0 },
+        { label: "Categories",   value: Object.values(stats.category_breakdown || {}).filter(v => v > 0).length },
+      ]}
+    >
       <div style={{ maxWidth: 760, margin: "0 auto" }}>
-
-        {/* Public header */}
-        <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #1e4080 100%)`,
-          borderRadius: 14, padding: "28px 32px", color: WHITE, marginBottom: 28,
-          boxShadow: "0 8px 32px rgba(15,40,71,.2)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <Globe size={16} color="rgba(255,255,255,.7)" />
-            <span style={{ fontSize: 12, opacity: 0.7 }}>Public Academic Timeline</span>
-          </div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 16px" }}>
-            Research Activity Timeline
-          </h1>
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-            {[
-              { label: "Total Events",  value: stats.total_events || 0,   icon: Activity },
-              { label: "Milestones",    value: stats.milestone_count || 0, icon: Trophy },
-              { label: "Categories",    value: Object.values(stats.category_breakdown || {}).filter(v => v > 0).length, icon: CalendarDays },
-            ].map(s => {
-              const Icon = s.icon;
-              return (
-                <div key={s.label} style={{ textAlign: "center" }}>
-                  <Icon size={14} color="rgba(255,255,255,.6)" style={{ marginBottom: 2 }} />
-                  <div style={{ fontSize: 22, fontWeight: 700 }}>{s.value}</div>
-                  <div style={{ fontSize: 11, opacity: 0.65 }}>{s.label}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
         {/* Events */}
         {events.length === 0 ? (

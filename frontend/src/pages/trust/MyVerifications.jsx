@@ -1,6 +1,6 @@
 /* eslint-disable */
 import React, { useEffect, useState } from "react";
-import { RefreshCw, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { RefreshCw, CheckCircle2, Clock, XCircle, AlertTriangle, ListChecks } from "lucide-react";
 import { NAVY, BRD, EMERALD, ACCENT, TEXT_SECONDARY } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, FilterChip, EmptyState, LoadingOverlay } from "@/components/ds";
@@ -81,10 +81,26 @@ export default function MyVerifications() {
   const verifiedSet = new Set(items.map(i => i.verification_type));
   const filtered = filter === "all" ? items : items.filter(i => i.status === filter);
 
+  const verifiedCount = items.filter(x => x.status === "verified").length;
+  const pendingCount = items.filter(x => x.status === "pending").length;
+  const failedCount = items.filter(x => x.status === "failed" || x.status === "rejected").length;
+  const availableTypes = types.filter(t => !verifiedSet.has(t.id));
+  const needsAttention = items.filter(x => x.status === "pending" || x.status === "failed" || x.status === "rejected");
+  const coveragePct = types.length > 0 ? (verifiedCount / types.length) * 100 : 0;
+  const ringColor = coveragePct >= 80 ? EMERALD : coveragePct >= 50 ? "#D97706" : ACCENT;
+
   return (
     <ResearchLayout
       title="My Verifications"
-      subtitle={`${items.filter(x => x.status === "verified").length} of ${types.length} types verified`}
+      subtitle={`${verifiedCount} of ${types.length} types verified`}
+      ring={types.length > 0 ? { value: verifiedCount, max: types.length, label: "Verified", color: ringColor } : undefined}
+      stats={[
+        { label: "Verified",  value: verifiedCount },
+        { label: "Pending",   value: pendingCount },
+        { label: "Failed",    value: failedCount },
+        { label: "Available", value: availableTypes.length },
+      ]}
+      sidebar={<MyVerificationsSidebar needsAttention={needsAttention} availableTypes={availableTypes} />}
       actions={
         <div style={{ display: "flex", gap: 8 }}>
           {["all", "verified", "pending", "failed"].map(f => (
@@ -150,5 +166,58 @@ export default function MyVerifications() {
         )}
       </div>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — real data already loaded by this page, never fabricated ──────
+function MyVerificationsSidebar({ needsAttention, availableTypes }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <AlertTriangle size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Needs Attention</div>
+        </div>
+        {needsAttention.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {needsAttention.slice(0, 5).map(v => (
+              <div key={v._id || v.verification_type} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 12, color: "#374151" }}>{v.label}</span>
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: v.status === "pending" ? "#D97706" : ACCENT, textTransform: "uppercase" }}>
+                  {v.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            All caught up — nothing pending or failed.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <ListChecks size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Available Checks</div>
+        </div>
+        {availableTypes.length > 0 ? (
+          <>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {availableTypes.slice(0, 5).map(t => (
+                <div key={t.id} style={{ fontSize: 12, color: "#374151" }}>{t.label}</div>
+              ))}
+            </div>
+            {availableTypes.length > 5 && (
+              <p style={{ fontSize: 11, color: "#94A3B8", margin: "6px 0 0" }}>+{availableTypes.length - 5} more</p>
+            )}
+          </>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            You've run every available verification type.
+          </p>
+        )}
+      </Card>
+    </div>
   );
 }

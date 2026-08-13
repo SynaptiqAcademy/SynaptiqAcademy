@@ -87,10 +87,10 @@ export default function Meetings() {
       subtitle="Manage research meetings, doctoral supervision sessions, collaborations and AI meeting summaries."
       actions={
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <Button variant="ghost" onClick={() => setImportOpen(true)}>
+          <Button variant="hero" onClick={() => setImportOpen(true)}>
             <Upload size={13} /> Import Calendar
           </Button>
-          <Button onClick={() => openCreate()}>
+          <Button variant="hero" onClick={() => openCreate()}>
             <Plus size={14} /> New Meeting
           </Button>
         </div>

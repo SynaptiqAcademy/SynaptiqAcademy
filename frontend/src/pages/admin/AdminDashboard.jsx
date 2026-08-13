@@ -5,7 +5,7 @@ import api from "@/lib/api";
 import { NAVY } from "@/lib/tokens";
 import { SkeletonPage } from "@/components/ds/LoadingState";
 import { ErrorState } from "@/components/ds/ErrorState";
-import { StatCard, StatGrid, Card, H2, List, ListItem, StatusDot, DataTable } from "@/components/ds";
+import { Card, H2, List, ListItem, StatusDot, DataTable } from "@/components/ds";
 import { AdministrationLayout } from "@/layouts";
 
 export default function AdminDashboard() {
@@ -74,35 +74,14 @@ export default function AdminDashboard() {
     <AdministrationLayout
       title="Admin Dashboard"
       subtitle="Platform overview — live data"
+      stats={[
+        { label: "Total Users", value: users.total.toLocaleString() },
+        { label: "Active Subscribers", value: financial.active_subscribers.toLocaleString() },
+        { label: "Monthly Revenue", value: `€${financial.mrr_eur.toFixed(2)}` },
+        { label: "System Status", value: systemIssues === 0 ? "Operational" : `${systemIssues} issue${systemIssues > 1 ? "s" : ""}` },
+      ]}
+      sidebar={<DashboardSidebar users={users} financial={financial} />}
     >
-      {/* KPI Row */}
-      <StatGrid cols={4}>
-        <StatCard
-          label="Total Users"
-          value={users.total.toLocaleString()}
-          sub={`+${users.new_today} today · +${users.new_week} this week`}
-          icon={<Users style={{ color: "#2563eb" }} />}
-        />
-        <StatCard
-          label="Active Subscribers"
-          value={financial.active_subscribers.toLocaleString()}
-          sub={`${financial.churn_rate_pct}% churn (30d)`}
-          icon={<Users style={{ color: "#4f46e5" }} />}
-        />
-        <StatCard
-          label="Monthly Revenue"
-          value={`€${financial.mrr_eur.toFixed(2)}`}
-          sub={`ARR €${financial.arr_eur.toFixed(2)}`}
-          icon={<DollarSign style={{ color: "#16a34a" }} />}
-        />
-        <StatCard
-          label="System Status"
-          value={systemIssues === 0 ? "Operational" : `${systemIssues} issue${systemIssues > 1 ? "s" : ""}`}
-          sub={systemIssues === 0 ? "All systems nominal" : "Check health page"}
-          icon={<Activity style={{ color: systemIssues === 0 ? "#16a34a" : "#dc2626" }} />}
-        />
-      </StatGrid>
-
       {/* Metrics grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
         {/* Users breakdown */}
@@ -179,5 +158,43 @@ export default function AdminDashboard() {
         </Card>
       </div>
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — growth and revenue detail dropped from the hero ribbon,
+// pulled from the same /admin/dashboard payload already fetched above ────────
+function DashboardSidebar({ users, financial }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Users size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Growth Snapshot</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
+            <span>New today</span>
+            <span style={{ fontWeight: 700 }}>{users.new_today}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
+            <span>New this week</span>
+            <span style={{ fontWeight: 700 }}>{users.new_week}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
+            <span>Churn (30d)</span>
+            <span style={{ fontWeight: 700 }}>{financial.churn_rate_pct}%</span>
+          </div>
+        </div>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <DollarSign size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Annual Revenue</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 24, color: "#0f172a" }}>€{financial.arr_eur.toFixed(2)}</div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0" }}>Recurring revenue, annualized</p>
+      </Card>
+    </div>
   );
 }

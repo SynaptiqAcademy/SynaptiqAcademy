@@ -96,7 +96,7 @@ export default function InstitutionHealth() {
       title="Institution Health"
       subtitle={health ? `${health.institution} · ${health.faculty_count} researchers · Grade ${health.grade}` : "Monitor your institution's health across all key indicators"}
       actions={
-        <Button variant="ghost" size="md" onClick={load}>
+        <Button variant="hero" size="md" onClick={load}>
           <RefreshCw size={14} /> Refresh
         </Button>
       }

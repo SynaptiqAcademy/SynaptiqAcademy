@@ -62,7 +62,7 @@ export default function SyncCenter() {
       subtitle="Monitor and control knowledge graph synchronization from existing platform collections."
       icon={<Database size={22} color={ACCENT} />}
       actions={
-        <Button variant="primary" onClick={triggerSync} disabled={syncing} loading={syncing}>
+        <Button variant="hero" onClick={triggerSync} disabled={syncing} loading={syncing}>
           {!syncing && <RefreshCw size={16} />}
           {syncing ? "Syncing…" : "Run Full Sync"}
         </Button>

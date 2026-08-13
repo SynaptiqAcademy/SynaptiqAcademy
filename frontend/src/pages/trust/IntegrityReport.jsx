@@ -43,7 +43,7 @@ export default function IntegrityReport() {
       title="Integrity Report"
       subtitle="Academic integrity analysis — retractions, duplicates, flags"
       actions={
-        <Button variant="outline" onClick={() => load(true)} disabled={refreshing}>
+        <Button variant="hero" onClick={() => load(true)} disabled={refreshing}>
           <RefreshCw size={14} style={{ animation: refreshing ? "spin 1s linear infinite" : "none" }} />
           Regenerate
         </Button>

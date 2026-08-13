@@ -12,6 +12,7 @@ import { USER_TYPE_OPTIONS as USER_TYPE_FILTER_OPTIONS_BASE, PRIMARY_DOMAIN_OPTI
 import { WARM } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { AI_NAV_ITEMS } from "@/lib/navItems";
+import { Card } from "@/components/ds/Card";
 
 // ─────────────────────── ai nav ──────────────────────────────────────────────
 

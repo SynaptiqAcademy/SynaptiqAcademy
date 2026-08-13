@@ -73,7 +73,7 @@ export default function EntityDetail() {
   ];
 
   return (
-    <ResearchLayout>
+    <ResearchLayout sidebar={<EntityDetailSidebar rels={rels} suggestions={suggestions} nav={nav} />}>
       <div style={{ maxWidth: 1100 }}>
       <Card padding="xl" className="mb-5">
         <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
@@ -163,5 +163,66 @@ export default function EntityDetail() {
       )}
       </div>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — real data already loaded by this page, never fabricated ──────
+function EntityDetailSidebar({ rels, suggestions, nav }) {
+  const inCount = rels.filter(r => (r.direction || "out") === "in").length;
+  const outCount = rels.length - inCount;
+  const topRelated = suggestions.slice(0, 3);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <GitBranch size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Graph Position</div>
+        </div>
+        {rels.length > 0 ? (
+          <div style={{ display: "flex", gap: 20 }}>
+            <div>
+              <div style={{ fontFamily: "Georgia, serif", fontSize: 22, color: NAVY }}>{inCount}</div>
+              <div style={{ fontSize: 11, color: TEXT_SECONDARY }}>Incoming</div>
+            </div>
+            <div>
+              <div style={{ fontFamily: "Georgia, serif", fontSize: 22, color: NAVY }}>{outCount}</div>
+              <div style={{ fontSize: 11, color: TEXT_SECONDARY }}>Outgoing</div>
+            </div>
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No relationships found for this entity yet.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Lightbulb size={13} style={{ color: ACCENT }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Related Entities</div>
+        </div>
+        {topRelated.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {topRelated.map((s, i) => (
+              <div
+                key={i}
+                onClick={() => nav(`/akg/entity/${s.entity_id}`)}
+                style={{ cursor: "pointer" }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 600, color: NAVY }}>{s.label}</div>
+                {s.score !== undefined && (
+                  <div style={{ fontSize: 11, color: "#94A3B8" }}>Match: {(s.score * 100).toFixed(0)}%</div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No related entities discovered yet.
+          </p>
+        )}
+      </Card>
+    </div>
   );
 }

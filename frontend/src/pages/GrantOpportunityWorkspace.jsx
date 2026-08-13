@@ -1442,14 +1442,14 @@ export default function GrantOpportunityWorkspace() {
 
   const headerActions = (
     <>
-      <Button onClick={handleRefreshMatches} variant="ghost" size="sm">
+      <Button onClick={handleRefreshMatches} variant="hero" size="sm">
         <RefreshCw size={12} /> Refresh Matches
       </Button>
-      <Button onClick={handleShare} variant="ghost" size="sm">
+      <Button onClick={handleShare} variant="hero" size="sm">
         <Share2 size={12} /> Share
       </Button>
       {isLead && collab?.status !== "closed" && (
-        <Button onClick={handleClose} loading={closing} variant="ghost" size="sm" className="!border-red-200 !text-red-600 hover:!bg-red-50">
+        <Button onClick={handleClose} loading={closing} variant="danger" size="sm">
           {!closing && <X size={12} />} Close Collaboration
         </Button>
       )}

@@ -1,10 +1,64 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Star, ShieldCheck } from "lucide-react";
+import { NAVY, ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Input, Textarea, FormSelect, Tag, TagGroup, Button, Alert } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
+
+// ── Right rail — the provider's own live stats, already fetched from /me ──────
+function ProviderSetupSidebar({ existing }) {
+  const verLabel = (lvl) => {
+    if (lvl >= 5) return { label: "Elite", color: "#7C3AED" };
+    if (lvl >= 4) return { label: "Expert Verified", color: EMERALD };
+    if (lvl >= 3) return { label: "Institution Verified", color: ACCENT };
+    if (lvl >= 2) return { label: "ID Verified", color: "#0891B2" };
+    return { label: "Unverified", color: "#94A3B8" };
+  };
+  const ver = verLabel(existing.verification_level);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <Star size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Your Provider Stats</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+            <span style={{ color: "#64748B" }}>Rating</span>
+            <span style={{ fontWeight: 600, color: "#0f172a" }}>
+              {existing.average_rating > 0 ? existing.average_rating.toFixed(1) : "New"} {existing.rating_count > 0 ? `(${existing.rating_count})` : ""}
+            </span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+            <span style={{ color: "#64748B" }}>Completed orders</span>
+            <span style={{ fontWeight: 600, color: "#0f172a" }}>{existing.completed_orders ?? 0}</span>
+          </div>
+          {existing.success_rate != null && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+              <span style={{ color: "#64748B" }}>Success rate</span>
+              <span style={{ fontWeight: 600, color: "#0f172a" }}>{existing.success_rate.toFixed(0)}%</span>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <ShieldCheck size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Verification</div>
+        </div>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: ver.color }}>{ver.label}</div>
+        <p style={{ fontSize: 11.5, color: "#94A3B8", margin: "6px 0 0", lineHeight: 1.5 }}>
+          Higher verification levels build trust with buyers and improve your ranking.
+        </p>
+      </Card>
+    </div>
+  );
+}
 
 const CATEGORIES = [
   "statistical_analysis", "systematic_review", "scientific_writing", "grant_writing",
@@ -45,6 +99,7 @@ export default function ProviderSetup() {
     <ResearchLayout
       title={existing ? "Edit Provider Profile" : "Become a Provider"}
       subtitle="Offer your academic expertise to the community."
+      sidebar={existing ? <ProviderSetupSidebar existing={existing} /> : undefined}
     >
 
         {msg && (

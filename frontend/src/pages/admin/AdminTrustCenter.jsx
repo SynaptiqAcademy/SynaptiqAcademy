@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ShieldCheck, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { NAVY, WARM, BRD, EMERALD, ACCENT, TEXT_SECONDARY, WHITE } from "../../lib/tokens";
 import { AdministrationLayout } from "@/layouts";
-import { Card, Button, StatCard, StatGrid, StatusDot } from "@/components/ds";
+import { Card, Button, StatusDot } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = "/api/trust";
@@ -50,24 +50,18 @@ export default function AdminTrustCenter() {
       title="Admin Trust Center"
       subtitle="Review verification requests, manage badges and monitor platform trust"
       icon={<ShieldCheck size={24} />}
+      stats={!loadingStats ? [
+        { label: "Total Users",       value: stats?.total_users },
+        { label: "Verifications",     value: stats?.verifications_total },
+        { label: "Pending Reviews",   value: stats?.requests_pending },
+        { label: "Badges Awarded",    value: stats?.badges_awarded },
+        { label: "Passports",         value: stats?.passports_generated },
+        { label: "Audit Events",      value: stats?.audit_events },
+        { label: "Total Requests",    value: stats?.requests_total },
+        { label: "Verification Rate", value: `${stats?.verification_rate || 0}%` },
+      ] : undefined}
+      sidebar={<TrustCenterSidebar pending={pending} auditLog={auditLog} />}
     >
-        {/* Stats grid */}
-        {loadingStats ? (
-          <div style={{ color: TEXT_SECONDARY, marginBottom: 20 }}>Loading stats…</div>
-        ) : (
-          <StatGrid cols={4} className="mb-6">
-            <StatCard label="Total Users" value={stats?.total_users} />
-            <StatCard label="Verifications" value={stats?.verifications_total}
-              sub={`${stats?.verifications_verified} verified (${stats?.verification_rate}%)`} />
-            <StatCard label="Pending Reviews" value={stats?.requests_pending} />
-            <StatCard label="Badges Awarded" value={stats?.badges_awarded} />
-            <StatCard label="Passports" value={stats?.passports_generated} />
-            <StatCard label="Audit Events" value={stats?.audit_events} />
-            <StatCard label="Total Requests" value={stats?.requests_total} />
-            <StatCard label="Verification Rate" value={`${stats?.verification_rate || 0}%`} />
-          </StatGrid>
-        )}
-
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
           {/* Pending requests */}
           <Card padding="lg">
@@ -160,5 +154,55 @@ export default function AdminTrustCenter() {
           </Card>
         </div>
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — top pending request & today's audit volume, real data ────────
+function TrustCenterSidebar({ pending, auditLog }) {
+  const topPending = pending.length > 0
+    ? [...pending].sort((a, b) => (b.ai_confidence || 0) - (a.ai_confidence || 0))[0]
+    : null;
+  const today = new Date().toDateString();
+  const eventsToday = auditLog.filter((e) => e.created_at && new Date(e.created_at).toDateString() === today).length;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <CheckCircle2 size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Highest-Confidence Pending</div>
+        </div>
+        {topPending ? (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{topPending.label}</div>
+            <p style={{ fontSize: 11.5, color: "#64748B", margin: "4px 0 0" }}>
+              AI confidence: {topPending.ai_confidence}%
+            </p>
+            {topPending.user_notes && (
+              <p style={{ fontSize: 11.5, color: "#94A3B8", fontStyle: "italic", margin: "8px 0 0", lineHeight: 1.5 }}>
+                "{topPending.user_notes}"
+              </p>
+            )}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No pending requests.</p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Clock size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Audit Activity Today</div>
+        </div>
+        {auditLog.length === 0 ? (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No audit events yet.</p>
+        ) : (
+          <div>
+            <span className="font-serif" style={{ fontSize: 26, color: "#0f172a" }}>{eventsToday}</span>
+            <p style={{ fontSize: 11.5, color: "#94A3B8", margin: "6px 0 0" }}>events logged today</p>
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }

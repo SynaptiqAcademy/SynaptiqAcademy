@@ -85,7 +85,7 @@ export default function AdminTeachingAnalytics() {
       title="Teaching Analytics"
       subtitle="Platform-wide teaching activity intelligence"
       actions={
-        <Button variant="ghost" size="sm" onClick={load}>
+        <Button variant="hero" size="sm" onClick={load}>
           <RefreshCw size={13} strokeWidth={1.5} /> Refresh
         </Button>
       }

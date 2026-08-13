@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "@/lib/api";
-import { Search, X, Shield } from "lucide-react";
+import { Search, X, Shield, Users } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Input, FormSelect, EmptyState, LoadingOverlay, Pagination } from "@/components/ds";
@@ -95,7 +95,7 @@ export default function PeopleDiscovery() {
   };
 
   return (
-    <ResearchLayout title="Find Researchers">
+    <ResearchLayout title="Find Researchers" sidebar={<PeopleDiscoverySidebar results={results} total={total} />}>
       {/* Search bar */}
       <form onSubmit={handleSearch} style={{ display: "flex", gap: 10, marginBottom: 16 }}>
         <Input
@@ -173,5 +173,44 @@ export default function PeopleDiscovery() {
         </div>
       )}
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — real search results already loaded by this page ─────────────
+function PeopleDiscoverySidebar({ results, total }) {
+  const stageCounts = results.reduce((acc, p) => {
+    const s = p.career_stage || "unspecified";
+    acc[s] = (acc[s] || 0) + 1;
+    return acc;
+  }, {});
+  const stageEntries = Object.entries(stageCounts).sort((a, b) => b[1] - a[1]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Users size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Researchers Found</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{total}</div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          Matching your current search and filters.
+        </p>
+      </Card>
+
+      {stageEntries.length > 0 && (
+        <Card padding="lg">
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>Career Stage Mix</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {stageEntries.map(([stage, count]) => (
+              <div key={stage} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
+                <span style={{ textTransform: "capitalize" }}>{stage.replace("_", " ")}</span>
+                <span style={{ fontWeight: 700, color: NAVY }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

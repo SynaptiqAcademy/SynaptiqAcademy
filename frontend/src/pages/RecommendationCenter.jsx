@@ -108,7 +108,7 @@ export default function RecommendationCenter() {
       title="AI Advisor"
       subtitle="Evidence-based recommendations from your verified platform data. Every suggestion includes its source and reasoning."
       actions={
-        <Button onClick={refresh} disabled={refreshing} variant="ghost" size="sm">
+        <Button onClick={refresh} disabled={refreshing} variant="hero" size="sm">
           <RefreshCw size={11} strokeWidth={1.5} className={refreshing ? "animate-spin" : ""} />
           Refresh
         </Button>

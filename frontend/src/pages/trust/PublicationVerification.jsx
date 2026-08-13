@@ -1,6 +1,6 @@
 /* eslint-disable */
 import React, { useEffect, useState } from "react";
-import { FileText, CheckCircle2, Search } from "lucide-react";
+import { FileText, CheckCircle2, Search, Layers, Star } from "lucide-react";
 import { NAVY, BRD, EMERALD, TEXT_SECONDARY } from "../../lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Input, Button, Alert, EmptyState, LoadingOverlay } from "@/components/ds";
@@ -46,11 +46,28 @@ export default function PublicationVerification() {
     setSubmitting(false);
   };
 
+  const avgConfidence = verified.length > 0
+    ? Math.round(verified.reduce((sum, v) => sum + (v.confidence || 0), 0) / verified.length)
+    : null;
+  const sourceCounts = verified.reduce((acc, v) => {
+    const src = v.source || "Unknown";
+    acc[src] = (acc[src] || 0) + 1;
+    return acc;
+  }, {});
+  const latestVerified = verified[0];
+
   return (
     <ResearchLayout
       title="Publication Verification"
       subtitle="Verify authorship via DOI — CrossRef + OpenAlex"
       icon={<FileText size={15} strokeWidth={1.5} color={NAVY} />}
+      stats={verified.length > 0 ? [
+        { label: "Verified Publications", value: verified.length },
+        { label: "Avg. Confidence",       value: `${avgConfidence}%` },
+      ] : undefined}
+      sidebar={verified.length > 0 ? (
+        <PublicationVerificationSidebar sourceCounts={sourceCounts} latestVerified={latestVerified} />
+      ) : undefined}
     >
       {/* DOI form */}
       <Card padding="lg" style={{ marginBottom: 20 }}>
@@ -108,5 +125,43 @@ export default function PublicationVerification() {
         )}
       </Card>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — real data already loaded by this page, never fabricated ──────
+function PublicationVerificationSidebar({ sourceCounts, latestVerified }) {
+  const sources = Object.entries(sourceCounts);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Layers size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>By Source</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {sources.map(([src, count]) => (
+            <div key={src} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 12, color: "#374151" }}>{src}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{count}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {latestVerified && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Star size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Latest Verified</div>
+          </div>
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", lineHeight: 1.4 }}>
+            {latestVerified.extra?.title || latestVerified.extra?.doi || "Publication"}
+          </div>
+          <div style={{ fontSize: 11, color: "#64748B", marginTop: 4 }}>
+            {latestVerified.confidence}% confidence · via {latestVerified.source}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

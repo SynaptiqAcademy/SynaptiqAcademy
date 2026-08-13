@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "@/lib/api";
-import { Save, CheckCircle } from "lucide-react";
+import { Save, CheckCircle, Eye, Sparkles } from "lucide-react";
 import { NAVY, ACCENT, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Tag, Button, Switch, FormSelect, LoadingOverlay } from "@/components/ds";
@@ -50,6 +50,7 @@ export default function NetworkSettings() {
     <ResearchLayout
       title="Network Settings"
       actions={saved ? <Badge variant="success"><CheckCircle size={14} />Saved</Badge> : null}
+      sidebar={<NetworkSettingsSidebar settings={settings} />}
     >
 
       {/* Privacy */}
@@ -130,5 +131,55 @@ export default function NetworkSettings() {
         <Save size={16} />{saving ? "Saving…" : "Save Settings"}
       </Button>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — a live summary of the settings this page already loaded ──────
+function NetworkSettingsSidebar({ settings }) {
+  const activeCategories = (settings.discovery_categories || [])
+    .map(key => DISCOVERY_CATEGORIES.find(c => c.key === key)?.label || key);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Eye size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Current Preferences</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
+            <span>Profile visibility</span>
+            <span style={{ fontWeight: 700, color: NAVY, textTransform: "capitalize" }}>{settings.profile_visibility || "—"}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
+            <span>Notifications</span>
+            <span style={{ fontWeight: 700, color: NAVY, textTransform: "capitalize" }}>{settings.notification_frequency || "—"}</span>
+          </div>
+        </div>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Sparkles size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>AI Discovery</div>
+        </div>
+        {activeCategories.length > 0 ? (
+          <>
+            <p style={{ fontSize: 12, color: "#64748B", margin: "0 0 8px", lineHeight: 1.5 }}>
+              {activeCategories.length} of {DISCOVERY_CATEGORIES.length} categories active.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+              {activeCategories.map(label => (
+                <span key={label} style={{ fontSize: 10, color: NAVY, background: `${ACCENT}12`, border: `1px solid ${ACCENT}30`, padding: "2px 7px", borderRadius: 4 }}>{label}</span>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No discovery categories selected — the AI won't generate recommendations.
+          </p>
+        )}
+      </Card>
+    </div>
   );
 }

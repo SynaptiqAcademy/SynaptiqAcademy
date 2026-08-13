@@ -123,6 +123,7 @@ export default function AIExecutiveAssistant() {
     <InstitutionLayout
       title="AI Executive Assistant"
       subtitle="Ask strategic questions about your institution. Powered by real institutional data."
+      sidebar={<AIExecutiveAssistantSidebar history={history} />}
     >
       <div style={{ marginBottom: 16 }}>
         <NavTabs
@@ -206,5 +207,33 @@ export default function AIExecutiveAssistant() {
         </div>
       )}
     </InstitutionLayout>
+  );
+}
+
+// ── Right rail — conversation history already fetched by this page ────────────
+function AIExecutiveAssistantSidebar({ history }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Clock size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Conversation History</div>
+        </div>
+        {history.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {history.slice(0, 4).map((item, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.query}</div>
+                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>{new Date(item.created_at).toLocaleDateString()}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            Questions you ask the assistant will show up here.
+          </p>
+        )}
+      </Card>
+    </div>
   );
 }

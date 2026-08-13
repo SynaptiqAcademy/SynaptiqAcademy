@@ -633,20 +633,20 @@ export default function ImpactDashboard() {
       nav={<><IntelNav current="/impact-dashboard" />{tabBar}</>}
       actions={
         <>
-          <Button onClick={handleRefresh} disabled={refreshing} variant="outline" size="sm">
+          <Button onClick={handleRefresh} disabled={refreshing} variant="hero" size="sm">
             <RefreshCw size={12} strokeWidth={1.5} className={refreshing ? "animate-spin" : ""} />
             {refreshing ? "Refreshing…" : "Refresh"}
           </Button>
-          <Button onClick={() => handleExport("csv")} variant="outline" size="sm">
+          <Button onClick={() => handleExport("csv")} variant="hero" size="sm">
             <Download size={12} strokeWidth={1.5} />
             Export CSV
           </Button>
-          <Button onClick={() => handleExport("json")} variant="outline" size="sm">
+          <Button onClick={() => handleExport("json")} variant="hero" size="sm">
             <Download size={12} strokeWidth={1.5} />
             Export JSON
           </Button>
           {!showSnapshotInput ? (
-            <Button onClick={() => setShowSnapshotInput(true)} variant="primary" size="sm">
+            <Button onClick={() => setShowSnapshotInput(true)} variant="hero" size="sm">
               <Camera size={12} strokeWidth={1.5} />
               Save Snapshot
             </Button>
@@ -662,12 +662,12 @@ export default function ImpactDashboard() {
                 wrapperClassName="w-36"
                 autoFocus
               />
-              <Button onClick={handleSaveSnapshot} disabled={savingSnapshot} loading={savingSnapshot} variant="primary" size="sm">
+              <Button onClick={handleSaveSnapshot} disabled={savingSnapshot} loading={savingSnapshot} variant="hero" size="sm">
                 {savingSnapshot ? "Saving…" : "Save"}
               </Button>
               <Button
                 onClick={() => { setShowSnapshotInput(false); setSnapshotName(""); }}
-                variant="ghost"
+                variant="hero"
                 size="sm"
               >
                 &times;

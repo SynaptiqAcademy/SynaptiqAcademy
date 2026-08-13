@@ -409,44 +409,32 @@ export default function Network() {
   const firstName = user?.full_name?.split(" ")[0] || "Researcher";
 
   return (
-    <ResearchLayout title={header.title} subtitle={header.sub}>
-    <div>
-      {/* ── COMMAND HEADER ───────────────────────────────────────────────── */}
-      <div style={{ background: NAVY, margin: "-24px -24px 0", padding: "36px 28px 28px" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 600, marginBottom: 8 }}>
-              {getGreeting()}, {firstName}
-            </div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, color: "white", margin: "0 0 6px", letterSpacing: "-0.03em", lineHeight: 1.15 }}>
-              {header.title}
-            </h1>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", margin: 0, maxWidth: 480 }}>
-              {header.sub}
-            </p>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            {savedIds.size > 0 && (
-              <Button
-                variant="ghost"
-                onClick={() => setActiveTab("saved")}
-                style={{ border: "1px solid rgba(255,255,255,0.18)", color: "rgba(255,255,255,0.7)", background: "transparent" }}
-              >
-                <BookmarkCheck size={12} strokeWidth={1.5} />
-                Saved ({savedIds.size})
-              </Button>
-            )}
-            <Button
-              onClick={() => setActiveTab("discover")}
-              style={{ background: ACCENT }}
-            >
-              <Sparkles size={13} strokeWidth={1.5} />
-              Discover Researchers
+    <ResearchLayout
+      title={header.title}
+      subtitle={header.sub}
+      eyebrow={`${getGreeting()}, ${firstName}`}
+      stats={hubData?.stats && Object.keys(hubData.stats).length > 0 ? [
+        { label: "Researchers",    value: hubData.stats.total_users || hubData.stats.researchers || 0 },
+        { label: "Teams",          value: hubData.stats.total_groups || hubData.stats.groups || 0 },
+        { label: "Collaborations", value: hubData.stats.total_collabs || hubData.stats.collaborations || 0 },
+        { label: "Institutions",   value: hubData.stats.total_institutions || hubData.stats.institutions || 0 },
+      ] : undefined}
+      actions={
+        <>
+          {savedIds.size > 0 && (
+            <Button variant="hero" onClick={() => setActiveTab("saved")}>
+              <BookmarkCheck size={12} strokeWidth={1.5} />
+              Saved ({savedIds.size})
             </Button>
-          </div>
-        </div>
-      </div>
-
+          )}
+          <Button variant="hero" onClick={() => setActiveTab("discover")}>
+            <Sparkles size={13} strokeWidth={1.5} />
+            Discover Researchers
+          </Button>
+        </>
+      }
+    >
+    <div>
       {/* ── TAB NAVIGATION ───────────────────────────────────────────────── */}
       <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${BORDER}`, background: "white", marginBottom: 24 }}>
         {[

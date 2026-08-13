@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { CheckCircle, AlertCircle, ShieldCheck } from "lucide-react";
+import { CheckCircle, AlertCircle, ShieldCheck, FileText } from "lucide-react";
+import { NAVY, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Alert, LoadingOverlay, ErrorState, Caption } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
@@ -33,7 +34,10 @@ export default function ContractView() {
   if (!contract) return <ErrorState type="not_found" message="Contract not found." />;
 
   return (
-    <ResearchLayout title="Academic Services Agreement">
+    <ResearchLayout
+      title="Academic Services Agreement"
+      sidebar={<ContractViewSidebar contract={contract} orderId={orderId} />}
+    >
         <div className="mb-2">
           <Link to={`/academic-marketplace/orders/${orderId}`} className="text-crimson-600 text-[13px] no-underline">← Back to Order</Link>
         </div>
@@ -83,5 +87,34 @@ export default function ContractView() {
           </Caption>
         </div>
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — contract metadata already loaded above ───────────────────────
+function ContractViewSidebar({ contract, orderId }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <FileText size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Contract Details</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+            <span style={{ color: "#94A3B8" }}>Status</span>
+            <span style={{ color: contract.status === "active" ? EMERALD : "#374151", fontWeight: 600, textTransform: "capitalize" }}>{contract.status}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+            <span style={{ color: "#94A3B8" }}>Created</span>
+            <span style={{ color: "#374151", fontWeight: 600 }}>{new Date(contract.created_at).toLocaleDateString()}</span>
+          </div>
+        </div>
+        <Link to={`/academic-marketplace/orders/${orderId}`}>
+          <Button as="span" size="sm" variant="ghost" style={{ width: "100%", marginTop: 10 }}>
+            View Order
+          </Button>
+        </Link>
+      </Card>
+    </div>
   );
 }

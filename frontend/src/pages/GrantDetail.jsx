@@ -82,7 +82,7 @@ export default function GrantDetail() {
     <>
       <Button
         onClick={toggleSave}
-        variant="outline"
+        variant="hero"
         size="sm"
       >
         {saved ? <BookmarkCheck size={12} strokeWidth={1.5} /> : <Bookmark size={12} strokeWidth={1.5} />}
@@ -92,7 +92,7 @@ export default function GrantDetail() {
       <Button
         onClick={startApplication}
         disabled={applying}
-        variant={hasApplication ? "outline" : "primary"}
+        variant="hero"
         size="sm"
         className={hasApplication ? "!border-emerald-600 !text-emerald-700 hover:!bg-emerald-50" : ""}
       >

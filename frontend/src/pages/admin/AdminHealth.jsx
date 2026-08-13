@@ -79,7 +79,7 @@ export default function AdminHealth() {
       title="Platform Health Center"
       subtitle="Infrastructure, integrations, and incident monitoring"
       actions={
-        <Button variant="ghost" size="icon" onClick={refetchAll} aria-label="Refresh">
+        <Button variant="hero" size="icon" onClick={refetchAll} aria-label="Refresh">
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
         </Button>
       }

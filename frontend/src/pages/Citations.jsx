@@ -406,13 +406,13 @@ export default function Citations() {
 
   const citationsActions = (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-      <Button onClick={handleImport} disabled={syncing} data-testid={TID.citationsImportBtn} variant="outline" size="sm">
+      <Button onClick={handleImport} disabled={syncing} data-testid={TID.citationsImportBtn} variant="hero" size="sm">
         <Upload size={12} strokeWidth={1.5} />{syncing ? "Working…" : "Import ORCID"}
       </Button>
-      <Button onClick={handleSync} disabled={syncing} data-testid={TID.citationsSyncBtn} variant="outline" size="sm">
+      <Button onClick={handleSync} disabled={syncing} data-testid={TID.citationsSyncBtn} variant="hero" size="sm">
         <RefreshCw size={12} strokeWidth={1.5} className={syncing ? "animate-spin" : ""} />{syncing ? "Syncing…" : "Sync & Track"}
       </Button>
-      <Button onClick={handleExport} disabled={exporting || !hasData} data-testid={TID.citationsExportBtn} variant="primary" size="sm">
+      <Button onClick={handleExport} disabled={exporting || !hasData} data-testid={TID.citationsExportBtn} variant="hero" size="sm">
         <Download size={12} strokeWidth={1.5} />{exporting ? "Exporting…" : "Export CSV"}
       </Button>
     </div>

@@ -129,7 +129,8 @@ export default function ActivityCenter() {
     <ResearchLayout
       title="Activity Center"
       subtitle="Professional academic events only. No likes, no engagement metrics. Sorted by academic relevance."
-      actions={<Button variant="primary" onClick={() => setShowPost(true)}><Plus size={15} />Share Update</Button>}
+      actions={<Button variant="hero" onClick={() => setShowPost(true)}><Plus size={15} />Share Update</Button>}
+      sidebar={<ActivityCenterSidebar feed={feed} myActivity={myActivity} />}
     >
 
       <div style={{ marginBottom: 16 }}>
@@ -166,5 +167,58 @@ export default function ActivityCenter() {
 
       {showPost && <PostActivityModal onClose={() => setShowPost(false)} onSuccess={() => { fetchFeed(); fetchMyActivity(); }} />}
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — feed/my-activity data already loaded by this page ────────────
+function ActivityCenterSidebar({ feed, myActivity }) {
+  const typeCounts = {};
+  feed.forEach((item) => {
+    typeCounts[item.type] = (typeCounts[item.type] || 0) + 1;
+  });
+  const topTypes = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]).slice(0, 4);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Radio size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>My Activity</div>
+        </div>
+        {myActivity.length > 0 ? (
+          <p style={{ fontSize: 12, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
+            You've shared {myActivity.length} update{myActivity.length !== 1 ? "s" : ""} to the academic feed.
+          </p>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            You haven't shared any updates yet — use "Share Update" to post your first one.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Layers size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Feed Breakdown</div>
+        </div>
+        {topTypes.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {topTypes.map(([type, count]) => {
+              const meta = TYPE_META[type] || { label: type };
+              return (
+                <div key={type} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
+                  <span>{meta.label}</span>
+                  <span style={{ fontWeight: 700, color: "#0f172a" }}>{count}</span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No academic activity has been posted yet.
+          </p>
+        )}
+      </Card>
+    </div>
   );
 }

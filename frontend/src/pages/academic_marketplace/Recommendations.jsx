@@ -47,7 +47,7 @@ export default function Recommendations() {
       subtitle="Algorithmic matches based on your research profile"
       icon={<Lightbulb size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
       actions={
-        <Button variant="ghost" onClick={refresh} disabled={refreshing}>
+        <Button variant="hero" onClick={refresh} disabled={refreshing}>
           <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
           Refresh
         </Button>

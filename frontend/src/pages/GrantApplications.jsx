@@ -5,10 +5,10 @@ import { toast } from "sonner";
 import { BRD, BRDH, NAVY, WARM } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import {
-  Coins, Plus, Target, Users, Clock, BarChart2,
+  Coins, Plus, Target, Users, BarChart2,
   ChevronRight, CheckCircle2, XCircle,
   AlertCircle, Archive, ClipboardCheck,
-  Calendar, TrendingUp,
+  Calendar,
 } from "lucide-react";
 import { EmptyState } from "@/components/ds/EmptyState";
 import { SkeletonPage } from "@/components/ds/LoadingState";
@@ -16,7 +16,6 @@ import { FilterChip } from "@/components/ds/SearchBar";
 import { Badge as DsBadge } from "@/components/ds/Badge";
 import { Button } from "@/components/ds/Button";
 import { Card } from "@/components/ds/Card";
-import { StatCard, StatGrid } from "@/components/ds/StatCard";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const EMRL  = "#059669";
@@ -87,21 +86,81 @@ function Badge({ status }) {
   return <DsBadge color={s.color}>{s.label}</DsBadge>;
 }
 
-// ─── Analytics panel ──────────────────────────────────────────────────────────
-function AnalyticsPanel({ data }) {
-  if (!data) return null;
-  const items = [
-    { label: "Total Applications", value: data.total_applications ?? 0, icon: Target,    accent: NAVY    },
-    { label: "Active",             value: data.active_applications ?? 0, icon: Clock,    accent: "#4338CA" },
-    { label: "Funded",             value: data.funded ?? 0,              icon: Coins,    accent: EMRL    },
-    { label: "Success Rate",       value: data.success_rate != null ? `${data.success_rate}%` : "—", icon: TrendingUp, accent: data.success_rate > 0 ? EMRL : "#94A3B8" },
-  ];
+// ─── Right rail — deadlines, status mix, and PI/team split from apps already loaded ─
+function GrantApplicationsSidebar({ apps }) {
+  const upcoming = apps
+    .filter((a) => a.grant?.deadline && new Date(a.grant.deadline) >= new Date(new Date().toDateString()))
+    .sort((a, b) => new Date(a.grant.deadline) - new Date(b.grant.deadline))
+    .slice(0, 4);
+
+  const statusCounts = {};
+  apps.forEach((a) => { if (a.status) statusCounts[a.status] = (statusCounts[a.status] || 0) + 1; });
+  const topStatuses = Object.entries(statusCounts).sort((a, b) => b[1] - a[1]).slice(0, 4);
+
+  const piCount = apps.filter((a) => a.is_pi).length;
+  const teamCount = apps.length - piCount;
+
   return (
-    <StatGrid cols={4} className="mb-7">
-      {items.map(({ label, value, icon: Icon }) => (
-        <StatCard key={label} label={label} value={value} icon={<Icon />} />
-      ))}
-    </StatGrid>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Calendar size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Upcoming Deadlines</div>
+        </div>
+        {upcoming.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {upcoming.map((a) => (
+              <Link key={a.id} to={`/grant-applications/${a.id}`} style={{ textDecoration: "none" }}>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {a.grant?.title || a.grant_title || "Untitled Grant"}
+                </div>
+                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>{a.grant.deadline}</div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            No upcoming deadlines among your applications.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <BarChart2 size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>By Status</div>
+        </div>
+        {topStatuses.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {topStatuses.map(([s, count]) => (
+              <div key={s} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 12, color: "#374151" }}>{STATUS[s]?.label || s}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", fontFamily: "monospace" }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No applications yet.</p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <Users size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Your Role</div>
+        </div>
+        <div style={{ display: "flex", gap: 20 }}>
+          <div>
+            <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{piCount}</div>
+            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>As PI</div>
+          </div>
+          <div>
+            <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{teamCount}</div>
+            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>As Team Member</div>
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 }
 
@@ -188,10 +247,10 @@ export default function GrantApplications() {
 
   const grantActions = (
     <div style={{ display: "flex", gap: 8 }}>
-      <Button as={Link} to="/grants" variant="ghost" size="sm">
+      <Button as={Link} to="/grants" variant="hero" size="sm">
         <Coins size={12} strokeWidth={1.5} /> Browse Grants
       </Button>
-      <Button as={Link} to="/grant-collaboration-hub" variant="ghost" size="sm">
+      <Button as={Link} to="/grant-collaboration-hub" variant="hero" size="sm">
         <Users size={12} strokeWidth={1.5} /> Grant Hub
       </Button>
     </div>
@@ -203,15 +262,19 @@ export default function GrantApplications() {
       subtitle="Track every application from discovery to award. Develop proposals, manage teams, plan budgets, and monitor deliverables."
       nav={<LifecycleNav current="/grant-applications" />}
       actions={grantActions}
+      stats={!loading && analytics ? [
+        { label: "Total Applications", value: analytics.total_applications ?? 0 },
+        { label: "Active",             value: analytics.active_applications ?? 0 },
+        { label: "Funded",             value: analytics.funded ?? 0 },
+        { label: "Success Rate",       value: analytics.success_rate != null ? `${analytics.success_rate}%` : "—" },
+      ] : undefined}
+      sidebar={!loading && apps.length > 0 ? <GrantApplicationsSidebar apps={apps} /> : undefined}
     >
       <div style={{ paddingBottom: 64 }}>
         {loading ? (
           <SkeletonPage />
         ) : (
           <>
-            {/* Analytics */}
-            <AnalyticsPanel data={analytics} />
-
             {/* Filters */}
             {apps.length > 2 && (
               <div style={{ display: "flex", gap: 6, marginBottom: 24, flexWrap: "wrap" }}>

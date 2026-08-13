@@ -802,7 +802,7 @@ function ExportMenu() {
     <Dropdown
       align="right"
       trigger={
-        <Button variant="outline" size="sm">
+        <Button variant="hero" size="sm">
           <Download size={12} /> Export
         </Button>
       }
@@ -848,7 +848,7 @@ export default function Analytics() {
       actions={
         <>
           <ExportMenu />
-          <Button as={Link} to="/research-impact" variant="outline" size="sm">
+          <Button as={Link} to="/research-impact" variant="hero" size="sm">
             <FileText size={12} strokeWidth={1.5} /> Full Impact
           </Button>
         </>

@@ -992,7 +992,7 @@ function ExportButton() {
       align="right"
       width={220}
       trigger={
-        <Button variant="ghost" size="sm" disabled={loading} loading={loading}>
+        <Button variant="hero" size="sm" disabled={loading} loading={loading}>
           {!loading && <Download size={12} strokeWidth={1.5} />}
           {loading ? "Exporting…" : "Export CSV"}
         </Button>

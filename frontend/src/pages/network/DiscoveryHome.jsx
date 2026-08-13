@@ -47,7 +47,7 @@ export default function DiscoveryHome() {
             prefix={<Search size={14} />}
             wrapperClassName="w-64"
           />
-          <Button type="submit" variant="primary" size="sm">Search</Button>
+          <Button type="submit" variant="hero" size="sm">Search</Button>
         </form>
       }
     >

@@ -69,6 +69,7 @@ export default function SavedOpportunities() {
     <ResearchLayout
       title="Saved Opportunities"
       subtitle="Save researchers, institutions, collaborations, events, and grants for later review."
+      sidebar={saved.total > 0 ? <SavedOpportunitiesSidebar saved={saved} /> : undefined}
     >
 
       {types.length > 0 && (
@@ -102,5 +103,46 @@ export default function SavedOpportunities() {
         </div>
       )}
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — the saved-items breakdown already loaded by this page ────────
+function SavedOpportunitiesSidebar({ saved }) {
+  const byType = saved.by_type || {};
+  const typeEntries = Object.entries(byType).sort((a, b) => (b[1]?.length || 0) - (a[1]?.length || 0));
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Bookmark size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Saved Items</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{saved.total}</div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          Across all saved categories.
+        </p>
+      </Card>
+
+      {typeEntries.length > 0 && (
+        <Card padding="lg">
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>By Type</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {typeEntries.map(([type, items]) => {
+              const meta = TYPE_META[type] || {};
+              return (
+                <div key={type} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12 }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 6, color: "#374151" }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: meta.color || ACCENT, flexShrink: 0 }} />
+                    {meta.label || type}
+                  </span>
+                  <span style={{ fontWeight: 700, color: NAVY }}>{(items || []).length}</span>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

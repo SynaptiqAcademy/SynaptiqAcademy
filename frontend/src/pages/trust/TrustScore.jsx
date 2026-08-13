@@ -94,7 +94,7 @@ export default function TrustScore() {
       title="Trust Score"
       subtitle="14-factor weighted breakdown of your academic trust"
       actions={
-        <Button variant="outline" onClick={() => load(true)} disabled={refreshing}>
+        <Button variant="hero" onClick={() => load(true)} disabled={refreshing}>
           <RefreshCw size={14} style={{ animation: refreshing ? "spin 1s linear infinite" : "none" }} />
           Recalculate
         </Button>

@@ -586,25 +586,25 @@ export default function ManuscriptDetail() {
       <Button
         data-testid={TID.manuscriptSnapshotBtn}
         onClick={snapshot}
-        variant="outline"
+        variant="hero"
         size="sm"
       >
         <GitBranch size={11} strokeWidth={1.5} /> Snapshot
       </Button>
-      <div className="flex items-center border border-[#0F2847]/20 divide-x divide-[#0F2847]/20">
+      <div className="flex items-center border border-white/20 divide-x divide-white/20">
         <span className="flex items-center gap-1 pl-2 pr-1">
-          <Sparkles size={10} strokeWidth={1.5} className="text-[#0F2847]" />
-          <span className="text-[10px] text-slate-400 font-mono">AI match</span>
+          <Sparkles size={10} strokeWidth={1.5} className="text-white/70" />
+          <span className="text-[10px] text-white/50 font-mono">AI match</span>
         </span>
-        <Button data-testid="ai-match-journal"     onClick={() => setAIMatch("journal")}     variant="ghost" size="sm" className="!border-0 !h-8 text-[10px] !text-[#0F2847]">Journal</Button>
-        <Button data-testid="ai-match-conference" onClick={() => setAIMatch("conference")}  variant="ghost" size="sm" className="!border-0 !h-8 text-[10px] !text-[#0F2847]">Conf</Button>
-        <Button data-testid="ai-match-grant"       onClick={() => setAIMatch("grant")}       variant="ghost" size="sm" className="!border-0 !h-8 text-[10px] !text-[#0F2847]">Grant</Button>
-        <Button data-testid="ai-match-reviewer"    onClick={() => setAIMatch("reviewer")}    variant="ghost" size="sm" className="!border-0 !h-8 text-[10px] !text-[#0F2847]">Reviewer</Button>
+        <Button data-testid="ai-match-journal"     onClick={() => setAIMatch("journal")}     variant="hero" size="sm" className="!border-0 !h-8 text-[10px]">Journal</Button>
+        <Button data-testid="ai-match-conference" onClick={() => setAIMatch("conference")}  variant="hero" size="sm" className="!border-0 !h-8 text-[10px]">Conf</Button>
+        <Button data-testid="ai-match-grant"       onClick={() => setAIMatch("grant")}       variant="hero" size="sm" className="!border-0 !h-8 text-[10px]">Grant</Button>
+        <Button data-testid="ai-match-reviewer"    onClick={() => setAIMatch("reviewer")}    variant="hero" size="sm" className="!border-0 !h-8 text-[10px]">Reviewer</Button>
       </div>
       <Button
         data-testid={TID.openChatBtn}
         onClick={() => navigate("/messages", { state: { openContext: { type: "manuscript", id } } })}
-        variant="outline"
+        variant="hero"
         size="sm"
       >
         <MessageSquare size={11} strokeWidth={1.5} /> Chat

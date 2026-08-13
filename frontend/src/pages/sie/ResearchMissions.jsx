@@ -196,7 +196,7 @@ export default function ResearchMissions() {
       subtitle={`${pending} pending · ${completed} completed`}
       navItems={SIE_NAV_ITEMS}
       actions={
-        <Button onClick={() => setShowNew(true)} size="sm">
+        <Button onClick={() => setShowNew(true)} variant="hero" size="sm">
           <Plus size={13} /> New Mission
         </Button>
       }

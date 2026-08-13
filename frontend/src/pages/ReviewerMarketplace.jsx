@@ -192,9 +192,16 @@ export default function ReviewerMarketplace() {
     <ResearchLayout
       title="Reviewer Marketplace"
       subtitle="Expert peer review matching for academic research"
+      stats={[
+        { label: "Reviewers",     value: total > 0 ? `${total}+` : "—" },
+        { label: "Available now", value: availableCount > 0 ? `${availableCount}` : "—" },
+        { label: "Countries",     value: "Global" },
+        { label: "Integrity",     value: "Guaranteed" },
+      ]}
+      sidebar={<ReviewerMarketplaceSidebar myProfile={myProfile} compareList={compareList} />}
       actions={
         <>
-          <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} size="sm">
+          <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} variant="hero" size="sm">
             <Search size={13} strokeWidth={2} /> Find Reviewer
           </Button>
           {myProfile?.reviewer_status === "active" ? (
@@ -203,7 +210,7 @@ export default function ReviewerMarketplace() {
             </Badge>
           ) : (
             <Button
-              variant="ghost"
+              variant="hero"
               size="sm"
               onClick={() => {
                 api.get("/reviewer-marketplace/profile/me")
@@ -224,20 +231,6 @@ export default function ReviewerMarketplace() {
         }
         .sq-pulse { animation: sq-pulse 1.8s ease-in-out infinite; }
       `}</style>
-      {/* ── Stats strip ───────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mb-8">
-        {[
-          { label: "Reviewers",     value: total > 0 ? `${total}+` : "—" },
-          { label: "Available now", value: availableCount > 0 ? `${availableCount}` : "—" },
-          { label: "Countries",     value: "Global" },
-          { label: "Integrity",     value: "Guaranteed" },
-        ].map(({ label, value }) => (
-          <div key={label} className="text-center">
-            <div className="font-serif text-3xl text-slate-900">{value}</div>
-            <div className="overline mt-1 text-xs">{label}</div>
-          </div>
-        ))}
-      </div>
       {/* ── AI Recommendations ───────────────────────────────────────────── */}
       {(recsLoading || recs) && (
         <AiRecsPanel
@@ -344,6 +337,67 @@ export default function ReviewerMarketplace() {
         />
       )}
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — real reviewer-profile state + live compare selection ─────────
+function ReviewerMarketplaceSidebar({ myProfile, compareList }) {
+  const isActive = myProfile?.reviewer_status === "active";
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <UserCheck size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Your Reviewer Profile</div>
+        </div>
+        {isActive ? (
+          <>
+            <Badge size="sm" variant="success" style={{ marginBottom: 10 }}>
+              <CheckCircle size={11} strokeWidth={2} /> {LEVEL_LABEL[myProfile?.reviewer_level] || "Active reviewer"}
+            </Badge>
+            <div style={{ display: "flex", gap: 20 }}>
+              {myProfile?.reviewer_score > 0 && (
+                <div>
+                  <div style={{ fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700, color: "#0f172a" }}>{Math.round(myProfile.reviewer_score)}</div>
+                  <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Score</div>
+                </div>
+              )}
+              {myProfile?.reviews_completed > 0 && (
+                <div>
+                  <div style={{ fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700, color: "#0f172a" }}>{myProfile.reviews_completed}</div>
+                  <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Reviews</div>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <p style={{ fontSize: 12, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
+            You're not listed as a reviewer yet. Activate your profile to appear in reviewer matches and receive review requests.
+          </p>
+        )}
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <BarChart2 size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Comparing</div>
+        </div>
+        {compareList.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {compareList.map((r) => (
+              <div key={r.user_id} style={{ fontSize: 12, color: "#374151" }}>{r.full_name}</div>
+            ))}
+            {compareList.length < 2 && (
+              <p style={{ fontSize: 11, color: "#94A3B8", margin: "6px 0 0" }}>Add one more to compare.</p>
+            )}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+            Select up to 3 reviewers below to compare them side by side.
+          </p>
+        )}
+      </Card>
+    </div>
   );
 }
 

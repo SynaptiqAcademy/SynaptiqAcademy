@@ -234,7 +234,7 @@ export default function GoalManager() {
       subtitle="Set, track, and achieve your research goals with AI guidance."
       navItems={SIE_NAV_ITEMS}
       actions={
-        <Button onClick={() => setShowNew(true)} size="sm">
+        <Button onClick={() => setShowNew(true)} variant="hero" size="sm">
           <Plus size={13} /> New Goal
         </Button>
       }

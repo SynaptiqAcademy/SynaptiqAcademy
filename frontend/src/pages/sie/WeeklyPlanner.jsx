@@ -3,7 +3,7 @@ import { Clock, CheckSquare } from "lucide-react";
 import { NAVY, WARM, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { SIE_NAV_ITEMS } from "@/lib/navItems";
-import { Card, Tag, StatCard, StatGrid, Spinner } from "@/components/ds";
+import { Card, Tag, Spinner } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 
@@ -78,31 +78,25 @@ export default function WeeklyPlanner() {
       title="Weekly Planner"
       subtitle="Weekly view of missions, goals, and research commitments."
       navItems={SIE_NAV_ITEMS}
-    >
-
-      {/* Weekly goals */}
-      {(plan?.weekly_goals || []).length > 0 && (
-        <Card padding="none" style={{ padding: "14px 18px", marginBottom: 16 }}>
+      stats={[
+        { label: "Total Missions",         value: plan?.total_missions ?? 0 },
+        { label: "Hours Planned",          value: `${plan?.estimated_hours_total ?? 0}h` },
+        { label: "Completed This Week",    value: plan?.completed_this_week ?? 0 },
+      ]}
+      sidebar={(plan?.weekly_goals || []).length > 0 ? (
+        <Card padding="lg">
           <div style={{ fontSize: 12, fontWeight: 700, color: ACCENT, letterSpacing: "0.05em", marginBottom: 8 }}>WEEKLY GOALS</div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {(plan.weekly_goals || []).map((g, i) => <Tag key={i} color={ACCENT}>{g}</Tag>)}
+            {plan.weekly_goals.map((g, i) => <Tag key={i} color={ACCENT}>{g}</Tag>)}
           </div>
           {plan.ai_focus && <p style={{ margin: "10px 0 0", fontSize: 12, color: TEXT_SECONDARY, fontStyle: "italic" }}>{plan.ai_focus}</p>}
         </Card>
-      )}
+      ) : undefined}
+    >
 
       {/* Days grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
         {(plan?.days || []).map((day, i) => <DayCard key={i} day={day} />)}
-      </div>
-
-      {/* Stats */}
-      <div style={{ marginTop: 16 }}>
-        <StatGrid cols={3}>
-          <StatCard label="Total Missions" value={plan?.total_missions ?? 0} icon={<CheckSquare />} />
-          <StatCard label="Hours Planned" value={`${plan?.estimated_hours_total ?? 0}h`} icon={<Clock />} />
-          <StatCard label="Completed This Week" value={plan?.completed_this_week ?? 0} icon={<CheckSquare />} />
-        </StatGrid>
       </div>
     </ResearchLayout>
   );

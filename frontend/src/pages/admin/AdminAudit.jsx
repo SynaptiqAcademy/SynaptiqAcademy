@@ -1,10 +1,10 @@
 /* eslint-disable */
 import React, { useState, useEffect, useCallback } from "react";
-import { ShieldCheck, ChevronDown, ChevronUp } from "lucide-react";
+import { ShieldCheck, ChevronDown, ChevronUp, Clock, BarChart2 } from "lucide-react";
 import api from "@/lib/api";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
-import { Input, Button, Badge, EmptyState, Alert, Pagination, SkeletonTable } from "@/components/ds";
+import { Input, Button, Badge, EmptyState, Alert, Pagination, SkeletonTable, Card } from "@/components/ds";
 
 const LIMIT = 50;
 
@@ -65,7 +65,11 @@ export default function AdminAudit() {
   const fmt = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
 
   return (
-    <AdministrationLayout title="Audit Center" subtitle="Complete record of all platform events">
+    <AdministrationLayout
+      title="Audit Center"
+      subtitle="Complete record of all platform events"
+      sidebar={!loading && items.length > 0 ? <AuditSidebar items={items} fmt={fmt} /> : undefined}
+    >
       {/* Filters */}
       <div className="flex gap-3 mb-4 flex-wrap items-start">
         <Input
@@ -159,5 +163,46 @@ export default function AdminAudit() {
         <Pagination page={page} totalPages={totalPages} onPage={setPage} className="mt-4" />
       )}
     </AdministrationLayout>
+  );
+}
+
+// ── Right rail — computed from the events already loaded on this page ─────────
+function AuditSidebar({ items, fmt }) {
+  const latest = items[0];
+  const actionCounts = items.reduce((acc, ev) => {
+    const prefix = (ev.action || "other").split(".")[0];
+    acc[prefix] = (acc[prefix] || 0) + 1;
+    return acc;
+  }, {});
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Clock size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Latest Event</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 14, color: "#0f172a" }}>{latest.action || "—"}</div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0" }}>
+          {latest.actor_email || latest.actor_id || "—"} · {fmt(latest.created_at)}
+        </p>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <BarChart2 size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Action Breakdown</div>
+        </div>
+        <p style={{ fontSize: 11, color: "#94A3B8", margin: "0 0 8px" }}>Across the {items.length} events currently loaded</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {Object.entries(actionCounts).map(([prefix, count]) => (
+            <div key={prefix} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
+              <span className="capitalize">{prefix}</span>
+              <span>{count}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
   );
 }
