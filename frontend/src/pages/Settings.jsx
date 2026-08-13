@@ -12,6 +12,7 @@ import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ds/Button";
 import { PageLayout } from "@/components/ds/PageLayout";
 import { usePreferences } from "@/hooks/usePreferences";
+import { confirmDialog } from "@/lib/confirm";
 import { SettingsNav, CATEGORIES } from "@/components/settings/SettingsNav";
 import { SettingsSidebar } from "@/components/settings/SettingsSidebar";
 import { GeneralSection } from "@/components/settings/GeneralSection";
@@ -58,12 +59,22 @@ export default function Settings() {
   const ActiveSection = SECTION_COMPONENTS[activeCategory];
   const activeMeta = CATEGORIES.find((c) => c.id === activeCategory);
 
+  const handleResetAll = async () => {
+    if (!(await confirmDialog({
+      title: "Reset all preferences?",
+      description: "This resets general, appearance, language, AI, workspace, editor, keyboard, accessibility, labs and privacy settings to their defaults.",
+      danger: true,
+      confirmLabel: "Reset all",
+    }))) return;
+    resetAll();
+  };
+
   return (
     <PageLayout
       title={activeMeta?.label}
       subtitle="Configure how Synaptiq behaves. These preferences customize your experience across the platform."
       actions={
-        <Button variant="ghost" size="sm" onClick={resetAll}>
+        <Button variant="ghost" size="sm" onClick={handleResetAll}>
           <RotateCcw size={12} /> Reset all preferences
         </Button>
       }
