@@ -594,7 +594,7 @@ export default function TeachingAnalytics() {
                 <div className="grid sm:grid-cols-3 gap-6">
                   <Card padding="xl" className="sm:col-span-1">
                     <div className="overline text-slate-500 mb-3">Productivity Score</div>
-                    <div className="font-serif text-5xl text-[#0F2847]">{d.productivity_score}</div>
+                    <div className="font-serif text-6xl text-[#0F2847]">{d.productivity_score}</div>
                     <div className="text-sm text-slate-500 mt-1">{d.score_label}</div>
                     <div className="mt-4 h-2 bg-slate-100 relative">
                       <div
