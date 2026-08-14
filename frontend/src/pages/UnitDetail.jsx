@@ -9,7 +9,8 @@ import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import { userTypeLabel } from "../lib/userTypes";
-import { SkeletonCard, Card, StatCard, StatGrid, EmptyState, Button, Modal } from "@/components/ds";
+import { SkeletonCard, Card, EmptyState, Button, Modal } from "@/components/ds";
+import { ResearchLayout } from "@/layouts";
 import {
   Layers, Users, Award, ChevronRight, UserPlus,
 } from "lucide-react";
@@ -67,12 +68,33 @@ export default function UnitDetail() {
     }).catch(() => {});
   }, [userIds]);
 
-  if (!u) return <div className="p-6"><SkeletonCard rows={4} /></div>;
+  if (!u) {
+    return (
+      <ResearchLayout title="Unit" eyebrow="Unit">
+        <div className="p-6"><SkeletonCard rows={4} /></div>
+      </ResearchLayout>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <ResearchLayout
+      eyebrow={[TYPE_LABEL[u.type] || u.type, u.institution?.name].filter(Boolean).join(" · ")}
+      title={u.name}
+      subtitle={u.description}
+      stats={[
+        { label: "Members",         value: u.member_count ?? 0 },
+        { label: "Sub-units",       value: u.child_count ?? 0 },
+        { label: "Reputation avg",  value: stats?.reputation_avg ?? "—" },
+        { label: "Type",            value: TYPE_LABEL[u.type] || u.type },
+      ]}
+      actions={isAdmin ? (
+        <Button data-testid="manage-unit-members-btn" variant="hero" size="sm" onClick={() => setEditingMembers(true)}>
+          <UserPlus size={11} strokeWidth={1.5} /> Manage members
+        </Button>
+      ) : undefined}
+    >
       {/* Breadcrumb */}
-      <nav className="text-xs text-slate-500 flex items-center gap-1 flex-wrap" data-testid="unit-breadcrumb">
+      <nav className="text-xs text-slate-500 flex items-center gap-1 flex-wrap mb-4" data-testid="unit-breadcrumb">
         {u.institution && (
           <Link to={`/institutions/${u.institution.id}`} className="hover:text-[#0F2847]">{u.institution.name}</Link>
         )}
@@ -86,76 +108,55 @@ export default function UnitDetail() {
         <span className="text-slate-900">{u.name}</span>
       </nav>
 
-      <header className="border-b border-slate-200 pb-6 flex items-start justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="overline">{TYPE_LABEL[u.type] || u.type}</span>
-            {u.institution && <Link to={`/institutions/${u.institution.id}`} className="overline text-slate-500 hover:text-[#0F2847]">· {u.institution.name}</Link>}
-          </div>
-          <h1 className="font-serif text-4xl text-slate-900 mt-1 leading-tight" data-testid="unit-name">{u.name}</h1>
-          {u.description && <p className="text-sm text-slate-600 mt-2 max-w-3xl">{u.description}</p>}
-          {(u.research_areas || []).length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {(u.research_areas || []).map((a, i) => (
-                <span key={i} className="text-[10px] font-mono border border-[#0F2847]/30 bg-[#0F2847]/5 text-[#0F2847] px-1.5 py-0.5">{a}</span>
-              ))}
-            </div>
-          )}
-        </div>
-        {isAdmin && (
-          <Button data-testid="manage-unit-members-btn" variant="ghost" size="sm" onClick={() => setEditingMembers(true)}>
-            <UserPlus size={11} strokeWidth={1.5} /> Manage members
-          </Button>
-        )}
-      </header>
-
-      {/* KPI */}
-      <StatGrid cols={4} data-testid="unit-kpis">
-        <StatCard label="Members" value={u.member_count} icon={<Users />} />
-        <StatCard label="Sub-units" value={u.child_count} icon={<Layers />} />
-        <StatCard label="Reputation avg" value={stats?.reputation_avg ?? "—"} icon={<Award />} />
-        <StatCard label="Type" value={TYPE_LABEL[u.type]} icon={<Layers />} />
-      </StatGrid>
-
-      {/* Members */}
-      <Card padding="lg">
-        <div className="overline mb-3">Researchers in this {TYPE_LABEL[u.type]?.toLowerCase()}</div>
-        {members.length === 0 && (
-          <EmptyState data-testid="unit-members-empty" size="sm" dashed={false} title="No members yet." />
-        )}
-        <div className="grid sm:grid-cols-2 gap-2" data-testid="unit-members-list">
-          {members.map((m) => (
-            <Card key={m.user_id} to={`/profile/${m.user_id}`} padding="sm" data-testid={`unit-member-${m.user_id}`}>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#0F2847] text-white text-[10px] font-serif flex items-center justify-center">
-                  {(m.user?.full_name || "").split(" ").map((p) => p[0]).filter(Boolean).slice(0,2).join("").toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-serif text-sm text-slate-900 truncate">{m.user?.full_name || m.user_id}</div>
-                  <div className="text-[10px] font-mono text-slate-500 truncate">{userTypeLabel(m.user)}</div>
-                </div>
-                <span className="overline text-[#0F2847]">{m.role}</span>
-              </div>
-            </Card>
+      {(u.research_areas || []).length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-6">
+          {(u.research_areas || []).map((a, i) => (
+            <span key={i} className="text-[10px] font-mono border border-[#0F2847]/30 bg-[#0F2847]/5 text-[#0F2847] px-1.5 py-0.5">{a}</span>
           ))}
         </div>
-      </Card>
+      )}
 
-      {/* Sub-units */}
-      {children.length > 0 && (
+      {/* Members */}
+      <div className="space-y-6">
         <Card padding="lg">
-          <div className="overline mb-3">Sub-units</div>
-          <div className="grid sm:grid-cols-2 gap-3" data-testid="unit-children-list">
-            {children.map((c) => (
-              <Card key={c.id} to={`/units/${c.id}`} padding="sm">
-                <span className="overline">{TYPE_LABEL[c.type] || c.type}</span>
-                <div className="font-serif text-base text-slate-900 mt-1">{c.name}</div>
-                <div className="text-[10px] font-mono text-slate-500">{c.member_count} members</div>
+          <div className="overline mb-3">Researchers in this {TYPE_LABEL[u.type]?.toLowerCase()}</div>
+          {members.length === 0 && (
+            <EmptyState data-testid="unit-members-empty" size="sm" dashed={false} title="No members yet." />
+          )}
+          <div className="grid sm:grid-cols-2 gap-2" data-testid="unit-members-list">
+            {members.map((m) => (
+              <Card key={m.user_id} to={`/profile/${m.user_id}`} padding="sm" data-testid={`unit-member-${m.user_id}`}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#0F2847] text-white text-[10px] font-serif flex items-center justify-center">
+                    {(m.user?.full_name || "").split(" ").map((p) => p[0]).filter(Boolean).slice(0,2).join("").toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-serif text-sm text-slate-900 truncate">{m.user?.full_name || m.user_id}</div>
+                    <div className="text-[10px] font-mono text-slate-500 truncate">{userTypeLabel(m.user)}</div>
+                  </div>
+                  <span className="overline text-[#0F2847]">{m.role}</span>
+                </div>
               </Card>
             ))}
           </div>
         </Card>
-      )}
+
+        {/* Sub-units */}
+        {children.length > 0 && (
+          <Card padding="lg">
+            <div className="overline mb-3">Sub-units</div>
+            <div className="grid sm:grid-cols-2 gap-3" data-testid="unit-children-list">
+              {children.map((c) => (
+                <Card key={c.id} to={`/units/${c.id}`} padding="sm">
+                  <span className="overline">{TYPE_LABEL[c.type] || c.type}</span>
+                  <div className="font-serif text-base text-slate-900 mt-1">{c.name}</div>
+                  <div className="text-[10px] font-mono text-slate-500">{c.member_count} members</div>
+                </Card>
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
 
       <Modal
         open={editingMembers}
@@ -170,7 +171,7 @@ export default function UnitDetail() {
           />
         )}
       </Modal>
-    </div>
+    </ResearchLayout>
   );
 }
 

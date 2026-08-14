@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ds/Button";
+import { Dropdown, DropdownItem } from "@/components/ds/Dropdown";
 import { Card } from "@/components/ds/Card";
 import { Badge } from "@/components/ds/Badge";
 import { StatCard } from "@/components/ds/StatCard";
@@ -633,18 +634,20 @@ export default function ImpactDashboard() {
       nav={<><IntelNav current="/impact-dashboard" />{tabBar}</>}
       actions={
         <>
-          <Button onClick={handleRefresh} disabled={refreshing} variant="hero" size="sm">
+          <Button onClick={handleRefresh} disabled={refreshing} variant="hero" size="icon" aria-label="Refresh">
             <RefreshCw size={12} strokeWidth={1.5} className={refreshing ? "animate-spin" : ""} />
-            {refreshing ? "Refreshing…" : "Refresh"}
           </Button>
-          <Button onClick={() => handleExport("csv")} variant="hero" size="sm">
-            <Download size={12} strokeWidth={1.5} />
-            Export CSV
-          </Button>
-          <Button onClick={() => handleExport("json")} variant="hero" size="sm">
-            <Download size={12} strokeWidth={1.5} />
-            Export JSON
-          </Button>
+          <Dropdown
+            align="right"
+            trigger={
+              <Button variant="hero" size="sm">
+                <Download size={12} strokeWidth={1.5} /> Export
+              </Button>
+            }
+          >
+            <DropdownItem onClick={() => handleExport("csv")}>Export CSV</DropdownItem>
+            <DropdownItem onClick={() => handleExport("json")}>Export JSON</DropdownItem>
+          </Dropdown>
           {!showSnapshotInput ? (
             <Button onClick={() => setShowSnapshotInput(true)} variant="hero" size="sm">
               <Camera size={12} strokeWidth={1.5} />

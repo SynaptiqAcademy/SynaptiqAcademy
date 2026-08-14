@@ -27,11 +27,12 @@ import { FormSelect } from "@/components/ds/FormSelect";
 import { NavTabs } from "@/components/ds/NavTabs";
 import { Modal } from "@/components/ds/Modal";
 import { Alert } from "@/components/ds/Alert";
+import { Dropdown, DropdownItem } from "@/components/ds/Dropdown";
 import { BarChart, LineChart, DonutChart } from "@/components/ds/Chart";
 import {
   Send, MessageSquare, UserPlus, Activity, Target, FileText,
   Beaker, Users2, ShieldCheck, Trash2, Search, ChevronRight,
-  BarChart2, LogOut, ArrowRightLeft,
+  BarChart2, LogOut, ArrowRightLeft, MoreVertical,
   BrainCircuit, BookMarked, Microscope, PenLine, AlignLeft, Sparkles,
   Coins, ArrowRight, Info, AlertTriangle, Clock, GitBranch, ListTodo,
 } from "lucide-react";
@@ -386,16 +387,25 @@ export default function WorkspaceDetail() {
               <UserPlus size={12} strokeWidth={1.5} /> Invite member
             </Button>
           )}
-          {myRole === "Owner" && (
-            <Button variant="hero" size="sm" onClick={() => setShowTransfer(!showTransfer)}>
-              <ArrowRightLeft size={12} strokeWidth={1.5} /> Transfer ownership
-            </Button>
-          )}
-          {myRole !== "Owner" && (
-            <Button variant="danger" size="sm" onClick={leaveWorkspace}>
-              <LogOut size={12} strokeWidth={1.5} /> Leave workspace
-            </Button>
-          )}
+          <Dropdown
+            align="right"
+            trigger={
+              <Button variant="hero" size="icon" aria-label="More workspace actions">
+                <MoreVertical size={14} strokeWidth={1.5} />
+              </Button>
+            }
+          >
+            {myRole === "Owner" && (
+              <DropdownItem icon={ArrowRightLeft} onClick={() => setShowTransfer(!showTransfer)}>
+                Transfer ownership
+              </DropdownItem>
+            )}
+            {myRole !== "Owner" && (
+              <DropdownItem icon={LogOut} onClick={leaveWorkspace} destructive>
+                Leave workspace
+              </DropdownItem>
+            )}
+          </Dropdown>
         </>
       }
     >
