@@ -3,24 +3,22 @@ import { Link } from "react-router-dom";
 import { ResearchLayout } from "@/layouts";
 import { Button, Card } from "@/components/ds";
 import {
-  FolderOpen, LayoutGrid, Archive, Users, FileText, Database,
-  Microscope, GitBranch, CheckSquare, BookOpen, TrendingUp, Award,
+  FolderOpen, LayoutGrid, Archive, Users, FileText,
+  Microscope, CheckSquare, BookOpen, TrendingUp, Award,
   ArrowRight, FlaskConical,
 } from "lucide-react";
 
 const MODULES = [
   { icon: FolderOpen,  label: "Research Projects",  desc: "Organise work into structured projects with milestones.", to: "/projects",          action: "Open projects" },
   { icon: LayoutGrid,  label: "Workspaces",         desc: "Shared environments for writing, thinking and planning.", to: "/workspaces",        action: "Open workspaces" },
-  { icon: Archive,     label: "Repository",         desc: "Store files and datasets with full version control.",     to: "/repository",        action: "Open repository" },
+  { icon: Archive,     label: "Repository",         desc: "Files, datasets, and full version history in one place.", to: "/repository",        action: "Open repository" },
   { icon: Users,       label: "Collaborations",     desc: "Research partnerships across institutions and borders.",  to: "/collaborations",    action: "Find collaborators" },
   { icon: FileText,    label: "Manuscripts",        desc: "Write from first draft through to published paper.",      to: "/manuscripts",       action: "Open manuscripts" },
-  { icon: Microscope,  label: "Protocols",          desc: "Document reproducible research procedures.",               to: "/sie/planning",      action: "Plan protocol" },
-  { icon: GitBranch,   label: "Version History",    desc: "Every change tracked. Nothing lost.",                      to: "/repository",        action: "View history" },
+  { icon: Microscope,  label: "Research Roadmaps",  desc: "Plan and track your research protocol stage by stage.",   to: "/sie/planning",      action: "Plan roadmap" },
   { icon: CheckSquare, label: "Reviewer Workspace",  desc: "Structured peer review with tracked annotations.",        to: "/manuscript-review", action: "Open reviews" },
-  { icon: BookOpen,    label: "Publishing",         desc: "Journal matching and submission pipeline management.",    to: "/journal-matching",  action: "Match journals" },
+  { icon: BookOpen,    label: "Publishing",         desc: "Journal matching and submission pipeline management.",    to: "/journals",          action: "Match journals" },
   { icon: TrendingUp,  label: "Impact",             desc: "Citations, H-index and influence metrics in one view.",   to: "/research-impact",   action: "View impact" },
-  { icon: Award,       label: "Funding",            desc: "Grants discovery and application management.",           to: "/grant-hub",         action: "Find funding" },
-  { icon: Database,    label: "Datasets",           desc: "Upload, curate and share research data.",                 to: "/repository",        action: "Open datasets" },
+  { icon: Award,       label: "Funding",            desc: "Grants discovery and application management.",           to: "/grant-collaboration-hub", action: "Find funding" },
 ];
 
 export default function ResearchCommandCenter() {
