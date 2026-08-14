@@ -468,10 +468,22 @@ export const NAV_SECTIONS = {
 // Academic Passport and Settings are reachable only via the avatar menu
 // (TopBar.jsx AVATAR_SECTIONS) and ⌘K, not the sidebar accordion. The
 // NAV_SECTIONS.profile object itself stays defined for routing/breadcrumb/search.
+//
+// Order follows the natural end-to-end arc of a piece of work, not an
+// alphabetical or feature-launch order:
+//   1. Do the work      (Research / Teaching, whichever is the user's primary mode)
+//   2. Connect           (Network — find collaborators, join groups, discover)
+//   3. Get resourced     (Funding — grants and applications, usually sought once
+//                          a research direction and/or collaborators exist)
+//   4. Finish & share    (Publishing — manuscript through to journal, review,
+//                          citations and impact — the actual "finish the paper" step)
+//   5. Secondary track   (Teaching / Research — whichever wasn't the primary mode)
+//   6. Oversight         (Institution — administrative, not a daily personal step)
+//   7. Cross-cutting tool(AI Workspace — used throughout, not a stage of the arc)
 const SECTION_ORDERS = {
-  research: ["research", "publishing", "funding", "network", "institution", "teaching", "ai"],
-  teaching: ["teaching", "research", "publishing", "funding", "network", "institution", "ai"],
-  hybrid:   ["network", "research", "teaching", "publishing", "funding", "institution", "ai"],
+  research: ["research", "network", "funding", "publishing", "teaching", "institution", "ai"],
+  teaching: ["teaching", "network", "research", "funding", "publishing", "institution", "ai"],
+  hybrid:   ["network", "research", "funding", "publishing", "teaching", "institution", "ai"],
 };
 
 export function getOrderedSections(dashboardMode, showInstitution = false) {
