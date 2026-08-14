@@ -486,10 +486,23 @@ const SECTION_ORDERS = {
   hybrid:   ["network", "research", "funding", "publishing", "teaching", "institution", "ai"],
 };
 
+// Teaching and Institution don't help a user whose only goal is to connect
+// with other researchers and write papers — they're only relevant once the
+// user's onboarding "primary focus" (Onboarding.jsx step 1, required field →
+// getDashboardMode()) says teaching is part of what they do:
+//   primary_domain "research" (or unset)  → dashboardMode "research" → both hidden
+//   primary_domain "teaching"             → dashboardMode "teaching" → both shown
+//   primary_domain "both"                 → dashboardMode "hybrid"  → both shown
+// `showInstitution` (role: institution_admin/admin/super_admin, computed by
+// the caller) is kept as an override so institution administrators never
+// lose access to their own admin tools just because their personal focus
+// happens to be research.
 export function getOrderedSections(dashboardMode, showInstitution = false) {
   const order = SECTION_ORDERS[dashboardMode] || SECTION_ORDERS.research;
+  const isPureResearch = dashboardMode === "research";
   return order
-    .filter((id) => id !== "institution" || showInstitution)
+    .filter((id) => id !== "institution" || showInstitution || !isPureResearch)
+    .filter((id) => id !== "teaching" || !isPureResearch)
     .map((id) => NAV_SECTIONS[id]);
 }
 
