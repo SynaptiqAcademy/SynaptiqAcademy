@@ -4,9 +4,6 @@ Connects the Research Gap Finder and Collaboration Intelligence workflows into
 a real collaboration pipeline. A request carries an optional project_id so the
 receiver knows what they are being invited to.
 
-On accept, a Workspace is auto-provisioned (typed by invitation_type — e.g.
-grant_team -> "Grant Proposal") and both parties are added as members.
-
 Endpoints:
   POST /api/collaboration-requests          — send a request
   GET  /api/collaboration-requests          — list mine (sent + received)
@@ -28,7 +25,6 @@ from pydantic import BaseModel, Field
 from auth_utils import get_current_user
 from db import get_db
 from services.notifications_service import dispatch, NotificationEvent
-from services.workspace_provisioning import provision_workspace
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -40,14 +36,6 @@ INVITATION_TYPES = {
     "research_collaboration", "project_invitation", "workspace_invitation",
     "manuscript_invitation", "grant_team", "conference_team",
     "reviewer", "mentorship", "institutional_collaboration",
-}
-# What kind of shared workspace to auto-provision when a request of this
-# invitation_type is accepted. Everything not listed defaults to "Research Project".
-_INVITATION_TYPE_TO_WORKSPACE_TYPE = {
-    "manuscript_invitation": "Manuscript",
-    "grant_team":            "Grant Proposal",
-    "conference_team":       "Conference Paper",
-    "institutional_collaboration": "Institutional Research Team",
 }
 REQUEST_EXPIRY_DAYS = 30
 
@@ -451,37 +439,7 @@ async def update_request_status(
             except Exception as exc:
                 log.warning("Failed to add member to project after accept: %s", exc)
 
-        # 2. Auto-provision a shared workspace for the two parties. Non-fatal —
-        # a provisioning failure never blocks the accept itself, it just means
-        # the pair falls back to the manual "New Workspace" flow.
-        try:
-            sender_doc = await db.users.find_one(
-                {"_id": ObjectId(req["sender_id"])}, {"full_name": 1}
-            )
-            sender_name = (sender_doc or {}).get("full_name") or "Collaborator"
-            ws_type = _INVITATION_TYPE_TO_WORKSPACE_TYPE.get(
-                req.get("invitation_type", "research_collaboration"), "Research Project"
-            )
-            ws = await provision_workspace(
-                db, owner_id=uid, owner_name=user.get("full_name") or "Someone",
-                name=f"{sender_name} × {user.get('full_name') or 'Collaborator'} — {ws_type}",
-                workspace_type=ws_type,
-                extra_members={req["sender_id"]: "Co-Author"},
-                project_id=req.get("project_id"),
-                description=req.get("message") or "",
-                activity_message=f"Workspace auto-created from an accepted collaboration request ({ws_type}).",
-            )
-            workspace_id = ws["id"]
-            # Persist onto the request doc itself so GET /collaboration-requests
-            # keeps returning workspace_id on later page loads, not just in this
-            # response.
-            await db.collaboration_requests.update_one(
-                {"_id": oid}, {"$set": {"workspace_id": workspace_id}}
-            )
-        except Exception as exc:
-            log.warning("Workspace auto-provisioning after accept failed: %s", exc)
-
-        # 3. Record team membership
+        # 2. Record team membership
         try:
             await db.team_memberships.insert_one({
                 "user_id":         req["sender_id"],
@@ -491,7 +449,6 @@ async def update_request_status(
                 "entity_type":     "collaboration_request",
                 "entity_id":       request_id,
                 "project_id":      req.get("project_id"),
-                "workspace_id":    workspace_id,
                 "role":            req.get("role") or "collaborator",
                 "joined_at":       now,
                 "created_at":      now,
@@ -499,7 +456,7 @@ async def update_request_status(
         except Exception as exc:
             log.warning("team_memberships insert failed: %s", exc)
 
-        # 4. Auto-create DM conversation so they can immediately communicate
+        # 3. Auto-create DM conversation so they can immediately communicate
         try:
             sorted_ids = sorted([req["sender_id"], uid])
             conv_key = f"direct:{sorted_ids[0]}:{sorted_ids[1]}"
