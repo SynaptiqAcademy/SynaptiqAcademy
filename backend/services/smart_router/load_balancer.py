@@ -1,6 +1,7 @@
 """LoadBalancer — tracks concurrent requests across providers and local models."""
 from __future__ import annotations
 
+import os
 import threading
 import time
 from collections import deque
@@ -122,6 +123,16 @@ class LoadBalancer:
         return best
 
     def local_is_available(self) -> bool:
+        # _ProviderState defaults every provider's availability to AVAILABLE
+        # — a reasonable "innocent until proven guilty" default for cloud
+        # providers, which genuinely exist until a call fails. "local" is
+        # different: when AI_LOCAL_ENABLED isn't set, no local provider was
+        # ever configured, so there is nothing to be "available" — routing
+        # a request there guarantees an immediate dead-end (and, worse, the
+        # local-selected fallback chain never includes cloud, so a request
+        # that could have gotten a real answer gets a placeholder instead).
+        if os.environ.get("AI_LOCAL_ENABLED", "0") != "1":
+            return False
         state = self._get_state("local")
         return state.availability != ProviderAvailability.UNAVAILABLE and state.load_ratio() < 0.95
 

@@ -144,7 +144,7 @@ class RatingIn(BaseModel):
 @router.get("/overview")
 async def overview(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    user_id = str(user["_id"])
+    user_id = str(user["id"])
     ctx, insights = await __import__("asyncio").gather(
         get_platform_context(user_id, db),
         synthesize_insights(user_id, db),
@@ -157,7 +157,7 @@ async def overview(user=Depends(get_current_user), db=Depends(get_db)):
 @router.post("/command")
 async def command(body: CommandIn, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    user_id = str(user["_id"])
+    user_id = str(user["id"])
     user_name = user.get("name", "Researcher")
     return await process_command(user_id, body.command, user_name, db)
 
@@ -165,7 +165,7 @@ async def command(body: CommandIn, user=Depends(get_current_user), db=Depends(ge
 @router.get("/command/history")
 async def command_history(limit: int = Query(20, ge=1, le=100), user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await get_command_history(str(user["_id"]), db, limit)
+    return await get_command_history(str(user["id"]), db, limit)
 
 
 # ─── Goals ────────────────────────────────────────────────────────────────────
@@ -173,20 +173,20 @@ async def command_history(limit: int = Query(20, ge=1, le=100), user=Depends(get
 @router.post("/goals")
 async def create_goal_ep(body: GoalIn, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await create_goal(str(user["_id"]), body.model_dump(), db)
+    return await create_goal(str(user["id"]), body.model_dump(), db)
 
 
 @router.get("/goals")
 async def list_goals(status: Optional[str] = None, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await get_goals(str(user["_id"]), db, status)
+    return await get_goals(str(user["id"]), db, status)
 
 
 @router.put("/goals/{goal_id}")
 async def update_goal_ep(goal_id: str, body: GoalUpdate, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
-    result = await update_goal(str(user["_id"]), goal_id, updates, db)
+    result = await update_goal(str(user["id"]), goal_id, updates, db)
     if not result:
         raise HTTPException(404, "Goal not found")
     return result
@@ -195,7 +195,7 @@ async def update_goal_ep(goal_id: str, body: GoalUpdate, user=Depends(get_curren
 @router.delete("/goals/{goal_id}")
 async def delete_goal_ep(goal_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    ok = await delete_goal(str(user["_id"]), goal_id, db)
+    ok = await delete_goal(str(user["id"]), goal_id, db)
     if not ok:
         raise HTTPException(404, "Goal not found")
     return {"deleted": goal_id}
@@ -204,7 +204,7 @@ async def delete_goal_ep(goal_id: str, user=Depends(get_current_user), db=Depend
 @router.post("/goals/{goal_id}/evaluate")
 async def evaluate_goal_ep(goal_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    result = await evaluate_goal(str(user["_id"]), goal_id, db)
+    result = await evaluate_goal(str(user["id"]), goal_id, db)
     if not result:
         raise HTTPException(404, "Goal not found")
     return result
@@ -215,19 +215,19 @@ async def evaluate_goal_ep(goal_id: str, user=Depends(get_current_user), db=Depe
 @router.post("/roadmaps/generate")
 async def generate_roadmap_ep(body: RoadmapIn, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await generate_roadmap(str(user["_id"]), body.model_dump(), db)
+    return await generate_roadmap(str(user["id"]), body.model_dump(), db)
 
 
 @router.get("/roadmaps")
 async def list_roadmaps(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await get_roadmaps(str(user["_id"]), db)
+    return await get_roadmaps(str(user["id"]), db)
 
 
 @router.get("/roadmaps/{roadmap_id}")
 async def get_roadmap_ep(roadmap_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    result = await get_roadmap(str(user["_id"]), roadmap_id, db)
+    result = await get_roadmap(str(user["id"]), roadmap_id, db)
     if not result:
         raise HTTPException(404, "Roadmap not found")
     return result
@@ -236,7 +236,7 @@ async def get_roadmap_ep(roadmap_id: str, user=Depends(get_current_user), db=Dep
 @router.put("/roadmaps/{roadmap_id}/stage")
 async def advance_stage_ep(roadmap_id: str, body: RoadmapStageUpdate, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    result = await advance_stage(str(user["_id"]), roadmap_id, body.stage_key, body.completion, db)
+    result = await advance_stage(str(user["id"]), roadmap_id, body.stage_key, body.completion, db)
     if not result:
         raise HTTPException(404, "Roadmap not found")
     return result
@@ -247,7 +247,7 @@ async def advance_stage_ep(roadmap_id: str, body: RoadmapStageUpdate, user=Depen
 @router.post("/missions")
 async def create_mission_ep(body: MissionIn, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await create_mission(str(user["_id"]), body.model_dump(), db)
+    return await create_mission(str(user["id"]), body.model_dump(), db)
 
 
 @router.get("/missions")
@@ -258,14 +258,14 @@ async def list_missions(
     db=Depends(get_db),
 ):
     db = make_db_proxy(db, user)
-    return await get_missions(str(user["_id"]), db, status, goal_id)
+    return await get_missions(str(user["id"]), db, status, goal_id)
 
 
 @router.put("/missions/{mission_id}")
 async def update_mission_ep(mission_id: str, body: MissionUpdate, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
-    result = await update_mission(str(user["_id"]), mission_id, updates, db)
+    result = await update_mission(str(user["id"]), mission_id, updates, db)
     if not result:
         raise HTTPException(404, "Mission not found")
     return result
@@ -274,7 +274,7 @@ async def update_mission_ep(mission_id: str, body: MissionUpdate, user=Depends(g
 @router.post("/missions/{mission_id}/complete")
 async def complete_mission_ep(mission_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    result = await complete_mission(str(user["_id"]), mission_id, db)
+    result = await complete_mission(str(user["id"]), mission_id, db)
     if not result:
         raise HTTPException(404, "Mission not found")
     return result
@@ -283,7 +283,7 @@ async def complete_mission_ep(mission_id: str, user=Depends(get_current_user), d
 @router.post("/goals/{goal_id}/missions/generate")
 async def generate_missions_ep(goal_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    missions = await generate_missions_from_goal(str(user["_id"]), goal_id, db)
+    missions = await generate_missions_from_goal(str(user["id"]), goal_id, db)
     return {"generated": len(missions), "missions": missions}
 
 
@@ -292,26 +292,26 @@ async def generate_missions_ep(goal_id: str, user=Depends(get_current_user), db=
 @router.get("/career/profile")
 async def career_profile(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await get_career_profile(str(user["_id"]), db)
+    return await get_career_profile(str(user["id"]), db)
 
 
 @router.put("/career/profile")
 async def update_career(body: CareerUpdate, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
-    return await update_career_profile(str(user["_id"]), updates, db)
+    return await update_career_profile(str(user["id"]), updates, db)
 
 
 @router.get("/career/readiness")
 async def career_readiness(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await get_promotion_readiness(str(user["_id"]), db)
+    return await get_promotion_readiness(str(user["id"]), db)
 
 
 @router.get("/career/roadmap")
 async def career_roadmap_ep(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await get_career_roadmap(str(user["_id"]), db)
+    return await get_career_roadmap(str(user["id"]), db)
 
 
 # ─── Agenda ───────────────────────────────────────────────────────────────────
@@ -319,25 +319,25 @@ async def career_roadmap_ep(user=Depends(get_current_user), db=Depends(get_db)):
 @router.get("/agenda/daily")
 async def daily_agenda(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await get_daily_agenda(str(user["_id"]), db)
+    return await get_daily_agenda(str(user["id"]), db)
 
 
 @router.post("/agenda/daily/refresh")
 async def refresh_daily(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await generate_daily_agenda(str(user["_id"]), db)
+    return await generate_daily_agenda(str(user["id"]), db)
 
 
 @router.get("/agenda/weekly")
 async def weekly_plan(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await get_weekly_plan(str(user["_id"]), db)
+    return await get_weekly_plan(str(user["id"]), db)
 
 
 @router.post("/agenda/weekly/refresh")
 async def refresh_weekly(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await generate_weekly_plan(str(user["_id"]), db)
+    return await generate_weekly_plan(str(user["id"]), db)
 
 
 # ─── Memory ───────────────────────────────────────────────────────────────────
@@ -345,20 +345,20 @@ async def refresh_weekly(user=Depends(get_current_user), db=Depends(get_db)):
 @router.get("/memory")
 async def get_memory_ep(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await get_memory(str(user["_id"]), db)
+    return await get_memory(str(user["id"]), db)
 
 
 @router.put("/memory")
 async def update_memory_ep(body: MemoryUpdate, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
-    return await update_memory(str(user["_id"]), updates, db)
+    return await update_memory(str(user["id"]), updates, db)
 
 
 @router.post("/memory/enrich")
 async def enrich_memory_ep(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    uid = str(user["_id"])
+    uid = str(user["id"])
     await enqueue_job(Job(job_type="memory.enrich", payload={"user_id": uid}, user_id=uid), db)
     return {"status": "enrichment_queued"}
 
@@ -366,7 +366,7 @@ async def enrich_memory_ep(user=Depends(get_current_user), db=Depends(get_db)):
 @router.post("/memory/events")
 async def add_event(body: MemoryEvent, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    await add_memory_event(str(user["_id"]), body.event_type, body.data, db)
+    await add_memory_event(str(user["id"]), body.event_type, body.data, db)
     return {"added": True}
 
 
@@ -375,27 +375,27 @@ async def add_event(body: MemoryEvent, user=Depends(get_current_user), db=Depend
 @router.get("/recommendations")
 async def list_recommendations(category: Optional[str] = None, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await get_recommendations(str(user["_id"]), db, category)
+    return await get_recommendations(str(user["id"]), db, category)
 
 
 @router.post("/recommendations/refresh")
 async def refresh_recommendations(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    recs = await generate_recommendations(str(user["_id"]), db)
+    recs = await generate_recommendations(str(user["id"]), db)
     return {"generated": len(recs)}
 
 
 @router.post("/recommendations/{rec_id}/dismiss")
 async def dismiss_rec(rec_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    ok = await dismiss_recommendation(str(user["_id"]), rec_id, db)
+    ok = await dismiss_recommendation(str(user["id"]), rec_id, db)
     return {"dismissed": ok}
 
 
 @router.post("/recommendations/{rec_id}/rate")
 async def rate_rec(rec_id: str, body: RatingIn, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    ok = await rate_recommendation(str(user["_id"]), rec_id, body.rating, db)
+    ok = await rate_recommendation(str(user["id"]), rec_id, body.rating, db)
     return {"rated": ok}
 
 
@@ -404,7 +404,7 @@ async def rate_rec(rec_id: str, body: RatingIn, user=Depends(get_current_user), 
 @router.get("/automations")
 async def list_automations(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    user_id = str(user["_id"])
+    user_id = str(user["id"])
     await seed_default_automations(user_id, db)
     return await get_automations(user_id, db)
 
@@ -412,14 +412,14 @@ async def list_automations(user=Depends(get_current_user), db=Depends(get_db)):
 @router.post("/automations")
 async def create_automation_ep(body: AutomationIn, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await create_automation(str(user["_id"]), body.model_dump(), db)
+    return await create_automation(str(user["id"]), body.model_dump(), db)
 
 
 @router.put("/automations/{automation_id}")
 async def update_automation_ep(automation_id: str, body: AutomationUpdate, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
-    result = await update_automation(str(user["_id"]), automation_id, updates, db)
+    result = await update_automation(str(user["id"]), automation_id, updates, db)
     if not result:
         raise HTTPException(404, "Automation not found")
     return result
@@ -428,7 +428,7 @@ async def update_automation_ep(automation_id: str, body: AutomationUpdate, user=
 @router.delete("/automations/{automation_id}")
 async def delete_automation_ep(automation_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    ok = await delete_automation(str(user["_id"]), automation_id, db)
+    ok = await delete_automation(str(user["id"]), automation_id, db)
     if not ok:
         raise HTTPException(404, "Automation not found")
     return {"deleted": automation_id}
@@ -437,7 +437,7 @@ async def delete_automation_ep(automation_id: str, user=Depends(get_current_user
 @router.post("/automations/{automation_id}/run")
 async def run_automation_ep(automation_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await run_automation(str(user["_id"]), automation_id, db)
+    return await run_automation(str(user["id"]), automation_id, db)
 
 
 # ─── Progress ─────────────────────────────────────────────────────────────────
@@ -445,10 +445,10 @@ async def run_automation_ep(automation_id: str, user=Depends(get_current_user), 
 @router.get("/progress/overview")
 async def progress_overview(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await get_progress_overview(str(user["_id"]), db)
+    return await get_progress_overview(str(user["id"]), db)
 
 
 @router.post("/progress/snapshot")
 async def progress_snapshot(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await take_snapshot(str(user["_id"]), db)
+    return await take_snapshot(str(user["id"]), db)

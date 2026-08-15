@@ -79,7 +79,7 @@ async def get_relationship_types(user=Depends(get_current_user)):
 async def create_entity(data: EntityIn, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     result = await entity_registry.create_entity(data.entity_type, data.label, data.properties or {}, db)
-    await _audit(str(user["_id"]), "create_entity", data.label, db)
+    await _audit(str(user["id"]), "create_entity", data.label, db)
     return result
 
 
@@ -247,7 +247,7 @@ async def get_recommendations(entity_id: str, user=Depends(get_current_user), db
 async def refresh_recommendations(entity_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     await enqueue_job(Job(job_type="recommendation.generate", payload={"entity_id": entity_id},
-                         user_id=str(user["_id"]), priority=Priority.NORMAL), db)
+                         user_id=str(user["id"]), priority=Priority.NORMAL), db)
     return {"status": "Recommendations refresh queued"}
 
 
@@ -329,7 +329,7 @@ async def sync_status(user=Depends(get_current_user), db=Depends(get_db)):
 async def trigger_sync(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     await enqueue_job(Job(job_type="kg.update", payload={"scope": "full_sync"},
-                         user_id=str(user["_id"]), priority=Priority.LOW), db)
+                         user_id=str(user["id"]), priority=Priority.LOW), db)
     return {"status": "Full sync queued in background"}
 
 
@@ -338,7 +338,7 @@ async def trigger_sync(user=Depends(get_current_user), db=Depends(get_db)):
 @router.get("/me/entity")
 async def my_entity(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    entity_id = f"user:{str(user['_id'])}"
+    entity_id = f"user:{str(user['id'])}"
     e = await entity_registry.get_entity(entity_id, db)
     return e or {"entity_id": entity_id, "entity_type": "researcher",
                  "label": user.get("name", ""), "synced": False}
@@ -347,14 +347,14 @@ async def my_entity(user=Depends(get_current_user), db=Depends(get_db)):
 @router.get("/me/graph")
 async def my_graph(depth: int = 2, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    entity_id = f"user:{str(user['_id'])}"
+    entity_id = f"user:{str(user['id'])}"
     return await graph_traversal.explore_from(entity_id, db, depth)
 
 
 @router.get("/me/recommendations")
 async def my_recommendations(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    entity_id = f"user:{str(user['_id'])}"
+    entity_id = f"user:{str(user['id'])}"
     cached = await recommendation_engine.get_cached_recommendations(entity_id, db)
     if cached:
         return cached
@@ -365,14 +365,14 @@ async def my_recommendations(user=Depends(get_current_user), db=Depends(get_db))
 async def my_collaborator_suggestions(limit: int = 10,
                                        user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    entity_id = f"user:{str(user['_id'])}"
+    entity_id = f"user:{str(user['id'])}"
     return await inference_engine.infer_collaborator_suggestions(entity_id, db, limit)
 
 
 @router.get("/me/inference/expertise-gaps")
 async def my_expertise_gaps(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    entity_id = f"user:{str(user['_id'])}"
+    entity_id = f"user:{str(user['id'])}"
     return await inference_engine.infer_expertise_gaps(entity_id, db)
 
 
@@ -390,7 +390,7 @@ async def admin_full_sync(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     zt_check(user, "admin", "admin")
     await enqueue_job(Job(job_type="kg.update", payload={"scope": "full_sync"},
-                         user_id=str(user["_id"]), priority=Priority.HIGH), db)
+                         user_id=str(user["id"]), priority=Priority.HIGH), db)
     return {"status": "Full AKG sync queued"}
 
 

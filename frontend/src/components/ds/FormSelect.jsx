@@ -17,7 +17,9 @@ export function FormSelect({
   children,
   ...props
 }) {
-  const inputId = id || (label ? `sel-${label.toLowerCase().replace(/\s+/g, "-")}` : undefined);
+  // label may be a JSX node, not just a string — only derive a slug from it
+  // when it actually is one.
+  const inputId = id || (typeof label === "string" ? `sel-${label.toLowerCase().replace(/\s+/g, "-")}` : undefined);
   const errorId = error && inputId ? `${inputId}-error` : undefined;
   const hintId = hint && !error && inputId ? `${inputId}-hint` : undefined;
   const heightClass = size === "sm" ? "h-7 text-[12px]" : "h-9 text-[13px]";

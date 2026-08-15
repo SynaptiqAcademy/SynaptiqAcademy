@@ -109,7 +109,7 @@ async def predict_publication(
     body: ManuscriptRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "prediction_publication")
+    await consume_credits(current_user["id"], "prediction_publication")
     engine = await get_prediction_engine()
     return engine.predict_publication(body.manuscript)
 
@@ -121,7 +121,7 @@ async def journal_ranking(
     body: JournalRankingRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "prediction_journal_ranking")
+    await consume_credits(current_user["id"], "prediction_journal_ranking")
     engine = await get_prediction_engine()
     return engine.predict_journals(body.manuscript, body.max_results)
 
@@ -133,7 +133,7 @@ async def conference_prediction(
     body: ConferenceRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "prediction_conference")
+    await consume_credits(current_user["id"], "prediction_conference")
     engine = await get_prediction_engine()
     return {"conferences": engine.predict_conference(body.profile)}
 
@@ -145,7 +145,7 @@ async def grant_prediction(
     body: GrantRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "prediction_grant")
+    await consume_credits(current_user["id"], "prediction_grant")
     engine = await get_prediction_engine()
     return engine.predict_grant(body.grant)
 
@@ -157,7 +157,7 @@ async def career_forecast(
     body: CareerForecastRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "prediction_career_forecast")
+    await consume_credits(current_user["id"], "prediction_career_forecast")
     engine = await get_prediction_engine()
     return engine.forecast_career(body.profile, body.horizon)
 
@@ -169,7 +169,7 @@ async def collaboration_forecast(
     body: CollaborationRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "prediction_collaboration")
+    await consume_credits(current_user["id"], "prediction_collaboration")
     engine = await get_prediction_engine()
     return engine.forecast_collaboration(body.profile)
 
@@ -181,7 +181,7 @@ async def institution_forecast(
     body: InstitutionRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "prediction_institution")
+    await consume_credits(current_user["id"], "prediction_institution")
     engine = await get_prediction_engine()
     return engine.forecast_institution(body.profile, body.horizon)
 
@@ -193,7 +193,7 @@ async def trend_forecast(
     body: TrendRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "prediction_trend")
+    await consume_credits(current_user["id"], "prediction_trend")
     engine = await get_prediction_engine()
     return engine.forecast_trends(body.profile, body.top_k)
 
@@ -205,7 +205,7 @@ async def strategic_decision(
     body: StrategicRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "prediction_strategic")
+    await consume_credits(current_user["id"], "prediction_strategic")
     engine = await get_prediction_engine()
     return engine.strategic_decision(body.question, body.profile)
 
@@ -217,7 +217,7 @@ async def scenario_simulation(
     body: ScenarioRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "prediction_scenario")
+    await consume_credits(current_user["id"], "prediction_scenario")
     engine = await get_prediction_engine()
     return engine.simulate_scenarios(body.manuscript, body.scenario_types)
 
@@ -229,7 +229,7 @@ async def what_if(
     body: WhatIfRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "prediction_what_if")
+    await consume_credits(current_user["id"], "prediction_what_if")
     engine = await get_prediction_engine()
     return engine.what_if(body.manuscript, body.factor)
 
@@ -241,7 +241,7 @@ async def visualization(
     body: VizRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "prediction_visualization")
+    await consume_credits(current_user["id"], "prediction_visualization")
     engine = await get_prediction_engine()
     return engine.visualize(body.viz_type, body.data)
 
@@ -253,7 +253,7 @@ async def copilot_forecast(
     body: CopilotForecastRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "prediction_copilot")
+    await consume_credits(current_user["id"], "prediction_copilot")
     engine = await get_prediction_engine()
     return {"suggestions": engine.copilot_forecasts(body.workflow, body.profile)}
 
@@ -263,7 +263,7 @@ async def copilot_enrich(
     body: CopilotEnrichRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "prediction_copilot")
+    await consume_credits(current_user["id"], "prediction_copilot")
     engine = await get_prediction_engine()
     return {"enriched_prompt": engine.copilot_enrich_prompt(body.prompt, body.profile)}
 

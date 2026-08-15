@@ -86,7 +86,7 @@ async def create_mission(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    user_id    = str(user["_id"])
+    user_id    = str(user["id"])
     mission_id = await mission_store.create_mission(
         db, user_id, body.title, body.description,
         body.autonomy_level, body.mission_type, body.params,
@@ -112,7 +112,7 @@ async def list_missions(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    return await mission_store.list_missions(db, str(user["_id"]), status, limit)
+    return await mission_store.list_missions(db, str(user["id"]), status, limit)
 
 
 @router.get("/missions/{mission_id}")
@@ -122,7 +122,7 @@ async def get_mission(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    mission = await mission_store.get_mission(db, mission_id, str(user["_id"]))
+    mission = await mission_store.get_mission(db, mission_id, str(user["id"]))
     if not mission:
         raise HTTPException(404, "Mission not found")
     return mission
@@ -135,7 +135,7 @@ async def approve_plan(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    user_id = str(user["_id"])
+    user_id = str(user["id"])
     mission = await mission_store.get_mission(db, mission_id, user_id)
     if not mission:
         raise HTTPException(404, "Mission not found")
@@ -166,7 +166,7 @@ async def refine_plan(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    user_id = str(user["_id"])
+    user_id = str(user["id"])
     mission = await mission_store.get_mission(db, mission_id, user_id)
     if not mission:
         raise HTTPException(404, "Mission not found")
@@ -189,7 +189,7 @@ async def pause_mission(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    mission = await mission_store.get_mission(db, mission_id, str(user["_id"]))
+    mission = await mission_store.get_mission(db, mission_id, str(user["id"]))
     if not mission:
         raise HTTPException(404, "Mission not found")
     if mission["status"] not in ("running", "awaiting_human"):
@@ -205,7 +205,7 @@ async def cancel_mission(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    mission = await mission_store.get_mission(db, mission_id, str(user["_id"]))
+    mission = await mission_store.get_mission(db, mission_id, str(user["id"]))
     if not mission:
         raise HTTPException(404, "Mission not found")
     if mission["status"] == "completed":
@@ -221,12 +221,12 @@ async def delete_mission(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    mission = await mission_store.get_mission(db, mission_id, str(user["_id"]))
+    mission = await mission_store.get_mission(db, mission_id, str(user["id"]))
     if not mission:
         raise HTTPException(404, "Mission not found")
     if mission["status"] in ("running", "awaiting_human"):
         raise HTTPException(400, "Cannot delete a running mission — cancel it first")
-    deleted = await mission_store.delete_mission(db, mission_id, str(user["_id"]))
+    deleted = await mission_store.delete_mission(db, mission_id, str(user["id"]))
     return {"deleted": deleted}
 
 
@@ -237,7 +237,7 @@ async def get_steps(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    mission = await mission_store.get_mission(db, mission_id, str(user["_id"]))
+    mission = await mission_store.get_mission(db, mission_id, str(user["id"]))
     if not mission:
         raise HTTPException(404, "Mission not found")
     return await mission_store.get_steps(db, mission_id)
@@ -251,7 +251,7 @@ async def get_logs(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    mission = await mission_store.get_mission(db, mission_id, str(user["_id"]))
+    mission = await mission_store.get_mission(db, mission_id, str(user["id"]))
     if not mission:
         raise HTTPException(404, "Mission not found")
     return await mission_store.get_logs(db, mission_id, limit)
@@ -264,7 +264,7 @@ async def get_mission_approvals(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    mission = await mission_store.get_mission(db, mission_id, str(user["_id"]))
+    mission = await mission_store.get_mission(db, mission_id, str(user["id"]))
     if not mission:
         raise HTTPException(404, "Mission not found")
     return await mission_store.get_mission_approvals(db, mission_id)
@@ -278,7 +278,7 @@ async def pending_approvals(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    return await mission_store.list_pending_approvals(db, str(user["_id"]))
+    return await mission_store.list_pending_approvals(db, str(user["id"]))
 
 
 @router.post("/approvals/{approval_id}/approve")
@@ -288,7 +288,7 @@ async def approve_action(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    user_id  = str(user["_id"])
+    user_id  = str(user["id"])
     approval = await mission_store.get_approval(db, approval_id, user_id)
     if not approval:
         raise HTTPException(404, "Approval request not found")
@@ -325,7 +325,7 @@ async def reject_action(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    user_id  = str(user["_id"])
+    user_id  = str(user["id"])
     approval = await mission_store.get_approval(db, approval_id, user_id)
     if not approval:
         raise HTTPException(404, "Approval request not found")
@@ -374,7 +374,7 @@ async def list_schedules(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    return await mission_store.list_schedules(db, str(user["_id"]))
+    return await mission_store.list_schedules(db, str(user["id"]))
 
 
 @router.post("/schedules")
@@ -387,7 +387,7 @@ async def create_schedule(
     if body.interval not in ("daily", "weekly", "monthly"):
         raise HTTPException(400, "interval must be daily, weekly, or monthly")
     schedule_id = await scheduler.create_schedule(
-        db, str(user["_id"]), body.title, body.description,
+        db, str(user["id"]), body.title, body.description,
         body.mission_type, body.autonomy_level, body.interval, body.params,
     )
     return {"schedule_id": schedule_id}
@@ -400,7 +400,7 @@ async def delete_schedule(
     user=Depends(get_current_user),
 ):
     db = make_db_proxy(db, user)
-    deleted = await mission_store.delete_schedule(db, schedule_id, str(user["_id"]))
+    deleted = await mission_store.delete_schedule(db, schedule_id, str(user["id"]))
     return {"deleted": deleted}
 
 
@@ -413,7 +413,7 @@ async def run_monitors(
 ):
     """Trigger all background monitors for the current user."""
     db = make_db_proxy(db, user)
-    user_id = str(user["_id"])
+    user_id = str(user["id"])
     user_doc = {k: str(v) if hasattr(v, "__str__") and not isinstance(v, (str, int, float, bool, type(None), dict, list)) else v
                 for k, v in user.items()}
     await enqueue_job(

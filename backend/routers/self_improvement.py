@@ -107,7 +107,7 @@ async def feedback_summary(current_user: dict = Depends(get_current_user)):
 
 @router.get("/performance")
 async def all_performance(current_user: dict = Depends(get_current_user)):
-    await consume_credits(current_user["_id"], "si_query")
+    await consume_credits(current_user["id"], "si_query")
     engine = await get_self_improvement_engine()
     return engine.get_all_performance()
 
@@ -117,14 +117,14 @@ async def engine_performance(
     engine_type:  str,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "si_query")
+    await consume_credits(current_user["id"], "si_query")
     engine = await get_self_improvement_engine()
     return engine.get_performance(engine_type)
 
 
 @router.get("/diagnostics")
 async def all_diagnostics(current_user: dict = Depends(get_current_user)):
-    await consume_credits(current_user["_id"], "si_diagnostics")
+    await consume_credits(current_user["id"], "si_diagnostics")
     engine = await get_self_improvement_engine()
     return {"diagnostics": engine.run_diagnostics()}
 
@@ -134,14 +134,14 @@ async def engine_diagnostic(
     engine_type:  str,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "si_diagnostics")
+    await consume_credits(current_user["id"], "si_diagnostics")
     engine = await get_self_improvement_engine()
     return engine.run_engine_diagnostic(engine_type)
 
 
 @router.get("/platform-quality")
 async def platform_quality(current_user: dict = Depends(get_current_user)):
-    await consume_credits(current_user["_id"], "si_query")
+    await consume_credits(current_user["id"], "si_query")
     engine = await get_self_improvement_engine()
     return engine.get_platform_quality()
 
@@ -196,7 +196,7 @@ async def copilot(
     body:         CopilotRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "si_copilot")
+    await consume_credits(current_user["id"], "si_copilot")
     engine = await get_self_improvement_engine()
     return {"suggestions": engine.copilot_suggestions(body.workflow, body.max_suggestions)}
 
@@ -206,7 +206,7 @@ async def copilot_enrich(
     body:         CopilotEnrichRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "si_copilot")
+    await consume_credits(current_user["id"], "si_copilot")
     engine = await get_self_improvement_engine()
     return {"enriched_prompt": engine.copilot_enrich_prompt(body.prompt)}
 
@@ -240,7 +240,7 @@ async def admin_engine_audit_log(
 
 @admin_router.get("/benchmarks")
 async def admin_all_benchmarks(current_user: dict = Depends(get_current_user)):
-    await consume_credits(current_user["_id"], "si_benchmark")
+    await consume_credits(current_user["id"], "si_benchmark")
     engine = await get_self_improvement_engine()
     return engine.run_all_benchmarks()
 
@@ -250,7 +250,7 @@ async def admin_engine_benchmark(
     engine_type:  str,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "si_benchmark")
+    await consume_credits(current_user["id"], "si_benchmark")
     engine = await get_self_improvement_engine()
     return engine.run_benchmark(engine_type)
 
@@ -273,7 +273,7 @@ async def admin_pending_optimizations(current_user: dict = Depends(get_current_u
 
 @admin_router.post("/optimizations/generate")
 async def admin_generate_optimizations(current_user: dict = Depends(get_current_user)):
-    await consume_credits(current_user["_id"], "si_optimize")
+    await consume_credits(current_user["id"], "si_optimize")
     engine = await get_self_improvement_engine()
     return {"candidates": engine.generate_optimizations()}
 
@@ -311,7 +311,7 @@ async def admin_create_experiment(
     body:         ExperimentCreateRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["_id"], "si_experiment")
+    await consume_credits(current_user["id"], "si_experiment")
     engine = await get_self_improvement_engine()
     return engine.create_experiment(
         body.name, body.engine_type, body.variant_a, body.variant_b,

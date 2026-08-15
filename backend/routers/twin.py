@@ -31,7 +31,7 @@ router = APIRouter(prefix="/api/twin", tags=["digital-research-twin"])
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _uid(user: dict) -> str:
-    return str(user["_id"])
+    return str(user["id"])
 
 
 # ── Full twin sync ────────────────────────────────────────────────────────────

@@ -87,7 +87,7 @@ async def copilot_chat(
     synthesises results with an AI expert panel, and returns a structured response.
     """
     db = make_db_proxy(db, user)
-    user_id = str(user["_id"])
+    user_id = str(user["id"])
     await require_feature(user, "ai_chat")
 
     ok, balance = await consume_credits(user_id, CREDIT_CHAT, "copilot_chat", db)
@@ -132,7 +132,7 @@ async def get_dashboard(
 ):
     """Return the personalised Academic Dashboard for the current user."""
     db = make_db_proxy(db, user)
-    user_id = str(user["_id"])
+    user_id = str(user["id"])
     ok, balance = await consume_credits(user_id, CREDIT_DASHBOARD, "copilot_dashboard", db)
     if not ok:
         raise HTTPException(402, detail={"error": "Insufficient credits", "required": CREDIT_DASHBOARD, "balance": balance})
@@ -153,7 +153,7 @@ async def get_suggestions(
 ):
     """Return proactive suggestions based on user context."""
     db = make_db_proxy(db, user)
-    user_id = str(user["_id"])
+    user_id = str(user["id"])
     ok, balance = await consume_credits(user_id, CREDIT_SUGGESTIONS, "copilot_suggestions", db)
     if not ok:
         raise HTTPException(402, detail={"error": "Insufficient credits", "required": CREDIT_SUGGESTIONS, "balance": balance})
@@ -170,7 +170,7 @@ async def generate_roadmap(
 ):
     """Generate a personalised academic roadmap (research / publication / grant / career / conference)."""
     db = make_db_proxy(db, user)
-    user_id = str(user["_id"])
+    user_id = str(user["id"])
     ok, balance = await consume_credits(user_id, CREDIT_ROADMAP, "copilot_roadmap", db)
     if not ok:
         raise HTTPException(402, detail={"error": "Insufficient credits", "required": CREDIT_ROADMAP, "balance": balance})
@@ -210,7 +210,7 @@ async def get_memory(
 ):
     """Return all active memory items for the current user."""
     db = make_db_proxy(db, user)
-    user_id = str(user["_id"])
+    user_id = str(user["id"])
     engine = await get_copilot_engine()
     items = await engine.get_memory(user_id, db)
     return {"memory": items, "count": len(items)}
@@ -224,7 +224,7 @@ async def save_memory(
 ):
     """Save a new memory item (research goal, target journal, preferred method, etc.)."""
     db = make_db_proxy(db, user)
-    user_id = str(user["_id"])
+    user_id = str(user["id"])
     engine = await get_copilot_engine()
     result = await engine.save_memory(user_id, req.memory_type, req.content, db)
     return {"saved": True, "item": result}
@@ -238,7 +238,7 @@ async def delete_memory(
 ):
     """Deactivate a memory item (soft delete)."""
     db = make_db_proxy(db, user)
-    user_id = str(user["_id"])
+    user_id = str(user["id"])
     engine = await get_copilot_engine()
     deleted = await engine.delete_memory(user_id, memory_id, db)
     if not deleted:
@@ -254,7 +254,7 @@ async def get_history(
 ):
     """Return conversation history with the Academic Copilot."""
     db = make_db_proxy(db, user)
-    user_id = str(user["_id"])
+    user_id = str(user["id"])
     if limit > 200:
         limit = 200
     engine = await get_copilot_engine()

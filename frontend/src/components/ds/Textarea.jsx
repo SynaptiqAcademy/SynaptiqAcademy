@@ -18,7 +18,9 @@ export const Textarea = React.forwardRef(function Textarea({
   id,
   ...props
 }, ref) {
-  const inputId = id || (label ? `ta-${label.toLowerCase().replace(/\s+/g, "-")}` : undefined);
+  // label may be a JSX node (e.g. a title + secondary hint span), not just a
+  // string — only derive a slug from it when it actually is one.
+  const inputId = id || (typeof label === "string" ? `ta-${label.toLowerCase().replace(/\s+/g, "-")}` : undefined);
   const errorId = error && inputId ? `${inputId}-error` : undefined;
   const hintId = hint && !error && inputId ? `${inputId}-hint` : undefined;
 

@@ -359,6 +359,14 @@ class SmartExecutionRouter:
         chain = [selected_layer]
         if selected_layer == "cloud" and profile.allow_local_downgrade:
             chain.append("local")
+        # Defense in depth: if "local" was selected first (e.g. load_balancer
+        # believed it available) and it fails, still try a real provider
+        # before falling through to the rule engine's placeholder text —
+        # "rule" can only produce real answers for a small fixed feature set
+        # (see rule_engine.py's _RULE_FEATURES), so for everything else it's
+        # a dead end that would otherwise reach the user instead of content.
+        if selected_layer == "local":
+            chain.append("cloud")
         if selected_layer in ("cloud", "local") and profile.allow_rule_downgrade:
             chain.append("rule")
         chain.append("cache")

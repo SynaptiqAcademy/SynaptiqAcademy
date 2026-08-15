@@ -235,7 +235,7 @@ async def degree_centrality(
 async def my_insights(user=Depends(get_current_user), db=Depends(get_db)):
     """AI insights for the authenticated researcher from graph data."""
     db = make_db_proxy(db, user)
-    return await lkg_insights.generate_user_insights(db, str(user["_id"]))
+    return await lkg_insights.generate_user_insights(db, str(user["id"]))
 
 
 @router.get("/insights/platform")
@@ -253,21 +253,21 @@ async def platform_insights(user=Depends(get_current_user), db=Depends(get_db)):
 async def discover_collaborators(user=Depends(get_current_user), db=Depends(get_db)):
     """Discover potential collaborators via friend-of-friend graph reasoning."""
     db = make_db_proxy(db, user)
-    return await lkg_discovery.discover_hidden_collaborations(db, str(user["_id"]))
+    return await lkg_discovery.discover_hidden_collaborations(db, str(user["id"]))
 
 
 @router.get("/discovery/topics")
 async def discover_topics(user=Depends(get_current_user), db=Depends(get_db)):
     """Discover emerging research topics, with user overlap if authenticated."""
     db = make_db_proxy(db, user)
-    return await lkg_discovery.discover_emerging_topics(db, str(user["_id"]))
+    return await lkg_discovery.discover_emerging_topics(db, str(user["id"]))
 
 
 @router.get("/discovery/funding")
 async def discover_funding(user=Depends(get_current_user), db=Depends(get_db)):
     """Discover funding opportunities linked to user's research topics."""
     db = make_db_proxy(db, user)
-    return await lkg_discovery.discover_funding_opportunities(db, str(user["_id"]))
+    return await lkg_discovery.discover_funding_opportunities(db, str(user["id"]))
 
 
 @router.get("/discovery/reviewers/{manuscript_id}")
@@ -289,7 +289,7 @@ async def discover_reviewers(
 async def my_node(user=Depends(get_current_user), db=Depends(get_db)):
     """Get the authenticated user's researcher node in the LKG."""
     db = make_db_proxy(db, user)
-    node_id = f"researcher:platform:{user['_id']}"
+    node_id = f"researcher:platform:{user['id']}"
     node    = await graph_store.get_node(db, node_id)
     if not node:
         return {
@@ -308,7 +308,7 @@ async def my_subgraph(
 ):
     """Get the authenticated user's ego subgraph for the visual explorer."""
     db = make_db_proxy(db, user)
-    node_id = f"researcher:platform:{user['_id']}"
+    node_id = f"researcher:platform:{user['id']}"
     return await graph_store.get_subgraph(db, node_id, depth, 80)
 
 

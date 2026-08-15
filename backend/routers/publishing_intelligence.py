@@ -305,7 +305,7 @@ async def get_publishing_dashboard(
     try:
         await _deduct(user, "publishing_dashboard", db)
         engine = await get_publishing_engine()
-        result = await engine.get_dashboard(str(user["_id"]), db)
+        result = await engine.get_dashboard(str(user["id"]), db)
         return _ok(result)
     except Exception as e:
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))

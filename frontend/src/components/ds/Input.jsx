@@ -21,7 +21,9 @@ export const Input = React.forwardRef(function Input({
   id,
   ...props
 }, ref) {
-  const inputId = id || (label ? `input-${label.toLowerCase().replace(/\s+/g, "-")}` : undefined);
+  // label may be a JSX node, not just a string — only derive a slug from it
+  // when it actually is one.
+  const inputId = id || (typeof label === "string" ? `input-${label.toLowerCase().replace(/\s+/g, "-")}` : undefined);
   const errorId = error && inputId ? `${inputId}-error` : undefined;
   const hintId = hint && !error && inputId ? `${inputId}-hint` : undefined;
   const heightClass = size === "sm" ? "h-7 text-[12px] px-2.5" : "h-9 text-[13px] px-3";

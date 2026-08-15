@@ -83,7 +83,7 @@ async def run_workflow(
         await _deduct(user, "agents_workflow_run", db)
         engine = await get_agent_engine()
         response = await engine.run_workflow(
-            wf_type, body.content, str(user["_id"]), body.metadata
+            wf_type, body.content, str(user["id"]), body.metadata
         )
         return _ok(response.to_dict())
     except Exception as e:
@@ -102,7 +102,7 @@ async def run_task(
         await _deduct(user, "agents_task_run", db)
         engine = await get_agent_engine()
         response = await engine.run_task(
-            body.message, body.content, str(user["_id"]), body.metadata
+            body.message, body.content, str(user["id"]), body.metadata
         )
         return _ok(response.to_dict())
     except Exception as e:
@@ -125,7 +125,7 @@ async def run_single_agent(
     try:
         await _deduct(user, "agents_single_run", db)
         engine = await get_agent_engine()
-        result = await engine.run_agent(agent_type, body.content, str(user["_id"]), body.metadata)
+        result = await engine.run_agent(agent_type, body.content, str(user["id"]), body.metadata)
         return _ok(result)
     except Exception as e:
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
@@ -143,7 +143,7 @@ async def run_parallel_agents(
         await _deduct(user, "agents_parallel_run", db)
         engine = await get_agent_engine()
         results = await engine.run_agents_parallel(
-            body.agent_types, body.content, str(user["_id"]), body.metadata
+            body.agent_types, body.content, str(user["id"]), body.metadata
         )
         return _ok(results)
     except Exception as e:
@@ -162,7 +162,7 @@ async def compose_workflow(
         await _deduct(user, "agents_workflow_run", db)
         engine = await get_agent_engine()
         results = await engine.run_agents_parallel(
-            body.agent_sequence, body.content, str(user["_id"]), body.metadata
+            body.agent_sequence, body.content, str(user["id"]), body.metadata
         )
         return _ok(results)
     except Exception as e:

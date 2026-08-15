@@ -14,6 +14,8 @@ No caller changes are required. Callers may optionally supply `user_id`,
 """
 from __future__ import annotations
 
+from fastapi import HTTPException
+
 
 async def call_llm(
     *,
@@ -67,4 +69,15 @@ async def call_llm(
         variables=variables or {},
     )
     response = await get_gateway().execute(request, db=db)
+    if response.provider == "error_fallback":
+        # cloud_ai.CloudAILayer._provider_error_response sets this exact
+        # sentinel only when every real provider failed (billing/quota/auth
+        # error, outage, etc.) — response.response is then a human-readable
+        # explanation, not usable content. Callers that expect structured
+        # output (JSON, etc.) would otherwise fail parsing it and surface a
+        # confusing "malformed output" error that hides the real cause.
+        raise HTTPException(
+            status_code=503,
+            detail="AI service is temporarily unavailable. Please try again in a moment.",
+        )
     return response.response
