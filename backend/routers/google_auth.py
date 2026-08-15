@@ -23,7 +23,9 @@ from auth_utils import (
 )
 from db import get_db
 from plans_catalogue import get_plan
-from routers.auth import _issue_tokens_and_cookies
+from routers.auth import _issue_tokens_and_cookies, _make_mfa_pending_token
+from services.admin_audit import log_event as _audit, request_meta as _req_meta
+from services.permissions import SUPER_ADMIN_EMAILS
 from services import google_oauth as G
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
@@ -125,6 +127,11 @@ async def callback(
                         {"_id": user_doc["_id"]},
                         {"$set": {"google_id": google_id}},
                     )
+        if not user_doc and google_email in SUPER_ADMIN_EMAILS:
+            # Same invariant as routers.auth.register: an address that grants
+            # super_admin purely by email match must never be auto-provisioned
+            # through a public OAuth flow — only via direct DB/seed control.
+            return RedirectResponse(f"{frontend}/login?google_error=account_creation_blocked")
         if not user_doc:
             # New account via Google
             doc = {
@@ -176,6 +183,19 @@ async def callback(
         if _evr and not resp_obj.get("email_verified"):
             logger.info("Google callback: blocking token issuance for unverified email uid=%s", str(resp_obj["_id"]))
             return RedirectResponse(f"{frontend}/verify-email-pending")
+
+    # SEC-1: Mirror the password-login MFA gate — an account with MFA enabled
+    # must not be able to skip the challenge just by authenticating via Google.
+    # "link" is exempt (the requester already holds a valid authenticated
+    # session and is only attaching a Google identity to it).
+    if mode != "link" and resp_obj.get("mfa_enabled"):
+        mfa_uid = str(resp_obj["_id"])
+        mfa_token = _make_mfa_pending_token(mfa_uid, remember=True)
+        meta = _req_meta(request)
+        await _audit("auth.mfa_challenge_issued", actor_id=mfa_uid,
+                     actor_email=resp_obj.get("email") or google_email,
+                     ip=meta["ip"], user_agent=meta["user_agent"], extra={"via": "google_oauth"})
+        return RedirectResponse(f"{frontend}/login?mfa_token={mfa_token}")
 
     await _issue_tokens_and_cookies(resp, str(resp_obj["_id"]), resp_obj.get("email") or google_email)
     return resp

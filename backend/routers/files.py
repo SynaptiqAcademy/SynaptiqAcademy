@@ -18,7 +18,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, R
 from fastapi.responses import StreamingResponse
 import io
 
-from auth_utils import get_current_user
+from auth_utils import get_current_user, safe_disposition_filename
 from db import get_db
 from services import storage_service as S
 from services.audit import write_audit
@@ -341,7 +341,7 @@ async def download(fid: str, user: dict = Depends(get_current_user)):
         io.BytesIO(data),
         media_type=ctype or d.get("mime") or "application/octet-stream",
         headers={
-            "Content-Disposition": f'attachment; filename="{d.get("filename","file")}"',
+            "Content-Disposition": f'attachment; filename="{safe_disposition_filename(d.get("filename"))}"',
             "X-Content-Type-Options": "nosniff",
         },
     )
@@ -369,7 +369,7 @@ async def preview(fid: str, user: dict = Depends(get_current_user)):
         io.BytesIO(data),
         media_type=ctype or d.get("mime") or "application/octet-stream",
         headers={
-            "Content-Disposition": f'inline; filename="{d.get("filename","file")}"',
+            "Content-Disposition": f'inline; filename="{safe_disposition_filename(d.get("filename"))}"',
             "Cache-Control": "private, max-age=300",
             "X-Content-Type-Options": "nosniff",
             "Content-Security-Policy": "default-src 'none'; img-src data:; style-src 'unsafe-inline'",

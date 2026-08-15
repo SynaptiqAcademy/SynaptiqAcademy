@@ -159,3 +159,43 @@ AUTH_RATE = os.environ.get("RATE_LIMIT_AUTH", "5/minute")
 # search). Looser than AUTH_RATE since these are behind auth + real
 # membership checks already, not a credential-stuffing surface.
 WRITE_RATE = os.environ.get("RATE_LIMIT_WRITE", "30/minute")
+
+# Per-user AI-action policy — every credit-billed AI feature (research
+# assistant, manuscript review, literature review, collaborator matching,
+# etc. — ~25 routers) funnels through services.credits_service.consume_credits
+# before it calls out to a real LLM provider. Rate limiting there, keyed by
+# user id rather than IP, is the single chokepoint that stops one account
+# (compromised or scripted) from bursting through the shared smart_router
+# daily/monthly $ budget and denying AI service to everyone else, without
+# having to duplicate a @limiter.limit decorator across every AI endpoint.
+AI_ACTION_RATE = os.environ.get("RATE_LIMIT_AI_ACTION", "20/minute")
+
+_ai_rate_item = None
+
+
+def check_ai_rate_limit(user_id: str) -> None:
+    """Raise HTTPException(429) if `user_id` exceeds AI_ACTION_RATE.
+
+    Reuses the same slowapi Limiter/storage backend as route-level limits
+    (Redis when configured, in-memory otherwise) so behaviour under a
+    multi-process deployment stays consistent with the rest of the app.
+    Fails open on any backend error — an unreachable rate-limit store must
+    never block a legitimate paid AI request.
+    """
+    if not limiter.enabled:
+        return
+    global _ai_rate_item
+    try:
+        if _ai_rate_item is None:
+            from limits import parse
+            _ai_rate_item = parse(AI_ACTION_RATE)
+        if not limiter.limiter.hit(_ai_rate_item, "ai_action", user_id):
+            from fastapi import HTTPException
+            raise HTTPException(
+                status_code=429,
+                detail="Too many AI requests. Please slow down and try again shortly.",
+            )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.warning("AI rate limiter check failed (allowing request): %s", exc)

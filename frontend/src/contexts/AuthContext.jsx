@@ -61,11 +61,31 @@ export function AuthProvider({ children }) {
   const login = async (email, password, remember = false) => {
     try {
       const { data } = await api.post("/auth/login", { email, password, remember });
+      // MFA-enabled accounts get a pending challenge, not a session — no
+      // cookies were set, so `data` here is {mfa_required, mfa_token, ...},
+      // not a user object. Leave `user` untouched; the caller (Login.jsx)
+      // is responsible for prompting for the code and completing the
+      // challenge via mfaVerify() below.
+      if (data?.mfa_required) return data;
       setUser(data);
       return data;
     } catch (e) {
       const msg = getErrorMessage(e);
       console.warn("[AUTH] Login failed:", msg);
+      throw new Error(msg);
+    }
+  };
+
+  const mfaVerify = async (mfaToken, code, trustDevice = false) => {
+    try {
+      const { data } = await api.post("/auth/mfa-verify", null, {
+        params: { mfa_token: mfaToken, code, trust_device: trustDevice },
+      });
+      setUser(data);
+      return data;
+    } catch (e) {
+      const msg = getErrorMessage(e);
+      console.warn("[AUTH] MFA verify failed:", msg);
       throw new Error(msg);
     }
   };
@@ -117,7 +137,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, register, logout, refreshMe }}>
+    <AuthContext.Provider value={{ user, setUser, login, mfaVerify, register, logout, refreshMe }}>
       {children}
     </AuthContext.Provider>
   );

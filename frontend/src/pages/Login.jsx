@@ -15,7 +15,7 @@ export default function Login() {
     document.title = "Sign In — Synaptiq";
     return () => { document.title = "Synaptiq"; };
   }, []);
-  const { login, user } = useAuth();
+  const { login, mfaVerify, user } = useAuth();
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -24,6 +24,25 @@ export default function Login() {
   const submittingRef = useRef(false);
   const navigate  = useNavigate();
   const location  = useLocation();
+
+  // MFA challenge state — set either after a password login on an MFA-enabled
+  // account, or from ?mfa_token= on redirect back from the Google OAuth flow
+  // (routers/google_auth.py issues the same pending token instead of cookies
+  // when the account has MFA enabled, so both login paths funnel through the
+  // same code-entry step here rather than silently skipping it).
+  const [mfaToken,   setMfaToken]   = useState(null);
+  const [mfaCode,    setMfaCode]    = useState("");
+  const [trustDevice, setTrustDevice] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get("mfa_token");
+    if (token) {
+      setMfaToken(token);
+      navigate(location.pathname, { replace: true }); // scrub the token from the URL bar
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (user) {
     if (user.is_super_admin) return <Navigate to="/admin" replace />;
@@ -47,6 +66,27 @@ export default function Login() {
     setLoading(true);
     try {
       const data = await login(email, password, remember);
+      if (data?.mfa_required) { setMfaToken(data.mfa_token); return; }
+      if (data?.is_super_admin)  navigate("/admin",      { replace: true });
+      else if (!data?.onboarded) navigate("/onboarding", { replace: true });
+      else navigate(location.state?.from?.pathname || "/discover", { replace: true });
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setLoading(false);
+      submittingRef.current = false;
+    }
+  }
+
+  async function onMfaSubmit(e) {
+    e.preventDefault();
+    if (submittingRef.current) return;
+    setErr("");
+    if (!mfaCode.trim()) { setErr("Enter the 6-digit code from your authenticator app."); return; }
+    submittingRef.current = true;
+    setLoading(true);
+    try {
+      const data = await mfaVerify(mfaToken, mfaCode.trim(), trustDevice);
       if (data?.is_super_admin)  navigate("/admin",      { replace: true });
       else if (!data?.onboarded) navigate("/onboarding", { replace: true });
       else navigate(location.state?.from?.pathname || "/discover", { replace: true });
@@ -74,6 +114,55 @@ export default function Login() {
     } catch (e) {
       setErr(getErrorMessage(e));
     }
+  }
+
+  if (mfaToken) {
+    return (
+      <AuthLayout>
+        <AuthCard>
+          <AuthHeader />
+
+          <AuthTitle
+            title="Two-factor authentication"
+            subtitle="Enter the 6-digit code from your authenticator app."
+          />
+
+          <form onSubmit={onMfaSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <AuthInput
+              label="Authentication code"
+              type="text"
+              value={mfaCode}
+              onChange={function(e) { setMfaCode(e.target.value.replace(/[^0-9a-zA-Z]/g, "")); }}
+              placeholder="123456"
+              required
+              autoComplete="one-time-code"
+              testId="mfa-code-input"
+            />
+
+            <AuthCheckbox checked={trustDevice} onChange={function(e) { setTrustDevice(e.target.checked); }}>
+              <span>Trust this device for 30 days</span>
+            </AuthCheckbox>
+
+            <ErrorBanner error={err} testId="mfa-error" />
+
+            <div style={{ marginTop: 4 }}>
+              <AuthButton loading={loading} testId="mfa-verify-submit">
+                Verify &amp; Sign In
+              </AuthButton>
+            </div>
+          </form>
+
+          <AuthFooter>
+            <AuthLink
+              to="#"
+              onClick={(e) => { e.preventDefault(); setMfaToken(null); setMfaCode(""); setErr(""); }}
+            >
+              Back to sign in
+            </AuthLink>
+          </AuthFooter>
+        </AuthCard>
+      </AuthLayout>
+    );
   }
 
   return (

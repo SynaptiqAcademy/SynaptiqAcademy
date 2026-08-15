@@ -22,6 +22,7 @@ logger = logging.getLogger("synaptiq.prod_validator")
 _WEAK_JWT_SUBSTRINGS = {
     "secret", "password", "changeme", "jwt_secret", "your_secret",
     "synaptiq", "development", "1234567890", "abc123", "example",
+    "test", "localhost", "sample", "placeholder",
 }
 
 _DEFAULT_SUPER_ADMIN_EMAIL = "synaptiq.academy@gmail.com"

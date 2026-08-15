@@ -25,6 +25,7 @@ from services.token_service import (
 )
 from services.ua_parser import parse_user_agent
 from services.security_event_service import emit_security_event as _emit_sec
+from services.permissions import SUPER_ADMIN_EMAILS
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -124,11 +125,26 @@ def _expose_reset_token() -> bool:
     return os.environ.get("EXPOSE_RESET_TOKEN", "0") == "1"
 
 
+# Common passwords that satisfy the length + letter+digit rule below but are
+# trivially guessable in a credential-stuffing / online-guessing attack.
+# Not exhaustive by design — this blocks the handful an attacker tries first,
+# not a full breached-password corpus (that would need an external API call).
+_COMMON_WEAK_PASSWORDS = {
+    "password1", "password12", "password123", "12345678", "123456789",
+    "qwerty123", "qwertyuiop", "letmein123", "welcome123", "admin1234",
+    "iloveyou1", "monkey123", "dragon123", "football1", "baseball1",
+    "trustno1a", "abc123456", "passw0rd1", "p@ssw0rd1", "changeme1",
+    "sunshine1", "princess1", "1qaz2wsx3e",
+}
+
+
 def _validate_password(pw: str) -> None:
     if len(pw) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
     if not re.search(r"[A-Za-z]", pw) or not re.search(r"\d", pw):
         raise HTTPException(status_code=400, detail="Password must contain at least one letter and one digit")
+    if pw.lower() in _COMMON_WEAK_PASSWORDS:
+        raise HTTPException(status_code=400, detail="This password is too common. Please choose a stronger one.")
 
 
 def _now():
@@ -256,8 +272,27 @@ async def register(request: Request, payload: RegisterIn, response: Response):
             detail="Temporary and disposable email addresses are not accepted. Please use a permanent institutional or personal email address."
         )
     existing = await db.users.find_one({"email": email})
-    if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+    # services.permissions.is_super_admin() grants super_admin purely by email
+    # match, independent of the stored `role` field — so any address in that
+    # set must never be claimable through public self-signup either.
+    if existing or email in SUPER_ADMIN_EMAILS:
+        # AUTH-EMAIL-ENUM: a distinguishing 400 here (the old behaviour) lets
+        # a scripted caller test many addresses and learn which ones already
+        # have accounts — a direct information leak, worse still for the
+        # protected admin address. Instead respond with the exact status and
+        # shape a fresh unverified signup returns, so this branch is
+        # indistinguishable from a real one to the caller. No account is
+        # created and nothing is sent to the real owner.
+        return {
+            "id": None,
+            "email": email,
+            "full_name": payload.full_name,
+            "onboarded": False,
+            "email_verified": False,
+            "is_super_admin": False,
+            "verification_email_sent": True,
+            "email_send_mode": "queued",
+        }
     ref_code = (payload.model_dump().get("referral_code") if hasattr(payload, "model_dump") else None)
     if not ref_code:
         ref_code = request.query_params.get("ref")

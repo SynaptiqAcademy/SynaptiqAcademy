@@ -16,6 +16,7 @@ from fastapi import HTTPException
 
 from db import get_db
 from plans_catalogue import get_plan, CREDIT_COSTS
+from rate_limit import check_ai_rate_limit
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -141,6 +142,12 @@ async def consume_credits(user_id: str, action: str, metadata: dict | None = Non
 
     Returns the resulting balances + per-bucket split of what was consumed.
     """
+    # Every credit-billed AI feature across the app funnels through here before
+    # calling out to a real LLM provider — rate limit at this single chokepoint
+    # (429) so one account can't burst through the shared AI budget. See
+    # rate_limit.check_ai_rate_limit for details.
+    check_ai_rate_limit(user_id)
+
     db = get_db()
     db = DBProxy(db, SecurityContext.system())
 

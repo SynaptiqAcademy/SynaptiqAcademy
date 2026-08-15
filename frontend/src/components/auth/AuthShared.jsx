@@ -446,11 +446,12 @@ export function AuthFooter({ children }) {
   );
 }
 
-export function AuthLink({ to, children, testId }) {
+export function AuthLink({ to, children, testId, onClick }) {
   return (
     <Link
       to={to}
       data-testid={testId}
+      onClick={onClick}
       style={{ color: NAVY, fontWeight: 600, textDecoration: "none", transition: "opacity 150ms" }}
       onMouseEnter={function(e) { e.currentTarget.style.opacity = "0.7"; }}
       onMouseLeave={function(e) { e.currentTarget.style.opacity = "1"; }}

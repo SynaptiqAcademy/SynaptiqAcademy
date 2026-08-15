@@ -22,6 +22,25 @@ _user_cache: TTLCache = TTLCache(maxsize=2000, ttl=60)
 _user_cache_lock = threading.Lock()
 
 
+def safe_disposition_filename(name: str, fallback: str = "file") -> str:
+    """Sanitise a user-supplied filename for use inside a quoted
+    Content-Disposition header value.
+
+    Upload/rename endpoints store the caller's filename verbatim (e.g.
+    ``file.filename`` from a multipart upload); some download endpoints later
+    interpolate that value straight into an f-string header. A filename
+    containing a `"` breaks out of the quoted value, and CR/LF bytes enable
+    HTTP header/response splitting — both are attacker-controlled at upload
+    time. Strip control characters and quotes rather than escaping them, so
+    the sanitised value can never need further escaping downstream.
+    """
+    if not name:
+        return fallback
+    cleaned = "".join(c for c in name if c.isprintable() and c not in ('"', "\\"))
+    cleaned = cleaned.replace("\r", "").replace("\n", "").strip()
+    return cleaned or fallback
+
+
 def invalidate_user_cache(user_id: str) -> None:
     """Remove a user's cached document immediately (e.g. after suspend/update)."""
     with _user_cache_lock:
@@ -37,6 +56,7 @@ CSRF_MAX_AGE = ACCESS_MIN * 60  # same lifetime as access token
 _WEAK_SECRETS = {
     "secret", "password", "changeme", "jwt_secret", "your_secret",
     "synaptiq", "development", "1234567890", "abc123",
+    "test", "example", "localhost", "sample", "placeholder",
 }
 
 

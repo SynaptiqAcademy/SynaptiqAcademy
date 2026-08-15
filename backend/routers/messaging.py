@@ -12,7 +12,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
-from auth_utils import get_current_user, JWT_ALGORITHM
+from auth_utils import get_current_user, JWT_ALGORITHM, safe_disposition_filename
 from db import get_db
 from services.realtime import manager
 from services.storage_service import put_object, get_object, build_path
@@ -869,7 +869,7 @@ async def download_file(attachment_id: str, request_user: dict = Depends(get_cur
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Storage error: {str(e)[:200]}")
     return Response(content=data, media_type=att.get("content_type", ctype),
-                    headers={"Content-Disposition": f'inline; filename="{att.get("original_filename","file")}"'})
+                    headers={"Content-Disposition": f'inline; filename="{safe_disposition_filename(att.get("original_filename"))}"'})
 
 
 # Convenience: GET via query-param auth for <img src>
