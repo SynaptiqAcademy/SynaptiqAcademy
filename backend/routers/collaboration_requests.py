@@ -4,7 +4,8 @@ Connects the Research Gap Finder and Collaboration Intelligence workflows into
 a real collaboration pipeline. A request carries an optional project_id so the
 receiver knows what they are being invited to.
 
-On accept the sender can then create a Workspace or Project Team.
+On accept, a Workspace is auto-provisioned (typed by invitation_type — e.g.
+grant_team -> "Grant Proposal") and both parties are added as members.
 
 Endpoints:
   POST /api/collaboration-requests          — send a request
@@ -27,6 +28,7 @@ from pydantic import BaseModel, Field
 from auth_utils import get_current_user
 from db import get_db
 from services.notifications_service import dispatch, NotificationEvent
+from services.workspace_provisioning import provision_workspace
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -38,6 +40,14 @@ INVITATION_TYPES = {
     "research_collaboration", "project_invitation", "workspace_invitation",
     "manuscript_invitation", "grant_team", "conference_team",
     "reviewer", "mentorship", "institutional_collaboration",
+}
+# What kind of shared workspace to auto-provision when a request of this
+# invitation_type is accepted. Everything not listed defaults to "Research Project".
+_INVITATION_TYPE_TO_WORKSPACE_TYPE = {
+    "manuscript_invitation": "Manuscript",
+    "grant_team":            "Grant Proposal",
+    "conference_team":       "Conference Paper",
+    "institutional_collaboration": "Institutional Research Team",
 }
 REQUEST_EXPIRY_DAYS = 30
 
@@ -253,6 +263,67 @@ async def list_my_requests(
     return [_enrich_request(_ser(d), users_map) for d in docs]
 
 
+@router.get("/metrics")
+async def get_collab_metrics(user: dict = Depends(get_current_user)):
+    """Aggregate collaboration workflow stats for the current user."""
+    db = get_db()
+    db = DBProxy(db, SecurityContext.from_user(user))
+
+    uid = user["id"]
+
+    sent   = await db.collaboration_requests.count_documents({"sender_id": uid})
+    received = await db.collaboration_requests.count_documents({"receiver_id": uid})
+    accepted = await db.collaboration_requests.count_documents({
+        "$or": [{"sender_id": uid}, {"receiver_id": uid}],
+        "status": "accepted",
+    })
+    pending_received = await db.collaboration_requests.count_documents({
+        "receiver_id": uid, "status": "pending",
+    })
+
+    gap_runs = await db.research_gap_reviews.count_documents({"user_id": uid})
+    collab_runs = await db.collaboration_recommendations.count_documents({"user_id": uid})
+    total_recs_cursor = await db.collaboration_recommendations.aggregate([
+        {"$match": {"user_id": uid}},
+        {"$group": {"_id": None, "total": {"$sum": "$recommendation_count"}}},
+    ]).to_list(1)
+    total_recs = total_recs_cursor[0]["total"] if total_recs_cursor else 0
+
+    projects_from_gap = await db.projects.count_documents({"owner_id": uid, "source": "gap_finder"})
+    projects_from_collab = await db.projects.count_documents({"owner_id": uid, "source": "collab_intel"})
+    total_projects = await db.projects.count_documents(
+        {"$or": [{"owner_id": uid}, {"members": uid}]}
+    )
+
+    recent_gaps = await db.research_gap_reviews.find(
+        {"user_id": uid},
+        {"topic": 1, "publication_score": 1, "keywords": 1, "created_at": 1},
+    ).sort("created_at", -1).to_list(5)
+
+    return {
+        "requests_sent":         sent,
+        "requests_received":     received,
+        "requests_accepted":     accepted,
+        "pending_received":      pending_received,
+        "gap_analyses":          gap_runs,
+        "collab_intel_runs":     collab_runs,
+        "total_recommendations": total_recs,
+        "projects_from_gap":     projects_from_gap,
+        "projects_from_collab":  projects_from_collab,
+        "total_projects":        total_projects,
+        "recent_gap_analyses": [
+            {
+                "id":               str(g["_id"]),
+                "topic":            g.get("topic", ""),
+                "publication_score": g.get("publication_score", 0),
+                "keywords":         g.get("keywords", [])[:3],
+                "created_at":       g.get("created_at"),
+            }
+            for g in recent_gaps
+        ],
+    }
+
+
 @router.get("/{request_id}")
 async def get_request(request_id: str, user: dict = Depends(get_current_user)):
     """Get a single collaboration request by ID (sender or receiver only)."""
@@ -365,6 +436,7 @@ async def update_request_status(
         raise HTTPException(409, "Request was already processed by a concurrent action.")
 
     # ── Accept side effects ──────────────────────────────────────────────────
+    workspace_id: str | None = None
     if body.status == "accepted":
         # 1. Add sender to project if receiver has access
         if req.get("project_id"):
@@ -379,7 +451,37 @@ async def update_request_status(
             except Exception as exc:
                 log.warning("Failed to add member to project after accept: %s", exc)
 
-        # 2. Record team membership
+        # 2. Auto-provision a shared workspace for the two parties. Non-fatal —
+        # a provisioning failure never blocks the accept itself, it just means
+        # the pair falls back to the manual "New Workspace" flow.
+        try:
+            sender_doc = await db.users.find_one(
+                {"_id": ObjectId(req["sender_id"])}, {"full_name": 1}
+            )
+            sender_name = (sender_doc or {}).get("full_name") or "Collaborator"
+            ws_type = _INVITATION_TYPE_TO_WORKSPACE_TYPE.get(
+                req.get("invitation_type", "research_collaboration"), "Research Project"
+            )
+            ws = await provision_workspace(
+                db, owner_id=uid, owner_name=user.get("full_name") or "Someone",
+                name=f"{sender_name} × {user.get('full_name') or 'Collaborator'} — {ws_type}",
+                workspace_type=ws_type,
+                extra_members={req["sender_id"]: "Co-Author"},
+                project_id=req.get("project_id"),
+                description=req.get("message") or "",
+                activity_message=f"Workspace auto-created from an accepted collaboration request ({ws_type}).",
+            )
+            workspace_id = ws["id"]
+            # Persist onto the request doc itself so GET /collaboration-requests
+            # keeps returning workspace_id on later page loads, not just in this
+            # response.
+            await db.collaboration_requests.update_one(
+                {"_id": oid}, {"$set": {"workspace_id": workspace_id}}
+            )
+        except Exception as exc:
+            log.warning("Workspace auto-provisioning after accept failed: %s", exc)
+
+        # 3. Record team membership
         try:
             await db.team_memberships.insert_one({
                 "user_id":         req["sender_id"],
@@ -389,6 +491,7 @@ async def update_request_status(
                 "entity_type":     "collaboration_request",
                 "entity_id":       request_id,
                 "project_id":      req.get("project_id"),
+                "workspace_id":    workspace_id,
                 "role":            req.get("role") or "collaborator",
                 "joined_at":       now,
                 "created_at":      now,
@@ -396,7 +499,7 @@ async def update_request_status(
         except Exception as exc:
             log.warning("team_memberships insert failed: %s", exc)
 
-        # 3. Auto-create DM conversation so they can immediately communicate
+        # 4. Auto-create DM conversation so they can immediately communicate
         try:
             sorted_ids = sorted([req["sender_id"], uid])
             conv_key = f"direct:{sorted_ids[0]}:{sorted_ids[1]}"
@@ -455,67 +558,9 @@ async def update_request_status(
     }
     await _track(db, uid, action_map.get(body.status, "request_updated"),
                  "collaboration_request", request_id,
-                 {"status": body.status, "project_id": req.get("project_id")})
+                 {"status": body.status, "project_id": req.get("project_id"),
+                  "workspace_id": workspace_id})
 
-    return {"id": request_id, "status": body.status, "updated_at": now}
+    return {"id": request_id, "status": body.status, "updated_at": now, "workspace_id": workspace_id}
 
 
-@router.get("/metrics")
-async def get_collab_metrics(user: dict = Depends(get_current_user)):
-    """Aggregate collaboration workflow stats for the current user."""
-    db = get_db()
-    db = DBProxy(db, SecurityContext.from_user(user))
-
-    uid = user["id"]
-
-    sent   = await db.collaboration_requests.count_documents({"sender_id": uid})
-    received = await db.collaboration_requests.count_documents({"receiver_id": uid})
-    accepted = await db.collaboration_requests.count_documents({
-        "$or": [{"sender_id": uid}, {"receiver_id": uid}],
-        "status": "accepted",
-    })
-    pending_received = await db.collaboration_requests.count_documents({
-        "receiver_id": uid, "status": "pending",
-    })
-
-    gap_runs = await db.research_gap_reviews.count_documents({"user_id": uid})
-    collab_runs = await db.collaboration_recommendations.count_documents({"user_id": uid})
-    total_recs_cursor = await db.collaboration_recommendations.aggregate([
-        {"$match": {"user_id": uid}},
-        {"$group": {"_id": None, "total": {"$sum": "$recommendation_count"}}},
-    ]).to_list(1)
-    total_recs = total_recs_cursor[0]["total"] if total_recs_cursor else 0
-
-    projects_from_gap = await db.projects.count_documents({"owner_id": uid, "source": "gap_finder"})
-    projects_from_collab = await db.projects.count_documents({"owner_id": uid, "source": "collab_intel"})
-    total_projects = await db.projects.count_documents(
-        {"$or": [{"owner_id": uid}, {"members": uid}]}
-    )
-
-    recent_gaps = await db.research_gap_reviews.find(
-        {"user_id": uid},
-        {"topic": 1, "publication_score": 1, "keywords": 1, "created_at": 1},
-    ).sort("created_at", -1).to_list(5)
-
-    return {
-        "requests_sent":         sent,
-        "requests_received":     received,
-        "requests_accepted":     accepted,
-        "pending_received":      pending_received,
-        "gap_analyses":          gap_runs,
-        "collab_intel_runs":     collab_runs,
-        "total_recommendations": total_recs,
-        "projects_from_gap":     projects_from_gap,
-        "projects_from_collab":  projects_from_collab,
-        "total_projects":        total_projects,
-        "recent_gap_analyses": [
-            {
-                "id":               str(g["_id"]),
-                "topic":            g.get("topic", ""),
-                "publication_score": g.get("publication_score", 0),
-                "keywords":         g.get("keywords", [])[:3],
-                "created_at":       g.get("created_at"),
-            }
-            for g in recent_gaps
-        ],
-    }

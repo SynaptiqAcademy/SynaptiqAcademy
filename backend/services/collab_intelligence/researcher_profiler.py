@@ -97,7 +97,20 @@ def build_researcher_profile(user: dict) -> ResearcherProfile:
         if intl_collab:
             intl_ratio = min(intl_collab / collab_count, 1.0)
 
-    availability = float(user.get("availability") or user.get("availability_score") or 0.5)
+    # "availability" on the user profile is a status label ("Available",
+    # "Limited Availability", "Not Currently Available" — see AVAILABILITY_OPTIONS
+    # in Profile.jsx/Network.jsx), not a number. availability_score is the
+    # actual numeric field this matcher wants; map the label as a fallback
+    # instead of feeding a string straight into float().
+    _availability_score_raw = user.get("availability_score")
+    if _availability_score_raw is not None:
+        availability = float(_availability_score_raw)
+    else:
+        availability = {
+            "available": 1.0,
+            "limited availability": 0.6,
+            "not currently available": 0.1,
+        }.get(str(user.get("availability") or "").strip().lower(), 0.5)
     response_rate = float(user.get("response_rate") or 0.7)
 
     productivity = _productivity_score(user)

@@ -16,7 +16,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from auth_utils import get_current_user
 from db import get_db
-from services.permissions import check_discovery_quota
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -58,7 +57,9 @@ async def list_conferences(
     page_size: int = Query(24, ge=1, le=100),
     user: dict = Depends(get_current_user),
 ):
-    await check_discovery_quota(user, "conference")
+    # Manual search/browse is core platform functionality, not a paid
+    # "recommendation" quota — see routers/grants.py's list_grants for the
+    # same reasoning.
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 

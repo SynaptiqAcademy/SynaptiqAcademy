@@ -65,9 +65,19 @@ async def _resolve_entity_members(entity_kind: str, entity_id: str) -> tuple[Opt
     if not coll: return None, []
     d = await db[coll].find_one({"_id": oid})
     if not d: return None, []
-    members = set(d.get("member_ids") or []) | set(d.get("team") or []) | set(d.get("author_ids") or [])
+    # Field names vary by entity: projects/workspaces use owner_id + members,
+    # manuscripts use authors (see routers/manuscripts.py's create doc) — no
+    # manuscript document has member_ids/team/author_ids/owner_id/created_by,
+    # so without this, every manuscript's own authors were locked out of its
+    # own files (only admins could ever see them).
+    members = (
+        set(d.get("member_ids") or []) | set(d.get("members") or [])
+        | set(d.get("team") or [])
+        | set(d.get("author_ids") or []) | set(d.get("authors") or [])
+    )
     if d.get("owner_id"): members.add(d["owner_id"])
     if d.get("created_by"): members.add(d["created_by"])
+    if d.get("lead_author_id"): members.add(d["lead_author_id"])
     return d, list(members)
 
 

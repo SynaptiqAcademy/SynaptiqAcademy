@@ -143,13 +143,13 @@ class CreditsIn(BaseModel):
 async def create_my_provider_profile(data: ProviderProfileIn,
                                       user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await provider_engine.create_provider_profile(str(user["_id"]), data.model_dump(), db)
+    return await provider_engine.create_provider_profile(str(user["id"]), data.model_dump(), db)
 
 
 @router.get("/providers/me")
 async def get_my_provider_profile(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    p = await provider_engine.get_provider_by_user(str(user["_id"]), db)
+    p = await provider_engine.get_provider_by_user(str(user["id"]), db)
     if not p:
         return {"error": "No provider profile found"}
     return p
@@ -159,7 +159,7 @@ async def get_my_provider_profile(user=Depends(get_current_user), db=Depends(get
 async def update_my_provider_profile(data: ProviderProfileIn,
                                       user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await provider_engine.update_provider_profile(str(user["_id"]), data.model_dump(), db)
+    return await provider_engine.update_provider_profile(str(user["id"]), data.model_dump(), db)
 
 
 @router.get("/providers/search")
@@ -200,19 +200,19 @@ async def get_provider_portfolio(provider_id: str,
 @router.get("/providers/me/portfolio")
 async def get_my_portfolio(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await provider_engine.get_portfolio(str(user["_id"]), db)
+    return await provider_engine.get_portfolio(str(user["id"]), db)
 
 
 @router.post("/providers/me/portfolio")
 async def add_portfolio_item(data: PortfolioItemIn, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await provider_engine.add_portfolio_item(str(user["_id"]), data.model_dump(), db)
+    return await provider_engine.add_portfolio_item(str(user["id"]), data.model_dump(), db)
 
 
 @router.delete("/providers/me/portfolio/{item_id}")
 async def delete_portfolio_item(item_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    ok = await provider_engine.delete_portfolio_item(item_id, str(user["_id"]), db)
+    ok = await provider_engine.delete_portfolio_item(item_id, str(user["id"]), db)
     return {"deleted": ok}
 
 
@@ -221,7 +221,7 @@ async def delete_portfolio_item(item_id: str, user=Depends(get_current_user), db
 @router.post("/services")
 async def create_service(data: ServiceIn, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await service_engine.create_service(str(user["_id"]), data.model_dump(), db)
+    return await service_engine.create_service(str(user["id"]), data.model_dump(), db)
 
 
 @router.get("/services")
@@ -247,7 +247,7 @@ async def get_categories(user=Depends(get_current_user)):
 @router.get("/services/my")
 async def get_my_services(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await service_engine.get_my_services(str(user["_id"]), db)
+    return await service_engine.get_my_services(str(user["id"]), db)
 
 
 @router.get("/services/{service_id}")
@@ -261,14 +261,14 @@ async def get_service(service_id: str, user=Depends(get_current_user), db=Depend
 async def update_service(service_id: str, data: ServiceIn,
                           user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    s = await service_engine.update_service(service_id, str(user["_id"]), data.model_dump(), db)
+    s = await service_engine.update_service(service_id, str(user["id"]), data.model_dump(), db)
     return s or {"error": "Service not found or not authorized"}
 
 
 @router.delete("/services/{service_id}")
 async def delete_service(service_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    ok = await service_engine.delete_service(service_id, str(user["_id"]), db)
+    ok = await service_engine.delete_service(service_id, str(user["id"]), db)
     return {"deleted": ok}
 
 
@@ -287,12 +287,12 @@ async def estimate_quality(service_id: str, user=Depends(get_current_user), db=D
 @router.post("/orders")
 async def create_order(data: OrderIn, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    order = await order_engine.create_order(str(user["_id"]), data.model_dump(), db)
+    order = await order_engine.create_order(str(user["id"]), data.model_dump(), db)
     if "error" not in order:
         await enqueue_job(
             Job(job_type="marketplace.process",
                 payload={"order_id": order["id"], "action": "generate_contract"},
-                user_id=str(user["_id"])),
+                user_id=str(user["id"])),
             db,
         )
     return order
@@ -303,7 +303,7 @@ async def list_my_orders(role: str = "buyer", status: Optional[str] = None,
                           page: int = 1, limit: int = 20,
                           user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await order_engine.list_orders(str(user["_id"]), db, role, status, page, limit)
+    return await order_engine.list_orders(str(user["id"]), db, role, status, page, limit)
 
 
 @router.get("/orders/{order_id}")
@@ -312,7 +312,7 @@ async def get_order(order_id: str, user=Depends(get_current_user), db=Depends(ge
     o = await order_engine.get_order(order_id, db)
     if not o:
         return {"error": "Order not found"}
-    uid = str(user["_id"])
+    uid = str(user["id"])
     if o.get("buyer_user_id") != uid and o.get("provider_user_id") != uid:
         return {"error": "Not authorized"}
     return o
@@ -322,7 +322,7 @@ async def get_order(order_id: str, user=Depends(get_current_user), db=Depends(ge
 async def transition_order(order_id: str, data: TransitionIn,
                             user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await order_engine.transition_order(order_id, str(user["_id"]),
+    return await order_engine.transition_order(order_id, str(user["id"]),
                                                 data.status, data.note or "", db)
 
 
@@ -330,14 +330,14 @@ async def transition_order(order_id: str, data: TransitionIn,
 async def submit_deliverable(order_id: str, data: DeliverableIn,
                                user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await order_engine.submit_deliverable(order_id, str(user["_id"]), data.model_dump(), db)
+    return await order_engine.submit_deliverable(order_id, str(user["id"]), data.model_dump(), db)
 
 
 @router.post("/orders/{order_id}/revision-notes")
 async def add_revision_note(order_id: str, data: RevisionNoteIn,
                               user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await order_engine.add_revision_note(order_id, str(user["_id"]), data.note, db)
+    return await order_engine.add_revision_note(order_id, str(user["id"]), data.note, db)
 
 
 # ── Contract endpoints ────────────────────────────────────────────────────────
@@ -345,20 +345,20 @@ async def add_revision_note(order_id: str, data: RevisionNoteIn,
 @router.get("/contracts")
 async def list_my_contracts(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await contract_engine.list_my_contracts(str(user["_id"]), db)
+    return await contract_engine.list_my_contracts(str(user["id"]), db)
 
 
 @router.get("/contracts/{order_id}")
 async def get_contract(order_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    c = await contract_engine.get_contract(order_id, str(user["_id"]), db)
+    c = await contract_engine.get_contract(order_id, str(user["id"]), db)
     return c or {"error": "Contract not found"}
 
 
 @router.post("/contracts/{order_id}/accept")
 async def provider_accept_contract(order_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await contract_engine.provider_accept_contract(order_id, str(user["_id"]), db)
+    return await contract_engine.provider_accept_contract(order_id, str(user["id"]), db)
 
 
 # ── Payment / Wallet endpoints ────────────────────────────────────────────────
@@ -366,35 +366,35 @@ async def provider_accept_contract(order_id: str, user=Depends(get_current_user)
 @router.get("/wallet")
 async def get_wallet(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await payment_engine.get_wallet(str(user["_id"]), db)
+    return await payment_engine.get_wallet(str(user["id"]), db)
 
 
 @router.post("/wallet/credits")
 async def add_credits(data: CreditsIn, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await payment_engine.add_credits(str(user["_id"]), data.credits, data.reason, db)
+    return await payment_engine.add_credits(str(user["id"]), data.credits, data.reason, db)
 
 
 @router.get("/wallet/transactions")
 async def get_transactions(page: int = 1, limit: int = 30,
                             user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await payment_engine.get_transactions(str(user["_id"]), db, page, limit)
+    return await payment_engine.get_transactions(str(user["id"]), db, page, limit)
 
 
 @router.get("/invoices/{order_id}")
 async def get_invoice(order_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await payment_engine.get_invoice(order_id, str(user["_id"]), db)
+    return await payment_engine.get_invoice(order_id, str(user["id"]), db)
 
 
 @router.post("/escrow/{order_id}/hold")
 async def hold_escrow(order_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     o = await order_engine.get_order(order_id, db)
-    if not o or o.get("buyer_user_id") != str(user["_id"]):
+    if not o or o.get("buyer_user_id") != str(user["id"]):
         return {"error": "Not authorized"}
-    return await payment_engine.hold_in_escrow(order_id, str(user["_id"]),
+    return await payment_engine.hold_in_escrow(order_id, str(user["id"]),
                                                 o.get("price", 0), o.get("currency", "USD"), db)
 
 
@@ -402,7 +402,7 @@ async def hold_escrow(order_id: str, user=Depends(get_current_user), db=Depends(
 async def release_escrow(order_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     o = await order_engine.get_order(order_id, db)
-    if not o or o.get("buyer_user_id") != str(user["_id"]):
+    if not o or o.get("buyer_user_id") != str(user["id"]):
         return {"error": "Not authorized"}
     if o.get("status") != "completed":
         return {"error": "Order must be completed first"}
@@ -414,7 +414,7 @@ async def release_escrow(order_id: str, user=Depends(get_current_user), db=Depen
 @router.post("/ratings")
 async def submit_rating(data: RatingIn, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await rating_engine.submit_rating(str(user["_id"]), data.model_dump(), db)
+    return await rating_engine.submit_rating(str(user["id"]), data.model_dump(), db)
 
 
 @router.get("/ratings/providers/{provider_user_id}")
@@ -442,7 +442,7 @@ async def get_service_ratings(service_id: str, page: int = 1, limit: int = 10,
 async def provider_respond_rating(rating_id: str, data: RatingResponseIn,
                                    user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await rating_engine.provider_respond_to_rating(rating_id, str(user["_id"]),
+    return await rating_engine.provider_respond_to_rating(rating_id, str(user["id"]),
                                                            data.response, db)
 
 
@@ -457,19 +457,19 @@ async def mark_helpful(rating_id: str, user=Depends(get_current_user), db=Depend
 @router.post("/disputes")
 async def open_dispute(data: DisputeIn, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await dispute_engine.open_dispute(str(user["_id"]), data.model_dump(), db)
+    return await dispute_engine.open_dispute(str(user["id"]), data.model_dump(), db)
 
 
 @router.get("/disputes")
 async def list_my_disputes(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await dispute_engine.list_my_disputes(str(user["_id"]), db)
+    return await dispute_engine.list_my_disputes(str(user["id"]), db)
 
 
 @router.get("/disputes/{dispute_id}")
 async def get_dispute(dispute_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    d = await dispute_engine.get_dispute(dispute_id, str(user["_id"]), db)
+    d = await dispute_engine.get_dispute(dispute_id, str(user["id"]), db)
     return d or {"error": "Dispute not found or not authorized"}
 
 
@@ -477,14 +477,14 @@ async def get_dispute(dispute_id: str, user=Depends(get_current_user), db=Depend
 async def add_evidence(dispute_id: str, data: EvidenceIn,
                         user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await dispute_engine.add_evidence(dispute_id, str(user["_id"]), data.model_dump(), db)
+    return await dispute_engine.add_evidence(dispute_id, str(user["id"]), data.model_dump(), db)
 
 
 @router.post("/disputes/{dispute_id}/messages")
 async def add_message(dispute_id: str, data: MessageIn,
                        user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await dispute_engine.add_message(dispute_id, str(user["_id"]), data.text, db)
+    return await dispute_engine.add_message(dispute_id, str(user["id"]), data.text, db)
 
 
 @router.post("/disputes/{dispute_id}/resolve")
@@ -494,7 +494,7 @@ async def resolve_dispute(dispute_id: str, data: ResolveDisputeIn,
     role = user.get("role", "")
     if role not in ("admin", "super_admin", "moderator"):
         return {"error": "Only platform moderators can resolve disputes"}
-    return await dispute_engine.resolve_dispute(dispute_id, str(user["_id"]),
+    return await dispute_engine.resolve_dispute(dispute_id, str(user["id"]),
                                                  data.resolution, data.note or "", db)
 
 
@@ -503,19 +503,19 @@ async def resolve_dispute(dispute_id: str, data: ResolveDisputeIn,
 @router.get("/analytics/provider")
 async def provider_dashboard(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await analytics_engine.get_provider_dashboard(str(user["_id"]), db)
+    return await analytics_engine.get_provider_dashboard(str(user["id"]), db)
 
 
 @router.get("/analytics/buyer")
 async def buyer_dashboard(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await analytics_engine.get_buyer_dashboard(str(user["_id"]), db)
+    return await analytics_engine.get_buyer_dashboard(str(user["id"]), db)
 
 
 @router.get("/analytics/services/{service_id}")
 async def service_analytics(service_id: str, user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await analytics_engine.get_service_analytics(service_id, str(user["_id"]), db)
+    return await analytics_engine.get_service_analytics(service_id, str(user["id"]), db)
 
 
 # ── Recommendation endpoints ──────────────────────────────────────────────────
@@ -524,13 +524,13 @@ async def service_analytics(service_id: str, user=Depends(get_current_user), db=
 async def get_recommendations(category: Optional[str] = None,
                                 user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    return await recommendation_engine.get_recommendations(str(user["_id"]), db, category)
+    return await recommendation_engine.get_recommendations(str(user["id"]), db, category)
 
 
 @router.post("/recommendations/refresh")
 async def refresh_recommendations(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    recs = await recommendation_engine.generate_recommendations(str(user["_id"]), db)
+    recs = await recommendation_engine.generate_recommendations(str(user["id"]), db)
     return {"generated": len(recs), "recommendations": recs}
 
 
@@ -538,7 +538,7 @@ async def refresh_recommendations(user=Depends(get_current_user), db=Depends(get
 async def dismiss_recommendation(service_id: str,
                                   user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
-    ok = await recommendation_engine.dismiss_recommendation(str(user["_id"]), service_id, db)
+    ok = await recommendation_engine.dismiss_recommendation(str(user["id"]), service_id, db)
     return {"dismissed": ok}
 
 
@@ -579,5 +579,5 @@ async def admin_resolve_dispute(dispute_id: str, data: ResolveDisputeIn,
                                  user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     zt_check(user, "admin", "admin")
-    return await dispute_engine.resolve_dispute(dispute_id, str(user["_id"]),
+    return await dispute_engine.resolve_dispute(dispute_id, str(user["id"]),
                                                  data.resolution, data.note or "", db)

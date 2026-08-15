@@ -27,7 +27,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from auth_utils import get_current_user
 from db import get_db
-from services.permissions import check_discovery_quota
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 from zt.deps import zt_check, zt_is_admin, zt_is_super_admin
@@ -87,7 +86,9 @@ async def list_grants(
     overview: bool = False,
     user: dict = Depends(get_current_user),
 ):
-    await check_discovery_quota(user, "grant")
+    # Manual search/browse is core platform functionality, not a paid
+    # "recommendation" — the discovery quota belongs on /matches (the
+    # actual personalized scoring endpoint), not on plain pagination.
     db = get_db()
 
     db = DBProxy(db, SecurityContext.from_user(user))

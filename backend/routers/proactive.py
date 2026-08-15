@@ -62,7 +62,7 @@ PROFILE_FIELDS = [
 # ── Evidence helpers ───────────────────────────────────────────────────────────
 
 def _uid(user: dict) -> str:
-    return str(user["_id"])
+    return str(user["id"])
 
 def _rec_id(*parts: str) -> str:
     """Stable deterministic ID so dismiss/accept can be stored."""

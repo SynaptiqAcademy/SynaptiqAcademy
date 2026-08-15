@@ -25,9 +25,13 @@ PLANS = [
             "workspaces": 1,
             "repository_gb": 0.5,           # 500 MB
             "team_seats": 1,
-            "journal_recs_per_month": 5,
-            "conference_recs_per_month": 5,
-            "grant_recs_per_month": 3,
+            # Unlimited on every plan, including Free — manual search/browse
+            # of journals, conferences and grants is core platform
+            # functionality, not a gated recommendation feature. See
+            # routers/grants.py's list_grants for the reasoning.
+            "journal_recs_per_month": -1,
+            "conference_recs_per_month": -1,
+            "grant_recs_per_month": -1,
         },
         "features": [
             "50 Research Credits / month",
@@ -37,9 +41,7 @@ PLANS = [
             "1 Active Project",
             "1 Workspace",
             "500 MB Repository Storage",
-            "5 Journal Recommendations / month",
-            "5 Conference Recommendations / month",
-            "3 Grant Recommendations / month",
+            "Full Journal, Conference & Grant Search",
             "Basic Profile Visibility",
         ],
         "excluded": [
@@ -47,7 +49,6 @@ PLANS = [
             "AI Manuscript Copilot",
             "Publication Tracking",
             "Advanced Analytics",
-            "Unlimited Discovery Tools",
             "Advanced Collaboration Features",
             "Priority Support",
         ],

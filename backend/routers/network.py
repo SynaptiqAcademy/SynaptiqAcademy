@@ -25,7 +25,7 @@ from services.network import (
 router = APIRouter(prefix="/api/network", tags=["network"])
 
 
-def _uid(user): return str(user["_id"])
+def _uid(user): return str(user["id"])
 
 
 # ── Pydantic models ──────────────────────────────────────────────────────────
