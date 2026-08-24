@@ -18,6 +18,7 @@ const ERROR_MESSAGES = {
   missing_profile:        "Your Google account is missing required profile information.",
   already_linked_to_other_account: "This Google account is already linked to a different SYNAPTIQ account.",
   no_session:             "Your session expired. Please sign in first, then link Google.",
+  registration_closed:    "New account registration is temporarily closed while we finish rolling out billing. Please check back soon.",
 };
 
 export default function GoogleCallback() {

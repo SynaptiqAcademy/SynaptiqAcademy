@@ -26,6 +26,7 @@ from services.token_service import (
 from services.ua_parser import parse_user_agent
 from services.security_event_service import emit_security_event as _emit_sec
 from services.permissions import SUPER_ADMIN_EMAILS
+from services.platform_flags import is_registration_open, REGISTRATION_CLOSED_MESSAGE
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -262,6 +263,9 @@ async def register(request: Request, payload: RegisterIn, response: Response):
     _raise_if_db_down()
     db = get_db()
     db = DBProxy(db, SecurityContext.system())
+
+    if not await is_registration_open(db):
+        raise HTTPException(status_code=403, detail=REGISTRATION_CLOSED_MESSAGE)
 
     email = payload.email.lower().strip()
     logger.info("[STEP 4] register() called for %s", email)

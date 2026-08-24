@@ -346,6 +346,24 @@ async def seed_admin_and_demo(db):
         {"$set": {"role": "user"}},
     )
 
+    # ── Public registration toggle (default: closed) ───────────────────────────
+    # Seeds the flag only if it doesn't exist yet — never overwrites an admin's
+    # later choice made via the Feature Flags admin panel.
+    await db.feature_flags.update_one(
+        {"name": "public_registration"},
+        {"$setOnInsert": {
+            "name": "public_registration",
+            "enabled": False,
+            "description": "Public self-signup (email/password + Google). Off until billing (Stripe) is live.",
+            "rollout_pct": 100,
+            "allowed_plans": None,
+            "created_at": now_iso,
+            "updated_at": now_iso,
+            "updated_by": "system-seed",
+        }},
+        upsert=True,
+    )
+
     # Demo users and sample collaborations — never created in production.
     # All demo records carry is_demo: True so they can be filtered from API responses.
     if not _IS_PROD:

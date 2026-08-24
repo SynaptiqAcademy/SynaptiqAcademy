@@ -438,6 +438,194 @@ class PurgeConfirm(dict):
     pass
 
 
+async def _purge_user_owned_data(db, uid: str) -> None:
+    """Delete every piece of data this user owns, across every collection
+    that stores a reference to them — everything except the users document
+    itself (callers delete that separately, since single-user purge and
+    bulk platform-reset batch it differently).
+
+    Shared by purge_user() (single-account GDPR erasure) and the platform
+    reset tool (routers/admin_platform_reset.py) so there is exactly one
+    place that has to know about every user-owned collection.
+    """
+    await revoke_all_user_tokens(uid)
+
+    # Collect a couple of id sets we need for two-level cascades (delete a
+    # child collection keyed by a parent id, where the parent is itself
+    # keyed by user_id) before the parent docs are deleted below.
+    ai_conv_ids = [
+        str(d["_id"]) async for d in db.ai_conversations.find({"user_id": uid}, {"_id": 1})
+    ]
+
+    # Delete across all collections — full cascade
+    await asyncio.gather(
+        # Owned entities
+        db.projects.delete_many({"owner_id": uid}),
+        db.workspaces.delete_many({"owner_id": uid}),
+        db.manuscripts.delete_many({"lead_author_id": uid}),
+        db.publications.delete_many({"owner_id": uid}),
+        db.repository_items.delete_many({"owner_id": uid}),
+        # Financial records
+        db.credit_transactions.delete_many({"user_id": uid}),
+        db.credit_purchases.delete_many({"user_id": uid}),
+        db.credit_usage.delete_many({"user_id": uid}),
+        db.billing_history.delete_many({"user_id": uid}),
+        db.subscriptions.delete_many({"user_id": uid}),
+        db.subscription_history.delete_many({"user_id": uid}),
+        # Auth records
+        db.refresh_tokens.delete_many({"user_id": uid}),
+        db.email_verifications.delete_many({"user_id": uid}),
+        db.password_resets.delete_many({"user_id": uid}),
+        db.trusted_devices.delete_many({"user_id": uid}),
+        db.mfa_configs.delete_many({"user_id": uid}),
+        # Notifications & consent
+        db.notifications.delete_many({"user_id": uid}),
+        db.consent_records.delete_many({"user_id": uid}),
+        db.email_preferences.delete_many({"user_id": uid}),
+        # Social / collaboration records
+        db.workspace_invitations.delete_many(
+            {"$or": [{"user_id": uid}, {"invited_by": uid}]}),
+        db.connection_requests.delete_many(
+            {"$or": [{"sender_id": uid}, {"receiver_id": uid}]}),
+        db.collaboration_requests.delete_many(
+            {"$or": [{"sender_id": uid}, {"receiver_id": uid}]}),
+        db.marketplace_invitations.delete_many(
+            {"$or": [{"from_user_id": uid}, {"to_user_id": uid}]}),
+        # review_requests holds two different schemas in the same collection:
+        # research_os.py's manuscript reviews (reviewer_id/requested_by) and
+        # reviewer_marketplace.py's marketplace requests (requester_user_id).
+        db.review_requests.delete_many(
+            {"$or": [{"reviewer_id": uid}, {"requested_by": uid}, {"requester_user_id": uid}]}),
+        db.review_assignments.delete_many({"reviewer_user_id": uid}),
+        db.reviewer_profiles.delete_many({"user_id": uid}),
+        # Manuscript contributions / comments / versions by this user
+        db.manuscript_contributions.delete_many({"user_id": uid}),
+        db.manuscript_comments.delete_many({"author_id": uid}),
+        db.manuscript_versions.delete_many({"author_id": uid}),
+        db.manuscript_reviews.delete_many({"user_id": uid}),
+        # Files owned by user
+        db.files.delete_many({"owner_id": uid}),
+        db.file_activity.delete_many({"actor_id": uid}),
+        # AI records
+        db.ai_requests.delete_many({"user_id": uid}),
+        db.abstract_generations.delete_many({"user_id": uid}),
+        db.literature_reviews.delete_many({"user_id": uid}),
+        db.research_gap_reviews.delete_many({"user_id": uid}),
+        db.research_design_reviews.delete_many({"user_id": uid}),
+        db.statistical_reviews.delete_many({"user_id": uid}),
+        db.rewriting_requests.delete_many({"user_id": uid}),
+        db.ai_conversations.delete_many({"user_id": uid}),
+        db.copilot_conversations.delete_many({"user_id": uid}),
+        db.knowledge_documents.delete_many({"user_id": uid}),
+        db.knowledge_chunks.delete_many({"user_id": uid}),
+        # Direct messaging
+        db.messages.delete_many({"sender_id": uid}),
+        db.conversations.delete_many({"created_by": uid}),
+        db.conversation_members.delete_many({"user_id": uid}),
+        # Activity trails
+        db.workspace_activity.delete_many({"actor_id": uid}),
+        db.collaboration_activity.delete_many({"user_id": uid}),
+        # Chat
+        db.chat_sessions.delete_many({"user_id": uid}),
+        db.saved_searches.delete_many({"user_id": uid}),
+        db.discovery_usage.delete_many({"user_id": uid}),
+        db.user_research_goals.delete_many({"user_id": uid}),
+        # Referrals
+        db.referrals.delete_many({"referrer_id": uid}),
+        db.referrals.delete_many({"referee_id": uid}),
+        # Workspace items (Notion-style docs/tasks)
+        db.workspace_items.delete_many({"creator_id": uid}),
+        db.item_comments.delete_many({"user_id": uid}),
+        # Profile / reputation / trust / verification
+        db.saved_researchers.delete_many({"$or": [{"user_id": uid}, {"saved_user_id": uid}]}),
+        db.profile_followers.delete_many({"$or": [{"follower_id": uid}, {"following_id": uid}]}),
+        db.public_profiles.delete_many({"user_id": uid}),
+        db.reputation_scores.delete_many({"user_id": uid}),
+        db.reputation_badges.delete_many({"user_id": uid}),
+        db.reputation_events.delete_many({"user_id": uid}),
+        db.research_reputation.delete_many({"user_id": uid}),
+        db.research_reputation_events.delete_many({"user_id": uid}),
+        db.research_reputation_badges.delete_many({"user_id": uid}),
+        db.research_impact.delete_many({"user_id": uid}),
+        db.verification_profiles.delete_many({"user_id": uid}),
+        db.verification_requests.delete_many({"user_id": uid}),
+        db.verification_badges.delete_many({"user_id": uid}),
+        db.trust_verifications.delete_many({"user_id": uid}),
+        db.trust_requests.delete_many({"user_id": uid}),
+        db.trust_audit.delete_many({"user_id": uid}),
+        db.trust_passports.delete_many({"user_id": uid}),
+        # SIE (self-improvement engine)
+        db.sie_career.delete_many({"user_id": uid}),
+        db.sie_roadmaps.delete_many({"user_id": uid}),
+        db.sie_missions.delete_many({"user_id": uid}),
+        db.sie_memory.delete_many({"user_id": uid}),
+        db.sie_goals.delete_many({"user_id": uid}),
+        db.sie_automations.delete_many({"user_id": uid}),
+        db.sie_commands.delete_many({"user_id": uid}),
+        db.sie_daily_agenda.delete_many({"user_id": uid}),
+        db.sie_progress_snapshots.delete_many({"user_id": uid}),
+        db.sie_weekly_plan.delete_many({"user_id": uid}),
+        db.sie_recommendations.delete_many({"user_id": uid}),
+        # Network hub
+        db.network_settings.delete_many({"user_id": uid}),
+        db.network_group_members.delete_many({"user_id": uid}),
+        db.network_community_members.delete_many({"user_id": uid}),
+        db.network_collaborations.delete_many({"owner_id": uid}),
+        db.network_event_registrations.delete_many({"user_id": uid}),
+        db.network_mentors.delete_many({"user_id": uid}),
+        db.network_mentorship_requests.delete_many(
+            {"$or": [{"mentee_id": uid}, {"mentor_user_id": uid}]}),
+        db.network_recommendations.delete_many({"user_id": uid}),
+        # Academic Marketplace
+        db.mkt_providers.delete_many({"user_id": uid}),
+        db.mkt_orders.delete_many({"$or": [{"buyer_user_id": uid}, {"provider_user_id": uid}]}),
+        db.mkt_wallet.delete_many({"user_id": uid}),
+        db.mkt_ratings.delete_many({"provider_user_id": uid}),
+        # Teaching OS
+        db.teaching_lessons.delete_many({"owner_id": uid}),
+        db.teaching_assessments.delete_many({"owner_id": uid}),
+        db.teaching_workspaces.delete_many({"owner_id": uid}),
+        # Conference team-forming
+        db.conference_submission_teams.delete_many({"lead_user_id": uid}),
+        db.conference_team_members.delete_many({"user_id": uid}),
+        # Grant Hub team formation
+        db.grant_team_members.delete_many({"user_id": uid}),
+        db.grant_team_invitations.delete_many({"user_id": uid}),
+        db.grant_collaborations.delete_many({"user_id": uid}),
+    )
+    # Child rows keyed by a parent id collected above
+    if ai_conv_ids:
+        await db.ai_messages.delete_many({"conv_id": {"$in": ai_conv_ids}})
+
+    # Remove user from others' membership arrays (non-owned entities)
+    await asyncio.gather(
+        db.workspaces.update_many(
+            {"members": uid},
+            {"$pull": {"members": uid}, "$unset": {f"member_roles.{uid}": ""}},
+        ),
+        db.projects.update_many(
+            {"members": uid},
+            {"$pull": {"members": uid}},
+        ),
+        db.manuscripts.update_many(
+            {"authors": uid},
+            {"$pull": {"authors": uid}},
+        ),
+        db.users.update_many(
+            {"connections": uid},
+            {"$pull": {"connections": uid}},
+        ),
+        db.workspace_items.update_many(
+            {"assignee_ids": uid},
+            {"$pull": {"assignee_ids": uid}},
+        ),
+        db.teaching_workspaces.update_many(
+            {"member_ids": uid},
+            {"$pull": {"member_ids": uid}, "$unset": {f"member_roles.{uid}": ""}},
+        ),
+    )
+
+
 @router.delete("/api/admin/users/{uid}/purge")
 async def purge_user(uid: str, request: Request, body: dict, admin: dict = Depends(require_super_admin)):
     """Permanently delete all user data across all collections.
@@ -461,90 +649,8 @@ async def purge_user(uid: str, request: Request, body: dict, admin: dict = Depen
         raise HTTPException(status_code=400, detail="Cannot purge a super admin account")
 
     original_email = user.get("email", "")
-    await revoke_all_user_tokens(uid)
-
-    # Delete across all collections — full cascade
-    await asyncio.gather(
-        db.users.delete_one({"_id": oid}),
-        # Owned entities
-        db.projects.delete_many({"owner_id": uid}),
-        db.workspaces.delete_many({"owner_id": uid}),
-        db.manuscripts.delete_many({"lead_author_id": uid}),
-        db.publications.delete_many({"owner_id": uid}),
-        db.repository_items.delete_many({"owner_id": uid}),
-        # Financial records
-        db.credit_transactions.delete_many({"user_id": uid}),
-        db.credit_purchases.delete_many({"user_id": uid}),
-        db.credit_usage.delete_many({"user_id": uid}),
-        db.billing_history.delete_many({"user_id": uid}),
-        db.subscriptions.delete_many({"user_id": uid}),
-        db.subscription_history.delete_many({"user_id": uid}),
-        # Auth records
-        db.refresh_tokens.delete_many({"user_id": uid}),
-        db.email_verifications.delete_many({"user_id": uid}),
-        db.password_resets.delete_many({"user_id": uid}),
-        # Notifications & consent
-        db.notifications.delete_many({"user_id": uid}),
-        db.consent_records.delete_many({"user_id": uid}),
-        db.email_preferences.delete_many({"user_id": uid}),
-        # Social / collaboration records
-        db.workspace_invitations.delete_many(
-            {"$or": [{"user_id": uid}, {"invited_by": uid}]}),
-        db.connection_requests.delete_many(
-            {"$or": [{"sender_id": uid}, {"receiver_id": uid}]}),
-        db.collaboration_requests.delete_many(
-            {"$or": [{"sender_id": uid}, {"receiver_id": uid}]}),
-        db.marketplace_invitations.delete_many(
-            {"$or": [{"from_user_id": uid}, {"to_user_id": uid}]}),
-        db.review_requests.delete_many(
-            {"$or": [{"reviewer_id": uid}, {"requested_by": uid}]}),
-        # Manuscript contributions / comments / versions by this user
-        db.manuscript_contributions.delete_many({"user_id": uid}),
-        db.manuscript_comments.delete_many({"author_id": uid}),
-        db.manuscript_versions.delete_many({"author_id": uid}),
-        db.manuscript_reviews.delete_many({"user_id": uid}),
-        # Files owned by user
-        db.files.delete_many({"owner_id": uid}),
-        db.file_activity.delete_many({"actor_id": uid}),
-        # AI records
-        db.ai_requests.delete_many({"user_id": uid}),
-        db.abstract_generations.delete_many({"user_id": uid}),
-        db.literature_reviews.delete_many({"user_id": uid}),
-        db.research_gap_reviews.delete_many({"user_id": uid}),
-        db.research_design_reviews.delete_many({"user_id": uid}),
-        db.statistical_reviews.delete_many({"user_id": uid}),
-        db.rewriting_requests.delete_many({"user_id": uid}),
-        # Activity trails
-        db.workspace_activity.delete_many({"actor_id": uid}),
-        db.collaboration_activity.delete_many({"user_id": uid}),
-        # Chat
-        db.chat_sessions.delete_many({"user_id": uid}),
-        db.saved_searches.delete_many({"user_id": uid}),
-        db.discovery_usage.delete_many({"user_id": uid}),
-        db.user_research_goals.delete_many({"user_id": uid}),
-        # Referrals
-        db.referrals.delete_many({"referrer_id": uid}),
-        db.referrals.delete_many({"referee_id": uid}),
-    )
-    # Remove user from others' membership arrays (non-owned entities)
-    await asyncio.gather(
-        db.workspaces.update_many(
-            {"members": uid},
-            {"$pull": {"members": uid}, "$unset": {f"member_roles.{uid}": ""}},
-        ),
-        db.projects.update_many(
-            {"members": uid},
-            {"$pull": {"members": uid}},
-        ),
-        db.manuscripts.update_many(
-            {"authors": uid},
-            {"$pull": {"authors": uid}},
-        ),
-        db.users.update_many(
-            {"connections": uid},
-            {"$pull": {"connections": uid}},
-        ),
-    )
+    await _purge_user_owned_data(db, uid)
+    await db.users.delete_one({"_id": oid})
 
     await log_event(
         "admin.gdpr.purge",

@@ -65,6 +65,7 @@ from routers import (
     admin_mfa as admin_mfa_router,
     mfa as mfa_router,
     admin_hardening as admin_hardening_router,
+    admin_platform_reset as admin_platform_reset_router,
     email_preferences as email_preferences_router,
     institutional_analytics as institutional_analytics_router,
     google_auth as google_auth_router,
@@ -375,6 +376,7 @@ app.include_router(admin_account_security_router.router)
 app.include_router(admin_mfa_router.router)
 app.include_router(mfa_router.router)
 app.include_router(admin_hardening_router.router)
+app.include_router(admin_platform_reset_router.router)
 app.include_router(email_preferences_router.router)
 app.include_router(institutional_analytics_router.router)
 app.include_router(google_auth_router.router)

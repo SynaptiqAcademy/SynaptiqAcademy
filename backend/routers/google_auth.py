@@ -26,6 +26,7 @@ from plans_catalogue import get_plan
 from routers.auth import _issue_tokens_and_cookies, _make_mfa_pending_token
 from services.admin_audit import log_event as _audit, request_meta as _req_meta
 from services.permissions import SUPER_ADMIN_EMAILS
+from services.platform_flags import is_registration_open
 from services import google_oauth as G
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
@@ -132,6 +133,8 @@ async def callback(
             # super_admin purely by email match must never be auto-provisioned
             # through a public OAuth flow — only via direct DB/seed control.
             return RedirectResponse(f"{frontend}/login?google_error=account_creation_blocked")
+        if not user_doc and not await is_registration_open(db):
+            return RedirectResponse(f"{frontend}/auth/google/callback?google_error=registration_closed")
         if not user_doc:
             # New account via Google
             doc = {

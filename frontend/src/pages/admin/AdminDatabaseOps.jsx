@@ -1,10 +1,10 @@
 /* eslint-disable */
 import React, { useState, useCallback, useEffect } from "react";
-import { Database, HardDrive, AlertTriangle, CheckCircle, RefreshCw, Activity } from "lucide-react";
+import { Database, HardDrive, AlertTriangle, CheckCircle, RefreshCw, Activity, Trash2 } from "lucide-react";
 import api from "@/lib/api";
 import { EMERALD, AMBER, CRIMSON, INFO, VIOLET } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
-import { Button, Card, StatCard, StatGrid, DataTable } from "@/components/ds";
+import { Button, Card, StatCard, StatGrid, DataTable, Alert } from "@/components/ds";
 
 function useAOS(path) {
   const [data, setData] = useState(null);
@@ -22,6 +22,100 @@ function useAOS(path) {
 
 function scoreColor(s) {
   return s >= 80 ? EMERALD : s >= 50 ? AMBER : CRIMSON;
+}
+
+function DangerZone() {
+  const [accounts, setAccounts] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [confirmText, setConfirmText] = useState("");
+  const [executing, setExecuting] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
+
+  const loadPreview = useCallback(() => {
+    setLoading(true);
+    setResult(null);
+    setError("");
+    api.get("/admin/platform-reset/preview")
+      .then((r) => setAccounts(r.data))
+      .catch(() => setError("Could not load account preview."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => { loadPreview(); }, [loadPreview]);
+
+  const canExecute = confirmText === "RESET" && !executing && (accounts?.count || 0) > 0;
+
+  const execute = () => {
+    if (!canExecute) return;
+    setExecuting(true);
+    setError("");
+    api.post("/admin/platform-reset/execute", { confirm: "RESET" })
+      .then((r) => { setResult(r.data); setConfirmText(""); loadPreview(); })
+      .catch((e) => setError(e?.response?.data?.detail || "Reset failed."))
+      .finally(() => setExecuting(false));
+  };
+
+  const accountColumns = [
+    { key: "email", label: "Email" },
+    { key: "full_name", label: "Name" },
+    { key: "role", label: "Role" },
+    { key: "plan_code", label: "Plan" },
+    { key: "created_at", label: "Created", render: (v) => (v || "").slice(0, 10) },
+  ];
+
+  return (
+    <Card padding="lg" accent={CRIMSON} className="bg-red-50/40 border-red-200">
+      <div className="flex items-center gap-2 mb-1">
+        <Trash2 size={16} style={{ color: CRIMSON }} />
+        <div className="text-sm font-semibold text-slate-800">Danger Zone — Reset to Zero</div>
+      </div>
+      <p className="text-xs text-slate-600 mb-3">
+        Permanently deletes every account except the protected super-admin, and every piece of
+        data those accounts own (projects, workspaces, manuscripts, messages, credits, sessions,
+        and everything else). Intended for the pre-launch testing period, before billing is live.
+        This cannot be undone.
+      </p>
+
+      {result && (
+        <div className="mb-3"><Alert variant="success">Deleted {result.deleted_users} account(s). The platform is now clean.</Alert></div>
+      )}
+      {error && (
+        <div className="mb-3"><Alert variant="error">{error}</Alert></div>
+      )}
+
+      {!loading && (accounts?.count || 0) === 0 && !result && (
+        <div className="flex items-center gap-2 text-sm" style={{ color: EMERALD }}>
+          <CheckCircle size={14} />
+          No accounts to delete — only the protected super-admin exists.
+        </div>
+      )}
+
+      {!loading && (accounts?.count || 0) > 0 && (
+        <>
+          <div className="text-xs font-medium text-slate-700 mb-2">
+            {accounts.count} account(s) will be permanently deleted:
+          </div>
+          <div className="overflow-y-auto max-h-64 mb-3">
+            <DataTable columns={accountColumns} rows={accounts.accounts} stickyHeader />
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder='Type "RESET" to confirm'
+              className="border border-red-300 rounded-md px-3 py-1.5 text-sm flex-1 max-w-xs"
+            />
+            <Button variant="danger" onClick={execute} disabled={!canExecute}>
+              {executing ? "Deleting…" : "Delete all non-admin accounts"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={loadPreview}>Refresh list</Button>
+          </div>
+        </>
+      )}
+    </Card>
+  );
 }
 
 export default function AdminDatabaseOps() {
@@ -133,6 +227,8 @@ export default function AdminDatabaseOps() {
           </div>
         </div>
       )}
+
+      <DangerZone />
     </AdministrationLayout>
   );
 }
