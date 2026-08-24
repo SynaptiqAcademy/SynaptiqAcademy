@@ -8,7 +8,7 @@ from bson.errors import InvalidId
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
-from auth_utils import serialize_user
+from auth_utils import serialize_user, invalidate_user_cache
 from db import get_db
 from services.admin_audit import log_event, request_meta
 from services.permissions import (
@@ -84,6 +84,11 @@ class SetRoleRequest(BaseModel):
     role: str
 
 
+class GrantFeatureRequest(BaseModel):
+    feature: str
+    reason: str = ""
+
+
 # ---------------------------------------------------------------------------
 # GET /api/admin/users
 # ---------------------------------------------------------------------------
@@ -139,6 +144,19 @@ async def list_users(
 # ---------------------------------------------------------------------------
 # GET /api/admin/users/stats — Context Panel data source for the Users list page
 # ---------------------------------------------------------------------------
+
+@router.get("/users/feature-catalogue", dependencies=[Depends(require_super_admin)])
+async def feature_catalogue():
+    """Every gatable feature key + the plan tier it normally requires, for the
+    grant-feature dropdown on AdminUserDetail. Registered before /users/{uid}
+    so it isn't shadowed by that dynamic route."""
+    from plans_catalogue import FEATURE_MIN_PLAN
+    return {
+        "features": [
+            {"feature": f, "min_plan": p} for f, p in sorted(FEATURE_MIN_PLAN.items())
+        ]
+    }
+
 
 @router.get("/users/stats", dependencies=[Depends(require_moderator_or_super_admin)])
 async def get_users_stats():
@@ -530,6 +548,85 @@ async def adjust_credits(
         target_id=uid, target_type="user", target_email=user.get("email"),
         ip=meta["ip"], user_agent=meta["user_agent"],
         extra={"amount": body.amount, "reason": body.reason},
+    )
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# POST /api/admin/users/{uid}/grant-feature — give this one user access to a
+# feature outside their plan tier, without upgrading their whole plan.
+# POST /api/admin/users/{uid}/revoke-feature — undo it.
+# ---------------------------------------------------------------------------
+
+@router.post("/users/{uid}/grant-feature")
+async def grant_feature(
+    uid: str,
+    body: GrantFeatureRequest,
+    request: Request,
+    admin: dict = Depends(require_super_admin),
+):
+    db = get_db()
+    db = DBProxy(db, SecurityContext.system())
+
+    oid = _parse_oid(uid)
+    user = await db.users.find_one({"_id": oid}, {"email": 1, "feature_overrides": 1})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    from plans_catalogue import FEATURE_MIN_PLAN
+    if body.feature not in FEATURE_MIN_PLAN:
+        raise HTTPException(status_code=400, detail=f"Unknown feature key: {body.feature}")
+
+    existing = user.get("feature_overrides") or []
+    if any(o.get("feature") == body.feature for o in existing if isinstance(o, dict)):
+        return {"ok": True, "already_granted": True}
+
+    now = _now_iso()
+    record = {
+        "feature": body.feature,
+        "reason": body.reason,
+        "granted_by": admin.get("email"),
+        "granted_at": now,
+    }
+    await db.users.update_one({"_id": oid}, {"$push": {"feature_overrides": record}})
+    invalidate_user_cache(uid)
+
+    meta = request_meta(request)
+    await log_event(
+        "admin.user.grant_feature",
+        actor_id=admin["id"], actor_email=admin.get("email"),
+        target_id=uid, target_type="user", target_email=user.get("email"),
+        ip=meta["ip"], user_agent=meta["user_agent"],
+        extra={"feature": body.feature, "reason": body.reason},
+    )
+    return {"ok": True}
+
+
+@router.post("/users/{uid}/revoke-feature")
+async def revoke_feature(
+    uid: str,
+    body: GrantFeatureRequest,
+    request: Request,
+    admin: dict = Depends(require_super_admin),
+):
+    db = get_db()
+    db = DBProxy(db, SecurityContext.system())
+
+    oid = _parse_oid(uid)
+    user = await db.users.find_one({"_id": oid}, {"email": 1})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    await db.users.update_one({"_id": oid}, {"$pull": {"feature_overrides": {"feature": body.feature}}})
+    invalidate_user_cache(uid)
+
+    meta = request_meta(request)
+    await log_event(
+        "admin.user.revoke_feature",
+        actor_id=admin["id"], actor_email=admin.get("email"),
+        target_id=uid, target_type="user", target_email=user.get("email"),
+        ip=meta["ip"], user_agent=meta["user_agent"],
+        extra={"feature": body.feature},
     )
     return {"ok": True}
 

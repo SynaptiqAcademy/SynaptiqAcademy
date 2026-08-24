@@ -80,8 +80,21 @@ def can_modify_target(actor: dict, target: dict) -> bool:
 
 # ---------------------------- predicates (sync, pure) ----------------------------
 
-def has_plan_at_least(user: dict, required: str) -> bool:
+def has_feature_override(user: dict, feature: str | None) -> bool:
+    """True if an admin has individually granted this user access to `feature`
+    outside their plan tier (see admin_users_mgmt.py's grant/revoke-feature
+    endpoints). Overrides are stored as a list on the user doc — see
+    services/feature_overrides.py for the exact record shape."""
+    if not feature:
+        return False
+    overrides = user.get("feature_overrides") or []
+    return any(o.get("feature") == feature for o in overrides if isinstance(o, dict))
+
+
+def has_plan_at_least(user: dict, required: str, *, feature: str | None = None) -> bool:
     if is_super_admin(user):
+        return True
+    if has_feature_override(user, feature):
         return True
     user_plan = user.get("plan_code") or "free"
     return PLAN_RANK.get(user_plan, 0) >= PLAN_RANK.get(required, 0)
@@ -100,7 +113,7 @@ def can_access_feature(user: dict, feature: str) -> tuple[bool, str | None]:
     """Returns (allowed, required_plan). Used by GET endpoints that should not
     raise but return a soft gate-state to the UI."""
     required = FEATURE_MIN_PLAN.get(feature, "free")
-    if has_plan_at_least(user, required):
+    if has_plan_at_least(user, required, feature=feature):
         return True, required
     return False, required
 
@@ -118,9 +131,9 @@ def can_consume_credits(user: dict, action: str, *, monthly_balance: int = 0,
 
 # ---------------------------- FastAPI dependencies ----------------------------
 
-def require_plan(min_plan: str) -> Callable:
+def require_plan(min_plan: str, *, feature: str | None = None) -> Callable:
     async def _dep(user: dict = Depends(get_current_user)) -> dict:
-        if not has_plan_at_least(user, min_plan):
+        if not has_plan_at_least(user, min_plan, feature=feature):
             raise HTTPException(
                 status_code=status.HTTP_402_PAYMENT_REQUIRED,
                 detail={
@@ -147,7 +160,7 @@ def require_plan(min_plan: str) -> Callable:
 
 def require_feature(feature: str) -> Callable:
     """Convenience wrapper for the feature catalogue."""
-    return require_plan(FEATURE_MIN_PLAN.get(feature, "free"))
+    return require_plan(FEATURE_MIN_PLAN.get(feature, "free"), feature=feature)
 
 
 def require_credits(action: str) -> Callable:
@@ -332,7 +345,7 @@ async def access_summary(user: dict) -> dict:
     """Used by GET /api/permissions/me to populate the frontend gating cache."""
     plan_code = user.get("plan_code") or "free"
     state = await ensure_user_credits(user["id"])
-    features = {f: has_plan_at_least(user, m) for f, m in FEATURE_MIN_PLAN.items()}
+    features = {f: has_plan_at_least(user, m, feature=f) for f, m in FEATURE_MIN_PLAN.items()}
     return {
         "is_super_admin": is_super_admin(user),
         "plan": plan_code,

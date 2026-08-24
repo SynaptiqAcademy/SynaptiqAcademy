@@ -62,8 +62,12 @@ async def issue_promotion(
     elif kind == "free_months":
         months = int(payload.get("months", 1))
         if months <= 0 or months > 24: raise HTTPException(400, "months must be 1..24")
-        await _grant_free_months(target_user_id, months)
-        effect = {"months_added": months}
+        gift_plan = payload.get("plan_code", "researcher")
+        from plans_catalogue import PLANS
+        if gift_plan not in {p["code"] for p in PLANS if p["code"] != "free"}:
+            raise HTTPException(400, f"Unknown or non-giftable plan code: {gift_plan}")
+        await _grant_free_months(target_user_id, months, plan_code=gift_plan)
+        effect = {"months_added": months, "plan_code": gift_plan}
 
     elif kind == "vip":
         await _grant_badge(target_user_id, "vip")

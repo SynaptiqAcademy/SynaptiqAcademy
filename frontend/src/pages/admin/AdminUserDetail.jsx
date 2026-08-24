@@ -64,7 +64,7 @@ function Confirm({ message, onConfirm, onCancel }) {
   );
 }
 
-function ActionResult({ onClick, label, loading, variant = "default" }) {
+function ActionResult({ onClick, label, loading, variant = "default", disabled = false }) {
   const base = "w-full py-2 text-sm font-medium transition-colors disabled:opacity-50";
   const styles = {
     default: "bg-[#0F2847] text-white hover:bg-slate-800",
@@ -72,7 +72,7 @@ function ActionResult({ onClick, label, loading, variant = "default" }) {
     outline: "border border-slate-300 text-slate-700 hover:bg-slate-50",
   };
   return (
-    <button onClick={onClick} disabled={loading} className={`${base} ${styles[variant]}`}>
+    <button onClick={onClick} disabled={loading || disabled} className={`${base} ${styles[variant]}`}>
       {loading ? "Working…" : label}
     </button>
   );
@@ -99,6 +99,11 @@ export default function AdminUserDetail() {
   const [creditReason, setCreditReason] = useState("");
   const [newRole, setNewRole] = useState("user");
   const [deleteEmail, setDeleteEmail] = useState("");
+  const [featureCatalogue, setFeatureCatalogue] = useState([]);
+  const [grantFeature, setGrantFeature] = useState("");
+  const [grantReason, setGrantReason] = useState("");
+  const [giftPlan, setGiftPlan] = useState("researcher");
+  const [giftMonths, setGiftMonths] = useState(1);
 
   const [timelineData, setTimelineData] = useState(null);
   const [timelineLoading, setTimelineLoading] = useState(false);
@@ -136,6 +141,14 @@ export default function AdminUserDetail() {
 
   useEffect(() => { loadUser(); }, [loadUser]);
   useEffect(() => {
+    api.get("/admin/users/feature-catalogue")
+      .then((r) => {
+        setFeatureCatalogue(r.data.features || []);
+        if (r.data.features?.length) setGrantFeature(r.data.features[0].feature);
+      })
+      .catch(() => {});
+  }, []);
+  useEffect(() => {
     if (tab === "Timeline" && !timelineData) loadTimeline();
   }, [tab, timelineData, loadTimeline]);
 
@@ -161,6 +174,23 @@ export default function AdminUserDetail() {
       await loadUser();
     } catch (e) {
       toast.error(e.response?.data?.detail || "Action failed");
+    } finally {
+      setActLoading(false);
+    }
+  };
+
+  const giftSubscription = async () => {
+    setActLoading(true);
+    try {
+      await api.post("/admin/promotions", {
+        target_user_id: uid,
+        kind: "free_months",
+        payload: { months: giftMonths, plan_code: giftPlan },
+      });
+      toast.success(`Gifted ${giftMonths} month${giftMonths !== 1 ? "s" : ""} of ${giftPlan.replace("_", " ")}`);
+      await loadUser();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Gift failed");
     } finally {
       setActLoading(false);
     }
@@ -407,6 +437,23 @@ export default function AdminUserDetail() {
             <ActionResult onClick={() => action("set-plan", { plan_code: newPlan })} label={`Set to ${newPlan}`} loading={actLoading} />
           </ActionCard>
 
+          <ActionCard id="action-gift" title="Gift Subscription" desc="Give this user a paid plan for free, for N months — no card required. Extends their current subscription if they already have one.">
+            <div className="flex gap-2 mb-2">
+              <select value={giftPlan} onChange={(e) => setGiftPlan(e.target.value)} className="flex-1 px-3 py-2 text-sm border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0F2847]">
+                <option value="researcher">Researcher</option>
+                <option value="pro_researcher">Pro Researcher</option>
+                <option value="institution">Institution</option>
+              </select>
+              <input
+                type="number" min={1} max={24} value={giftMonths}
+                onChange={(e) => setGiftMonths(Math.max(1, Math.min(24, Number(e.target.value))))}
+                className="w-20 px-3 py-2 text-sm border border-slate-300 focus:outline-none"
+              />
+              <span className="flex items-center text-xs text-slate-400 flex-shrink-0">month{giftMonths !== 1 ? "s" : ""}</span>
+            </div>
+            <ActionResult onClick={giftSubscription} label={`Gift ${giftMonths} month${giftMonths !== 1 ? "s" : ""} of ${giftPlan.replace("_", " ")}`} loading={actLoading} />
+          </ActionCard>
+
           <ActionCard id="action-credits" title="Adjust Credits" desc="Grant or remove credits. Positive adds, negative deducts.">
             <input type="number" value={creditAmount} onChange={(e) => setCreditAmount(Number(e.target.value))} className="w-full px-3 py-2 text-sm border border-slate-300 mb-2 focus:outline-none" placeholder="Amount (e.g. 500 or -100)" />
             <input value={creditReason} onChange={(e) => setCreditReason(e.target.value)} placeholder="Reason…" className="w-full px-3 py-2 text-sm border border-slate-300 mb-2 focus:outline-none" />
@@ -424,6 +471,42 @@ export default function AdminUserDetail() {
             </select>
             <p className="text-xs text-slate-400 mb-2">super_admin cannot be granted via the interface — DB only.</p>
             <ActionResult onClick={() => action("set-role", { role: newRole })} label={`Set role to ${newRole}`} loading={actLoading} />
+          </ActionCard>
+
+          <ActionCard id="action-feature" title="Grant Feature Access" desc="Give this one user a feature outside their plan, without changing their whole subscription.">
+            {(user.feature_overrides || []).length > 0 && (
+              <div className="mb-3 space-y-1.5">
+                {user.feature_overrides.map((o) => (
+                  <div key={o.feature} className="flex items-center justify-between gap-2 text-xs bg-emerald-50 border border-emerald-200 px-2 py-1.5">
+                    <div className="min-w-0">
+                      <span className="font-medium text-emerald-900 capitalize">{o.feature.replace(/_/g, " ")}</span>
+                      {o.reason && <span className="text-emerald-700"> — {o.reason}</span>}
+                    </div>
+                    <button
+                      onClick={() => action("revoke-feature", { feature: o.feature })}
+                      disabled={actLoading}
+                      className="text-emerald-700 hover:text-red-700 hover:underline flex-shrink-0 disabled:opacity-50"
+                    >
+                      Revoke
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <select value={grantFeature} onChange={(e) => setGrantFeature(e.target.value)} className="w-full px-3 py-2 text-sm border border-slate-300 mb-2 focus:outline-none focus:ring-1 focus:ring-[#0F2847]">
+              {featureCatalogue.map((f) => (
+                <option key={f.feature} value={f.feature}>
+                  {f.feature.replace(/_/g, " ")} (normally {f.min_plan.replace("_", " ")}+)
+                </option>
+              ))}
+            </select>
+            <input value={grantReason} onChange={(e) => setGrantReason(e.target.value)} placeholder="Reason (optional)…" className="w-full px-3 py-2 text-sm border border-slate-300 mb-2 focus:outline-none" />
+            <ActionResult
+              onClick={() => action("grant-feature", { feature: grantFeature, reason: grantReason })}
+              label="Grant Access"
+              loading={actLoading}
+              disabled={!grantFeature}
+            />
           </ActionCard>
 
           <ActionCard id="action-delete" title="Delete Account" desc="Soft-deletes the account and anonymises PII. Irreversible.">

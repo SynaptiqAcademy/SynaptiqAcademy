@@ -54,7 +54,7 @@ async def _granted_kinds(referrer_id: str) -> set[str]:
     return {f"{d['tier_count']}|{d['kind']}" for d in docs}
 
 
-async def _grant_free_months(uid: str, months: int) -> None:
+async def _grant_free_months(uid: str, months: int, plan_code: str = "researcher") -> None:
     db = get_db()
     db = DBProxy(db, SecurityContext.system())
 
@@ -84,10 +84,10 @@ async def _grant_free_months(uid: str, months: int) -> None:
                       "updated_at": _iso()}},
         )
     else:
-        # Free user — grant a comp subscription at researcher tier
+        # Free (or lapsed) user — grant a comp subscription at the requested tier.
         await db.subscriptions.insert_one({
             "user_id": uid,
-            "plan_code": "researcher",
+            "plan_code": plan_code,
             "status": "active",
             "billing_period": "monthly",
             "stripe_subscription_id": "",
@@ -96,9 +96,19 @@ async def _grant_free_months(uid: str, months: int) -> None:
             "comp": True,
             "created_at": _iso(), "updated_at": _iso(),
         })
+        from plans_catalogue import get_plan
+        gifted_allowance = get_plan(plan_code)["credits_per_month"]
         await db.users.update_one(
             {"_id": ObjectId(uid)},
-            {"$set": {"plan_code": "researcher", "subscription_status": "active"}},
+            {"$set": {
+                "plan_code": plan_code,
+                "subscription_status": "active",
+                # Give the gifted plan's credit allowance immediately rather than
+                # waiting for the next scheduled monthly reset — a gift a user
+                # can't actually use for weeks isn't much of a gift.
+                "credits_balance": gifted_allowance,
+                "credits_monthly_allowance": gifted_allowance,
+            }},
         )
 
 

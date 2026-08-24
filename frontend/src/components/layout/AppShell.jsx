@@ -8,6 +8,7 @@ import MobileSearch from "./MobileSearch";
 import CommandPalette from "./CommandPalette";
 import { trackPageVisit } from "../../hooks/useRecentPages";
 import { recordVisit } from "../../hooks/useUserMemory";
+import { trackSessionStart, trackPageView } from "../../lib/analytics";
 import ProactivePanel from "../proactive/ProactivePanel";
 import { loadPrefs } from "../../hooks/usePreferences";
 import { applyPreferenceEffects } from "../../lib/applyPreferenceEffects";
@@ -35,7 +36,14 @@ export default function AppShell({ children }) {
   useEffect(() => {
     trackPageVisit(pathname);
     recordVisit(pathname);
+    trackPageView(pathname);
   }, [pathname]);
+
+  // Platform-usage analytics (Admin OS dashboard) — one session_start per
+  // tab, independent of route changes.
+  useEffect(() => {
+    trackSessionStart();
+  }, []);
 
   // Global keyboard shortcuts
   useEffect(() => {

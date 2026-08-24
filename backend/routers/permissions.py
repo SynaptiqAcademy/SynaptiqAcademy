@@ -23,7 +23,7 @@ async def can_access(feature: str, user: dict = Depends(get_current_user)):
     from plans_catalogue import FEATURE_MIN_PLAN
     from services.permissions import has_plan_at_least
     required = FEATURE_MIN_PLAN.get(feature, "free")
-    allowed = is_super_admin(user) or has_plan_at_least(user, required)
+    allowed = is_super_admin(user) or has_plan_at_least(user, required, feature=feature)
     return {
         "feature": feature,
         "allowed": allowed,

@@ -160,6 +160,67 @@ async def email_log(limit: int = 50, admin: dict = Depends(require_super_admin))
 
 
 # ---------------------------------------------------------------------------
+# System (transactional) emails — read-only reference + live preview.
+#
+# These are NOT stored in `email_templates` (that collection is for admin-
+# composed individual/bulk/campaign sends). They're component-based Python
+# in services/email/templates/*.py, triggered automatically by product
+# events (registration, password reset, an invitation, ...). Rewriting that
+# engine to be DB-editable would touch every auth/notification call site for
+# comparatively little gain — what actually matters here is answering "what
+# does this account automatically send, and what does it look like" without
+# needing to read Python. Each preview below calls the real template
+# function with representative sample data — the exact same renderer that
+# produces the email a real user receives, not a re-description of it.
+# ---------------------------------------------------------------------------
+
+@router.get("/email/system-templates", dependencies=[Depends(require_super_admin)])
+async def system_email_previews():
+    from services.email.templates.welcome import welcome_email
+    from services.email.templates.verification import verification_email
+    from services.email.templates.password_reset import password_reset_email
+    from services.email.templates.getting_started import getting_started_email
+    from services.email.templates.workspace_invitation import workspace_invitation_email
+    from services.email.templates.collaboration_invitation import collaboration_invitation_email
+    from services.email.templates.review_request import review_request_email
+
+    frontend = os.environ.get("FRONTEND_BASE_URL") or os.environ.get("APP_BASE_URL") or "https://synaptiq.academy"
+
+    specs = [
+        ("welcome", "Welcome email", "Sent once, right after a new account registers.",
+         lambda: welcome_email(recipient_name="Ana Popescu", profile_setup_url=f"{frontend}/profile-setup", app_url=frontend)),
+        ("verification", "Email verification", "Sent on registration (and on request) to confirm the address is real.",
+         lambda: verification_email(recipient_name="Ana Popescu", verify_url=f"{frontend}/verify-email?token=sample", expires_in_hours=24)),
+        ("password_reset", "Password reset", "Sent when a user requests a password reset link.",
+         lambda: password_reset_email(recipient_name="Ana Popescu", reset_url=f"{frontend}/reset-password?token=sample", expires_in_minutes=30)),
+        ("getting_started", "Getting started nudge", "Sent ~24h after signup if the profile is still incomplete.",
+         lambda: getting_started_email(recipient_name="Ana Popescu", completion_pct=40,
+                                        remaining_tasks=[("Add your research areas", False), ("Connect ORCID", False), ("Upload a publication", True)],
+                                        profile_setup_url=f"{frontend}/profile-setup")),
+        ("workspace_invitation", "Workspace invitation", "Sent when someone is invited to join a shared workspace.",
+         lambda: workspace_invitation_email(recipient_name="Ana Popescu", workspace_name="Neural Signal Processing", role="Co-Author",
+                                            inviter_name="Dr. Mihai Ionescu", accept_url=f"{frontend}/workspaces")),
+        ("collaboration_invitation", "Collaboration invitation", "Sent when someone is invited to collaborate on a project/manuscript/grant.",
+         lambda: collaboration_invitation_email(recipient_name="Ana Popescu", collaboration_title="Attention Mechanisms in Low-Resource NLP",
+                                                inviter_name="Dr. Mihai Ionescu", kind="application", action_url=f"{frontend}/collaborations",
+                                                message="Would love your input on the methodology section.")),
+        ("review_request", "Review request", "Sent when a manuscript/statistical review is requested from a reviewer.",
+         lambda: review_request_email(recipient_name="Ana Popescu", manuscript_title="Attention Mechanisms in Low-Resource NLP",
+                                      requester_name="Dr. Mihai Ionescu", section="Methodology", note="Please focus on the sampling strategy.",
+                                      review_url=f"{frontend}/reviews")),
+    ]
+
+    out = []
+    for key, label, trigger, fn in specs:
+        try:
+            subject, html, _text = fn()
+            out.append({"key": key, "label": label, "trigger": trigger, "subject": subject, "html": html, "error": None})
+        except Exception as exc:
+            out.append({"key": key, "label": label, "trigger": trigger, "subject": None, "html": None, "error": str(exc)[:300]})
+    return {"templates": out}
+
+
+# ---------------------------------------------------------------------------
 # Templates
 # ---------------------------------------------------------------------------
 

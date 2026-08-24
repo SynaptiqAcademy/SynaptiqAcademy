@@ -173,13 +173,32 @@ async def platform_analytics() -> dict:
         {"$limit": 15},
     ]).to_list(15)
 
-    # Most active users
+    # Most active users — hydrated with name/email/plan so the admin dashboard
+    # can show who these people actually are, not just raw ids.
     top_users = await db.session_events.aggregate([
         {"$match": {"event": "session_start", "created_at": {"$gte": d30}}},
         {"$group": {"_id": "$user_id", "sessions": {"$sum": 1}}},
         {"$sort": {"sessions": -1}},
         {"$limit": 10},
     ]).to_list(10)
+    top_user_ids = []
+    for u in top_users:
+        try:
+            top_user_ids.append(ObjectId(u["_id"]))
+        except Exception:
+            pass
+    top_user_docs = {
+        str(d["_id"]): d
+        for d in await db.users.find(
+            {"_id": {"$in": top_user_ids}}, {"full_name": 1, "email": 1, "plan_code": 1}
+        ).to_list(len(top_user_ids))
+    } if top_user_ids else {}
+
+    # Plan distribution — how many users are on each plan tier right now.
+    plan_dist_agg = await db.users.aggregate([
+        {"$group": {"_id": {"$ifNull": ["$plan_code", "free"]}, "n": {"$sum": 1}}},
+    ]).to_list(20)
+    plan_distribution = {p["_id"]: p["n"] for p in plan_dist_agg}
 
     # Most active institutions
     top_inst = await db.users.aggregate([
@@ -208,8 +227,18 @@ async def platform_analytics() -> dict:
         "sessions": {"sessions_30d": sessions_30d, "avg_session_minutes": avg_session_min},
         "top_pages": [{"path": p["_id"], "views": p["views"]} for p in top_pages],
         "feature_usage": [{"action": f["_id"], "uses": f["uses"], "credits": f["credits"]} for f in feat],
-        "top_users": [{"user_id": u["_id"], "sessions": u["sessions"]} for u in top_users],
+        "top_users": [
+            {
+                "user_id": u["_id"],
+                "sessions": u["sessions"],
+                "full_name": (top_user_docs.get(u["_id"]) or {}).get("full_name") or "Unknown",
+                "email": (top_user_docs.get(u["_id"]) or {}).get("email") or "",
+                "plan_code": (top_user_docs.get(u["_id"]) or {}).get("plan_code") or "free",
+            }
+            for u in top_users
+        ],
         "top_institutions": [{"institution_id": i["_id"], "users": i["users"]} for i in top_inst],
+        "plan_distribution": plan_distribution,
         "referrals": {"total": ref_total, "qualified": ref_qualified},
         "retention_pct": retention_rate,
         "generated_at": now.isoformat(),

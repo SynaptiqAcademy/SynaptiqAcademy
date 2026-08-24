@@ -10,7 +10,7 @@ import {
   EmptyState, SkeletonLine, DataTable, List, ListItem,
 } from "@/components/ds";
 
-const TABS = ["Compose", "Templates", "Campaigns"];
+const TABS = ["Compose", "Templates", "System Emails", "Campaigns"];
 const SEGMENTS = [
   { value: "all", label: "All Users" },
   { value: "free", label: "Free Plan" },
@@ -51,6 +51,11 @@ export default function AdminEmailCenter() {
   const [campaigns, setCampaigns] = useState([]);
   const [campaignsLoading, setCampaignsLoading] = useState(false);
 
+  // System (transactional) emails — read-only preview
+  const [sysTemplates, setSysTemplates] = useState([]);
+  const [sysLoading, setSysLoading] = useState(false);
+  const [sysActiveKey, setSysActiveKey] = useState(null);
+
   const searchTimer = useRef(null);
 
   // User search with debounce
@@ -68,6 +73,18 @@ export default function AdminEmailCenter() {
   useEffect(() => {
     if (tab === "Templates") loadTemplates();
     if (tab === "Campaigns") loadCampaigns();
+    if (tab === "System Emails" && sysTemplates.length === 0) {
+      setSysLoading(true);
+      api.get("/admin/email/system-templates")
+        .then((r) => {
+          const items = r.data.templates || [];
+          setSysTemplates(items);
+          if (items.length) setSysActiveKey(items[0].key);
+        })
+        .catch(() => toast.error("Failed to load system email previews"))
+        .finally(() => setSysLoading(false));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
   const loadTemplates = async () => {
@@ -355,6 +372,65 @@ export default function AdminEmailCenter() {
             </div>
           )}
         </div>
+      )}
+
+      {/* System Emails — read-only, rendered live from the real Python templates */}
+      {tab === "System Emails" && (
+        sysLoading ? (
+          <div className="space-y-2">{[...Array(4)].map((_, i) => <SkeletonLine key={i} height={40} />)}</div>
+        ) : sysTemplates.length === 0 ? (
+          <EmptyState icon={<Mail />} title="No system emails found" />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+            <div className="flex flex-col gap-1.5">
+              <div style={{ marginBottom: 8 }}>
+                <Alert variant="info">
+                  Automatic emails triggered by product events — welcome, verification, password reset,
+                  invitations. Not editable here (they carry real tokens/links); this shows exactly what
+                  each one renders right now.
+                </Alert>
+              </div>
+              {sysTemplates.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setSysActiveKey(t.key)}
+                  className={`text-left px-3 py-2.5 border text-sm transition-colors ${
+                    sysActiveKey === t.key
+                      ? "border-[#0F2847] bg-[#0F2847]/5 font-medium text-[#0F2847]"
+                      : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  <div>{t.label}</div>
+                  <div className="text-xs text-slate-400 font-normal mt-0.5">{t.trigger}</div>
+                </button>
+              ))}
+            </div>
+            <Card padding="none">
+              {(() => {
+                const active = sysTemplates.find((t) => t.key === sysActiveKey);
+                if (!active) return null;
+                if (active.error) {
+                  return <div className="p-6"><Alert variant="error">Preview failed: {active.error}</Alert></div>;
+                }
+                return (
+                  <>
+                    <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+                      <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">Subject</div>
+                      <div className="text-sm font-medium text-slate-800">{active.subject}</div>
+                    </div>
+                    <iframe
+                      title={`preview-${active.key}`}
+                      srcDoc={active.html}
+                      className="w-full border-0"
+                      style={{ height: 640 }}
+                      sandbox=""
+                    />
+                  </>
+                );
+              })()}
+            </Card>
+          </div>
+        )
       )}
 
       {/* Campaigns */}
