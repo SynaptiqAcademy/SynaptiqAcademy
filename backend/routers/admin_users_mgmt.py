@@ -14,7 +14,7 @@ from services.admin_audit import log_event, request_meta
 from services.permissions import (
     require_super_admin, require_moderator_or_super_admin,
     is_protected_account, role_level, _API_BLOCKED_ROLES,
-    PROTECTED_SUPER_ADMIN_EMAIL,
+    PROTECTED_SUPER_ADMIN_EMAIL, REAL_CUSTOMER_FILTER,
 )
 from services.token_service import revoke_all_user_tokens
 from repo.shim import DBProxy
@@ -175,7 +175,7 @@ async def get_users_stats():
         db.users.count_documents({"created_at": {"$gte": today}}),
         db.users.count_documents({"last_successful_login": {"$gte": day_ago}}),
         db.users.count_documents({"email_verified": {"$ne": True}}),
-        db.users.count_documents({"plan_code": {"$nin": [None, "free"]}}),
+        db.users.count_documents({**REAL_CUSTOMER_FILTER, "plan_code": {"$nin": [None, "free"]}}),
         db.users.count_documents({"status": "suspended"}),
         db.users.count_documents({"status": "banned"}),
     )

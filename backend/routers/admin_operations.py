@@ -27,7 +27,7 @@ from pydantic import BaseModel
 from auth_utils import get_current_user, create_access_token
 from db import get_db
 from services.admin_audit import log_event, request_meta
-from services.permissions import require_super_admin
+from services.permissions import require_super_admin, REAL_CUSTOMER_FILTER
 from services.token_service import revoke_all_user_tokens
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
@@ -217,7 +217,7 @@ async def batch_grant_credits(
     elif body.segment == "free":
         query = {"plan_code": "free"}
     elif body.segment == "paid":
-        query = {"plan_code": {"$in": ["researcher", "pro_researcher", "institution"]}}
+        query = {**REAL_CUSTOMER_FILTER, "plan_code": {"$in": ["researcher", "pro_researcher", "institution"]}}
     else:
         query = {}
 
@@ -276,7 +276,7 @@ async def send_announcement(body: AnnouncementRequest, request: Request, admin: 
     if body.segment == "free":
         query: dict = {"plan_code": "free"}
     elif body.segment == "paid":
-        query = {"plan_code": {"$in": ["researcher", "pro_researcher", "institution"]}}
+        query = {**REAL_CUSTOMER_FILTER, "plan_code": {"$in": ["researcher", "pro_researcher", "institution"]}}
     else:
         query = {}
 

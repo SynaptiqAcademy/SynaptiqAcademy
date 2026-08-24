@@ -26,6 +26,7 @@ from bson import ObjectId
 from db import get_db
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.permissions import REAL_CUSTOMER_FILTER
 
 
 Tier = Literal["power", "healthy", "inactive", "at_risk", "dormant"]
@@ -195,7 +196,11 @@ async def platform_analytics() -> dict:
     } if top_user_ids else {}
 
     # Plan distribution — how many users are on each plan tier right now.
+    # Internal/staff accounts excluded: the protected super-admin always
+    # carries plan_code="institution" for full internal access, which isn't
+    # a real subscriber and would otherwise permanently show up here.
     plan_dist_agg = await db.users.aggregate([
+        {"$match": REAL_CUSTOMER_FILTER},
         {"$group": {"_id": {"$ifNull": ["$plan_code", "free"]}, "n": {"$sum": 1}}},
     ]).to_list(20)
     plan_distribution = {p["_id"]: p["n"] for p in plan_dist_agg}

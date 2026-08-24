@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends
 
 from db import get_db
 from plans_catalogue import PLANS, get_plan
-from services.permissions import require_super_admin
+from services.permissions import require_super_admin, REAL_CUSTOMER_FILTER
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -27,10 +27,13 @@ async def revenue_dashboard():
     db = DBProxy(db, SecurityContext.system())
 
     # ---- User counts by plan ----
+    # Internal/staff accounts excluded from paid-plan counts — see
+    # services/permissions.REAL_CUSTOMER_FILTER.
     plan_codes = [p["code"] for p in PLANS]
     plan_counts = {}
     for code in plan_codes:
-        plan_counts[code] = await db.users.count_documents({"plan_code": code})
+        filt = {"plan_code": code} if code == "free" else {**REAL_CUSTOMER_FILTER, "plan_code": code}
+        plan_counts[code] = await db.users.count_documents(filt)
     total_users = await db.users.count_documents({})
     active_subscribers = sum(plan_counts[c] for c in plan_codes if c != "free")
 

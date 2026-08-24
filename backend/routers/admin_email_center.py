@@ -28,7 +28,7 @@ from pydantic import BaseModel
 
 from db import get_db
 from services.admin_audit import log_event, request_meta
-from services.permissions import require_super_admin
+from services.permissions import require_super_admin, REAL_CUSTOMER_FILTER
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -511,7 +511,7 @@ async def send_bulk(
     elif body.segment == "free":
         query = {**consent_filter, "plan_code": "free"}
     elif body.segment == "paid":
-        query = {**consent_filter, "plan_code": {"$in": ["researcher", "pro_researcher", "institution"]}}
+        query = {**consent_filter, **REAL_CUSTOMER_FILTER, "plan_code": {"$in": ["researcher", "pro_researcher", "institution"]}}
     elif body.segment == "unverified":
         query = {**consent_filter, "email_verified": False}
     elif body.segment == "consented":

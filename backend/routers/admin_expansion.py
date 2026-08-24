@@ -36,7 +36,7 @@ from pydantic import BaseModel
 
 from db import get_db
 from services.admin_audit import log_event, request_meta
-from services.permissions import require_super_admin
+from services.permissions import require_super_admin, REAL_CUSTOMER_FILTER
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -1590,7 +1590,7 @@ async def _gather_platform_context(db) -> str:
     ) = await asyncio.gather(
         db.users.count_documents({}),
         db.users.count_documents({"created_at": {"$gte": cutoff}}),
-        db.users.count_documents({"plan_code": {"$in": ["researcher", "pro_researcher", "institution"]}}),
+        db.users.count_documents({**REAL_CUSTOMER_FILTER, "plan_code": {"$in": ["researcher", "pro_researcher", "institution"]}}),
         db.collaborations.count_documents({"status": "active"}),
         db.publications.count_documents({}),
         db.projects.count_documents({}),

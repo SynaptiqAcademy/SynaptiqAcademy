@@ -56,6 +56,15 @@ ROLE_HIERARCHY: dict[str, int] = {
 # Roles that may NOT be granted via the API at all (DB-only privilege escalation).
 _API_BLOCKED_ROLES: frozenset[str] = frozenset({"super_admin"})
 
+# Internal/staff roles — never real paying customers, regardless of what
+# plan_code they carry (the protected super-admin is always seeded on
+# plan_code="institution" so it has full internal access; moderators are
+# admin-granted, not self-service). Revenue/paid-subscriber metrics must
+# exclude these or an internal account with zero real payments behind it
+# permanently inflates MRR/ARR and "paying user" counts.
+INTERNAL_STAFF_ROLES: frozenset[str] = frozenset({"super_admin", "moderator"})
+REAL_CUSTOMER_FILTER: dict = {"role": {"$nin": list(INTERNAL_STAFF_ROLES)}}
+
 
 def is_protected_account(user: dict) -> bool:
     """True if this is the permanent protected super-admin account."""

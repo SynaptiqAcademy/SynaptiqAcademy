@@ -36,7 +36,7 @@ from pydantic import BaseModel
 
 from db import get_db
 from services.admin_audit import log_event, request_meta
-from services.permissions import require_super_admin
+from services.permissions import require_super_admin, REAL_CUSTOMER_FILTER
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -111,9 +111,12 @@ async def aos_dashboard(
     ) = await asyncio.gather(
         db.users.count_documents(user_filt),
         db.users.count_documents({**user_filt, "plan_code": "free"}),
-        db.users.count_documents({**user_filt, "plan_code": "researcher"}),
-        db.users.count_documents({**user_filt, "plan_code": "pro_researcher"}),
-        db.users.count_documents({**user_filt, "plan_code": "institution"}),
+        # Paid-tier breakdowns exclude internal/staff accounts (see revenue
+        # endpoints below) — the protected super-admin's plan_code="institution"
+        # is not a real subscriber.
+        db.users.count_documents({**user_filt, **REAL_CUSTOMER_FILTER, "plan_code": "researcher"}),
+        db.users.count_documents({**user_filt, **REAL_CUSTOMER_FILTER, "plan_code": "pro_researcher"}),
+        db.users.count_documents({**user_filt, **REAL_CUSTOMER_FILTER, "plan_code": "institution"}),
         db.users.count_documents({**user_filt, "orcid.orcid_id": {"$exists": True, "$ne": None}}),
         db.users.count_documents({**user_filt, "email_verified": True}),
         db.users.count_documents({**user_filt, "onboarded": True}),
@@ -124,7 +127,7 @@ async def aos_dashboard(
         db.users.count_documents({**user_filt, "created_at": {"$gte": cutoff}}),
         db.users.count_documents({**user_filt, "academic_role": {"$regex": "professor|associate professor|full professor|dean|rector", "$options": "i"}, "email_verified": True}),
         db.users.count_documents({**user_filt, "academic_role": {"$regex": "professor|associate|dean|rector", "$options": "i"}}),
-        db.users.count_documents({**user_filt, "plan_code": {"$in": ["researcher", "pro_researcher", "institution"]}}),
+        db.users.count_documents({**user_filt, **REAL_CUSTOMER_FILTER, "plan_code": {"$in": ["researcher", "pro_researcher", "institution"]}}),
     )
 
     # Online users: active in last 15 minutes via audit_log
@@ -351,9 +354,14 @@ async def revenue_metrics(days: int = 30):
 
     from plans_catalogue import PLANS, get_plan  # type: ignore
 
+    # Internal/staff accounts (the protected super-admin, moderators) are
+    # never real customers no matter what plan_code they carry — excluded
+    # here so revenue reflects only actual subscribers.
     plan_counts: dict[str, int] = {}
     for p in PLANS:
-        plan_counts[p["code"]] = await db.users.count_documents({"plan_code": p["code"]})
+        plan_counts[p["code"]] = await db.users.count_documents(
+            {**REAL_CUSTOMER_FILTER, "plan_code": p["code"]}
+        )
 
     active = sum(v for k, v in plan_counts.items() if k != "free")
     total  = sum(plan_counts.values())
@@ -439,7 +447,7 @@ async def revenue_by_country():
     db = DBProxy(db, SecurityContext.system())
 
     pipe = [
-        {"$match": {"plan_code": {"$in": ["researcher", "pro_researcher", "institution"]}}},
+        {"$match": {**REAL_CUSTOMER_FILTER, "plan_code": {"$in": ["researcher", "pro_researcher", "institution"]}}},
         {"$group": {"_id": "$country", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}},
         {"$limit": 30},
@@ -448,7 +456,7 @@ async def revenue_by_country():
     from plans_catalogue import get_plan  # type: ignore
     # Approximate revenue per country from plan counts
     plan_pipe = [
-        {"$match": {"plan_code": {"$in": ["researcher", "pro_researcher", "institution"]}}},
+        {"$match": {**REAL_CUSTOMER_FILTER, "plan_code": {"$in": ["researcher", "pro_researcher", "institution"]}}},
         {"$group": {"_id": {"country": "$country", "plan": "$plan_code"}, "count": {"$sum": 1}}},
     ]
     plan_docs = await db.users.aggregate(plan_pipe).to_list(1000)
@@ -535,7 +543,9 @@ async def list_subscriptions(
     db  = get_db()
     db = DBProxy(db, SecurityContext.system())
 
-    filt: dict = {}
+    # Internal/staff accounts never appear in the subscriptions list — the
+    # protected super-admin's plan_code="institution" isn't a real subscription.
+    filt: dict = dict(REAL_CUSTOMER_FILTER)
     if status == "active":
         filt["plan_code"] = {"$in": ["researcher", "pro_researcher", "institution"]}
     elif status == "free":
