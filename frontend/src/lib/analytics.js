@@ -17,17 +17,12 @@
  * components/layout/AppShell.jsx) — the backend endpoint requires a
  * logged-in session anyway.
  */
-import api, { API } from "./api";
+import api, { API, getCsrfToken } from "./api";
 import { isCategoryEnabled, CONSENT_EVENT } from "./cookieConsent";
 
 let sessionStartedAt = null;
 let sessionStarted = false;
 let unloadListenersBound = false;
-
-function getCsrfToken() {
-  const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : null;
-}
 
 function post(body) {
   if (!isCategoryEnabled("analytics")) return;

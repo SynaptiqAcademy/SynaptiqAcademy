@@ -20,7 +20,28 @@ const api = axios.create({
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function getCsrfToken() {
+// AUTH-BUG-006: the csrf_token cookie is set by the API's own domain
+// (api.synaptiq.academy / the Railway host), which is a different origin
+// than the frontend (synaptiq.academy) in production. document.cookie can
+// only ever see cookies belonging to the page's OWN origin, so reading it
+// here always returned null cross-origin — every state-changing request was
+// one silent failure away from "CSRF token missing", masked only by the
+// fact that local dev runs frontend+backend on the same "localhost" host
+// (cookies aren't port-scoped), where the cookie read happens to work.
+//
+// Fix: the backend now also returns the token in the JSON body of every
+// endpoint that (re)issues it (login, register, mfa-verify, refresh,
+// /auth/csrf-token) — kept in memory here instead of re-derived from a
+// cookie the frontend can't actually read.
+let _memCsrfToken = null;
+
+export function setCsrfToken(token) {
+  if (token) _memCsrfToken = token;
+}
+
+export function getCsrfToken() {
+  if (_memCsrfToken) return _memCsrfToken;
+  // Same-origin fallback (local dev, or any future same-domain deployment).
   const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
   return match ? decodeURIComponent(match[1]) : null;
 }
@@ -36,6 +57,14 @@ api.interceptors.request.use((config) => {
     }
   }
   return config;
+});
+
+// ─── Response interceptor: capture a fresh csrf_token wherever one appears ───
+api.interceptors.response.use((r) => {
+  if (r?.data && typeof r.data === "object" && r.data.csrf_token) {
+    setCsrfToken(r.data.csrf_token);
+  }
+  return r;
 });
 
 // ─── Response interceptor: 401 → refresh → retry; 402 → upgrade modal ────────

@@ -211,16 +211,23 @@ async def _record_successful_login(db, user_id) -> None:
 async def _issue_tokens_and_cookies(
     response: Response, uid: str, email: str,
     request: Request = None, session_id: str = None, remember: bool = True,
-) -> tuple[str, str]:
+) -> tuple[str, str, str]:
     """Issue access + refresh tokens, store jti (+ session_id for Active Sessions),
-    set all cookies. Returns (access, refresh)."""
+    set all cookies. Returns (access, refresh, csrf).
+
+    The csrf token is also returned (not just cookied) because the frontend
+    and backend live on different domains in production — JS on
+    synaptiq.academy can never read a cookie set by the API's own domain, so
+    the double-submit token has to reach the frontend via the JSON response
+    body instead. Callers should fold it into their response as "csrf_token".
+    """
     access = create_access_token(uid, email)
     refresh, jti = create_refresh_token(uid)
     meta = _req_meta(request) if request else {"ip": None, "user_agent": None}
     await store_refresh_jti(jti, uid, session_id=session_id, ip=meta["ip"], user_agent=meta["user_agent"])
     set_auth_cookies(response, access, refresh, remember=remember)
-    set_csrf_cookie(response)
-    return access, refresh
+    csrf = set_csrf_cookie(response)
+    return access, refresh, csrf
 
 
 # ─── Email verification helpers ───────────────────────────────────────────────
@@ -408,12 +415,15 @@ async def register(request: Request, payload: RegisterIn, response: Response):
     except Exception:
         logger.exception("[register] Failed to schedule getting-started email for user %s", uid)
 
+    csrf_token = None
     if not _email_verification_required():
-        await _issue_tokens_and_cookies(response, uid, email, request=request)
+        _, _, csrf_token = await _issue_tokens_and_cookies(response, uid, email, request=request)
     user_doc["_id"] = result.inserted_id
     out = serialize_user(user_doc)
     out["verification_email_sent"] = email_queued
     out["email_send_mode"] = "queued" if email_queued else "queue_failed"
+    if csrf_token:
+        out["csrf_token"] = csrf_token
     if _expose_reset_token():
         out["debug_verification_token"] = token
     return out
@@ -469,7 +479,7 @@ async def login(request: Request, payload: LoginIn, response: Response):
 
     # ── No MFA — issue full auth cookies ─────────────────────────────────────
     await _record_successful_login(db, uid)
-    await _issue_tokens_and_cookies(response, uid, email, request=request, remember=payload.remember)
+    _, _, csrf_token = await _issue_tokens_and_cookies(response, uid, email, request=request, remember=payload.remember)
     await _audit("auth.login", actor_id=uid, actor_email=email, ip=meta["ip"], user_agent=meta["user_agent"])
 
     # Run risk assessment asynchronously (non-blocking)
@@ -491,7 +501,9 @@ async def login(request: Request, payload: LoginIn, response: Response):
     except Exception:
         pass
 
-    return serialize_user(user)
+    out = serialize_user(user)
+    out["csrf_token"] = csrf_token
+    return out
 
 
 @router.post("/mfa-verify")
@@ -529,7 +541,7 @@ async def mfa_verify(
 
     email = user.get("email", "")
     await _record_successful_login(db, user_id)
-    await _issue_tokens_and_cookies(response, user_id, email, request=request, remember=remember)
+    _, _, csrf_token = await _issue_tokens_and_cookies(response, user_id, email, request=request, remember=remember)
     await _audit("auth.mfa_verified", actor_id=user_id, actor_email=email,
                  ip=meta["ip"], user_agent=meta["user_agent"],
                  extra={"method": method})
@@ -554,6 +566,7 @@ async def mfa_verify(
 
     result = serialize_user(user)
     result["mfa_method"] = method
+    result["csrf_token"] = csrf_token
     if device_id:
         result["device_trusted"] = True
     return result
@@ -617,8 +630,10 @@ async def refresh_token(request: Request, response: Response):
 
     uid = str(user["_id"])
     email = user.get("email") or ""
-    await _issue_tokens_and_cookies(response, uid, email, request=request, session_id=session_id)
-    return serialize_user(user)
+    _, _, csrf_token = await _issue_tokens_and_cookies(response, uid, email, request=request, session_id=session_id)
+    out = serialize_user(user)
+    out["csrf_token"] = csrf_token
+    return out
 
 
 @router.get("/me")
