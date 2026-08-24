@@ -82,7 +82,15 @@ api.interceptors.response.use(
       return api(config);
     }
 
-    if (status === 401 && !config?._retried && !isAuthEndpoint) {
+    // AUTH-BUG-005: the csrf_token cookie shares the access token's 15-min
+    // TTL, but only expires it — nothing proactively renews it while the
+    // user is just reading pages (GET requests are CSRF-exempt, so they
+    // never trigger a refresh). The first POST/DELETE after a long
+    // GET-only browsing session then hits this 403 instead of a 401, so it
+    // needs the same silent-refresh-and-retry treatment below.
+    const isCsrfFailure = status === 403 && typeof detail === "string" && detail.startsWith("CSRF token");
+
+    if ((status === 401 || isCsrfFailure) && !config?._retried && !isAuthEndpoint) {
       if (_refreshing) {
         return new Promise((resolve, reject) => {
           _refreshQueue.push((refreshErr) => {
