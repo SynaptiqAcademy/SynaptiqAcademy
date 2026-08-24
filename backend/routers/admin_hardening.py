@@ -24,13 +24,17 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
+from auth_utils import ACCESS_MIN, REFRESH_DAYS
 from db import get_db
-from services.admin_audit import log_event, request_meta
+from services.admin_audit import log_event, request_meta, _AUDIT_LOG_TTL_DAYS
 from services.device_service import get_trusted_devices, revoke_device, revoke_all_devices
 from services.mfa_service import mfa_is_enabled
-from services.permissions import require_super_admin, PROTECTED_SUPER_ADMIN_EMAIL
+from services.permissions import (
+    require_super_admin, PROTECTED_SUPER_ADMIN_EMAIL,
+    _API_BLOCKED_ROLES, role_level, can_modify_target,
+)
 from services.security_event_service import (
-    emit_security_event, resolve_event, get_events, event_stats,
+    emit_security_event, resolve_event, get_events, event_stats, _TTL_DAYS as _SECURITY_EVENT_TTL_DAYS,
 )
 from services.token_service import revoke_all_user_tokens
 from repo.shim import DBProxy
@@ -534,7 +538,7 @@ async def security_event_stats():
 # ═════════════════════════════════════════════════════════════════════════════
 
 @router.get("/certification", dependencies=_GATE)
-async def security_certification(admin: dict = Depends(require_super_admin)):
+async def security_certification(request: Request, admin: dict = Depends(require_super_admin)):
     """Compute real-time security certification scores based on current platform state."""
     db = get_db()
     db = DBProxy(db, SecurityContext.system())
@@ -597,20 +601,49 @@ async def security_certification(admin: dict = Depends(require_super_admin)):
     else:
         auth_checks.append(("✗ Protected flag missing", False))
 
+    # Shared, genuinely-verified structural signals (real imports, not assumptions)
+    role_blocked_ok = "super_admin" in _API_BLOCKED_ROLES
+    protected_flag_ok = bool(protected_doc and protected_doc.get("protected"))
+    try:
+        hierarchy_ok = (
+            role_level("super_admin") > role_level("admin")
+            > role_level("moderator") > role_level("user")
+        )
+        cannot_escalate = (
+            not can_modify_target({"role": "moderator"}, {"role": "admin"})
+            and can_modify_target({"role": "admin"}, {"role": "moderator"})
+        )
+    except Exception:
+        hierarchy_ok = False
+        cannot_escalate = False
+    seed_healed = bool(
+        protected_doc and protected_doc.get("role") == "super_admin"
+        and protected_doc.get("protected") and rogue_count == 0
+    )
+
     # 2. Authorization Security (0-100)
-    authz_score = 90  # base: API blocks are hardcoded
-    authz_checks = [
-        ("✓ super_admin role cannot be granted via API", True),
-        ("✓ Protected account cannot be suspended via API", True),
-        ("✓ Protected account cannot be deleted via API", True),
-        ("✓ Role hierarchy enforced on all user-management endpoints", True),
-        ("✓ Seed heals account on every startup", True),
-    ]
+    authz_score = 0
+    authz_checks = []
+    if role_blocked_ok:
+        authz_score += 20; authz_checks.append(("✓ super_admin role cannot be granted via API", True))
+    else:
+        authz_checks.append(("✗ super_admin missing from API-blocked role list", False))
+    if protected_flag_ok:
+        authz_score += 20; authz_checks.append(("✓ Protected account flagged — suspend/delete API-blocked", True))
+    else:
+        authz_checks.append(("✗ Protected account flag missing — suspend/delete guard inactive", False))
+    if hierarchy_ok:
+        authz_score += 20; authz_checks.append(("✓ Role hierarchy enforced on user-management endpoints", True))
+    else:
+        authz_checks.append(("✗ Role hierarchy check failed", False))
+    if seed_healed:
+        authz_score += 20; authz_checks.append(("✓ Protected account currently in seed-healed state", True))
+    else:
+        authz_checks.append(("✗ Protected account not in healed state — check seed on next restart", False))
     if rogue_count == 0:
-        authz_score += 10
+        authz_score += 20
         authz_checks.append(("✓ Zero rogue super-admin accounts", True))
     else:
-        authz_score -= 30
         authz_checks.append((f"✗ {rogue_count} rogue super-admin(s) exist", False))
 
     # 3. Auditability (0-100)
@@ -621,73 +654,98 @@ async def security_certification(admin: dict = Depends(require_super_admin)):
     else:
         audit_checks.append(("⚠ No audit events in last 24h — may indicate idle platform", False))
         audit_score += 10
-    audit_score += 30; audit_checks.append(("✓ Admin audit log with 90-day retention", True))
-    audit_score += 30; audit_checks.append(("✓ Security events with 365-day retention", True))
+    audit_score += 30; audit_checks.append((f"✓ Admin audit log retained {_AUDIT_LOG_TTL_DAYS} days", True))
+    audit_score += 30; audit_checks.append((f"✓ Security events retained {_SECURITY_EVENT_TTL_DAYS} days", True))
 
     # 4. Session Security (0-100)
-    session_score = 60  # base: JWT + httponly cookies + refresh rotation
-    session_checks = [
-        ("✓ JWT access tokens (15-min TTL)", True),
-        ("✓ Refresh token rotation with JTI revocation", True),
-        ("✓ HttpOnly cookies prevent XSS token theft", True),
-    ]
+    session_score = 0
+    session_checks = []
+    if ACCESS_MIN <= 30:
+        session_score += 15; session_checks.append((f"✓ JWT access tokens ({ACCESS_MIN}-min TTL)", True))
+    else:
+        session_checks.append((f"⚠ JWT access token TTL is {ACCESS_MIN} min — consider shortening", False))
+    session_score += 15; session_checks.append((f"✓ Refresh token rotation ({REFRESH_DAYS}-day TTL) with revocation", True))
+    if request.cookies.get("access_token"):
+        session_score += 10; session_checks.append(("✓ This session authenticated via HttpOnly cookie", True))
+    else:
+        session_checks.append(("⚠ This request did not carry an HttpOnly access-token cookie", False))
     if mfa_enabled:
-        session_score += 20; session_checks.append(("✓ MFA required on all logins", True))
+        session_score += 25; session_checks.append(("✓ MFA required on all logins", True))
     else:
         session_checks.append(("✗ No MFA — single-factor sessions", False))
     if trusted_device_count > 0:
-        session_score += 10; session_checks.append((f"✓ {trusted_device_count} trusted device(s) registered", True))
+        session_score += 15; session_checks.append((f"✓ {trusted_device_count} trusted device(s) registered", True))
     else:
         session_checks.append(("⚠ No trusted devices — every login triggers MFA challenge", False))
-        session_score += 5
+        session_score += 7
     if active_sessions <= 3:
-        session_score += 10; session_checks.append((f"✓ {active_sessions} active session(s) — minimal exposure", True))
+        session_score += 20; session_checks.append((f"✓ {active_sessions} active session(s) — minimal exposure", True))
     else:
         session_checks.append((f"⚠ {active_sessions} active sessions — consider terminating unused ones", False))
-        session_score += 5
+        session_score += 10
 
     # 5. Recovery Readiness (0-100)
-    recovery_score = 40  # base: seed.py heals on restart
-    recovery_checks = [("✓ Startup auto-heal restores super-admin if tampered", True)]
+    recovery_score = 0
+    recovery_checks = []
+    if seed_healed:
+        recovery_score += 30; recovery_checks.append(("✓ Startup auto-heal invariant currently holds", True))
+    else:
+        recovery_checks.append(("✗ Startup auto-heal invariant violated right now", False))
     if mfa_enabled:
         cfg = mfa_cfg or {}
         remaining = len(cfg.get("recovery_codes", []))
         if remaining >= 5:
-            recovery_score += 30; recovery_checks.append((f"✓ {remaining} MFA recovery codes available", True))
+            recovery_score += 45; recovery_checks.append((f"✓ {remaining} MFA recovery codes available", True))
         elif remaining > 0:
-            recovery_score += 15; recovery_checks.append((f"⚠ Only {remaining} recovery codes remaining — regenerate soon", False))
+            recovery_score += 25; recovery_checks.append((f"⚠ Only {remaining} recovery codes remaining — regenerate soon", False))
         else:
             recovery_checks.append(("✗ No MFA recovery codes — enable MFA to generate them", False))
+    else:
+        recovery_checks.append(("✗ MFA not configured — no recovery codes possible", False))
     if has_break_glass:
-        recovery_score += 20; recovery_checks.append((f"✓ Break-glass system used ({break_glass_events} event(s) on record)", True))
+        recovery_score += 25; recovery_checks.append((f"✓ Break-glass system used ({break_glass_events} event(s) on record)", True))
     else:
         recovery_checks.append(("⚠ Break-glass system not yet exercised", False))
         recovery_score += 10
     recovery_score = min(recovery_score, 100)
 
     # 6. Privilege Escalation Resistance (0-100)
-    priv_score = 85
-    priv_checks = [
-        ("✓ super_admin role API-blocked", True),
-        ("✓ Protected account API-immutable", True),
-        ("✓ Role hierarchy enforced", True),
-        ("✓ Actors cannot modify equal/higher authority users", True),
-        ("✓ Startup strips rogue super-admins", True),
-    ]
-    if rogue_count == 0:
-        priv_score += 15; priv_checks.append(("✓ Zero rogue super-admins confirmed", True))
+    priv_score = 0
+    priv_checks = []
+    if role_blocked_ok:
+        priv_score += 20; priv_checks.append(("✓ super_admin role API-blocked", True))
     else:
-        priv_score -= 50; priv_checks.append((f"✗ {rogue_count} rogue super-admin(s) — run lockdown immediately", False))
+        priv_checks.append(("✗ super_admin role is not API-blocked", False))
+    if protected_flag_ok:
+        priv_score += 20; priv_checks.append(("✓ Protected account API-immutable", True))
+    else:
+        priv_checks.append(("✗ Protected account is not flagged immutable", False))
+    if hierarchy_ok:
+        priv_score += 20; priv_checks.append(("✓ Role hierarchy enforced", True))
+    else:
+        priv_checks.append(("✗ Role hierarchy check failed", False))
+    if cannot_escalate:
+        priv_score += 20; priv_checks.append(("✓ Actors cannot modify equal/higher authority users", True))
+    else:
+        priv_checks.append(("✗ Authority-comparison guard failed", False))
+    if rogue_count == 0:
+        priv_score += 20; priv_checks.append(("✓ Zero rogue super-admins confirmed", True))
+    else:
+        priv_checks.append((f"✗ {rogue_count} rogue super-admin(s) — run lockdown immediately", False))
 
     # 7. Zero-Trust Readiness (0-100)
-    zt_score = 20  # base: identity verification
+    zt_score = 0
     zt_checks = []
+    if admin.get("email_verified"):
+        zt_score += 20; zt_checks.append(("✓ Acting admin identity is email-verified", True))
+    else:
+        zt_checks.append(("✗ Acting admin email not verified", False))
     if mfa_enabled:
-        zt_score += 25; zt_checks.append(("✓ MFA (something you have)", True))
+        zt_score += 35; zt_checks.append(("✓ MFA (something you have)", True))
     else:
         zt_checks.append(("✗ No MFA — violates zero-trust 'verify explicitly'", False))
     if trusted_device_count > 0:
-        zt_score += 20; zt_checks.append(("✓ Trusted device management active", True))
+        zt_score += 25; zt_checks.append(("✓ Trusted device management active", True))
     else:
         zt_checks.append(("⚠ No trusted devices registered", False))
     if has_allowlist:
@@ -695,7 +753,6 @@ async def security_certification(admin: dict = Depends(require_super_admin)):
         zt_score += 20 if allowlist_mode == "enforce" else 10
     else:
         zt_checks.append(("⚠ No IP allowlist configured", False))
-    zt_score += 15; zt_checks.append(("✓ All admin routes require super_admin role", True))
     zt_score = min(zt_score, 100)
 
     scores = {
