@@ -668,17 +668,22 @@ function ConferenceCard({ c, isCompared, onCompare }) {
   const fi = formatInfo(c.format);
   const stateDisplay = STATE_DISPLAY[c.deadline_state || "unknown"];
   const d = daysUntil(c.submission_deadline);
+  const navigate = useNavigate();
 
   return (
-    <Link
-      to={`/conferences/${c.id}`}
+    <div
+      role="link"
+      tabIndex={0}
       data-testid={TID.discoveryItem(c.id)}
+      onClick={() => navigate(`/conferences/${c.id}`)}
+      onKeyDown={(e) => { if (e.key === "Enter") navigate(`/conferences/${c.id}`); }}
       style={{
         display: "flex",
         flexDirection: "column",
         border: `1px solid ${BORDER}`,
         background: "white",
         textDecoration: "none",
+        cursor: "pointer",
         transition: "border-color 150ms, box-shadow 150ms, transform 150ms",
         overflow: "hidden",
       }}
@@ -771,7 +776,7 @@ function ConferenceCard({ c, isCompared, onCompare }) {
       {/* Card footer */}
       <div
         style={{ borderTop: `1px solid ${BORDER}`, padding: "7px 16px", display: "flex", gap: 10, background: "#FAFBFC", alignItems: "center" }}
-        onClick={(e) => e.preventDefault()}
+        onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={(e) => onCompare(c, e)}
@@ -788,7 +793,7 @@ function ConferenceCard({ c, isCompared, onCompare }) {
           <FileText size={10} strokeWidth={1.5} /> Review
         </Link>
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -878,12 +883,16 @@ function TimelineCard({ c, isCompared, onCompare }) {
   const deadline = urgencyLabel(c.submission_deadline);
   const rs = rankStyle(c.rank);
   const fi = formatInfo(c.format);
+  const navigate = useNavigate();
 
   return (
-    <Link
-      to={`/conferences/${c.id}`}
+    <div
+      role="link"
+      tabIndex={0}
       data-testid={TID.discoveryItem(c.id)}
-      style={{ display: "flex", border: `1px solid ${BORDER}`, background: "white", textDecoration: "none", transition: "border-color 150ms", overflow: "hidden" }}
+      onClick={() => navigate(`/conferences/${c.id}`)}
+      onKeyDown={(e) => { if (e.key === "Enter") navigate(`/conferences/${c.id}`); }}
+      style={{ display: "flex", border: `1px solid ${BORDER}`, background: "white", textDecoration: "none", cursor: "pointer", transition: "border-color 150ms", overflow: "hidden" }}
       onMouseEnter={(e) => e.currentTarget.style.borderColor = NAVY}
       onMouseLeave={(e) => e.currentTarget.style.borderColor = BORDER}
     >
@@ -923,7 +932,7 @@ function TimelineCard({ c, isCompared, onCompare }) {
       </div>
 
       {/* Actions */}
-      <div style={{ width: 76, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: 10, borderLeft: `1px solid ${BORDER}` }} onClick={(e) => e.preventDefault()}>
+      <div style={{ width: 76, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: 10, borderLeft: `1px solid ${BORDER}` }} onClick={(e) => e.stopPropagation()}>
         <button
           onClick={(e) => onCompare(c, e)}
           style={{ color: isCompared ? NAVY : "#CBD5E1", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, background: "none", border: "none", outline: "none" }}
@@ -940,7 +949,7 @@ function TimelineCard({ c, isCompared, onCompare }) {
           <span style={{ fontSize: 9, color: "#94A3B8" }}>Prepare</span>
         </Link>
       </div>
-    </Link>
+    </div>
   );
 }
 

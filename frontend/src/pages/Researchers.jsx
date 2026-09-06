@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ResearchLayout } from "@/layouts";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { useAuth } from "../contexts/AuthContext";
@@ -550,12 +550,16 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
   const orcidPresent = hasOrcid(r);
   const areas = (r.research_areas || []).slice(0, 3);
   const saved = isSaved;
+  const navigate = useNavigate();
 
   return (
-    <Link
-      to={profileUrl(r)}
+    <div
+      role="link"
+      tabIndex={0}
       data-testid={TID.discoverResearcherCard(r.id)}
-      style={{ display: "flex", flexDirection: "column", border: `1px solid ${BORDER}`, background: "white", textDecoration: "none", transition: "border-color 150ms, box-shadow 150ms, transform 150ms", overflow: "hidden" }}
+      onClick={() => navigate(profileUrl(r))}
+      onKeyDown={(e) => { if (e.key === "Enter") navigate(profileUrl(r)); }}
+      style={{ display: "flex", flexDirection: "column", border: `1px solid ${BORDER}`, background: "white", textDecoration: "none", cursor: "pointer", transition: "border-color 150ms, box-shadow 150ms, transform 150ms", overflow: "hidden" }}
       onMouseEnter={(e) => { e.currentTarget.style.borderColor = NAVY; e.currentTarget.style.boxShadow = "0 4px 16px rgba(15,40,71,0.08)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "translateY(0)"; }}
     >
@@ -683,7 +687,7 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
       {/* Card footer */}
       <div
         style={{ borderTop: `1px solid ${BORDER}`, padding: "7px 16px", display: "flex", gap: 10, background: "#FAFBFC", alignItems: "center" }}
-        onClick={(e) => e.preventDefault()}
+        onClick={(e) => e.stopPropagation()}
       >
         <Link
           to={profileUrl(r)}
@@ -710,7 +714,7 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
           <UserPlus size={10} strokeWidth={1.5} /> Collab
         </Link>
       </div>
-    </Link>
+    </div>
   );
 }
 

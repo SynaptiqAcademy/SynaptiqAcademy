@@ -511,10 +511,11 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
   const methods = (r.methods_expertise || []).slice(0, 2);
   const hasRatingData = r.reviews_completed > 0;
   const showScore = r.reviewer_score > 0;
+  const navigate = useNavigate();
 
   return (
     <Card
-      to={profileUrl(r)}
+      onClick={() => navigate(profileUrl(r))}
       data-testid={TID.discoverResearcherCard(r.user_id || r._id)}
       padding="none"
       style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}
@@ -620,7 +621,7 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
       {/* Footer */}
       <div
         style={{ borderTop: `1px solid ${BORDER}`, padding: "7px 16px", display: "flex", gap: 10, background: "#FAFBFC", alignItems: "center" }}
-        onClick={(e) => e.preventDefault()}
+        onClick={(e) => e.stopPropagation()}
       >
         <Button as={Link} to={profileUrl(r)} onClick={(e) => e.stopPropagation()} variant="link" size="sm" style={{ color: NAVY }}>
           View Profile <ArrowRight size={9} strokeWidth={2} />

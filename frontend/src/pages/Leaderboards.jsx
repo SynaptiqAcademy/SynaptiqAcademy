@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ResearchLayout } from "@/layouts";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
@@ -526,12 +526,16 @@ function ResearcherCard({ item, compared, onCompare }) {
   const lvlInfo  = getLevelInfo(level);
   const label    = item.reputation_label || "Research Explorer";
   const score    = item.overall_score || 0;
+  const navigate = useNavigate();
 
   return (
-    <Link
-      to={profileUrl(item)}
+    <div
+      role="link"
+      tabIndex={0}
       className="slide-up"
-      style={{ display: "flex", flexDirection: "column", border: `1px solid ${compared ? NAVY : BORDER}`, background: compared ? `${NAVY}03` : "white", textDecoration: "none", transition: "border-color 150ms, box-shadow 150ms, transform 150ms", overflow: "hidden" }}
+      onClick={() => navigate(profileUrl(item))}
+      onKeyDown={(e) => { if (e.key === "Enter") navigate(profileUrl(item)); }}
+      style={{ display: "flex", flexDirection: "column", border: `1px solid ${compared ? NAVY : BORDER}`, background: compared ? `${NAVY}03` : "white", textDecoration: "none", cursor: "pointer", transition: "border-color 150ms, box-shadow 150ms, transform 150ms", overflow: "hidden" }}
       onMouseEnter={(e) => { e.currentTarget.style.borderColor = NAVY; e.currentTarget.style.boxShadow = "0 4px 16px rgba(15,40,71,0.08)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = compared ? NAVY : BORDER; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "translateY(0)"; }}
     >
@@ -605,7 +609,7 @@ function ResearcherCard({ item, compared, onCompare }) {
       {/* Footer */}
       <div
         style={{ borderTop: `1px solid ${BORDER}`, padding: "7px 16px", background: "#FAFBFC", display: "flex", gap: 10, alignItems: "center" }}
-        onClick={(e) => e.preventDefault()}
+        onClick={(e) => e.stopPropagation()}
       >
         <Link
           to={profileUrl(item)}
@@ -622,7 +626,7 @@ function ResearcherCard({ item, compared, onCompare }) {
           <BarChart2 size={10} strokeWidth={1.5} /> {compared ? "Remove" : "Compare"}
         </button>
       </div>
-    </Link>
+    </div>
   );
 }
 

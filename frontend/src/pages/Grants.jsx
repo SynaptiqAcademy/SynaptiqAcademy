@@ -863,17 +863,22 @@ function GrantCard({ g, isSaved, onSave, isCompared, onCompare }) {
   const deadline = urgencyLabel(g.deadline);
   const ts       = typeStyle(g.funding_type);
   const d        = daysUntil(g.deadline);
+  const navigate = useNavigate();
 
   return (
-    <Link
-      to={`/grants/${g.id}`}
+    <div
+      role="link"
+      tabIndex={0}
       data-testid={TID.discoveryItem(g.id)}
+      onClick={() => navigate(`/grants/${g.id}`)}
+      onKeyDown={(e) => { if (e.key === "Enter") navigate(`/grants/${g.id}`); }}
       style={{
         display: "flex",
         flexDirection: "column",
         border: `1px solid ${BORDER}`,
         background: "white",
         textDecoration: "none",
+        cursor: "pointer",
         transition: "border-color 150ms, box-shadow 150ms, transform 150ms",
         position: "relative",
         overflow: "hidden",
@@ -990,7 +995,7 @@ function GrantCard({ g, isSaved, onSave, isCompared, onCompare }) {
           background: "#FAFBFC",
           alignItems: "center",
         }}
-        onClick={(e) => e.preventDefault()}
+        onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={(e) => onCompare(g, e)}
@@ -1028,7 +1033,7 @@ function GrantCard({ g, isSaved, onSave, isCompared, onCompare }) {
           <Plus size={10} strokeWidth={1.5} /> Apply
         </Link>
       </div>
-    </Link>
+    </div>
   );
 }
 
