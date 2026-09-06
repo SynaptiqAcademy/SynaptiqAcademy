@@ -28,7 +28,7 @@ from auth_utils import get_current_user
 from db import get_db
 from services.ai.llm import call_llm
 from services.credits_service import consume_credits, refund_credits
-from services.permissions import require_feature
+from services.permissions import require_feature, REAL_CUSTOMER_FILTER
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -294,6 +294,7 @@ async def generate_recommendations(
         "_id":                {"$ne": ObjectId(user_id)},
         "onboarding_complete": True,
         "is_demo":            {"$ne": True},
+        **REAL_CUSTOMER_FILTER,
     }
     if body.country:
         candidate_filter["country"] = body.country

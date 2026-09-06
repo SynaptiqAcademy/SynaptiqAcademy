@@ -8,9 +8,10 @@ import {
   MapPin, Building2, Globe, ExternalLink, Users, BookOpen, Award,
   TrendingUp, Star, Calendar, ChevronRight, Loader2, Share2, UserPlus,
   UserCheck, BarChart3, Layers, GraduationCap, Activity, Clock,
-  FileText, Briefcase, FlaskConical, ArrowLeft, Eye, Heart
+  FileText, Briefcase, FlaskConical, ArrowLeft, Eye, Heart, MessageCircle
 } from "lucide-react";
 import { Card, Tag, TagGroup, Badge, StatCard, StatGrid, NavTabs, ProgressBar as DsProgressBar } from "@/components/ds";
+import { toast } from "sonner";
 
 export default function ResearcherProfile() {
   const { slug } = useParams();
@@ -25,6 +26,8 @@ export default function ResearcherProfile() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [connectLoading, setConnectLoading] = useState(false);
+  const [connectSent, setConnectSent] = useState(false);
   const loadedTabs = useRef(new Set());
 
   useEffect(() => {
@@ -94,6 +97,30 @@ export default function ResearcherProfile() {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleConnect = async () => {
+    if (!user) { navigate("/login"); return; }
+    setConnectLoading(true);
+    try {
+      await api.post("/collaboration-requests", { receiver_id: profile.user_id });
+      setConnectSent(true);
+      toast.success(`Connection request sent to ${profile.full_name}.`);
+    } catch (e) {
+      if (e.response?.status === 409) {
+        setConnectSent(true);
+        toast.info("You already have a pending request to this researcher.");
+      } else {
+        toast.error(e.response?.data?.detail || "Could not send connection request.");
+      }
+    } finally {
+      setConnectLoading(false);
+    }
+  };
+
+  const handleMessage = () => {
+    if (!user) { navigate("/login"); return; }
+    navigate(`/messages/${profile.user_id}`);
   };
 
   const renderTabContent = () => {
@@ -486,6 +513,29 @@ export default function ResearcherProfile() {
       </button>
       {user && user.id !== profile.user_id && (
         <button
+          onClick={handleMessage}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-slate-200 text-slate-600 hover:border-slate-400 transition-colors rounded"
+        >
+          <MessageCircle size={12} />
+          Message
+        </button>
+      )}
+      {user && user.id !== profile.user_id && (
+        <button
+          onClick={handleConnect}
+          disabled={connectLoading || connectSent}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors rounded ${
+            connectSent
+              ? "bg-slate-100 text-slate-500 border border-slate-200 cursor-default"
+              : "border border-[#0F2847] text-[#0F2847] hover:bg-[#0F2847] hover:text-white"
+          }`}
+        >
+          {connectLoading ? <Loader2 size={12} className="animate-spin" /> : <UserPlus size={12} />}
+          {connectSent ? "Request Sent" : "Connect"}
+        </button>
+      )}
+      {user && user.id !== profile.user_id && (
+        <button
           onClick={handleFollow}
           disabled={followLoading}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors rounded ${
@@ -525,6 +575,7 @@ export default function ResearcherProfile() {
             {/* Identity */}
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-3 flex-wrap">
+                <h1 className="font-serif text-2xl text-slate-900">{profile.full_name || "Researcher"}</h1>
                 {profile.reputation?.level_name && (
                   <span className="mt-1 px-2 py-0.5 bg-[#0F2847]/10 text-[#0F2847] text-xs font-medium rounded-full">
                     {profile.reputation.level_name}

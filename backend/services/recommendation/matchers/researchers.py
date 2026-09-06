@@ -7,6 +7,7 @@ from bson import ObjectId
 from services.recommendation.profiles import get_or_refresh_profile
 from services.recommendation.scoring import normalize_set, jaccard, clamp, career_complement
 from services.recommendation.explainer import explain_researcher
+from services.permissions import REAL_CUSTOMER_FILTER
 
 
 async def match_researchers(
@@ -65,8 +66,9 @@ async def match_researchers(
     # ── Build query ──────────────────────────────────────────────────────────
     query: dict[str, Any] = {
         "is_suspended": {"$ne": True},
-        "account_type": {"$ne": "demo"},
+        "is_demo": {"$ne": True},
         "profile_visibility": {"$ne": "private"},
+        **REAL_CUSTOMER_FILTER,
     }
 
     if country_filter:
@@ -91,7 +93,7 @@ async def match_researchers(
         "methods": 1,
         "profile_visibility": 1,
         "is_suspended": 1,
-        "account_type": 1,
+        "is_demo": 1,
     }
 
     candidates_raw = await db.users.find(query, projection).limit(500).to_list(500)

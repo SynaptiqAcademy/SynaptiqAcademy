@@ -146,7 +146,7 @@ async def _enrich(doc: dict, db) -> dict:
             "institution":  u.get("institution", ""),
             "department":   u.get("department", ""),
             "avatar_url":   u.get("avatar_url"),
-            "orcid_id":     (u.get("orcid") or {}).get("orcid_id"),
+            "orcid_id":     u.get("orcid").get("orcid_id") if isinstance(u.get("orcid"), dict) else None,
             "role":         roles.get(str(u["_id"]), "Co-Author"),
         }
         for uid in author_ids

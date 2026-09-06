@@ -9,6 +9,7 @@ from db import get_db
 from models import ProfileUpdate, OnboardingComplete
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.permissions import REAL_CUSTOMER_FILTER
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -253,6 +254,9 @@ async def list_users(
         "is_demo": {"$ne": True},
         # Visibility: exclude users who have explicitly set profile to private
         "profile_visibility": {"$ne": "private"},
+        # Internal/staff accounts (the protected super-admin, moderators) are
+        # never real researchers to discover or connect with.
+        **REAL_CUSTOMER_FILTER,
     }
 
     # ── Full-text search ──────────────────────────────────────────────────────

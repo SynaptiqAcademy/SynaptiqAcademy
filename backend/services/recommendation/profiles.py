@@ -114,7 +114,7 @@ async def build_profile(user_id: str, db) -> dict:
         "reputation_score": reputation_score,
         "is_private": (user.get("profile_visibility") or "") == "private",
         "is_suspended": bool(user.get("is_suspended", False)),
-        "is_demo": (user.get("account_type") or "") == "demo",
+        "is_demo": bool(user.get("is_demo", False)),
         "manuscript_research_areas": sorted(manuscript_areas),
         "manuscript_keywords": sorted(manuscript_keywords),
         "updated_at": now_iso,
@@ -163,7 +163,7 @@ async def refresh_all_profiles(db, limit: int = 500) -> int:
     """Refresh profiles for up to `limit` users (for background refresh jobs). Returns count refreshed."""
     db = make_db_proxy(db, system=True)
     users_cursor = db.users.find(
-        {"is_suspended": {"$ne": True}, "account_type": {"$ne": "demo"}},
+        {"is_suspended": {"$ne": True}, "is_demo": {"$ne": True}},
         {"_id": 1},
         limit=limit,
     )

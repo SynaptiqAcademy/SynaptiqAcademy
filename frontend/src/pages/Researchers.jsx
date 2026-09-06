@@ -706,9 +706,8 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
         </Button>
         <span style={{ color: "#E2E8F0" }}>|</span>
         <Link
-          to="/collaboration-requests"
+          to={profileUrl(r)}
           onClick={(e) => e.stopPropagation()}
-          state={{ preselected_user_id: r.id }}
           style={{ fontSize: 10, fontWeight: 600, color: "#94A3B8", display: "flex", alignItems: "center", gap: 3, textDecoration: "none" }}
         >
           <UserPlus size={10} strokeWidth={1.5} /> Collab

@@ -358,6 +358,14 @@ async def register(request: Request, payload: RegisterIn, response: Response):
         await attribute_signup(referee_id=uid, code=ref_code)
     except Exception:
         logger.exception("Referral attribution failed (non-fatal)")
+    try:
+        # Provision the public profile (slug + default visibility settings) up
+        # front, so "View Profile" links other users click resolve immediately
+        # instead of relying on the get_user_id_by_slug self-heal fallback.
+        from services.public_profiles.slug_service import get_or_create_profile
+        await get_or_create_profile(uid, db)
+    except Exception:
+        logger.exception("Public profile provisioning failed (non-fatal)")
     token, jti = _make_verification_token(uid)
     await db.email_verifications.insert_one({
         "user_id": uid, "jti": jti, "used": False,

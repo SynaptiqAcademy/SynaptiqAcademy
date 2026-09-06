@@ -305,7 +305,7 @@ async def aos_export(report: str = Query("users", enum=["users", "activity", "fi
                 u.get("email"), u.get("full_name"), u.get("plan_code", "free"),
                 u.get("status", "active"), u.get("email_verified", False),
                 u.get("country"), u.get("academic_role"),
-                bool((u.get("orcid") or {}).get("orcid_id")),
+                bool(u.get("orcid").get("orcid_id")) if isinstance(u.get("orcid"), dict) else bool(u.get("orcid")),
                 (u.get("created_at") or "")[:10],
             ])
         filename = "users.csv"

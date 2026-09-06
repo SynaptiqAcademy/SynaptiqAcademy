@@ -12,6 +12,7 @@ from auth_utils import get_current_user, serialize_public_user
 from db import get_db
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.permissions import REAL_CUSTOMER_FILTER
 
 log = logging.getLogger("synaptiq.researchers")
 router = APIRouter(prefix="/api/researchers", tags=["researchers"])
@@ -221,6 +222,7 @@ async def discover_sections(user: dict = Depends(get_current_user)):
         "_id": {"$ne": ObjectId(uid)},
         "is_demo": {"$ne": True},
         "profile_visibility": {"$ne": "private"},
+        **REAL_CUSTOMER_FILTER,
     }
 
     def _score(r):

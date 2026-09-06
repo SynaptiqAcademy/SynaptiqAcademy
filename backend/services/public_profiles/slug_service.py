@@ -84,6 +84,31 @@ async def claim_custom_slug(user_id: str, desired_slug: str, db) -> dict:
 
 
 async def get_user_id_by_slug(slug: str, db) -> str | None:
-    """Return user_id for a given slug, or None."""
+    """Return user_id for a given slug, or None.
+
+    Every "view profile" link across the app (Researchers, Discover,
+    Leaderboards, Reviewer Marketplace card footers) is built client-side
+    from generate_slug_from_name-equivalent logic before a public_profiles
+    document necessarily exists — that document is normally only created
+    on-demand, the first time a user visits their OWN profile (GET
+    /profiles/me) or explicitly claims a custom slug. A user who has never
+    done either (which, before this fix, was effectively everyone) has no
+    resolvable slug, so every "View Profile" click 404s.
+
+    Self-heal here instead of requiring a backfill migration: if no
+    public_profiles doc matches, look for a real user whose name produces
+    this same slug and auto-provision their default public profile.
+    """
     doc = await db.public_profiles.find_one({"slug": slug}, {"user_id": 1})
-    return doc["user_id"] if doc else None
+    if doc:
+        return doc["user_id"]
+
+    candidates = await db.users.find(
+        {"is_demo": {"$ne": True}}, {"full_name": 1},
+    ).to_list(5000)
+    for cand in candidates:
+        if generate_slug_from_name(cand.get("full_name", "")) == slug:
+            user_id = str(cand["_id"])
+            await get_or_create_profile(user_id, db)
+            return user_id
+    return None

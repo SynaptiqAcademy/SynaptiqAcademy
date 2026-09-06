@@ -5,6 +5,7 @@ from typing import Any
 from services.recommendation.profiles import get_or_refresh_profile
 from services.recommendation.scoring import normalize_set, jaccard, clamp
 from services.recommendation.explainer import explain_mentor
+from services.permissions import REAL_CUSTOMER_FILTER
 
 def _normalize_role(role: str) -> str:
     """Normalize role: lowercase, replace spaces/hyphens with underscores."""
@@ -120,7 +121,8 @@ async def match_mentors(
         "academic_role": {"$regex": senior_role_pattern, "$options": "i"},
         "is_suspended": {"$ne": True},
         "profile_visibility": {"$ne": "private"},
-        "account_type": {"$ne": "demo"},
+        "is_demo": {"$ne": True},
+        **REAL_CUSTOMER_FILTER,
     }
 
     if area_filter:

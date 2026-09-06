@@ -79,20 +79,32 @@ async def get_full_profile(user_id: str, db, viewer_id: str = None) -> dict:
     if isinstance(orcid_val, dict):
         orcid_id = orcid_val.get("orcid_id")
 
+    # Research areas (required at onboarding) and research interests (an
+    # optional, separate free-text field) are complementary signals used
+    # together everywhere else in the app (search, recommendations) — merge
+    # them here too, or a profile with only the required field filled in
+    # would show an empty "Research Interests" section.
+    research_topics = list(dict.fromkeys(
+        (user.get("research_areas") or []) + (user.get("research_interests") or [])
+    ))
+
     return {
         "user_id": user_id,
         "slug": profile_doc["slug"] if profile_doc else None,
         "full_name": user.get("full_name"),
         "avatar_url": user.get("avatar_url"),
-        "academic_title": user.get("academic_title") or user.get("role"),
+        # academic_role (e.g. "Professor", "Researcher") is the real field
+        # set at onboarding — "academic_title" was never a real user field,
+        # so this always fell through to the account's auth role ("user").
+        "academic_title": user.get("academic_role") or "",
         "career_stage": user.get("career_stage"),
         "institution": user.get("institution"),
         "institution_id": user.get("institution_id"),
         "department": user.get("department"),
         "country": user.get("country"),
         "biography": user.get("biography"),
-        "research_interests": user.get("research_interests") or [],
-        "keywords": user.get("keywords") or [],
+        "research_interests": research_topics,
+        "keywords": user.get("research_keywords") or user.get("keywords") or [],
         "website": user.get("website"),
         "orcid_id": orcid_id,
         "email": user.get("email"),

@@ -10,6 +10,7 @@ from auth_utils import get_current_user, serialize_public_user
 from db import get_db
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.permissions import REAL_CUSTOMER_FILTER
 
 log = logging.getLogger("synaptiq.discover")
 
@@ -110,6 +111,7 @@ async def feed(user: dict = Depends(get_current_user)):
         "_id": {"$nin": list(excluded_ids)},
         "is_demo": {"$ne": True},
         "profile_visibility": {"$ne": "private"},
+        **REAL_CUSTOMER_FILTER,
     }
     researchers_q = {**base_filter}
 
@@ -146,6 +148,7 @@ async def feed(user: dict = Depends(get_current_user)):
                         },
                         "is_demo": {"$ne": True},
                         "profile_visibility": {"$ne": "private"},
+                        **REAL_CUSTOMER_FILTER,
                     }
                 ).limit(10).to_list(10)
                 researchers.extend(extra)
@@ -182,7 +185,7 @@ async def feed(user: dict = Depends(get_current_user)):
     # Fallback if we still have fewer than 6
     if len(deduped) < 6:
         more = await db.users.find(
-            {"_id": {"$nin": list(excluded_ids)}, "is_demo": {"$ne": True}, "profile_visibility": {"$ne": "private"}}
+            {"_id": {"$nin": list(excluded_ids)}, "is_demo": {"$ne": True}, "profile_visibility": {"$ne": "private"}, **REAL_CUSTOMER_FILTER}
         ).limit(8).to_list(8)
         for r in more:
             if str(r["_id"]) not in seen_final and len(deduped) < 8:

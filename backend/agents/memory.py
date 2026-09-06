@@ -123,7 +123,7 @@ class SharedMemory:
                 "domain":       user.get("primary_domain", ""),
                 "institution":  user.get("institution", ""),
                 "role":         user.get("user_type", ""),
-                "orcid":        (user.get("orcid") or {}).get("orcid_id"),
+                "orcid":        user.get("orcid").get("orcid_id") if isinstance(user.get("orcid"), dict) else None,
                 "manuscripts":  [],
                 "projects":     [],
                 "collaborations": [],

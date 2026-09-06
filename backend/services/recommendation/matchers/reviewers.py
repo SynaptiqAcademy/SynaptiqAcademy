@@ -7,6 +7,7 @@ from bson import ObjectId
 from services.recommendation.profiles import get_or_refresh_profile
 from services.recommendation.scoring import normalize_set, jaccard, clamp
 from services.recommendation.explainer import explain_reviewer
+from services.permissions import REAL_CUSTOMER_FILTER
 
 _SENIORITY_SCORES: dict[str, float] = {
     "professor": 15.0,
@@ -121,8 +122,9 @@ async def match_reviewers(
     # ── Query candidate reviewers ────────────────────────────────────────────
     query: dict[str, Any] = {
         "is_suspended": {"$ne": True},
-        "account_type": {"$ne": "demo"},
+        "is_demo": {"$ne": True},
         "profile_visibility": {"$ne": "private"},
+        **REAL_CUSTOMER_FILTER,
     }
 
     projection = {

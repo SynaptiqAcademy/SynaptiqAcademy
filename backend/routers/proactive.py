@@ -64,6 +64,13 @@ PROFILE_FIELDS = [
 def _uid(user: dict) -> str:
     return str(user["id"])
 
+def _has_orcid(user: dict) -> bool:
+    """`orcid` is stored either as a verified-OAuth dict ({"orcid_id": ...})
+    or a plain string (typed in manually, e.g. demo/seed data) — both count
+    as "has ORCID". Crashed with AttributeError for string values before."""
+    orcid = user.get("orcid")
+    return bool(orcid.get("orcid_id")) if isinstance(orcid, dict) else bool(orcid)
+
 def _rec_id(*parts: str) -> str:
     """Stable deterministic ID so dismiss/accept can be stored."""
     return hashlib.sha1(":".join(parts).encode()).hexdigest()[:16]
@@ -476,7 +483,7 @@ async def _build_recommendations(user: dict, db, dismissed_ids: set) -> list[dic
             })
 
     # ORCID: based on verified profile field
-    if not (user.get("orcid") or {}).get("orcid_id"):
+    if not _has_orcid(user):
         evidence = [
             {
                 "type": "profile_field",
@@ -629,7 +636,7 @@ async def _build_recommendations(user: dict, db, dismissed_ids: set) -> list[dic
                 missing_context.append("Projects (none found in platform database)")
         except Exception:
             pass
-        if not (user.get("orcid") or {}).get("orcid_id"):
+        if not _has_orcid(user):
             missing_context.append("ORCID (not connected — no publication data available)")
 
         recs.append({
@@ -966,7 +973,7 @@ async def get_insights(user=Depends(get_current_user), db=Depends(get_db)):
         "source": "Synaptiq platform database — user profile",
     })
 
-    if not (user.get("orcid") or {}).get("orcid_id"):
+    if not _has_orcid(user):
         insights.append({
             "id":     "orcid",
             "icon":   "link",
@@ -1043,7 +1050,7 @@ async def get_health_score(user=Depends(get_current_user), db=Depends(get_db)):
     total += proj_pts
 
     # ORCID (15 pts) — direct profile field check
-    orcid_pts = 15 if (user.get("orcid") or {}).get("orcid_id") else 0
+    orcid_pts = 15 if _has_orcid(user) else 0
     subscores["orcid"] = {
         "label":  "ORCID connected",
         "score":  orcid_pts,

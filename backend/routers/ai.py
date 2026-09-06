@@ -8,7 +8,7 @@ from auth_utils import get_current_user
 from db import get_db
 from models import AIAssistRequest
 from services.credits_service import consume_credits, refund_credits
-from services.permissions import require_feature
+from services.permissions import require_feature, REAL_CUSTOMER_FILTER
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -119,7 +119,7 @@ async def recommend_collaborators(user: dict = Depends(get_current_user)):
     user_expertise  = user.get("professional_expertise") or []
     compatible_types = _get_compatible_types(user_type)
 
-    base_query = {"_id": {"$ne": ObjectId(user["id"])}, "role": {"$ne": "admin"}, "is_demo": {"$ne": True}}
+    base_query = {"_id": {"$ne": ObjectId(user["id"])}, "is_demo": {"$ne": True}, **REAL_CUSTOMER_FILTER}
 
     # ── Stage 1: compatibility + domain overlap ─────────────────────────────
     stage1_query = {**base_query, "user_type": {"$in": compatible_types}}

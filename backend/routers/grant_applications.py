@@ -546,7 +546,7 @@ async def list_team(app_id: str, user: dict = Depends(get_current_user)):
                 "id": str(u["_id"]), "full_name": u.get("full_name", ""),
                 "institution": u.get("institution", ""), "avatar_url": u.get("avatar_url"),
                 "department": u.get("department", ""),
-                "orcid_id": (u.get("orcid") or {}).get("orcid_id"),
+                "orcid_id": u.get("orcid").get("orcid_id") if isinstance(u.get("orcid"), dict) else None,
             }
         out.append(item)
     return out

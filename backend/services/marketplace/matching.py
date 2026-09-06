@@ -30,6 +30,7 @@ from fastapi import HTTPException
 
 from auth_utils import serialize_public_user
 from db import get_db
+from services.permissions import REAL_CUSTOMER_FILTER
 from services.credits_service import consume_credits, refund_credits
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
@@ -136,7 +137,7 @@ async def deterministic_rank(
             req_tokens[k] |= set(context_tokens.get(k, []))
 
     # Pre-filter candidate set (faster than ranking everyone).
-    q_filter: dict = {"is_demo": {"$ne": True}}
+    q_filter: dict = {"is_demo": {"$ne": True}, **REAL_CUSTOMER_FILTER}
     if exclude_self: q_filter["_id"] = {"$ne": ObjectId(requester_id)}
     if country: q_filter["country"] = country
     if institution: q_filter["institution"] = {"$regex": institution, "$options": "i"}
