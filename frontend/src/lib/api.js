@@ -204,6 +204,11 @@ export function formatApiError(detail) {
       .join(" ");
   }
   if (detail && typeof detail.msg === "string") return detail.msg;
+  // Many backend endpoints raise HTTPException(detail={"message": "...", ...})
+  // for a custom user-facing error plus extra machine-readable context
+  // (next_step, plan_code, etc.) — show the message, not a dump of the
+  // whole object with its internal field names.
+  if (detail && typeof detail.message === "string") return detail.message;
   if (detail && typeof detail === "object") return JSON.stringify(detail);
   return String(detail);
 }

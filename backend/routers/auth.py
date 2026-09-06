@@ -12,7 +12,7 @@ import jwt
 from auth_utils import (
     hash_password, verify_password, create_access_token, create_refresh_token,
     set_auth_cookies, clear_auth_cookies, serialize_user, get_current_user,
-    get_optional_user, JWT_ALGORITHM, set_csrf_cookie, clear_csrf_cookie,
+    get_optional_user, JWT_ALGORITHM, set_csrf_cookie,
 )
 from db import get_db, is_db_down, db_down_reason
 from models import RegisterIn, LoginIn, ForgotPasswordIn, ResetPasswordIn, ChangePasswordIn
@@ -590,8 +590,17 @@ async def logout(request: Request, response: Response, _user: Optional[dict] = D
         except Exception:
             pass
     clear_auth_cookies(response)
-    clear_csrf_cookie(response)
-    return {"ok": True}
+    # Re-issue (not clear) the CSRF token: logout only ends the authenticated
+    # session, but the browser stays on the site and can keep taking
+    # anonymous, unauthenticated actions (cookie consent, public forms) that
+    # still need a valid double-submit token. This also matters because the
+    # frontend calls this endpoint automatically whenever a session-restore
+    # attempt fails (i.e. for every first-time, never-logged-in visitor, not
+    # just real logouts) — clearing the token here used to wipe out the one
+    # the page had just fetched moments earlier on mount, breaking CSRF for
+    # any pre-login action for the rest of that visit.
+    csrf_token = set_csrf_cookie(response)
+    return {"ok": True, "csrf_token": csrf_token}
 
 
 @router.post("/refresh")
