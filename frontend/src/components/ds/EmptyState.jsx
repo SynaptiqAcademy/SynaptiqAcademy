@@ -91,7 +91,7 @@ export function EmptyState({
           </div>
         )
       )}
-      <p
+      <div
         style={{
           fontSize: titleSize,
           fontWeight: dark ? 400 : 600,
@@ -101,7 +101,7 @@ export function EmptyState({
         }}
       >
         {title}
-      </p>
+      </div>
       {description && (
         <p
           style={{

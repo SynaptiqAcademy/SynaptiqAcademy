@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import api from "@/lib/api";
-import { MessageSquare, Plus, Users, ChevronRight, Send } from "lucide-react";
+import { MessageSquare, Plus, Users, ChevronRight, Send, Hash } from "lucide-react";
 import { NAVY, BRD, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Input, Textarea, FormSelect, Modal, NavTabs, EmptyState, LoadingOverlay } from "@/components/ds";
@@ -248,5 +248,57 @@ export default function Communities() {
       {openCommunity && <CommunityDetail community={openCommunity} onClose={() => setOpenCommunity(null)} />}
       {showCreate && <CreateCommunityModal onClose={() => setShowCreate(false)} onCreate={() => { fetchCommunities(); fetchMyCommunities(); }} />}
     </ResearchLayout>
+  );
+}
+
+// ── Right rail — real data already loaded by this page ────────────────────────
+function CommunitiesSidebar({ myCommunities, total }) {
+  const topicCounts = myCommunities.reduce((acc, c) => {
+    if (c.topic) acc[c.topic] = (acc[c.topic] || 0) + 1;
+    return acc;
+  }, {});
+  const topicEntries = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <MessageSquare size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Communities Found</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{total}</div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          Matching your current search and filters.
+        </p>
+      </Card>
+
+      <Card padding="lg">
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+          <Users size={13} style={{ color: NAVY }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Your Communities</div>
+        </div>
+        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{myCommunities.length}</div>
+        <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
+          Communities you've joined.
+        </p>
+      </Card>
+
+      {topicEntries.length > 0 && (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <Hash size={13} style={{ color: NAVY }} />
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Your Topics</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {topicEntries.map(([topic, count]) => (
+              <div key={topic} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
+                <span style={{ textTransform: "capitalize" }}>{topic.replace(/_/g, " ")}</span>
+                <span style={{ fontWeight: 700, color: NAVY }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

@@ -118,7 +118,7 @@ async def list_collaborations(
     skip = (page - 1) * limit
     total, cursor = await asyncio.gather(
         db["grant_collaborations"].count_documents(query),
-        asyncio.coroutine(lambda: db["grant_collaborations"].find(query).skip(skip).limit(limit).to_list(limit))(),
+        db["grant_collaborations"].find(query).skip(skip).limit(limit).to_list(limit),
     )
 
     # Join creator names

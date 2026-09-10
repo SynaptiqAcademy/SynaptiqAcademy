@@ -272,7 +272,7 @@ export default function TeachingAnalytics() {
                   <Card padding="lg">
                     <div className="overline text-slate-500 mb-3">Overall Reputation</div>
                     <div className="font-serif text-4xl text-[#0F2847]">{d.reputation?.overall ?? 0}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">/ 100 · {getLevel(d.reputation?.overall || 0)}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">/ 100 · {getLevel(d.reputation?.overall || 0).label}</div>
                   </Card>
                 </div>
               </div>

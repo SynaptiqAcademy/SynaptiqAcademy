@@ -119,14 +119,10 @@ export default function ReviewerMarketplace() {
 
   // ── Boot ───────────────────────────────────────────────────────────────────
   useEffect(() => {
-    api.get("/recommendations/reviewers?limit=8")
-      .then((r) => {
-        const raw = r.data;
-        const list = Array.isArray(raw) ? raw : (raw?.results || []);
-        setRecs(list.length > 0 ? list : null);
-      })
-      .catch(() => setRecs(null))
-      .finally(() => setRecsLoading(false));
+    // Reviewer recommendations require a manuscript_id/project_id to score
+    // against — there's no such context on this general landing page, so the
+    // panel has no real data source here and stays hidden.
+    setRecsLoading(false);
 
     api.get("/reviewer-marketplace/requests?visibility=public&status=open&limit=6")
       .then((r) => setOpenRequests(r.data?.items || []))

@@ -52,6 +52,203 @@ async def my_badges(user: dict = Depends(get_current_user)):
     return doc.get("badges", [])
 
 
+# ── Leaderboard ───────────────────────────────────────────────────────────────
+
+_LEADERBOARD_CATEGORIES = {
+    "top_researchers":   "overall_score",
+    "top_collaborators": "collaboration_score",
+    "top_reviewers":     "reviewer_score",
+    "top_mentors":       "teaching_score",
+    "top_teachers":      "teaching_score",
+    "top_institutions":  None,  # aggregated
+    "top_countries":     None,  # aggregated
+}
+
+
+@router.get("/leaderboard/categories")
+async def leaderboard_categories(_user: dict = Depends(get_current_user)):
+    """Return the list of available leaderboard categories."""
+    return {
+        "categories": list(_LEADERBOARD_CATEGORIES.keys()),
+        "default": "top_researchers",
+    }
+
+
+@router.get("/leaderboard")
+async def leaderboard(
+    category: str = Query("top_researchers"),
+    country: Optional[str] = Query(None),
+    institution: Optional[str] = Query(None),
+    area: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    _user: dict = Depends(get_current_user),
+):
+    """Return leaderboard for the requested category."""
+    from typing import Optional as _Opt  # already imported at module level but guard
+
+    db = get_db()
+
+    db = DBProxy(db, SecurityContext.system())
+
+    if category not in _LEADERBOARD_CATEGORIES:
+        raise HTTPException(400, f"Unknown category '{category}'. Use /leaderboard/categories.")
+
+    skip = (page - 1) * limit
+
+    if category == "top_institutions":
+        # Aggregate by institution
+        pipeline = [
+            {"$match": {"overall_score": {"$gt": 0}}},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "let": {"uid": "$user_id"},
+                    "pipeline": [
+                        {"$match": {"$expr": {"$eq": [{"$toString": "$_id"}, "$$uid"]}}},
+                        {"$project": {"institution": 1, "country": 1}},
+                    ],
+                    "as": "user_info",
+                }
+            },
+            {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": False}},
+            {
+                "$group": {
+                    "_id": "$user_info.institution",
+                    "total_score": {"$sum": "$overall_score"},
+                    "member_count": {"$sum": 1},
+                    "country": {"$first": "$user_info.country"},
+                }
+            },
+            {"$match": {"_id": {"$ne": None, "$ne": ""}}},
+            {"$sort": {"total_score": -1}},
+            {"$skip": skip},
+            {"$limit": limit},
+        ]
+        rows = await db.research_reputation.aggregate(pipeline).to_list(limit)
+        return {
+            "category": category,
+            "page": page,
+            "limit": limit,
+            "results": [
+                {
+                    "rank": skip + i + 1,
+                    "institution": r["_id"],
+                    "country": r.get("country"),
+                    "total_score": r["total_score"],
+                    "member_count": r["member_count"],
+                }
+                for i, r in enumerate(rows)
+            ],
+        }
+
+    if category == "top_countries":
+        pipeline = [
+            {"$match": {"overall_score": {"$gt": 0}}},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "let": {"uid": "$user_id"},
+                    "pipeline": [
+                        {"$match": {"$expr": {"$eq": [{"$toString": "$_id"}, "$$uid"]}}},
+                        {"$project": {"country": 1}},
+                    ],
+                    "as": "user_info",
+                }
+            },
+            {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": False}},
+            {
+                "$group": {
+                    "_id": "$user_info.country",
+                    "total_score": {"$sum": "$overall_score"},
+                    "member_count": {"$sum": 1},
+                }
+            },
+            {"$match": {"_id": {"$ne": None, "$ne": ""}}},
+            {"$sort": {"total_score": -1}},
+            {"$skip": skip},
+            {"$limit": limit},
+        ]
+        rows = await db.research_reputation.aggregate(pipeline).to_list(limit)
+        return {
+            "category": category,
+            "page": page,
+            "limit": limit,
+            "results": [
+                {
+                    "rank": skip + i + 1,
+                    "country": r["_id"],
+                    "total_score": r["total_score"],
+                    "member_count": r["member_count"],
+                }
+                for i, r in enumerate(rows)
+            ],
+        }
+
+    # Individual researcher leaderboards
+    score_field = _LEADERBOARD_CATEGORIES[category]
+    match_filter: dict = {score_field: {"$gt": 0}}
+
+    pipeline = [
+        {"$match": match_filter},
+        {"$sort": {score_field: -1}},
+        {
+            "$lookup": {
+                "from": "users",
+                "let": {"uid": "$user_id"},
+                "pipeline": [
+                    {"$match": {"$expr": {"$eq": [{"$toString": "$_id"}, "$$uid"]}}},
+                    {
+                        "$project": {
+                            "full_name": 1,
+                            "institution": 1,
+                            "country": 1,
+                            "academic_role": 1,
+                            "avatar_url": 1,
+                        }
+                    },
+                ],
+                "as": "user_info",
+            }
+        },
+        {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": True}},
+    ]
+
+    # Optional filters
+    if country:
+        pipeline.append({"$match": {"user_info.country": country}})
+    if institution:
+        pipeline.append({"$match": {"user_info.institution": institution}})
+
+    pipeline += [{"$skip": skip}, {"$limit": limit}]
+
+    rows = await db.research_reputation.aggregate(pipeline).to_list(limit)
+    results = []
+    for i, r in enumerate(rows):
+        ui = r.get("user_info") or {}
+        results.append({
+            "rank": r.get("rank_global") or (skip + i + 1),
+            "user_id": r["user_id"],
+            "full_name": ui.get("full_name", "—"),
+            "institution": ui.get("institution"),
+            "country": ui.get("country"),
+            "academic_role": ui.get("academic_role"),
+            "avatar_url": ui.get("avatar_url"),
+            "overall_score": r.get("overall_score", 0),
+            "reputation_level": r.get("reputation_level", 1),
+            "reputation_label": r.get("reputation_label", "Research Explorer"),
+            "badges_count": r.get("badges_count", 0),
+            "percentile_global": r.get("percentile_global", 0),
+        })
+
+    return {
+        "category": category,
+        "page": page,
+        "limit": limit,
+        "results": results,
+    }
+
+
 @router.get("/{user_id}")
 async def user_reputation(user_id: str, force: bool = False,
                            _user: dict = Depends(get_current_user)):
@@ -292,202 +489,6 @@ async def my_reputation_events(
     """Return current user's recent reputation events."""
     return await get_recent_events(user["id"], limit=limit)
 
-
-# ── Leaderboard ───────────────────────────────────────────────────────────────
-
-_LEADERBOARD_CATEGORIES = {
-    "top_researchers":   "overall_score",
-    "top_collaborators": "collaboration_score",
-    "top_reviewers":     "reviewer_score",
-    "top_mentors":       "teaching_score",
-    "top_teachers":      "teaching_score",
-    "top_institutions":  None,  # aggregated
-    "top_countries":     None,  # aggregated
-}
-
-
-@router.get("/leaderboard/categories")
-async def leaderboard_categories(_user: dict = Depends(get_current_user)):
-    """Return the list of available leaderboard categories."""
-    return {
-        "categories": list(_LEADERBOARD_CATEGORIES.keys()),
-        "default": "top_researchers",
-    }
-
-
-@router.get("/leaderboard")
-async def leaderboard(
-    category: str = Query("top_researchers"),
-    country: Optional[str] = Query(None),
-    institution: Optional[str] = Query(None),
-    area: Optional[str] = Query(None),
-    page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=100),
-    _user: dict = Depends(get_current_user),
-):
-    """Return leaderboard for the requested category."""
-    from typing import Optional as _Opt  # already imported at module level but guard
-
-    db = get_db()
-
-    db = DBProxy(db, SecurityContext.system())
-
-    if category not in _LEADERBOARD_CATEGORIES:
-        raise HTTPException(400, f"Unknown category '{category}'. Use /leaderboard/categories.")
-
-    skip = (page - 1) * limit
-
-    if category == "top_institutions":
-        # Aggregate by institution
-        pipeline = [
-            {"$match": {"overall_score": {"$gt": 0}}},
-            {
-                "$lookup": {
-                    "from": "users",
-                    "let": {"uid": "$user_id"},
-                    "pipeline": [
-                        {"$match": {"$expr": {"$eq": [{"$toString": "$_id"}, "$$uid"]}}},
-                        {"$project": {"institution": 1, "country": 1}},
-                    ],
-                    "as": "user_info",
-                }
-            },
-            {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": False}},
-            {
-                "$group": {
-                    "_id": "$user_info.institution",
-                    "total_score": {"$sum": "$overall_score"},
-                    "member_count": {"$sum": 1},
-                    "country": {"$first": "$user_info.country"},
-                }
-            },
-            {"$match": {"_id": {"$ne": None, "$ne": ""}}},
-            {"$sort": {"total_score": -1}},
-            {"$skip": skip},
-            {"$limit": limit},
-        ]
-        rows = await db.research_reputation.aggregate(pipeline).to_list(limit)
-        return {
-            "category": category,
-            "page": page,
-            "limit": limit,
-            "results": [
-                {
-                    "rank": skip + i + 1,
-                    "institution": r["_id"],
-                    "country": r.get("country"),
-                    "total_score": r["total_score"],
-                    "member_count": r["member_count"],
-                }
-                for i, r in enumerate(rows)
-            ],
-        }
-
-    if category == "top_countries":
-        pipeline = [
-            {"$match": {"overall_score": {"$gt": 0}}},
-            {
-                "$lookup": {
-                    "from": "users",
-                    "let": {"uid": "$user_id"},
-                    "pipeline": [
-                        {"$match": {"$expr": {"$eq": [{"$toString": "$_id"}, "$$uid"]}}},
-                        {"$project": {"country": 1}},
-                    ],
-                    "as": "user_info",
-                }
-            },
-            {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": False}},
-            {
-                "$group": {
-                    "_id": "$user_info.country",
-                    "total_score": {"$sum": "$overall_score"},
-                    "member_count": {"$sum": 1},
-                }
-            },
-            {"$match": {"_id": {"$ne": None, "$ne": ""}}},
-            {"$sort": {"total_score": -1}},
-            {"$skip": skip},
-            {"$limit": limit},
-        ]
-        rows = await db.research_reputation.aggregate(pipeline).to_list(limit)
-        return {
-            "category": category,
-            "page": page,
-            "limit": limit,
-            "results": [
-                {
-                    "rank": skip + i + 1,
-                    "country": r["_id"],
-                    "total_score": r["total_score"],
-                    "member_count": r["member_count"],
-                }
-                for i, r in enumerate(rows)
-            ],
-        }
-
-    # Individual researcher leaderboards
-    score_field = _LEADERBOARD_CATEGORIES[category]
-    match_filter: dict = {score_field: {"$gt": 0}}
-
-    pipeline = [
-        {"$match": match_filter},
-        {"$sort": {score_field: -1}},
-        {
-            "$lookup": {
-                "from": "users",
-                "let": {"uid": "$user_id"},
-                "pipeline": [
-                    {"$match": {"$expr": {"$eq": [{"$toString": "$_id"}, "$$uid"]}}},
-                    {
-                        "$project": {
-                            "full_name": 1,
-                            "institution": 1,
-                            "country": 1,
-                            "academic_role": 1,
-                            "avatar_url": 1,
-                        }
-                    },
-                ],
-                "as": "user_info",
-            }
-        },
-        {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": True}},
-    ]
-
-    # Optional filters
-    if country:
-        pipeline.append({"$match": {"user_info.country": country}})
-    if institution:
-        pipeline.append({"$match": {"user_info.institution": institution}})
-
-    pipeline += [{"$skip": skip}, {"$limit": limit}]
-
-    rows = await db.research_reputation.aggregate(pipeline).to_list(limit)
-    results = []
-    for i, r in enumerate(rows):
-        ui = r.get("user_info") or {}
-        results.append({
-            "rank": r.get("rank_global") or (skip + i + 1),
-            "user_id": r["user_id"],
-            "full_name": ui.get("full_name", "—"),
-            "institution": ui.get("institution"),
-            "country": ui.get("country"),
-            "academic_role": ui.get("academic_role"),
-            "avatar_url": ui.get("avatar_url"),
-            "overall_score": r.get("overall_score", 0),
-            "reputation_level": r.get("reputation_level", 1),
-            "reputation_label": r.get("reputation_label", "Research Explorer"),
-            "badges_count": r.get("badges_count", 0),
-            "percentile_global": r.get("percentile_global", 0),
-        })
-
-    return {
-        "category": category,
-        "page": page,
-        "limit": limit,
-        "results": results,
-    }
 
 
 @router.post("/rankings/compute")

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Briefcase, AlertCircle, ChevronRight } from "lucide-react";
+import { Briefcase, ChevronRight, Package, Zap, TrendingUp, Star, DollarSign } from "lucide-react";
 import { ACCENT, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
-import { Card, Alert, Badge, Button, LoadingOverlay, EmptyState, H2, Caption } from "@/components/ds";
+import { Card, Alert, Badge, Button, LoadingOverlay, EmptyState, H2, Caption, StatGrid, StatCard } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
