@@ -554,6 +554,10 @@ async def _purge_user_owned_data(db, uid: str) -> None:
         db.trust_requests.delete_many({"user_id": uid}),
         db.trust_audit.delete_many({"user_id": uid}),
         db.trust_passports.delete_many({"user_id": uid}),
+        db.trust_scores.delete_many({"user_id": uid}),
+        db.trust_badges.delete_many({"user_id": uid}),
+        db.profile_showcases.delete_many({"user_id": uid}),
+        db.profile_views.delete_many({"profile_user_id": uid}),
         # SIE (self-improvement engine)
         db.sie_career.delete_many({"user_id": uid}),
         db.sie_roadmaps.delete_many({"user_id": uid}),
@@ -588,10 +592,15 @@ async def _purge_user_owned_data(db, uid: str) -> None:
         # Conference team-forming
         db.conference_submission_teams.delete_many({"lead_user_id": uid}),
         db.conference_team_members.delete_many({"user_id": uid}),
+        db.conference_team_invitations.delete_many(
+            {"$or": [{"from_user_id": uid}, {"to_user_id": uid}]}),
         # Grant Hub team formation
         db.grant_team_members.delete_many({"user_id": uid}),
-        db.grant_team_invitations.delete_many({"user_id": uid}),
-        db.grant_collaborations.delete_many({"user_id": uid}),
+        db.grant_team_invitations.delete_many(
+            {"$or": [{"from_user_id": uid}, {"to_user_id": uid}]}),
+        db.grant_collaborations.delete_many({"lead_user_id": uid}),
+        # Grant applications (PI-owned)
+        db.grant_applications.delete_many({"pi_id": uid}),
     )
     # Child rows keyed by a parent id collected above
     if ai_conv_ids:

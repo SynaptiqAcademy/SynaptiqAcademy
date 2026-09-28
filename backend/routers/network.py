@@ -189,7 +189,10 @@ async def search_people(
         "career_stage": career_stage, "discipline": discipline,
         "verification_level": verification_level, "min_trust_score": min_trust_score,
     }
-    return await discovery.search_people(db, {k: v for k, v in filters.items() if v is not None}, page, limit)
+    return await discovery.search_people(
+        db, {k: v for k, v in filters.items() if v is not None}, page, limit,
+        viewer_id=_uid(user),
+    )
 
 
 # ── Institution discovery ────────────────────────────────────────────────────

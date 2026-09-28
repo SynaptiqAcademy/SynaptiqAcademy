@@ -240,7 +240,7 @@ async def researcher_directory(
     db=Depends(get_db),
 ):
     db = make_db_proxy(db, system=True)
-    query: dict = {}
+    query: dict = {"profile_visibility": {"$ne": "private"}}
     if search:
         query["full_name"] = {"$regex": search, "$options": "i"}
     if research_area:

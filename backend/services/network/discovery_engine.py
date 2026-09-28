@@ -2,6 +2,9 @@
 import asyncio
 from datetime import datetime, timezone
 
+from bson import ObjectId
+from bson.errors import InvalidId
+
 
 def _now():
     return datetime.now(timezone.utc)
@@ -10,17 +13,54 @@ def _now():
 def _serialize(doc):
     if doc:
         doc["id"] = str(doc.pop("_id", ""))
+        # Project real schema fields (full_name/avatar_url) but keep the
+        # response shape's existing key names (name/profile_picture) so
+        # this doesn't require a frontend change.
+        if "full_name" in doc:
+            doc["name"] = doc.pop("full_name")
+        if "avatar_url" in doc:
+            doc["profile_picture"] = doc.pop("avatar_url")
     return doc
+
+
+def _to_object_id(uid: str):
+    try:
+        return ObjectId(uid)
+    except (InvalidId, TypeError):
+        return uid
 
 
 # ── Field sets returned by list queries (lightweight) ───────────────────────
 
 _USER_FIELDS = {
-    "name": 1, "email": 1, "institution": 1, "department": 1,
+    "full_name": 1, "institution": 1, "department": 1,
     "research_interests": 1, "expertise": 1, "career_stage": 1,
-    "country": 1, "profile_picture": 1, "verification_level": 1,
+    "country": 1, "avatar_url": 1, "verification_level": 1,
     "trust_score": 1, "created_at": 1,
 }
+
+
+async def _discovery_exclusions(db, viewer_id: str | None) -> set[str]:
+    """User ids to exclude from discovery results: anyone who has opted out
+    via show_in_discovery=False, plus a symmetric block (viewer blocked them,
+    or they blocked viewer) when a viewer is known."""
+    excluded: set[str] = set()
+    async for s in db["network_settings"].find(
+        {"show_in_discovery": False}, {"user_id": 1}
+    ):
+        if uid := s.get("user_id"):
+            excluded.add(uid)
+    if viewer_id:
+        viewer_settings = await db["network_settings"].find_one({"user_id": viewer_id})
+        if viewer_settings:
+            excluded.update(viewer_settings.get("blocked_users") or [])
+        async for s in db["network_settings"].find(
+            {"blocked_users": viewer_id}, {"user_id": 1}
+        ):
+            if uid := s.get("user_id"):
+                excluded.add(uid)
+        excluded.discard(viewer_id)
+    return excluded
 
 _INST_FIELDS = {
     "name": 1, "country": 1, "type": 1, "departments": 1,
@@ -30,15 +70,14 @@ _INST_FIELDS = {
 
 # ── People search ────────────────────────────────────────────────────────────
 
-async def search_people(db, filters: dict, page: int = 1, limit: int = 20) -> dict:
-    query = {}
+async def search_people(db, filters: dict, page: int = 1, limit: int = 20, viewer_id: str | None = None) -> dict:
+    query: dict = {"profile_visibility": {"$ne": "private"}}
 
     if q := filters.get("q"):
         terms = q.strip()
         query["$or"] = [
-            {"name": {"$regex": terms, "$options": "i"}},
+            {"full_name": {"$regex": terms, "$options": "i"}},
             {"research_interests": {"$regex": terms, "$options": "i"}},
-            {"expertise": {"$regex": terms, "$options": "i"}},
             {"department": {"$regex": terms, "$options": "i"}},
         ]
 
@@ -57,6 +96,10 @@ async def search_people(db, filters: dict, page: int = 1, limit: int = 20) -> di
 
     if ts := filters.get("min_trust_score"):
         query["trust_score"] = {"$gte": float(ts)}
+
+    excluded = await _discovery_exclusions(db, viewer_id)
+    if excluded:
+        query["_id"] = {"$nin": [_to_object_id(x) for x in excluded]}
 
     skip = (page - 1) * limit
     cursor = db["users"].find(query, _USER_FIELDS).skip(skip).limit(limit)

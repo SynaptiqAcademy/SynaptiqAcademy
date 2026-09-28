@@ -883,7 +883,28 @@ async def startup():
             await db.grant_applications.create_index([("pi_id", 1), ("grant_id", 1)])
             await db.grant_applications.create_index([("grant_id", 1), ("status", 1)])
             await db.grant_applications.create_index([("pi_id", 1), ("updated_at", -1)])
-            await db.grant_team_members.create_index([("application_id", 1), ("user_id", 1)], unique=True)
+            # Grant team members — two independent team-membership schemas
+            # share this collection: application-keyed (grant_applications.py)
+            # and collaboration-keyed (grant_hub services). A single
+            # non-sparse unique index on (application_id, user_id) collapsed
+            # every collaboration-keyed doc onto (null, user_id) collection-
+            # wide. Split into two partial unique indexes, one per schema.
+            try:
+                await db.grant_team_members.drop_index("application_id_1_user_id_1")
+            except Exception:
+                pass  # index doesn't exist yet (fresh env) — nothing to drop
+            await db.grant_team_members.create_index(
+                [("application_id", 1), ("user_id", 1)],
+                unique=True,
+                partialFilterExpression={"application_id": {"$exists": True}},
+                name="unique_application_team_member",
+            )
+            await db.grant_team_members.create_index(
+                [("collaboration_id", 1), ("user_id", 1)],
+                unique=True,
+                partialFilterExpression={"collaboration_id": {"$exists": True}},
+                name="unique_collaboration_team_member",
+            )
             await db.grant_team_members.create_index([("user_id", 1), ("status", 1)])
             await db.grant_budget_items.create_index([("application_id", 1), ("category", 1)])
             await db.grant_deliverables.create_index([("application_id", 1), ("due_date", 1)])
@@ -1418,6 +1439,16 @@ async def startup():
                 unique=True,
                 partialFilterExpression={"status": "pending"},
                 name="unique_pending_connection_request",
+            )
+            # Collaboration requests — same protection; collaboration_requests
+            # is a distinct relationship concept from connection_requests (see
+            # Phase 1 architecture audit) but had no DB-level duplicate-pending
+            # guard at all, unlike connection_requests above.
+            await db.collaboration_requests.create_index(
+                [("sender_id", 1), ("receiver_id", 1)],
+                unique=True,
+                partialFilterExpression={"status": "pending"},
+                name="unique_pending_collaboration_request",
             )
             # Subscriptions for active-subscription lookups
             await db.subscriptions.create_index([("user_id", 1), ("current_period_end", -1)])
