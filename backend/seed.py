@@ -461,8 +461,16 @@ async def seed_admin_and_demo(db):
                 )
 
     if await db.grants.count_documents({}) == 0:
+        # Phase 0: tagged is_seed so production read/match endpoints exclude
+        # these hand-typed fixture amounts/deadlines. See AUDIT_PHASE0.md.
+        for _g in DEMO_GRANTS:
+            _g["is_seed"] = True
+            _g.setdefault("source", "seed")
         await db.grants.insert_many(DEMO_GRANTS)
     if await db.conferences.count_documents({}) == 0:
+        for _c in DEMO_CONFERENCES:
+            _c["is_seed"] = True
+            _c.setdefault("source", "seed")
         await db.conferences.insert_many(DEMO_CONFERENCES)
 
     # Backfill user_type/primary_domain for users who registered before these fields existed

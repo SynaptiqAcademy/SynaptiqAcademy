@@ -163,10 +163,24 @@ def repository_seed_for(owner_id: str, names: list):
     return items
 
 
+def _mark_seed(records: list[dict]) -> list[dict]:
+    """Phase 0: every hand-typed fixture record is tagged is_seed=True so it
+    is excluded from production read endpoints (journals.py, conferences.py,
+    grants.py, funding.py, manuscripts.py journal-matches) and from the
+    real-data-only publishing-intelligence matchers. See AUDIT_PHASE0.md —
+    these records' numeric fields (impact_factor, acceptance_rate, specific
+    conference/grant dates and amounts) are not sourced and must never reach
+    a real user."""
+    for r in records:
+        r["is_seed"] = True
+        r.setdefault("source", "seed")
+    return records
+
+
 async def seed_phase2(db):
     # Journals
     if await db.journals.count_documents({}) == 0:
-        await db.journals.insert_many(JOURNALS)
+        await db.journals.insert_many(_mark_seed(JOURNALS))
 
     # Conferences extra (only if existing count is low)
     existing_conf = await db.conferences.count_documents({})
@@ -183,7 +197,7 @@ async def seed_phase2(db):
                     "description": c.get("description", "Annual scholarly conference in the field."),
                 }},
             )
-        await db.conferences.insert_many(CONFERENCES_EXTRA)
+        await db.conferences.insert_many(_mark_seed(CONFERENCES_EXTRA))
 
     # Extra funding (in grants collection)
     if await db.grants.count_documents({}) < 10:
@@ -198,7 +212,7 @@ async def seed_phase2(db):
                     "description": "Funding call. Refer to the agency website for full programme details.",
                 }},
             )
-        await db.grants.insert_many(FUNDING_EXTRA)
+        await db.grants.insert_many(_mark_seed(FUNDING_EXTRA))
 
     # Demo workspaces (one per first 2 demo users)
     if await db.workspaces.count_documents({}) == 0:

@@ -36,7 +36,7 @@ class PublicationStrategyAgent(AcademicAgent):
         strategy_dict: dict = {}
         try:
             from services.publishing.strategy_builder import build_publication_strategy
-            strategy = build_publication_strategy(title, text, discipline, quality)
+            strategy = await build_publication_strategy(title, text, discipline, quality)
             strategy_dict = strategy.to_dict()
         except Exception:
             pass

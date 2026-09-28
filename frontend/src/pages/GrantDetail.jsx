@@ -122,6 +122,11 @@ export default function GrantDetail() {
         {g.source && (
           <Badge variant="neutral">Source: {g.source}</Badge>
         )}
+        {g.last_seen_source_at && !Number.isNaN(new Date(g.last_seen_source_at).getTime()) && (
+          <span className="text-xs text-slate-400 font-mono">
+            Last verified {new Date(g.last_seen_source_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
+          </span>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-12 gap-8">
@@ -190,8 +195,8 @@ export default function GrantDetail() {
             <Card padding="md" className="border-emerald-200 bg-emerald-50/60">
               <div className="overline text-emerald-700 mb-1">Match score: {g.match_score}</div>
               <div className="text-xs text-emerald-700">{g.match_reason}</div>
-              {g.eligibility_estimate && (
-                <div className="text-xs text-emerald-600 font-mono mt-1">Eligibility: {g.eligibility_estimate}</div>
+              {g.career_stage_relevance && (
+                <div className="text-xs text-emerald-600 font-mono mt-1">{g.career_stage_relevance} — verify full eligibility on the official source</div>
               )}
             </Card>
           )}

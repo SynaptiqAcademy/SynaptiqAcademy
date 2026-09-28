@@ -140,9 +140,9 @@ class ManuscriptIntelligenceEngine:
         discipline = infer_discipline(text.lower(), ai_result.get("inferred_discipline", ""))
         ai_journals = ai_result.get("journal_matches", [])
         if request.review_depth == ReviewDepth.DEEP:
-            journal_matches = recommend_journals(text, discipline, overall_score, ai_journals)
+            journal_matches = await recommend_journals(text, discipline, overall_score, ai_journals, db=db)
         else:
-            journal_matches = recommend_journals(text, discipline, overall_score, ai_journals[:3])
+            journal_matches = await recommend_journals(text, discipline, overall_score, ai_journals[:3], db=db)
 
         # ── 12. Publication readiness ─────────────────────────────────────────
         pub_readiness_dict = ai_result.get("publication_readiness", {})

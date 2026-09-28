@@ -28,7 +28,9 @@ async def list_funding(
     db = get_db()
     db = DBProxy(db, SecurityContext.system())
 
-    query = {}
+    # Phase 0: seed/demo fixture records carry fabricated amounts/deadlines
+    # and must never reach a production listing. See AUDIT_PHASE0.md.
+    query = {"is_seed": {"$ne": True}}
     if q:
         query["$or"] = [
             {"title": {"$regex": q, "$options": "i"}},
@@ -49,7 +51,7 @@ async def get_funding(funding_id: str):
     db = DBProxy(db, SecurityContext.system())
 
     try:
-        doc = await db.grants.find_one({"_id": ObjectId(funding_id)})
+        doc = await db.grants.find_one({"_id": ObjectId(funding_id), "is_seed": {"$ne": True}})
     except Exception:
         raise HTTPException(status_code=404, detail="Not found")
     if not doc:

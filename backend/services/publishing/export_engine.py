@@ -77,7 +77,7 @@ def export_journal_comparison(
     matches: list[SmartJournalMatch],
     fmt: ExportFormat,
 ) -> str:
-    headers = ["Journal", "Publisher", "Q", "IF", "Acc%", "OA", "APC", "Review Wks"]
+    headers = ["Journal", "Publisher", "Quartile", "h-index", "Acceptance rate", "OA", "APC", "Source"]
     rows = []
     seen: set[str] = set()
     for sm in matches:
@@ -87,11 +87,12 @@ def export_journal_comparison(
                 continue
             seen.add(j.name)
             rows.append([
-                j.name[:40], j.publisher[:20], j.quartile,
-                str(j.impact_factor), f"{j.acceptance_rate:.0%}",
+                j.name[:40], j.publisher[:20], j.quartile or "—",
+                str(j.h_index) if j.h_index is not None else "—",
+                f"{j.acceptance_rate:.0%}" if j.acceptance_rate is not None else "Not published",
                 "Yes" if j.open_access else "No",
-                f"${j.apc_usd:,}" if j.apc_usd else "Free",
-                str(j.review_duration_weeks),
+                f"${j.apc_usd:,}" if j.apc_usd else "—",
+                j.source or "—",
             ])
         if len(rows) >= 15:
             break
@@ -147,12 +148,11 @@ def export_grant_readiness(
     grants: list[GrantFit],
     fmt: ExportFormat,
 ) -> str:
-    headers = ["Grant", "Funder", "Amount", "Topic Fit", "Elig.", "Fund Prob."]
+    headers = ["Grant", "Funder", "Amount", "Topic Fit", "Deadline"]
     rows = [
         [
-            g.title[:40], g.funder, f"${g.amount_usd:,}",
-            f"{g.topic_fit:.0%}", f"{g.eligibility_score:.0%}",
-            f"{g.funding_probability:.0%}",
+            g.title[:40], g.funder, f"${g.amount_usd:,}" if g.amount_usd else "—",
+            f"{g.topic_fit:.0%}", g.deadline or "—",
         ]
         for g in grants[:10]
     ]
@@ -168,11 +168,10 @@ def export_grant_readiness(
     parts = [_md_header(1, "Grant Readiness Report"), _md_table(headers, rows)]
     for g in grants[:5]:
         parts.append(_md_header(3, g.title))
-        parts.append(f"**Funder:** {g.funder} | **Amount:** ${g.amount_usd:,}\n\n")
-        if g.strengths:
-            parts.append("**Strengths:** " + "; ".join(g.strengths) + "\n\n")
-        if g.missing_elements:
-            parts.append("**Gaps:** " + "; ".join(g.missing_elements) + "\n\n")
+        parts.append(f"**Funder:** {g.funder} | **Amount:** ${g.amount_usd:,}\n\n" if g.amount_usd else f"**Funder:** {g.funder}\n\n")
+        if g.eligibility:
+            parts.append("**Eligibility (as published):** " + "; ".join(g.eligibility) + "\n\n")
+        parts.append(g.rationale + "\n\n")
     return "".join(parts)
 
 

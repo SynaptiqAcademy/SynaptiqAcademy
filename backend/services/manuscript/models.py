@@ -290,9 +290,12 @@ class PublicationReadiness:
 class JournalMatch:
     name: str
     publisher: str = ""
-    quartile: str = "Q2"
+    quartile: str = ""
     scope_match: float = 0.70     # 0–1
-    acceptance_probability: float = 0.25
+    # No real source publishes a predicted acceptance probability or (for
+    # anything short of a paid Clarivate license) a Journal Impact Factor —
+    # Phase 0 removed both as invented figures. See AUDIT_PHASE0.md.
+    acceptance_probability: Optional[float] = None
     impact_factor: Optional[float] = None
     submission_notes: str = ""
     url: str = ""

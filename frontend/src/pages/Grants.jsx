@@ -644,8 +644,8 @@ function MatchCard({ g, isSaved, onSave, isCompared, onCompare }) {
           </div>
           <div>
             <div style={{ fontSize: 9, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>Match</div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: g.eligibility_estimate === "high" ? EMERALD : "#D97706" }}>
-              {g.eligibility_estimate === "high" ? "High eligibility" : "Check eligibility"}
+            <div style={{ fontSize: 9, fontWeight: 700, color: g.career_stage_relevance === "matches career-stage keywords" ? EMERALD : "#94A3B8" }}>
+              {g.career_stage_relevance === "matches career-stage keywords" ? "Matches your career stage" : "Verify eligibility on source site"}
             </div>
           </div>
         </div>

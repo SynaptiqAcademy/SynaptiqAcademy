@@ -22,13 +22,7 @@ def _build_tiered_strategy(fits: list[JournalFitScore]) -> StrategicOption:
             "Revise manuscript based on peer review feedback between submissions",
         ],
         estimated_weeks=30,
-        success_probability=round(
-            1 - (
-                (1 - fits[0].acceptance_probability) *
-                (1 - fits[1].acceptance_probability if len(fits) > 1 else 0.5)
-            ),
-            3,
-        ) if fits else 0.7,
+        success_probability=None,
         risks=["Each rejection adds 3–6 months to timeline"],
         rewards=["Maximises prestige — starts with your best shot at a top journal"],
         recommended=True,
@@ -51,7 +45,7 @@ def _build_parallel_strategy(fits: list[JournalFitScore]) -> StrategicOption:
             "Leverage conference feedback to strengthen journal submission",
         ],
         estimated_weeks=20,
-        success_probability=0.75,
+        success_probability=None,
         risks=["Dual submission to two journals simultaneously violates most ethics policies"],
         rewards=["Faster path to first publication; conference paper builds visibility"],
         recommended=False,
@@ -70,7 +64,7 @@ def _build_conference_first(journal_name: str) -> StrategicOption:
             f"Submit expanded version to {journal_name}",
         ],
         estimated_weeks=40,
-        success_probability=0.70,
+        success_probability=None,
         risks=["Longer timeline; conference version may need significant expansion"],
         rewards=["Peer feedback before journal; stronger network; citation head start"],
         recommended=False,
@@ -91,8 +85,8 @@ def _build_oa_first(fits: list[JournalFitScore]) -> StrategicOption:
             "Track citation metrics to demonstrate impact",
         ],
         estimated_weeks=16,
-        success_probability=round(oa_fits[0].acceptance_probability if oa_fits else 0.60, 3),
-        risks=["APCs may be required; lower IF compared to subscription journals"],
+        success_probability=None,
+        risks=["APCs may be required; open-access journals vary widely in selectivity"],
         rewards=["Maximum readership; faster citations; compliant with many funder mandates"],
         recommended=False,
     )
@@ -110,20 +104,21 @@ def _build_multi_paper(manuscript_title: str) -> StrategicOption:
             "Cross-cite across the series to boost visibility and citation counts",
         ],
         estimated_weeks=52,
-        success_probability=0.80,
+        success_probability=None,
         risks=["Risk of 'salami slicing' — check journal policies; requires sustained effort"],
         rewards=["Multiple publications; sustained citation growth; broader audience reach"],
         recommended=False,
     )
 
 
-def build_publication_strategy(
+async def build_publication_strategy(
     manuscript_title: str,
     text: str,
     discipline: str,
     manuscript_quality: float,
+    db=None,
 ) -> PublicationStrategy:
-    fits = analyze_journal_fit(text, discipline, manuscript_quality)
+    fits = await analyze_journal_fit(text, discipline, manuscript_quality, db=db)
     top_fits = fits[:6] if fits else []
 
     tiered = _build_tiered_strategy(top_fits)

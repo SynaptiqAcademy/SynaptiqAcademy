@@ -67,73 +67,75 @@ class StrategyType(str, Enum):
 
 @dataclass
 class JournalProfile:
+    """Real-data-only journal record, sourced from the live `journals`
+    collection (OpenAlex/Crossref/DOAJ ingestion). Fields with no legitimate
+    free/verifiable source (Journal Impact Factor, CiteScore, SJR, SNIP,
+    predicted acceptance/desk-rejection odds, predatory-risk scoring) are
+    intentionally absent from this model — see services/discovery/providers
+    for what each real source actually supplies.
+    """
+    id: str = ""
     name: str = ""
     publisher: str = ""
     issn: str = ""
-    quartile: str = "Q3"
-    impact_factor: float = 0.0
-    cite_score: float = 0.0
-    snip: float = 0.0
-    sjr: float = 0.0
-    acceptance_rate: float = 0.30
-    review_duration_weeks: int = 12
-    time_to_publication_weeks: int = 20
+    quartile: str | None = None
+    quartile_source: str | None = None   # e.g. "openalex_estimate" — never authoritative
+    h_index: int | None = None
+    works_count: int | None = None
+    cited_by_count: int | None = None
+    acceptance_rate: float | None = None       # only ever set if the source publishes it
     open_access: bool = False
-    hybrid: bool = False
-    apc_usd: int = 0          # Article Processing Charge
-    predatory_risk: float = 0.0    # 0.0 = none, 1.0 = confirmed predatory
+    apc_usd: int | None = None          # Article Processing Charge, when the source provides it
     tags: list[str] = field(default_factory=list)
-    language: str = "English"
-    reference_style: str = "APA"
-    requires_data_sharing: bool = False
-    ethics_statement_required: bool = True
-    requires_cover_letter: bool = True
-    notes: str = ""
+    language: str | None = None
+    homepage_url: str | None = None
+    source: str = ""                     # provenance: "openalex" | "crossref" | "doaj"
+    last_verified_at: str | None = None
 
     def to_dict(self) -> dict:
         return {
+            "id": self.id,
             "name": self.name,
             "publisher": self.publisher,
+            "issn": self.issn,
             "quartile": self.quartile,
-            "impact_factor": self.impact_factor,
-            "cite_score": self.cite_score,
+            "quartile_source": self.quartile_source,
+            "h_index": self.h_index,
+            "works_count": self.works_count,
+            "cited_by_count": self.cited_by_count,
             "acceptance_rate": self.acceptance_rate,
-            "review_duration_weeks": self.review_duration_weeks,
-            "time_to_publication_weeks": self.time_to_publication_weeks,
             "open_access": self.open_access,
-            "hybrid": self.hybrid,
             "apc_usd": self.apc_usd,
-            "predatory_risk": round(self.predatory_risk, 2),
             "tags": self.tags,
             "language": self.language,
-            "reference_style": self.reference_style,
+            "homepage_url": self.homepage_url,
+            "source": self.source,
+            "last_verified_at": self.last_verified_at,
         }
 
 
 @dataclass
 class JournalFitScore:
+    """Scope-match score only. No acceptance/desk-rejection/predatory-risk
+    prediction is computed — those require data no free source publishes,
+    and Phase 0 explicitly forbids inventing them (see AUDIT_PHASE0.md).
+    """
     journal: JournalProfile = field(default_factory=JournalProfile)
-    scope_match: float = 0.0         # 0.0–1.0
-    acceptance_probability: float = 0.0
-    desk_rejection_risk: float = 0.0
-    overall_fit: float = 0.0         # weighted composite
+    scope_match: float = 0.0         # 0.0–1.0, keyword/subject overlap with the manuscript
+    overall_fit: float = 0.0         # weighted composite of real signals only
     strengths: list[str] = field(default_factory=list)
-    weaknesses: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)   # caveats, e.g. "no acceptance-rate data available"
     rationale: str = ""
-    submission_notes: str = ""
     match_type: MatchType | None = None
 
     def to_dict(self) -> dict:
         return {
             "journal": self.journal.to_dict(),
             "scope_match": round(self.scope_match, 3),
-            "acceptance_probability": round(self.acceptance_probability, 3),
-            "desk_rejection_risk": round(self.desk_rejection_risk, 3),
             "overall_fit": round(self.overall_fit, 3),
             "strengths": self.strengths,
-            "weaknesses": self.weaknesses,
+            "notes": self.notes,
             "rationale": self.rationale,
-            "submission_notes": self.submission_notes,
             "match_type": self.match_type.value if self.match_type else None,
         }
 
@@ -162,26 +164,21 @@ class SmartJournalMatch:
 
 @dataclass
 class ConferenceFit:
+    """Real-data-only conference record (WikiCFP ingestion). No acceptance
+    rate, registration fee, or "networking/career/publication value" score
+    is invented — WikiCFP does not publish any of those figures."""
     name: str = ""
     acronym: str = ""
-    publisher: str = ""
-    ranking: str = "B"             # A*, A, B, C
-    acceptance_rate: float = 0.30
+    publisher: str = ""            # organizer, when known
+    ranking: str = ""              # only set when a real ranking source provided it
     topics: list[str] = field(default_factory=list)
-    is_indexed: bool = True
-    offers_journal_track: bool = False
-    registration_fee_usd: int = 400
+    is_indexed: bool = False       # true only if a real ranking/index source confirmed it
     submission_deadline: str = ""
     notification_date: str = ""
     event_date: str = ""
     location: str = ""
-    presentation_types: list[str] = field(default_factory=list)
 
-    research_fit: float = 0.0
-    acceptance_probability: float = 0.0
-    networking_value: float = 0.0
-    career_value: float = 0.0
-    publication_value: float = 0.0
+    research_fit: float = 0.0      # topic overlap with the manuscript
     overall_score: float = 0.0
     rationale: str = ""
 
@@ -189,17 +186,15 @@ class ConferenceFit:
         return {
             "name": self.name,
             "acronym": self.acronym,
+            "publisher": self.publisher,
             "ranking": self.ranking,
-            "acceptance_rate": self.acceptance_rate,
             "topics": self.topics,
             "is_indexed": self.is_indexed,
-            "registration_fee_usd": self.registration_fee_usd,
             "submission_deadline": self.submission_deadline,
+            "notification_date": self.notification_date,
+            "event_date": self.event_date,
+            "location": self.location,
             "research_fit": round(self.research_fit, 3),
-            "acceptance_probability": round(self.acceptance_probability, 3),
-            "networking_value": round(self.networking_value, 3),
-            "career_value": round(self.career_value, 3),
-            "publication_value": round(self.publication_value, 3),
             "overall_score": round(self.overall_score, 3),
             "rationale": self.rationale,
         }
@@ -209,22 +204,18 @@ class ConferenceFit:
 
 @dataclass
 class GrantFit:
+    """Real-data-only grant record (NIH RePORTER / OpenAIRE / UKRI
+    ingestion). No competitiveness, funding-probability, or
+    proposal-readiness score is invented — no source publishes the data
+    such a prediction would need."""
     title: str = ""
     funder: str = ""
     amount_usd: int = 0
     deadline: str = ""
     eligibility: list[str] = field(default_factory=list)
-    required_docs: list[str] = field(default_factory=list)
-    evaluation_criteria: list[str] = field(default_factory=list)
     topics: list[str] = field(default_factory=list)
 
-    eligibility_score: float = 0.0
     topic_fit: float = 0.0
-    competitiveness: float = 0.5   # 0=highly competitive, 1=attainable
-    funding_probability: float = 0.0
-    proposal_readiness: float = 0.0
-    missing_elements: list[str] = field(default_factory=list)
-    strengths: list[str] = field(default_factory=list)
     rationale: str = ""
 
     def to_dict(self) -> dict:
@@ -233,13 +224,9 @@ class GrantFit:
             "funder": self.funder,
             "amount_usd": self.amount_usd,
             "deadline": self.deadline,
-            "eligibility_score": round(self.eligibility_score, 3),
+            "eligibility": self.eligibility,
+            "topics": self.topics,
             "topic_fit": round(self.topic_fit, 3),
-            "competitiveness": round(self.competitiveness, 3),
-            "funding_probability": round(self.funding_probability, 3),
-            "proposal_readiness": round(self.proposal_readiness, 3),
-            "missing_elements": self.missing_elements,
-            "strengths": self.strengths,
             "rationale": self.rationale,
         }
 
@@ -386,7 +373,10 @@ class StrategicOption:
     description: str = ""
     steps: list[str] = field(default_factory=list)
     estimated_weeks: int = 0
-    success_probability: float = 0.5
+    # No real source publishes an outcome-probability figure for a strategic
+    # option — Phase 0 removed the fabricated constant. Kept as Optional for
+    # a future model genuinely trained/calibrated on real outcome data.
+    success_probability: float | None = None
     risks: list[str] = field(default_factory=list)
     rewards: list[str] = field(default_factory=list)
     recommended: bool = False
@@ -399,7 +389,7 @@ class StrategicOption:
             "description": self.description,
             "steps": self.steps,
             "estimated_weeks": self.estimated_weeks,
-            "success_probability": round(self.success_probability, 3),
+            "success_probability": round(self.success_probability, 3) if self.success_probability is not None else None,
             "risks": self.risks,
             "rewards": self.rewards,
             "recommended": self.recommended,
@@ -463,7 +453,7 @@ class PublicationRisk:
     dimensions: list[RiskDimension] = field(default_factory=list)
     top_risks: list[str] = field(default_factory=list)
     mitigation_plan: list[str] = field(default_factory=list)
-    estimated_success_probability: float = 0.5
+    estimated_success_probability: float | None = None
     ai_assessment: str = ""
 
     def to_dict(self) -> dict:
@@ -475,7 +465,7 @@ class PublicationRisk:
             "dimensions": [d.to_dict() for d in self.dimensions],
             "top_risks": self.top_risks,
             "mitigation_plan": self.mitigation_plan,
-            "estimated_success_probability": round(self.estimated_success_probability, 3),
+            "estimated_success_probability": round(self.estimated_success_probability, 3) if self.estimated_success_probability is not None else None,
             "ai_assessment": self.ai_assessment,
         }
 

@@ -63,7 +63,7 @@ async def match_journals(
         return []
 
     # ── Build journal query ──────────────────────────────────────────────────
-    query: dict[str, Any] = {}
+    query: dict[str, Any] = {"is_seed": {"$ne": True}}
 
     if open_access_only:
         query["open_access"] = True

@@ -97,7 +97,7 @@ async def list_grants(
     if overview:
         user_areas = user.get("research_areas") or []
         saved_ids = user.get("saved_funding_ids") or []
-        all_grants = await db.grants.find({}).sort("deadline", 1).limit(100).to_list(100)
+        all_grants = await db.grants.find({"is_seed": {"$ne": True}}).sort("deadline", 1).limit(100).to_list(100)
         saved_oids = set()
         for sid in saved_ids:
             try:
@@ -115,7 +115,9 @@ async def list_grants(
             "tracking":    [_ser(g) for g in saved],
         }
 
-    query: dict = {}
+    # Phase 0: seed/demo fixture records carry fabricated amounts/deadlines
+    # and must never reach a production listing. See AUDIT_PHASE0.md.
+    query: dict = {"is_seed": {"$ne": True}}
     if q:
         query["$text"] = {"$search": q}
     if research_area or discipline:
@@ -231,8 +233,9 @@ async def grant_matches(
 
     today = date.today().isoformat()
 
-    # Pull open grants
+    # Pull open grants (Phase 0: excludes untraceable seed/demo fixtures)
     all_grants = await db.grants.find({
+        "is_seed": {"$ne": True},
         "$or": [{"deadline": None}, {"deadline": {"$gt": today}}],
     }).sort("deadline", 1).limit(500).to_list(500)
 
@@ -318,10 +321,19 @@ async def grant_matches(
         item["match_score"] = s
         item["match_reason"] = note
         item["is_saved"] = item["id"] in saved_ids
-        # Eligibility estimate
+        # Career-stage relevance — a signal about topical/title match to the
+        # user's career stage, NOT a determination of actual eligibility.
+        # Phase 0: renamed from "eligibility_estimate" because inferring
+        # eligibility from keyword overlap (rather than reading the grant's
+        # real eligibility criteria) is exactly the kind of unsupported
+        # claim AUDIT_PHASE0.md prohibits — consult the source for real
+        # eligibility requirements.
         career_match = any(ck in (g.get("title", "") + " " + (g.get("abstract_text") or "")).lower()
-                           for ck in stage_kws) if stage_kws else True
-        item["eligibility_estimate"] = "high" if career_match else "medium"
+                           for ck in stage_kws) if stage_kws else None
+        item["career_stage_relevance"] = (
+            "matches career-stage keywords" if career_match else
+            "no career-stage keyword match" if career_match is False else None
+        )
         out.append(item)
     return out
 
@@ -335,7 +347,7 @@ async def get_grant(grant_id: str, user: dict = Depends(get_current_user)):
         oid = ObjectId(grant_id)
     except Exception:
         raise HTTPException(status_code=404, detail="Not found")
-    doc = await db.grants.find_one({"_id": oid})
+    doc = await db.grants.find_one({"_id": oid, "is_seed": {"$ne": True}})
     if not doc:
         raise HTTPException(status_code=404, detail="Not found")
     item = _ser(doc)

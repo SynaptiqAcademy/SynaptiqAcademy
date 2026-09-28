@@ -169,6 +169,9 @@ export default function ConferenceDetail() {
           </div>
           <div className="text-[11px] text-slate-500">
             Data: {c.source === "wikicfp" ? "WikiCFP" : (c.source || "—")}
+            {c.last_seen_source_at && !Number.isNaN(new Date(c.last_seen_source_at).getTime()) && (
+              <> · Last verified {new Date(c.last_seen_source_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}</>
+            )}
           </div>
         </aside>
       </div>

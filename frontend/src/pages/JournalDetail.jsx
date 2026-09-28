@@ -21,8 +21,19 @@ function Metric({ label, value, sub }) {
 }
 
 function ProvenanceBadge({ source }) {
-  const labels = { openalex: "OpenAlex", doaj: "DOAJ", crossref: "Crossref", seed: "Curated seed" };
-  return <Badge variant="neutral">Data: {labels[source] || source}</Badge>;
+  const labels = { openalex: "OpenAlex", doaj: "DOAJ", crossref: "Crossref" };
+  return <Badge variant="neutral">Data: {labels[source] || source || "Unknown"}</Badge>;
+}
+
+function LastVerified({ at }) {
+  if (!at) return null;
+  const d = new Date(at);
+  if (Number.isNaN(d.getTime())) return null;
+  return (
+    <span className="text-xs text-slate-400 font-mono">
+      Last verified {d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
+    </span>
+  );
 }
 
 export default function JournalDetail() {
@@ -51,6 +62,7 @@ export default function JournalDetail() {
           <BookOpen size={16} strokeWidth={1.5} className="text-[#0F2847]" />
           <div className="overline text-[#0F2847]">{j.publisher || "Publisher unknown"}</div>
           <ProvenanceBadge source={j.source} />
+          <LastVerified at={j.last_seen_source_at} />
           {j.quartile && (
             <Badge variant="default">{j.quartile}</Badge>
           )}

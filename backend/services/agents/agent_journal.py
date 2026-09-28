@@ -14,8 +14,7 @@ class JournalIntelligenceAgent(AcademicAgent):
     name = "Journal Intelligence Agent"
     domain = "Journal Selection & Analysis"
     capabilities = [
-        "journal_matching", "scope_analysis", "acceptance_probability",
-        "predatory_risk_assessment", "submission_strategy",
+        "journal_matching", "scope_analysis", "submission_strategy",
     ]
 
     async def execute(self, task: AgentTask, context: AgentContext) -> AgentResult:
@@ -28,7 +27,7 @@ class JournalIntelligenceAgent(AcademicAgent):
         top_fits: list[dict] = []
         try:
             from services.publishing.journal_analyzer import analyze_journal_fit
-            fits = analyze_journal_fit(text, discipline, quality)[:5]
+            fits = (await analyze_journal_fit(text, discipline, quality))[:5]
             top_fits = [f.to_dict() for f in fits]
         except Exception as exc:
             top_fits = []

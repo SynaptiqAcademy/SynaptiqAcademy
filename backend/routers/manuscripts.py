@@ -975,7 +975,9 @@ async def journal_matches(
     ms_type   = doc.get("manuscript_type", "").lower()
     area_words = set(abstract.split()) if abstract else set()
 
-    journals_raw = await db.journals.find({}).limit(200).to_list(200)
+    # Phase 0: seed/demo fixture records carry fabricated metrics and must
+    # never reach a production listing. See AUDIT_PHASE0.md.
+    journals_raw = await db.journals.find({"is_seed": {"$ne": True}}).limit(200).to_list(200)
 
     def _score(j: dict) -> int:
         score = 0

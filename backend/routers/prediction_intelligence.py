@@ -6,7 +6,7 @@ Public:          /api/prediction-intelligence/available-types
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 
 from auth_utils import get_current_user
@@ -121,9 +121,19 @@ async def journal_ranking(
     body: JournalRankingRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["id"], "prediction_journal_ranking")
-    engine = await get_prediction_engine()
-    return engine.predict_journals(body.manuscript, body.max_results)
+    # Phase 0: this previously scored a hardcoded 12-journal database with
+    # invented acceptance/impact figures. No real source publishes the
+    # historical-outcome data a genuine ranking prediction would need, and
+    # building one is out of scope for a data-integrity fix — so this
+    # returns "not available" rather than a fabricated ranking. Use
+    # /api/publishing/journal/match for real-data journal matching.
+    # See AUDIT_PHASE0.md.
+    raise HTTPException(
+        status.HTTP_501_NOT_IMPLEMENTED,
+        "Journal ranking prediction is not available — no verified source "
+        "publishes the outcome data this would require. Use the Journal "
+        "Finder for real, sourced journal matches instead.",
+    )
 
 
 # ── Conference ────────────────────────────────────────────────────────────────
@@ -133,9 +143,13 @@ async def conference_prediction(
     body: ConferenceRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    await consume_credits(current_user["id"], "prediction_conference")
-    engine = await get_prediction_engine()
-    return {"conferences": engine.predict_conference(body.profile)}
+    # Phase 0: see journal_ranking() above — same rationale.
+    raise HTTPException(
+        status.HTTP_501_NOT_IMPLEMENTED,
+        "Conference outcome prediction is not available — no verified "
+        "source publishes the outcome data this would require. Use the "
+        "Conference Finder for real, sourced conference matches instead.",
+    )
 
 
 # ── Grant ─────────────────────────────────────────────────────────────────────

@@ -40,7 +40,7 @@ class PublishingEngine:
     ) -> list[dict]:
         t0 = time.monotonic()
         try:
-            fits = analyze_journal_fit(text, discipline, manuscript_quality)
+            fits = await analyze_journal_fit(text, discipline, manuscript_quality)
             get_telemetry().record_journal_analysis()
             return [f.to_dict() for f in fits[:10]]
         except Exception:
@@ -59,7 +59,7 @@ class PublishingEngine:
         t0 = time.monotonic()
         try:
             mts = [MatchType(m) for m in match_types] if match_types else None
-            matches = match_journals(text, discipline, manuscript_quality, mts)
+            matches = await match_journals(text, discipline, manuscript_quality, mts)
             get_telemetry().record_journal_match()
             return [m.to_dict() for m in matches]
         except Exception:
@@ -78,7 +78,7 @@ class PublishingEngine:
     ) -> list[dict]:
         t0 = time.monotonic()
         try:
-            fits = analyze_conference_fit(text, discipline, manuscript_quality)
+            fits = await analyze_conference_fit(text, discipline, manuscript_quality)
             get_telemetry().record_conference_match()
             return [f.to_dict() for f in fits[:8]]
         except Exception:
@@ -98,7 +98,7 @@ class PublishingEngine:
     ) -> list[dict]:
         t0 = time.monotonic()
         try:
-            fits = analyze_grant_fit(text, discipline, manuscript_quality, user_profile)
+            fits = await analyze_grant_fit(text, discipline, manuscript_quality, user_profile)
             get_telemetry().record_grant_match()
             return [f.to_dict() for f in fits[:10]]
         except Exception:
@@ -181,7 +181,7 @@ class PublishingEngine:
     ) -> dict:
         t0 = time.monotonic()
         try:
-            strategy = build_publication_strategy(
+            strategy = await build_publication_strategy(
                 manuscript_title, text, discipline, manuscript_quality
             )
             get_telemetry().record_strategy()
@@ -198,19 +198,11 @@ class PublishingEngine:
         self,
         text: str,
         manuscript_quality: float,
-        scope_match: float = 0.5,
-        journal_acceptance_rate: float = 0.25,
-        journal_review_weeks: int = 12,
-        journal_predatory_risk: float = 0.0,
         metadata: dict | None = None,
     ) -> dict:
         t0 = time.monotonic()
         try:
-            risk = analyze_publication_risk(
-                text, manuscript_quality, scope_match,
-                journal_acceptance_rate, journal_review_weeks,
-                journal_predatory_risk, metadata,
-            )
+            risk = analyze_publication_risk(text, manuscript_quality, metadata)
             get_telemetry().record_risk_analysis()
             return risk.to_dict()
         except Exception:

@@ -82,7 +82,7 @@ async def match_conferences(
     combined_user_areas = user_areas | user_interests
 
     # ── Build conference query ───────────────────────────────────────────────
-    query: dict[str, Any] = {}
+    query: dict[str, Any] = {"is_seed": {"$ne": True}}
 
     now_iso = datetime.now(timezone.utc).isoformat()
 

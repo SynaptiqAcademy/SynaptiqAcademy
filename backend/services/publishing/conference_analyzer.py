@@ -1,90 +1,108 @@
-"""Academic Publishing Intelligence — Conference analyzer (Phase XII)."""
+"""Academic Publishing Intelligence — Conference analyzer.
+
+Phase 0 rewrite: scores conferences against a manuscript using only the live
+`conferences` collection (WikiCFP ingestion via services/discovery). No
+hardcoded conference database, no invented acceptance rate, registration
+fee, or "networking/career value" scores — see AUDIT_PHASE0.md. Seed/demo
+conference records (`is_seed: true`) are excluded, as are conferences whose
+submission deadline has already passed.
+"""
 from __future__ import annotations
 
+from datetime import date
+
+from db import get_db
+from repo.security_context import SecurityContext
+from repo.shim import DBProxy
 from .models import ConferenceFit
 
-_CONFERENCES: list[dict] = [
-    # ── CS / AI ───────────────────────────────────────────────────────────────
-    {"name": "International Conference on Machine Learning", "acr": "ICML",  "pub": "PMLR",     "rank": "A*", "acc": 0.26, "fee": 750,  "indexed": True, "jt": False, "tags": ["ai","machine learning","deep learning","optimization","nlp"],          "loc": "International"},
-    {"name": "Neural Information Processing Systems",         "acr": "NeurIPS","pub": "Curran",   "rank": "A*", "acc": 0.26, "fee": 750,  "indexed": True, "jt": False, "tags": ["ai","deep learning","reinforcement learning","generative models"],      "loc": "North America"},
-    {"name": "International Conference on Learning Representations","acr":"ICLR","pub":"OpenReview","rank":"A*","acc":0.32,"fee":500,   "indexed": True, "jt": False, "tags": ["deep learning","representation learning","ai"],                            "loc": "International"},
-    {"name": "ACL Annual Meeting",                             "acr": "ACL",   "pub": "ACL",      "rank": "A*", "acc": 0.24, "fee": 600,  "indexed": True, "jt": True,  "tags": ["nlp","language","text","machine translation","dialogue"],               "loc": "International"},
-    {"name": "IEEE/CVF Computer Vision and Pattern Recognition","acr":"CVPR", "pub":"IEEE",      "rank": "A*", "acc": 0.25, "fee": 700,  "indexed": True, "jt": False, "tags": ["computer vision","image","deep learning","detection","recognition"],     "loc": "North America"},
-    {"name": "AAAI Conference on Artificial Intelligence",     "acr": "AAAI",  "pub": "AAAI",     "rank": "A",  "acc": 0.23, "fee": 650,  "indexed": True, "jt": False, "tags": ["ai","knowledge","reasoning","planning","ethics"],                       "loc": "North America"},
-    {"name": "ACM International Conference on Information Retrieval","acr":"SIGIR","pub":"ACM", "rank": "A",  "acc": 0.25, "fee": 600,  "indexed": True, "jt": False, "tags": ["information retrieval","search","nlp","recommendation"],                  "loc": "International"},
-    # ── Medicine / Health ─────────────────────────────────────────────────────
-    {"name": "European Congress of Cardiology",                "acr": "ESC",   "pub": "ESC",      "rank": "A",  "acc": 0.30, "fee": 900,  "indexed": True, "jt": True,  "tags": ["cardiology","medicine","clinical","heart failure"],                     "loc": "Europe"},
-    {"name": "American Heart Association Scientific Sessions", "acr": "AHA",   "pub": "AHA",      "rank": "A",  "acc": 0.30, "fee": 800,  "indexed": True, "jt": True,  "tags": ["cardiology","medicine","clinical","vascular","stroke"],                  "loc": "North America"},
-    # ── Psychology / Education ────────────────────────────────────────────────
-    {"name": "American Psychological Association Annual Convention","acr":"APA","pub":"APA",    "rank": "A",  "acc": 0.40, "fee": 400,  "indexed": True, "jt": False, "tags": ["psychology","cognitive","social","clinical","behaviour"],                 "loc": "North America"},
-    {"name": "Society for Research on Educational Effectiveness","acr":"SREE", "pub": "SREE",    "rank": "B",  "acc": 0.45, "fee": 300,  "indexed": True, "jt": False, "tags": ["education","learning","pedagogy","assessment","policy"],                  "loc": "North America"},
-    # ── Engineering ───────────────────────────────────────────────────────────
-    {"name": "IEEE World Congress on Computational Intelligence","acr":"WCCI","pub":"IEEE",     "rank": "A",  "acc": 0.35, "fee": 750,  "indexed": True, "jt": False, "tags": ["engineering","ai","neural networks","evolutionary","control"],             "loc": "International"},
-    {"name": "Renewable Energy World Conference",               "acr": "REWC",  "pub": "Elsevier","rank": "B", "acc": 0.50, "fee": 450,  "indexed": True, "jt": True,  "tags": ["energy","renewable","sustainability","solar","wind"],                    "loc": "Europe"},
-    # ── Social Science / Management ───────────────────────────────────────────
-    {"name": "Academy of Management Annual Meeting",            "acr": "AoM",   "pub": "AOM",      "rank": "A",  "acc": 0.35, "fee": 500,  "indexed": True, "jt": False, "tags": ["management","organisation","strategy","leadership","behaviour"],        "loc": "North America"},
-    {"name": "European Academy of Management Conference",       "acr": "EURAM", "pub": "EURAM",    "rank": "B",  "acc": 0.40, "fee": 400,  "indexed": True, "jt": False, "tags": ["management","organisation","strategy","innovation","sustainability"],   "loc": "Europe"},
-]
 
-_RANK_SCORES = {"A*": 1.0, "A": 0.8, "B": 0.6, "C": 0.4}
+def _as_list(v) -> list[str]:
+    """Defensive normalization — some legacy/seed records store a
+    comma-separated string where the schema expects a list."""
+    if not v:
+        return []
+    if isinstance(v, list):
+        return [str(x) for x in v if x]
+    if isinstance(v, str):
+        return [s.strip() for s in v.split(",") if s.strip()]
+    return []
+
+_MAX_CANDIDATES = 300
 
 
-def _to_fit(c: dict) -> ConferenceFit:
-    return ConferenceFit(
-        name=c["name"], acronym=c["acr"], publisher=c["pub"],
-        ranking=c["rank"], acceptance_rate=c["acc"],
-        topics=c["tags"], is_indexed=c["indexed"],
-        offers_journal_track=c.get("jt", False),
-        registration_fee_usd=c.get("fee", 500),
-        location=c.get("loc", "International"),
-        presentation_types=["oral", "poster"],
+def _scope_hit(text_lower: str, discipline_lower: str, tags: list[str]) -> float:
+    if not tags:
+        return 0.0
+    tags_lower = [t.lower() for t in tags if t]
+    hits = sum(1 for t in tags_lower if t in text_lower or t in discipline_lower)
+    return round(min(1.0, hits / max(len(tags_lower) * 0.4, 1)), 3)
+
+
+def _to_fit(c: dict, scope: float) -> ConferenceFit:
+    tags = _as_list(c.get("topics")) + _as_list(c.get("research_areas"))
+    fit = ConferenceFit(
+        name=c.get("name", ""),
+        acronym=c.get("acronym") or "",
+        publisher=c.get("organizer") or "",
+        ranking=c.get("rank") or "",
+        topics=tags,
+        is_indexed=bool(c.get("rank")),  # only claim "indexed" if a source actually ranked it
+        submission_deadline=c.get("submission_deadline") or "",
+        notification_date=c.get("notification_date") or "",
+        event_date=c.get("start_date") or "",
+        location=c.get("location") or "",
     )
+    fit.research_fit = scope
+    fit.overall_score = scope
+    caveats = []
+    if not c.get("submission_deadline"):
+        caveats.append("no submission deadline on record")
+    if not c.get("rank"):
+        caveats.append("no ranking source")
+    fit.rationale = (
+        f"{fit.name} shares {scope:.0%} of its indexed topics with this manuscript"
+        + (f" ({'; '.join(caveats)})" if caveats else "")
+        + "."
+    )
+    return fit
 
 
-def _scope_hit(text: str, discipline: str, tags: list[str]) -> float:
-    combined = text.lower() + " " + discipline.lower()
-    hits = sum(1 for t in tags if t in combined)
-    return min(1.0, hits / max(len(tags) * 0.4, 1))
+async def get_all_profiles(db=None, limit: int = _MAX_CANDIDATES) -> list[dict]:
+    if db is None:
+        db = DBProxy(get_db(), SecurityContext.system())
+    today = date.today().isoformat()
+    docs = await db.conferences.find({
+        "is_seed": {"$ne": True},
+        "$or": [{"submission_deadline": None}, {"submission_deadline": {"$gte": today}}],
+    }).limit(limit).to_list(limit)
+    return docs
 
 
-def analyze_conference_fit(
+async def analyze_conference_fit(
     text: str,
     discipline: str,
     manuscript_quality: float,
+    db=None,
 ) -> list[ConferenceFit]:
+    """`manuscript_quality` is accepted for API compatibility but no longer
+    perturbs the score — see journal_analyzer.py for the same rationale."""
+    if db is None:
+        db = DBProxy(get_db(), SecurityContext.system())
+
+    text_lower = (text or "").lower()
+    discipline_lower = (discipline or "").lower()
+
+    conferences = await get_all_profiles(db=db)
     scored: list[tuple[float, ConferenceFit]] = []
-    for c in _CONFERENCES:
-        scope = _scope_hit(text, discipline, c["tags"])
+
+    for c in conferences:
+        tags = _as_list(c.get("topics")) + _as_list(c.get("research_areas"))
+        scope = _scope_hit(text_lower, discipline_lower, tags)
         if scope == 0.0:
             continue
-
-        rank_score = _RANK_SCORES.get(c["rank"], 0.5)
-        q = manuscript_quality / 100.0
-        acc_prob = c["acc"] * (0.4 + 0.6 * q) * (0.6 + 0.4 * scope)
-        acc_prob = round(min(0.90, max(0.02, acc_prob)), 3)
-
-        jt_bonus = 0.15 if c.get("jt") else 0.0
-        network = round(rank_score * 0.8 + 0.2, 3)
-        career = round(rank_score * 0.7 + scope * 0.3, 3)
-        pub_val = round((0.5 if c.get("indexed") else 0.1) + jt_bonus, 3)
-        overall = round(
-            0.35 * scope + 0.25 * acc_prob + 0.20 * network
-            + 0.10 * career + 0.10 * pub_val,
-            3,
-        )
-
-        fit = _to_fit(c)
-        fit.research_fit = round(scope, 3)
-        fit.acceptance_probability = acc_prob
-        fit.networking_value = network
-        fit.career_value = career
-        fit.publication_value = pub_val
-        fit.overall_score = overall
-        fit.rationale = (
-            f"{c['name']} ({c['rank']}) aligns {scope:.0%} with your research area "
-            f"with estimated {acc_prob:.0%} acceptance probability."
-        )
-        scored.append((overall, fit))
+        fit = _to_fit(c, scope)
+        scored.append((scope, fit))
 
     scored.sort(key=lambda x: -x[0])
     return [f for _, f in scored]

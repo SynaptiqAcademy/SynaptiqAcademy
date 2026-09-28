@@ -99,6 +99,7 @@ async def match_grants(
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     query: dict[str, Any] = {
+        "is_seed": {"$ne": True},
         "$or": [
             {"deadline": {"$gt": now_str}},
             {"deadline": None},

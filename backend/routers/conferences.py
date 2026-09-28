@@ -63,7 +63,9 @@ async def list_conferences(
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
-    query: dict = {}
+    # Phase 0: seed/demo fixture records carry fabricated dates/deadlines
+    # and must never reach a production listing. See AUDIT_PHASE0.md.
+    query: dict = {"is_seed": {"$ne": True}}
     if q: query["$text"] = {"$search": q}
     if research_area: query["research_areas"] = research_area
     if rank: query["rank"] = rank
@@ -153,6 +155,6 @@ async def get_conference(conf_id: str, _user: dict = Depends(get_current_user)):
 
     try: oid = ObjectId(conf_id)
     except Exception: raise HTTPException(status_code=404, detail="Not found")
-    doc = await db.conferences.find_one({"_id": oid})
+    doc = await db.conferences.find_one({"_id": oid, "is_seed": {"$ne": True}})
     if not doc: raise HTTPException(status_code=404, detail="Not found")
     return _ser(doc)

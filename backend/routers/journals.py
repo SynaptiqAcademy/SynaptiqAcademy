@@ -46,7 +46,9 @@ async def list_journals(
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
-    query: dict = {}
+    # Phase 0: seed/demo fixture records carry fabricated metrics and must
+    # never reach a production listing. See AUDIT_PHASE0.md.
+    query: dict = {"is_seed": {"$ne": True}}
     if q: query["$text"] = {"$search": q}
     if subject: query["subjects"] = subject
     if quartile: query["quartile"] = quartile
@@ -130,6 +132,6 @@ async def get_journal(journal_id: str, _user: dict = Depends(get_current_user)):
 
     try: oid = ObjectId(journal_id)
     except Exception: raise HTTPException(status_code=404, detail="Not found")
-    doc = await db.journals.find_one({"_id": oid})
+    doc = await db.journals.find_one({"_id": oid, "is_seed": {"$ne": True}})
     if not doc: raise HTTPException(status_code=404, detail="Not found")
     return _ser(doc)

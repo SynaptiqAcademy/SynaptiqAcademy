@@ -54,32 +54,38 @@ _MED_TEXT = (
 
 class TestModels:
     def test_journal_profile_defaults(self):
+        # Phase 0: no field defaults to a fabricated non-zero value — an
+        # unpopulated JournalProfile must read as "no data", not "average".
         from services.publishing.models import JournalProfile
         j = JournalProfile(name="Test Journal", publisher="Test")
-        assert j.quartile == "Q3"
+        assert j.quartile is None
         assert j.open_access is False
-        assert j.apc_usd == 0
-        assert j.predatory_risk == 0.0
+        assert j.apc_usd is None
+        assert j.acceptance_rate is None
+        assert not hasattr(j, "impact_factor")  # removed — no free source publishes JIF
+        assert not hasattr(j, "predatory_risk")  # removed — no real basis existed
 
-    def test_journal_profile_to_dict(self):
+    def test_journal_profile_to_dict_carries_provenance(self):
         from services.publishing.models import JournalProfile
-        j = JournalProfile(name="J", publisher="P", quartile="Q1", impact_factor=5.0)
+        j = JournalProfile(name="J", publisher="P", quartile="Q1", source="openalex", last_verified_at="2026-01-01T00:00:00Z")
         d = j.to_dict()
         assert d["name"] == "J"
-        assert d["impact_factor"] == 5.0
+        assert d["source"] == "openalex"
+        assert d["last_verified_at"] == "2026-01-01T00:00:00Z"
         assert "open_access" in d
 
     def test_journal_fit_score_to_dict(self):
         from services.publishing.models import JournalFitScore, JournalProfile
         fs = JournalFitScore(
             journal=JournalProfile(name="Test", publisher="P"),
-            scope_match=0.8, acceptance_probability=0.3,
-            desk_rejection_risk=0.2, overall_fit=0.65,
+            scope_match=0.8, overall_fit=0.65,
         )
         d = fs.to_dict()
         assert d["scope_match"] == 0.8
         assert "journal" in d
         assert d["overall_fit"] == 0.65
+        assert "acceptance_probability" not in d  # Phase 0: no invented figure
+        assert "desk_rejection_risk" not in d
 
     def test_smart_journal_match_to_dict(self):
         from services.publishing.models import MatchType, SmartJournalMatch
@@ -209,228 +215,344 @@ class TestModels:
 # 2. Journal Analyzer
 # ═══════════════════════════════════════════════════════════════════════════════
 
+import datetime as _dt
+
+from db import get_db
+from repo.security_context import SecurityContext
+from repo.shim import DBProxy
+
+
+def _test_db():
+    return DBProxy(get_db(), SecurityContext.system())
+
+
+_FUTURE = (_dt.date.today() + _dt.timedelta(days=180)).isoformat()
+_PAST = (_dt.date.today() - _dt.timedelta(days=30)).isoformat()
+
+_REAL_JOURNALS = [
+    {"title": "Nature Machine Intelligence", "publisher": "Springer Nature", "quartile": "Q1",
+     "quartile_source": "openalex_estimate", "h_index": 120, "works_count": 900, "cited_by_count": 40000,
+     "open_access": False, "apc_usd": 9500, "subjects": ["Artificial Intelligence", "Machine Learning"],
+     "research_areas": ["computer science"], "scope_keywords": ["deep learning", "neural network"],
+     "source": "openalex", "last_seen_source_at": "2026-01-01T00:00:00Z"},
+    {"title": "PLOS ONE", "publisher": "PLOS", "quartile": "Q2", "quartile_source": "openalex_estimate",
+     "h_index": 300, "works_count": 5000, "cited_by_count": 20000, "open_access": True, "apc_usd": 1895,
+     "subjects": ["Multidisciplinary"], "research_areas": ["science"], "scope_keywords": ["open science"],
+     "source": "openalex", "last_seen_source_at": "2026-01-01T00:00:00Z"},
+]
+# A record with no real signals at all — must never be dropped into the
+# result set with an invented acceptance rate or impact factor.
+_SPARSE_JOURNAL = {
+    "title": "Journal Of Minimal Data", "publisher": "", "subjects": ["Artificial Intelligence"],
+    "source": "openalex", "last_seen_source_at": "2026-01-01T00:00:00Z",
+}
+_SEED_JOURNAL = {
+    "title": "Fabricated Impact Journal", "publisher": "Test", "quartile": "Q1",
+    "impact_factor": 999.9, "acceptance_rate": 5, "subjects": ["Artificial Intelligence"],
+    "is_seed": True, "source": "seed",
+}
+
+_REAL_CONFERENCES = [
+    {"name": "International Conference on Machine Learning", "acronym": "ICML", "organizer": "PMLR",
+     "rank": "A*", "research_areas": ["Artificial Intelligence"], "topics": ["machine learning", "deep learning"],
+     "submission_deadline": _FUTURE, "location": "International", "source": "wikicfp"},
+    {"name": "Expired AI Symposium", "acronym": "EAS", "research_areas": ["Artificial Intelligence"],
+     "topics": ["machine learning"], "submission_deadline": _PAST, "source": "wikicfp"},
+]
+_SEED_CONFERENCE = {
+    "name": "Fabricated AI Summit", "acronym": "FAS", "rank": "A*", "research_areas": ["Artificial Intelligence"],
+    "topics": ["machine learning"], "submission_deadline": _FUTURE, "is_seed": True, "source": "seed",
+}
+
+_REAL_GRANTS = [
+    {"title": "NIH R01 Machine Learning in Medicine", "sponsor": "NIH", "research_areas": ["Artificial Intelligence", "medicine"],
+     "keywords": ["machine learning", "clinical"], "deadline": _FUTURE,
+     "funding_amount": {"currency": "USD", "amount": 500000}, "eligibility": "US institutions per NIH announcement.",
+     "source": "nih", "url": "https://reporter.nih.gov/example"},
+    {"title": "Expired AI Grant", "sponsor": "NSF", "research_areas": ["Artificial Intelligence"],
+     "keywords": ["machine learning"], "deadline": _PAST, "source": "nih"},
+]
+_SEED_GRANT = {
+    "title": "Fabricated Mega Grant", "sponsor": "Test Foundation", "research_areas": ["Artificial Intelligence"],
+    "keywords": ["machine learning"], "deadline": _FUTURE, "funding_amount": {"currency": "USD", "amount": 99000000},
+    "is_seed": True, "source": "seed",
+}
+
+
+async def _seeded_db(journals=None, conferences=None, grants=None):
+    """Insert fixture records into the real test-DB collections and return a
+    DBProxy plus the inserted ids for cleanup."""
+    db = _test_db()
+    ids = {"journals": [], "conferences": [], "grants": []}
+    if journals:
+        res = await db.journals.insert_many(journals)
+        ids["journals"] = list(res.inserted_ids)
+    if conferences:
+        res = await db.conferences.insert_many(conferences)
+        ids["conferences"] = list(res.inserted_ids)
+    if grants:
+        res = await db.grants.insert_many(grants)
+        ids["grants"] = list(res.inserted_ids)
+    return db, ids
+
+
+async def _cleanup(db, ids):
+    if ids["journals"]:
+        await db.journals.delete_many({"_id": {"$in": ids["journals"]}})
+    if ids["conferences"]:
+        await db.conferences.delete_many({"_id": {"$in": ids["conferences"]}})
+    if ids["grants"]:
+        await db.grants.delete_many({"_id": {"$in": ids["grants"]}})
+
+
 class TestJournalAnalyzer:
-    def test_returns_fits_for_ml_text(self):
-        from services.publishing.journal_analyzer import analyze_journal_fit
-        fits = analyze_journal_fit(_ML_TEXT, "computer science", 80)
-        assert len(fits) > 0
+    """Phase 0: real-DB-backed, no invented acceptance/desk-rejection figures."""
 
-    def test_fits_sorted_by_overall_fit(self):
+    async def test_returns_fits_from_real_records_only(self):
         from services.publishing.journal_analyzer import analyze_journal_fit
-        fits = analyze_journal_fit(_ML_TEXT, "ai", 75)
-        if len(fits) > 1:
-            assert fits[0].overall_fit >= fits[1].overall_fit
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS + [_SEED_JOURNAL])
+        try:
+            fits = await analyze_journal_fit(_ML_TEXT, "artificial intelligence", 80, db=db)
+            names = {f.journal.name for f in fits}
+            assert "Nature Machine Intelligence" in names
+            # The fabricated seed record must never appear in results.
+            assert "Fabricated Impact Journal" not in names
+        finally:
+            await _cleanup(db, ids)
 
-    def test_medicine_text_matches_medicine_journals(self):
+    async def test_no_journal_carries_an_impact_factor_field(self):
         from services.publishing.journal_analyzer import analyze_journal_fit
-        fits = analyze_journal_fit(_MED_TEXT, "medicine", 80)
-        names = [f.journal.name for f in fits[:5]]
-        med_journals = {"The Lancet", "JAMA", "BMJ", "PLOS Medicine"}
-        assert any(n in med_journals for n in names)
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            fits = await analyze_journal_fit(_ML_TEXT, "artificial intelligence", 80, db=db)
+            for f in fits:
+                d = f.journal.to_dict()
+                assert "impact_factor" not in d  # no legitimate free source publishes JIF
 
-    def test_scope_match_between_0_and_1(self):
+        finally:
+            await _cleanup(db, ids)
+
+    async def test_sparse_journal_reports_data_unavailable_not_a_fabricated_default(self):
         from services.publishing.journal_analyzer import analyze_journal_fit
-        fits = analyze_journal_fit(_ML_TEXT, "ai", 70)
-        for f in fits:
-            assert 0.0 <= f.scope_match <= 1.0
+        db, ids = await _seeded_db(journals=[_SPARSE_JOURNAL])
+        try:
+            fits = await analyze_journal_fit(_ML_TEXT, "artificial intelligence", 80, db=db)
+            assert len(fits) == 1
+            f = fits[0]
+            assert f.journal.acceptance_rate is None
+            assert any("not available" in n.lower() or "no " in n.lower() for n in f.notes)
+        finally:
+            await _cleanup(db, ids)
 
-    def test_acceptance_probability_between_0_and_1(self):
+    async def test_scope_match_between_0_and_1(self):
         from services.publishing.journal_analyzer import analyze_journal_fit
-        fits = analyze_journal_fit(_ML_TEXT, "ai", 70)
-        for f in fits:
-            assert 0.0 <= f.acceptance_probability <= 1.0
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            fits = await analyze_journal_fit(_ML_TEXT, "artificial intelligence", 70, db=db)
+            for f in fits:
+                assert 0.0 <= f.scope_match <= 1.0
+        finally:
+            await _cleanup(db, ids)
 
-    def test_desk_rejection_risk_between_0_and_1(self):
+    async def test_fits_sorted_by_overall_fit(self):
         from services.publishing.journal_analyzer import analyze_journal_fit
-        fits = analyze_journal_fit(_ML_TEXT, "ai", 70)
-        for f in fits:
-            assert 0.0 <= f.desk_rejection_risk <= 1.0
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            fits = await analyze_journal_fit(_ML_TEXT, "artificial intelligence", 75, db=db)
+            if len(fits) > 1:
+                assert fits[0].overall_fit >= fits[1].overall_fit
+        finally:
+            await _cleanup(db, ids)
 
-    def test_high_quality_gets_higher_acceptance(self):
-        from services.publishing.journal_analyzer import analyze_journal_fit
-        fits_high = analyze_journal_fit(_ML_TEXT, "ai", 95)
-        fits_low  = analyze_journal_fit(_ML_TEXT, "ai", 30)
-        avg_high = sum(f.acceptance_probability for f in fits_high) / max(len(fits_high), 1)
-        avg_low  = sum(f.acceptance_probability for f in fits_low) / max(len(fits_low), 1)
-        assert avg_high > avg_low
-
-    def test_get_all_profiles_returns_list(self):
+    async def test_get_all_profiles_excludes_seed(self):
         from services.publishing.journal_analyzer import get_all_profiles
-        profiles = get_all_profiles()
-        assert len(profiles) > 10
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS + [_SEED_JOURNAL])
+        try:
+            profiles = await get_all_profiles(db=db)
+            names = {p.name for p in profiles}
+            assert "Fabricated Impact Journal" not in names
+        finally:
+            await _cleanup(db, ids)
 
-    def test_fit_score_has_strengths_list(self):
+    async def test_fit_score_has_rationale(self):
         from services.publishing.journal_analyzer import analyze_journal_fit
-        fits = analyze_journal_fit(_ML_TEXT, "ai", 80)
-        if fits:
-            assert isinstance(fits[0].strengths, list)
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            fits = await analyze_journal_fit(_ML_TEXT, "artificial intelligence", 80, db=db)
+            if fits:
+                assert len(fits[0].rationale) > 10
+        finally:
+            await _cleanup(db, ids)
 
-    def test_fit_score_has_rationale(self):
-        from services.publishing.journal_analyzer import analyze_journal_fit
-        fits = analyze_journal_fit(_ML_TEXT, "ai", 80)
-        if fits:
-            assert len(fits[0].rationale) > 10
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 3. Journal Matcher
-# ═══════════════════════════════════════════════════════════════════════════════
 
 class TestJournalMatcher:
-    def test_returns_all_six_match_types(self):
+    async def test_returns_all_six_match_types(self):
         from services.publishing.journal_matcher import match_journals
-        results = match_journals(_ML_TEXT, "ai", 75)
-        assert len(results) == 6
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            results = await match_journals(_ML_TEXT, "artificial intelligence", 75, db=db)
+            assert len(results) == 6
+        finally:
+            await _cleanup(db, ids)
 
-    def test_best_match_type_correct(self):
+    async def test_open_access_match_only_oa_journals(self):
         from services.publishing.models import MatchType
         from services.publishing.journal_matcher import match_journals
-        results = match_journals(_ML_TEXT, "ai", 75, [MatchType.BEST])
-        assert results[0].match_type == MatchType.BEST
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            results = await match_journals(_ML_TEXT, "artificial intelligence", 75, [MatchType.OPEN_ACCESS], db=db)
+            for fit in results[0].fits:
+                assert fit.journal.open_access is True
+        finally:
+            await _cleanup(db, ids)
 
-    def test_open_access_match_only_oa_journals(self):
+    async def test_safe_match_only_journals_with_published_acceptance_rate(self):
         from services.publishing.models import MatchType
         from services.publishing.journal_matcher import match_journals
-        results = match_journals(_ML_TEXT, "ai", 75, [MatchType.OPEN_ACCESS])
-        oa_match = results[0]
-        for fit in oa_match.fits:
-            assert fit.journal.open_access is True
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS + [_SPARSE_JOURNAL])
+        try:
+            results = await match_journals(_ML_TEXT, "artificial intelligence", 75, [MatchType.SAFE], db=db)
+            for fit in results[0].fits:
+                assert fit.journal.acceptance_rate is not None
+        finally:
+            await _cleanup(db, ids)
 
-    def test_high_impact_only_q1_q2(self):
+    async def test_fast_pub_returns_empty_no_source_has_review_time_data(self):
         from services.publishing.models import MatchType
         from services.publishing.journal_matcher import match_journals
-        results = match_journals(_ML_TEXT, "ai", 75, [MatchType.HIGH_IMPACT])
-        hi_match = results[0]
-        for fit in hi_match.fits:
-            assert fit.journal.quartile in ("Q1", "Q2")
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            results = await match_journals(_ML_TEXT, "artificial intelligence", 75, [MatchType.FAST_PUB], db=db)
+            assert results[0].fits == []
+        finally:
+            await _cleanup(db, ids)
 
-    def test_budget_friendly_max_1000_apc(self):
+    async def test_budget_friendly_max_1000_apc(self):
         from services.publishing.models import MatchType
         from services.publishing.journal_matcher import match_journals
-        results = match_journals(_ML_TEXT, "ai", 75, [MatchType.BUDGET_FRIENDLY])
-        budget = results[0]
-        for fit in budget.fits:
-            assert fit.journal.apc_usd <= 1000
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            results = await match_journals(_ML_TEXT, "artificial intelligence", 75, [MatchType.BUDGET_FRIENDLY], db=db)
+            for fit in results[0].fits:
+                assert fit.journal.apc_usd is not None and fit.journal.apc_usd <= 1000
+        finally:
+            await _cleanup(db, ids)
 
-    def test_fast_pub_sorted_by_review_weeks(self):
-        from services.publishing.models import MatchType
+    async def test_match_types_accept_strings(self):
         from services.publishing.journal_matcher import match_journals
-        results = match_journals(_ML_TEXT, "ai", 75, [MatchType.FAST_PUB])
-        fp = results[0]
-        if len(fp.fits) >= 2:
-            assert fp.fits[0].journal.review_duration_weeks <= fp.fits[1].journal.review_duration_weeks
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            results = await match_journals(_ML_TEXT, "artificial intelligence", 75, ["best_match", "safe_match"], db=db)
+            assert len(results) == 2
+        finally:
+            await _cleanup(db, ids)
 
-    def test_top_pick_present(self):
-        from services.publishing.journal_matcher import match_journals
-        results = match_journals(_ML_TEXT, "ai", 75)
-        for r in results:
-            if r.fits:
-                assert r.top_pick is not None
-
-    def test_match_types_accept_strings(self):
-        from services.publishing.journal_matcher import match_journals
-        results = match_journals(_ML_TEXT, "ai", 75, ["best_match", "safe_match"])
-        assert len(results) == 2
-
-    def test_medicine_text_conference_match_returns_medicine(self):
-        from services.publishing.conference_analyzer import analyze_conference_fit
-        fits = analyze_conference_fit(_MED_TEXT, "medicine", 80)
-        names = [f.name for f in fits[:5]]
-        med_confs = {"European Congress of Cardiology", "American Heart Association Scientific Sessions"}
-        assert any(n in med_confs for n in names)
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 4. Conference Analyzer
-# ═══════════════════════════════════════════════════════════════════════════════
 
 class TestConferenceAnalyzer:
-    def test_returns_fits_for_ai_text(self):
+    """Phase 0: real-DB-backed, expired deadlines excluded, seed excluded."""
+
+    async def test_returns_real_conferences_only(self):
         from services.publishing.conference_analyzer import analyze_conference_fit
-        fits = analyze_conference_fit(_ML_TEXT, "ai", 75)
-        assert len(fits) > 0
+        db, ids = await _seeded_db(conferences=_REAL_CONFERENCES + [_SEED_CONFERENCE])
+        try:
+            fits = await analyze_conference_fit(_ML_TEXT, "artificial intelligence", 80, db=db)
+            names = {f.name for f in fits}
+            assert "International Conference on Machine Learning" in names
+            assert "Fabricated AI Summit" not in names  # seed — never shown
+        finally:
+            await _cleanup(db, ids)
 
-    def test_fits_sorted_by_overall_score(self):
+    async def test_expired_deadline_excluded(self):
         from services.publishing.conference_analyzer import analyze_conference_fit
-        fits = analyze_conference_fit(_ML_TEXT, "ai", 75)
-        if len(fits) > 1:
-            assert fits[0].overall_score >= fits[1].overall_score
+        db, ids = await _seeded_db(conferences=_REAL_CONFERENCES)
+        try:
+            fits = await analyze_conference_fit(_ML_TEXT, "artificial intelligence", 80, db=db)
+            names = {f.name for f in fits}
+            assert "Expired AI Symposium" not in names
+        finally:
+            await _cleanup(db, ids)
 
-    def test_ai_text_includes_ai_conferences(self):
+    async def test_no_acceptance_rate_or_networking_value_fields(self):
         from services.publishing.conference_analyzer import analyze_conference_fit
-        fits = analyze_conference_fit(_ML_TEXT, "ai", 80)
-        names = [f.name for f in fits[:5]]
-        ai_confs = {"International Conference on Machine Learning", "Neural Information Processing Systems"}
-        assert any(n in ai_confs for n in names)
+        db, ids = await _seeded_db(conferences=_REAL_CONFERENCES)
+        try:
+            fits = await analyze_conference_fit(_ML_TEXT, "artificial intelligence", 75, db=db)
+            for f in fits:
+                d = f.to_dict()
+                assert "acceptance_rate" not in d
+                assert "networking_value" not in d
+                assert "registration_fee_usd" not in d
+        finally:
+            await _cleanup(db, ids)
 
-    def test_acceptance_probability_in_range(self):
+    async def test_research_fit_in_range(self):
         from services.publishing.conference_analyzer import analyze_conference_fit
-        fits = analyze_conference_fit(_ML_TEXT, "ai", 75)
-        for f in fits:
-            assert 0.0 <= f.acceptance_probability <= 1.0
+        db, ids = await _seeded_db(conferences=_REAL_CONFERENCES)
+        try:
+            fits = await analyze_conference_fit(_ML_TEXT, "artificial intelligence", 75, db=db)
+            for f in fits:
+                assert 0.0 <= f.research_fit <= 1.0
+        finally:
+            await _cleanup(db, ids)
 
-    def test_research_fit_in_range(self):
-        from services.publishing.conference_analyzer import analyze_conference_fit
-        fits = analyze_conference_fit(_ML_TEXT, "ai", 75)
-        for f in fits:
-            assert 0.0 <= f.research_fit <= 1.0
-
-    def test_to_dict_has_required_keys(self):
-        from services.publishing.conference_analyzer import analyze_conference_fit
-        fits = analyze_conference_fit(_ML_TEXT, "ai", 75)
-        if fits:
-            d = fits[0].to_dict()
-            assert "name" in d and "overall_score" in d and "acceptance_probability" in d
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 5. Grant Analyzer
-# ═══════════════════════════════════════════════════════════════════════════════
 
 class TestGrantAnalyzer:
-    def test_returns_fits(self):
-        from services.publishing.grant_analyzer import analyze_grant_fit
-        fits = analyze_grant_fit(_ML_TEXT, "computer science", 75)
-        assert len(fits) > 0
+    """Phase 0: real-DB-backed, no invented funding-probability/eligibility score."""
 
-    def test_fits_sorted_correctly(self):
+    async def test_returns_real_grants_only(self):
         from services.publishing.grant_analyzer import analyze_grant_fit
-        fits = analyze_grant_fit(_ML_TEXT, "ai", 75)
-        for f in fits:
-            assert 0.0 <= f.topic_fit <= 1.0
+        db, ids = await _seeded_db(grants=_REAL_GRANTS + [_SEED_GRANT])
+        try:
+            fits = await analyze_grant_fit(_ML_TEXT, "artificial intelligence", 75, db=db)
+            titles = {f.title for f in fits}
+            assert "NIH R01 Machine Learning in Medicine" in titles
+            assert "Fabricated Mega Grant" not in titles
+        finally:
+            await _cleanup(db, ids)
 
-    def test_medicine_text_matches_nih(self):
+    async def test_expired_deadline_excluded(self):
         from services.publishing.grant_analyzer import analyze_grant_fit
-        fits = analyze_grant_fit(_MED_TEXT, "medicine", 80)
-        names = [f.title for f in fits[:5]]
-        assert any("NIH" in n for n in names)
+        db, ids = await _seeded_db(grants=_REAL_GRANTS)
+        try:
+            fits = await analyze_grant_fit(_ML_TEXT, "artificial intelligence", 75, db=db)
+            titles = {f.title for f in fits}
+            assert "Expired AI Grant" not in titles
+        finally:
+            await _cleanup(db, ids)
 
-    def test_eligibility_score_in_range(self):
+    async def test_topic_fit_in_range(self):
         from services.publishing.grant_analyzer import analyze_grant_fit
-        fits = analyze_grant_fit(_ML_TEXT, "ai", 75, {"role": "faculty"})
-        for f in fits:
-            assert 0.0 <= f.eligibility_score <= 1.0
+        db, ids = await _seeded_db(grants=_REAL_GRANTS)
+        try:
+            fits = await analyze_grant_fit(_ML_TEXT, "artificial intelligence", 75, db=db)
+            for f in fits:
+                assert 0.0 <= f.topic_fit <= 1.0
+        finally:
+            await _cleanup(db, ids)
 
-    def test_funding_probability_in_range(self):
+    async def test_no_funding_probability_or_competitiveness_fields(self):
         from services.publishing.grant_analyzer import analyze_grant_fit
-        fits = analyze_grant_fit(_ML_TEXT, "ai", 75)
-        for f in fits:
-            assert 0.0 <= f.funding_probability <= 1.0
+        db, ids = await _seeded_db(grants=_REAL_GRANTS)
+        try:
+            fits = await analyze_grant_fit(_ML_TEXT, "artificial intelligence", 75, db=db)
+            for f in fits:
+                d = f.to_dict()
+                assert "funding_probability" not in d
+                assert "competitiveness" not in d
+                assert "eligibility_score" not in d
+        finally:
+            await _cleanup(db, ids)
 
-    def test_faculty_profile_increases_eligibility(self):
+    async def test_grant_fit_to_dict_has_keys(self):
         from services.publishing.grant_analyzer import analyze_grant_fit
-        fits_faculty = analyze_grant_fit(_ML_TEXT, "ai", 75, {"role": "professor"})
-        fits_anon    = analyze_grant_fit(_ML_TEXT, "ai", 75, {})
-        avg_fac  = sum(f.eligibility_score for f in fits_faculty) / max(len(fits_faculty), 1)
-        avg_anon = sum(f.eligibility_score for f in fits_anon) / max(len(fits_anon), 1)
-        assert avg_fac >= avg_anon
-
-    def test_grant_fit_to_dict_has_keys(self):
-        from services.publishing.grant_analyzer import analyze_grant_fit
-        fits = analyze_grant_fit(_ML_TEXT, "ai", 75)
-        if fits:
-            d = fits[0].to_dict()
-            assert "title" in d and "funder" in d and "funding_probability" in d
+        db, ids = await _seeded_db(grants=_REAL_GRANTS)
+        try:
+            fits = await analyze_grant_fit(_ML_TEXT, "artificial intelligence", 75, db=db)
+            if fits:
+                d = fits[0].to_dict()
+                assert "title" in d and "funder" in d and "topic_fit" in d
+        finally:
+            await _cleanup(db, ids)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -628,37 +750,55 @@ class TestReviewerResponseGenerator:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestStrategyBuilder:
-    def test_builds_strategy(self):
+    async def test_builds_strategy(self):
         from services.publishing.strategy_builder import build_publication_strategy
-        strategy = build_publication_strategy("AI Paper", _ML_TEXT, "ai", 75)
-        assert len(strategy.options) >= 3
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            strategy = await build_publication_strategy("AI Paper", _ML_TEXT, "artificial intelligence", 75, db=db)
+            assert len(strategy.options) >= 3
+        finally:
+            await _cleanup(db, ids)
 
-    def test_recommended_option_is_set(self):
+    async def test_recommended_option_is_set(self):
         from services.publishing.strategy_builder import build_publication_strategy
-        strategy = build_publication_strategy("AI Paper", _ML_TEXT, "ai", 75)
-        assert strategy.recommended_option is not None
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            strategy = await build_publication_strategy("AI Paper", _ML_TEXT, "artificial intelligence", 75, db=db)
+            assert strategy.recommended_option is not None
+        finally:
+            await _cleanup(db, ids)
 
-    def test_strategy_has_backup_journals(self):
+    async def test_no_option_claims_an_unsupported_success_probability(self):
+        # Phase 0: strategic options no longer assert a fabricated numeric
+        # outcome probability — see AUDIT_PHASE0.md.
         from services.publishing.strategy_builder import build_publication_strategy
-        strategy = build_publication_strategy("AI Paper", _ML_TEXT, "ai", 75)
-        assert isinstance(strategy.backup_journals, list)
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            strategy = await build_publication_strategy("AI Paper", _ML_TEXT, "artificial intelligence", 75, db=db)
+            for opt in strategy.options:
+                assert opt.success_probability is None
+        finally:
+            await _cleanup(db, ids)
 
-    def test_options_have_steps(self):
+    async def test_options_have_steps(self):
         from services.publishing.strategy_builder import build_publication_strategy
-        strategy = build_publication_strategy("AI Paper", _ML_TEXT, "ai", 75)
-        for opt in strategy.options:
-            assert len(opt.steps) > 0
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            strategy = await build_publication_strategy("AI Paper", _ML_TEXT, "artificial intelligence", 75, db=db)
+            for opt in strategy.options:
+                assert len(opt.steps) > 0
+        finally:
+            await _cleanup(db, ids)
 
-    def test_strategy_to_dict(self):
+    async def test_strategy_to_dict(self):
         from services.publishing.strategy_builder import build_publication_strategy
-        strategy = build_publication_strategy("AI Paper", _ML_TEXT, "ai", 75)
-        d = strategy.to_dict()
-        assert "options" in d and "recommended_option" in d
-
-    def test_citation_strategy_non_empty(self):
-        from services.publishing.strategy_builder import build_publication_strategy
-        strategy = build_publication_strategy("AI Paper", _ML_TEXT, "ai", 75)
-        assert len(strategy.citation_strategy) > 0
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            strategy = await build_publication_strategy("AI Paper", _ML_TEXT, "artificial intelligence", 75, db=db)
+            d = strategy.to_dict()
+            assert "options" in d and "recommended_option" in d
+        finally:
+            await _cleanup(db, ids)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -666,56 +806,42 @@ class TestStrategyBuilder:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestRiskAnalyzer:
-    def test_returns_eight_dimensions(self):
+    """Phase 0: 5 manuscript-content dimensions only — desk-rejection, delay,
+    and predatory-journal dimensions were removed because they depended on
+    fabricated per-journal figures (acceptance rate, review weeks, predatory
+    score) with hardcoded defaults. See AUDIT_PHASE0.md."""
+
+    def test_returns_five_dimensions(self):
         from services.publishing.risk_analyzer import analyze_publication_risk
-        risk = analyze_publication_risk(_ML_TEXT, 75, 0.7, 0.25, 12, 0.0)
-        assert len(risk.dimensions) == 8
+        risk = analyze_publication_risk(_ML_TEXT, 75)
+        assert len(risk.dimensions) == 5
+        names = {d.dimension for d in risk.dimensions}
+        assert "Desk Rejection" not in names
+        assert "Publication Delay" not in names
+        assert "Predatory Journal Risk" not in names
 
     def test_overall_risk_in_range(self):
         from services.publishing.risk_analyzer import analyze_publication_risk
-        risk = analyze_publication_risk(_ML_TEXT, 75, 0.7, 0.25, 12, 0.0)
+        risk = analyze_publication_risk(_ML_TEXT, 75)
         assert 0.0 <= risk.overall_risk_score <= 1.0
 
-    def test_success_probability_inverse_of_risk(self):
+    def test_no_fabricated_success_probability(self):
         from services.publishing.risk_analyzer import analyze_publication_risk
-        risk = analyze_publication_risk(_ML_TEXT, 75, 0.7, 0.25, 12, 0.0)
-        assert risk.estimated_success_probability > 0
-
-    def test_predatory_journal_elevates_risk(self):
-        from services.publishing.risk_analyzer import analyze_publication_risk
-        risk_safe  = analyze_publication_risk(_ML_TEXT, 75, 0.7, 0.25, 12, 0.0)
-        risk_pred  = analyze_publication_risk(_ML_TEXT, 75, 0.7, 0.25, 12, 0.9)
-        pred_dim_safe = next(d for d in risk_safe.dimensions if "Predatory" in d.dimension)
-        pred_dim_risky = next(d for d in risk_pred.dimensions if "Predatory" in d.dimension)
-        assert pred_dim_risky.score > pred_dim_safe.score
-
-    def test_low_scope_elevates_desk_rejection_risk(self):
-        from services.publishing.risk_analyzer import analyze_publication_risk
-        risk_high_scope = analyze_publication_risk(_ML_TEXT, 75, 0.9, 0.25, 12, 0.0)
-        risk_low_scope  = analyze_publication_risk(_ML_TEXT, 75, 0.1, 0.25, 12, 0.0)
-        desk_high = next(d for d in risk_high_scope.dimensions if "Desk" in d.dimension)
-        desk_low  = next(d for d in risk_low_scope.dimensions  if "Desk" in d.dimension)
-        assert desk_low.score > desk_high.score
-
-    def test_long_review_elevates_delay_risk(self):
-        from services.publishing.risk_analyzer import analyze_publication_risk
-        risk_fast = analyze_publication_risk(_ML_TEXT, 75, 0.7, 0.25, 4,  0.0)
-        risk_slow = analyze_publication_risk(_ML_TEXT, 75, 0.7, 0.25, 24, 0.0)
-        delay_fast = next(d for d in risk_fast.dimensions if "Delay" in d.dimension)
-        delay_slow = next(d for d in risk_slow.dimensions if "Delay" in d.dimension)
-        assert delay_slow.score > delay_fast.score
+        risk = analyze_publication_risk(_ML_TEXT, 75)
+        assert risk.estimated_success_probability is None
 
     def test_top_risks_non_empty(self):
         from services.publishing.risk_analyzer import analyze_publication_risk
-        risk = analyze_publication_risk(_ML_TEXT, 75, 0.7, 0.25, 12, 0.0)
+        risk = analyze_publication_risk(_ML_TEXT, 75)
         assert len(risk.top_risks) > 0
 
     def test_to_dict_has_dimensions(self):
         from services.publishing.risk_analyzer import analyze_publication_risk
-        risk = analyze_publication_risk(_ML_TEXT, 75, 0.7, 0.25, 12, 0.0)
+        risk = analyze_publication_risk(_ML_TEXT, 75)
         d = risk.to_dict()
         assert isinstance(d["dimensions"], list)
-        assert len(d["dimensions"]) == 8
+        assert len(d["dimensions"]) == 5
+        assert d["estimated_success_probability"] is None
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -727,9 +853,9 @@ class TestExportEngine:
         from services.publishing.models import CoverLetter
         return CoverLetter(journal="Nature", manuscript_title="AI Study", text="Dear Editor,\n\nTest.\n\nYours,\nAuthor")
 
-    def _make_strategy(self):
+    async def _make_strategy(self, db):
         from services.publishing.strategy_builder import build_publication_strategy
-        return build_publication_strategy("AI Paper", _ML_TEXT, "ai", 75)
+        return await build_publication_strategy("AI Paper", _ML_TEXT, "artificial intelligence", 75, db=db)
 
     def test_export_cover_letter_markdown(self):
         from services.publishing.export_engine import export
@@ -743,33 +869,51 @@ class TestExportEngine:
         result = export(ExportFormat.COVER_LETTER, ExportFormat.LATEX, {"cover_letter": self._make_letter()})
         assert "\\documentclass" in result
 
-    def test_export_roadmap_markdown(self):
+    async def test_export_roadmap_markdown(self):
         from services.publishing.export_engine import export
         from services.publishing.models import ExportFormat
-        result = export(ExportFormat.PUBLICATION_ROADMAP, ExportFormat.MARKDOWN, {"strategy": self._make_strategy()})
-        assert "# Publication Roadmap" in result
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            strategy = await self._make_strategy(db)
+            result = export(ExportFormat.PUBLICATION_ROADMAP, ExportFormat.MARKDOWN, {"strategy": strategy})
+            assert "# Publication Roadmap" in result
+        finally:
+            await _cleanup(db, ids)
 
-    def test_export_roadmap_latex(self):
+    async def test_export_roadmap_latex(self):
         from services.publishing.export_engine import export
         from services.publishing.models import ExportFormat
-        result = export(ExportFormat.PUBLICATION_ROADMAP, ExportFormat.LATEX, {"strategy": self._make_strategy()})
-        assert "\\documentclass" in result
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            strategy = await self._make_strategy(db)
+            result = export(ExportFormat.PUBLICATION_ROADMAP, ExportFormat.LATEX, {"strategy": strategy})
+            assert "\\documentclass" in result
+        finally:
+            await _cleanup(db, ids)
 
-    def test_export_journal_comparison(self):
+    async def test_export_journal_comparison(self):
         from services.publishing.export_engine import export
         from services.publishing.journal_matcher import match_journals
         from services.publishing.models import ExportFormat
-        matches = match_journals(_ML_TEXT, "ai", 75)
-        result = export(ExportFormat.JOURNAL_COMPARISON, ExportFormat.MARKDOWN, {"matches": matches})
-        assert "Journal" in result
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            matches = await match_journals(_ML_TEXT, "artificial intelligence", 75, db=db)
+            result = export(ExportFormat.JOURNAL_COMPARISON, ExportFormat.MARKDOWN, {"matches": matches})
+            assert "Journal" in result
+        finally:
+            await _cleanup(db, ids)
 
-    def test_export_grant_readiness(self):
+    async def test_export_grant_readiness(self):
         from services.publishing.export_engine import export
         from services.publishing.grant_analyzer import analyze_grant_fit
         from services.publishing.models import ExportFormat
-        grants = analyze_grant_fit(_ML_TEXT, "ai", 75)
-        result = export(ExportFormat.GRANT_READINESS, ExportFormat.MARKDOWN, {"grants": grants})
-        assert "Grant" in result
+        db, ids = await _seeded_db(grants=_REAL_GRANTS)
+        try:
+            grants = await analyze_grant_fit(_ML_TEXT, "artificial intelligence", 75, db=db)
+            result = export(ExportFormat.GRANT_READINESS, ExportFormat.MARKDOWN, {"grants": grants})
+            assert "Grant" in result
+        finally:
+            await _cleanup(db, ids)
 
     def test_export_submission_package(self):
         from services.publishing.export_engine import export
@@ -862,35 +1006,47 @@ class TestPublishingEngine:
             assert e1 is e2
         asyncio.run(_run())
 
-    def test_analyse_journal_returns_list(self):
-        async def _run():
-            e = await _make_engine()
-            result = await e.analyse_journal(_ML_TEXT, "ai", 75)
+    async def test_analyse_journal_returns_list(self):
+        # engine methods use the process-default DB connection (db=None
+        # inside journal_analyzer.py), which is the same live test DB
+        # _seeded_db() writes to — so seeding here is visible to the engine.
+        e = await _make_engine()
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            result = await e.analyse_journal(_ML_TEXT, "artificial intelligence", 75)
             assert isinstance(result, list)
             assert len(result) > 0
-        asyncio.run(_run())
+            assert "impact_factor" not in result[0]["journal"]
+        finally:
+            await _cleanup(db, ids)
 
-    def test_match_journal_returns_list(self):
-        async def _run():
-            e = await _make_engine()
-            result = await e.match_journal(_ML_TEXT, "ai", 75)
+    async def test_match_journal_returns_six_strategies(self):
+        e = await _make_engine()
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            result = await e.match_journal(_ML_TEXT, "artificial intelligence", 75)
             assert isinstance(result, list)
             assert len(result) == 6
-        asyncio.run(_run())
+        finally:
+            await _cleanup(db, ids)
 
-    def test_match_conference_returns_list(self):
-        async def _run():
-            e = await _make_engine()
-            result = await e.match_conference(_ML_TEXT, "ai", 75)
+    async def test_match_conference_returns_list(self):
+        e = await _make_engine()
+        db, ids = await _seeded_db(conferences=_REAL_CONFERENCES)
+        try:
+            result = await e.match_conference(_ML_TEXT, "artificial intelligence", 75)
             assert isinstance(result, list)
-        asyncio.run(_run())
+        finally:
+            await _cleanup(db, ids)
 
-    def test_match_grant_returns_list(self):
-        async def _run():
-            e = await _make_engine()
-            result = await e.match_grant(_ML_TEXT, "ai", 75)
+    async def test_match_grant_returns_list(self):
+        e = await _make_engine()
+        db, ids = await _seeded_db(grants=_REAL_GRANTS)
+        try:
+            result = await e.match_grant(_ML_TEXT, "artificial intelligence", 75)
             assert isinstance(result, list)
-        asyncio.run(_run())
+        finally:
+            await _cleanup(db, ids)
 
     def test_check_readiness_returns_dict(self):
         async def _run():
@@ -935,12 +1091,14 @@ class TestPublishingEngine:
             assert "dimensions" in result
         asyncio.run(_run())
 
-    def test_export_markdown(self):
-        async def _run():
-            from services.publishing.strategy_builder import build_publication_strategy
-            e = await _make_engine()
-            strategy = build_publication_strategy("AI Paper", _ML_TEXT, "ai", 75)
+    async def test_export_markdown(self):
+        from services.publishing.strategy_builder import build_publication_strategy
+        e = await _make_engine()
+        db, ids = await _seeded_db(journals=_REAL_JOURNALS)
+        try:
+            strategy = await build_publication_strategy("AI Paper", _ML_TEXT, "artificial intelligence", 75, db=db)
             result = await e.export("publication_roadmap", "markdown", {"strategy": strategy})
             assert isinstance(result, str)
             assert len(result) > 50
-        asyncio.run(_run())
+        finally:
+            await _cleanup(db, ids)

@@ -80,10 +80,6 @@ class StrategyRequest(BaseModel):
 class RiskRequest(BaseModel):
     text: str = Field(..., min_length=20)
     manuscript_quality: float = Field(70.0, ge=0, le=100)
-    scope_match: float = Field(0.5, ge=0, le=1)
-    journal_acceptance_rate: float = Field(0.25, ge=0, le=1)
-    journal_review_weeks: int = Field(12, ge=1, le=104)
-    journal_predatory_risk: float = Field(0.0, ge=0, le=1)
     metadata: Optional[dict] = None
 
 
@@ -111,10 +107,10 @@ async def analyse_journal(
     user: dict = Depends(get_current_user),
     db=Depends(get_db),
 ):
-    """Analyse journal fit for a manuscript (30+ factors)."""
+    """Analyse journal fit for a manuscript against real, sourced journal
+    records. Deterministic (no LLM call) — not charged against AI credits."""
     db = make_db_proxy(db, user)
     try:
-        await _deduct(user, "publishing_journal_analyse", db)
         engine = await get_publishing_engine()
         result = await engine.analyse_journal(body.text, body.discipline, body.manuscript_quality)
         return _ok(result)
@@ -128,10 +124,10 @@ async def match_journals(
     user: dict = Depends(get_current_user),
     db=Depends(get_db),
 ):
-    """Smart journal matching — 6 match strategies."""
+    """Smart journal matching — 6 match strategies over real journal
+    records. Deterministic (no LLM call) — not charged against AI credits."""
     db = make_db_proxy(db, user)
     try:
-        await _deduct(user, "publishing_journal_match", db)
         engine = await get_publishing_engine()
         result = await engine.match_journal(
             body.text, body.discipline, body.manuscript_quality, body.match_types
@@ -145,10 +141,12 @@ async def match_journals(
 async def get_journal_profile(
     journal_id: str,
     user: dict = Depends(get_current_user),
+    db=Depends(get_db),
 ):
     """Get a journal profile by name (URL-encoded)."""
     from services.publishing.journal_analyzer import get_all_profiles
-    profiles = get_all_profiles()
+    db_proxy = make_db_proxy(db, user)
+    profiles = await get_all_profiles(db=db_proxy)
     name_lower = journal_id.replace("-", " ").replace("%20", " ").lower()
     match = next((p for p in profiles if p.name.lower() == name_lower), None)
     if not match:
@@ -162,10 +160,10 @@ async def match_conferences(
     user: dict = Depends(get_current_user),
     db=Depends(get_db),
 ):
-    """Match conferences by research area and manuscript quality."""
+    """Match conferences by research area against real, sourced conference
+    records. Deterministic (no LLM call) — not charged against AI credits."""
     db = make_db_proxy(db, user)
     try:
-        await _deduct(user, "publishing_conference_match", db)
         engine = await get_publishing_engine()
         result = await engine.match_conference(body.text, body.discipline, body.manuscript_quality)
         return _ok(result)
@@ -179,10 +177,10 @@ async def match_grants(
     user: dict = Depends(get_current_user),
     db=Depends(get_db),
 ):
-    """Match grants by topic and eligibility."""
+    """Match grants by topic against real, sourced grant records.
+    Deterministic (no LLM call) — not charged against AI credits."""
     db = make_db_proxy(db, user)
     try:
-        await _deduct(user, "publishing_grant_match", db)
         engine = await get_publishing_engine()
         result = await engine.match_grant(
             body.text, body.discipline, body.manuscript_quality, body.user_profile
@@ -276,20 +274,13 @@ async def analyse_risk(
     user: dict = Depends(get_current_user),
     db=Depends(get_db),
 ):
-    """Analyse publication risk across 8 dimensions."""
+    """Analyse manuscript-content publication risk (peer review, ethics,
+    methodology, language, citation practice)."""
     db = make_db_proxy(db, user)
     try:
         await _deduct(user, "publishing_risk_analysis", db)
         engine = await get_publishing_engine()
-        result = await engine.analyse_risk(
-            body.text,
-            body.manuscript_quality,
-            body.scope_match,
-            body.journal_acceptance_rate,
-            body.journal_review_weeks,
-            body.journal_predatory_risk,
-            body.metadata,
-        )
+        result = await engine.analyse_risk(body.text, body.manuscript_quality, body.metadata)
         return _ok(result)
     except Exception as e:
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))

@@ -1,7 +1,15 @@
-"""Academic Publishing Intelligence — Publication risk analyzer (Phase XII).
+"""Academic Publishing Intelligence — Publication risk analyzer.
 
-8 risk dimensions: desk rejection, peer review, ethical, methodological,
-language, citation, publication delay, predatory journal.
+5 manuscript-content risk dimensions: peer review readiness, ethical
+compliance, methodological concerns, language quality, citation practice.
+All are computed from the manuscript text itself via deterministic
+heuristics — no journal-specific data is used.
+
+Phase 0 removed 3 former dimensions (desk rejection, publication delay,
+predatory-journal risk) that depended on per-journal acceptance-rate,
+review-duration, and predatory-risk figures no real source publishes —
+those were fed hardcoded defaults, which violates the "no fabricated
+academic data" rule. See AUDIT_PHASE0.md.
 """
 from __future__ import annotations
 
@@ -40,31 +48,6 @@ def _level(score: float) -> RiskLevel:
         if score >= threshold:
             return level
     return RiskLevel.MINIMAL
-
-
-def _dim_desk_rejection(
-    scope_match: float,
-    manuscript_quality: float,
-    journal_acceptance: float,
-) -> RiskDimension:
-    base = 1 - journal_acceptance
-    scope_pen = max(0, 0.5 - scope_match) * 0.6
-    quality_bonus = (manuscript_quality / 100) * 0.4
-    score = round(max(0.05, min(0.95, base * 0.5 + scope_pen - quality_bonus + 0.1)), 3)
-
-    signals, mitigations = [], []
-    if scope_match < 0.4:
-        signals.append("Low scope alignment with target journal")
-        mitigations.append("Re-evaluate journal fit; consider closer-match journals")
-    if manuscript_quality < 60:
-        signals.append("Below-average manuscript quality score")
-        mitigations.append("Improve overall manuscript quality before submission")
-    if journal_acceptance < 0.15:
-        signals.append(f"Highly selective journal (acceptance rate < 15%)")
-        mitigations.append("Prepare a compelling cover letter emphasising novelty")
-
-    return RiskDimension("Desk Rejection", _level(score), score,
-                         "Risk of rejection before peer review.", signals, mitigations)
 
 
 def _dim_peer_review(manuscript_quality: float, has_statistics: bool) -> RiskDimension:
@@ -163,54 +146,25 @@ def _dim_citation(text: str) -> RiskDimension:
                          signals, mitigations)
 
 
-def _dim_delay(journal_review_weeks: int) -> RiskDimension:
-    if journal_review_weeks >= 20:
-        score, signals, mitigations = 0.7, [f"Review duration {journal_review_weeks} weeks"], ["Consider faster journals if time is critical"]
-    elif journal_review_weeks >= 12:
-        score, signals, mitigations = 0.4, [f"Moderate review duration ({journal_review_weeks} weeks)"], []
-    else:
-        score, signals, mitigations = 0.15, [], []
-
-    return RiskDimension("Publication Delay", _level(score), score,
-                         "Risk of long time-to-publication.", signals, mitigations)
-
-
-def _dim_predatory(journal_predatory_risk: float) -> RiskDimension:
-    score = journal_predatory_risk
-    signals = ["Journal has elevated predatory risk indicators"] if score > 0.3 else []
-    mitigations = ["Verify journal on DOAJ, Beall's list, and Scopus before submitting"] if score > 0.3 else []
-    return RiskDimension("Predatory Journal Risk", _level(score), score,
-                         "Risk that the journal is predatory or low-quality.",
-                         signals, mitigations)
-
-
 def analyze_publication_risk(
     text: str,
     manuscript_quality: float,
-    scope_match: float,
-    journal_acceptance_rate: float,
-    journal_review_weeks: int,
-    journal_predatory_risk: float,
     metadata: dict | None = None,
 ) -> PublicationRisk:
     md = metadata or {}
     has_stats = any(kw in text.lower() for kw in ["mean", "standard deviation", "anova", "regression", "p =", "p<", "n ="])
 
     dims = [
-        _dim_desk_rejection(scope_match, manuscript_quality, journal_acceptance_rate),
         _dim_peer_review(manuscript_quality, has_stats),
         _dim_ethical(text, md),
         _dim_methodological(text, manuscript_quality),
         _dim_language(text),
         _dim_citation(text),
-        _dim_delay(journal_review_weeks),
-        _dim_predatory(journal_predatory_risk),
     ]
 
     overall = round(sum(d.score for d in dims) / len(dims), 3)
     top_risks = [d.description for d in sorted(dims, key=lambda x: -x.score)[:3]]
     mitigations = list({m for d in dims for m in d.mitigations})[:6]
-    success_prob = round(max(0.05, min(0.95, 1 - overall * 0.8)), 3)
 
     return PublicationRisk(
         manuscript_title=md.get("title", "Untitled"),
@@ -219,5 +173,7 @@ def analyze_publication_risk(
         dimensions=dims,
         top_risks=top_risks,
         mitigation_plan=mitigations,
-        estimated_success_probability=success_prob,
+        # No real basis for a predicted publication-success probability —
+        # Phase 0 removed the fabricated formula. See AUDIT_PHASE0.md.
+        estimated_success_probability=None,
     )

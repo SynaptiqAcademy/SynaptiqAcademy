@@ -608,7 +608,32 @@ class TestStatisticalReviewer:
 # 9. Journal Matcher
 # ══════════════════════════════════════════════════════════════════════════════
 
+from db import get_db
+from repo.security_context import SecurityContext
+from repo.shim import DBProxy
+
+_MED_JOURNAL_FIXTURES = [
+    {"title": "Journal of Clinical Medicine Test", "publisher": "Test Pub", "quartile": "Q1",
+     "open_access": True, "subjects": ["medicine", "clinical"], "source": "openalex"},
+]
+
+
+async def _seeded_journals_db(extra=None):
+    db = DBProxy(get_db(), SecurityContext.system())
+    docs = list(_MED_JOURNAL_FIXTURES) + (extra or [])
+    res = await db.journals.insert_many(docs)
+    return db, list(res.inserted_ids)
+
+
+async def _cleanup_journals(db, ids):
+    if ids:
+        await db.journals.delete_many({"_id": {"$in": ids}})
+
+
 class TestJournalMatcher:
+    """Phase 0: candidate journals come from the live `journals` collection,
+    not a hardcoded list — see services/manuscript/journal_matcher.py."""
+
     def test_infer_discipline_medicine(self):
         from services.manuscript.journal_matcher import infer_discipline
         text = "patient diagnosis treatment disease clinical hospital"
@@ -623,38 +648,65 @@ class TestJournalMatcher:
         from services.manuscript.journal_matcher import infer_discipline
         assert infer_discipline("anything", ai_discipline="psychology") == "psychology"
 
-    def test_recommend_journals_returns_list(self):
+    async def test_recommend_journals_returns_real_records(self):
         from services.manuscript.journal_matcher import recommend_journals
-        results = recommend_journals(_MINIMAL_TEXT, "medicine", 72.0)
-        assert len(results) >= 1
+        db, ids = await _seeded_journals_db()
+        try:
+            results = await recommend_journals(_MINIMAL_TEXT, "medicine", 72.0, db=db)
+            assert len(results) >= 1
+            assert results[0].name == "Journal of Clinical Medicine Test"
+        finally:
+            await _cleanup_journals(db, ids)
 
-    def test_journals_are_journal_match_objects(self):
+    async def test_journals_are_journal_match_objects(self):
         from services.manuscript.journal_matcher import recommend_journals
         from services.manuscript.models import JournalMatch
-        results = recommend_journals(_MINIMAL_TEXT, "AI", 75.0)
-        for j in results:
-            assert isinstance(j, JournalMatch)
+        db, ids = await _seeded_journals_db()
+        try:
+            results = await recommend_journals(_MINIMAL_TEXT, "medicine", 75.0, db=db)
+            for j in results:
+                assert isinstance(j, JournalMatch)
+        finally:
+            await _cleanup_journals(db, ids)
 
-    def test_ai_journals_merged(self):
+    async def test_ai_suggested_journal_kept_only_if_real(self):
+        # Phase 0: an LLM-suggested journal is only surfaced if it matches a
+        # real record in the journals collection — otherwise it's a
+        # hallucination risk and must be dropped, not fabricated in.
         from services.manuscript.journal_matcher import recommend_journals
-        ai_journals = [{"name": "Test Journal XYZ", "quartile": "Q1",
-                        "publisher": "Test Pub", "scope_match": 0.9,
-                        "acceptance_probability": 0.15, "submission_notes": "Note",
-                        "open_access": True}]
-        results = recommend_journals(_MINIMAL_TEXT, "AI", 80.0, ai_journals)
-        names = [j.name for j in results]
-        assert "Test Journal XYZ" in names
+        db, ids = await _seeded_journals_db()
+        try:
+            ai_journals_hallucinated = [{"name": "Completely Made Up Journal", "quartile": "Q1"}]
+            results = await recommend_journals(_MINIMAL_TEXT, "medicine", 80.0, ai_journals_hallucinated, db=db)
+            names = [j.name for j in results]
+            assert "Completely Made Up Journal" not in names
 
-    def test_journal_quartile_valid(self):
-        from services.manuscript.journal_matcher import recommend_journals
-        results = recommend_journals(_MINIMAL_TEXT, "medicine", 70.0)
-        for j in results:
-            assert j.quartile in ("Q1", "Q2", "Q3", "Q4")
+            ai_journals_real = [{"name": "Journal of Clinical Medicine Test", "quartile": "Q1"}]
+            results2 = await recommend_journals(_MINIMAL_TEXT, "medicine", 80.0, ai_journals_real, db=db)
+            names2 = [j.name for j in results2]
+            assert "Journal of Clinical Medicine Test" in names2
+        finally:
+            await _cleanup_journals(db, ids)
 
-    def test_max_six_journals_returned(self):
+    async def test_no_journal_has_a_fabricated_acceptance_probability(self):
         from services.manuscript.journal_matcher import recommend_journals
-        results = recommend_journals(_MINIMAL_TEXT, "general", 75.0)
-        assert len(results) <= 6
+        db, ids = await _seeded_journals_db()
+        try:
+            results = await recommend_journals(_MINIMAL_TEXT, "medicine", 70.0, db=db)
+            for j in results:
+                assert j.acceptance_probability is None
+                assert j.impact_factor is None
+        finally:
+            await _cleanup_journals(db, ids)
+
+    async def test_max_six_journals_returned(self):
+        from services.manuscript.journal_matcher import recommend_journals
+        db, ids = await _seeded_journals_db()
+        try:
+            results = await recommend_journals(_MINIMAL_TEXT, "general", 75.0, db=db)
+            assert len(results) <= 6
+        finally:
+            await _cleanup_journals(db, ids)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
