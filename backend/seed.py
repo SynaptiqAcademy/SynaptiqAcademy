@@ -530,3 +530,14 @@ async def seed_admin_and_demo(db):
 
     # Phase 2 seed (journals, expanded conferences/funding, workspaces, manuscripts, repository)
     await seed_phase2(db)
+
+    # Phase 0 (AUDIT_PHASE0.md): tag any journal/conference/grant record that
+    # predates the is_seed/source provenance fields so it's excluded from
+    # production read/match endpoints. Idempotent and cheap — safe to run on
+    # every boot; matches only legacy hand-typed fixture records (real
+    # ingested records always carry a `source` field).
+    for _coll in (db.journals, db.conferences, db.grants):
+        await _coll.update_many(
+            {"source": {"$exists": False}},
+            {"$set": {"is_seed": True, "source": "seed"}},
+        )

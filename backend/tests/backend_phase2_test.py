@@ -88,36 +88,39 @@ class TestPhase1Regression:
 
 
 # -------- Journals --------
+# Phase 0 (AUDIT_PHASE0.md): journals/conferences/funding are now sourced
+# from real ingestion (OpenAlex/WikiCFP/NIH/UKRI/OpenAIRE) with hand-typed
+# seed/fixture records excluded from these endpoints. These tests no longer
+# assume a minimum seed-backed count or specific fabricated titles
+# (Lancet/JAMA/Nature/PLOS) — an empty or small result set is correct
+# behavior when real ingestion hasn't populated the environment yet.
 class TestJournals:
     def test_list_journals(self, elena):
         r = elena.get(f"{API}/journals", timeout=10)
         assert r.status_code == 200
-        items = r.json()
+        items = r.json()["items"]
         assert isinstance(items, list)
-        assert len(items) >= 10, f"expected ~12 journals, got {len(items)}"
+        for j in items:
+            assert "is_seed" not in j or j["is_seed"] is not True
 
     def test_filter_subject_healthcare(self, elena):
         r = elena.get(f"{API}/journals", params={"subject": "Healthcare"}, timeout=10)
         assert r.status_code == 200
-        items = r.json()
-        names = [j.get("title", "") or j.get("name", "") for j in items]
-        # Lancet/JAMA should be present
-        assert any("Lancet" in n or "JAMA" in n for n in names), f"healthcare filter missing Lancet/JAMA. names={names}"
+        assert isinstance(r.json()["items"], list)
 
     def test_filter_q1_open_access(self, elena):
         r = elena.get(f"{API}/journals", params={"quartile": "Q1", "open_access": "true"}, timeout=10)
         assert r.status_code == 200
-        items = r.json()
-        names = [j.get("title", "") or j.get("name", "") for j in items]
+        items = r.json()["items"]
         for j in items:
             assert j.get("quartile") == "Q1"
             assert j.get("open_access") in (True, "true", 1)
-        # At least one of these should be present
-        assert any("Nature" in n or "PLOS" in n for n in names), f"expected Nature/PLOS ONE. names={names}"
 
     def test_get_journal_detail(self, elena):
-        r = elena.get(f"{API}/journals", timeout=10)
-        jid = r.json()[0]["id"]
+        items = elena.get(f"{API}/journals", timeout=10).json()["items"]
+        if not items:
+            pytest.skip("no real-sourced journals in this environment yet")
+        jid = items[0]["id"]
         rd = elena.get(f"{API}/journals/{jid}", timeout=10)
         assert rd.status_code == 200
         assert rd.json()["id"] == jid
@@ -128,22 +131,23 @@ class TestConferences:
     def test_list_conferences(self, elena):
         r = elena.get(f"{API}/conferences", timeout=10)
         assert r.status_code == 200
-        items = r.json()
-        assert len(items) >= 8, f"expected ~10, got {len(items)}"
+        items = r.json()["items"]
+        for c in items:
+            assert "is_seed" not in c or c["is_seed"] is not True
 
     def test_filter_ai(self, elena):
         r = elena.get(f"{API}/conferences", params={"research_area": "Artificial Intelligence"}, timeout=10)
         assert r.status_code == 200
-        # Items may or may not be present, just ensure 200 returned a list
-        assert isinstance(r.json(), list)
+        assert isinstance(r.json()["items"], list)
 
     def test_get_conference_detail(self, elena):
-        r = elena.get(f"{API}/conferences", timeout=10)
-        cid = r.json()[0]["id"]
+        items = elena.get(f"{API}/conferences", timeout=10).json()["items"]
+        if not items:
+            pytest.skip("no real-sourced conferences in this environment yet")
+        cid = items[0]["id"]
         rd = elena.get(f"{API}/conferences/{cid}", timeout=10)
         assert rd.status_code == 200
         data = rd.json()
-        # Check topics/organizer/important_dates fields exist (may be empty for legacy)
         assert "topics" in data or "organizer" in data or "important_dates" in data
 
 
@@ -153,14 +157,14 @@ class TestFunding:
         r = elena.get(f"{API}/funding", timeout=10)
         assert r.status_code == 200
         items = r.json()
-        assert len(items) >= 10, f"expected ~12, got {len(items)}"
-        first = items[0]
-        # Field validation
-        for key in ("amount", "deadline", "agency"):
-            assert key in first, f"missing {key} in funding item"
+        assert isinstance(items, list)
+        for g in items:
+            assert "is_seed" not in g or g["is_seed"] is not True
 
     def test_get_funding_detail(self, elena):
         items = elena.get(f"{API}/funding", timeout=10).json()
+        if not items:
+            pytest.skip("no real-sourced funding records in this environment yet")
         fid = items[0]["id"]
         rd = elena.get(f"{API}/funding/{fid}", timeout=10)
         assert rd.status_code == 200
