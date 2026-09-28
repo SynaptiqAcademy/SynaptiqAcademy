@@ -1199,12 +1199,21 @@ async def startup():
             # Academic Research Record — publication <-> Synaptiq-user
             # relationship collection (Phase 1). A publication is a global
             # record; this is the many-to-one link, not a second
-            # publications store. NOT unique-DOI on `publications` itself —
-            # that index is gated on a production duplicate audit.
+            # publications store.
             await db.publication_authors.create_index(
                 [("publication_id", 1), ("synaptiq_user_id", 1)], unique=True)
             await db.publication_authors.create_index([("synaptiq_user_id", 1)])
-            await db.publications.create_index([("doi", 1)], sparse=True)
+            # Global DOI identity constraint (Phase 1) — confirmed zero
+            # duplicate normalized DOIs in production before this was added.
+            # Deliberately NOT (owner_id, doi): a publication is one global
+            # record regardless of who imported/confirmed it; per-user
+            # authorship is publication_authors above, not part of this key.
+            try:
+                await db.publications.drop_index("doi_1")
+            except Exception:
+                pass  # old non-unique sparse index doesn't exist in a fresh env
+            await db.publications.create_index(
+                [("doi", 1)], unique=True, sparse=True, name="doi_unique_sparse")
             await db.publications.create_index([("orcid_put_code", 1)], sparse=True)
             await db.publications.create_index([("title_norm", 1)])
             # Research File Layer
