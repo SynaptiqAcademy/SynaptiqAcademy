@@ -49,6 +49,12 @@ async def complete_onboarding(payload: OnboardingComplete, user: dict = Depends(
     db = DBProxy(db, SecurityContext.from_user(user))
 
     update = payload.model_dump()
+    # orcid is OAuth-only (see ProfileUpdate's own field exclusion, models.py) —
+    # users.orcid is a dict {orcid_id, access_token, ...} once connected via
+    # OAuth; OnboardingComplete.orcid is a legacy plain-string field. Writing
+    # it here would silently clobber an already-connected OAuth dict back to
+    # a bare string if a user connects ORCID before finishing onboarding.
+    update.pop("orcid", None)
     update["full_name"] = f"{payload.first_name} {payload.last_name}".strip()
     update["onboarded"] = True
     await db.users.update_one({"_id": ObjectId(user["id"])}, {"$set": update})

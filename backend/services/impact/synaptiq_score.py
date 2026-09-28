@@ -376,22 +376,22 @@ async def _component_profile_completeness(uid: str, db) -> dict:
             "orcid":           1,
             "orcid_verified":  1,
             "avatar_url":      1,
-            "bio":             1,
+            "biography":       1,
             "institution":     1,
             "research_areas":  1,
             "research_keywords": 1,
-            "research_methods":  1,
+            "methods":         1,
         },
     )
     u = u_doc or {}
 
     orcid_verified  = bool(u.get("orcid_verified") or u.get("orcid"))
     has_avatar      = bool(u.get("avatar_url"))
-    has_bio         = bool((u.get("bio") or "").strip())
+    has_bio         = bool((u.get("biography") or "").strip())
     has_institution = bool((u.get("institution") or "").strip())
     has_areas       = bool(u.get("research_areas"))
     has_keywords    = bool(u.get("research_keywords"))
-    has_methods     = bool(u.get("research_methods"))
+    has_methods     = bool(u.get("methods"))
 
     pts_orcid       = 50 if orcid_verified  else 0
     pts_avatar      = 25 if has_avatar      else 0

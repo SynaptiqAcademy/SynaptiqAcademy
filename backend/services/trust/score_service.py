@@ -197,7 +197,7 @@ async def compute_trust_score(user_id: str, db) -> dict:
     }
 
     # ── 9. Profile Completeness (5) ───────────────────────────────────────────
-    profile_fields = ["full_name", "institution", "bio", "country", "department", "position",
+    profile_fields = ["full_name", "institution", "biography", "country", "department", "position",
                       "research_interests", "expertise", "orcid"]
     completed = sum(1 for f in profile_fields if user and user.get(f)) if user else 0
     profile_score = _pct(completed, len(profile_fields))

@@ -39,7 +39,13 @@ _LABELS = [(90, "Exemplary"), (75, "Strong"), (60, "Moderate"), (40, "Developing
 
 
 def _field_present(profile: dict, key: str) -> bool:
+    # The real users-document field is `biography`, not `bio` — fall back to
+    # it so this actually reads real profile data; still accepts a raw
+    # `bio` key too, for callers (and existing tests) that pass an ad-hoc
+    # dict shaped that way rather than a full user document.
     val = profile.get(key)
+    if key == "bio" and not val:
+        val = profile.get("biography")
     if val is None or val == "" or val == [] or val == {}:
         return False
     if key == "bio" and len(str(val)) < 50:

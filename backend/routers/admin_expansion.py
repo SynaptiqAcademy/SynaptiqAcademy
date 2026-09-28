@@ -911,7 +911,7 @@ async def data_quality_scores():
     ) = await asyncio.gather(
         db.users.count_documents({"full_name": {"$exists": True, "$nin": [None, ""]}}),
         db.users.count_documents({"email": {"$exists": True, "$nin": [None, ""]}}),
-        db.users.count_documents({"bio": {"$exists": True, "$nin": [None, ""]}}),
+        db.users.count_documents({"biography": {"$exists": True, "$nin": [None, ""]}}),
         db.users.count_documents({"avatar_url": {"$exists": True, "$nin": [None, ""]}}),
         db.users.count_documents({"orcid.orcid_id": {"$exists": True, "$ne": None}}),
         db.users.count_documents({"institution_id": {"$exists": True, "$nin": [None, ""]}}),

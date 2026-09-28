@@ -42,7 +42,9 @@ def generate_profile_alerts(profile: dict) -> list[Alert]:
             action="Connect ORCID", action_url="/profile/settings#orcid",
         ))
 
-    bio = profile.get("bio") or ""
+    # Real users-document field is `biography`; also accept a raw `bio` key
+    # for ad-hoc callers/tests that pass a dict shaped that way.
+    bio = profile.get("biography") or profile.get("bio") or ""
     if len(bio) < 50:
         alerts.append(Alert(
             code="PROFILE_MISSING_BIO", level="info", category="profile",

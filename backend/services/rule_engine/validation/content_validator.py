@@ -9,10 +9,10 @@ def validate_profile_completeness(profile: dict) -> dict[str, Any]:
     """Returns per-field completeness and an overall score (0–100)."""
     checks: list[tuple[str, str, int, bool]] = [
         ("avatar", "avatar_url", 10, bool(profile.get("avatar_url"))),
-        ("biography", "bio", 10, bool(profile.get("bio") and len(profile.get("bio", "")) >= 50)),
+        ("biography", "biography", 10, bool(profile.get("biography") and len(profile.get("biography", "")) >= 50)),
         ("institution", "institution", 10, bool(profile.get("institution"))),
         ("keywords", "research_keywords", 10, bool(profile.get("research_keywords"))),
-        ("methods", "research_methods", 5, bool(profile.get("research_methods"))),
+        ("methods", "methods", 5, bool(profile.get("methods"))),
         ("social_links", "social_links", 5, bool(profile.get("social_links"))),
         ("availability", "availability", 5, bool(profile.get("availability"))),
         ("orcid", "orcid_id", 15, bool(profile.get("orcid_id"))),
