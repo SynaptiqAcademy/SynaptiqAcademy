@@ -528,6 +528,21 @@ async def seed_admin_and_demo(db):
     await db.messages.create_index("conversation_id")
     await db.notifications.create_index("user_id")
 
+
+async def seed_content_and_tag_legacy(db):
+    """Journals/conferences/grants/workspaces/manuscripts content seed, plus
+    the is_seed provenance-tagging migration (AUDIT_PHASE0.md).
+
+    Deliberately independent of super-admin/demo-user seeding — this is real
+    content data, not an admin-account concern, and must keep working even
+    when SUPER_ADMIN_PASSWORD is missing and seed_admin_and_demo() can't run.
+    Called as its own top-level startup step (see server.py) so a failure in
+    one does not block the other. In production, demo users are never
+    created (`if not _IS_PROD` gate in seed_admin_and_demo), so the
+    demo-workspace sub-seed inside seed_phase2 is a no-op there regardless of
+    ordering; in dev, it's self-healing across boots since seed_phase2's own
+    `count == 0` gates re-attempt on the next startup.
+    """
     # Phase 2 seed (journals, expanded conferences/funding, workspaces, manuscripts, repository)
     await seed_phase2(db)
 

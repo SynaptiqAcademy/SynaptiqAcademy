@@ -139,7 +139,7 @@ import agents.teaching_agent      # noqa: F401
 import agents.institution_agent   # noqa: F401
 import agents.career_agent        # noqa: F401
 from routers import copilot as copilot_router
-from seed import seed_admin_and_demo, ensure_super_admin_exists
+from seed import seed_admin_and_demo, ensure_super_admin_exists, seed_content_and_tag_legacy
 from services.storage_service import init_storage
 from repo.shim import make_db_proxy
 
@@ -675,6 +675,14 @@ async def startup():
         )
         return
 
+    # ── Startup tasks below each have their OWN error boundary ─────────────────
+    # Each is independent: a failure in one (e.g. AUTH-010 aborting super-admin
+    # seeding because SUPER_ADMIN_PASSWORD isn't configured) must not cancel
+    # the others — discovery indexes, the scheduler, and later migrations all
+    # need to run regardless of whether admin/demo seeding succeeded. See
+    # AUDIT_PHASE0.md for the incident this fixes: one early AUTH-010
+    # exception here used to skip everything below it, including the
+    # discovery scheduler, for every single boot.
     try:
         # Drop legacy direct-message collection if present (old schema, no conversations)
         if "messages" in await db.list_collection_names():
@@ -682,14 +690,35 @@ async def startup():
             if sample and ("recipient_id" in sample or "sender_id" in sample) and "attachment_ids" not in sample:
                 await db.messages.drop()
                 logger.info("Dropped legacy messages collection (old schema)")
+    except Exception as msg_e:
+        logger.warning("Legacy messages collection cleanup warning: %s", msg_e)
+
+    try:
         # Phase XII: verify protected super-admin FIRST, before anything else
         sa_status = await ensure_super_admin_exists(db)
         logger.info("Super-admin check: action=%s rogue_stripped=%d",
                     sa_status["action"], sa_status["rogue_stripped"])
+    except RuntimeError as sa_cfg_e:
+        # AUTH-010: SUPER_ADMIN_PASSWORD missing/default in production. This is
+        # a configuration problem, not a platform failure — log it clearly and
+        # move on. The protected admin account simply won't be created/healed
+        # this boot; every other startup task still runs.
+        logger.error("Super-admin verification skipped — configuration error: %s", sa_cfg_e)
+    except Exception as sa_e:
+        logger.exception("Super-admin verification failed: %s", sa_e)
 
+    try:
         await seed_admin_and_demo(db)
-        logger.info("Seed complete")
+        logger.info("Admin/demo seed complete")
+    except RuntimeError as seed_cfg_e:
+        # Same AUTH-010 guard as above — seed_admin_and_demo() re-validates
+        # SUPER_ADMIN_PASSWORD independently. Skip only admin/demo-user
+        # seeding; content seeding, indexes, and the scheduler are unaffected.
+        logger.error("Admin/demo seed skipped — configuration error: %s", seed_cfg_e)
+    except Exception as seed_e:
+        logger.exception("Admin/demo seed failed: %s", seed_e)
 
+    try:
         # ── Demo-data isolation migration (idempotent) ────────────────────────
         # Tag all records created by known demo accounts with is_demo:True so
         # they are excluded from every production-facing API query.
@@ -722,7 +751,20 @@ async def startup():
                 "Demo isolation: tagged %d demo user(s) and their collaborations/projects",
                 len(demo_ids_to_tag),
             )
+    except Exception as demo_iso_e:
+        logger.warning("Demo isolation migration warning: %s", demo_iso_e)
 
+    try:
+        # Real content seed (journals/conferences/grants/workspaces/manuscripts)
+        # + the is_seed provenance-tagging migration (AUDIT_PHASE0.md).
+        # Independent of admin/demo-user seeding on purpose — see
+        # seed_content_and_tag_legacy()'s docstring in seed.py.
+        await seed_content_and_tag_legacy(db)
+        logger.info("Content seed + legacy provenance tagging complete")
+    except Exception as content_e:
+        logger.exception("Content seed/tagging migration failed: %s", content_e)
+
+    try:
         # ── Core uniqueness indexes — run BEFORE any data inserts ─────────
         try:
             await db.users.create_index([("email", 1)], unique=True)

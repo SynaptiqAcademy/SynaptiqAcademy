@@ -619,6 +619,16 @@ _MED_JOURNAL_FIXTURES = [
 
 
 async def _seeded_journals_db(extra=None):
+    # This test file mixes sync TestClient-based tests (their own event loop)
+    # with these direct-Motor async tests (pytest-asyncio's function-scoped
+    # loop) — the cached db.py client can be left bound to a now-different
+    # loop. Force a fresh, current-loop-bound client rather than relying on
+    # get_db()'s "is closed" self-heal, which doesn't catch "different but
+    # still open" loops.
+    import db as _db_module
+    _db_module._client = None
+    _db_module._db = None
+    _db_module._db_proxy = None
     db = DBProxy(get_db(), SecurityContext.system())
     docs = list(_MED_JOURNAL_FIXTURES) + (extra or [])
     res = await db.journals.insert_many(docs)
