@@ -59,6 +59,17 @@ async def get_or_create_verification_profile(user_id: str, db) -> dict:
     return _serialize(default)
 
 
+async def _pub_count_for_expertise(db, user_id: str) -> int:
+    """Canonical Research Record publication count for Expertise verification
+    — see services/research_record/authors.py::count_publications_for_user
+    for why this isn't a plain db.publications.count_documents() call
+    (author_ids was never a real field; the real relationship is
+    publication_authors, with an owner_id fallback for ORCID-imported
+    publications that predate that relationship)."""
+    from services.research_record.authors import count_publications_for_user
+    return await count_publications_for_user(db, user_id)
+
+
 async def compute_verification_profile(user_id: str, db) -> dict:
     """Recompute all verification flags, trust score and level for a user."""
     now = datetime.now(timezone.utc)
@@ -85,7 +96,7 @@ async def compute_verification_profile(user_id: str, db) -> dict:
             "$or": [{"created_by": user_id}, {"participants": user_id}]
         }),
         db.teaching_lessons.count_documents({"created_by": user_id}),
-        db.publications.count_documents({"author_ids": user_id}),
+        _pub_count_for_expertise(db, user_id),
         db.verification_profiles.find_one({"user_id": user_id}),
         db.verification_evidence.count_documents({"user_id": user_id, "status": "approved"}),
     )
@@ -193,16 +204,24 @@ async def compute_verification_profile(user_id: str, db) -> dict:
         "grant_verified": grant_verified,
         "teaching_verified": teaching_verified,
         "verification_level": verification_level,
-        "updated_at": now,
     }
     if level_changed:
         update_fields["verified_at"] = now
 
-    await db.verification_profiles.update_one(
-        {"user_id": user_id},
-        {"$set": update_fields, "$setOnInsert": {"created_at": now, "user_id": user_id}},
-        upsert=True,
+    # No unnecessary writes: skip the update entirely if nothing computed
+    # actually differs from what's already stored (this function may now be
+    # called on every GET /api/verification/me, not just an explicit user
+    # action — see routers/verification.py).
+    unchanged = existing_profile is not None and all(
+        existing_profile.get(k) == v for k, v in update_fields.items()
     )
+    if not unchanged:
+        update_fields["updated_at"] = now
+        await db.verification_profiles.update_one(
+            {"user_id": user_id},
+            {"$set": update_fields, "$setOnInsert": {"created_at": now, "user_id": user_id}},
+            upsert=True,
+        )
 
     # ── History + badges on level change ──────────────────────────────────────
     if level_changed:

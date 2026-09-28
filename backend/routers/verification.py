@@ -73,7 +73,10 @@ async def get_my_verification_profile(
 ):
     db = make_db_proxy(db, user)
     from services.verification import profile_service
-    profile = await profile_service.get_or_create_verification_profile(user["id"], db)
+    # Recomputes on every read rather than returning a possibly-stale (or
+    # never-computed) default — compute_verification_profile() is
+    # idempotent and skips the write when nothing actually changed.
+    profile = await profile_service.compute_verification_profile(user["id"], db)
     return profile
 
 

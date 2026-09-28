@@ -67,6 +67,22 @@ async def get_publication_ids_for_user(db, synaptiq_user_id: str) -> list[str]:
     return [r["publication_id"] for r in rows]
 
 
+async def count_publications_for_user(db, synaptiq_user_id: str) -> int:
+    """Distinct publication count for a user — the canonical relationship
+    is publication_authors, but services/orcid/sync.py (the primary real
+    writer of `publications`) sets `owner_id` directly and never creates a
+    publication_authors row, so a real ORCID-imported publication would be
+    invisible to a publication_authors-only count. Union both paths,
+    deduplicated by publication id, so a doc reachable through either (or
+    both) is counted exactly once — never double-counted for co-authorship
+    rows on the same publication.
+    """
+    linked_ids = set(await get_publication_ids_for_user(db, synaptiq_user_id))
+    owned_ids = await db.publications.distinct("_id", {"owner_id": synaptiq_user_id})
+    linked_ids.update(str(oid) for oid in owned_ids)
+    return len(linked_ids)
+
+
 async def get_users_for_publication(db, publication_id: str) -> list[dict]:
     return await db.publication_authors.find(
         {"publication_id": publication_id}

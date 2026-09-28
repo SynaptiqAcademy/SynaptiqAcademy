@@ -25,22 +25,36 @@ export function VerificationStatusCard({ verification }) {
         {ITEMS.map(({ key, label }) => {
           const done = !!verification[key];
           return (
-            <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 12, color: TEXT_SECONDARY }}>{label}</span>
-              {done ? (
-                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: EMERALD }}>
-                  Verified <CheckCircle2 size={13} />
-                </span>
-              ) : (
-                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: AMBER }}>
-                  Pending <Clock size={12} />
-                </span>
+            <div key={key} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 12, color: TEXT_SECONDARY }}>{label}</span>
+                {done ? (
+                  <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: EMERALD }}>
+                    Verified <CheckCircle2 size={13} />
+                  </span>
+                ) : (
+                  <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: AMBER }}>
+                    Pending <Clock size={12} />
+                  </span>
+                )}
+              </div>
+              {/* Institution verification is the one status with its own
+                  request workflow (admin-reviewed) — surface it directly
+                  here rather than leaving the user to discover /trust/institution
+                  on their own. */}
+              {key === "institution_verified" && !done && (
+                <Link
+                  to="/trust/institution"
+                  style={{ fontSize: 11, color: TEXT_MUTED, textDecoration: "underline" }}
+                >
+                  Request institution verification (requires admin approval)
+                </Link>
               )}
             </div>
           );
         })}
       </div>
-      <Link to="/trust/my-verifications" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600, color: NAVY, textDecoration: "none", marginTop: 12 }}>
+      <Link to="/verification" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600, color: NAVY, textDecoration: "none", marginTop: 12 }}>
         View all verifications <ArrowRight size={11} />
       </Link>
     </Card>

@@ -157,6 +157,16 @@ async def callback(code: Optional[str] = None, state: Optional[str] = None,
         await emit_reputation_event(uid_str, "orcid_verified", "orcid", orcid_id)
     except Exception as _rep_e:
         logger.warning("ORCID reputation event failed: %s", _rep_e)
+    # Refresh verification_profiles.orcid_verified (and any other flag that
+    # depends on it, e.g. identity_verified) now that users.orcid is set —
+    # previously only a separate, manual "Recompute" action on /verification
+    # did this, so a successful OAuth connection alone never updated the
+    # Academic Passport's ORCID Connection status.
+    try:
+        from services.verification.profile_service import compute_verification_profile
+        await compute_verification_profile(uid_str, db)
+    except Exception as _verif_e:
+        logger.warning("ORCID verification-profile recompute failed: %s", _verif_e)
     return resp
 
 
