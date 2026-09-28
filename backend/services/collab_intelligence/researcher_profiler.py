@@ -23,7 +23,8 @@ _STAGE_KEYWORDS: dict[CareerStage, list[str]] = {
 
 
 def _infer_career_stage(user: dict) -> CareerStage:
-    position = (user.get("position") or user.get("academic_position") or "").lower()
+    position = (user.get("position") or user.get("academic_position")
+                or user.get("academic_role") or "").lower()
     user_type = (user.get("user_type") or "").lower()
     combined = f"{position} {user_type}"
 
@@ -41,9 +42,17 @@ def _safe_list(val: Any) -> list[str]:
     return []
 
 
+def _pub_count(user: dict) -> int:
+    """The canonical field is `publications_count` (plural) — see
+    auth_utils.serialize_user / models.ProfileUpdate. `publication_count`
+    (singular) is not a real field on user documents and always reads as 0;
+    kept as a secondary fallback only in case some caller sets it directly."""
+    return int(user.get("publications_count") or user.get("publication_count") or 0)
+
+
 def _productivity_score(user: dict) -> float:
     """Normalised score 0-1 based on publication + citation volume."""
-    pubs    = int(user.get("publication_count", 0) or 0)
+    pubs    = _pub_count(user)
     cites   = int(user.get("citation_count", 0) or 0)
     h       = float(user.get("h_index", 0) or 0)
 
@@ -55,7 +64,7 @@ def _productivity_score(user: dict) -> float:
 
 def _quality_score(user: dict) -> float:
     """Proxy for publication quality via h-index relative to volume."""
-    pubs = int(user.get("publication_count", 0) or 0)
+    pubs = _pub_count(user)
     h    = float(user.get("h_index", 0) or 0)
     if pubs == 0:
         return 0.0
@@ -70,8 +79,17 @@ def _impact_score(user: dict) -> float:
     return round(min((cites / 500.0 * 0.5 + h / 20.0 * 0.5), 1.0), 3)
 
 
-def build_researcher_profile(user: dict) -> ResearcherProfile:
-    """Convert a MongoDB user document into a ResearcherProfile."""
+def build_researcher_profile(user: dict, reputation_score: float | None = None) -> ResearcherProfile:
+    """Convert a MongoDB user document into a ResearcherProfile.
+
+    `reputation_score` (0-100) is optional because it lives in a separate
+    `recommendation_profiles` collection, not on the user document itself —
+    callers that have already loaded it (e.g. services/recommendation/
+    matchers/researchers.py) can pass it straight through instead of this
+    function reaching into a collection it otherwise has no reason to know
+    about. Falls back to a `reputation_score` key on `user` for callers that
+    merge it in themselves, then to 0.
+    """
     uid   = str(user.get("_id") or user.get("id") or user.get("user_id", ""))
     name  = user.get("full_name") or user.get("name") or f"{user.get('first_name','')} {user.get('last_name','')}".strip()
 
@@ -143,7 +161,7 @@ def build_researcher_profile(user: dict) -> ResearcherProfile:
         statistical_expertise=stats,
         programming_skills=progs,
         h_index=float(user.get("h_index", 0) or 0),
-        publication_count=int(user.get("publication_count", 0) or 0),
+        publication_count=_pub_count(user),
         citation_count=int(user.get("citation_count", 0) or 0),
         collaboration_count=collab_count,
         international_collab_ratio=intl_ratio,
@@ -152,5 +170,9 @@ def build_researcher_profile(user: dict) -> ResearcherProfile:
         productivity_score=productivity,
         quality_score=quality,
         impact_score=impact,
+        reputation_score=float(
+            reputation_score if reputation_score is not None
+            else (user.get("reputation_score") or 0)
+        ),
         competency_graph=competency,
     )

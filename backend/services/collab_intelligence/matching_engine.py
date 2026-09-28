@@ -8,16 +8,20 @@ from __future__ import annotations
 from .models import CareerStage, CollabMatch, CollabType, ResearcherProfile
 
 # ── Dimension weights (sum to 1.0) ────────────────────────────────────────────
+# citation_overlap and diversity_score each ceded 0.02 to the new
+# reputation_compatibility factor (migrated from the now-deprecated
+# services/recommendation/matchers/researchers.py — see Phase 1 consolidation).
 _WEIGHTS = {
     "research_similarity":         0.25,
     "complementarity":             0.20,
     "methodological_compatibility":0.15,
     "publication_synergy":         0.10,
-    "citation_overlap":            0.08,
+    "citation_overlap":            0.06,
     "grant_compatibility":         0.07,
-    "diversity_score":             0.07,
+    "diversity_score":             0.05,
     "availability_compatibility":  0.05,
     "career_stage_compatibility":  0.03,
+    "reputation_compatibility":    0.04,
 }
 
 _CAREER_COMPAT: dict[tuple[CareerStage, CareerStage], float] = {
@@ -135,6 +139,19 @@ def _availability_compat(a: ResearcherProfile, b: ResearcherProfile) -> float:
     return round((a.availability * b.availability) ** 0.5, 3)
 
 
+def _reputation_compat(a: ResearcherProfile, b: ResearcherProfile) -> float:
+    """Higher combined reputation raises compatibility — a strong-reputation
+    researcher makes any pairing more credible, regardless of the other
+    party's own standing (mirrors the additive treatment recommendation/
+    matchers/researchers.py used before its reputation term was migrated
+    here). Neutral 0.5 when neither side has a recorded score yet."""
+    a_r = (a.reputation_score or 0.0) / 100.0
+    b_r = (b.reputation_score or 0.0) / 100.0
+    if not a_r and not b_r:
+        return 0.5
+    return round(min((a_r + b_r) / 2.0 + min(a_r, b_r) * 0.3, 1.0), 3)
+
+
 def _career_stage_compat(a: ResearcherProfile, b: ResearcherProfile) -> float:
     pair = (a.career_stage, b.career_stage)
     if pair in _CAREER_COMPAT:
@@ -207,6 +224,7 @@ def match_researchers(a: ResearcherProfile, b: ResearcherProfile) -> CollabMatch
     div   = _diversity_score(a, b)
     avail = _availability_compat(a, b)
     stage = _career_stage_compat(a, b)
+    rep   = _reputation_compat(a, b)
 
     overall = (
         sim   * _WEIGHTS["research_similarity"] +
@@ -217,7 +235,8 @@ def match_researchers(a: ResearcherProfile, b: ResearcherProfile) -> CollabMatch
         grant * _WEIGHTS["grant_compatibility"] +
         div   * _WEIGHTS["diversity_score"] +
         avail * _WEIGHTS["availability_compatibility"] +
-        stage * _WEIGHTS["career_stage_compatibility"]
+        stage * _WEIGHTS["career_stage_compatibility"] +
+        rep   * _WEIGHTS["reputation_compatibility"]
     )
 
     collab_type = _infer_collab_type(a, b, sim)
@@ -238,6 +257,7 @@ def match_researchers(a: ResearcherProfile, b: ResearcherProfile) -> CollabMatch
         diversity_score=div,
         availability_compatibility=avail,
         career_stage_compatibility=stage,
+        reputation_compatibility=rep,
         shared_keywords=list(shared_kws),
         complementary_skills=list(comp_skills),
         explanation=explanation,
@@ -249,8 +269,22 @@ def rank_matches(
     source: ResearcherProfile,
     candidates: list[ResearcherProfile],
     top_n: int = 10,
+    dismissed_ids: set[str] | None = None,
 ) -> list[CollabMatch]:
-    """Rank all candidates by compatibility with source, return top_n."""
+    """Rank all candidates by compatibility with source, return top_n.
+
+    `dismissed_ids` — candidates the viewer previously dismissed for THIS
+    source (a pairwise, viewer-specific signal that doesn't belong in the
+    symmetric per-pair scoring above) get their overall_score knocked down
+    to 20% of its computed value, same penalty services/recommendation/
+    matchers/researchers.py applied before this became the canonical engine
+    — surfaced last rather than hidden outright, in case the fit is strong
+    enough to warrant a second look.
+    """
     matches = [match_researchers(source, c) for c in candidates if c.user_id != source.user_id]
+    if dismissed_ids:
+        for m in matches:
+            if m.researcher_b_id in dismissed_ids:
+                m.overall_score = round(m.overall_score * 0.2, 3)
     matches.sort(key=lambda m: -m.overall_score)
     return matches[:top_n]

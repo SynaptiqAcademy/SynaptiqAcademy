@@ -169,6 +169,7 @@ class ResearcherProfile:
     productivity_score: float          = 0.0
     quality_score: float               = 0.0
     impact_score: float                = 0.0
+    reputation_score: float            = 0.0   # 0-100 scale, see recommendation_profiles
     competency_graph: CompetencyGraph | None = None
 
     def all_interests(self) -> set[str]:
@@ -204,6 +205,7 @@ class ResearcherProfile:
             "productivity_score": round(self.productivity_score, 3),
             "quality_score": round(self.quality_score, 3),
             "impact_score": round(self.impact_score, 3),
+            "reputation_score": round(self.reputation_score, 3),
             "competency_graph": self.competency_graph.to_dict() if self.competency_graph else None,
         }
 
@@ -222,6 +224,7 @@ class CollabMatch:
     diversity_score: float             = 0.0
     availability_compatibility: float  = 0.0
     career_stage_compatibility: float  = 0.5
+    reputation_compatibility: float    = 0.0
     shared_keywords: list[str]         = field(default_factory=list)
     complementary_skills: list[str]    = field(default_factory=list)
     explanation: str                   = ""
@@ -242,6 +245,7 @@ class CollabMatch:
                 "diversity_score": round(self.diversity_score, 3),
                 "availability_compatibility": round(self.availability_compatibility, 3),
                 "career_stage_compatibility": round(self.career_stage_compatibility, 3),
+                "reputation_compatibility": round(self.reputation_compatibility, 3),
             },
             "shared_keywords": self.shared_keywords,
             "complementary_skills": self.complementary_skills,
