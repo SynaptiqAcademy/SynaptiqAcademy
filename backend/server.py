@@ -1124,6 +1124,27 @@ async def startup():
             await db.verification_profiles.create_index([("user_id", 1)], unique=True)
             await db.verification_profiles.create_index([("verification_level", -1)])
             await db.verification_profiles.create_index([("verification_score", -1)])
+            # Trust Center (P1 Phase 2 audit) — trust_passports and
+            # trust_verifications are real, actively-read-by-user_id
+            # collections (routers/trust_center.py, services/trust/
+            # {integrity_service,score_service,passport_service}.py,
+            # services/timeline/*) that had NO index at all in server.py
+            # before this. trust_passports is a confirmed 1-doc-per-user
+            # profile (matches the same shape as verification_profiles/
+            # reputation_scores/research_reputation above — unique is safe,
+            # verified zero duplicates in production first). trust_verifications
+            # is a log of per-claim records (one user can have an "orcid" row
+            # AND a "department" row AND a "researcher_identity" row) — the
+            # existing find_one({user_id, verification_type}) + insert/update
+            # pattern at routers/trust_center.py:201,845 already assumes
+            # (user_id, verification_type) is unique; this makes the DB
+            # enforce what the app layer only assumed, closing the same class
+            # of race-condition gap fixed earlier for grant_team_members /
+            # collaboration_requests.
+            await db.trust_passports.create_index([("user_id", 1)], unique=True)
+            await db.trust_verifications.create_index(
+                [("user_id", 1), ("verification_type", 1)], unique=True)
+            await db.trust_verifications.create_index([("user_id", 1), ("status", 1)])
             await db.verification_requests.create_index([("user_id", 1)])
             await db.verification_requests.create_index([("status", 1)])
             await db.verification_requests.create_index([("created_at", -1)])
