@@ -253,6 +253,8 @@ async def list_users(
     cursor: Optional[str] = Query(default=None),
     _user: dict = Depends(get_current_user),
 ):
+    from services.network.discovery_engine import _discovery_exclusions, _to_object_id
+
     db = get_db()
     db = DBProxy(db, SecurityContext.system())
 
@@ -264,6 +266,14 @@ async def list_users(
         # never real researchers to discover or connect with.
         **REAL_CUSTOMER_FILTER,
     }
+
+    # Self-exclusion + the same block/opt-out exclusion already enforced on
+    # /api/network/people and /api/profiles/directory — this endpoint was
+    # missing both (Phase 3 People Discovery audit). Held separately from
+    # `query["_id"]` here and merged in below, alongside cursor pagination,
+    # so the two don't clobber each other (both target `_id`).
+    excluded = await _discovery_exclusions(db, _user["id"])
+    id_nin = [ObjectId(_user["id"])] + [_to_object_id(x) for x in excluded]
 
     # ── Full-text search ──────────────────────────────────────────────────────
     if q:
@@ -334,11 +344,13 @@ async def list_users(
         query["publications_count"] = {"$gte": min_publications}
 
     # ── Cursor pagination ─────────────────────────────────────────────────────
+    id_filter: dict = {"$nin": id_nin}
     if cursor:
         try:
-            query["_id"] = {"$gt": ObjectId(cursor)}
+            id_filter["$gt"] = ObjectId(cursor)
         except Exception:
             pass
+    query["_id"] = id_filter
 
     docs = await db.users.find(query).sort("_id", 1).limit(limit).to_list(limit)
     items = [serialize_public_user(u) for u in docs]

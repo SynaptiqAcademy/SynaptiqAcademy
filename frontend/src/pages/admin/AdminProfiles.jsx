@@ -12,8 +12,8 @@ export default function AdminProfiles() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    api.get("/public-profiles/directory?limit=50")
-      .then((r) => setProfiles(r.data?.profiles || []))
+    api.get("/profiles/directory?limit=50")
+      .then((r) => setProfiles(r.data?.items || []))
       .catch((e) => setErr(e?.response?.data?.detail || "Failed to load profiles"))
       .finally(() => setLoading(false));
   }, []);
@@ -30,7 +30,7 @@ export default function AdminProfiles() {
     { key: "full_name", label: "Name", render: (v) => <span className="font-medium text-slate-800">{v || "—"}</span> },
     { key: "institution", label: "Institution", render: (v) => v || "—" },
     {
-      key: "research_areas",
+      key: "research_interests",
       label: "Research Areas",
       render: (v) => (v || []).slice(0, 2).join(", ") || "—",
     },

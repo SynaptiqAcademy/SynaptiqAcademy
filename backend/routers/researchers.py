@@ -218,8 +218,15 @@ async def discover_sections(user: dict = Depends(get_current_user)):
     saved_raw = await db.saved_researchers.find({"user_id": uid}, {"saved_user_id": 1}).to_list(500)
     saved_ids = {s["saved_user_id"] for s in saved_raw}
 
+    # Same block/opt-out exclusion already enforced on /api/network/people
+    # and /api/profiles/directory — this endpoint was missing it (Phase 3
+    # People Discovery audit).
+    from services.network.discovery_engine import _discovery_exclusions, _to_object_id
+    excluded = await _discovery_exclusions(db, uid)
+    id_nin = [ObjectId(uid)] + [_to_object_id(x) for x in excluded]
+
     base_filter = {
-        "_id": {"$ne": ObjectId(uid)},
+        "_id": {"$nin": id_nin},
         "is_demo": {"$ne": True},
         "profile_visibility": {"$ne": "private"},
         **REAL_CUSTOMER_FILTER,

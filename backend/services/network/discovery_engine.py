@@ -71,7 +71,12 @@ _INST_FIELDS = {
 # ── People search ────────────────────────────────────────────────────────────
 
 async def search_people(db, filters: dict, page: int = 1, limit: int = 20, viewer_id: str | None = None) -> dict:
-    query: dict = {"profile_visibility": {"$ne": "private"}}
+    from services.permissions import REAL_CUSTOMER_FILTER
+    query: dict = {
+        "profile_visibility": {"$ne": "private"},
+        "is_demo": {"$ne": True},
+        **REAL_CUSTOMER_FILTER,
+    }
 
     if q := filters.get("q"):
         terms = q.strip()
@@ -98,8 +103,11 @@ async def search_people(db, filters: dict, page: int = 1, limit: int = 20, viewe
         query["trust_score"] = {"$gte": float(ts)}
 
     excluded = await _discovery_exclusions(db, viewer_id)
-    if excluded:
-        query["_id"] = {"$nin": [_to_object_id(x) for x in excluded]}
+    id_nin = list(excluded)
+    if viewer_id:
+        id_nin.append(viewer_id)  # self-exclusion, consistent with discover_sections
+    if id_nin:
+        query["_id"] = {"$nin": [_to_object_id(x) for x in id_nin]}
 
     skip = (page - 1) * limit
     cursor = db["users"].find(query, _USER_FIELDS).skip(skip).limit(limit)

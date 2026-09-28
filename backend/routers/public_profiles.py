@@ -239,8 +239,21 @@ async def researcher_directory(
     limit: int = Query(20, ge=1, le=50),
     db=Depends(get_db),
 ):
+    from services.network.discovery_engine import _discovery_exclusions, _to_object_id
+    from services.permissions import REAL_CUSTOMER_FILTER
+
     db = make_db_proxy(db, system=True)
-    query: dict = {"profile_visibility": {"$ne": "private"}}
+    query: dict = {
+        "profile_visibility": {"$ne": "private"},
+        "is_demo": {"$ne": True},
+        **REAL_CUSTOMER_FILTER,
+    }
+    # No viewer identity on this unauthenticated endpoint, so block-pairs
+    # don't apply — but show_in_discovery=False is a per-candidate opt-out,
+    # not viewer-relative, and was previously not enforced here at all.
+    opted_out = await _discovery_exclusions(db, viewer_id=None)
+    if opted_out:
+        query["_id"] = {"$nin": [_to_object_id(x) for x in opted_out]}
     if search:
         query["full_name"] = {"$regex": search, "$options": "i"}
     if research_area:
