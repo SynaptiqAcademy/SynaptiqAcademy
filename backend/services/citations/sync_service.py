@@ -335,95 +335,37 @@ async def import_orcid_publications(
     access_token: str,
     orcid_api_base: str = "https://pub.orcid.org/v3.0",
 ) -> dict:
-    """Fetch works from ORCID, deduplicate, insert into publications, enrich via OpenAlex.
+    """Import a user's ORCID works into `publications`, then enrich via OpenAlex
+    and take a citation snapshot.
+
+    The actual ORCID fetch + dedupe + upsert is delegated to
+    services/orcid/sync.py::sync_user() — the single canonical ORCID→publications
+    pipeline (Phase 1 consolidation). This function's own job is the
+    citations-module-specific work on top: OpenAlex citation enrichment,
+    a citation snapshot, and this endpoint's own stats/history shape.
+    `orcid_id`/`access_token`/`orcid_api_base` are accepted for backward
+    compatibility with existing callers but are no longer used directly —
+    sync_user() re-derives them from the user's own stored ORCID data.
 
     Returns stats: {imported, duplicates, enriched, snapshotted, alerts_created, new_citations}.
     """
-    from services.orcid.sync import enrich_publications_with_openalex
+    from services.orcid.sync import enrich_publications_with_openalex, sync_user
 
     uid = user_id
-    now = _now()
-
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Accept":        "application/vnd.orcid+json",
-    }
-
-    imported = errors = duplicates = 0
-
-    WORK_TYPE_MAP = {
-        "journal-article":  "journal_article",
-        "conference-paper": "conference_paper",
-        "book":             "book",
-        "book-chapter":     "book_chapter",
-        "preprint":         "preprint",
-        "review":           "review",
-    }
+    errors = 0
 
     try:
-        async with httpx.AsyncClient(timeout=20, headers=headers) as cli:
-            r = await cli.get(f"{orcid_api_base}/{orcid_id}/works")
-            if r.status_code != 200:
-                raise RuntimeError(f"ORCID API returned {r.status_code}")
-            groups = (r.json().get("group") or [])
-
-        for group in groups:
-            work_summaries = group.get("work-summary") or []
-            if not work_summaries:
-                continue
-            ws = work_summaries[0]  # canonical / most recent
-
-            # extract DOI
-            doi = None
-            for eid in ((ws.get("external-ids") or {}).get("external-id") or []):
-                if (eid.get("external-id-type") or "").lower() == "doi":
-                    doi = (eid.get("external-id-value") or "").strip().lower()
-                    if doi.startswith("http"):
-                        doi = doi.split("doi.org/", 1)[-1]
-                    break
-
-            title_raw = (ws.get("title") or {}).get("title") or {}
-            title     = title_raw.get("value") or "Untitled"
-            year_raw  = (ws.get("publication-date") or {}).get("year") or {}
-            year      = int(year_raw.get("value") or 0) or None
-
-            jt = ws.get("journal-title")
-            journal = jt.get("value") if isinstance(jt, dict) else jt
-
-            wtype     = ws.get("type") or "other"
-            norm_type = WORK_TYPE_MAP.get(wtype, wtype.replace("-", "_"))
-            title_norm = re.sub(r"\s+", " ", title.lower().strip())
-
-            # deduplicate
-            existing = None
-            if doi:
-                existing = await db.publications.find_one({"owner_id": uid, "doi": doi})
-            if not existing:
-                existing = await db.publications.find_one(
-                    {"owner_id": uid, "title_norm": title_norm})
-
-            if existing:
-                duplicates += 1
-                continue
-
-            await db.publications.insert_one({
-                "owner_id":   uid,
-                "title":      title,
-                "title_norm": title_norm,
-                "year":       year,
-                "doi":        doi,
-                "journal":    journal,
-                "type":       norm_type,
-                "citations":  0,
-                "source":     "orcid",
-                "created_at": now.isoformat(),
-                "updated_at": now.isoformat(),
-            })
-            imported += 1
-
+        sync_result = await sync_user(uid, trigger="citations_import")
+        imported = sync_result.get("publications_imported", 0)
+        # An ORCID work that already existed and got refreshed is, from this
+        # endpoint's pre-existing stats shape, equivalent to "duplicate".
+        duplicates = sync_result.get("publications_updated", 0)
+        if sync_result.get("errors"):
+            errors = len(sync_result["errors"])
     except Exception as e:
         log.warning("ORCID import failed for user %s: %s", uid, e)
-        errors += 1
+        imported = duplicates = 0
+        errors = 1
 
     # enrich newly imported pubs via OpenAlex
     enrich = await enrich_publications_with_openalex(uid, limit=100)

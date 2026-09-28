@@ -287,8 +287,11 @@ async def _link_to_manuscript(pub_id: str, pub: dict, user_id: str) -> bool:
     if pub.get("doi"):
         candidate = await db.manuscripts.find_one({"doi": pub["doi"]})
     if not candidate and pub.get("title_norm"):
+        # manuscripts store co-authorship as `authors` (see routers/manuscripts.py) —
+        # this previously queried a nonexistent `author_ids` field, so the
+        # title-match fallback below the DOI-match branch above never matched.
         candidate = await db.manuscripts.find_one({
-            "author_ids": user_id,
+            "authors": user_id,
             "$expr": {"$eq": [{"$toLower": "$title"}, pub["title_norm"]]}
         })
     if not candidate: return False

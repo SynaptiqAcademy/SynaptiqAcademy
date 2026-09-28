@@ -503,6 +503,10 @@ app.include_router(api_platform_router)
 from zt.router import router as zt_router
 app.include_router(zt_router)
 
+# Academic Research Record (Phase 1 consolidation)
+from routers import research_record as research_record_router
+app.include_router(research_record_router.router)
+
 
 @app.get("/api/")
 async def root():
@@ -763,6 +767,17 @@ async def startup():
         logger.info("Content seed + legacy provenance tagging complete")
     except Exception as content_e:
         logger.exception("Content seed/tagging migration failed: %s", content_e)
+
+    try:
+        # Academic Research Record (Phase 1 consolidation) — idempotent
+        # owner_id/user_id/author_ids alias backfill + origin backfill.
+        # Independent of every other startup task; see
+        # services/research_record/migration.py's docstring.
+        from services.research_record.migration import ensure_publications_backward_compat
+        await ensure_publications_backward_compat(db)
+        logger.info("Academic Research Record backward-compat migration complete")
+    except Exception as arr_e:
+        logger.exception("Academic Research Record migration failed: %s", arr_e)
 
     try:
         # ── Core uniqueness indexes — run BEFORE any data inserts ─────────
@@ -1181,6 +1196,14 @@ async def startup():
             await db.institution_audit.create_index([("institution_id", 1), ("created_at", -1)])
             # Publications (ORCID-sourced canonical store)
             await db.publications.create_index([("owner_id", 1), ("year", -1)])
+            # Academic Research Record — publication <-> Synaptiq-user
+            # relationship collection (Phase 1). A publication is a global
+            # record; this is the many-to-one link, not a second
+            # publications store. NOT unique-DOI on `publications` itself —
+            # that index is gated on a production duplicate audit.
+            await db.publication_authors.create_index(
+                [("publication_id", 1), ("synaptiq_user_id", 1)], unique=True)
+            await db.publication_authors.create_index([("synaptiq_user_id", 1)])
             await db.publications.create_index([("doi", 1)], sparse=True)
             await db.publications.create_index([("orcid_put_code", 1)], sparse=True)
             await db.publications.create_index([("title_norm", 1)])

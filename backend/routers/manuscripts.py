@@ -1087,3 +1087,37 @@ def _days_in_status(history: list, status: str) -> Optional[int]:
         return max(0, (dt_out - dt_in).days)
     except Exception:
         return None
+
+
+# ── Academic Research Record — explicit publish action ──────────────────────
+# A manuscript's status becoming "published" is NOT enough on its own to
+# create/link an entry in the Academic Research Record — that would let a
+# Synaptiq draft silently masquerade as an externally-published work. This
+# is a separate, explicit action the lead author (or an admin) must take.
+
+class PublishToResearchRecordBody(BaseModel):
+    doi: Optional[str] = None
+
+
+@router.post("/{manuscript_id}/publish-to-research-record")
+async def publish_to_research_record(
+    manuscript_id: str,
+    body: PublishToResearchRecordBody,
+    db=Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    from services.research_record.manuscript_link import publish_manuscript_to_research_record
+    from services.permissions import is_super_admin
+
+    db = DBProxy(db, SecurityContext.from_user(user))
+    doc = await db.manuscripts.find_one({"_id": ObjectId(manuscript_id)})
+    if not doc:
+        raise HTTPException(404, "Manuscript not found")
+    if doc.get("lead_author_id") != user["id"] and not is_super_admin(user):
+        raise HTTPException(403, "Only the lead author or an admin can publish this manuscript")
+
+    try:
+        result = await publish_manuscript_to_research_record(db, manuscript_id, doi=body.doi)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return result
