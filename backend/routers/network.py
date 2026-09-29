@@ -174,25 +174,92 @@ async def search_people(
     q: Optional[str] = None,
     institution: Optional[str] = None,
     country: Optional[str] = None,
-    career_stage: Optional[str] = None,
     discipline: Optional[str] = None,
-    verification_level: Optional[int] = None,
-    min_trust_score: Optional[float] = None,
+    professional_role: Optional[str] = None,
+    research_area: Optional[List[str]] = Query(None),
+    research_keyword: Optional[List[str]] = Query(None),
+    method: Optional[List[str]] = Query(None),
+    software_skill: Optional[List[str]] = Query(None),
+    professional_expertise: Optional[List[str]] = Query(None),
+    language: Optional[List[str]] = Query(None),
+    available_for_collaboration: Optional[bool] = None,
+    available_for_reviewing: Optional[bool] = None,
+    orcid_verified: Optional[bool] = None,
+    institution_verified: Optional[bool] = None,
     page: int = 1,
     limit: int = 20,
     db=Depends(get_db),
     user=Depends(get_current_user),
 ):
+    """Canonical people retrieval (P1 Phase 8B) — free, backend-filtered,
+    paginated. career_stage/verification_level/trust_score intentionally
+    removed (§5 — no real data pipeline; see discovery_engine.py's
+    _USER_FIELDS comment). No consume_credits() call anywhere in this path —
+    basic discovery must never cost AI credits (§1/§15).
+    """
     db = make_db_proxy(db, user)
     filters = {
         "q": q, "institution": institution, "country": country,
-        "career_stage": career_stage, "discipline": discipline,
-        "verification_level": verification_level, "min_trust_score": min_trust_score,
+        "discipline": discipline, "professional_role": professional_role,
+        "research_areas": research_area, "research_keywords": research_keyword,
+        "methods": method, "software_skills": software_skill,
+        "professional_expertise": professional_expertise, "languages": language,
+        "available_for_collaboration": available_for_collaboration,
+        "available_for_reviewing": available_for_reviewing,
+        "orcid_verified": orcid_verified, "institution_verified": institution_verified,
     }
-    return await discovery.search_people(
+    result = await discovery.search_people(
         db, {k: v for k, v in filters.items() if v is not None}, page, limit,
         viewer_id=_uid(user),
     )
+
+    # Explainable compatibility (§13/§15/§16) — the canonical deterministic
+    # engine, called directly (no consume_credits wrapper, unlike
+    # collab_intelligence_v2.py's /match/rank). Bounded to this one page of
+    # results (<=100), never the full candidate population (§24).
+    if result["results"]:
+        from services.collab_intelligence.researcher_profiler import build_researcher_profile
+        from services.collab_intelligence.matching_engine import match_researchers
+        from bson import ObjectId
+
+        viewer_doc = await db["users"].find_one({"_id": ObjectId(user["id"])})
+        viewer_has_signal = bool(
+            viewer_doc and (
+                viewer_doc.get("research_areas") or viewer_doc.get("research_keywords")
+                or viewer_doc.get("methods") or viewer_doc.get("professional_expertise")
+            )
+        )
+        if viewer_has_signal:
+            viewer_profile = build_researcher_profile(viewer_doc)
+            result_ids = [r["id"] for r in result["results"]]
+            full_docs = await db["users"].find(
+                {"_id": {"$in": [ObjectId(i) for i in result_ids]}}
+            ).to_list(len(result_ids))
+            full_by_id = {str(d["_id"]): d for d in full_docs}
+            for r in result["results"]:
+                candidate_doc = full_by_id.get(r["id"])
+                candidate_has_signal = bool(
+                    candidate_doc and (
+                        candidate_doc.get("research_areas") or candidate_doc.get("research_keywords")
+                        or candidate_doc.get("methods") or candidate_doc.get("professional_expertise")
+                    )
+                )
+                if not candidate_has_signal:
+                    r["compatibility"] = None  # "Limited profile information" — never a fake score
+                    continue
+                candidate_profile = build_researcher_profile(candidate_doc)
+                m = match_researchers(viewer_profile, candidate_profile)
+                r["compatibility"] = {
+                    "score": round(m.overall_score * 100),
+                    "shared_keywords": m.shared_keywords,
+                    "complementary_skills": m.complementary_skills,
+                    "explanation": m.explanation,
+                }
+        else:
+            for r in result["results"]:
+                r["compatibility"] = None
+
+    return result
 
 
 # ── Institution discovery ────────────────────────────────────────────────────

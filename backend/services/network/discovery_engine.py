@@ -23,6 +23,38 @@ def _serialize(doc):
     return doc
 
 
+def _scrub_orcid_field(orcid):
+    """Same rule as auth_utils._scrub_orcid — strips OAuth access/refresh
+    tokens, keeps only what's safe to show another user (P1 Phase 8B §3:
+    the confirmed leak this phase fixes was a *different* serializer,
+    services/collab_intelligence's collaboration_intelligence.py, doing this
+    same job without this scrub — kept here as its own small helper rather
+    than importing auth_utils into this module, since this file has no
+    other dependency on it and the rule is a two-line dict literal)."""
+    if isinstance(orcid, dict):
+        return {"orcid_id": orcid.get("orcid_id"), "verified_at": orcid.get("verified_at")}
+    return None
+
+
+def _serialize_person(doc):
+    """People-search-specific serialization on top of _serialize(): scrubs
+    ORCID to a connected/not-connected + public id (never tokens), and
+    derives the same institution_verified signal
+    services/verification/profile_service.py's canonical institution_verified
+    check uses (user.institution_id set) — a boolean derived from a field
+    already in the lightweight projection, not a second verification model.
+    """
+    if not doc:
+        return doc
+    orcid_scrubbed = _scrub_orcid_field(doc.pop("orcid", None))
+    institution_id = doc.pop("institution_id", None)
+    doc = _serialize(doc)
+    doc["orcid_verified"] = orcid_scrubbed is not None
+    doc["orcid_id"] = orcid_scrubbed.get("orcid_id") if orcid_scrubbed else None
+    doc["institution_verified"] = institution_id is not None
+    return doc
+
+
 def _to_object_id(uid: str):
     try:
         return ObjectId(uid)
@@ -31,12 +63,25 @@ def _to_object_id(uid: str):
 
 
 # ── Field sets returned by list queries (lightweight) ───────────────────────
-
+# P1 Phase 8B §5: career_stage/verification_level/trust_score removed — none
+# of the three is ever actually set on a real users document (confirmed
+# against production: 0 of 75 users have any of these fields at all), so
+# projecting and filtering on them was dead weight that could never match —
+# exactly the "filter with no data pipeline" this phase's audit flagged.
+# `expertise` removed for the same reason (also 0/75 in production; the real
+# field is `research_areas`/`research_keywords`). Added the fields the new
+# Research & Experts filters/cards actually need, all real per the Phase 8A
+# field audit.
 _USER_FIELDS = {
     "full_name": 1, "institution": 1, "department": 1,
-    "research_interests": 1, "expertise": 1, "career_stage": 1,
-    "country": 1, "avatar_url": 1, "verification_level": 1,
-    "trust_score": 1, "created_at": 1,
+    "research_areas": 1, "research_interests": 1, "research_keywords": 1,
+    "methods": 1, "software_skills": 1,
+    "academic_role": 1, "professional_role": 1, "professional_expertise": 1,
+    "user_type": 1, "languages": 1,
+    "country": 1, "avatar_url": 1, "orcid": 1, "institution_id": 1,
+    "available_for_collaboration": 1, "available_for_reviewing": 1,
+    "available_for_supervision": 1, "available_for_consulting": 1,
+    "publications_count": 1, "h_index": 1, "created_at": 1,
 }
 
 
@@ -71,6 +116,13 @@ _INST_FIELDS = {
 # ── People search ────────────────────────────────────────────────────────────
 
 async def search_people(db, filters: dict, page: int = 1, limit: int = 20, viewer_id: str | None = None) -> dict:
+    """Canonical people-retrieval layer (P1 Phase 8B §2/§9) — backend-side
+    filtered + paginated, privacy-enforced via _discovery_exclusions(). Every
+    filter below maps to a real, populated field (confirmed against the
+    Phase 8A field audit + production data) — career_stage/verification_
+    level/trust_score were removed here for the reason _USER_FIELDS' comment
+    above explains (§5: dead filters, zero real data pipeline).
+    """
     from services.permissions import REAL_CUSTOMER_FILTER
     query: dict = {
         "profile_visibility": {"$ne": "private"},
@@ -82,25 +134,50 @@ async def search_people(db, filters: dict, page: int = 1, limit: int = 20, viewe
         terms = q.strip()
         query["$or"] = [
             {"full_name": {"$regex": terms, "$options": "i"}},
+            {"research_areas": {"$regex": terms, "$options": "i"}},
             {"research_interests": {"$regex": terms, "$options": "i"}},
+            {"research_keywords": {"$regex": terms, "$options": "i"}},
+            {"methods": {"$regex": terms, "$options": "i"}},
+            {"software_skills": {"$regex": terms, "$options": "i"}},
+            {"professional_role": {"$regex": terms, "$options": "i"}},
+            {"professional_expertise": {"$regex": terms, "$options": "i"}},
+            {"institution": {"$regex": terms, "$options": "i"}},
             {"department": {"$regex": terms, "$options": "i"}},
         ]
 
-    for field in ("institution", "country", "career_stage", "department"):
+    for field in ("institution", "country", "department", "professional_role"):
         if v := filters.get(field):
             query[field] = {"$regex": v, "$options": "i"}
 
+    # Array-field filters — exact element match via $in, not regex (these
+    # are chip-selected values from a controlled or free-tag list, not
+    # prose); accepts either a single value or a list of values per field.
+    for field in ("research_areas", "research_keywords", "methods",
+                  "software_skills", "professional_expertise", "languages"):
+        if v := filters.get(field):
+            query[field] = {"$in": v if isinstance(v, list) else [v]}
+
     if disc := filters.get("discipline"):
         query["$or"] = query.get("$or", []) + [
+            {"research_areas": {"$regex": disc, "$options": "i"}},
             {"research_interests": {"$regex": disc, "$options": "i"}},
-            {"expertise": {"$regex": disc, "$options": "i"}},
+            {"research_keywords": {"$regex": disc, "$options": "i"}},
         ]
 
-    if vl := filters.get("verification_level"):
-        query["verification_level"] = {"$gte": int(vl)}
+    for field in ("available_for_collaboration", "available_for_reviewing",
+                  "available_for_supervision", "available_for_consulting"):
+        v = filters.get(field)
+        if v is not None:
+            query[field] = bool(v)
 
-    if ts := filters.get("min_trust_score"):
-        query["trust_score"] = {"$gte": float(ts)}
+    # Derived-boolean filters (§13 "Verification indicators") — real signals
+    # already used elsewhere (routers/orcid.py's authenticated-connection
+    # check; services/verification/profile_service.py's institution_verified
+    # check), not a new verification concept.
+    if filters.get("orcid_verified"):
+        query["orcid.orcid_id"] = {"$exists": True, "$ne": None}
+    if filters.get("institution_verified"):
+        query["institution_id"] = {"$exists": True, "$ne": None}
 
     excluded = await _discovery_exclusions(db, viewer_id)
     id_nin = list(excluded)
@@ -115,7 +192,7 @@ async def search_people(db, filters: dict, page: int = 1, limit: int = 20, viewe
     total = await db["users"].count_documents(query)
 
     return {
-        "results": [_serialize(d) for d in docs],
+        "results": [_serialize_person(d) for d in docs],
         "total": total,
         "page": page,
         "pages": max(1, -(-total // limit)),

@@ -195,6 +195,7 @@ const GrantCollaborationHub      = lazy(() => import("@/pages/GrantCollaboration
 const GrantOpportunityWorkspace  = lazy(() => import("@/pages/GrantOpportunityWorkspace"));
 const ResearcherProfile          = lazy(() => import("@/pages/ResearcherProfile"));
 const Researchers                = lazy(() => import("@/pages/Researchers"));
+const ResearchExperts            = lazy(() => import("@/pages/ResearchExperts"));
 const ReviewerMarketplace        = lazy(() => import("@/pages/ReviewerMarketplace"));
 const ReviewWorkspace            = lazy(() => import("@/pages/ReviewWorkspace"));
 const InstitutionAnalyticsCenter = lazy(() => import("@/pages/InstitutionAnalyticsCenter"));
@@ -245,7 +246,11 @@ const SIESettings         = lazy(() => import("@/pages/sie/SIESettings"));
 
 // Phase VII — Academic Collaboration & Discovery Network — /network/*
 const NetHome             = lazy(() => import("@/pages/network/DiscoveryHome"));
-const NetPeople           = lazy(() => import("@/pages/network/PeopleDiscovery"));
+// NetPeople (PeopleDiscovery.jsx) — superseded by ResearchExperts.jsx at
+// /researchers (P1 Phase 8B). /network/people now redirects there; the
+// component import is removed rather than left dangling/unused, but the
+// file itself is left in place (same "don't delete, just unroute"
+// precedent as Researchers.jsx and the pre-existing Network.jsx).
 const NetInstitutions     = lazy(() => import("@/pages/network/InstitutionDiscovery"));
 const NetGroups           = lazy(() => import("@/pages/network/ResearchGroups"));
 const NetTeaching         = lazy(() => import("@/pages/network/TeachingCommunities"));
@@ -535,7 +540,11 @@ function App() {
               <Route path="/grant-hub/:id" element={<Protected><GrantOpportunityWorkspace /></Protected>} />
               {/* Phase XXVI — Public Research Profiles (no auth, standalone) */}
               <Route path="/researcher/:slug" element={<ResearcherProfile />} />
-              <Route path="/researchers" element={<Protected><Researchers /></Protected>} />
+              {/* P1 Phase 8B — consolidated primary discovery experience.
+                  Old Researchers.jsx (its Explorer hit a different, less
+                  privacy-consistent endpoint per the Phase 8A audit) is left
+                  in place but unrouted rather than deleted. */}
+              <Route path="/researchers" element={<Protected><ResearchExperts /></Protected>} />
               {/* Phase XXVII — Reviewer Marketplace */}
               <Route path="/reviewer-marketplace" element={<Protected><ReviewerMarketplace /></Protected>} />
               <Route path="/review-workspace/:id" element={<Protected><ReviewWorkspace /></Protected>} />
@@ -584,7 +593,11 @@ function App() {
 
               {/* Phase VII — Academic Collaboration & Discovery Network — /network/* */}
               <Route path="/network"                    element={<Protected><NetHome /></Protected>} />
-              <Route path="/network/people"             element={<Protected><NetPeople /></Protected>} />
+              {/* P1 Phase 8B — /network/people consolidated into /researchers
+                  (the same backend, GET /network/people, still serves it —
+                  only the frontend route/page changed). Kept as a redirect
+                  so existing links/bookmarks don't break. */}
+              <Route path="/network/people"             element={<Navigate to="/researchers" replace />} />
               <Route path="/network/institutions"       element={<Protected><NetInstitutions /></Protected>} />
               <Route path="/network/groups"             element={<Protected><NetGroups /></Protected>} />
               <Route path="/network/teaching"           element={<Protected><NetTeaching /></Protected>} />

@@ -254,7 +254,11 @@ export const NAV_SECTIONS = {
     icon: Users2,
     items: [
       // Visible
-      { to: "/researchers",            label: "Researchers",          icon: Users,         testid: null, exact: true },
+      // P1 Phase 8B: renamed from "Researchers" — this was also duplicated
+      // as a second, differently-routed "Researchers" entry inside the
+      // hidden Discover subgroup below (→ /network/people); that entry now
+      // points here too instead of a second implementation.
+      { to: "/researchers",            label: "Research & Experts",   icon: Users,         testid: null, exact: true },
       { to: "/collaborations",         label: "Collaborations",       icon: Users2,        testid: TID.navCollaborations },
       { to: "/reviewer-marketplace",   label: "Reviewer Marketplace", icon: UserCheck,     testid: null },
       // Messages and Meetings live only in the global TopBar (see file header) — not duplicated here.
@@ -272,7 +276,7 @@ export const NAV_SECTIONS = {
         icon: Compass,
         sidebarHidden: true,
         items: [
-          { to: "/network/people",        label: "Researchers",        icon: Users,      testid: null },
+          { to: "/researchers",           label: "Research & Experts", icon: Users,      testid: null },
           { to: "/network/institutions",  label: "Institutions",       icon: Building2,  testid: null },
           { to: "/network/groups",        label: "Research Groups",    icon: Layers,     testid: null },
           { to: "/network/teaching",      label: "Teaching Networks",  icon: BookOpen,   testid: null },
@@ -563,7 +567,7 @@ export const DISCOVER_GROUP = [
   { to: "/conferences",          label: "Conferences",          icon: CalendarDays,    testid: TID.navConferences, group: "Publishing" },
   { to: "/grants",               label: "Grants",               icon: BadgeDollarSign, testid: TID.navGrants,      group: "Funding" },
   { to: "/funding",              label: "Funding",              icon: Coins,           testid: TID.navFunding,     group: "Funding" },
-  { to: "/researchers",          label: "Researchers",          icon: Users,           testid: null,               group: "Network" },
+  { to: "/researchers",          label: "Research & Experts",   icon: Users,           testid: null,               group: "Network" },
   { to: "/reviewer-marketplace", label: "Reviewer Marketplace", icon: UserCheck,       testid: null,               group: "Network" },
   { to: "/leaderboards",         label: "Leaderboards",         icon: Trophy,          testid: null,               group: "Publishing" },
 ];

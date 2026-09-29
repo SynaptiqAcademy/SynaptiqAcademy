@@ -98,10 +98,15 @@ def build_researcher_profile(user: dict, reputation_score: float | None = None) 
     methods  = _safe_list(user.get("research_methods") or user.get("methods"))
     stats    = _safe_list(user.get("statistical_expertise") or user.get("statistics"))
     progs    = _safe_list(user.get("programming_skills") or user.get("software_skills"))
-    langs    = _safe_list(user.get("languages") or [user.get("language", "English")])
-
-    if not langs:
-        langs = ["English"]
+    # P1 Phase 8B §4: never fabricate a language. This used to default to
+    # ["English"] whenever the real `languages` field was empty — inventing
+    # data the user never provided, and specifically contradicting the
+    # platform's language semantics ("never infer language from country,
+    # name, or anything else"). An empty list is the honest unknown state;
+    # the matcher's own diversity dimension already handles empty languages
+    # correctly (see matching_engine.py's _diversity_score — the shared-
+    # language bonus simply doesn't apply when either side has none).
+    langs = _safe_list(user.get("languages"))
 
     collab_count = int(
         user.get("collaboration_count") or

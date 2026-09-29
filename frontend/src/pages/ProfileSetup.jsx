@@ -129,12 +129,7 @@ const AVAILABILITY_OPTIONS = [
   "Available", "Limited availability", "Not available", "Open to short projects only",
 ];
 
-const LANGUAGE_OPTIONS = [
-  "English", "French", "Spanish", "Portuguese", "German", "Italian",
-  "Dutch", "Polish", "Romanian", "Czech", "Hungarian", "Greek",
-  "Turkish", "Arabic", "Mandarin Chinese", "Japanese", "Korean",
-  "Hindi", "Russian", "Swedish", "Norwegian", "Danish", "Finnish",
-];
+import { LANGUAGE_OPTIONS } from "@/lib/languages";
 
 const USER_TYPES = [
   { value: "undergraduate_student", label: "Undergraduate Student" },

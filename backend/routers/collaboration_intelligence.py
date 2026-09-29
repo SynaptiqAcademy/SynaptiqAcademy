@@ -249,11 +249,26 @@ def _ser_doc(d: dict) -> dict:
 
 
 def _public_profile(u: dict) -> dict:
-    """Return only public-safe fields for embedding in recommendation results."""
+    """Return only public-safe fields for embedding in recommendation results.
+
+    P1 Phase 8B §3 security fix: this previously returned the raw `orcid`
+    field verbatim — an OAuth-authenticated connection stores that as a dict
+    containing the user's encrypted access/refresh token envelope
+    (services/orcid — routers/orcid.py's /callback), so every caller of
+    POST /collaboration-intelligence/generate was receiving other users'
+    encrypted ORCID token envelopes embedded in the response. Reuses the
+    same auth_utils._scrub_orcid() helper serialize_public_user() already
+    uses for every other public-facing profile response, instead of
+    inventing a second scrubbing rule here.
+    """
+    from auth_utils import _scrub_orcid
+    scrubbed = _scrub_orcid(u.get("orcid"))
+    orcid_id = scrubbed.get("orcid_id") if isinstance(scrubbed, dict) else None
     return {
         "id":               str(u["_id"]),
         "full_name":        u.get("full_name") or "",
         "academic_role":    u.get("academic_role") or "",
+        "professional_role": u.get("professional_role") or None,
         "user_type":        u.get("user_type") or None,
         "primary_domain":   u.get("primary_domain") or None,
         "institution":      u.get("institution") or "",
@@ -262,11 +277,13 @@ def _public_profile(u: dict) -> dict:
         "research_areas":   u.get("research_areas") or [],
         "research_keywords": u.get("research_keywords") or [],
         "skills":           u.get("skills") or [],
+        "professional_expertise": u.get("professional_expertise") or [],
         "looking_for":      u.get("looking_for") or [],
         "can_contribute":   u.get("can_contribute") or [],
         "publications_count": u.get("publications_count") or 0,
         "avatar_url":       u.get("avatar_url") or None,
-        "orcid":            u.get("orcid") or None,
+        "orcid_connected":  orcid_id is not None,
+        "orcid_id":         orcid_id,
         "biography":        u.get("biography") or "",
     }
 

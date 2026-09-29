@@ -10,7 +10,19 @@ import { FormField, FormGroup, FormRow, Checkbox } from "@/components/ds/Form";
 import { Tag } from "@/components/ds/Tag";
 import { NAVY } from "@/lib/tokens";
 import { USER_TYPE_OPTIONS, PRIMARY_DOMAIN_OPTIONS } from "@/lib/userTypes";
+import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import api from "@/lib/api";
+
+// Examples only, not a closed enum — professional_role is free text so the
+// platform works across disciplines never listed here (P1 Phase 8B §6).
+// Shown as <datalist> suggestions, never enforced.
+const PROFESSIONAL_ROLE_EXAMPLES = [
+  "Physician", "Epidemiologist", "Public Health Specialist", "Hospital Manager",
+  "Health Policy Specialist", "Policy Analyst", "Government Adviser", "Civil Servant",
+  "Diplomat", "Consular Officer", "International Relations Specialist",
+  "Science Diplomacy Specialist", "Economist", "Engineer", "Data Scientist",
+  "Lawyer", "NGO Programme Specialist", "International Organization Specialist",
+];
 
 const RESEARCH_AREAS = [
   "Artificial Intelligence", "Healthcare", "Management", "Economics", "Education",
@@ -63,6 +75,7 @@ export function EditIdentityModal({ open, onClose, profile, onSaved }) {
     research_keywords: profile?.research_keywords || [], methods: profile?.methods || [],
     software_skills: profile?.software_skills || [], teaching_areas: profile?.teaching_areas || [],
     professional_expertise: profile?.professional_expertise || [], skills: profile?.skills || [],
+    professional_role: profile?.professional_role || "", languages: profile?.languages || [],
     can_contribute: profile?.can_contribute || [], looking_for: profile?.looking_for || [],
     availability: profile?.availability || "Available",
     available_for_collaboration: profile?.available_for_collaboration ?? true,
@@ -122,6 +135,17 @@ export function EditIdentityModal({ open, onClose, profile, onSaved }) {
           <FormRow cols={2}>
             <FormField label="Full name"><Input value={f.full_name} onChange={(e) => update("full_name", e.target.value)} /></FormField>
             <FormField label="Job title"><Input value={f.academic_role} onChange={(e) => update("academic_role", e.target.value)} placeholder="e.g. Associate Professor" /></FormField>
+            <FormField label="Professional role" hint="For interdisciplinary experts — e.g. physician, diplomat, policy analyst">
+              <Input
+                value={f.professional_role}
+                onChange={(e) => update("professional_role", e.target.value)}
+                placeholder="e.g. Health Policy Specialist"
+                list="professional-role-examples"
+              />
+              <datalist id="professional-role-examples">
+                {PROFESSIONAL_ROLE_EXAMPLES.map((r) => <option key={r} value={r} />)}
+              </datalist>
+            </FormField>
             <FormField label="Institution"><Input value={f.institution} onChange={(e) => update("institution", e.target.value)} /></FormField>
             <FormField label="Department"><Input value={f.department} onChange={(e) => update("department", e.target.value)} /></FormField>
             <FormField label="City"><Input value={f.city} onChange={(e) => update("city", e.target.value)} /></FormField>
@@ -169,6 +193,7 @@ export function EditIdentityModal({ open, onClose, profile, onSaved }) {
           <ChipToggle label="Skills" options={SKILLS_OPTS} selected={f.skills} onToggle={(v) => toggle("skills", v)} />
           <ChipToggle label="Teaching areas" options={TEACHING_AREAS_OPTS} selected={f.teaching_areas} onToggle={(v) => toggle("teaching_areas", v)} />
           <ChipToggle label="Professional expertise" options={PROFESSIONAL_EXPERTISE_OPTS} selected={f.professional_expertise} onToggle={(v) => toggle("professional_expertise", v)} />
+          <ChipToggle label="Languages" options={LANGUAGE_OPTIONS} selected={f.languages} onToggle={(v) => toggle("languages", v)} />
         </FormGroup>
 
         <FormGroup title="Collaboration & Availability" divided>

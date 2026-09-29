@@ -254,6 +254,7 @@ def serialize_public_user(user: dict) -> dict:
         "country":             user.get("country") or "",
         "city":                user.get("city") or "",
         "academic_role":       user.get("academic_role") or "",
+        "professional_role":   user.get("professional_role") or "",
         "career_stage":        user.get("career_stage") or "",
         "user_type":              user.get("user_type") or None,
         "primary_domain":         user.get("primary_domain") or None,

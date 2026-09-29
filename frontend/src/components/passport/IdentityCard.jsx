@@ -103,8 +103,11 @@ export function IdentityCard({ profile }) {
 
   const allMethods = [...(profile.methods || []), ...(profile.methodological_expertise || [])]
     .filter((v, i, a) => a.indexOf(v) === i);
-  const allSkills = [...(profile.skills || []), ...(profile.professional_expertise || [])]
-    .filter((v, i, a) => a.indexOf(v) === i);
+  // P1 Phase 8B §7: professional_expertise gets its own labeled group below
+  // instead of being silently folded into "Skills" — it's the field expert
+  // discovery/search actually reads, so it needs to be identifiable as its
+  // own concept on the profile that produced it, not merged away.
+  const allSkills = profile.skills || [];
 
   const anyMatchingFieldPresent = ["research_areas", "research_interests", "research_keywords", "software_skills"]
     .some((k) => (profile[k] || []).length > 0);
@@ -150,6 +153,14 @@ export function IdentityCard({ profile }) {
           <ExpertiseGroup label="Skills" items={allSkills} color={EMERALD} />
           <ExpertiseGroup label="Teaching" items={profile.teaching_areas} color="#7C3AED" />
         </div>
+
+        {(profile.professional_expertise || []).length > 0 && (
+          <ExpertiseGroup label="Professional Expertise" items={profile.professional_expertise} color="#0F766E" fieldKey="professional_expertise" />
+        )}
+
+        {(profile.languages || []).length > 0 && (
+          <ExpertiseGroup label="Languages" items={profile.languages} color="#475569" bg="#F8FAFC" />
+        )}
 
         {identifiers.length > 0 && (
           <div style={{ borderTop: `1px solid ${BRD}`, paddingTop: 16 }}>

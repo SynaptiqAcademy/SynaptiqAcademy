@@ -151,6 +151,15 @@ class ProfileUpdate(BaseModel):
     country: Optional[str] = None
     city: Optional[str] = None
     academic_role: Optional[str] = None
+    # P1 Phase 8B §6 — distinct from academic_role/user_type/
+    # professional_expertise (see their own comments): free-text answer to
+    # "what professional role best describes your real-world work?" for
+    # interdisciplinary experts (physician, diplomat, policy analyst, ...).
+    # Deliberately not a closed enum — the platform must work across
+    # disciplines never enumerated here. Self-declared only; no verification
+    # semantics attach to this field in this phase (see Phase 8A §5 audit —
+    # professional-claim verification is explicitly out of scope here).
+    professional_role: Optional[str] = None
     career_stage: Optional[str] = None  # early_career | mid_career | senior | professor | industry
     user_type: Optional[USER_TYPE_VALUES] = None
     primary_domain: Optional[PRIMARY_DOMAIN_VALUES] = None

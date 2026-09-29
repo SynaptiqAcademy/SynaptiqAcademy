@@ -1455,6 +1455,11 @@ async def startup():
             await db.users.create_index([("research_keywords", 1)])
             await db.users.create_index([("methods", 1)])
             await db.users.create_index([("software_skills", 1)])
+            # P1 Phase 8B §12/§24 — new real Research & Experts filters.
+            await db.users.create_index([("professional_role", 1)], sparse=True)
+            await db.users.create_index([("professional_expertise", 1)])
+            await db.users.create_index([("languages", 1)])
+            await db.users.create_index([("institution_id", 1)], sparse=True)
             await db.users.create_index([("country", 1), ("research_areas", 1)])
             await db.users.create_index([("institution", 1)])
             await db.users.create_index([("user_type", 1), ("research_areas", 1)])

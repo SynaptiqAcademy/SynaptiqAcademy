@@ -85,7 +85,7 @@ export function PassportCredentialHeader({ profile, passport, verification, comp
           </h1>
 
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginTop: 5, lineHeight: 1.5 }}>
-            {[profile?.academic_role].filter(Boolean).join("")}
+            {[profile?.academic_role, profile?.professional_role].filter(Boolean).join(" · ")}
             {(profile?.institution || profile?.department) && (
               <div style={{ display: "flex", alignItems: "center", gap: 5, color: "rgba(255,255,255,0.55)", fontSize: 12.5, marginTop: 3 }}>
                 <Building2 size={11} style={{ flexShrink: 0 }} />
