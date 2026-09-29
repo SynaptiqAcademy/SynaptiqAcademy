@@ -145,59 +145,14 @@ async def recently_viewed(limit: int = Query(default=10, ge=1, le=50),
     return [serialize_public_user(users_map[uid]) for uid in deduped if uid in users_map]
 
 
-# ─────────────────────── match score (on-demand) ─────────────────────────────
-
-@router.get("/match-score/{target_user_id}")
-async def get_match_score(target_user_id: str, user: dict = Depends(get_current_user)):
-    """Return a fast local pre-score (0-100) between current user and target."""
-    db = get_db()
-    db = DBProxy(db, SecurityContext.from_user(user))
-
-    if target_user_id == user["id"]:
-        return {"score": 100, "reason": "This is you."}
-    try:
-        oid = ObjectId(target_user_id)
-    except Exception:
-        raise HTTPException(404, "User not found")
-    target = await db.users.find_one({"_id": oid})
-    if not target:
-        raise HTTPException(404, "User not found")
-
-    def _safe_set(v) -> set:
-        return {str(x).lower().strip() for x in (v or []) if x}
-
-    u_areas  = _safe_set(user.get("research_areas"))
-    c_areas  = _safe_set(target.get("research_areas"))
-    u_kw     = _safe_set(user.get("research_keywords"))
-    c_kw     = _safe_set(target.get("research_keywords"))
-    u_skills = _safe_set(user.get("skills") or [] + user.get("software_skills") or [] + user.get("methods") or [])
-    c_skills = _safe_set(target.get("skills") or [] + target.get("software_skills") or [] + target.get("methods") or [])
-
-    def _jaccard(a, b):
-        if not a or not b: return 0.0
-        return len(a & b) / len(a | b)
-
-    area_j  = _jaccard(u_areas, c_areas)
-    kw_j    = _jaccard(u_kw, c_kw)
-    skill_j = _jaccard(u_skills, c_skills)
-    # Institution proximity bonus
-    inst_bonus = 5 if (user.get("institution") and user.get("institution") == target.get("institution")) else 0
-    # Country bonus
-    ctry_bonus = 3 if (user.get("country") and user.get("country") == target.get("country")) else 0
-
-    raw = int(area_j * 40 + kw_j * 25 + skill_j * 20) + inst_bonus + ctry_bonus
-    score = min(98, max(0, raw))
-
-    overlaps = list(u_areas & c_areas)[:4]
-    if overlaps:
-        reason = f"{score}% match — shared areas: {', '.join(overlaps)}"
-    elif list(u_kw & c_kw):
-        reason = f"{score}% match — shared keywords: {', '.join(list(u_kw & c_kw)[:3])}"
-    else:
-        reason = f"{score}% compatibility based on profile analysis"
-
-    return {"score": score, "reason": reason, "overlaps": {"areas": overlaps}}
-
+# NOTE (P1 Phase 6): the legacy on-demand `/match-score/{target_user_id}`
+# endpoint that used to live here was removed. It duplicated the canonical
+# matching engine with its own independent, buggy formula (an operator-
+# precedence bug meant `skills`/`software_skills`/`methods` were never
+# actually unioned — only one of the three was ever used) and the P1 Phase 5
+# audit confirmed zero callers anywhere in the codebase, frontend or
+# backend. See tests/test_p1phase6_matching.py for the regression test
+# confirming the route is gone (404), not silently broken.
 
 # ─────────────────────── discover sections ────────────────────────────────────
 
@@ -233,6 +188,12 @@ async def discover_sections(user: dict = Depends(get_current_user)):
     }
 
     def _score(r):
+        # In-memory browsing-relevance score for these discovery sections —
+        # NOT a collaboration compatibility score. The canonical
+        # compatibility engine is services/collab_intelligence/
+        # matching_engine.py; this stays a lightweight, section-scoped
+        # ranking signal by design (P1 Phase 6: discovery is preserved as
+        # discovery, not folded into canonical matching).
         r_areas   = {a.lower() for a in (r.get("research_areas") or [])}
         r_kw      = {k.lower() for k in (r.get("research_keywords") or [])}
         r_methods = {m.lower() for m in (r.get("methods") or [])}

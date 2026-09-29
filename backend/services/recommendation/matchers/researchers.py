@@ -5,9 +5,9 @@ from typing import Any
 from bson import ObjectId
 
 from services.recommendation.profiles import get_or_refresh_profile
-from services.recommendation.scoring import normalize_set, jaccard, clamp, career_complement
-from services.recommendation.explainer import explain_researcher
 from services.permissions import REAL_CUSTOMER_FILTER
+from services.collab_intelligence.researcher_profiler import build_researcher_profile
+from services.collab_intelligence.matching_engine import rank_matches
 
 
 async def match_researchers(
@@ -20,38 +20,53 @@ async def match_researchers(
     interaction_cache: dict | None = None,
 ) -> list[dict]:
     """
-    Return algorithmically scored researcher recommendations for a given user.
+    Return researcher recommendations for a given user.
 
-    Scores are purely algorithmic (no LLM). Excluded:
-    - suspended users
-    - demo accounts
-    - private profiles
-    - self
-    - already-connected collaborators
-    - dismissed items (penalized by 0.2x)
+    P1 Phase 6 consolidation: this function no longer computes its own
+    independent compatibility formula. Scoring is delegated entirely to the
+    canonical deterministic matching engine
+    (services/collab_intelligence/matching_engine.py) via rank_matches().
+    This function still owns everything that is genuinely candidate
+    ELIGIBILITY rather than compatibility SCORING: excluding suspended/demo/
+    private/internal-staff accounts, excluding already-connected
+    collaborators, and the optional country/area/role query filters — none
+    of that is duplicate matching math, it's the same eligibility layer
+    every consumer of the canonical engine builds on top of it.
 
-    Sub-scores:
-      area_score      = jaccard(areas) * 35
-      kw_score        = jaccard(keywords) * 25
-      method_score    = jaccard(methods) * 15
-      diversity_score = 10 if different country else 5
-      complement_score = career_complement(roles) * 10
-      rep_score       = min(reputation / 200, 1.0) * 5
-    Total capped at 100.
+    The canonical engine itself never reads reputation/trust collections
+    (by design — see services/collab_intelligence/researcher_profiler.py).
+    This function reads `recommendation_profiles.reputation_score` (as it
+    always has) and passes it into build_researcher_profile()'s optional
+    `reputation_score` parameter, which only exists so callers like this one
+    can supply it without the engine reaching into a collection it has no
+    reason to know about. The engine's own `reputation_compatibility`
+    dimension (added in the Phase 1 matching-signal migration, weighted
+    0.04) is what actually uses it now, replacing this file's old one-sided
+    `rep_score = min(cand_rep/200,1)*5` term with the engine's existing
+    symmetric formula.
+
+    Response shape (list of flat dicts with `user_id`, `score` 0-100,
+    `match_label`, `explanation`, etc.) and the public function signature
+    are unchanged, for backward compatibility with existing callers
+    (services/recommendation/engine.py, routers/recommendations.py,
+    frontend/src/pages/Researchers.jsx and Recommendations.jsx).
     """
-    # ── Load requesting user's profile ──────────────────────────────────────
+    # ── Load requesting user's profile (eligibility gate + reputation) ──────
     user_p = await get_or_refresh_profile(user_id, db)
 
     if user_p.get("is_suspended") or user_p.get("is_demo"):
         return []
 
-    user_areas = normalize_set(user_p.get("research_areas") or [])
-    user_kws = normalize_set(user_p.get("research_keywords") or [])
-    user_methods = normalize_set(user_p.get("methods") or [])
-    user_country = (user_p.get("country") or "").strip().lower()
-    user_role = (user_p.get("academic_role") or "").strip().lower()
+    user_doc = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user_doc:
+        return []
+    user_doc["_id"] = user_id
 
-    # ── Get already-connected collaborator IDs ───────────────────────────────
+    source_rep_doc = await db.recommendation_profiles.find_one(
+        {"user_id": user_id}, {"reputation_score": 1})
+    source_reputation = int((source_rep_doc or {}).get("reputation_score", 0))
+
+    # ── Get already-connected collaborator IDs (eligibility, not scoring) ───
     collab_docs = await db.collaborations.find(
         {"members": user_id},
         {"members": 1},
@@ -63,7 +78,7 @@ async def match_researchers(
             connected_ids.add(str(member))
     connected_ids.discard(user_id)
 
-    # ── Build query ──────────────────────────────────────────────────────────
+    # ── Build candidate query (eligibility, not scoring) ─────────────────────
     query: dict[str, Any] = {
         "is_suspended": {"$ne": True},
         "is_demo": {"$ne": True},
@@ -97,9 +112,16 @@ async def match_researchers(
     }
 
     candidates_raw = await db.users.find(query, projection).limit(500).to_list(500)
+    candidates_raw = [
+        c for c in candidates_raw
+        if str(c["_id"]) != user_id and str(c["_id"]) not in connected_ids
+    ]
 
-    # ── Batch-load profiles for reputation_score and publication_count ────────
-    # We'll need recommendation_profiles for richer data; fall back gracefully
+    if not candidates_raw:
+        return []
+
+    # ── Batch-load reputation_score/publication_count — the canonical engine
+    #    never reads this collection itself; this file does, as before.
     candidate_ids = [str(c["_id"]) for c in candidates_raw]
     profile_docs = await db.recommendation_profiles.find(
         {"user_id": {"$in": candidate_ids}},
@@ -107,85 +129,61 @@ async def match_researchers(
     ).to_list(500)
     profile_map = {p["user_id"]: p for p in profile_docs}
 
-    # ── Score each candidate ─────────────────────────────────────────────────
-    results: list[dict] = []
+    # ── Build canonical ResearcherProfile objects ─────────────────────────────
+    source_profile = build_researcher_profile(user_doc, reputation_score=source_reputation)
 
+    candidate_profiles = []
+    display_data: dict[str, dict] = {}
     for cand in candidates_raw:
         cand_id = str(cand["_id"])
+        cand_rep_doc = profile_map.get(cand_id, {})
+        cand_rep = int(cand_rep_doc.get("reputation_score", 0))
+        cand_pub_count = int(cand_rep_doc.get("publication_count", 0))
 
-        # Exclusions
-        if cand_id == user_id:
-            continue
-        if cand_id in connected_ids:
-            continue
-
-        cand_areas = normalize_set(cand.get("research_areas") or [])
-        cand_kws = normalize_set(cand.get("research_keywords") or [])
-        cand_methods = normalize_set(cand.get("methods") or [])
-        cand_country = (cand.get("country") or "").strip().lower()
-        cand_role = (cand.get("academic_role") or "").strip().lower()
-
-        cand_profile = profile_map.get(cand_id, {})
-        cand_rep = int(cand_profile.get("reputation_score", 0))
-        cand_pub_count = int(cand_profile.get("publication_count", 0))
-
-        # Sub-scores
-        area_score = jaccard(user_areas, cand_areas) * 35
-        kw_score = jaccard(user_kws, cand_kws) * 25
-        method_score = jaccard(user_methods, cand_methods) * 15
-        diversity_score = 10.0 if (user_country and cand_country and user_country != cand_country) else 5.0
-        complement_score = career_complement(user_role, cand_role) * 10
-        rep_score = min(cand_rep / 200.0, 1.0) * 5
-
-        sub_scores = {
-            "area_score": area_score,
-            "kw_score": kw_score,
-            "method_score": method_score,
-            "diversity_score": diversity_score,
-            "complement_score": complement_score,
-            "rep_score": rep_score,
-        }
-
-        total = clamp(sum(sub_scores.values()))
-
-        # Interaction penalty
-        if interaction_cache:
-            action = interaction_cache.get(cand_id)
-            if action == "dismissed":
-                total *= 0.2
-
-        # Skip zero-score candidates (no overlap at all)
-        if total <= 0:
-            continue
-
-        cand_p_for_explain = {
-            "research_areas": list(cand_areas),
-            "research_keywords": list(cand_kws),
-            "methods": list(cand_methods),
-            "country": cand_country,
-            "academic_role": cand_role,
-            "reputation_score": cand_rep,
-        }
-
-        explanation = explain_researcher(user_p, cand_p_for_explain, sub_scores)
-
-        score_rounded = round(total, 1)
-        results.append({
-            "user_id": cand_id,
+        display_data[cand_id] = {
             "full_name": (cand.get("full_name") or "").strip(),
             "institution": (cand.get("institution") or "").strip(),
             "country": (cand.get("country") or "").strip(),
             "academic_role": (cand.get("academic_role") or "").strip(),
             "avatar_url": cand.get("avatar_url") or None,
             "orcid": cand.get("orcid") or None,
-            "research_areas": [a.title() for a in sorted(cand_areas)],
+            "research_areas": [a.strip().title() for a in (cand.get("research_areas") or []) if a],
             "reputation_score": cand_rep,
             "publication_count": cand_pub_count,
+        }
+
+        cand_doc = dict(cand)
+        cand_doc["_id"] = cand_id
+        candidate_profiles.append(build_researcher_profile(cand_doc, reputation_score=cand_rep))
+
+    # ── Dismissal penalty — now applied by the canonical engine's own
+    #    rank_matches(), same 0.2x semantics as this file's old inline logic.
+    dismissed_ids = None
+    if interaction_cache:
+        dismissed_ids = {
+            cid for cid, action in interaction_cache.items() if action == "dismissed"
+        }
+
+    ranked = rank_matches(source_profile, candidate_profiles, top_n=limit, dismissed_ids=dismissed_ids)
+
+    results: list[dict] = []
+    for m in ranked:
+        extra = display_data.get(m.researcher_b_id, {})
+        score_rounded = round(m.overall_score * 100, 1)
+        results.append({
+            "user_id": m.researcher_b_id,
+            "full_name": extra.get("full_name", ""),
+            "institution": extra.get("institution", ""),
+            "country": extra.get("country", ""),
+            "academic_role": extra.get("academic_role", ""),
+            "avatar_url": extra.get("avatar_url"),
+            "orcid": extra.get("orcid"),
+            "research_areas": extra.get("research_areas", []),
+            "reputation_score": extra.get("reputation_score", 0),
+            "publication_count": extra.get("publication_count", 0),
             "score": score_rounded,
-            "explanation": explanation,
+            "explanation": m.explanation,
             "match_label": f"{int(score_rounded)}% Match",
         })
 
-    # ── Sort and return top results ──────────────────────────────────────────
-    results.sort(key=lambda x: x["score"], reverse=True)
-    return results[:limit]
+    return results

@@ -571,23 +571,25 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
           <div style={{ position: "relative", flexShrink: 0 }}>
             <AvatarCircle r={r} size={44} />
             {showMatchScore && r.match_score > 0 && (
-              <div style={{
-                position: "absolute",
-                bottom: -4,
-                right: -4,
-                width: 20,
-                height: 20,
-                borderRadius: "50%",
-                background: NAVY,
-                border: "2px solid white",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 7,
-                fontWeight: 800,
-                color: "white",
-                fontFamily: "monospace",
-              }}>
+              <div
+                title="Relevance to your profile in this list — not a collaboration compatibility score"
+                style={{
+                  position: "absolute",
+                  bottom: -4,
+                  right: -4,
+                  width: 20,
+                  height: 20,
+                  borderRadius: "50%",
+                  background: NAVY,
+                  border: "2px solid white",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 7,
+                  fontWeight: 800,
+                  color: "white",
+                  fontFamily: "monospace",
+                }}>
                 {Math.min(r.match_score, 99)}
               </div>
             )}
