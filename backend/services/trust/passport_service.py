@@ -12,6 +12,8 @@ import secrets
 from datetime import datetime, timezone
 from bson import ObjectId
 
+from services.passport.fingerprint import compute_fingerprint
+
 log = logging.getLogger("synaptiq.trust.passport")
 
 
@@ -69,9 +71,30 @@ async def build_passport(user_id: str, db) -> dict:
         "verified_institution":u.get("institution") if "institution_affiliation" in verified_types else None,
         "verified_department": u.get("department")  if "department"             in verified_types else None,
         "verified_position":   u.get("position")    if "academic_position"      in verified_types else None,
-        "verified_orcid":      u.get("orcid")       if "orcid"                  in verified_types else None,
+        # P1 Phase 7 C3: this used to return the ENTIRE raw users.orcid dict
+        # — including the encrypted access_token/refresh_token envelope —
+        # whenever ORCID was verified. Nothing reads more than orcid_id from
+        # this field (PassportHero.jsx only checks its truthiness; the real
+        # orcid_id the UI displays comes from the already-safely-scrubbed
+        # profile.orcid via auth_utils.serialize_user's _scrub_orcid). No
+        # caller needs tokens here, so stop returning them.
+        "verified_orcid":      (
+            (u.get("orcid") or {}).get("orcid_id")
+            if "orcid" in verified_types and isinstance(u.get("orcid"), dict)
+            else None
+        ),
         "trust_score":         (score_doc or {}).get("score", 0),
         "trust_level":         (score_doc or {}).get("level", "Unverified"),
+        # Passport V2 (P1 Phase 7): distinguishes "never computed" (no
+        # trust_scores doc exists — the common case, since compute_trust_score()
+        # only runs when a user visits /trust/score or /trust/overview, never
+        # on Passport load) from a genuinely-computed low/zero score. Without
+        # this, the UI has no way to avoid presenting a stale default 0/
+        # "Unverified" as if it contradicts verification_profiles, which is
+        # computed fresh on every /verification/me call. Purely additive —
+        # score_doc was already fetched above, no extra query, no write, no
+        # change to the scoring algorithm itself.
+        "trust_score_computed": score_doc is not None,
         "badges":              badges,
         "verified_pub_count":  len([p for p in pub_list if p.get("doi")]),
         "verified_grant_count":len(grant_list),
@@ -83,6 +106,11 @@ async def build_passport(user_id: str, db) -> dict:
         "verification_types":  list(verified_types),
         "generated_at":        now,
         "public_url":          f"/passport/{share_token}",
+        # Non-biometric Academic Fingerprint (P1 Phase 7 C3) — deterministic
+        # per-account HMAC, safe for public display. See
+        # services/passport/fingerprint.py for the construction and its
+        # non-reversibility rationale.
+        "academic_fingerprint": compute_fingerprint(user_id),
     }
 
     await db.trust_passports.update_one(

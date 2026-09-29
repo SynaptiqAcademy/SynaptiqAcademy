@@ -8,16 +8,21 @@ import {
 import { SectionShell } from "./PassportUI";
 import { TYPE, BRD, TEXT_MUTED, TEXT_SECONDARY, TEXT_PRIMARY, SHADOW_CARD_HOVER } from "@/lib/tokens";
 import { EmptyState } from "@/components/ds/EmptyState";
+import { getAuthenticatedOrcidId } from "@/lib/orcid";
 
-function extractOrcidId(orcid) {
-  if (!orcid) return null;
-  if (typeof orcid === "object") return orcid.orcid_id || null;
-  if (typeof orcid === "string") return orcid;
-  return null;
-}
-
-export function computeClientBadges(profile, pubCount) {
-  const orcidId = extractOrcidId(profile.orcid);
+/**
+ * computeProfileMilestones — NOT achievements. These are purely client-side,
+ * non-persisted profile-completeness indicators (has a bio? has research
+ * areas? etc.) with no award criteria, no timestamp, and nothing Synaptiq
+ * verified or granted. Renamed from computeClientBadges (P1 Phase 7 C1.5):
+ * the old name/UI implied these were earned achievements on equal footing
+ * with real backend-issued badges (GET /trust/badges), and their counts were
+ * summed together — exactly the "no fake achievements" problem the Phase 7
+ * audit flagged. Keep this list purely as completion guidance; never count
+ * it alongside, or label it as, a genuine achievement.
+ */
+export function computeProfileMilestones(profile, pubCount) {
+  const orcidId = getAuthenticatedOrcidId(profile.orcid);
   return [
     orcidId && { icon: Shield, label: "ORCID Connected", color: "#059669", bg: "#F0FDF4" },
     profile.biography?.trim() && { icon: PenLine, label: "Researcher Profile", color: "#0891B2", bg: "#F0F9FF" },
@@ -73,16 +78,20 @@ function AchievementTile({ icon: Icon, label, color, bg, description, earned = t
 }
 
 /**
- * AchievementsPanel — two real, distinct galleries:
- *  - "Verified Achievements": the trust badge catalogue (GET /trust/badges +
- *    /trust/badges/catalogue) — genuinely earned vs. genuinely not-yet-earned,
- *    each with its real award criterion as the tile's tooltip. Nothing here is
- *    invented; locked tiles show the actual requirement.
- *  - "Platform Achievements": lightweight client-computed milestones based on
- *    real profile completeness (unchanged logic from before, just restyled).
+ * AchievementsPanel — two DELIBERATELY separate, honestly-labeled galleries
+ * (P1 Phase 7 C1.5 — see computeProfileMilestones' comment for why these
+ * must never be merged):
+ *  - "Achievements": ONLY the real trust badge catalogue (GET /trust/badges
+ *    + /trust/badges/catalogue) — genuinely earned vs. genuinely
+ *    not-yet-earned, each with its real award criterion as the tile's
+ *    tooltip. Nothing here is invented; locked tiles show the actual
+ *    requirement. The section's earned-count is scoped to this gallery only.
+ *  - "Profile Milestones": client-computed profile-completeness indicators.
+ *    Explicitly NOT called achievements, NOT counted into the Achievements
+ *    total, and never implies Synaptiq awarded or verified anything.
  */
 export function AchievementsPanel({ profile, pubCount = 0, catalogue = [], earnedBadges = [] }) {
-  const clientBadges = computeClientBadges(profile || {}, pubCount);
+  const milestones = computeProfileMilestones(profile || {}, pubCount);
   const earnedKeys = new Set(earnedBadges.map((b) => b.badge_key));
 
   const verifiedTiles = catalogue.map((def) => {
@@ -98,14 +107,14 @@ export function AchievementsPanel({ profile, pubCount = 0, catalogue = [], earne
     };
   });
 
-  const totalEarned = verifiedTiles.filter((t) => t.earned).length + clientBadges.length;
+  const totalEarned = verifiedTiles.filter((t) => t.earned).length;
 
   return (
     <SectionShell
       title="Achievements"
-      subtitle={`${totalEarned} earned across verified credentials and platform milestones`}
+      subtitle={`${totalEarned} of ${verifiedTiles.length} verified credentials earned`}
     >
-      {verifiedTiles.length === 0 && clientBadges.length === 0 ? (
+      {verifiedTiles.length === 0 && milestones.length === 0 ? (
         <EmptyState icon={<Award />} title="No achievements yet" description="Badges appear as you build your academic identity." />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
@@ -117,11 +126,14 @@ export function AchievementsPanel({ profile, pubCount = 0, catalogue = [], earne
               </div>
             </div>
           )}
-          {clientBadges.length > 0 && (
+          {milestones.length > 0 && (
             <div>
-              <div style={{ ...TYPE.label, marginBottom: 10 }}>Platform Achievements</div>
+              <div style={{ ...TYPE.label, marginBottom: 10 }}>Profile Milestones</div>
+              <div style={{ fontSize: 11, color: TEXT_MUTED, marginBottom: 10, marginTop: -4 }}>
+                Completion indicators, not verified achievements.
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
-                {clientBadges.map((b) => <AchievementTile key={b.label} {...b} earned />)}
+                {milestones.map((b) => <AchievementTile key={b.label} {...b} earned />)}
               </div>
             </div>
           )}
@@ -131,6 +143,4 @@ export function AchievementsPanel({ profile, pubCount = 0, catalogue = [], earne
   );
 }
 
-// Kept for compatibility with any other importer expecting the old combined name.
-export const AchievementsTimeline = AchievementsPanel;
 export default AchievementsPanel;

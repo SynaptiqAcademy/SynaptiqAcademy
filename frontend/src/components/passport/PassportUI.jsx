@@ -135,9 +135,30 @@ export function ProfileCompletionMini({ completion }) {
   );
 }
 
-/** TrustHealthMini — compact trust score/level widget from the same real passport.trust_score used in the Hero. */
+/**
+ * TrustHealthMini — secondary-detail trust score widget (Passport V2: this
+ * score is intentionally NOT the primary identity/verification signal —
+ * see VerificationStatusCard / TrustVerificationSection for that, both
+ * driven by verification_profiles). trust_score/trust_level come from the
+ * separate trust_scores collection, which is only computed when a user
+ * visits /trust/score or /trust/overview — never by viewing the Passport
+ * (Passport load stays read-only). Most accounts have never triggered that
+ * computation, so a bare "0 / Unverified" here does NOT mean the account
+ * is actually unverified — passport.trust_score_computed distinguishes
+ * "never calculated" from a genuinely low real score.
+ */
 export function TrustHealthMini({ passport }) {
   if (!passport) return null;
+  if (!passport.trust_score_computed) {
+    return (
+      <RailCard title="Trust Health" icon={ShieldCheck}>
+        <div style={{ fontSize: 12.5, color: TEXT_MUTED, lineHeight: 1.5 }}>
+          Not yet calculated. This is a separate detail score from your verification status above —
+          it has no bearing on whether your identity, email, or ORCID are verified.
+        </div>
+      </RailCard>
+    );
+  }
   const score = Math.round(passport.trust_score ?? 0);
   const color = score >= 70 ? EMERALD : score >= 40 ? AMBER : TEXT_MUTED;
   return (

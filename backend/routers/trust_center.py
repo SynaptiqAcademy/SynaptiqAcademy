@@ -419,7 +419,13 @@ async def get_public_passport(
         raise HTTPException(404, "Passport not found.")
     if not doc.get("is_public", False):
         raise HTTPException(403, "This passport is private.")
-    private_fields = {"user_id", "share_token"}
+    # P1 Phase 7 C3: `is_public` is a single coarse on/off switch for the
+    # whole passport — there's no separate, explicit contact-visibility
+    # consent for this route (unlike routers/public_profiles.py's
+    # visibility_settings.contact, which get_full_profile() now respects).
+    # Opting a passport into public view isn't informed consent to publish
+    # a real email address, so it stays excluded here regardless.
+    private_fields = {"user_id", "share_token", "email"}
     return {k: v for k, v in doc.items() if k not in private_fields}
 
 

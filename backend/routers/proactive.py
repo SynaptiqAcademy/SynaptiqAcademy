@@ -33,6 +33,7 @@ from fastapi import APIRouter, Depends, Query
 from auth_utils import get_current_user
 from db import get_db
 from repo.shim import make_db_proxy
+from services.profile_completion import compute_profile_completion
 
 logger = logging.getLogger("synaptiq.proactive")
 
@@ -45,51 +46,44 @@ CATEGORIES = [
     "funding", "teaching", "institution", "career", "productivity",
 ]
 
-# Verified profile fields and their weights for completeness computation.
-# Weights are platform-internal — they do not claim to correlate with external outcomes.
-PROFILE_FIELDS = [
-    ("full_name",          "Full name",           10),
-    ("bio",                "Bio",                  8),
-    ("institution",        "Institution",          8),
-    ("research_interests", "Research interests",   8),
-    ("user_type",          "Academic role",        6),
-    ("orcid",              "ORCID",                6),
-    ("website",            "Website",              4),
-    ("location",           "Location",             4),
-    ("avatar_url",         "Profile photo",        6),
-]
-
 # ── Evidence helpers ───────────────────────────────────────────────────────────
 
 def _uid(user: dict) -> str:
     return str(user["id"])
 
 def _has_orcid(user: dict) -> bool:
-    """`orcid` is stored either as a verified-OAuth dict ({"orcid_id": ...})
-    or a plain string (typed in manually, e.g. demo/seed data) — both count
-    as "has ORCID". Crashed with AttributeError for string values before."""
+    """Only an OAuth-authenticated ORCID connection ({"orcid_id": ...} dict,
+    written by routers/orcid.py's /callback) counts as "has ORCID" — a bare
+    legacy/seed string is a never-authenticated, self-reported value. This
+    previously accepted any truthy value (string or dict), which is the same
+    bug class fixed in services/verification/profile_service.py and
+    frontend/src/lib/orcid.js: it could tell a user "Connect ORCID" is
+    already done, or award profile-completeness points, for an account that
+    never actually completed OAuth. Does not crash on a string value either
+    way — isinstance() guards that regardless of which branch is taken."""
     orcid = user.get("orcid")
-    return bool(orcid.get("orcid_id")) if isinstance(orcid, dict) else bool(orcid)
+    return bool(isinstance(orcid, dict) and orcid.get("orcid_id"))
 
 def _rec_id(*parts: str) -> str:
     """Stable deterministic ID so dismiss/accept can be stored."""
     return hashlib.sha1(":".join(parts).encode()).hexdigest()[:16]
 
-def _profile_completeness(user: dict) -> tuple[int, list[str]]:
+async def _profile_completeness(user: dict, db) -> tuple[int, list[str]]:
     """
-    Returns (score 0-100, list of missing field labels).
-    Score computed from platform-defined field weights. No external correlation claimed.
+    Returns (percentage 0-100, list of missing field labels) from the ONE
+    canonical profile-completion source (services/profile_completion.py —
+    the same one GET /users/me/profile-completion and the Academic Passport
+    use). This used to be an independent, differently-weighted formula
+    (different fields, 60-pt scale, no publication count, no DB lookups) —
+    which is exactly what caused the Passport's "AI Insights" card to show a
+    different completion % than the rest of the page (P1 Phase 7 audit).
     """
-    earned   = 0
-    possible = sum(w for _, _, w in PROFILE_FIELDS)
-    missing  = []
-    for key, label, weight in PROFILE_FIELDS:
-        val = user.get(key)
-        if val and (not isinstance(val, list) or len(val) > 0):
-            earned += weight
-        else:
-            missing.append(label)
-    return round(earned * 100 / possible), missing
+    uid = _uid(user)
+    result = await compute_profile_completion(db, uid)
+    if not result:
+        return 0, []
+    missing = [i["label"] for i in result["items"] if not i["earned"]]
+    return result["percentage"], missing
 
 def _confidence_from_evidence(evidence: list[dict]) -> tuple[str, str]:
     """
@@ -145,7 +139,7 @@ async def _build_recommendations(user: dict, db, dismissed_ids: set) -> list[dic
     uid   = _uid(user)
     recs  = []
     now   = datetime.now(timezone.utc)
-    comp, missing_fields = _profile_completeness(user)
+    comp, missing_fields = await _profile_completeness(user, db)
 
     # Track whether we have any substantive user data.
     # If not, we return a single "insufficient data" recommendation.
@@ -676,7 +670,7 @@ async def get_briefing(user=Depends(get_current_user), db=Depends(get_db)):
     """
     db = make_db_proxy(db, user)
     uid     = _uid(user)
-    comp, _ = _profile_completeness(user)
+    comp, _ = await _profile_completeness(user, db)
     now     = datetime.now(timezone.utc)
     name    = (user.get("full_name") or "Researcher").split()[0]
 
@@ -907,7 +901,7 @@ async def get_insights(user=Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     uid      = _uid(user)
     interests = user.get("research_interests") or user.get("research_areas") or []
-    comp, _  = _profile_completeness(user)
+    comp, _  = await _profile_completeness(user, db)
     insights = []
 
     try:
@@ -1002,7 +996,7 @@ async def get_health_score(user=Depends(get_current_user), db=Depends(get_db)):
     """
     db = make_db_proxy(db, user)
     uid     = _uid(user)
-    comp, _ = _profile_completeness(user)
+    comp, _ = await _profile_completeness(user, db)
 
     subscores = {}
     total     = 0

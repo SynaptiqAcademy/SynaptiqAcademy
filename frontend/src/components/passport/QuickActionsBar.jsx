@@ -5,6 +5,7 @@ import { Edit3, FilePlus2, FolderPlus, Link2, Share2, Download, FileDown, Check 
 import { Card } from "@/components/ds/Card";
 import { NAVY, TEXT_SECONDARY, TEXT_PRIMARY, BRD } from "@/lib/tokens";
 import api from "@/lib/api";
+import { isOrcidAuthenticated } from "@/lib/orcid";
 
 function downloadTextFile(filename, text) {
   const blob = new Blob([text], { type: "text/plain" });
@@ -118,13 +119,6 @@ export function usePassportActions({ profile, passport }) {
   return { exportCV, downloadPassport, shareProfile };
 }
 
-function hasOrcid(profile) {
-  const o = profile?.orcid;
-  if (!o) return false;
-  if (typeof o === "object") return !!o.orcid_id;
-  return true;
-}
-
 function ActionRow({ icon: Icon, label, done, onClick }) {
   return (
     <button
@@ -153,7 +147,7 @@ function ActionRow({ icon: Icon, label, done, onClick }) {
 export function QuickActionsRail({ profile, passport, verification, onEdit }) {
   const navigate = useNavigate();
   const { exportCV, downloadPassport, shareProfile } = usePassportActions({ profile, passport });
-  const orcidConnected = hasOrcid(profile) || !!verification?.orcid_verified;
+  const orcidConnected = isOrcidAuthenticated(profile?.orcid) || !!verification?.orcid_verified;
 
   return (
     <Card padding="lg">

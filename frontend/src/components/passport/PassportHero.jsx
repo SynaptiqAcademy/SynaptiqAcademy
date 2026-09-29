@@ -3,27 +3,25 @@ import { Edit3, Building2, CheckCircle2, Award } from "lucide-react";
 import { Avatar } from "@/components/ds/Avatar";
 import OrcidBadge from "@/components/orcid/OrcidBadge";
 import { NAVY, NAVY2, WHITE, EMERALD } from "@/lib/tokens";
+import { getAuthenticatedOrcidId } from "@/lib/orcid";
+import { VERIFICATION_ITEMS, countVerifiedDimensions } from "@/components/passport/TrustVerificationSection";
 
-// Only an OAuth-authenticated ORCID connection (the {orcid_id, access_token,
-// verified_at, ...} object routers/orcid.py's /callback persists) counts as
-// "connected" here — this badge sits next to "Verified Researcher" and would
-// otherwise falsely claim a connection for accounts holding a bare,
-// self-reported ORCID string (legacy data / seed accounts), which is what
-// caused this badge to contradict the Research Integrations card's (correct)
-// "not connected" state for the same account. IdentityCard's own
-// extractOrcidId intentionally stays permissive — it's a plain outbound
-// identifier link there, same as Google Scholar/ResearchGate, not a
-// verified-connection indicator.
-function extractOrcidId(orcid) {
-  if (orcid && typeof orcid === "object" && orcid.orcid_id) return orcid.orcid_id;
-  return null;
-}
-
-function TrustRing({ value, level }) {
+/**
+ * VerificationRing — Passport V2: the primary above-the-fold identity
+ * signal is verification coverage (from verification_profiles, always
+ * fresh, read-only), not the separate trust_score (which is frequently 0
+ * simply because it's never been computed for most accounts — see
+ * TrustHealthMini in the right rail for that detail score instead). This
+ * avoids the "Trust Score = 0 / Unverified while Identity/Email/ORCID show
+ * Verified" contradiction: this ring can never disagree with the
+ * verification badges shown just below it, because it's built from the
+ * exact same 5 fields.
+ */
+function VerificationRing({ verifiedCount, total }) {
   const dim = 84, stroke = 6;
   const r = (dim - stroke) / 2;
   const circ = 2 * Math.PI * r;
-  const pct = Math.min(100, Math.max(0, value));
+  const pct = total > 0 ? Math.min(100, Math.max(0, (verifiedCount / total) * 100)) : 0;
   const offset = circ - (pct / 100) * circ;
   return (
     <div style={{ textAlign: "center", flexShrink: 0 }}>
@@ -37,12 +35,14 @@ function TrustRing({ value, level }) {
           />
         </svg>
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: WHITE, lineHeight: 1 }}>{Math.round(value)}</span>
-          <span style={{ fontSize: 9.5, color: "rgba(255,255,255,0.5)" }}>/100</span>
+          <span style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: WHITE, lineHeight: 1 }}>{verifiedCount}</span>
+          <span style={{ fontSize: 9.5, color: "rgba(255,255,255,0.5)" }}>/{total}</span>
         </div>
       </div>
-      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", marginTop: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Trust Score</div>
-      {level && <div style={{ fontSize: 12, fontWeight: 700, color: WHITE, marginTop: 2 }}>{level}</div>}
+      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", marginTop: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Verification</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: WHITE, marginTop: 2 }}>
+        {verifiedCount === 0 ? "Getting started" : verifiedCount === total ? "Fully verified" : "In progress"}
+      </div>
     </div>
   );
 }
@@ -63,10 +63,9 @@ function Pill({ children }) {
  * PassportHero — flagship identity header. Every badge/stat is conditional
  * on real data — nothing here is shown unless the backing field is present.
  */
-export function PassportHero({ profile, passport, reputation, verification, researchRank, teachingStats, projectsTotal, grantsTotal, pubsTotal, achievementsTotal, onEdit }) {
-  const orcidId = extractOrcidId(profile?.orcid);
-  const trustScore = passport?.trust_score ?? 0;
-  const trustLevel = passport?.trust_level;
+export function PassportHero({ profile, passport, reputation, verification, researchRank, teachingStats, projectsTotal, grantsTotal, pubsTotal, achievementsTotal, completion, onEdit }) {
+  const orcidId = getAuthenticatedOrcidId(profile?.orcid);
+  const verifiedCount = countVerifiedDimensions(verification);
   const isVerifiedResearcher = !!(verification?.researcher_verified || passport?.verified_orcid);
   const isTop5Percent = (researchRank?.percentile_global ?? 0) >= 95;
 
@@ -115,6 +114,15 @@ export function PassportHero({ profile, passport, reputation, verification, rese
             </div>
           )}
 
+          {passport?.academic_fingerprint?.display && (
+            <div
+              title="A stable, non-biometric Synaptiq Academic Passport identifier — not your ORCID, email, or account ID."
+              style={{ fontFamily: "monospace", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6, letterSpacing: "0.02em" }}
+            >
+              {passport.academic_fingerprint.display}
+            </div>
+          )}
+
           <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
             {orcidId && (
               <Pill><OrcidBadge orcidId={orcidId} size="sm" testId="passport-orcid-badge" /> {orcidId}</Pill>
@@ -125,10 +133,13 @@ export function PassportHero({ profile, passport, reputation, verification, rese
             {isTop5Percent && (
               <Pill><Award size={12} /> Top 5% Researcher</Pill>
             )}
+            {completion?.percentage != null && (
+              <Pill>{completion.percentage}% profile complete</Pill>
+            )}
           </div>
         </div>
 
-        <TrustRing value={trustScore} level={trustLevel} />
+        <VerificationRing verifiedCount={verifiedCount} total={VERIFICATION_ITEMS.length} />
       </div>
 
       {/* Real stats ribbon — Courses/Students dropped (no such concept exists

@@ -88,6 +88,22 @@ async def get_full_profile(user_id: str, db, viewer_id: str = None) -> dict:
         (user.get("research_areas") or []) + (user.get("research_interests") or [])
     ))
 
+    # ── Safe-by-default public projection (P1 Phase 7 C1.6) ────────────────────
+    # This function used to unconditionally include the real email, and never
+    # redacted institution_id at all (an internal DB identifier with no public
+    # use — no frontend code reads it). Redaction previously lived entirely in
+    # routers/public_profiles.py's /researcher/{slug} handler, applied AFTER
+    # the fact and only for non-owner viewers whose visibility_settings
+    # explicitly opted out — and that check's own fallback default was
+    # "public", so a user who never touched privacy settings leaked their
+    # real email to anonymous visitors by default. Enforcing this here
+    # instead, as an explicit allowlist, means every current and future
+    # caller of get_full_profile() gets safe-by-default behavior even if a
+    # caller forgets its own redaction step.
+    is_owner = bool(viewer_id) and viewer_id == user_id
+    contact_visibility = ((profile_doc or {}).get("visibility_settings") or {}).get("contact")
+    email = user.get("email") if (is_owner or contact_visibility == "public") else None
+
     return {
         "user_id": user_id,
         "slug": profile_doc["slug"] if profile_doc else None,
@@ -99,7 +115,6 @@ async def get_full_profile(user_id: str, db, viewer_id: str = None) -> dict:
         "academic_title": user.get("academic_role") or "",
         "career_stage": user.get("career_stage"),
         "institution": user.get("institution"),
-        "institution_id": user.get("institution_id"),
         "department": user.get("department"),
         "country": user.get("country"),
         "biography": user.get("biography"),
@@ -107,7 +122,7 @@ async def get_full_profile(user_id: str, db, viewer_id: str = None) -> dict:
         "keywords": user.get("research_keywords") or user.get("keywords") or [],
         "website": user.get("website"),
         "orcid_id": orcid_id,
-        "email": user.get("email"),
+        "email": email,
         "impact": impact,
         "reputation": reputation,
         "stats": {

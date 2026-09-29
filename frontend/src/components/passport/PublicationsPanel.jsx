@@ -7,7 +7,24 @@ import { Button } from "@/components/ds/Button";
 import { EmptyState } from "@/components/ds/EmptyState";
 import { SkeletonCard } from "@/components/ds/LoadingState";
 import { NAVY, BRD, WARM, TEXT_MUTED, TEXT_SECONDARY, TEXT_PRIMARY } from "@/lib/tokens";
+import { ProvenanceTag } from "@/components/passport/ProvenanceTag";
 import api from "@/lib/api";
+
+// Provenance a publication record can actually carry, per
+// services/research_record/*.py's real "source" values — never inferred
+// beyond what's stored (P1 Phase 7 C2/§9).
+const SOURCE_LABELS = {
+  orcid: "Imported from ORCID",
+  openalex: "Metadata from OpenAlex",
+  synaptiq: "Created in Synaptiq",
+  manual: "Manually confirmed",
+};
+
+function publicationProvenance(pub) {
+  if (pub.doi) return { kind: "externally_verified", source: SOURCE_LABELS[pub.source] || "DOI on record" };
+  if (pub.source && SOURCE_LABELS[pub.source]) return { kind: "system_verified", source: SOURCE_LABELS[pub.source] };
+  return null;
+}
 
 const PUB_TYPE_LABELS = {
   "journal-article": "Journal Article", "conference-paper": "Conference Paper",
@@ -19,6 +36,7 @@ function PublicationRow({ pub }) {
   const [expanded, setExpanded] = useState(false);
   const typeLabel = PUB_TYPE_LABELS[pub.type] || pub.type || "Publication";
   const isRecent = pub.year >= 2020;
+  const provenance = publicationProvenance(pub);
 
   return (
     <div
@@ -44,6 +62,11 @@ function PublicationRow({ pub }) {
           {pub.journal && <span style={{ fontSize: 11, color: TEXT_SECONDARY, fontStyle: "italic" }}>{pub.journal}</span>}
           <span style={{ fontSize: 10, padding: "1px 6px", background: "#EFF6FF", color: NAVY, fontWeight: 600 }}>{typeLabel}</span>
         </div>
+        {provenance && (
+          <div style={{ marginTop: 4 }}>
+            <ProvenanceTag kind={provenance.kind} source={provenance.source} size="sm" />
+          </div>
+        )}
         {expanded && pub.abstract && (
           <p style={{ fontSize: 12, color: TEXT_SECONDARY, lineHeight: 1.65, margin: "8px 0 0", borderTop: `1px solid ${BRD}`, paddingTop: 8 }}>{pub.abstract}</p>
         )}

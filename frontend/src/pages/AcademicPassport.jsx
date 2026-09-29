@@ -16,7 +16,6 @@ import api from "@/lib/api";
 import { PassportNav, TABS } from "@/components/passport/PassportNav";
 import { PassportHero } from "@/components/passport/PassportHero";
 import { PassportRightRail } from "@/components/passport/PassportRightRail";
-import { computeClientBadges } from "@/components/passport/AchievementsTimeline";
 import { usePassportActions } from "@/components/passport/QuickActionsBar";
 import { EditIdentityModal } from "@/components/passport/EditIdentityModal";
 import { SkeletonPage } from "@/components/ds/LoadingState";
@@ -139,7 +138,10 @@ export default function AcademicPassport() {
   }
 
   const pubsTotal = pubs?.total ?? me.publications_count ?? 0;
-  const achievementsTotal = trustBadges.length + computeClientBadges(me, pubsTotal).length;
+  // "Achievements" in the hero stats ribbon is a hard number next to
+  // Publications/Citations/etc. — must be real earned badges only, not
+  // fabricated client-computed profile milestones (P1 Phase 7 C1.5).
+  const achievementsTotal = trustBadges.length;
   const publicUrl = passport?.public_url ? window.location.origin + passport.public_url : null;
 
   const tabProps = {
@@ -186,6 +188,7 @@ export default function AcademicPassport() {
           grantsTotal={grantsTotal}
           pubsTotal={pubsTotal}
           achievementsTotal={achievementsTotal}
+          completion={completion}
           onEdit={() => setEditOpen(true)}
         />
 
