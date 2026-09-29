@@ -42,9 +42,9 @@ from typing import Optional, Literal
 
 import jwt
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 from auth_utils import get_current_user, JWT_ALGORITHM
 from db import get_db
@@ -330,10 +330,6 @@ async def claim_institution(iid: str, payload: ClaimIn,
 # email_verifications JWT+single-use-record pattern exactly (short-lived,
 # single-use, no plaintext token persisted anywhere but the signed JWT
 # itself, rate-limited, never logged).
-class VerifyEmailStartIn(BaseModel):
-    email: EmailStr
-
-
 def _make_institution_email_token(user_id: str, institution_id: str, email: str) -> tuple[str, str]:
     jti = str(uuid.uuid4())
     payload = {
@@ -348,7 +344,18 @@ def _make_institution_email_token(user_id: str, institution_id: str, email: str)
 @router.post("/api/institutions/{iid}/verify-email/start")
 @limiter.limit(AUTH_RATE)
 async def start_institution_email_verification(
-    iid: str, request: Request, payload: VerifyEmailStartIn,
+    iid: str, request: Request,
+    # A bare Body(..., embed=True) field, not a local Pydantic model class —
+    # this router has `from __future__ import annotations` active, which
+    # turns every annotation (including a custom model's) into a string
+    # FastAPI must re-resolve via the endpoint's __globals__. slowapi's
+    # @limiter.limit wrapper does not forward that global namespace
+    # correctly, so a `payload: VerifyEmailStartIn` parameter silently
+    # failed to resolve and FastAPI fell back to treating it as an
+    # unrelated query parameter (confirmed in production: every call 400'd
+    # with "query.payload... Field required"). A plain `str` annotation
+    # needs no such lookup, sidestepping the interaction entirely.
+    email: str = Body(..., embed=True),
     user: dict = Depends(get_current_user),
 ):
     db = get_db()
@@ -358,7 +365,9 @@ async def start_institution_email_verification(
     if not inst:
         raise HTTPException(404, "Institution not found")
 
-    email = payload.email.lower().strip()
+    email = (email or "").lower().strip()
+    if "@" not in email or email.startswith("@") or email.endswith("@"):
+        raise HTTPException(400, "Enter a valid email address")
     domain = _email_domain(email)
     trusted_domains = [d.lower().strip() for d in (inst.get("email_domains") or [])]
     # A matching domain alone only proves the domain is the institution's

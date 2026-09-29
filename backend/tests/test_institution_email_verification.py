@@ -17,8 +17,25 @@ import pytest
 from bson import ObjectId
 
 from routers.institutions import (
-    _make_institution_email_token, confirm_institution_email_verification,
+    _make_institution_email_token, confirm_institution_email_verification, router as institutions_router,
 )
+
+
+def test_verify_email_start_route_recognizes_body_param():
+    """Regression guard: this router has `from __future__ import annotations`
+    active, and combining a rate-limit decorator (@limiter.limit) with a
+    locally-defined Pydantic BaseModel parameter silently broke FastAPI's
+    body-param resolution — every real request 400'd with a spurious
+    "query.payload Field required" error, confirmed live in production QA.
+    Fixed by using an explicit Body(..., embed=True) str field instead of a
+    model class. This checks the route's dependant actually has the body
+    param FastAPI needs, so this exact class of bug can't silently return."""
+    for r in institutions_router.routes:
+        if "verify-email/start" in r.path:
+            names = [p.name for p in r.dependant.body_params]
+            assert "email" in names, f"body_params={r.dependant.body_params!r}"
+            return
+    pytest.fail("verify-email/start route not found")
 
 
 def _oid() -> str:
