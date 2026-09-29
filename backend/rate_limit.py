@@ -199,3 +199,36 @@ def check_ai_rate_limit(user_id: str) -> None:
         raise
     except Exception as exc:
         logger.warning("AI rate limiter check failed (allowing request): %s", exc)
+
+
+_write_rate_item = None
+
+
+def check_write_rate_limit(user_id: str, *, bucket: str = "write") -> None:
+    """Raise HTTPException(429) if `user_id` exceeds WRITE_RATE for `bucket`.
+
+    P1 Phase 8E: collaboration-request sending is a new abuse surface (mass
+    invitations, automated outreach) — this is the same per-user chokepoint
+    pattern as check_ai_rate_limit above, reusing WRITE_RATE (already
+    defined for exactly this "cheap individually, abusable at volume"
+    class of authenticated write) instead of introducing a new constant or
+    limiter. `bucket` namespaces the hit-count key so unrelated write
+    endpoints reusing this helper don't share one counter.
+    """
+    if not limiter.enabled:
+        return
+    global _write_rate_item
+    try:
+        if _write_rate_item is None:
+            from limits import parse
+            _write_rate_item = parse(WRITE_RATE)
+        if not limiter.limiter.hit(_write_rate_item, bucket, user_id):
+            from fastapi import HTTPException
+            raise HTTPException(
+                status_code=429,
+                detail="Too many requests. Please slow down and try again shortly.",
+            )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.warning("Write rate limiter check failed (allowing request): %s", exc)

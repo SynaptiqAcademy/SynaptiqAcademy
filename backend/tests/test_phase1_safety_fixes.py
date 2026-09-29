@@ -273,6 +273,17 @@ class TestGrantTeamMembersIndex:
 class TestCollaborationRequestsUniqueIndex:
     @pytest.mark.asyncio
     async def test_duplicate_pending_request_rejected(self):
+        """This index exists only for the duration of this test — it is NOT
+        created by server.py's real startup (confirmed: production relies on
+        the application-level find_one check in
+        routers/collaboration_requests.py instead, which Phase 8E's
+        context-scoped duplicate protection depends on). Previously this
+        test created the index and never dropped it, leaving it to silently
+        persist in the shared local test DB and break any later test in any
+        file that inserts more than one collaboration_requests document for
+        the same sender/receiver pair — exactly the kind of cross-test
+        pollution this repo's is_demo/is_test hygiene work has been finding
+        elsewhere. Always dropped in `finally`, regardless of outcome."""
         _reset_db_client()
         db = get_db()
         try:
@@ -285,18 +296,21 @@ class TestCollaborationRequestsUniqueIndex:
             name="unique_pending_collaboration_request",
         )
 
-        sender, receiver = _oid(), _oid()
-        await db.collaboration_requests.delete_many({"sender_id": sender, "receiver_id": receiver})
-        await db.collaboration_requests.insert_one(
-            {"sender_id": sender, "receiver_id": receiver, "status": "pending"})
-
-        from pymongo.errors import DuplicateKeyError
-        with pytest.raises(DuplicateKeyError):
+        try:
+            sender, receiver = _oid(), _oid()
+            await db.collaboration_requests.delete_many({"sender_id": sender, "receiver_id": receiver})
             await db.collaboration_requests.insert_one(
                 {"sender_id": sender, "receiver_id": receiver, "status": "pending"})
 
-        # A non-pending status for the same pair must be allowed (partial index).
-        await db.collaboration_requests.insert_one(
-            {"sender_id": sender, "receiver_id": receiver, "status": "declined"})
+            from pymongo.errors import DuplicateKeyError
+            with pytest.raises(DuplicateKeyError):
+                await db.collaboration_requests.insert_one(
+                    {"sender_id": sender, "receiver_id": receiver, "status": "pending"})
 
-        await db.collaboration_requests.delete_many({"sender_id": sender, "receiver_id": receiver})
+            # A non-pending status for the same pair must be allowed (partial index).
+            await db.collaboration_requests.insert_one(
+                {"sender_id": sender, "receiver_id": receiver, "status": "declined"})
+
+            await db.collaboration_requests.delete_many({"sender_id": sender, "receiver_id": receiver})
+        finally:
+            await db.collaboration_requests.drop_index("unique_pending_collaboration_request")

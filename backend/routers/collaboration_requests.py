@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field
 
 from auth_utils import get_current_user
 from db import get_db
+from rate_limit import check_write_rate_limit
 from services.notifications_service import dispatch, NotificationEvent
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
@@ -37,6 +38,16 @@ INVITATION_TYPES = {
     "manuscript_invitation", "grant_team", "conference_team",
     "reviewer", "mentorship", "institutional_collaboration",
 }
+# P1 Phase 8E — the NATURE of the collaboration being proposed, orthogonal
+# to invitation_type above (which routes accept-side-effects: project vs
+# workspace vs manuscript). Additive-only field; existing callers that never
+# send it are unaffected.
+COLLABORATION_PURPOSES = {
+    "co_author_paper", "join_research_project", "grant_proposal",
+    "methodological_support", "data_analysis_support", "peer_review",
+    "policy_research", "research_consultation", "domain_expertise",
+    "conference_collaboration", "teaching_collaboration", "other",
+}
 REQUEST_EXPIRY_DAYS = 30
 
 
@@ -49,6 +60,7 @@ class SendRequestBody(BaseModel):
     source:                Optional[str] = Field(None)
     context:               Optional[dict] = Field(None)
     invitation_type:       Optional[str] = Field("research_collaboration")
+    collaboration_purpose: Optional[str] = Field(None)
     role:                  Optional[str] = Field(None, max_length=100)
     expected_contribution: Optional[str] = Field(None, max_length=500)
     estimated_duration:    Optional[str] = Field(None, max_length=100)
@@ -95,6 +107,20 @@ def _enrich_request(req: dict, users_map: dict) -> dict:
     return req
 
 
+async def _is_blocked_either_way(db, a_id: str, b_id: str) -> bool:
+    """P1 Phase 8E §17 — mandatory reciprocal blocking. Same network_settings
+    shape services/network/discovery_engine.py's _discovery_exclusions()
+    already reads (user_id + blocked_users), just a direct pairwise check
+    instead of building an exclusion set for a whole search."""
+    a_settings = await db.network_settings.find_one({"user_id": a_id})
+    b_settings = await db.network_settings.find_one({"user_id": b_id})
+    if a_settings and b_id in (a_settings.get("blocked_users") or []):
+        return True
+    if b_settings and a_id in (b_settings.get("blocked_users") or []):
+        return True
+    return False
+
+
 # ──────────────────────────────── endpoints ──────────────────────────────────
 
 @router.post("")
@@ -108,8 +134,15 @@ async def send_request(
 
     sender_id = user["id"]
 
+    # P1 Phase 8E §20 — new abuse surface (mass invitations, automated
+    # outreach); same per-user chokepoint pattern as the AI-credit limiter.
+    check_write_rate_limit(sender_id, bucket="collaboration_request")
+
     if body.receiver_id == sender_id:
         raise HTTPException(400, "Cannot send a collaboration request to yourself.")
+
+    if body.collaboration_purpose and body.collaboration_purpose not in COLLABORATION_PURPOSES:
+        raise HTTPException(400, f"Invalid collaboration_purpose. Must be one of: {', '.join(sorted(COLLABORATION_PURPOSES))}")
 
     # Verify receiver exists
     try:
@@ -118,15 +151,35 @@ async def send_request(
         raise HTTPException(404, "Receiver not found.")
     if not receiver:
         raise HTTPException(404, "Receiver not found.")
+    # §31/§41 — demo/QA fixtures are not real people; never a valid
+    # recipient for a real collaboration request, regardless of how the
+    # sender obtained their id.
+    if receiver.get("is_demo"):
+        raise HTTPException(404, "Receiver not found.")
 
-    # Prevent duplicate pending requests
-    existing = await db.collaboration_requests.find_one({
-        "sender_id":   sender_id,
-        "receiver_id": body.receiver_id,
-        "status":      "pending",
-    })
+    # §17 — mandatory reciprocal blocking, checked before anything else that
+    # would reveal information about the receiver.
+    if await _is_blocked_either_way(db, sender_id, body.receiver_id):
+        raise HTTPException(404, "Receiver not found.")
+
+    # §15 — duplicate protection scoped to the same meaningful context, not
+    # a blanket "one pending request ever" rule: the same two people may
+    # legitimately have separate simultaneous requests for, e.g., Project X
+    # and Paper Y. Falls back to the original blanket behaviour only when
+    # neither a project nor a research-need topic is given (a plain,
+    # contextless "let's collaborate" invite).
+    topic = (body.context or {}).get("research_need_topic")
+    dup_query: dict = {"sender_id": sender_id, "receiver_id": body.receiver_id, "status": "pending"}
+    if body.project_id:
+        dup_query["project_id"] = body.project_id
+    elif topic:
+        dup_query["context.research_need_topic"] = topic
+    else:
+        dup_query["project_id"] = None
+        dup_query["context.research_need_topic"] = {"$exists": False}
+    existing = await db.collaboration_requests.find_one(dup_query)
     if existing:
-        raise HTTPException(409, "You already have a pending request to this researcher.")
+        raise HTTPException(409, "You already have a pending request to this researcher for this context.")
 
     # Validate project_id if supplied
     project_title = None
@@ -151,6 +204,7 @@ async def send_request(
         "source":                body.source or "manual",
         "context":               body.context or {},
         "invitation_type":       inv_type,
+        "collaboration_purpose": body.collaboration_purpose or "",
         "role":                  body.role or "",
         "expected_contribution": body.expected_contribution or "",
         "estimated_duration":    body.estimated_duration or "",

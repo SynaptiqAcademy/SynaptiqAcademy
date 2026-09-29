@@ -151,7 +151,11 @@ function WhyThisPerson({ explanation, contribution, relevanceLabels, evidence })
   );
 }
 
-export function ExpertResultCard({ person }) {
+// P1 Phase 8E — onInvite is optional so this card stays the one shared
+// component for basic search (Phase 8B, no invite action), Research Need
+// results (Phase 8C/8D), and anywhere else it's reused; only a caller that
+// passes onInvite gets the button.
+export function ExpertResultCard({ person, onInvite }) {
   const role = [person.academic_role, person.professional_role].filter(Boolean).join(" · ");
   return (
     <Card padding="lg">
@@ -191,6 +195,19 @@ export function ExpertResultCard({ person }) {
         />
       ) : (
         <CompatibilityBadge compatibility={person.compatibility} />
+      )}
+
+      {onInvite && (
+        <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${BRD}` }}>
+          <Button type="button" size="sm" variant="primary" onClick={() => onInvite(person)}>
+            Invite to Collaborate
+          </Button>
+          {person.available_for_collaboration === false && (
+            <div style={{ marginTop: 5, fontSize: 11, color: TEXT_MUTED, fontStyle: "italic" }}>
+              This researcher has indicated they're not currently open to collaboration.
+            </div>
+          )}
+        </div>
       )}
     </Card>
   );

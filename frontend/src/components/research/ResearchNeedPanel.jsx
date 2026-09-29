@@ -18,6 +18,7 @@ import api from "@/lib/api";
 import { NAVY, TEXT_SECONDARY, TEXT_MUTED, BRD } from "@/lib/tokens";
 import { Card, Button, Input, Checkbox, EmptyState, LoadingOverlay } from "@/components/ds";
 import { ExpertResultCard } from "@/pages/ResearchExperts";
+import InviteToCollaborateModal from "./InviteToCollaborateModal";
 
 const PLACEHOLDER =
   "e.g. How can AI improve quality management in public hospitals while protecting patient outcomes and supporting healthcare staff?";
@@ -56,14 +57,14 @@ function EditableChipList({ label, items, onChange }) {
   );
 }
 
-function ResultGroup({ title, description, people }) {
+function ResultGroup({ title, description, people, onInvite }) {
   if (!people || people.length === 0) return null;
   return (
     <div style={{ marginBottom: 22 }}>
       <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, marginBottom: 2 }}>{title}</div>
       {description && <div style={{ fontSize: 12, color: TEXT_MUTED, marginBottom: 10 }}>{description}</div>}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 12 }}>
-        {people.map((p) => <ExpertResultCard key={p.id} person={p} />)}
+        {people.map((p) => <ExpertResultCard key={p.id} person={p} onInvite={onInvite} />)}
       </div>
     </div>
   );
@@ -105,6 +106,7 @@ export default function ResearchNeedPanel() {
   const [availableOnly, setAvailableOnly] = useState(false);
   const [includeMethods, setIncludeMethods] = useState(true);
   const [prioritize, setPrioritize] = useState("");
+  const [inviteTarget, setInviteTarget] = useState(null); // person object, or null when closed
 
   useEffect(() => {
     api.get("/research-need/cost").then((r) => setCost(r.data.cost)).catch(() => setCost(null));
@@ -238,10 +240,10 @@ export default function ResearchNeedPanel() {
             />
           ) : (
             <>
-              <ResultGroup title="Directly relevant" description="Working directly in the same research area." people={matchResult.similar} />
-              <ResultGroup title="Complementary expertise" description="Expertise that fills a different part of this research problem." people={matchResult.complementary} />
-              <ResultGroup title="Methods specialists" description="Relevant methods or tools, though not the same core topic." people={matchResult.methods_specialists} />
-              <ResultGroup title="Context specialists" description="Relevant geographic or language context for this project." people={matchResult.context_specialists} />
+              <ResultGroup title="Directly relevant" description="Working directly in the same research area." people={matchResult.similar} onInvite={setInviteTarget} />
+              <ResultGroup title="Complementary expertise" description="Expertise that fills a different part of this research problem." people={matchResult.complementary} onInvite={setInviteTarget} />
+              <ResultGroup title="Methods specialists" description="Relevant methods or tools, though not the same core topic." people={matchResult.methods_specialists} onInvite={setInviteTarget} />
+              <ResultGroup title="Context specialists" description="Relevant geographic or language context for this project." people={matchResult.context_specialists} onInvite={setInviteTarget} />
             </>
           )}
 
@@ -255,6 +257,13 @@ export default function ResearchNeedPanel() {
           )}
         </div>
       )}
+
+      <InviteToCollaborateModal
+        open={!!inviteTarget}
+        onClose={() => setInviteTarget(null)}
+        person={inviteTarget}
+        need={need}
+      />
     </Card>
   );
 }
