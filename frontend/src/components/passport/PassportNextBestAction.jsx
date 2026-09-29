@@ -27,17 +27,21 @@ const BENEFIT_COPY = {
 const IDENTITY_KEYS = new Set(["avatar", "biography", "institution", "keywords", "methods", "social", "availability"]);
 const ORCID_DEPENDENT_KEYS = new Set(["publications", "employment", "education"]);
 
-export function PassportNextBestAction({ completion, onEditIdentity, onConnectOrcid, onSyncOrcid, orcidConnected }) {
+export function PassportNextBestAction({ completion, onEditIdentity, onConnectOrcid, onSyncOrcid, orcidConnected, orcidConfigured = true }) {
   const navigate = useNavigate();
   if (!completion) return null;
 
   const next = pickNextBestAction(completion);
   if (!next) return null;
 
+  const orcidKeyBlocked = !orcidConfigured && !orcidConnected &&
+    (next.key === "orcid_connected" || ORCID_DEPENDENT_KEYS.has(next.key));
+
   // Mirrors PassportCompletion's routing (P1 Phase 7C4.3 §2/§6): identity
   // fields open the in-place editor, ORCID connect/sync run directly
   // instead of navigating to the now-dead /settings destination.
   const handleAction = () => {
+    if (orcidKeyBlocked) return;
     if (IDENTITY_KEYS.has(next.key)) return onEditIdentity?.();
     if (next.key === "orcid_connected") return onConnectOrcid?.();
     if (ORCID_DEPENDENT_KEYS.has(next.key)) return orcidConnected ? onSyncOrcid?.() : onConnectOrcid?.();
@@ -55,11 +59,13 @@ export function PassportNextBestAction({ completion, onEditIdentity, onConnectOr
             Recommended next step
           </div>
           <div style={{ fontSize: 14.5, fontWeight: 700, color: TEXT_PRIMARY, marginTop: 3 }}>{next.action_label || next.label}</div>
-          {BENEFIT_COPY[next.key] && (
+          {orcidKeyBlocked ? (
+            <p style={{ fontSize: 12.5, color: TEXT_SECONDARY, margin: "4px 0 0", lineHeight: 1.5, fontStyle: "italic" }}>ORCID connect is pending admin setup.</p>
+          ) : BENEFIT_COPY[next.key] && (
             <p style={{ fontSize: 12.5, color: TEXT_SECONDARY, margin: "4px 0 0", lineHeight: 1.5 }}>{BENEFIT_COPY[next.key]}</p>
           )}
         </div>
-        {next.action && (
+        {next.action && !orcidKeyBlocked && (
           <button
             onClick={handleAction}
             style={{

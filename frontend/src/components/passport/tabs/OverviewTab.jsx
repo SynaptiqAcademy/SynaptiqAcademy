@@ -21,24 +21,33 @@ import { NAVY, TEXT_PRIMARY, TEXT_SECONDARY } from "@/lib/tokens";
  */
 export function OverviewTab({
   profile, verification, completion, pubsTotal, recentEvents, onEdit, onGoToTab,
-  onConnectOrcid, onSyncOrcid, orcidConnected, orcidBusy,
+  onConnectOrcid, onSyncOrcid, orcidConnected, orcidBusy, orcidConfigured = true,
 }) {
-  const guardedConnect = orcidBusy ? undefined : onConnectOrcid;
+  // ORCID isn't configured platform-wide yet in some environments
+  // (ORCID_CLIENT_ID/SECRET unset — the Research tab's own ORCID card
+  // already discloses this via a disabled button + explanation). These
+  // Overview entry points previously looked identically clickable
+  // regardless, then silently failed with only a toast — inconsistent with
+  // that honest pattern (P1 Phase 7C4.3 §20: "if it cannot work, it must
+  // not look clickable").
+  const guardedConnect = (orcidBusy || !orcidConfigured) ? undefined : onConnectOrcid;
   const guardedSync = orcidBusy ? undefined : onSyncOrcid;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <PassportNextBestAction
         completion={completion} onEditIdentity={onEdit}
         onConnectOrcid={guardedConnect} onSyncOrcid={guardedSync} orcidConnected={orcidConnected}
+        orcidConfigured={orcidConfigured}
       />
 
       <PassportCompletion
         completion={completion} onEditIdentity={onEdit}
         onConnectOrcid={guardedConnect} onSyncOrcid={guardedSync} orcidConnected={orcidConnected}
+        orcidConfigured={orcidConfigured}
       />
 
       <div id="trust_verification">
-        <TrustVerificationSection verification={verification} profile={profile} onEditIdentity={onEdit} onConnectOrcid={guardedConnect} />
+        <TrustVerificationSection verification={verification} profile={profile} onEditIdentity={onEdit} onConnectOrcid={guardedConnect} orcidConfigured={orcidConfigured} />
       </div>
 
       <div id="academic_identity">

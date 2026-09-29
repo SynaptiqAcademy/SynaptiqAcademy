@@ -93,6 +93,10 @@ export default function AcademicPassport() {
   const [trustBadges, setTrustBadges] = useState([]);
   const [badgeCatalogue, setBadgeCatalogue] = useState([]);
   const [publicProfile, setPublicProfile] = useState(null);
+  // null while unknown (assume available, matching the pre-existing
+  // OrcidSettings card's own default) so the buttons don't flash
+  // disabled-then-enabled before this resolves.
+  const [orcidConfigured, setOrcidConfigured] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -138,6 +142,7 @@ export default function AcademicPassport() {
     api.get("/trust/badges", { silentGate: true }).then((r) => setTrustBadges(r.data || [])).catch(() => {});
     api.get("/trust/badges/catalogue", { silentGate: true }).then((r) => setBadgeCatalogue(r.data || [])).catch(() => {});
     api.get("/profiles/me", { silentGate: true }).then((r) => setPublicProfile(r.data)).catch(() => {});
+    api.get("/orcid/config", { silentGate: true }).then((r) => setOrcidConfigured(!!r.data?.configured)).catch(() => {});
     loadPubs();
   }, [me?.id, loadPubs]);
 
@@ -273,7 +278,7 @@ export default function AcademicPassport() {
                   pubsTotal={pubsTotal} recentEvents={recentEvents}
                   onEdit={() => setEditOpen(true)} onGoToTab={setActiveTab}
                   onConnectOrcid={handleConnectOrcid} onSyncOrcid={handleSyncOrcid} orcidConnected={orcidConnected}
-                  orcidBusy={orcidSyncing}
+                  orcidBusy={orcidSyncing} orcidConfigured={orcidConfigured !== false}
                 />,
     research:   <ResearchTab
                   profile={me} impact={impact} researchRank={researchRank}

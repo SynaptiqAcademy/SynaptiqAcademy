@@ -36,10 +36,12 @@ const GROUPS = [
 const IDENTITY_KEYS = new Set(["avatar", "biography", "institution", "keywords", "methods", "social", "availability"]);
 const ORCID_DEPENDENT_KEYS = new Set(["publications", "employment", "education"]);
 
-function CompletionItem({ item, onEditIdentity, onConnectOrcid, onSyncOrcid, orcidConnected }) {
+function CompletionItem({ item, onEditIdentity, onConnectOrcid, onSyncOrcid, orcidConnected, orcidConfigured = true }) {
   const navigate = useNavigate();
+  const orcidKeyBlocked = !orcidConfigured && !orcidConnected &&
+    (item.key === "orcid_connected" || ORCID_DEPENDENT_KEYS.has(item.key));
   const handleClick = () => {
-    if (!item.action) return;
+    if (!item.action || orcidKeyBlocked) return;
     if (IDENTITY_KEYS.has(item.key)) return onEditIdentity?.();
     if (item.key === "orcid_connected") return onConnectOrcid?.();
     if (ORCID_DEPENDENT_KEYS.has(item.key)) return orcidConnected ? onSyncOrcid?.() : onConnectOrcid?.();
@@ -48,13 +50,14 @@ function CompletionItem({ item, onEditIdentity, onConnectOrcid, onSyncOrcid, orc
   return (
     <button
       onClick={handleClick}
-      disabled={item.earned}
+      disabled={item.earned || orcidKeyBlocked}
+      title={orcidKeyBlocked ? "ORCID connect is pending admin setup" : undefined}
       style={{
         display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 4px",
-        border: "none", background: "none", cursor: item.earned ? "default" : "pointer", textAlign: "left",
-        borderRadius: 6, opacity: item.earned ? 0.7 : 1,
+        border: "none", background: "none", cursor: (item.earned || orcidKeyBlocked) ? "default" : "pointer", textAlign: "left",
+        borderRadius: 6, opacity: (item.earned || orcidKeyBlocked) ? 0.7 : 1,
       }}
-      onMouseEnter={(e) => { if (!item.earned) e.currentTarget.style.background = "#F8FAFC"; }}
+      onMouseEnter={(e) => { if (!item.earned && !orcidKeyBlocked) e.currentTarget.style.background = "#F8FAFC"; }}
       onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
     >
       <span style={{
@@ -67,15 +70,19 @@ function CompletionItem({ item, onEditIdentity, onConnectOrcid, onSyncOrcid, orc
         {item.label}
       </span>
       {!item.earned && item.action_label && (
-        <span style={{ fontSize: 11.5, fontWeight: 600, color: NAVY, flexShrink: 0, display: "flex", alignItems: "center", gap: 2 }}>
-          {item.action_label} <ArrowRight size={11} />
-        </span>
+        orcidKeyBlocked ? (
+          <span style={{ fontSize: 11, color: TEXT_SECONDARY, fontStyle: "italic", flexShrink: 0 }}>Pending admin setup</span>
+        ) : (
+          <span style={{ fontSize: 11.5, fontWeight: 600, color: NAVY, flexShrink: 0, display: "flex", alignItems: "center", gap: 2 }}>
+            {item.action_label} <ArrowRight size={11} />
+          </span>
+        )
       )}
     </button>
   );
 }
 
-export function PassportCompletion({ completion, onEditIdentity, onConnectOrcid, onSyncOrcid, orcidConnected }) {
+export function PassportCompletion({ completion, onEditIdentity, onConnectOrcid, onSyncOrcid, orcidConnected, orcidConfigured = true }) {
   const [expanded, setExpanded] = useState(false);
   if (!completion) return null;
 
@@ -133,7 +140,7 @@ export function PassportCompletion({ completion, onEditIdentity, onConnectOrcid,
                     <CompletionItem
                       key={item.key} item={item}
                       onEditIdentity={onEditIdentity} onConnectOrcid={onConnectOrcid}
-                      onSyncOrcid={onSyncOrcid} orcidConnected={orcidConnected}
+                      onSyncOrcid={onSyncOrcid} orcidConnected={orcidConnected} orcidConfigured={orcidConfigured}
                     />
                   ))}
                 </div>

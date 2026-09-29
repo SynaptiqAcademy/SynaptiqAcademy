@@ -95,7 +95,7 @@ function VerificationRow({ icon: Icon, title, verified, meta, action }) {
   );
 }
 
-export function TrustVerificationSection({ verification, profile, onEditIdentity, onConnectOrcid }) {
+export function TrustVerificationSection({ verification, profile, onEditIdentity, onConnectOrcid, orcidConfigured = true }) {
   if (!verification) return null;
 
   return (
@@ -121,13 +121,15 @@ export function TrustVerificationSection({ verification, profile, onEditIdentity
                 <Link to="/trust/institution" style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11.5, fontWeight: 600, color: NAVY, textDecoration: "none" }}>
                   Request institution verification <ChevronRight size={11} />
                 </Link>
-              ) : key === "orcid_verified" && !verification[key] ? (
+              ) : key === "orcid_verified" && !verification[key] && orcidConfigured ? (
                 <button
                   onClick={onConnectOrcid}
                   style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11.5, fontWeight: 600, color: NAVY, background: "none", border: "none", padding: 0, cursor: "pointer" }}
                 >
                   Connect ORCID <ChevronRight size={11} />
                 </button>
+              ) : key === "orcid_verified" && !verification[key] ? (
+                <span style={{ fontSize: 11, color: TEXT_MUTED, fontStyle: "italic" }}>ORCID connect is pending admin setup</span>
               ) : undefined
             }
           />
