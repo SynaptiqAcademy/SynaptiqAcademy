@@ -128,7 +128,7 @@ export function PassportCredentialHeader({ profile, passport, verification, comp
             </button>
           )}
           <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.5)", marginTop: 8 }}>
-            {verifiedCount} of {totalVerification} verification steps complete
+            Academic verification · {verifiedCount} of {totalVerification} complete
           </div>
         </div>
       </div>

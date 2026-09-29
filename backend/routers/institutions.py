@@ -34,19 +34,30 @@ Routes:
   GET    /api/institutions/{id}/analytics/health    — composite Research Health Score
 """
 from __future__ import annotations
-from datetime import datetime, timezone
+import logging
+import os
+import uuid
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Literal
 
+import jwt
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import RedirectResponse
+from pydantic import BaseModel, EmailStr, Field
 
-from auth_utils import get_current_user
+from auth_utils import get_current_user, JWT_ALGORITHM
 from db import get_db
+from rate_limit import limiter, AUTH_RATE
 from services.institutions import analytics as A
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 from zt.deps import zt_check, zt_is_admin, zt_is_super_admin
+
+logger = logging.getLogger("synaptiq.institutions")
+
+INSTITUTION_EMAIL_VERIFY_TTL_MIN = 30
+FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL", "")
 
 router = APIRouter(tags=["institutions"])
 
@@ -260,6 +271,13 @@ async def list_members(iid: str, status: Optional[str] = None,
 class ClaimIn(BaseModel):
     note: Optional[str] = None
     unit_ids: list[str] = []
+    # P1 Phase 7C4.4 Method 2 (manual evidence review) — a link to
+    # affiliation evidence (official staff/directory page, appointment
+    # letter, enrollment confirmation, etc.) for the admin who reviews this
+    # pending claim. Never a file upload (no such infra exists), never
+    # automatically trusted — it's just context for a human decision.
+    evidence_kind: Optional[str] = None
+    evidence_url: Optional[str] = None
 
 
 @router.post("/api/institutions/{iid}/claim")
@@ -282,7 +300,8 @@ async def claim_institution(iid: str, payload: ClaimIn,
         "status": "approved" if auto else "pending",
         "unit_ids": payload.unit_ids,
         "seat_type": "personal", "verified_via": "email_domain" if auto else "admin_approval",
-        "note": payload.note, "joined_at": _now(),
+        "note": payload.note, "evidence_kind": payload.evidence_kind,
+        "evidence_url": payload.evidence_url, "joined_at": _now(),
     }
     if existing:
         await db.institution_memberships.update_one(
@@ -298,6 +317,169 @@ async def claim_institution(iid: str, payload: ClaimIn,
         await _audit(iid, user["id"], "member_claim_pending",
                       target_kind="user", target_id=user["id"])
     return {"status": record["status"], "verified_via": record["verified_via"]}
+
+
+# ============================= EMAIL-DOMAIN VERIFICATION (Method 1) ========
+# P1 Phase 7C4.4 §D Method 1 — institutional email verification. Distinct
+# from claim()'s auto-domain-match above: that trusts the user's LOGIN email
+# without any proof step, only when it already happens to match. This lets a
+# user prove control of a *different* institutional email (their login email
+# is never touched — "Institutional verification email is evidence of
+# affiliation, not necessarily the login email" per spec) by actually
+# sending them a one-time link, mirroring routers/auth.py's own
+# email_verifications JWT+single-use-record pattern exactly (short-lived,
+# single-use, no plaintext token persisted anywhere but the signed JWT
+# itself, rate-limited, never logged).
+class VerifyEmailStartIn(BaseModel):
+    email: EmailStr
+
+
+def _make_institution_email_token(user_id: str, institution_id: str, email: str) -> tuple[str, str]:
+    jti = str(uuid.uuid4())
+    payload = {
+        "sub": user_id, "jti": jti, "type": "institution_email_verification",
+        "institution_id": institution_id, "email": email.lower().strip(),
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=INSTITUTION_EMAIL_VERIFY_TTL_MIN),
+    }
+    token = jwt.encode(payload, os.environ["JWT_SECRET"], algorithm=JWT_ALGORITHM)
+    return token, jti
+
+
+@router.post("/api/institutions/{iid}/verify-email/start")
+@limiter.limit(AUTH_RATE)
+async def start_institution_email_verification(
+    iid: str, request: Request, payload: VerifyEmailStartIn,
+    user: dict = Depends(get_current_user),
+):
+    db = get_db()
+    db = DBProxy(db, SecurityContext.from_user(user))
+
+    inst = await db.institutions.find_one({"_id": ObjectId(iid)}, {"name": 1, "email_domains": 1})
+    if not inst:
+        raise HTTPException(404, "Institution not found")
+
+    email = payload.email.lower().strip()
+    domain = _email_domain(email)
+    trusted_domains = [d.lower().strip() for d in (inst.get("email_domains") or [])]
+    # A matching domain alone only proves the domain is the institution's
+    # trusted domain — never treated as proof the user controls this
+    # specific mailbox (spec §D: "A matching domain alone is not sufficient
+    # proof that the user controls the address"). That proof is the whole
+    # point of actually sending and confirming the link below.
+    if not domain or domain not in trusted_domains:
+        raise HTTPException(
+            400,
+            f"{email.split('@', 1)[-1] if '@' in email else email} is not a recognized "
+            f"email domain for {inst.get('name', 'this institution')}.",
+        )
+
+    existing = await db.institution_memberships.find_one(
+        {"institution_id": iid, "user_id": user["id"]})
+    if existing and existing.get("status") == "approved":
+        raise HTTPException(400, "Already a verified member")
+
+    token, jti = _make_institution_email_token(user["id"], iid, email)
+    now = datetime.now(timezone.utc)
+    await db.institution_email_verifications.insert_one({
+        "user_id": user["id"], "institution_id": iid, "email": email, "jti": jti,
+        "used": False, "created_at": now,
+        "expires_at": now + timedelta(minutes=INSTITUTION_EMAIL_VERIFY_TTL_MIN),
+    })
+
+    from worker import enqueue_job, Job
+    try:
+        await enqueue_job(Job(
+            job_type="email.send",
+            payload={"kind": "institution_email_verification", "args": {
+                "user_id": user["id"], "to_email": email,
+                "institution_name": inst.get("name", "your institution"), "token": token,
+                "expires_in_minutes": INSTITUTION_EMAIL_VERIFY_TTL_MIN,
+            }},
+            user_id=user["id"],
+        ), db)
+    except Exception:
+        logger.exception("Failed to queue institution email verification for user %s", user["id"])
+        raise HTTPException(503, "Could not send verification email — please try again")
+
+    # Never echo the token/email back in a way that would end up logged —
+    # the caller already knows the address they just submitted.
+    return {"ok": True, "sent_to_domain": domain, "expires_in_minutes": INSTITUTION_EMAIL_VERIFY_TTL_MIN}
+
+
+@router.get("/api/institutions/verify-email/confirm")
+async def confirm_institution_email_verification(token: str = Query(...)):
+    """Opened directly from the emailed link (GET, no session cookie
+    required — the signed JWT itself is the credential), mirroring
+    routers/orcid.py's OAuth callback shape: verify server-side, then
+    redirect back to the Passport with a query-param result instead of
+    rendering anything here."""
+    db = get_db()
+    db = DBProxy(db, SecurityContext.system())
+
+    def _redirect(qs: str) -> RedirectResponse:
+        return RedirectResponse(f"{FRONTEND_BASE_URL}/academic-passport?{qs}")
+
+    try:
+        data = jwt.decode(token, os.environ["JWT_SECRET"], algorithms=[JWT_ALGORITHM])
+        if data.get("type") != "institution_email_verification":
+            return _redirect("institution_error=invalid_token")
+        user_id = data["sub"]
+        institution_id = data["institution_id"]
+        email = data["email"]
+        jti = data.get("jti")
+    except jwt.ExpiredSignatureError:
+        return _redirect("institution_error=expired")
+    except Exception:
+        return _redirect("institution_error=invalid_token")
+
+    record = await db.institution_email_verifications.find_one({"user_id": user_id, "jti": jti})
+    if record and record.get("used"):
+        return _redirect("institution_error=already_used")
+
+    inst = await db.institutions.find_one({"_id": ObjectId(institution_id)}, {"name": 1})
+    if not inst:
+        return _redirect("institution_error=invalid_token")
+
+    now = datetime.now(timezone.utc)
+    await db.institution_memberships.update_one(
+        {"institution_id": institution_id, "user_id": user_id},
+        {"$set": {
+            "institution_id": institution_id, "user_id": user_id, "role": "researcher",
+            "status": "approved", "seat_type": "personal",
+            "verified_via": "institutional_email", "verified_email": email,
+            "joined_at": now,
+        }, "$setOnInsert": {"unit_ids": []}},
+        upsert=True,
+    )
+    # Keep the free-text profile field consistent with the now-verified
+    # canonical institution — never touches user.email (the login email is
+    # untouched per spec; this is a separate, verified affiliation record).
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"institution_id": institution_id, "institution": inst.get("name")}},
+    )
+    if record:
+        await db.institution_email_verifications.update_one(
+            {"_id": record["_id"]}, {"$set": {"used": True, "used_at": now}},
+        )
+    else:
+        # Token was valid and unexpired but its DB record is missing (should
+        # not happen under normal operation) — proceed since the JWT itself
+        # already proved authenticity, but there's no single-use record to
+        # mark, so log for visibility rather than silently ignoring it.
+        logger.warning("institution_email_verifications record missing for jti=%s user=%s", jti, user_id)
+
+    await db.institution_audit.insert_one({
+        "institution_id": institution_id, "actor_id": user_id,
+        "action": "member_verified_via_institutional_email",
+        "target_kind": "user", "target_id": user_id,
+        "metadata": {"domain": _email_domain(email)}, "created_at": now.isoformat(),
+    })
+
+    from services.verification.profile_service import compute_verification_profile
+    await compute_verification_profile(user_id, db)
+
+    return _redirect("institution=verified")
 
 
 class MemberDecisionIn(BaseModel):

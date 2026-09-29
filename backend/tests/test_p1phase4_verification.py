@@ -38,9 +38,17 @@ class _RawDB:
 
 
 async def _insert_user(db, **extra) -> str:
+    # email_verified defaults True — a realistic confirmed test account.
+    # P1 Phase 7C4.4 fixed compute_verification_profile's email_verified to
+    # check this real, JWT-link-confirmed field instead of mere presence of
+    # an email string (the old bug this suite's fixtures used to encode);
+    # these composite-identity tests care about orcid/institution/identity
+    # logic, not email confirmation itself, so the default keeps that intent
+    # unchanged. Pass email_verified=False explicitly to test that case.
     doc = {
         "full_name": "Verification Test User",
         "email": f"verify-{_oid()}@synaptiq-test.io",
+        "email_verified": True,
         **extra,
     }
     res = await db.users.insert_one(doc)
@@ -141,6 +149,116 @@ class TestRecomputeIdempotency:
             assert third["updated_at"] != first_updated_at
         finally:
             await raw.db.users.delete_one({"_id": ObjectId(uid)})
+            await raw.db.verification_profiles.delete_one({"user_id": uid})
+            raw.close()
+
+
+class TestEmailVerifiedRequiresRealConfirmation:
+    """P1 Phase 7C4.4 §B: email_verified must reflect the real, JWT-link-
+    confirmed users.email_verified field, not mere presence of an email
+    string — the presence-only check falsely told users their email
+    ownership was confirmed when it had never been."""
+
+    @pytest.mark.asyncio
+    async def test_email_present_but_unconfirmed_is_not_verified(self):
+        raw = _RawDB()
+        try:
+            uid = await _insert_user(raw.db, email_verified=False)
+            profile = await compute_verification_profile(uid, raw.db)
+            assert profile["email_verified"] is False
+            assert profile["identity_verified"] is False
+        finally:
+            await raw.db.users.delete_one({"_id": ObjectId(uid)})
+            await raw.db.verification_profiles.delete_one({"user_id": uid})
+            raw.close()
+
+    @pytest.mark.asyncio
+    async def test_email_confirmed_is_verified(self):
+        raw = _RawDB()
+        try:
+            uid = await _insert_user(raw.db, email_verified=True)
+            profile = await compute_verification_profile(uid, raw.db)
+            assert profile["email_verified"] is True
+        finally:
+            await raw.db.users.delete_one({"_id": ObjectId(uid)})
+            await raw.db.verification_profiles.delete_one({"user_id": uid})
+            raw.close()
+
+
+class TestInstitutionVerifiedPaths:
+    """P1 Phase 7C4.4 §D/§K audit: institution_verified must become true via
+    every real evidence path — an approved institution_memberships row (the
+    status value is "approved", never "active" — the dead check this fixes)
+    and an approved manual verification_requests institution request (the
+    admin-approval path that was previously silently discarded by the very
+    recompute call that followed it)."""
+
+    @pytest.mark.asyncio
+    async def test_approved_membership_with_status_approved_verifies(self):
+        raw = _RawDB()
+        try:
+            uid = await _insert_user(raw.db, institution="Test University")
+            await raw.db.institution_memberships.insert_one(
+                {"institution_id": _oid(), "user_id": uid, "status": "approved"})
+            profile = await compute_verification_profile(uid, raw.db)
+            assert profile["institution_verified"] is True
+        finally:
+            await raw.db.users.delete_one({"_id": ObjectId(uid)})
+            await raw.db.institution_memberships.delete_many({"user_id": uid})
+            await raw.db.verification_profiles.delete_one({"user_id": uid})
+            raw.close()
+
+    @pytest.mark.asyncio
+    async def test_pending_membership_does_not_verify(self):
+        raw = _RawDB()
+        try:
+            uid = await _insert_user(raw.db, institution="Test University")
+            await raw.db.institution_memberships.insert_one(
+                {"institution_id": _oid(), "user_id": uid, "status": "pending"})
+            profile = await compute_verification_profile(uid, raw.db)
+            assert profile["institution_verified"] is False
+        finally:
+            await raw.db.users.delete_one({"_id": ObjectId(uid)})
+            await raw.db.institution_memberships.delete_many({"user_id": uid})
+            await raw.db.verification_profiles.delete_one({"user_id": uid})
+            raw.close()
+
+    @pytest.mark.asyncio
+    async def test_approved_manual_verification_request_verifies(self):
+        """The confirmed root-cause case: an admin approving a
+        verification_requests institution request (routers/verification.py's
+        POST /admin/request/{rid}/decide) must actually result in
+        institution_verified=True on the next recompute, not silently
+        revert to False."""
+        raw = _RawDB()
+        try:
+            uid = await _insert_user(raw.db, institution="Test University")
+            await raw.db.verification_requests.insert_one({
+                "user_id": uid, "request_type": "institution", "status": "approved",
+                "details": {"institution_name": "Test University"},
+            })
+            profile = await compute_verification_profile(uid, raw.db)
+            assert profile["institution_verified"] is True
+        finally:
+            await raw.db.users.delete_one({"_id": ObjectId(uid)})
+            await raw.db.verification_requests.delete_many({"user_id": uid})
+            await raw.db.verification_profiles.delete_one({"user_id": uid})
+            raw.close()
+
+    @pytest.mark.asyncio
+    async def test_pending_manual_verification_request_does_not_verify(self):
+        raw = _RawDB()
+        try:
+            uid = await _insert_user(raw.db, institution="Test University")
+            await raw.db.verification_requests.insert_one({
+                "user_id": uid, "request_type": "institution", "status": "pending",
+                "details": {"institution_name": "Test University"},
+            })
+            profile = await compute_verification_profile(uid, raw.db)
+            assert profile["institution_verified"] is False
+        finally:
+            await raw.db.users.delete_one({"_id": ObjectId(uid)})
+            await raw.db.verification_requests.delete_many({"user_id": uid})
             await raw.db.verification_profiles.delete_one({"user_id": uid})
             raw.close()
 

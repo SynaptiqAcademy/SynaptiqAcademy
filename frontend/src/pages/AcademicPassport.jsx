@@ -25,6 +25,7 @@ import { PassportNav, TABS } from "@/components/passport/PassportNav";
 import { PassportCredentialHeader } from "@/components/passport/PassportCredentialHeader";
 import { usePassportActions } from "@/components/passport/QuickActionsBar";
 import { EditIdentityModal } from "@/components/passport/EditIdentityModal";
+import { InstitutionVerificationModal } from "@/components/passport/InstitutionVerificationModal";
 import { SkeletonPage } from "@/components/ds/LoadingState";
 
 import { OverviewTab } from "@/components/passport/tabs/OverviewTab";
@@ -70,6 +71,12 @@ const ORCID_ERROR_MESSAGES = {
   already_linked_to_other_account: "This ORCID iD is already linked to a different SYNAPTIQ account.",
 };
 
+const INSTITUTION_ERROR_MESSAGES = {
+  expired: "That verification link has expired — request a new one.",
+  already_used: "That verification link was already used.",
+  invalid_token: "That verification link isn't valid. Please try again.",
+};
+
 export default function AcademicPassport() {
   const { user: me, refreshMe } = useAuth();
   const location = useLocation();
@@ -99,6 +106,8 @@ export default function AcademicPassport() {
   const [orcidConfigured, setOrcidConfigured] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [institutionModalOpen, setInstitutionModalOpen] = useState(false);
+  const [institutionStatus, setInstitutionStatus] = useState(null);
 
   const initialTab = useMemo(() => {
     const h = location.hash?.replace("#", "");
@@ -143,8 +152,13 @@ export default function AcademicPassport() {
     api.get("/trust/badges/catalogue", { silentGate: true }).then((r) => setBadgeCatalogue(r.data || [])).catch(() => {});
     api.get("/profiles/me", { silentGate: true }).then((r) => setPublicProfile(r.data)).catch(() => {});
     api.get("/orcid/config", { silentGate: true }).then((r) => setOrcidConfigured(!!r.data?.configured)).catch(() => {});
+    api.get("/verification/me/institution-status", { silentGate: true }).then((r) => setInstitutionStatus(r.data)).catch(() => {});
     loadPubs();
   }, [me?.id, loadPubs]);
+
+  const refreshInstitutionStatus = useCallback(() => {
+    api.get("/verification/me/institution-status", { silentGate: true }).then((r) => setInstitutionStatus(r.data)).catch(() => {});
+  }, []);
 
   // The real, existing public profile URL (ResearcherProfile.jsx's
   // /researcher/:slug route) — used for Share/Export/Preview everywhere in
@@ -174,6 +188,7 @@ export default function AcademicPassport() {
   const refreshVerificationAndCompletion = useCallback(() => {
     api.get("/users/me/profile-completion").then((r) => setCompletion(r.data)).catch(() => {});
     api.get("/verification/me", { silentGate: true }).then((r) => setVerification(r.data)).catch(() => {});
+    api.get("/verification/me/institution-status", { silentGate: true }).then((r) => setInstitutionStatus(r.data)).catch(() => {});
   }, []);
 
   const refreshAfterIdentityChange = useCallback(async () => {
@@ -237,6 +252,24 @@ export default function AcademicPassport() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Lands here after clicking the institutional-email confirmation link
+  // (backend redirects GET /api/institutions/verify-email/confirm here) —
+  // same shape as the ORCID callback above (P1 Phase 7C4.4 §D Method 1).
+  useEffect(() => {
+    const institutionError = searchParams.get("institution_error");
+    const institutionVerified = searchParams.get("institution") === "verified";
+    if (institutionError) {
+      toast.error(INSTITUTION_ERROR_MESSAGES[institutionError] || "Institution verification failed. Please try again.");
+      setSearchParams((p) => { p.delete("institution_error"); return p; }, { replace: true });
+    } else if (institutionVerified) {
+      toast.success("Institution verified");
+      setSearchParams((p) => { p.delete("institution"); return p; }, { replace: true });
+      refreshAfterIdentityChange();
+      refreshInstitutionStatus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Supports plain <Link to="/academic-passport#some_section"> from child
   // cards (e.g. "View all publications") without a full page reload — maps
   // the old anchor onto its new tab, then scrolls to the actual section
@@ -279,6 +312,7 @@ export default function AcademicPassport() {
                   onEdit={() => setEditOpen(true)} onGoToTab={setActiveTab}
                   onConnectOrcid={handleConnectOrcid} onSyncOrcid={handleSyncOrcid} orcidConnected={orcidConnected}
                   orcidBusy={orcidSyncing} orcidConfigured={orcidConfigured !== false}
+                  institutionStatus={institutionStatus} onVerifyInstitution={() => setInstitutionModalOpen(true)}
                 />,
     research:   <ResearchTab
                   profile={me} impact={impact} researchRank={researchRank}
@@ -339,6 +373,13 @@ export default function AcademicPassport() {
         onClose={() => setEditOpen(false)}
         profile={me}
         onSaved={refreshAfterIdentityChange}
+      />
+
+      <InstitutionVerificationModal
+        open={institutionModalOpen}
+        onClose={() => setInstitutionModalOpen(false)}
+        profile={me}
+        onSubmitted={refreshInstitutionStatus}
       />
     </div>
   );

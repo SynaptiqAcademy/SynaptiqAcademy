@@ -34,9 +34,21 @@ class EvidenceBody(BaseModel):
 
 
 class InstitutionVerifyBody(BaseModel):
-    institution_id: str
+    # institution_id is set when the user selected a real institutions-
+    # directory entry (P1 Phase 7C4.4 Method 2, institution known);
+    # institution_name is the free-text fallback when their institution
+    # isn't in the directory yet — at least one is required. evidence_kind/
+    # evidence_url capture the affiliation evidence an admin reviews (a
+    # staff/directory page URL, an appointment letter link, etc.) — never a
+    # file upload (no such infra exists here, and inventing one is out of
+    # scope), never automatically trusted.
+    institution_id: Optional[str] = None
+    institution_name: Optional[str] = None
     department: str = ""
     role: str = ""
+    evidence_kind: Optional[str] = None
+    evidence_url: Optional[str] = None
+    notes: str = ""
 
 
 class EvidenceReviewBody(BaseModel):
@@ -177,8 +189,27 @@ async def request_institution_verification(
     user: dict = Depends(get_current_user),
     db=Depends(get_db),
 ):
+    """Method 2 fallback for an institution not (yet) in the institutions
+    directory — see routers/institutions.py's claim() for the preferred
+    path when the institution IS in the directory. Creates a pending
+    request for an authorized admin to review (P1 Phase 7C4.4 §D Method 2).
+    """
     db = make_db_proxy(db, user)
+    if not (body.institution_id or (body.institution_name or "").strip()):
+        raise HTTPException(400, "institution_id or institution_name is required")
+
     now = datetime.now(timezone.utc)
+
+    # Don't let repeated clicks pile up duplicate pending requests — surface
+    # the existing one instead of creating another the admin queue would
+    # have to de-duplicate by hand.
+    existing = await db.verification_requests.find_one(
+        {"user_id": user["id"], "request_type": "institution", "status": "pending"}
+    )
+    if existing:
+        existing["_id"] = _s(existing.get("_id"))
+        return existing
+
     request_doc = {
         "user_id": user["id"],
         "request_type": "institution",
@@ -189,6 +220,87 @@ async def request_institution_verification(
     result = await db.verification_requests.insert_one(request_doc)
     request_doc["_id"] = _s(result.inserted_id)
     return request_doc
+
+
+@router.get("/me/institution-status")
+async def get_my_institution_status(
+    user: dict = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Read-only aggregation over the real institution-verification state —
+    verification_profiles.institution_verified plus whichever of the two
+    request-shaped collections (institution_memberships for a known
+    institution, verification_requests for a not-yet-catalogued one) is
+    actually in flight. P1 Phase 7C4.4 §E: the Passport previously only had
+    a bare boolean, which can only ever render "Verified" or a meaningless
+    "Pending" — this exists so the UI can show the real state (not verified /
+    in progress / verified / action required / rejected) instead. No new
+    verification model — every field here already exists somewhere.
+    """
+    db = make_db_proxy(db, user)
+    uid = user["id"]
+
+    u = await db.users.find_one({"_id": ObjectId(uid)}, {"institution_id": 1, "institution": 1})
+    inst_id = (u or {}).get("institution_id")
+
+    if inst_id:
+        inst = await db.institutions.find_one({"_id": ObjectId(inst_id)}, {"name": 1})
+        membership = await db.institution_memberships.find_one({"institution_id": inst_id, "user_id": uid})
+        if membership and membership.get("status") == "approved":
+            return {
+                "state": "verified",
+                "institution_name": (inst or {}).get("name") or (u or {}).get("institution"),
+                "verified_via": membership.get("verified_via"),
+                "verified_at": _iso(membership.get("joined_at")),
+            }
+
+    # Not (yet) linked to an approved institution_memberships row — check
+    # both request-shaped paths for anything in flight, most recent first.
+    membership_req = await db.institution_memberships.find_one(
+        {"user_id": uid}, sort=[("joined_at", -1)]
+    ) if not inst_id else await db.institution_memberships.find_one({"institution_id": inst_id, "user_id": uid})
+    legacy_req = await db.verification_requests.find_one(
+        {"user_id": uid, "request_type": "institution"}, sort=[("created_at", -1)]
+    )
+
+    # Prefer whichever request is newer when both exist.
+    def _ts(doc, key):
+        if not doc:
+            return None
+        v = doc.get(key)
+        return v if isinstance(v, str) else (v.isoformat() if v else None)
+
+    m_time = _ts(membership_req, "joined_at")
+    r_time = _ts(legacy_req, "created_at")
+    use_membership = bool(membership_req) and (not legacy_req or (m_time or "") >= (r_time or ""))
+
+    if use_membership and membership_req:
+        status = membership_req.get("status")
+        inst = await db.institutions.find_one({"_id": ObjectId(membership_req["institution_id"])}, {"name": 1})
+        name = (inst or {}).get("name")
+        if status == "pending":
+            return {"state": "in_progress", "institution_name": name, "submitted_at": m_time}
+        if status == "denied":
+            return {"state": "rejected", "institution_name": name, "decided_at": _iso(membership_req.get("decided_at"))}
+
+    if legacy_req:
+        status = legacy_req.get("status")
+        name = (legacy_req.get("details") or {}).get("institution_name") or (legacy_req.get("details") or {}).get("institution_id")
+        if status == "pending":
+            return {"state": "in_progress", "institution_name": name, "submitted_at": r_time}
+        if status == "rejected":
+            return {
+                "state": "rejected", "institution_name": name,
+                "decided_at": _iso(legacy_req.get("reviewed_at")), "notes": legacy_req.get("review_notes"),
+            }
+
+    return {"state": "not_verified", "institution_name": (u or {}).get("institution")}
+
+
+def _iso(v):
+    if v is None:
+        return None
+    return v if isinstance(v, str) else v.isoformat()
 
 
 # ──────────────────────────────────────────────
@@ -437,11 +549,15 @@ async def admin_decide_request(
         if req_doc:
             uid = req_doc.get("user_id")
             if uid:
-                await db.verification_profiles.update_one(
-                    {"user_id": uid},
-                    {"$set": {"institution_verified": True, "updated_at": now}},
-                    upsert=True,
-                )
+                # compute_verification_profile() now itself checks for an
+                # approved request_type="institution" verification_requests
+                # doc (see services/verification/profile_service.py) — no
+                # separate direct field write needed here. The previous
+                # direct update_one(institution_verified=True) was silently
+                # discarded by this very recompute call overwriting it back
+                # to False on the next line, since the compute function had
+                # no way to know about the approval (P1 Phase 7C4.4 — the
+                # confirmed root cause of admin approval having no effect).
                 from services.verification import profile_service
                 await profile_service.compute_verification_profile(uid, db)
 

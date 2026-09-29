@@ -22,6 +22,7 @@ import { NAVY, TEXT_PRIMARY, TEXT_SECONDARY } from "@/lib/tokens";
 export function OverviewTab({
   profile, verification, completion, pubsTotal, recentEvents, onEdit, onGoToTab,
   onConnectOrcid, onSyncOrcid, orcidConnected, orcidBusy, orcidConfigured = true,
+  institutionStatus, onVerifyInstitution,
 }) {
   // ORCID isn't configured platform-wide yet in some environments
   // (ORCID_CLIENT_ID/SECRET unset — the Research tab's own ORCID card
@@ -47,7 +48,12 @@ export function OverviewTab({
       />
 
       <div id="trust_verification">
-        <TrustVerificationSection verification={verification} profile={profile} onEditIdentity={onEdit} onConnectOrcid={guardedConnect} orcidConfigured={orcidConfigured} />
+        <TrustVerificationSection
+          verification={verification} profile={profile} onEditIdentity={onEdit}
+          onConnectOrcid={guardedConnect} orcidConfigured={orcidConfigured}
+          institutionStatus={institutionStatus} onVerifyInstitution={onVerifyInstitution}
+          pubsTotal={pubsTotal} onGoToResearch={() => onGoToTab?.("research")}
+        />
       </div>
 
       <div id="academic_identity">

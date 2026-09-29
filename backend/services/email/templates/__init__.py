@@ -1,5 +1,6 @@
 from .welcome import welcome_email
 from .verification import verification_email
+from .institution_email_verification import institution_email_verification_email
 from .getting_started import getting_started_email
 from .password_reset import password_reset_email
 from .workspace_invitation import workspace_invitation_email
@@ -9,6 +10,7 @@ from .collaboration_invitation import collaboration_invitation_email
 __all__ = [
     "welcome_email",
     "verification_email",
+    "institution_email_verification_email",
     "getting_started_email",
     "password_reset_email",
     "workspace_invitation_email",

@@ -12,6 +12,7 @@ from __future__ import annotations
 from services.email.templates import (
     welcome_email,
     verification_email as email_verification_email,
+    institution_email_verification_email,
     getting_started_email,
     password_reset_email,
     workspace_invitation_email,
@@ -22,6 +23,7 @@ from services.email.templates import (
 __all__ = [
     "welcome_email",
     "email_verification_email",
+    "institution_email_verification_email",
     "getting_started_email",
     "password_reset_email",
     "workspace_invitation_email",

@@ -801,6 +801,10 @@ async def startup():
             # TTL: auto-delete expired verification tokens and reset tokens
             await db.email_verifications.create_index([("expires_at", 1)], expireAfterSeconds=0)
             await db.password_resets.create_index([("expires_at", 1)], expireAfterSeconds=0)
+            # P1 Phase 7C4.4: institution-email verification tokens — same
+            # single-use JTI lookup + TTL auto-expiry pattern as the two above.
+            await db.institution_email_verifications.create_index([("user_id", 1), ("jti", 1)])
+            await db.institution_email_verifications.create_index([("expires_at", 1)], expireAfterSeconds=0)
             # AUTH-011: Audit log TTL (90 days) + security events TTL (180 days)
             await db.audit_log.create_index([("expires_at", 1)], expireAfterSeconds=0)
             await db.security_events.create_index([("expires_at", 1)], expireAfterSeconds=0)

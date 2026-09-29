@@ -1,44 +1,28 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import {
   UserCircle2, Building2, Mail, ArrowRight, CheckCircle2, Clock,
-  GraduationCap, Link2, ChevronRight,
+  BookOpen, Link2, ChevronRight, AlertTriangle,
 } from "lucide-react";
 import { SectionShell } from "./PassportUI";
-import { EMERALD, AMBER, TYPE, NAVY, BRD, TEXT_MUTED, TEXT_SECONDARY, TEXT_PRIMARY } from "@/lib/tokens";
+import { EMERALD, AMBER, CRIMSON, TYPE, NAVY, BRD, TEXT_MUTED, TEXT_SECONDARY, TEXT_PRIMARY } from "@/lib/tokens";
+import api from "@/lib/api";
 
-// Maps 1:1 to real booleans on GET /api/verification/me. "Expertise" is
-// deliberately labeled by what it actually measures (publication count) —
-// there is no separate expert-review verification flow in the backend.
-//
-// This is the ONE canonical set of "verification dimensions" shown across
-// the Passport (the hero's verification-coverage count, this section, and
-// the old VerificationStatusCard — now retired, its content absorbed here
-// to remove that duplicate item list). Counting
+// Maps 1:1 to real booleans on GET /api/verification/me. Kept as the ONE
+// canonical set of "verification dimensions" shown across the Passport (the
+// header's coverage count and this section both read from here) — counting
 // Object.values(verification).filter(Boolean) directly is what previously
-// produced the "11 / 5 Verified" bug: that response object also carries
-// verification_score, verification_level, user_id, and several other
-// verified_* booleans beyond these 5 — none of which belong here.
-//
-// metaVerified/metaPending: honest, literally-true provenance/next-step
-// text (P1 Phase 7 C2). Never claim more than the backend can prove — e.g.
-// ORCID authentication is never described as legal identity verification.
+// produced the "11 / 5 Verified" bug (P1 Phase 7 C1). Only the `title`/copy
+// changed in P1 Phase 7C4.4 (Identity & Verification → Academic
+// Verification rewrite) — the keys and what each one measures are
+// unchanged, per that phase's "preserve backend semantics" constraint.
 export const VERIFICATION_ITEMS = [
-  { key: "email_verified",       icon: Mail,          title: "Email",
-    metaVerified: "Source: account signup",
-    metaPending:  "Verify your email address" },
-  { key: "orcid_verified",       icon: Link2,         title: "ORCID",
-    metaVerified: "Source: ORCID OAuth — authenticated connection",
-    metaPending:  "Connect your ORCID account" },
-  { key: "institution_verified", icon: Building2,     title: "Institution",
-    metaVerified: "Source: institution verification request",
-    metaPending:  "Self-declared" },
-  { key: "identity_verified",    icon: UserCircle2,   title: "Academic Identity",
-    metaVerified: "System-derived from verified email + institution or ORCID",
-    metaPending:  "Requires verified email plus institution or ORCID connection" },
-  { key: "expert_verified",      icon: GraduationCap, title: "Research Expertise",
-    metaVerified: "System-derived from your Research Record",
-    metaPending:  "Requires 5+ publications in your Research Record" },
+  { key: "email_verified",       icon: Mail,          title: "Email" },
+  { key: "orcid_verified",       icon: Link2,         title: "ORCID" },
+  { key: "institution_verified", icon: Building2,     title: "Institution" },
+  { key: "identity_verified",    icon: UserCircle2,   title: "Academic Identity" },
+  { key: "expert_verified",      icon: BookOpen,      title: "Research Record" },
 ];
 
 export function countVerifiedDimensions(verification) {
@@ -56,14 +40,24 @@ const OTHER_PLATFORMS = [
   { key: "linkedin",       label: "LinkedIn",        href: (v) => `https://www.linkedin.com/in/${v}` },
 ];
 
+const VERIFIED_VIA_LABELS = {
+  institutional_email: "institutional email",
+  email_domain: "institutional email domain",
+  admin_approval: "admin review",
+  creator: "institution registration",
+};
+
 /**
- * VerificationRow — one full-width, readable row per dimension. Replaces
- * the old 5-column StatusCard grid, whose narrow columns caused labels
- * like "Expertise (Publication Count)" and provenance text to wrap
- * awkwardly (P1 Phase 7C4.1 §11/§E). Status is never color-only — every
- * row carries an icon + text label alongside the color.
+ * VerificationRow — one full-width, readable row per dimension. `status`
+ * drives both the icon color and the status pill text/tone (verified /
+ * pending / attention), so a row is never reduced to a plain boolean the
+ * way "Pending" used to cover every non-verified state (P1 Phase 7C4.4 §E —
+ * "Not verified" / "Verification in progress" / "Verified" / "Action
+ * required" are visibly different, not all the same amber dot).
  */
-function VerificationRow({ icon: Icon, title, verified, meta, action }) {
+function VerificationRow({ icon: Icon, title, status, statusLabel, meta, action }) {
+  const tone = status === "verified" ? EMERALD : status === "attention" ? CRIMSON : AMBER;
+  const StatusIcon = status === "verified" ? CheckCircle2 : status === "attention" ? AlertTriangle : Clock;
   return (
     <div style={{
       display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 0",
@@ -71,22 +65,16 @@ function VerificationRow({ icon: Icon, title, verified, meta, action }) {
     }}>
       <span style={{
         width: 34, height: 34, borderRadius: 9, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-        background: verified ? `${EMERALD}18` : `${AMBER}18`,
+        background: `${tone}18`,
       }}>
-        <Icon size={16} style={{ color: verified ? EMERALD : AMBER }} />
+        <Icon size={16} style={{ color: tone }} />
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <span style={{ fontSize: 13.5, fontWeight: 700, color: TEXT_PRIMARY }}>{title}</span>
-          {verified ? (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 700, color: EMERALD }}>
-              <CheckCircle2 size={12} /> Verified
-            </span>
-          ) : (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 700, color: AMBER }}>
-              <Clock size={11} /> Pending
-            </span>
-          )}
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 700, color: tone }}>
+            <StatusIcon size={11} /> {statusLabel}
+          </span>
         </div>
         {meta && <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginTop: 3, lineHeight: 1.5 }}>{meta}</div>}
         {action && <div style={{ marginTop: 6 }}>{action}</div>}
@@ -95,45 +83,139 @@ function VerificationRow({ icon: Icon, title, verified, meta, action }) {
   );
 }
 
-export function TrustVerificationSection({ verification, profile, onEditIdentity, onConnectOrcid, orcidConfigured = true }) {
+function ActionLink({ onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11.5, fontWeight: 600, color: NAVY, background: "none", border: "none", padding: 0, cursor: "pointer" }}
+    >
+      {children} <ChevronRight size={11} />
+    </button>
+  );
+}
+
+/**
+ * TrustVerificationSection — "Academic Verification" (P1 Phase 7C4.4 §A: was
+ * "Identity & Verification", explained in implementation-rule language like
+ * "Requires verified email plus institution or ORCID connection"). Every row
+ * now answers plain-language what/current-state/next-action instead of
+ * exposing the backend's boolean requirements.
+ */
+export function TrustVerificationSection({
+  verification, profile, onEditIdentity, onConnectOrcid, orcidConfigured = true,
+  institutionStatus, onVerifyInstitution, pubsTotal = 0, onGoToResearch,
+}) {
+  const [resending, setResending] = useState(false);
   if (!verification) return null;
+
+  const resendEmailVerification = async () => {
+    if (!profile?.email || resending) return;
+    setResending(true);
+    try {
+      await api.post("/auth/resend-verification", { email: profile.email });
+      toast.success("Confirmation email sent — check your inbox");
+    } catch {
+      toast.error("Could not send confirmation email");
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const instState = institutionStatus?.state || (verification.institution_verified ? "verified" : "not_verified");
+  const instName = institutionStatus?.institution_name || profile?.institution;
 
   return (
     <SectionShell
-      title="Identity &amp; Verification"
-      subtitle="What Synaptiq can verify about your academic identity"
+      title="Academic Verification"
+      subtitle="Build a trusted Academic Passport by verifying your information and research record."
       action={
         <Link to="/trust" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12.5, fontWeight: 600, color: NAVY, textDecoration: "none" }}>
           View full trust report <ArrowRight size={12} />
         </Link>
       }
     >
+      <div style={{ fontSize: 11.5, color: TEXT_MUTED, marginBottom: 4 }}>
+        Academic verification · {countVerifiedDimensions(verification)} of {VERIFICATION_ITEMS.length} complete
+      </div>
+
       <div>
-        {VERIFICATION_ITEMS.map(({ key, icon, title, metaVerified, metaPending }) => (
-          <VerificationRow
-            key={key}
-            icon={icon}
-            title={title}
-            verified={!!verification[key]}
-            meta={verification[key] ? metaVerified : metaPending}
+        {/* Email */}
+        {verification.email_verified ? (
+          <VerificationRow icon={Mail} title="Email" status="verified" statusLabel="Verified"
+            meta="Your email address has been confirmed." />
+        ) : (
+          <VerificationRow icon={Mail} title="Email" status="pending" statusLabel="Not yet verified"
+            meta="Confirm your email address to activate full verification."
+            action={<ActionLink onClick={resendEmailVerification}>{resending ? "Sending…" : "Resend confirmation email"}</ActionLink>}
+          />
+        )}
+
+        {/* ORCID */}
+        {verification.orcid_verified ? (
+          <VerificationRow icon={Link2} title="ORCID" status="verified" statusLabel="Connected"
+            meta="Your ORCID account is authenticated and confirms your researcher identity." />
+        ) : (
+          <VerificationRow icon={Link2} title="ORCID" status="pending" statusLabel="Not connected"
+            meta="Connect your ORCID account to confirm your researcher identity."
             action={
-              key === "institution_verified" && !verification[key] ? (
-                <Link to="/trust/institution" style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11.5, fontWeight: 600, color: NAVY, textDecoration: "none" }}>
-                  Request institution verification <ChevronRight size={11} />
-                </Link>
-              ) : key === "orcid_verified" && !verification[key] && orcidConfigured ? (
-                <button
-                  onClick={onConnectOrcid}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11.5, fontWeight: 600, color: NAVY, background: "none", border: "none", padding: 0, cursor: "pointer" }}
-                >
-                  Connect ORCID <ChevronRight size={11} />
-                </button>
-              ) : key === "orcid_verified" && !verification[key] ? (
-                <span style={{ fontSize: 11, color: TEXT_MUTED, fontStyle: "italic" }}>ORCID connect is pending admin setup</span>
-              ) : undefined
+              orcidConfigured
+                ? <ActionLink onClick={onConnectOrcid}>Connect ORCID</ActionLink>
+                : <span style={{ fontSize: 11, color: TEXT_MUTED, fontStyle: "italic" }}>ORCID connect is pending admin setup</span>
             }
           />
-        ))}
+        )}
+
+        {/* Institution */}
+        {instState === "verified" ? (
+          <VerificationRow icon={Building2} title="Institution" status="verified" statusLabel="Verified"
+            meta={
+              <>
+                {instName}
+                {institutionStatus?.verified_via && (
+                  <> · Verified via {VERIFIED_VIA_LABELS[institutionStatus.verified_via] || institutionStatus.verified_via}</>
+                )}
+              </>
+            }
+          />
+        ) : instState === "in_progress" ? (
+          <VerificationRow icon={Building2} title="Institution" status="pending" statusLabel="Verification in progress"
+            meta={`We're reviewing your affiliation with ${instName || "your institution"}.`} />
+        ) : instState === "rejected" ? (
+          <VerificationRow icon={Building2} title="Institution" status="attention" statusLabel="Action required"
+            meta="Your submitted evidence didn't confirm your affiliation. You can try again with more evidence."
+            action={<ActionLink onClick={onVerifyInstitution}>Try again</ActionLink>}
+          />
+        ) : (
+          <VerificationRow icon={Building2} title="Institution" status="pending" statusLabel="Not verified"
+            meta={instName ? `Verify your affiliation with ${instName}.` : "Add your institution to your profile, then verify your affiliation."}
+            action={<ActionLink onClick={onVerifyInstitution}>Verify institution</ActionLink>}
+          />
+        )}
+
+        {/* Academic Identity */}
+        {verification.identity_verified ? (
+          <VerificationRow icon={UserCircle2} title="Academic Identity" status="verified" statusLabel="Verified"
+            meta="Confirmed from your verified email plus institution or ORCID connection." />
+        ) : (
+          <VerificationRow icon={UserCircle2} title="Academic Identity" status="pending" statusLabel="Not yet verified"
+            meta={
+              verification.email_verified
+                ? "Connect ORCID or verify your institutional affiliation to strengthen your academic identity."
+                : "Confirm your email, then connect ORCID or verify your institutional affiliation, to strengthen your academic identity."
+            }
+          />
+        )}
+
+        {/* Research Record */}
+        {verification.expert_verified ? (
+          <VerificationRow icon={BookOpen} title="Research Record" status="verified" statusLabel="Verified"
+            meta="Confirmed from your Research Record." />
+        ) : (
+          <VerificationRow icon={BookOpen} title="Research Record" status="pending" statusLabel={`${Math.min(pubsTotal, 5)} of 5 publications recorded`}
+            meta="Add or import publications to strengthen your verified research record."
+            action={<ActionLink onClick={onGoToResearch}>Add or import publications</ActionLink>}
+          />
+        )}
       </div>
 
       <div style={{ marginTop: 20, paddingTop: 18, borderTop: `1px solid ${BRD}` }}>

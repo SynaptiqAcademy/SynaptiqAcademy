@@ -28,7 +28,11 @@ export default function AdminVerification() {
       .then(([s, q, f]) => {
         if (!mounted) return;
         setStats(s.data);
-        setQueue(q.data?.queue || []);
+        // GET /verification/admin/queue returns a raw array, not {queue:[...]}
+        // — this previously always fell through to [], so the admin queue
+        // silently showed empty regardless of how many requests were
+        // actually pending (P1 Phase 7C4.4 audit finding).
+        setQueue(q.data || []);
         setFraud(f.data);
       })
       .catch((e) => { if (mounted) setErr(e?.response?.data?.detail || "Failed to load"); })
@@ -39,7 +43,7 @@ export default function AdminVerification() {
   const handleDecide = async (rid, decision) => {
     try {
       await api.post(`/verification/admin/request/${rid}/decide`, { decision, notes: "" });
-      setQueue((q) => q.filter((r) => r.id !== rid));
+      setQueue((q) => q.filter((r) => (r._id ?? r.id) !== rid));
     } catch (e) {
       toast.error(e?.response?.data?.detail || "Failed");
     }
@@ -51,15 +55,41 @@ export default function AdminVerification() {
   const columns = [
     { key: "user_id", label: "User", render: (v) => <span className="text-slate-700">{v}</span> },
     { key: "request_type", label: "Type", render: (v) => <span className="text-slate-600">{v}</span> },
+    {
+      key: "details", label: "Details",
+      render: (v, r) => {
+        // Institution-verification requests (P1 Phase 7C4.4) carry the
+        // claimed institution + whatever evidence the user submitted —
+        // shown here so the admin can decide without a separate lookup.
+        // This is admin-only (this whole page requires zt_is_admin server
+        // side); never surfaced on any public profile or the Passport.
+        if (r.request_type !== "institution" || !v) return <span className="text-slate-400">—</span>;
+        return (
+          <div className="text-xs text-slate-600 max-w-xs">
+            <div className="font-medium text-slate-700">{v.institution_name || v.institution_id}</div>
+            {v.department && <div>{v.department}{v.role ? ` · ${v.role}` : ""}</div>}
+            {v.evidence_url && (
+              <a href={v.evidence_url} target="_blank" rel="noreferrer" className="text-blue-600 underline block truncate">
+                {v.evidence_kind || "evidence"}: {v.evidence_url}
+              </a>
+            )}
+            {v.notes && <div className="italic text-slate-500 truncate">"{v.notes}"</div>}
+          </div>
+        );
+      },
+    },
     { key: "status", label: "Status", render: (v) => <Badge variant="warning" size="sm">{v}</Badge> },
     {
       key: "_actions", label: "Actions", align: "right",
-      render: (_, r) => (
-        <div className="flex justify-end gap-2">
-          <Button variant="primary" size="sm" className="!bg-emerald-600 hover:!bg-emerald-700" onClick={() => handleDecide(r.id, "approved")}>Approve</Button>
-          <Button variant="subtle" size="sm" onClick={() => handleDecide(r.id, "rejected")}>Reject</Button>
-        </div>
-      ),
+      render: (_, r) => {
+        const rid = r._id ?? r.id;
+        return (
+          <div className="flex justify-end gap-2">
+            <Button variant="primary" size="sm" className="!bg-emerald-600 hover:!bg-emerald-700" onClick={() => handleDecide(rid, "approved")}>Approve</Button>
+            <Button variant="subtle" size="sm" onClick={() => handleDecide(rid, "rejected")}>Reject</Button>
+          </div>
+        );
+      },
     },
   ];
 

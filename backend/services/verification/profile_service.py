@@ -117,8 +117,27 @@ async def compute_verification_profile(user_id: str, db) -> dict:
     publication_count = max(int(pub_count or 0), publication_count_impact)
 
     # ── Institution membership check ───────────────────────────────────────────
+    # institution_memberships never actually uses status="active" — real
+    # values are "pending"/"approved"/"denied" (see routers/institutions.py's
+    # claim()/decide_member()). This checked a status that could never occur,
+    # making it permanently dead — institution_verified only ever became true
+    # via the separate user.institution_id check below (P1 Phase 7C4.4 audit).
     institution_membership_active = await db.institution_memberships.count_documents(
-        {"user_id": user_id, "status": "active"}
+        {"user_id": user_id, "status": "approved"}
+    )
+    # An approved manual institution-verification request (Academic Passport
+    # → "I don't have an institutional email" path, for an institution not
+    # yet in the institutions directory — see routers/verification.py's
+    # POST /me/institution) is real, admin-reviewed evidence of affiliation
+    # too, even though it has no institutions/institution_memberships row of
+    # its own. Previously this admin decision was silently discarded: the
+    # approve handler wrote institution_verified=True directly, then
+    # immediately called this same function, which recomputed the flag from
+    # scratch with no knowledge of the approval and overwrote it back to
+    # False on the very next line (P1 Phase 7C4.4 — confirmed root cause of
+    # "admin approves but nothing changes").
+    approved_institution_request = await db.verification_requests.count_documents(
+        {"user_id": user_id, "request_type": "institution", "status": "approved"}
     )
 
     # ── Grant verification check ───────────────────────────────────────────────
@@ -127,7 +146,12 @@ async def compute_verification_profile(user_id: str, db) -> dict:
     )
 
     # ── Boolean flags ──────────────────────────────────────────────────────────
-    email_verified: bool = bool(user and user.get("email"))
+    # users.email_verified is the real, JWT-link-confirmed field (see
+    # routers/auth.py's /verify-email) — checking mere presence of an email
+    # string claimed every account was "verified" the instant it existed,
+    # which is untrue for the (rare but real) case of a signed-up-but-
+    # unconfirmed account (P1 Phase 7C4.4 §B audit).
+    email_verified: bool = bool(user and user.get("email_verified"))
     # users.orcid is normally an OAuth-authenticated dict written by
     # routers/orcid.py's /callback ({orcid_id, access_token, verified_at, ...}).
     # Some accounts (legacy data / seed scripts predating the PATCH /users/me
@@ -145,7 +169,7 @@ async def compute_verification_profile(user_id: str, db) -> dict:
     institution_verified: bool = bool(
         user
         and user.get("institution")
-        and (user.get("institution_id") or institution_membership_active > 0)
+        and (user.get("institution_id") or institution_membership_active > 0 or approved_institution_request > 0)
     )
     researcher_verified: bool = bool(publication_count >= 1 and (orcid_verified or institution_verified))
     reviewer_verified: bool = bool(reviews_completed >= 1)

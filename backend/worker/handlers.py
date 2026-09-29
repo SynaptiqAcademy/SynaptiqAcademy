@@ -497,6 +497,7 @@ async def handle_email_send(job: Job, ctx: HandlerContext) -> HandlerResult:
     KIND_TO_SENDER = {
         "welcome": svc.send_welcome_email,
         "verification": svc.send_email_verification,
+        "institution_email_verification": svc.send_institution_email_verification,
         "getting_started": svc.send_getting_started_email,
         "password_reset": svc.send_password_reset,
         "workspace_invitation": svc.send_workspace_invitation,

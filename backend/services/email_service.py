@@ -227,6 +227,34 @@ async def send_email_verification(*, user_id: str, token: str, expires_in_hours:
                                subject=subject, html=html, text=text, event_kind="email_verification")
 
 
+async def send_institution_email_verification(
+    *, user_id: str, to_email: str, institution_name: str, token: str,
+    expires_in_minutes: int = 30,
+) -> dict:
+    """Sends to the submitted institutional email, not the account email —
+    that's the whole point (proving control of a possibly-different address).
+    Bypasses notification-preference gating like password_reset/
+    email_verification: this is a security confirmation the user just
+    explicitly requested by submitting the form, not a preference-subject
+    notification."""
+    u = await _user_doc(user_id)
+    if not u:
+        return {"ok": False, "mode": "skipped", "error": "user not found"}
+    name = u.get("full_name") or u.get("first_name") or ""
+    # This link is opened directly in the browser and must hit the backend
+    # API (it does the verification server-side then redirects to the
+    # Passport), not the frontend origin absolute_url() builds for — same
+    # BACKEND_BASE_URL pattern as services/orcid/oauth.py's OAuth callback.
+    backend_base = (os.environ.get("BACKEND_BASE_URL") or "").rstrip("/")
+    verify_url = f"{backend_base}/api/institutions/verify-email/confirm?token={token}"
+    subject, html, text = T.institution_email_verification_email(
+        recipient_name=name, institution_name=institution_name, verify_url=verify_url,
+        expires_in_minutes=expires_in_minutes,
+    )
+    return await send_email(to=to_email, subject=subject, html=html, text=text,
+                            event_kind="institution_email_verification")
+
+
 async def send_getting_started_email(*, user_id: str, completion_pct: int,
                                      remaining_tasks: list[tuple[str, bool]]) -> dict:
     from services.email.categories import EmailCategory
