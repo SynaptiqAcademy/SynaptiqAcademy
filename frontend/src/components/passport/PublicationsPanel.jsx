@@ -90,7 +90,7 @@ function PublicationRow({ pub }) {
  * PublicationsPanel — searchable publications list + ORCID sync.
  * Merges Profile.jsx's PublicationsSection + PublicationCard.
  */
-export function PublicationsPanel({ pubs, loading, query, onQuery, onRefresh, profile }) {
+export function PublicationsPanel({ pubs, loading, query, onQuery, onRefresh, onSynced, profile }) {
   const [syncing, setSyncing] = useState(false);
   const navigate = useNavigate();
   const orcidConnected = isOrcidAuthenticated(profile?.orcid);
@@ -109,6 +109,7 @@ export function PublicationsPanel({ pubs, loading, query, onQuery, onRefresh, pr
       const imported = data.publications_imported ?? data.imported ?? 0;
       toast.success(`ORCID synced — ${imported} publications imported`);
       onRefresh();
+      onSynced?.();
     } catch (e) {
       toast.error(e?.response?.data?.detail || "ORCID sync failed");
     } finally {

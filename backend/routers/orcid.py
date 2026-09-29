@@ -47,10 +47,11 @@ async def get_config():
 # ============================= OAUTH FLOW ==================================
 @router.get("/authorize")
 async def authorize(mode: Literal["login", "signup", "link"] = "login",
+                    return_to: Optional[str] = None,
                     user: Optional[dict] = Depends(get_optional_user)):
     if mode == "link" and not user:
         raise HTTPException(401, "Sign in first to link your ORCID")
-    url = O.authorization_url(mode, requesting_user_id=user["id"] if user else None)
+    url = O.authorization_url(mode, requesting_user_id=user["id"] if user else None, return_to=return_to)
     return {"authorization_url": url, "configured": True}
 
 
@@ -60,14 +61,26 @@ async def callback(code: Optional[str] = None, state: Optional[str] = None,
     db = get_db()
     db = DBProxy(db, SecurityContext.system())
 
+    # Recover the caller's origin page even on a denied/errored authorization
+    # so the error toast surfaces where the user actually started (e.g. the
+    # Passport), not an unconditional /settings redirect — ORCID's error
+    # callback still carries the original signed `state`.
+    error_return_to = "/settings"
+    if state:
+        try:
+            error_return_to = O.sanitize_return_to(O.decode_state(state).get("return_to"))
+        except Exception:
+            pass
+
     if error or not code or not state:
-        return RedirectResponse(f"{O.FRONTEND_BASE_URL}/settings?orcid_error={error or 'cancelled'}")
+        return RedirectResponse(f"{O.FRONTEND_BASE_URL}{error_return_to}?orcid_error={error or 'cancelled'}")
     try:
         payload = O.decode_state(state)
     except Exception:
         raise HTTPException(400, "Invalid state parameter")
     mode = payload.get("mode", "login")
     requesting_uid = payload.get("uid")
+    return_to = O.sanitize_return_to(payload.get("return_to"))
 
     token = await O.exchange_code(code)
     nt = O.normalize_token(token)
@@ -84,7 +97,7 @@ async def callback(code: Optional[str] = None, state: Optional[str] = None,
         if not requesting_uid:
             raise HTTPException(400, "No active session")
         if linked and str(linked["_id"]) != requesting_uid:
-            return RedirectResponse(f"{O.FRONTEND_BASE_URL}/settings?orcid_error=already_linked_to_other_account")
+            return RedirectResponse(f"{O.FRONTEND_BASE_URL}{return_to}?orcid_error=already_linked_to_other_account")
         user_doc = await db.users.find_one({"_id": ObjectId(requesting_uid)})
         if not user_doc:
             raise HTTPException(404, "User not found")
@@ -140,11 +153,11 @@ async def callback(code: Optional[str] = None, state: Optional[str] = None,
             return RedirectResponse(f"{O.FRONTEND_BASE_URL}/verify-email-pending")
 
     is_new_account = mode != "link" and not user_doc.get("onboarded")
-    post_redirect = (
-        f"{O.FRONTEND_BASE_URL}/onboarding"
-        if is_new_account
-        else f"{O.FRONTEND_BASE_URL}/settings?orcid=connected"
-    )
+    if is_new_account:
+        post_redirect = f"{O.FRONTEND_BASE_URL}/onboarding"
+    else:
+        path, _, fragment = return_to.partition("#")
+        post_redirect = f"{O.FRONTEND_BASE_URL}{path}?orcid=connected" + (f"#{fragment}" if fragment else "")
     resp = RedirectResponse(post_redirect)
     await _issue_tokens_and_cookies(resp, uid_str, user_doc.get("email") or "")
     try:

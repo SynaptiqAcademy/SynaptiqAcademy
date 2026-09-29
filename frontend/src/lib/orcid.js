@@ -28,3 +28,23 @@ export function getAuthenticatedOrcidId(orcid) {
 export function isOrcidAuthenticated(orcid) {
   return getAuthenticatedOrcidId(orcid) !== null;
 }
+
+/**
+ * connectOrcid — initiates the real ORCID OAuth "link" flow directly (the
+ * same GET /orcid/authorize + redirect that OrcidSettings.jsx has always
+ * used), and asks the backend to return the browser to `returnTo` after a
+ * successful/failed authorization instead of unconditionally landing on
+ * /settings (P1 Phase 7C4.3 §2 — Connect ORCID must work directly from
+ * Passport, not redirect to account/settings). `returnTo` is revalidated
+ * server-side against a strict allowlist, so this never becomes an open
+ * redirect even if called with an unexpected value.
+ */
+export async function connectOrcid(returnTo = "/academic-passport") {
+  // Lazily imported (not a static top-level import) — this repo's Jest
+  // config cannot parse axios's ESM packaging at module-collection time
+  // (the same class of issue as react-router-dom, see
+  // lib/passportCompletion.js), and orcid.test.js otherwise fails to load.
+  const { default: api } = await import("@/lib/api");
+  const { data } = await api.get("/orcid/authorize", { params: { mode: "link", return_to: returnTo } });
+  window.location.href = data.authorization_url;
+}

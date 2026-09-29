@@ -75,10 +75,40 @@ def decode_state(state: str) -> dict:
 
 
 # ============================= OAUTH ========================================
+# Only these post-connect destinations are honored — return_to is
+# attacker-controllable input (it round-trips through the ORCID redirect),
+# so it is validated against this allowlist both here and again on callback
+# rather than trusted as an open redirect target.
+ALLOWED_RETURN_TO_BASES = ("/academic-passport", "/settings")
+
+
+def sanitize_return_to(return_to: Optional[str]) -> str:
+    """Validate a requested post-OAuth redirect path against a strict allowlist.
+
+    Only an allowlisted base path, optionally followed by a `#fragment`
+    (letters/digits/_/- only), is accepted. Anything else — including
+    absolute URLs, protocol-relative URLs, or unknown paths — falls back to
+    the default so this can never be used as an open redirect.
+    """
+    default = "/academic-passport"
+    if not return_to:
+        return default
+    path, _, fragment = return_to.partition("#")
+    if path not in ALLOWED_RETURN_TO_BASES:
+        return default
+    if fragment and not fragment.replace("_", "").replace("-", "").isalnum():
+        return path
+    return f"{path}#{fragment}" if fragment else path
+
+
 def authorization_url(mode: Literal["login", "signup", "link"],
-                      requesting_user_id: Optional[str] = None) -> str:
+                      requesting_user_id: Optional[str] = None,
+                      return_to: Optional[str] = None) -> str:
     _require_configured()
-    state = encode_state({"mode": mode, "uid": requesting_user_id, "ts": int(time.time())})
+    state = encode_state({
+        "mode": mode, "uid": requesting_user_id, "ts": int(time.time()),
+        "return_to": sanitize_return_to(return_to) if mode == "link" else None,
+    })
     qs = urlencode({
         "client_id":    ORCID_CLIENT_ID,
         "response_type": "code",

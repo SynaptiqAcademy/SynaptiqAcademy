@@ -6,9 +6,9 @@
  * sync history, and a "Sync now" action.
  */
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import api from "../../lib/api";
 import { toast } from "sonner";
+import { connectOrcid } from "@/lib/orcid";
 import OrcidBadge from "./OrcidBadge";
 import { Card } from "@/components/ds/Card";
 import { Section } from "@/components/ds/Section";
@@ -33,31 +33,18 @@ function StatTile({ label, testId, children, sub }) {
   );
 }
 
-const ORCID_ERROR_MESSAGES = {
-  cancelled: "You cancelled the ORCID sign-in.",
-  already_linked_to_other_account: "This ORCID iD is already linked to a different SYNAPTIQ account.",
-};
-
 export default function OrcidSettings() {
   const [config, setConfig] = useState(null);
   const [status, setStatus] = useState(null);
   const [history, setHistory] = useState([]);
   const [busy, setBusy] = useState(false);
   const [enriching, setEnriching] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
 
-  useEffect(() => {
-    const orcidError = searchParams.get("orcid_error");
-    const orcidConnected = searchParams.get("orcid") === "connected";
-    if (orcidError) {
-      toast.error(ORCID_ERROR_MESSAGES[orcidError] || "ORCID sign-in failed. Please try again.");
-      setSearchParams((p) => { p.delete("orcid_error"); return p; }, { replace: true });
-    } else if (orcidConnected) {
-      toast.success("ORCID connected");
-      setSearchParams((p) => { p.delete("orcid"); return p; }, { replace: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // OrcidSettings now only ever renders inside the Academic Passport's
+  // Research tab (via ResearchIntegrationsCard) — AcademicPassport.jsx owns
+  // the post-connect toast + canonical-state refresh for the whole page
+  // (P1 Phase 7C4.3 §2/§19); this component just re-loads its own status on
+  // mount, which a fresh post-OAuth-redirect page load already triggers.
 
   const load = async () => {
     try {
@@ -73,8 +60,7 @@ export default function OrcidSettings() {
 
   const connect = async () => {
     try {
-      const { data } = await api.get("/orcid/authorize?mode=link");
-      window.location.href = data.authorization_url;
+      await connectOrcid("/academic-passport#research_integrations");
     } catch (e) { toast.error(e?.response?.data?.detail || "ORCID is not configured"); }
   };
 

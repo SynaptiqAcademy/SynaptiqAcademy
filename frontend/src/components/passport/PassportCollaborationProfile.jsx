@@ -35,7 +35,7 @@ function ChipRow({ label, items = [], color = NAVY, bg }) {
   );
 }
 
-export function PassportCollaborationProfile({ profile }) {
+export function PassportCollaborationProfile({ profile, onEdit }) {
   if (!profile) return null;
 
   const openTo = [
@@ -50,9 +50,20 @@ export function PassportCollaborationProfile({ profile }) {
   const hasAnything = openTo.length || canContribute.length || lookingFor.length || profile.availability;
   if (!hasAnything) return null;
 
+  // These fields (availability, open-to checkboxes, can-contribute /
+  // looking-for chips) are all edited in EditIdentityModal's "Collaboration
+  // & Availability" section, but this card previously had no edit action of
+  // its own — the only way to find that editor was via an unrelated section
+  // elsewhere on the page (P1 Phase 7C4.3 §11).
+  const editAction = onEdit ? (
+    <button onClick={onEdit} style={{ fontSize: 11.5, fontWeight: 600, color: NAVY, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+      Edit
+    </button>
+  ) : undefined;
+
   return (
     <Card padding="xl">
-      <Section title="Collaboration Profile" subtitle="Preferences you've set — not used by the matching engine" gap="lg">
+      <Section title="Collaboration Profile" subtitle="Preferences you've set — not used by the matching engine" action={editAction} gap="lg">
         {profile.availability && (
           <Badge variant={profile.availability === "Available" ? "success" : "warning"} dot>
             {profile.availability}

@@ -1,10 +1,12 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import { Card } from "@/components/ds/Card";
 import { Tag } from "@/components/ds/Tag";
 import { NAVY, TEXT_MUTED, TEXT_PRIMARY } from "@/lib/tokens";
 
-export function ResearchAreasCard({ profile }) {
+// P1 Phase 7C4.3 §13: this previously linked to "/academic-passport" — the
+// page the user is already on — so "Edit Identity" silently did nothing.
+// Opens the real in-place editor instead.
+export function ResearchAreasCard({ profile, onEdit }) {
   const areas = profile?.research_areas || [];
   const visible = areas.slice(0, 4);
   const rest = areas.length - visible.length;
@@ -15,7 +17,7 @@ export function ResearchAreasCard({ profile }) {
       {areas.length === 0 ? (
         <p style={{ fontSize: 12, color: TEXT_MUTED, margin: 0 }}>
           Add research areas in{" "}
-          <Link to="/academic-passport" style={{ color: NAVY }}>Edit Identity</Link> to populate this.
+          <button onClick={onEdit} style={{ color: NAVY, background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer", textDecoration: "underline" }}>Edit Identity</button> to populate this.
         </p>
       ) : (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>

@@ -15,7 +15,7 @@ import api from "@/lib/api";
  * Distinct from the Trust Passport's own public share link (PassportHero's
  * "Download Passport" / trust `public_url`) — two real, separate artifacts.
  */
-export function PublicPortfolioPanel() {
+export function PublicPortfolioPanel({ onSlugChanged }) {
   const [profile, setProfile] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [visibility, setVisibility] = useState(null);
@@ -36,6 +36,11 @@ export function PublicPortfolioPanel() {
       const { data } = await api.post("/profiles/me/slug", { slug: slugInput.trim() });
       setProfile((p) => ({ ...p, slug: data.slug || slugInput.trim() }));
       toast.success("Public portfolio URL updated");
+      // Keeps the Passport header's Share/Export and the Portfolio tab's own
+      // "Profile Preview" card in sync with the new slug immediately — both
+      // read this same URL from AcademicPassport.jsx's parent-level state
+      // (P1 Phase 7C4.3 §16/§19: no stale state, no manual page refresh).
+      onSlugChanged?.();
     } catch (e) {
       toast.error(e?.response?.data?.detail || "Could not claim that URL");
     } finally {

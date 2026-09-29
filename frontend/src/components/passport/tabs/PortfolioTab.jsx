@@ -31,10 +31,10 @@ function ActionCard({ icon: Icon, label, description, onClick, href }) {
  * and a scannable code can't be safely hand-rolled in scope; Copy Link /
  * Share already cover the "get this to someone else" need honestly.
  */
-export function PortfolioTab({ profile, employments, educations, pubs, exportCV, downloadPassport, shareProfile, publicUrl }) {
+export function PortfolioTab({ profile, employments, educations, pubs, exportCV, downloadPassport, shareProfile, publicUrl, onSlugChanged }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <PublicPortfolioPanel />
+      <PublicPortfolioPanel onSlugChanged={onSlugChanged} />
 
       <SectionShell title="Passport Actions">
         <div className="grid grid-cols-2 lg:grid-cols-4" style={{ gap: 12 }}>

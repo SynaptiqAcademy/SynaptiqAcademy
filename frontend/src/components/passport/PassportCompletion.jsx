@@ -26,11 +26,28 @@ const GROUPS = [
   { title: "Research Record", keys: ["publications", "employment", "education"] },
 ];
 
-function CompletionItem({ item }) {
+// Items whose backend `action` points at a page ("/profile", "/settings")
+// that either navigates away from the Passport unnecessarily (identity
+// fields, which EditIdentityModal already edits in place) or no longer
+// hosts the actual control at all ("/settings" — ORCID connect/sync moved
+// into the Passport's own Research tab in P1 Phase 7C4.1, so it left behind
+// a dead destination). These are handled directly instead of navigating
+// (P1 Phase 7C4.3 §6/§2).
+const IDENTITY_KEYS = new Set(["avatar", "biography", "institution", "keywords", "methods", "social", "availability"]);
+const ORCID_DEPENDENT_KEYS = new Set(["publications", "employment", "education"]);
+
+function CompletionItem({ item, onEditIdentity, onConnectOrcid, onSyncOrcid, orcidConnected }) {
   const navigate = useNavigate();
+  const handleClick = () => {
+    if (!item.action) return;
+    if (IDENTITY_KEYS.has(item.key)) return onEditIdentity?.();
+    if (item.key === "orcid_connected") return onConnectOrcid?.();
+    if (ORCID_DEPENDENT_KEYS.has(item.key)) return orcidConnected ? onSyncOrcid?.() : onConnectOrcid?.();
+    navigate(item.action);
+  };
   return (
     <button
-      onClick={() => item.action && navigate(item.action)}
+      onClick={handleClick}
       disabled={item.earned}
       style={{
         display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 4px",
@@ -58,7 +75,7 @@ function CompletionItem({ item }) {
   );
 }
 
-export function PassportCompletion({ completion }) {
+export function PassportCompletion({ completion, onEditIdentity, onConnectOrcid, onSyncOrcid, orcidConnected }) {
   const [expanded, setExpanded] = useState(false);
   if (!completion) return null;
 
@@ -112,7 +129,13 @@ export function PassportCompletion({ completion }) {
                   {group.title}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                  {groupItems.map((item) => <CompletionItem key={item.key} item={item} />)}
+                  {groupItems.map((item) => (
+                    <CompletionItem
+                      key={item.key} item={item}
+                      onEditIdentity={onEditIdentity} onConnectOrcid={onConnectOrcid}
+                      onSyncOrcid={onSyncOrcid} orcidConnected={orcidConnected}
+                    />
+                  ))}
                 </div>
               </div>
             );

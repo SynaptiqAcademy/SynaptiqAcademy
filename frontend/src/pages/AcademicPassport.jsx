@@ -13,11 +13,13 @@
  * Analytics narrative, so every tab's content gets full width. Every panel
  * still reuses an existing endpoint — no new backend.
  */
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import api from "@/lib/api";
+import { connectOrcid, isOrcidAuthenticated } from "@/lib/orcid";
 
 import { PassportNav, TABS } from "@/components/passport/PassportNav";
 import { PassportCredentialHeader } from "@/components/passport/PassportCredentialHeader";
@@ -48,9 +50,30 @@ const HASH_TO_TAB = {
   academic_timeline: "portfolio",
 };
 
+// Several hashes above land on the same tab section — this maps each one to
+// the actual DOM id to scroll to once that tab's content has mounted, so
+// "View all X" links from other pages/cards land the user ON the relevant
+// section, not just on the right tab with no further feedback (P1 Phase
+// 7C4.3 §13/§18 — several of these were previously dead in that sense).
+const HASH_TO_ANCHOR_ID = {
+  academic_identity: "academic_identity",
+  research_interests: "academic_identity",
+  biography: "academic_identity",
+  research_impact: "research_impact",
+  publications_panel: "publications_panel",
+  research_integrations: "research-integrations-section",
+  trust_verification: "trust_verification",
+};
+
+const ORCID_ERROR_MESSAGES = {
+  cancelled: "You cancelled the ORCID sign-in.",
+  already_linked_to_other_account: "This ORCID iD is already linked to a different SYNAPTIQ account.",
+};
+
 export default function AcademicPassport() {
   const { user: me, refreshMe } = useAuth();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [passport, setPassport] = useState(null);
   const [reputation, setReputation] = useState(null);
   const [teachingStats, setTeachingStats] = useState(null);
@@ -69,6 +92,7 @@ export default function AcademicPassport() {
   const [recentEvents, setRecentEvents] = useState([]);
   const [trustBadges, setTrustBadges] = useState([]);
   const [badgeCatalogue, setBadgeCatalogue] = useState([]);
+  const [publicProfile, setPublicProfile] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -113,8 +137,19 @@ export default function AcademicPassport() {
     api.get("/reputation/events/me", { params: { limit: 5 }, silentGate: true }).then((r) => setRecentEvents(r.data || [])).catch(() => {});
     api.get("/trust/badges", { silentGate: true }).then((r) => setTrustBadges(r.data || [])).catch(() => {});
     api.get("/trust/badges/catalogue", { silentGate: true }).then((r) => setBadgeCatalogue(r.data || [])).catch(() => {});
+    api.get("/profiles/me", { silentGate: true }).then((r) => setPublicProfile(r.data)).catch(() => {});
     loadPubs();
   }, [me?.id, loadPubs]);
+
+  // The real, existing public profile URL (ResearcherProfile.jsx's
+  // /researcher/:slug route) — used for Share/Export/Preview everywhere in
+  // the Passport. Every account has a slug from its first GET /profiles/me
+  // (auto-generated, see get_or_create_profile), so this is reliably
+  // available, unlike the trust passport's own public_url (no matching
+  // frontend route — see usePassportActions).
+  const refreshPublicProfile = useCallback(() => {
+    api.get("/profiles/me", { silentGate: true }).then((r) => setPublicProfile(r.data)).catch(() => {});
+  }, []);
 
   const handleSyncOpenAlex = async () => {
     setSyncing(true);
@@ -126,37 +161,128 @@ export default function AcademicPassport() {
     }
   };
 
+  // Re-fetches only the canonical data a Passport mutation can affect — no
+  // window.location.reload() anywhere (P1 Phase 7C4.3 §19). Identity edits
+  // affect completion + verification (via refreshMe, which updates `me`);
+  // ORCID connect/sync additionally affects the trust passport and the
+  // publications list.
+  const refreshVerificationAndCompletion = useCallback(() => {
+    api.get("/users/me/profile-completion").then((r) => setCompletion(r.data)).catch(() => {});
+    api.get("/verification/me", { silentGate: true }).then((r) => setVerification(r.data)).catch(() => {});
+  }, []);
+
+  const refreshAfterIdentityChange = useCallback(async () => {
+    await refreshMe();
+    refreshVerificationAndCompletion();
+  }, [refreshMe, refreshVerificationAndCompletion]);
+
+  const refreshAfterOrcidChange = useCallback(async () => {
+    await refreshMe();
+    refreshVerificationAndCompletion();
+    api.get("/trust/passport").then((r) => setPassport(r.data)).catch(() => {});
+    loadPubs(pubQuery);
+  }, [refreshMe, refreshVerificationAndCompletion, loadPubs, pubQuery]);
+
+  const [orcidSyncing, setOrcidSyncing] = useState(false);
+  const orcidActionInFlight = useRef(false);
+
+  // Connect ORCID directly from the Passport (P1 Phase 7C4.3 §2): reuses the
+  // exact OAuth flow OrcidSettings.jsx has always used, just told to return
+  // to /academic-passport instead of the now ORCID-content-free /settings.
+  // Guards against double-clicks firing two full-page OAuth redirects.
+  const handleConnectOrcid = useCallback(() => {
+    if (orcidActionInFlight.current) return;
+    orcidActionInFlight.current = true;
+    connectOrcid("/academic-passport")
+      .catch(() => { toast.error("Could not start the ORCID connection"); orcidActionInFlight.current = false; });
+  }, []);
+
+  const handleSyncOrcid = useCallback(async () => {
+    if (orcidActionInFlight.current) return;
+    orcidActionInFlight.current = true;
+    setOrcidSyncing(true);
+    try {
+      const { data } = await api.post("/orcid/sync");
+      const imported = data.publications_imported ?? data.imported ?? 0;
+      toast.success(`ORCID synced — ${imported} publication${imported === 1 ? "" : "s"} imported`);
+      await refreshAfterOrcidChange();
+    } catch (e) {
+      toast.error(e?.response?.data?.detail || "ORCID sync failed");
+    } finally {
+      setOrcidSyncing(false);
+      orcidActionInFlight.current = false;
+    }
+  }, [refreshAfterOrcidChange]);
+
+  // Lands here after a successful/failed direct ORCID connect (backend now
+  // redirects back to /academic-passport instead of /settings). Mirrors
+  // OrcidSettings.jsx's own query-param handling so the toast + state
+  // refresh happen wherever the connection was actually initiated from.
+  useEffect(() => {
+    const orcidError = searchParams.get("orcid_error");
+    const orcidConnected = searchParams.get("orcid") === "connected";
+    if (orcidError) {
+      toast.error(ORCID_ERROR_MESSAGES[orcidError] || "ORCID sign-in failed. Please try again.");
+      setSearchParams((p) => { p.delete("orcid_error"); return p; }, { replace: true });
+    } else if (orcidConnected) {
+      toast.success("ORCID connected");
+      setSearchParams((p) => { p.delete("orcid"); return p; }, { replace: true });
+      refreshAfterOrcidChange();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Supports plain <Link to="/academic-passport#some_section"> from child
   // cards (e.g. "View all publications") without a full page reload — maps
-  // the old anchor onto its new tab.
+  // the old anchor onto its new tab, then scrolls to the actual section
+  // once that tab's (AnimatePresence-animated) content has mounted.
   useEffect(() => {
     const h = location.hash?.replace("#", "");
     if (!h) return;
     const tab = HASH_TO_TAB[h] || (TABS.some((t) => t.id === h) ? h : null);
     if (tab) setActiveTab(tab);
+
+    const anchorId = HASH_TO_ANCHOR_ID[h];
+    if (!anchorId) return;
+    let attempts = 0;
+    const tryScroll = () => {
+      const el = document.getElementById(anchorId);
+      if (el) { el.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+      if (attempts++ < 10) setTimeout(tryScroll, 50);
+    };
+    setTimeout(tryScroll, 50);
   }, [location.hash]);
 
-  const { exportCV, downloadPassport, shareProfile } = usePassportActions({ profile: me, passport });
+  // usePassportActions has no internal hooks of its own (it's a plain
+  // function despite the `use` naming convention), but the linter's
+  // rules-of-hooks check doesn't know that — called unconditionally, before
+  // the early return below, to satisfy it regardless.
+  const publicUrl = publicProfile?.slug ? `${window.location.origin}/researcher/${publicProfile.slug}` : null;
+  const { exportCV, downloadPassport, shareProfile } = usePassportActions({ profile: me, passport, publicUrl });
 
   if (!me) {
     return <div className="p-6"><SkeletonPage /></div>;
   }
 
   const pubsTotal = pubs?.total ?? me.publications_count ?? 0;
-  const publicUrl = passport?.public_url ? window.location.origin + passport.public_url : null;
+  const orcidConnected = isOrcidAuthenticated(me.orcid);
 
   const tabProps = {
     overview:   <OverviewTab
                   profile={me} verification={verification} completion={completion}
                   pubsTotal={pubsTotal} recentEvents={recentEvents}
                   onEdit={() => setEditOpen(true)} onGoToTab={setActiveTab}
+                  onConnectOrcid={handleConnectOrcid} onSyncOrcid={handleSyncOrcid} orcidConnected={orcidConnected}
+                  orcidBusy={orcidSyncing}
                 />,
     research:   <ResearchTab
                   profile={me} impact={impact} researchRank={researchRank}
                   pubs={pubs} pubsLoading={pubsLoading} pubQuery={pubQuery}
                   onQuery={(q) => { setPubQuery(q); loadPubs(q); }}
                   onRefresh={() => loadPubs(pubQuery)}
+                  onSynced={refreshAfterOrcidChange}
                   projects={projects} collaborations={collaborations}
+                  onEdit={() => setEditOpen(true)}
                 />,
     teaching:   <TeachingTab teachingStats={teachingStats} />,
     reputation: <ReputationTab
@@ -172,6 +298,7 @@ export default function AcademicPassport() {
                   pubs={pubs}
                   exportCV={exportCV} downloadPassport={downloadPassport} shareProfile={shareProfile}
                   publicUrl={publicUrl}
+                  onSlugChanged={refreshPublicProfile}
                 />,
     analytics:  <AnalyticsTab reputation={reputation} teachingStats={teachingStats} />,
   };
@@ -206,7 +333,7 @@ export default function AcademicPassport() {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         profile={me}
-        onSaved={refreshMe}
+        onSaved={refreshAfterIdentityChange}
       />
     </div>
   );

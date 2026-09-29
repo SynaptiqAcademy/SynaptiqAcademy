@@ -1,11 +1,5 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Edit3, FilePlus2, FolderPlus, Link2, Share2, Download, FileDown, Check } from "lucide-react";
-import { Card } from "@/components/ds/Card";
-import { NAVY, TEXT_SECONDARY, TEXT_PRIMARY, BRD } from "@/lib/tokens";
 import api from "@/lib/api";
-import { isOrcidAuthenticated } from "@/lib/orcid";
 
 function downloadTextFile(filename, text) {
   const blob = new Blob([text], { type: "text/plain" });
@@ -19,12 +13,12 @@ function downloadTextFile(filename, text) {
 
 /**
  * usePassportActions — Export CV, Download Passport, and Share Public Profile
- * handlers, wired into PassportHero's quick-action buttons. Ports the
- * existing downloadCV() logic from Profile.jsx as-is; "Download Passport" is
- * a new client-side export of the already-fetched trust passport data,
+ * handlers, wired into PassportCredentialHeader's quick-action buttons. Ports
+ * the existing downloadCV() logic from Profile.jsx as-is; "Download Passport"
+ * is a client-side export of the already-fetched trust passport data,
  * mirroring the same download pattern (no new backend).
  */
-export function usePassportActions({ profile, passport }) {
+export function usePassportActions({ profile, passport, publicUrl }) {
   const exportCV = async () => {
     try {
       const { data } = await api.get("/users/me/cv");
@@ -107,8 +101,13 @@ export function usePassportActions({ profile, passport }) {
     toast.success("Academic Passport downloaded");
   };
 
+  // Shares the real public researcher portfolio page (/researcher/:slug —
+  // ResearcherProfile.jsx, the only public-facing profile route that
+  // actually exists). passport.public_url ("/passport/{token}") has no
+  // matching frontend route at all — sharing it silently handed people a
+  // 404 (P1 Phase 7C4.3 §4, found during the functional audit).
   const shareProfile = () => {
-    const url = passport?.public_url ? window.location.origin + passport.public_url : window.location.href;
+    const url = publicUrl || window.location.href;
     if (navigator.share) {
       navigator.share({ title: profile?.full_name, url }).catch(() => {});
     } else {
@@ -117,58 +116,6 @@ export function usePassportActions({ profile, passport }) {
   };
 
   return { exportCV, downloadPassport, shareProfile };
-}
-
-function ActionRow({ icon: Icon, label, done, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={done}
-      style={{
-        display: "flex", alignItems: "center", gap: 9, width: "100%", padding: "8px 4px",
-        border: "none", background: "transparent", cursor: done ? "default" : "pointer", textAlign: "left",
-        borderRadius: 6,
-      }}
-      onMouseEnter={(e) => { if (!done) e.currentTarget.style.background = "#F8FAFC"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-    >
-      <Icon size={14} style={{ color: done ? "#059669" : NAVY, flexShrink: 0 }} />
-      <span style={{ fontSize: 12.5, color: TEXT_SECONDARY, flex: 1 }}>{label}</span>
-      {done && <Check size={14} style={{ color: "#059669", flexShrink: 0 }} />}
-    </button>
-  );
-}
-
-/**
- * QuickActionsRail — right-rail card version of the passport quick actions.
- * All actions are real: identity edit, real create-flows, real ORCID connect
- * state, and the same export/share handlers as the hero buttons.
- */
-export function QuickActionsRail({ profile, passport, verification, onEdit }) {
-  const navigate = useNavigate();
-  const { exportCV, downloadPassport, shareProfile } = usePassportActions({ profile, passport });
-  const orcidConnected = isOrcidAuthenticated(profile?.orcid) || !!verification?.orcid_verified;
-
-  return (
-    <Card padding="lg">
-      <div style={{ fontSize: 13, fontWeight: 700, color: TEXT_PRIMARY, marginBottom: 8 }}>Quick Actions</div>
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <ActionRow icon={Edit3} label="Edit Academic Identity" onClick={onEdit} />
-        <ActionRow icon={FilePlus2} label="Add Publication" onClick={() => navigate("/publication-hub")} />
-        <ActionRow icon={FolderPlus} label="Add Project" onClick={() => navigate("/projects")} />
-        <ActionRow
-          icon={Link2}
-          label={orcidConnected ? "ORCID Connected" : "Connect ORCID"}
-          done={orcidConnected}
-          onClick={() => navigate("/academic-passport#research_integrations")}
-        />
-        <div style={{ height: 1, background: BRD, margin: "4px 0" }} />
-        <ActionRow icon={Share2} label="Share Public Profile" onClick={shareProfile} />
-        <ActionRow icon={Download} label="Export CV" onClick={exportCV} />
-        <ActionRow icon={FileDown} label="Download Passport" onClick={downloadPassport} />
-      </div>
-    </Card>
-  );
 }
 
 export default usePassportActions;

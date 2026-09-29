@@ -14,15 +14,15 @@ import { SectionShell } from "@/components/passport/PassportUI";
  * lives on the Portfolio tab (same real component, shown once).
  */
 export function ResearchTab({
-  profile, impact, researchRank, pubs, pubsLoading, pubQuery, onQuery, onRefresh,
-  projects, collaborations,
+  profile, impact, researchRank, pubs, pubsLoading, pubQuery, onQuery, onRefresh, onSynced,
+  projects, collaborations, onEdit,
 }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }} id="research_impact">
       <ResearchImpactSection impact={impact} researchRank={researchRank} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 20 }}>
-        <ResearchAreasCard profile={profile} />
+        <ResearchAreasCard profile={profile} onEdit={onEdit} />
         <TopPublicationsCard pubs={pubs} loading={pubsLoading} />
       </div>
 
@@ -32,14 +32,17 @@ export function ResearchTab({
         fundings={profile.orcid_fundings || []}
       />
 
-      <PublicationsPanel
-        pubs={pubs}
-        loading={pubsLoading}
-        query={pubQuery}
-        onQuery={onQuery}
-        onRefresh={onRefresh}
-        profile={profile}
-      />
+      <div id="publications_panel">
+        <PublicationsPanel
+          pubs={pubs}
+          loading={pubsLoading}
+          query={pubQuery}
+          onQuery={onQuery}
+          onRefresh={onRefresh}
+          onSynced={onSynced}
+          profile={profile}
+        />
+      </div>
 
       <div id="research-integrations-section">
         <SectionShell title="Research Integrations" subtitle="Connect ORCID and OpenAlex to auto-sync your identity and citations">

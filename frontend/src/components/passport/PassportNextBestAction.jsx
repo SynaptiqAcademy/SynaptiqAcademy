@@ -24,12 +24,25 @@ const BENEFIT_COPY = {
   education: "Education history completes your academic background.",
 };
 
-export function PassportNextBestAction({ completion }) {
+const IDENTITY_KEYS = new Set(["avatar", "biography", "institution", "keywords", "methods", "social", "availability"]);
+const ORCID_DEPENDENT_KEYS = new Set(["publications", "employment", "education"]);
+
+export function PassportNextBestAction({ completion, onEditIdentity, onConnectOrcid, onSyncOrcid, orcidConnected }) {
   const navigate = useNavigate();
   if (!completion) return null;
 
   const next = pickNextBestAction(completion);
   if (!next) return null;
+
+  // Mirrors PassportCompletion's routing (P1 Phase 7C4.3 §2/§6): identity
+  // fields open the in-place editor, ORCID connect/sync run directly
+  // instead of navigating to the now-dead /settings destination.
+  const handleAction = () => {
+    if (IDENTITY_KEYS.has(next.key)) return onEditIdentity?.();
+    if (next.key === "orcid_connected") return onConnectOrcid?.();
+    if (ORCID_DEPENDENT_KEYS.has(next.key)) return orcidConnected ? onSyncOrcid?.() : onConnectOrcid?.();
+    if (next.action) navigate(next.action);
+  };
 
   return (
     <Card padding="lg" style={{ border: `1px solid ${NAVY}25`, background: "linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%)" }}>
@@ -48,7 +61,7 @@ export function PassportNextBestAction({ completion }) {
         </div>
         {next.action && (
           <button
-            onClick={() => navigate(next.action)}
+            onClick={handleAction}
             style={{
               display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 700,
               padding: "8px 14px", borderRadius: 8, background: NAVY, color: "#fff", border: "none",

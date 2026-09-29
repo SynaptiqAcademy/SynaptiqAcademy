@@ -19,16 +19,31 @@ import { NAVY, TEXT_PRIMARY, TEXT_SECONDARY } from "@/lib/tokens";
  * they appear once, in their natural place in this narrative, and the
  * other five tabs get their content-width back.
  */
-export function OverviewTab({ profile, verification, completion, pubsTotal, recentEvents, onEdit, onGoToTab }) {
+export function OverviewTab({
+  profile, verification, completion, pubsTotal, recentEvents, onEdit, onGoToTab,
+  onConnectOrcid, onSyncOrcid, orcidConnected, orcidBusy,
+}) {
+  const guardedConnect = orcidBusy ? undefined : onConnectOrcid;
+  const guardedSync = orcidBusy ? undefined : onSyncOrcid;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <PassportNextBestAction completion={completion} />
+      <PassportNextBestAction
+        completion={completion} onEditIdentity={onEdit}
+        onConnectOrcid={guardedConnect} onSyncOrcid={guardedSync} orcidConnected={orcidConnected}
+      />
 
-      <PassportCompletion completion={completion} />
+      <PassportCompletion
+        completion={completion} onEditIdentity={onEdit}
+        onConnectOrcid={guardedConnect} onSyncOrcid={guardedSync} orcidConnected={orcidConnected}
+      />
 
-      <TrustVerificationSection verification={verification} profile={profile} onEditIdentity={onEdit} />
+      <div id="trust_verification">
+        <TrustVerificationSection verification={verification} profile={profile} onEditIdentity={onEdit} onConnectOrcid={guardedConnect} />
+      </div>
 
-      <IdentityCard profile={profile} />
+      <div id="academic_identity">
+        <IdentityCard profile={profile} />
+      </div>
 
       {pubsTotal > 0 ? (
         <Card padding="lg">
@@ -60,7 +75,7 @@ export function OverviewTab({ profile, verification, completion, pubsTotal, rece
         </Card>
       )}
 
-      <PassportCollaborationProfile profile={profile} />
+      <PassportCollaborationProfile profile={profile} onEdit={onEdit} />
 
       <RecentActivityCard events={recentEvents} />
     </div>

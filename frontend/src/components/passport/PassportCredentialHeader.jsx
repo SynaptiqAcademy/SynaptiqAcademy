@@ -136,7 +136,7 @@ export function PassportCredentialHeader({ profile, passport, verification, comp
       <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap", borderTop: "1px solid rgba(255,255,255,0.12)", paddingTop: 16 }}>
         <ActionButton icon={Edit3} label="Edit Passport" onClick={onEdit} primary />
         <ActionButton icon={Share2} label="Share" onClick={onShare} />
-        <ActionButton icon={Download} label="Export" onClick={onExport} />
+        <ActionButton icon={Download} label="Export Passport" onClick={onExport} />
       </div>
     </div>
   );
