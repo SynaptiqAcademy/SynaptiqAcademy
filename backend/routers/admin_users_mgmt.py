@@ -397,6 +397,70 @@ async def unban_user(
 
 
 # ---------------------------------------------------------------------------
+# POST /api/admin/users/{uid}/mark-demo, /unmark-demo
+#
+# P1 Phase 8B QA-hygiene follow-up: is_demo is already the canonical
+# discovery-eligibility exclusion field (search_people(), discover.py,
+# collaboration_intelligence.py, collaborations.py, public_profiles.py,
+# researchers.py, projects.py, users.py all already exclude on it) — the gap
+# this closes is that nothing in production could ever *set* it. Manual QA
+# accounts created via the public API were therefore fully real/discoverable,
+# with only a naming convention (never enforced) marking them for deletion.
+# ---------------------------------------------------------------------------
+
+@router.post("/users/{uid}/mark-demo")
+async def mark_user_demo(
+    uid: str,
+    request: Request,
+    admin: dict = Depends(require_moderator_or_super_admin),
+):
+    db = get_db()
+    db = DBProxy(db, SecurityContext.system())
+
+    oid = _parse_oid(uid)
+    user = await db.users.find_one({"_id": oid}, {"email": 1, "role": 1})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    _guard_protected(user, "mark as demo")
+    _guard_hierarchy(admin, user, "mark as demo")
+    await db.users.update_one({"_id": oid}, {"$set": {"is_demo": True}})
+    invalidate_user_cache(uid)
+    meta = request_meta(request)
+    await log_event(
+        "admin.user.mark_demo",
+        actor_id=admin["id"], actor_email=admin.get("email"),
+        target_id=uid, target_type="user", target_email=user.get("email"),
+        ip=meta["ip"], user_agent=meta["user_agent"],
+    )
+    return {"ok": True, "is_demo": True}
+
+
+@router.post("/users/{uid}/unmark-demo")
+async def unmark_user_demo(
+    uid: str,
+    request: Request,
+    admin: dict = Depends(require_moderator_or_super_admin),
+):
+    db = get_db()
+    db = DBProxy(db, SecurityContext.system())
+
+    oid = _parse_oid(uid)
+    user = await db.users.find_one({"_id": oid}, {"email": 1})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    await db.users.update_one({"_id": oid}, {"$set": {"is_demo": False}})
+    invalidate_user_cache(uid)
+    meta = request_meta(request)
+    await log_event(
+        "admin.user.unmark_demo",
+        actor_id=admin["id"], actor_email=admin.get("email"),
+        target_id=uid, target_type="user", target_email=user.get("email"),
+        ip=meta["ip"], user_agent=meta["user_agent"],
+    )
+    return {"ok": True, "is_demo": False}
+
+
+# ---------------------------------------------------------------------------
 # POST /api/admin/users/{uid}/force-logout
 # ---------------------------------------------------------------------------
 

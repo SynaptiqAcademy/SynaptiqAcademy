@@ -217,6 +217,14 @@ def serialize_user(user: dict) -> dict:
     out["id"] = str(out.pop("_id"))
     out.pop("password_hash", None)
     out["orcid"] = _scrub_orcid(out.get("orcid"))
+    # Canonical default (see serialize_public_user below): absent/null means
+    # "available", not "unavailable" — apply it here too so a user's own
+    # Passport view of themselves matches what everyone else's view already
+    # shows via serialize_public_user.
+    out["available_for_collaboration"] = (
+        True if out.get("available_for_collaboration") is None
+        else bool(out.get("available_for_collaboration"))
+    )
     _sa_emails = {
         e.strip().lower()
         for e in os.environ.get("SUPER_ADMIN_EMAILS", "admin@synaptiq.academy").split(",")
@@ -288,7 +296,15 @@ def serialize_public_user(user: dict) -> dict:
         "expertise_role_tags": user.get("expertise_role_tags") or [],
         # Availability
         "availability":        user.get("availability") or "",
-        "available_for_collaboration": bool(user.get("available_for_collaboration", True)),
+        # True if unset (.get(key, True) only applies that default when the
+        # key is fully absent — if it were ever stored as an explicit null,
+        # .get would return None here, not the default, making bool() -> False
+        # despite the intended "absent = available" semantic; this form
+        # applies the default identically for absent and null).
+        "available_for_collaboration": (
+            True if user.get("available_for_collaboration") is None
+            else bool(user.get("available_for_collaboration"))
+        ),
         "available_for_supervision":   bool(user.get("available_for_supervision", False)),
         "available_for_reviewing":     bool(user.get("available_for_reviewing", False)),
         "available_for_consulting":    bool(user.get("available_for_consulting", False)),

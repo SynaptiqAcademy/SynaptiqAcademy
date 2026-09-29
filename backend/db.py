@@ -120,6 +120,41 @@ def _redact_uri(uri: str) -> str:
     return re.sub(r"(?<=://)[^:]+:[^@]+@", "***:***@", uri)
 
 
+# ── Local/script production-DB guard (P1 Phase 8B QA-hygiene follow-up) ────────
+# Root cause of a real incident: this repo's own .env ships the production
+# Atlas URI (APP_ENV=production locally too, since .env mirrors Railway's
+# values for local debugging), so any raw script that imports db.py directly
+# — bypassing tests/conftest.py's pytest-only MONGODB_URI override — silently
+# connects to and can write into production. pytest itself is unaffected
+# (conftest.py pins MONGODB_URI to localhost before server.py's load_dotenv()
+# ever runs), and neither is the real Railway deployment: Railway injects
+# RAILWAY_ENVIRONMENT/RAILWAY_PROJECT_ID into its own runtime, and no local
+# .env can fabricate those, so this only ever fires for a local process.
+def _looks_like_prod_atlas(uri: str) -> bool:
+    return "synaptiq-prod" in uri
+
+
+def _running_on_railway() -> bool:
+    return bool(os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("RAILWAY_PROJECT_ID"))
+
+
+def _assert_safe_db_target(uri: str) -> None:
+    if not _looks_like_prod_atlas(uri):
+        return  # not the production cluster (local Mongo, test DB, a different Atlas project) — nothing to guard
+    if _running_on_railway():
+        return  # genuine Railway production runtime — always allowed
+    if os.environ.get("ALLOW_PROD_DB_LOCAL") == "1":
+        return  # explicit, deliberate opt-in for a one-off local production diagnostic
+    raise RuntimeError(
+        "Refusing to connect to the production database (synaptiq-prod) from a "
+        "non-Railway process. This looks like a local script, REPL, or debug run "
+        "using .env's production MONGODB_URI — not the deployed backend and not "
+        "the pytest suite (which is isolated to a local test DB via "
+        "tests/conftest.py). If this is a deliberate, one-off, read-only "
+        "production diagnostic, set ALLOW_PROD_DB_LOCAL=1 and re-run."
+    )
+
+
 def _configure_dns_fallback() -> None:
     """
     Ensure dnspython has valid nameservers before PyMongo resolves the SRV record.
@@ -196,6 +231,7 @@ def get_db():
     if _db is None:
         uri = _mongo_uri()
         db_name = _db_name()
+        _assert_safe_db_target(uri)
         is_atlas = uri.startswith("mongodb+srv://")
         uri_redacted = _redact_uri(uri)
 

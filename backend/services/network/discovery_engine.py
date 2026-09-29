@@ -52,6 +52,12 @@ def _serialize_person(doc):
     doc["orcid_verified"] = orcid_scrubbed is not None
     doc["orcid_id"] = orcid_scrubbed.get("orcid_id") if orcid_scrubbed else None
     doc["institution_verified"] = institution_id is not None
+    # Same canonical default as the query above and as auth_utils'
+    # serializers — an absent value displays as "available", not blank, so a
+    # Research & Experts card matches what that same user's own Passport
+    # already shows.
+    v = doc.get("available_for_collaboration")
+    doc["available_for_collaboration"] = True if v is None else bool(v)
     return doc
 
 
@@ -164,11 +170,26 @@ async def search_people(db, filters: dict, page: int = 1, limit: int = 20, viewe
             {"research_keywords": {"$regex": disc, "$options": "i"}},
         ]
 
-    for field in ("available_for_collaboration", "available_for_reviewing",
-                  "available_for_supervision", "available_for_consulting"):
+    for field in ("available_for_reviewing", "available_for_supervision", "available_for_consulting"):
         v = filters.get(field)
         if v is not None:
             query[field] = bool(v)
+
+    # available_for_collaboration is the one availability field whose canonical
+    # semantic (see auth_utils.serialize_user/serialize_public_user, both of
+    # which already default it to True) treats an absent/legacy value as
+    # "available" — the other three default to False when unset, so an exact
+    # {field: true} match is correct for them, but doing the same here would
+    # silently exclude every profile that never touched the checkbox (the
+    # majority, per the Phase 8A field-sparsity audit), even though those same
+    # profiles display "Open to Collaboration" everywhere else. $ne is the
+    # correct operator for the actual storage shape here (the field is never
+    # written as null — routers/users.py's update_me() explicitly drops None
+    # values — so it is only ever absent, true, or false; {"$ne": False}
+    # matches "absent or true", exactly the display default).
+    v = filters.get("available_for_collaboration")
+    if v is not None:
+        query["available_for_collaboration"] = {"$ne": False} if bool(v) else False
 
     # Derived-boolean filters (§13 "Verification indicators") — real signals
     # already used elsewhere (routers/orcid.py's authenticated-connection

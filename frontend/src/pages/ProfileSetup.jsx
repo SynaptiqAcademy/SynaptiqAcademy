@@ -618,7 +618,7 @@ export default function ProfileSetup() {
     software_skills:         user?.software_skills || [],
     methodological_expertise: user?.methodological_expertise || [],
     availability:            user?.availability || "",
-    available_for_collaboration: user?.available_for_collaboration || false,
+    available_for_collaboration: user?.available_for_collaboration ?? true,
     available_for_reviewing: user?.available_for_reviewing || false,
     available_for_consulting: user?.available_for_consulting || false,
     professional_expertise:  user?.professional_expertise || [],
