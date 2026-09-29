@@ -4,10 +4,18 @@ import { Avatar } from "@/components/ds/Avatar";
 import OrcidBadge from "@/components/orcid/OrcidBadge";
 import { NAVY, NAVY2, WHITE, EMERALD } from "@/lib/tokens";
 
+// Only an OAuth-authenticated ORCID connection (the {orcid_id, access_token,
+// verified_at, ...} object routers/orcid.py's /callback persists) counts as
+// "connected" here — this badge sits next to "Verified Researcher" and would
+// otherwise falsely claim a connection for accounts holding a bare,
+// self-reported ORCID string (legacy data / seed accounts), which is what
+// caused this badge to contradict the Research Integrations card's (correct)
+// "not connected" state for the same account. IdentityCard's own
+// extractOrcidId intentionally stays permissive — it's a plain outbound
+// identifier link there, same as Google Scholar/ResearchGate, not a
+// verified-connection indicator.
 function extractOrcidId(orcid) {
-  if (!orcid) return null;
-  if (typeof orcid === "object") return orcid.orcid_id || null;
-  if (typeof orcid === "string") return orcid;
+  if (orcid && typeof orcid === "object" && orcid.orcid_id) return orcid.orcid_id;
   return null;
 }
 

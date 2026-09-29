@@ -128,7 +128,20 @@ async def compute_verification_profile(user_id: str, db) -> dict:
 
     # ── Boolean flags ──────────────────────────────────────────────────────────
     email_verified: bool = bool(user and user.get("email"))
-    orcid_verified: bool = bool(user and user.get("orcid") and str(user.get("orcid", "")).strip())
+    # users.orcid is normally an OAuth-authenticated dict written by
+    # routers/orcid.py's /callback ({orcid_id, access_token, verified_at, ...}).
+    # Some accounts (legacy data / seed scripts predating the PATCH /users/me
+    # orcid-field guard in routers/users.py) instead hold a bare string — a
+    # self-reported, never-authenticated ORCID iD. The old `str(...).strip()`
+    # check here treated ANY non-empty value, string or dict, as verified,
+    # which is what caused verification_profiles.orcid_verified (and every UI
+    # badge/status derived from it) to say "Connected"/"Verified" for users
+    # the canonical GET /api/orcid/status — and every other consumer in this
+    # codebase, e.g. routers/citations.py, services/profile_completion.py —
+    # already correctly reports as not connected. Matching that same
+    # dict+orcid_id check here is the fix, not inventing a new one.
+    _orcid = user.get("orcid") if user else None
+    orcid_verified: bool = bool(isinstance(_orcid, dict) and _orcid.get("orcid_id"))
     institution_verified: bool = bool(
         user
         and user.get("institution")
