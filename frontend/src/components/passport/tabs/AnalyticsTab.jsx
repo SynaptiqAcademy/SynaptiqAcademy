@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { LineChart, DollarSign, Users2, ArrowRight } from "lucide-react";
 import { AnalyticsSummary } from "@/components/passport/AnalyticsSummary";
+import { AIInsightsPanel } from "@/components/passport/AIInsightsPanel";
 import { SectionShell } from "@/components/passport/PassportUI";
 import { Card } from "@/components/ds/Card";
 import { TEXT_SECONDARY, TEXT_PRIMARY } from "@/lib/tokens";
@@ -26,10 +27,14 @@ function ExploreCard({ icon: Icon, label, description, to }) {
 /**
  * AnalyticsTab — the real h-index/citations/teaching summary (AnalyticsSummary,
  * already built and previously unused), plus real navigation into the
- * dedicated full dashboards for deeper analysis. AI Insights lives in the
- * always-visible right rail rather than duplicated here — same component,
- * shown once. "Downloads" isn't tracked anywhere in the backend for
- * publications, so it's honestly left out rather than fabricated.
+ * dedicated full dashboards for deeper analysis. Analytics is deliberately
+ * secondary to identity/verification/research (P1 Phase 7C4.1 §17) — it's
+ * its own tab, not the Passport's opening impression. AI Insights (P1 Phase
+ * 7C4.1 §18) moved here from the old permanent right rail — it's rule-based
+ * platform-activity guidance, not core academic identity, so it belongs
+ * alongside other secondary analytics rather than on every tab. "Downloads"
+ * isn't tracked anywhere in the backend for publications, so it's honestly
+ * left out rather than fabricated.
  */
 export function AnalyticsTab({ reputation, teachingStats }) {
   return (
@@ -43,6 +48,8 @@ export function AnalyticsTab({ reputation, teachingStats }) {
           <ExploreCard icon={Users2} label="Collaboration Network" description="Active partners" to="/collaborations" />
         </div>
       </SectionShell>
+
+      <AIInsightsPanel />
     </div>
   );
 }

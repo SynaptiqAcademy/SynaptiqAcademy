@@ -1,41 +1,68 @@
 import React from "react";
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { IdentityCard } from "@/components/passport/IdentityCard";
-import { QuickActionsRail } from "@/components/passport/QuickActionsBar";
-import { SectionShell, MiniStat } from "@/components/passport/PassportUI";
-import { VERIFICATION_ITEMS, countVerifiedDimensions } from "@/components/passport/TrustVerificationSection";
-import { Button } from "@/components/ds/Button";
-import { TYPE, NAVY } from "@/lib/tokens";
+import { PassportCollaborationProfile } from "@/components/passport/PassportCollaborationProfile";
+import { PassportCompletion } from "@/components/passport/PassportCompletion";
+import { PassportNextBestAction } from "@/components/passport/PassportNextBestAction";
+import { TrustVerificationSection } from "@/components/passport/TrustVerificationSection";
+import { RecentActivityCard } from "@/components/passport/RecentActivityCard";
+import { Card } from "@/components/ds/Card";
+import { EmptyState } from "@/components/ds/EmptyState";
+import { NAVY, TEXT_PRIMARY, TEXT_SECONDARY } from "@/lib/tokens";
 
 /**
- * OverviewTab — personal identity: biography, research interests, quick
- * actions, and a compact trust summary. Profile Completion / Trust Score /
- * Recent Activity are intentionally not duplicated here — they're always
- * visible in the persistent right rail (PassportRightRail), which is shown
- * on every tab including this one.
+ * OverviewTab — P1 Phase 7C4.1: THE Passport, not a random card collection.
+ * Tells the identity story top to bottom: completion + next step,
+ * verification, academic focus, a Research Record teaser, collaboration
+ * identity, then recent activity. Completion/Verification/Recent Activity
+ * used to live permanently in a separate right rail on every tab — now
+ * they appear once, in their natural place in this narrative, and the
+ * other five tabs get their content-width back.
  */
-export function OverviewTab({ profile, verification, passport, onGoToTab, onEdit }) {
-  const verifiedCount = countVerifiedDimensions(verification);
-
+export function OverviewTab({ profile, verification, completion, pubsTotal, recentEvents, onEdit, onGoToTab }) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px]" style={{ gap: 20 }}>
-      <div style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
-        <IdentityCard profile={profile} />
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <PassportNextBestAction completion={completion} />
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <SectionShell title="Trust Summary">
-          <div style={{ display: "flex", gap: 24, marginBottom: 14 }}>
-            <MiniStat label="Trust Score" value={Math.round(passport?.trust_score ?? 0)} />
-            <MiniStat label="Verified" value={`${verifiedCount} / ${VERIFICATION_ITEMS.length}`} />
+      <PassportCompletion completion={completion} />
+
+      <TrustVerificationSection verification={verification} profile={profile} onEditIdentity={onEdit} />
+
+      <IdentityCard profile={profile} />
+
+      {pubsTotal > 0 ? (
+        <Card padding="lg">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(15,40,71,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <BookOpen size={16} style={{ color: NAVY }} />
+              </span>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>Research Record</div>
+                <div style={{ fontSize: 12.5, color: TEXT_SECONDARY, marginTop: 2 }}>{pubsTotal} publication{pubsTotal === 1 ? "" : "s"} on record</div>
+              </div>
+            </div>
+            <button
+              onClick={() => onGoToTab?.("research")}
+              style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12.5, fontWeight: 600, color: NAVY, background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}>
+              View Research Record <ArrowRight size={12} />
+            </button>
           </div>
-          <Button size="sm" variant="ghost" onClick={() => onGoToTab("reputation")} style={{ width: "100%" }}>
-            <ShieldCheck size={13} /> View Trust &amp; Verification <ArrowRight size={12} />
-          </Button>
-        </SectionShell>
+        </Card>
+      ) : (
+        <Card padding="lg">
+          <EmptyState
+            icon={<BookOpen />}
+            size="sm"
+            title="Build your Research Record"
+            description="Import verified works through ORCID or add a DOI to strengthen your academic evidence."
+          />
+        </Card>
+      )}
 
-        <QuickActionsRail profile={profile} passport={passport} verification={verification} onEdit={onEdit} />
-      </div>
+      <PassportCollaborationProfile profile={profile} />
+
+      <RecentActivityCard events={recentEvents} />
     </div>
   );
 }

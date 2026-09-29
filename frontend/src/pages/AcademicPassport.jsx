@@ -1,11 +1,17 @@
 /**
  * Academic Passport — the flagship, single identity experience.
  *
- * V3: six primary sections (Overview/Research/Teaching/Reputation/Portfolio/
- * Analytics) replace the previous ~30-item anchor-link sidebar. Every panel
- * still reuses an existing endpoint — no new backend, nothing removed, only
- * regrouped into tabs (see components/passport/tabs/*). The right rail
- * (PassportRightRail) stays visible across every tab.
+ * P1 Phase 7C4.1: full experience/visual redesign. Six primary sections
+ * (Overview/Research/Teaching/Reputation/Portfolio/Analytics) now sit
+ * behind a compact horizontal PassportNav (replacing the old fixed-width
+ * vertical sidebar-inside-a-sidebar), under a premium
+ * PassportCredentialHeader (replacing the old PassportHero, which repeated
+ * a 7-counter analytics ribbon on every tab). The old permanently-visible
+ * right rail (Completion/Trust Health/Verification/Next Steps/AI Insights/
+ * Recent Activity/Platform Tip stacked on every tab) is gone — each piece
+ * now lives once, in its natural place in the Overview/Reputation/
+ * Analytics narrative, so every tab's content gets full width. Every panel
+ * still reuses an existing endpoint — no new backend.
  */
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -14,8 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import api from "@/lib/api";
 
 import { PassportNav, TABS } from "@/components/passport/PassportNav";
-import { PassportHero } from "@/components/passport/PassportHero";
-import { PassportRightRail } from "@/components/passport/PassportRightRail";
+import { PassportCredentialHeader } from "@/components/passport/PassportCredentialHeader";
 import { usePassportActions } from "@/components/passport/QuickActionsBar";
 import { EditIdentityModal } from "@/components/passport/EditIdentityModal";
 import { SkeletonPage } from "@/components/ds/LoadingState";
@@ -37,7 +42,7 @@ const HASH_TO_TAB = {
   publications_panel: "research",
   research_integrations: "research",
   research_reputation: "reputation",
-  trust_verification: "reputation",
+  trust_verification: "overview",
   achievements: "reputation",
   public_portfolio: "portfolio",
   academic_timeline: "portfolio",
@@ -138,16 +143,16 @@ export default function AcademicPassport() {
   }
 
   const pubsTotal = pubs?.total ?? me.publications_count ?? 0;
-  // "Achievements" in the hero stats ribbon is a hard number next to
-  // Publications/Citations/etc. — must be real earned badges only, not
-  // fabricated client-computed profile milestones (P1 Phase 7 C1.5).
-  const achievementsTotal = trustBadges.length;
   const publicUrl = passport?.public_url ? window.location.origin + passport.public_url : null;
 
   const tabProps = {
-    overview:   <OverviewTab profile={me} verification={verification} passport={passport} onGoToTab={setActiveTab} onEdit={() => setEditOpen(true)} />,
+    overview:   <OverviewTab
+                  profile={me} verification={verification} completion={completion}
+                  pubsTotal={pubsTotal} recentEvents={recentEvents}
+                  onEdit={() => setEditOpen(true)} onGoToTab={setActiveTab}
+                />,
     research:   <ResearchTab
-                  profile={me} impact={impact} completion={completion}
+                  profile={me} impact={impact} researchRank={researchRank}
                   pubs={pubs} pubsLoading={pubsLoading} pubQuery={pubQuery}
                   onQuery={(q) => { setPubQuery(q); loadPubs(q); }}
                   onRefresh={() => loadPubs(pubQuery)}
@@ -155,8 +160,7 @@ export default function AcademicPassport() {
                 />,
     teaching:   <TeachingTab teachingStats={teachingStats} />,
     reputation: <ReputationTab
-                  profile={me} verification={verification} passport={passport}
-                  onEditIdentity={() => setEditOpen(true)}
+                  profile={me} onEditIdentity={() => setEditOpen(true)} passport={passport}
                   repAnalytics={repAnalytics} researchRank={researchRank}
                   onSyncOpenAlex={handleSyncOpenAlex} syncing={syncing}
                   pubCount={pubsTotal} trustBadges={trustBadges} badgeCatalogue={badgeCatalogue}
@@ -173,44 +177,30 @@ export default function AcademicPassport() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row items-stretch lg:items-start" style={{ gap: 24 }}>
-      <PassportNav activeTab={activeTab} onTabChange={setActiveTab} />
-
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
-        <PassportHero
-          profile={me}
-          passport={passport}
-          reputation={reputation}
-          verification={verification}
-          researchRank={researchRank}
-          teachingStats={teachingStats}
-          projectsTotal={projectsTotal}
-          grantsTotal={grantsTotal}
-          pubsTotal={pubsTotal}
-          achievementsTotal={achievementsTotal}
-          completion={completion}
-          onEdit={() => setEditOpen(true)}
-        />
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {tabProps[activeTab]}
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      <PassportRightRail
-        completion={completion}
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <PassportCredentialHeader
+        profile={me}
         passport={passport}
         verification={verification}
-        recentEvents={recentEvents}
+        completion={completion}
+        onEdit={() => setEditOpen(true)}
+        onShare={shareProfile}
+        onExport={downloadPassport}
       />
+
+      <PassportNav activeTab={activeTab} onTabChange={setActiveTab} />
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {tabProps[activeTab]}
+        </motion.div>
+      </AnimatePresence>
 
       <EditIdentityModal
         open={editOpen}

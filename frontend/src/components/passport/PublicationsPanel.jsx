@@ -1,6 +1,7 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { BookOpen, Search, RefreshCw, Loader2, ChevronDown, ExternalLink } from "lucide-react";
+import { BookOpen, Search, RefreshCw, Loader2, ChevronDown, ExternalLink, Link2, Plus } from "lucide-react";
 import { Card } from "@/components/ds/Card";
 import { Section } from "@/components/ds/Section";
 import { Button } from "@/components/ds/Button";
@@ -8,6 +9,7 @@ import { EmptyState } from "@/components/ds/EmptyState";
 import { SkeletonCard } from "@/components/ds/LoadingState";
 import { NAVY, BRD, WARM, TEXT_MUTED, TEXT_SECONDARY, TEXT_PRIMARY } from "@/lib/tokens";
 import { ProvenanceTag } from "@/components/passport/ProvenanceTag";
+import { isOrcidAuthenticated } from "@/lib/orcid";
 import api from "@/lib/api";
 
 // Provenance a publication record can actually carry, per
@@ -88,8 +90,17 @@ function PublicationRow({ pub }) {
  * PublicationsPanel — searchable publications list + ORCID sync.
  * Merges Profile.jsx's PublicationsSection + PublicationCard.
  */
-export function PublicationsPanel({ pubs, loading, query, onQuery, onRefresh }) {
+export function PublicationsPanel({ pubs, loading, query, onQuery, onRefresh, profile }) {
   const [syncing, setSyncing] = useState(false);
+  const navigate = useNavigate();
+  const orcidConnected = isOrcidAuthenticated(profile?.orcid);
+
+  // Scrolls to the real ORCID connect action (ResearchIntegrationsCard,
+  // further down this same tab) instead of duplicating the OAuth-initiation
+  // logic that already lives in OrcidSettings.jsx (P1 Phase 7C4.1 §26).
+  const goToOrcidConnect = () => {
+    document.getElementById("research-integrations-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const importOrcid = async () => {
     setSyncing(true);
@@ -128,11 +139,26 @@ export function PublicationsPanel({ pubs, loading, query, onQuery, onRefresh }) 
 
         {loading && <SkeletonCard rows={3} />}
         {!loading && (!pubs || pubs.results.length === 0) && (
-          <EmptyState
-            icon={<BookOpen />}
-            title={query ? "No publications match your search" : "No publications on record"}
-            description={!query ? "Sync ORCID to automatically import your publications." : undefined}
-          />
+          query ? (
+            <EmptyState icon={<BookOpen />} title="No publications match your search" />
+          ) : (
+            <EmptyState
+              icon={<BookOpen />}
+              title="Build your Research Record"
+              description="Import verified works through ORCID or add a DOI to strengthen your academic evidence."
+              action={
+                <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+                  {/* State-aware: already-authenticated ORCID users never see "Connect ORCID" (P1 Phase 7C4.1 §13). */}
+                  {!orcidConnected && (
+                    <Button size="sm" onClick={goToOrcidConnect}><Link2 size={12} /> Connect ORCID</Button>
+                  )}
+                  <Button size="sm" variant={orcidConnected ? "primary" : "ghost"} onClick={() => navigate("/publication-hub")}>
+                    <Plus size={12} /> Add publication
+                  </Button>
+                </div>
+              }
+            />
+          )
         )}
         {!loading && pubs && pubs.results.length > 0 && (
           <>

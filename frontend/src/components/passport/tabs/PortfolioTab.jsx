@@ -49,7 +49,7 @@ export function PortfolioTab({ profile, employments, educations, pubs, exportCV,
         </div>
       </SectionShell>
 
-      <AcademicTimelineSection employments={employments} educations={educations} pubs={pubs} />
+      <AcademicTimelineSection employments={employments} educations={educations} pubs={pubs} profile={profile} />
     </div>
   );
 }

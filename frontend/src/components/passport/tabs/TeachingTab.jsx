@@ -13,18 +13,32 @@ import { Button } from "@/components/ds/Button";
  * not an LMS with enrolled students) — Lessons / Assessments / Workspaces /
  * Portfolio Items / AI Sessions / Collaborations are the real equivalents shown
  * here instead, deliberately not fabricated to match the requested labels.
+ *
+ * P1 Phase 7C4.1 §14: a response with every total at 0 used to still render
+ * a 9-box grid of zeroes ("an empty analytics graveyard"). Now treated the
+ * same as no response at all — one useful empty state instead.
  */
 export function TeachingTab({ teachingStats }) {
-  if (!teachingStats) {
+  const totals = teachingStats?.totals || {};
+  const rep = teachingStats?.reputation || {};
+  const hasActivity = Object.values(totals).some((v) => v > 0) || Object.values(rep).some((v) => v > 0);
+
+  if (!teachingStats || !hasActivity) {
     return (
       <SectionShell title="Teaching">
-        <EmptyState icon={<GraduationCap />} title="No teaching activity yet" description="Create a lesson or workspace to see your teaching analytics here." />
+        <EmptyState
+          icon={<GraduationCap />}
+          title="Your teaching identity starts here"
+          description="Create a lesson, assessment, or teaching workspace and it becomes part of your Passport automatically — no manual entry needed."
+          action={
+            <Link to="/teaching">
+              <Button as="span" size="sm">Go to Teaching Workspaces</Button>
+            </Link>
+          }
+        />
       </SectionShell>
     );
   }
-
-  const totals = teachingStats.totals || {};
-  const rep = teachingStats.reputation || {};
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>

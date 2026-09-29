@@ -1,29 +1,26 @@
 import React from "react";
-import { TrustVerificationSection } from "@/components/passport/TrustVerificationSection";
 import { AcademicReputationSection } from "@/components/passport/AcademicReputationSection";
 import { AchievementsPanel } from "@/components/passport/AchievementsTimeline";
+import { TrustHealthMini } from "@/components/passport/PassportUI";
+import { TEXT_SECONDARY } from "@/lib/tokens";
 
 /**
- * ReputationTab — Trust & Verification, Academic (Research/Teaching/
- * Collaboration/Reviewer) Reputation, and Achievements/Badges, all grouped in
- * one place as the spec requests. ORCID/OpenAlex connection cards live on the
- * Research tab (Research Integrations) — not duplicated here, since they're
- * the same live components and would double their API calls if rendered
- * twice.
+ * ReputationTab — P1 Phase 7C4.1 §15: deliberately does NOT include
+ * verification content anymore (that's now Overview's Identity &
+ * Verification section, "what Synaptiq can verify"). This tab is only
+ * "what your academic activity demonstrates" — reputation/impact analytics,
+ * the separate detail Trust Score, and earned achievements. UI separation
+ * only; no backend systems were merged.
  */
 export function ReputationTab({
-  profile, verification, passport, onEditIdentity,
-  repAnalytics, researchRank, onSyncOpenAlex, syncing,
-  pubCount, trustBadges, badgeCatalogue,
+  repAnalytics, researchRank, onSyncOpenAlex, syncing, onEditIdentity,
+  profile, pubCount, trustBadges, badgeCatalogue, passport,
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <TrustVerificationSection
-        verification={verification}
-        profile={profile}
-        passport={passport}
-        onEditIdentity={onEditIdentity}
-      />
+      <p style={{ fontSize: 12.5, color: TEXT_SECONDARY, margin: 0 }}>
+        What your academic activity demonstrates — distinct from Overview's verification coverage.
+      </p>
 
       <AcademicReputationSection
         analytics={repAnalytics}
@@ -32,6 +29,8 @@ export function ReputationTab({
         syncing={syncing}
         onEditIdentity={onEditIdentity}
       />
+
+      <TrustHealthMini passport={passport} />
 
       <AchievementsPanel
         profile={profile}

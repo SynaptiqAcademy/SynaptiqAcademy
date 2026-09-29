@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { TrendingUp, CheckCircle2, Circle } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { Card } from "@/components/ds/Card";
-import { ProgressRing } from "@/components/ds/Progress";
-import { Button } from "@/components/ds/Button";
 import api from "@/lib/api";
 import { NAVY, EMERALD, TEXT_MUTED, TEXT_SECONDARY, TEXT_PRIMARY, BRD } from "@/lib/tokens";
 
@@ -43,14 +40,22 @@ function KpiTile({ label, value, sub, trend, points }) {
   );
 }
 
-function resolveAction(action) {
-  return action === "/settings" ? "/academic-passport" : action;
-}
-
-export function ResearchImpactSection({ impact, completion }) {
+/**
+ * ResearchImpactSection — P1 Phase 7C4.1 §13/§17/§23: two fixes made while
+ * redesigning this section.
+ * 1. The h-index tile's "Top 5% in Field" caption was a hardcoded string,
+ *    not derived from any real data — shown for every user regardless of
+ *    their actual standing. Now uses the real percentile from
+ *    researchRank.percentile_global (GET /reputation/research/me) when
+ *    available, and shows nothing rather than a fabricated claim otherwise.
+ * 2. Removed the embedded "Profile Completion" ring + checklist — it
+ *    duplicated the one canonical completion experience now on Overview
+ *    (PassportCompletion), which is the "no duplicate completion systems"
+ *    requirement from the redesign brief.
+ */
+export function ResearchImpactSection({ impact, researchRank }) {
   const [period, setPeriod] = useState("365d");
   const [series, setSeries] = useState(impact?.citation_growth?.series || null);
-  const [showChecklist, setShowChecklist] = useState(false);
 
   useEffect(() => {
     setSeries(impact?.citation_growth?.series || null);
@@ -67,78 +72,41 @@ export function ResearchImpactSection({ impact, completion }) {
 
   const kpi = impact?.kpi;
   const cumulativePoints = (series || []).map((p) => p.cumulative);
+  const percentile = researchRank?.percentile_global;
+  const hIndexSub = percentile != null ? `Top ${Math.max(1, 100 - percentile)}% in field` : undefined;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px]" style={{ gap: 20 }}>
-      <div style={{ minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-0.01em" }}>Research Impact</div>
-          <select
-            value={period}
-            onChange={handlePeriodChange}
-            style={{ fontSize: 12, border: `1px solid ${BRD}`, borderRadius: 6, padding: "5px 10px", background: "#fff", color: TEXT_SECONDARY }}
-          >
-            <option value="365d">This year</option>
-            <option value="all">All time</option>
-          </select>
-        </div>
-
-        {kpi ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4" style={{ gap: 14 }}>
-            <KpiTile label="h-index ↑" value={kpi.h_index ?? "—"} sub="Top 5% in Field" />
-            <KpiTile
-              label="Citations"
-              value={(kpi.citations ?? 0).toLocaleString()}
-              sub={kpi.cit_pct_30d ? `+${kpi.cit_pct_30d}% this period` : undefined}
-              trend={kpi.cit_pct_30d ? `+${kpi.cit_pct_30d}%` : undefined}
-              points={cumulativePoints}
-            />
-            <KpiTile label="i10-index" value={kpi.i10_index ?? "—"} />
-            <KpiTile label="Citation Velocity" value={kpi.avg_velocity ?? "—"} sub="Avg. citations / year" />
-          </div>
-        ) : (
-          <Card padding="lg">
-            <p style={{ fontSize: 12.5, color: TEXT_MUTED, margin: 0 }}>
-              Sync ORCID/OpenAlex to populate your research impact metrics.
-            </p>
-          </Card>
-        )}
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-0.01em" }}>Research Impact</div>
+        <select
+          value={period}
+          onChange={handlePeriodChange}
+          style={{ fontSize: 12, border: `1px solid ${BRD}`, borderRadius: 6, padding: "5px 10px", background: "#fff", color: TEXT_SECONDARY }}
+        >
+          <option value="365d">This year</option>
+          <option value="all">All time</option>
+        </select>
       </div>
 
-      {completion && (
-        <Card padding="lg" style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: TEXT_PRIMARY, marginBottom: 14 }}>Profile Completion</div>
-          <ProgressRing value={completion.percentage} max={100} size="lg" colorByValue />
-          <div style={{ fontSize: 12, fontWeight: 700, color: completion.percentage >= 80 ? EMERALD : NAVY, marginTop: 10 }}>
-            {completion.percentage >= 80 ? "Excellent" : completion.percentage >= 50 ? "Good progress" : "Getting started"}
-          </div>
-          <div style={{ fontSize: 11.5, color: TEXT_MUTED, marginTop: 4, lineHeight: 1.5 }}>
-            {completion.percentage >= 80 ? "Your profile is highly complete." : "A few more details will strengthen your profile."}
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            style={{ marginTop: 14, width: "100%" }}
-            onClick={() => setShowChecklist((s) => !s)}
-          >
-            {showChecklist ? "Hide Suggestions" : "View Suggestions"}
-          </Button>
-
-          {showChecklist && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14, textAlign: "left" }}>
-              {(completion.items || []).map((item) => (
-                <div key={item.key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  {item.earned
-                    ? <CheckCircle2 size={13} style={{ color: EMERALD, flexShrink: 0 }} />
-                    : <Circle size={13} style={{ color: "#CBD5E1", flexShrink: 0 }} />}
-                  <span style={{ flex: 1, fontSize: 11.5, color: item.earned ? TEXT_SECONDARY : TEXT_MUTED }}>{item.label}</span>
-                  {item.earned
-                    ? <span style={{ fontSize: 10.5, color: EMERALD, fontWeight: 600 }}>+{item.points}</span>
-                    : <Link to={resolveAction(item.action)} style={{ fontSize: 10.5, color: NAVY, textDecoration: "none" }}>{item.action_label}</Link>}
-                </div>
-              ))}
-            </div>
-          )}
+      {kpi ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4" style={{ gap: 14 }}>
+          <KpiTile label="h-index" value={kpi.h_index ?? "—"} sub={hIndexSub} />
+          <KpiTile
+            label="Citations"
+            value={(kpi.citations ?? 0).toLocaleString()}
+            sub={kpi.cit_pct_30d ? `+${kpi.cit_pct_30d}% this period` : undefined}
+            trend={kpi.cit_pct_30d ? `+${kpi.cit_pct_30d}%` : undefined}
+            points={cumulativePoints}
+          />
+          <KpiTile label="i10-index" value={kpi.i10_index ?? "—"} />
+          <KpiTile label="Citation Velocity" value={kpi.avg_velocity ?? "—"} sub="Avg. citations / year" />
+        </div>
+      ) : (
+        <Card padding="lg">
+          <p style={{ fontSize: 12.5, color: TEXT_MUTED, margin: 0 }}>
+            Sync ORCID/OpenAlex to populate your research impact metrics.
+          </p>
         </Card>
       )}
     </div>

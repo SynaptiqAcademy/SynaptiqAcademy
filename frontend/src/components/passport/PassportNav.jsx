@@ -1,10 +1,8 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import {
   LayoutGrid, FlaskConical, GraduationCap, Award, Globe2, BarChart3,
-  Settings as SettingsIcon,
 } from "lucide-react";
-import { NAVY, TEXT_SECONDARY, WHITE, BRD } from "@/lib/tokens";
+import { NAVY, TEXT_SECONDARY, BRD } from "@/lib/tokens";
 
 export const TABS = [
   { id: "overview",   label: "Overview",   icon: LayoutGrid },
@@ -16,46 +14,45 @@ export const TABS = [
 ];
 
 /**
- * PassportNav — six primary sections, replacing the previous ~30-item
- * anchor-link menu. Every one of those items still exists — they're now
- * grouped as premium cards inside their section's tab panel (see
- * AcademicPassport.jsx / components/passport/tabs/*) instead of being
- * separate nav entries. Coexists with the main app sidebar.
+ * PassportNav — P1 Phase 7C4.1: replaces the old fixed 200px vertical
+ * sidebar (a "sidebar inside sidebar" next to the app's own global left
+ * nav) with a compact horizontal strip beneath the credential header.
+ * Scrolls horizontally on narrow viewports instead of stacking a dropdown,
+ * keeping every section one tap away at any width. Settings moved out of
+ * this list — it's general account settings, not Passport content, so it
+ * no longer needs a seat among six Passport sections.
  */
 export function PassportNav({ activeTab, onTabChange }) {
   return (
-    <div className="w-full lg:w-[200px] lg:sticky lg:top-6" style={{ flexShrink: 0, alignSelf: "flex-start" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        {TABS.map(({ id, label, icon: Icon }) => {
-          const active = activeTab === id;
-          return (
-            <button
-              key={id}
-              onClick={() => onTabChange(id)}
-              style={{
-                display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 12px",
-                border: "none", borderRadius: 9, cursor: "pointer", textAlign: "left",
-                background: active ? NAVY : "transparent", color: active ? WHITE : TEXT_SECONDARY,
-                fontWeight: active ? 600 : 500, fontSize: 13.5, transition: "background 120ms ease",
-              }}
-              onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "#F1F5F9"; }}
-              onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "transparent"; }}
-            >
-              <Icon size={16} style={{ flexShrink: 0 }} />
-              {label}
-            </button>
-          );
-        })}
-      </div>
-
-      <div style={{ marginTop: 16, paddingTop: 12, borderTop: `1px solid ${BRD}` }}>
-        <Link
-          to="/settings"
-          style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 12px", borderRadius: 9, textDecoration: "none", color: TEXT_SECONDARY, fontSize: 13.5, fontWeight: 500 }}
-        >
-          <SettingsIcon size={16} /> Settings
-        </Link>
-      </div>
+    <div
+      role="tablist"
+      aria-label="Academic Passport sections"
+      style={{
+        display: "flex", gap: 4, borderBottom: `1px solid ${BRD}`,
+        overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "none",
+      }}
+    >
+      {TABS.map(({ id, label, icon: Icon }) => {
+        const active = activeTab === id;
+        return (
+          <button
+            key={id}
+            role="tab"
+            aria-selected={active}
+            onClick={() => onTabChange(id)}
+            style={{
+              display: "flex", alignItems: "center", gap: 7, padding: "10px 14px", flexShrink: 0,
+              border: "none", borderBottom: active ? `2px solid ${NAVY}` : "2px solid transparent",
+              background: "transparent", cursor: "pointer", whiteSpace: "nowrap",
+              color: active ? NAVY : TEXT_SECONDARY, fontWeight: active ? 700 : 500, fontSize: 13.5,
+              transition: "color 120ms ease, border-color 120ms ease", marginBottom: -1,
+            }}
+          >
+            <Icon size={15} style={{ flexShrink: 0 }} />
+            {label}
+          </button>
+        );
+      })}
     </div>
   );
 }

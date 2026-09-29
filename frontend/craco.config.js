@@ -60,6 +60,19 @@ let webpackConfig = {
   },
 };
 
+// P1 Phase 7C4.1: Jest doesn't inherit webpack's `@` alias automatically —
+// every component using `@/...` imports (nearly all of them) failed to even
+// load under `craco test` before this, so no component-level test was
+// possible. Mirrors the webpack alias above exactly; changes no existing
+// behavior for files that don't use the alias.
+webpackConfig.jest = {
+  configure: {
+    moduleNameMapper: {
+      '^@/(.*)$': '<rootDir>/src/$1',
+    },
+  },
+};
+
 webpackConfig.devServer = (devServerConfig) => {
   // Add health check endpoints if enabled
   if (config.enableHealthCheck && setupHealthEndpoints && healthPluginInstance) {

@@ -1,9 +1,8 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { CheckCircle2, Clock, XCircle, ShieldCheck, ArrowRight, Lightbulb } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ds/Card";
 import { ProgressRing } from "@/components/ds/Progress";
-import { TYPE, NAVY, WARM, BRD, EMERALD, AMBER, TEXT_MUTED, TEXT_SECONDARY, TEXT_PRIMARY, SHADOW_CARD_HOVER } from "@/lib/tokens";
+import { TYPE, NAVY, BRD, EMERALD, AMBER, TEXT_MUTED, TEXT_SECONDARY, TEXT_PRIMARY, SHADOW_CARD_HOVER } from "@/lib/tokens";
 
 /**
  * Shared premium building blocks reused across every "bottom half" Academic
@@ -117,24 +116,6 @@ export function RailCard({ title, icon: Icon, action, children }) {
   );
 }
 
-/** ProfileCompletionMini — compact rail version of the Overview/Research completion ring. Real data, no separate fetch. */
-export function ProfileCompletionMini({ completion }) {
-  if (!completion) return null;
-  return (
-    <RailCard title="Profile Completion">
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <ProgressRing value={completion.percentage} max={100} size="sm" colorByValue />
-        <div>
-          <div style={{ fontSize: 12, color: TEXT_SECONDARY, lineHeight: 1.4 }}>
-            {completion.percentage >= 80 ? "Highly complete" : completion.percentage >= 50 ? "Good progress" : "Getting started"}
-          </div>
-          <div style={{ ...TYPE.caption, marginTop: 2 }}>{(completion.items || []).filter((i) => !i.earned).length} steps remaining</div>
-        </div>
-      </div>
-    </RailCard>
-  );
-}
-
 /**
  * TrustHealthMini — secondary-detail trust score widget (Passport V2: this
  * score is intentionally NOT the primary identity/verification signal —
@@ -170,50 +151,6 @@ export function TrustHealthMini({ passport }) {
           <div style={{ ...TYPE.caption, marginTop: 2 }}>Trust score {score}/100</div>
         </div>
       </div>
-    </RailCard>
-  );
-}
-
-/**
- * NextStepsMini — "Upcoming Tasks", honestly sourced from the real
- * profile-completion checklist's still-pending items (no fabricated task
- * manager — every row here is a genuine unmet completion item with a real
- * action link).
- */
-export function NextStepsMini({ completion }) {
-  const pending = (completion?.items || []).filter((i) => !i.earned).slice(0, 3);
-  if (pending.length === 0) return null;
-  return (
-    <RailCard title="Suggested Next Steps">
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {pending.map((item) => (
-          <Link
-            key={item.key}
-            to={item.action === "/settings" ? "/academic-passport" : item.action}
-            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, textDecoration: "none" }}
-          >
-            <span style={{ fontSize: 12, color: TEXT_SECONDARY }}>{item.label}</span>
-            <ArrowRight size={12} style={{ color: NAVY, flexShrink: 0 }} />
-          </Link>
-        ))}
-      </div>
-    </RailCard>
-  );
-}
-
-const TIPS = [
-  "Connect ORCID to auto-import publications and unlock the Verified Researcher badge.",
-  "Sync OpenAlex citations regularly — it's the fastest way to keep your h-index accurate.",
-  "A complete biography and research interests noticeably improve your match quality in Collaboration Reputation.",
-  "Public Portfolio views count toward your Community reputation dimension.",
-];
-
-/** PlatformTipsMini — honest, static product-education copy (no fabricated per-user analytics), same pattern as Settings' "Quick Shortcuts" card. */
-export function PlatformTipsMini() {
-  const tip = TIPS[new Date().getDate() % TIPS.length];
-  return (
-    <RailCard title="Platform Tip" icon={Lightbulb}>
-      <p style={{ fontSize: 12, color: TEXT_SECONDARY, lineHeight: 1.6, margin: 0 }}>{tip}</p>
     </RailCard>
   );
 }

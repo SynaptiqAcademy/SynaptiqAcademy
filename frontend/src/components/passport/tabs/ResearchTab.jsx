@@ -14,12 +14,12 @@ import { SectionShell } from "@/components/passport/PassportUI";
  * lives on the Portfolio tab (same real component, shown once).
  */
 export function ResearchTab({
-  profile, impact, completion, pubs, pubsLoading, pubQuery, onQuery, onRefresh,
+  profile, impact, researchRank, pubs, pubsLoading, pubQuery, onQuery, onRefresh,
   projects, collaborations,
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <ResearchImpactSection impact={impact} completion={completion} />
+      <ResearchImpactSection impact={impact} researchRank={researchRank} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 20 }}>
         <ResearchAreasCard profile={profile} />
@@ -38,13 +38,16 @@ export function ResearchTab({
         query={pubQuery}
         onQuery={onQuery}
         onRefresh={onRefresh}
+        profile={profile}
       />
 
-      <SectionShell title="Research Integrations" subtitle="Connect ORCID and OpenAlex to auto-sync your identity and citations">
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <ResearchIntegrationsCard />
-        </div>
-      </SectionShell>
+      <div id="research-integrations-section">
+        <SectionShell title="Research Integrations" subtitle="Connect ORCID and OpenAlex to auto-sync your identity and citations">
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <ResearchIntegrationsCard />
+          </div>
+        </SectionShell>
+      </div>
     </div>
   );
 }

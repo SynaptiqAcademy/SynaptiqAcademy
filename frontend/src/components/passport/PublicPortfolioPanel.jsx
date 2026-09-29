@@ -64,7 +64,12 @@ export function PublicPortfolioPanel() {
   };
 
   return (
-    <SectionShell title="Public Academic Portfolio" subtitle="Your shareable researcher page">
+    <SectionShell title="Public Academic Portfolio" subtitle="Control what the world sees">
+      <p style={{ fontSize: 12, color: TEXT_MUTED, margin: "-8px 0 16px", lineHeight: 1.55 }}>
+        Your public Passport contains only the information you choose to share below. Anonymous
+        visitors never see your email or internal account details, regardless of these settings.
+      </p>
+
       <div style={{ display: "flex", gap: 8, alignItems: "flex-end", marginBottom: 16, flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 240px", minWidth: 0 }}>
           <div style={{ ...TYPE.label, marginBottom: 6 }}>Portfolio URL</div>

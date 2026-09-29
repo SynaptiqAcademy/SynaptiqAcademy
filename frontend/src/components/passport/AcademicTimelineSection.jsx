@@ -1,6 +1,7 @@
 import React from "react";
 import { NAVY, EMERALD, TEXT_MUTED, TEXT_SECONDARY, TEXT_PRIMARY, BRD } from "@/lib/tokens";
 import { Card } from "@/components/ds/Card";
+import { isOrcidAuthenticated } from "@/lib/orcid";
 
 /**
  * AcademicTimelineSection — horizontal career timeline built from real
@@ -11,7 +12,7 @@ import { Card } from "@/components/ds/Card";
  * aren't reliably modeled in the backend, so they're deliberately left out
  * rather than guessed; renders an honest empty state if nothing is available.
  */
-export function AcademicTimelineSection({ employments = [], educations = [], pubs = null }) {
+export function AcademicTimelineSection({ employments = [], educations = [], pubs = null, profile = null }) {
   const records = [
     ...employments.map((e) => ({ ...e, kind: "Employment" })),
     ...educations.map((e) => ({ ...e, kind: "Education" })),
@@ -41,7 +42,14 @@ export function AcademicTimelineSection({ employments = [], educations = [], pub
 
       {records.length === 0 ? (
         <p style={{ fontSize: 12.5, color: TEXT_MUTED, margin: 0 }}>
-          Connect ORCID to import your employment and education history, or add publications to build a timeline.
+          {/* P1 Phase 7C4.1: this previously always said "Connect ORCID..."
+              whenever employments/educations/pubs were empty — including
+              for accounts that ARE ORCID-authenticated but whose ORCID
+              record simply has no employment/education entries yet, or who
+              haven't synced. Caught live during this redesign's visual QA. */}
+          {isOrcidAuthenticated(profile?.orcid)
+            ? "No employment, education, or publication history on record yet. Sync ORCID or add publications to build a timeline."
+            : "Connect ORCID to import your employment and education history, or add publications to build a timeline."}
         </p>
       ) : (
         <div style={{ display: "flex", overflowX: "auto", paddingBottom: 4 }}>
