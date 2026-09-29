@@ -117,6 +117,7 @@ from routers import (
     institution_platform as institution_platform_router,
     sie as sie_router,
     network as network_router,
+    research_need as research_need_router,
     acad_market as acad_market_router,
     akg as akg_router,
     proactive as proactive_router,
@@ -444,6 +445,7 @@ app.include_router(institution_platform_router.router)
 app.include_router(institution_platform_router.admin_router)
 app.include_router(sie_router.router)
 app.include_router(network_router.router)
+app.include_router(research_need_router.router)
 app.include_router(acad_market_router.router)
 app.include_router(acad_market_router.admin_router)
 app.include_router(akg_router.router)

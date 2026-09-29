@@ -224,6 +224,8 @@ CREDIT_COSTS = {
     "ai_conference_matching":     5,
     "ai_grant_matching":          5,
     "ai_abstract_generator":      5,
+    "research_need_interpret":   5,   # Phase 8C — one structured extraction call; retrieval/matching stays free
+
     # Lightweight assistants
     "ai_research_assistant":      2,
     "ai_chat_message":            2,    # Manuscript Copilot — per message

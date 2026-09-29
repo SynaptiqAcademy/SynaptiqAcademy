@@ -24,6 +24,7 @@ import api from "@/lib/api";
 import { NAVY, EMERALD, TEXT_SECONDARY, TEXT_MUTED, BRD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Input, EmptyState, LoadingOverlay, Pagination, Checkbox } from "@/components/ds";
+import ResearchNeedPanel from "@/components/research/ResearchNeedPanel";
 
 const PAGE_SIZE = 20;
 
@@ -78,7 +79,23 @@ function CompatibilityBadge({ compatibility }) {
   );
 }
 
-function ExpertResultCard({ person }) {
+// P1 Phase 8C: a Research Need relevance result carries `explanation` (plain
+// evidence text, no score — see services/research_need/relevance.py) instead
+// of `compatibility` (the Phase 8B canonical-engine score). Same card, two
+// possible evidence blocks, so both search paths reuse one component.
+function WhyThisPerson({ explanation }) {
+  if (!explanation) return null;
+  return (
+    <div style={{ borderTop: `1px solid ${BRD}`, marginTop: 10, paddingTop: 10 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: NAVY, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.3 }}>
+        Why this person
+      </div>
+      <p style={{ margin: 0, fontSize: 11.5, color: TEXT_SECONDARY, lineHeight: 1.6 }}>{explanation}</p>
+    </div>
+  );
+}
+
+export function ExpertResultCard({ person }) {
   const role = [person.academic_role, person.professional_role].filter(Boolean).join(" · ");
   return (
     <Card padding="lg">
@@ -109,7 +126,7 @@ function ExpertResultCard({ person }) {
         <ChipRow items={person.methods} color={NAVY} bg="#F8FAFC" />
       </div>
 
-      <CompatibilityBadge compatibility={person.compatibility} />
+      {person.explanation ? <WhyThisPerson explanation={person.explanation} /> : <CompatibilityBadge compatibility={person.compatibility} />}
     </Card>
   );
 }
@@ -189,6 +206,8 @@ export default function ResearchExperts() {
   return (
     <ResearchLayout title="Research & Experts" subtitle="Find researchers and interdisciplinary experts across Synaptiq">
       <CompletenessBanner profile={me} />
+
+      <ResearchNeedPanel />
 
       <form
         onSubmit={(e) => { e.preventDefault(); runSearch(filters); }}
