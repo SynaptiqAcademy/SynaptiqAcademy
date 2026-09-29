@@ -252,8 +252,12 @@ class TestRelevanceRetrieval:
             result = await find_relevant_people(raw.db, need, viewer_id=None)
             person = next(p for group in (result["similar"], result["complementary"], result["methods_specialists"]) for p in group if p["id"] == uid)
             assert person["evidence"]
-            for ev in person["evidence"]:
-                assert ev["value"] in person.get(ev["field"], [])
+            # Phase 8D evidence shape: {type, candidate_value, need_value, relationship}
+            _type_to_field = {"method": "methods", "software_tool": "software_skills"}
+            for e in person["evidence"]:
+                field = _type_to_field.get(e["type"])
+                if field:
+                    assert e["candidate_value"] in person.get(field, [])
         finally:
             await raw.db.users.delete_many({"full_name": {"$regex": "^EvidenceCheck"}})
             raw.close()

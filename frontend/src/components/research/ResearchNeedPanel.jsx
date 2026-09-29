@@ -1,10 +1,12 @@
 /**
- * P1 Phase 8C — Research Need Intelligence.
+ * P1 Phase 8C/8D — Research Need Intelligence & Explainable Expert Matching.
  *
  * "Describe what you're researching" -> AI (or deterministic) interpretation
- * -> editable structured Research Need -> "Expertise this research may
- * need" -> real Synaptiq collaborators, grouped into similar/complementary/
- * methods, with "Why this person" evidence and "Expertise still missing".
+ * -> editable structured Research Need -> real Synaptiq collaborators,
+ * grouped by directly-relevant / complementary / methods / context
+ * expertise, each with "Why this person" evidence + "Possible contribution"
+ * + a coverage map of which required expertise the network can currently
+ * cover, and "Expertise still missing" where it can't.
  *
  * Deliberately not a chat interface: one text box, one structured result,
  * editable before matching. Reuses ExpertResultCard from ResearchExperts.jsx
@@ -14,7 +16,7 @@
 import React, { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { NAVY, TEXT_SECONDARY, TEXT_MUTED, BRD } from "@/lib/tokens";
-import { Card, Button, EmptyState, LoadingOverlay } from "@/components/ds";
+import { Card, Button, Input, Checkbox, EmptyState, LoadingOverlay } from "@/components/ds";
 import { ExpertResultCard } from "@/pages/ResearchExperts";
 
 const PLACEHOLDER =
@@ -67,6 +69,26 @@ function ResultGroup({ title, description, people }) {
   );
 }
 
+// §13 — a coverage view, not a quality score: which required expertise the
+// network can currently cover, plain checkmark/circle, nothing else.
+function CoverageMap({ coverage }) {
+  if (!coverage || coverage.length === 0) return null;
+  return (
+    <div style={{ marginBottom: 20, padding: 14, border: `1px solid ${BRD}`, background: "#F8FAFC" }}>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: NAVY, marginBottom: 8 }}>Your research need</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+        {coverage.map((c) => (
+          <div key={c.term} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
+            <span style={{ color: c.covered ? "#15803D" : TEXT_MUTED, fontWeight: 700, width: 14 }}>{c.covered ? "✓" : "○"}</span>
+            <span style={{ color: TEXT_SECONDARY }}>{c.term}</span>
+            <span style={{ color: TEXT_MUTED, fontSize: 11 }}>{c.covered ? "candidates found" : "no candidate"}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ResearchNeedPanel() {
   const [query, setQuery] = useState("");
   const [cost, setCost] = useState(null);
@@ -76,6 +98,13 @@ export default function ResearchNeedPanel() {
   const [matching, setMatching] = useState(false);
   const [matchResult, setMatchResult] = useState(null);
   const [error, setError] = useState("");
+
+  // §22 — real controls, each wired to an actual backend filter/behavior.
+  const [country, setCountry] = useState("");
+  const [language, setLanguage] = useState("");
+  const [availableOnly, setAvailableOnly] = useState(false);
+  const [includeMethods, setIncludeMethods] = useState(true);
+  const [prioritize, setPrioritize] = useState("");
 
   useEffect(() => {
     api.get("/research-need/cost").then((r) => setCost(r.data.cost)).catch(() => setCost(null));
@@ -97,12 +126,21 @@ export default function ResearchNeedPanel() {
     }
   };
 
+  // §23 — always recomputes from the CURRENT (possibly edited) need and
+  // current controls; there is no cache to go stale, every call is fresh.
   const runMatch = async () => {
     if (!need) return;
     setMatching(true);
     setError("");
     try {
-      const r = await api.post("/research-need/match", { need });
+      const r = await api.post("/research-need/match", {
+        need,
+        country: country.trim() || null,
+        language: language.trim() || null,
+        available_for_collaboration: availableOnly ? true : null,
+        include_methods: includeMethods,
+        prioritize: prioritize || null,
+      });
       setMatchResult(r.data);
     } catch (e) {
       setError(e?.response?.data?.detail || "Could not find relevant collaborators. Please try again.");
@@ -112,6 +150,10 @@ export default function ResearchNeedPanel() {
   };
 
   const updateNeed = (field, value) => setNeed((n) => ({ ...n, [field]: value }));
+
+  const totalResults = matchResult
+    ? matchResult.similar.length + matchResult.complementary.length + matchResult.methods_specialists.length + matchResult.context_specialists.length
+    : 0;
 
   return (
     <Card padding="lg" style={{ marginBottom: 24, border: `1px solid ${NAVY}20` }}>
@@ -170,6 +212,13 @@ export default function ResearchNeedPanel() {
             <EditableChipList label="Keywords" items={need.research_keywords} onChange={(v) => updateNeed("research_keywords", v)} />
           </div>
 
+          <div style={{ marginTop: 12, marginBottom: 12, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country (optional)" size="sm" style={{ maxWidth: 160 }} />
+            <Input value={language} onChange={(e) => setLanguage(e.target.value)} placeholder="Language (optional)" size="sm" style={{ maxWidth: 160 }} />
+            <Checkbox label="Available for collaboration only" checked={availableOnly} onChange={(e) => setAvailableOnly(e.target.checked)} />
+            <Checkbox label="Include methods specialists" checked={includeMethods} onChange={(e) => setIncludeMethods(e.target.checked)} />
+          </div>
+
           <Button type="button" variant="primary" onClick={runMatch} disabled={matching} style={{ marginTop: 6 }}>
             {matching ? "Searching…" : "Find relevant collaborators"}
           </Button>
@@ -180,16 +229,19 @@ export default function ResearchNeedPanel() {
 
       {matchResult && !matching && (
         <div style={{ marginTop: 24, borderTop: `1px solid ${BRD}`, paddingTop: 18 }}>
-          {(matchResult.similar.length + matchResult.complementary.length + matchResult.methods_specialists.length) === 0 ? (
+          <CoverageMap coverage={matchResult.coverage_map} />
+
+          {totalResults === 0 ? (
             <EmptyState
-              title="No discoverable Synaptiq member currently matches this expertise."
+              title="No discoverable Synaptiq member currently provides enough profile evidence for this research need."
               description="This doesn't mean no one relevant exists — it means the network doesn't yet have a discoverable match. Try refining the research need above, or check back as more researchers join."
             />
           ) : (
             <>
-              <ResultGroup title="Best aligned" description="Working directly in the same research area." people={matchResult.similar} />
+              <ResultGroup title="Directly relevant" description="Working directly in the same research area." people={matchResult.similar} />
               <ResultGroup title="Complementary expertise" description="Expertise that fills a different part of this research problem." people={matchResult.complementary} />
               <ResultGroup title="Methods specialists" description="Relevant methods or tools, though not the same core topic." people={matchResult.methods_specialists} />
+              <ResultGroup title="Context specialists" description="Relevant geographic or language context for this project." people={matchResult.context_specialists} />
             </>
           )}
 
@@ -197,7 +249,7 @@ export default function ResearchNeedPanel() {
             <div style={{ marginTop: 8, padding: 14, background: "#FFFBEB", border: "1px solid #FDE68A" }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#92400E", marginBottom: 4 }}>Expertise still missing</div>
               <p style={{ fontSize: 12, color: "#92400E", margin: 0, lineHeight: 1.6 }}>
-                No discoverable Synaptiq member currently matches: {matchResult.missing_expertise.join(", ")}.
+                No discoverable Synaptiq member currently provides enough profile evidence for: {matchResult.missing_expertise.join(", ")}.
               </p>
             </div>
           )}

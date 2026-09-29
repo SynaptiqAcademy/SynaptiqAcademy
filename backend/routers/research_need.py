@@ -7,6 +7,8 @@ is always free, same invariant as Phase 8B's basic discovery.
 """
 from __future__ import annotations
 
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
@@ -33,6 +35,14 @@ class InterpretRequest(BaseModel):
 
 class MatchRequest(BaseModel):
     need: ResearchNeed
+    # Real backend controls (§22 of Phase 8D) — each maps straight into
+    # discovery_engine's own filter handling or relevance.py's grouping
+    # logic; none of these is decorative.
+    country: Optional[str] = None
+    language: Optional[str] = None
+    available_for_collaboration: Optional[bool] = None
+    include_methods: bool = True
+    prioritize: Optional[str] = None  # "directly_relevant" | "complementary_expertise" | ...
 
 
 @router.get("/cost")
@@ -87,5 +97,10 @@ async def match(
     directly — every Phase 8B eligibility/privacy rule applies for free.
     """
     db = make_db_proxy(db, user)
-    result = await find_relevant_people(db, payload.need, viewer_id=_uid(user))
+    result = await find_relevant_people(
+        db, payload.need, viewer_id=_uid(user),
+        country=payload.country, language=payload.language,
+        available_for_collaboration=payload.available_for_collaboration,
+        include_methods=payload.include_methods, prioritize=payload.prioritize,
+    )
     return result

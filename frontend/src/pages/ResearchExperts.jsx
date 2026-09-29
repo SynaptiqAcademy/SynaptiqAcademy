@@ -79,18 +79,74 @@ function CompatibilityBadge({ compatibility }) {
   );
 }
 
-// P1 Phase 8C: a Research Need relevance result carries `explanation` (plain
-// evidence text, no score — see services/research_need/relevance.py) instead
-// of `compatibility` (the Phase 8B canonical-engine score). Same card, two
-// possible evidence blocks, so both search paths reuse one component.
-function WhyThisPerson({ explanation }) {
+// P1 Phase 8C/8D: a Research Need relevance result carries `explanation`
+// (plain evidence text, no score — see services/research_need/relevance.py),
+// `contribution` (conservative "what could they contribute" sentences),
+// `relevance_labels` (a small deterministic vocabulary — a candidate may
+// have more than one), and `evidence` (the full structured list, shown only
+// on request — progressive disclosure per §11). Never a percentage: this is
+// relevance to THIS research need, not researcher quality (§2/§20).
+const LABEL_META = {
+  directly_relevant: { text: "Directly relevant", color: "#0891B2" },
+  complementary_expertise: { text: "Complementary expertise", color: "#0F766E" },
+  methods_specialist: { text: "Methods specialist", color: NAVY },
+  context_specialist: { text: "Context specialist", color: "#7C3AED" },
+};
+
+function WhyThisPerson({ explanation, contribution, relevanceLabels, evidence }) {
+  const [expanded, setExpanded] = useState(false);
   if (!explanation) return null;
   return (
     <div style={{ borderTop: `1px solid ${BRD}`, marginTop: 10, paddingTop: 10 }}>
+      {relevanceLabels?.length > 0 && (
+        <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 6 }}>
+          {relevanceLabels.map((l) => {
+            const meta = LABEL_META[l];
+            if (!meta) return null;
+            return (
+              <span key={l} style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", color: meta.color, background: `${meta.color}14`, border: `1px solid ${meta.color}30` }}>
+                {meta.text}
+              </span>
+            );
+          })}
+        </div>
+      )}
       <div style={{ fontSize: 11, fontWeight: 700, color: NAVY, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.3 }}>
         Why this person
       </div>
       <p style={{ margin: 0, fontSize: 11.5, color: TEXT_SECONDARY, lineHeight: 1.6 }}>{explanation}</p>
+
+      {contribution?.length > 0 && (
+        <div style={{ marginTop: 6 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: NAVY, marginBottom: 2, textTransform: "uppercase", letterSpacing: 0.3 }}>
+            Possible contribution
+          </div>
+          <ul style={{ margin: 0, paddingLeft: 16, fontSize: 11.5, color: TEXT_SECONDARY, lineHeight: 1.6 }}>
+            {contribution.map((c) => <li key={c}>{c}</li>)}
+          </ul>
+        </div>
+      )}
+
+      {evidence?.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            style={{ fontSize: 11, fontWeight: 600, color: NAVY, background: "none", border: "none", padding: 0, cursor: "pointer", textDecoration: "underline" }}
+          >
+            {expanded ? "Hide relevance details" : "View relevance details"}
+          </button>
+          {expanded && (
+            <ul style={{ margin: "6px 0 0", paddingLeft: 16, fontSize: 11, color: TEXT_SECONDARY, lineHeight: 1.7 }}>
+              {evidence.map((e, i) => (
+                <li key={i}>
+                  <strong>{e.candidate_value}</strong> — {e.relationship === "direct" ? "direct overlap" : "complementary"} with "{e.need_value}"
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -126,7 +182,16 @@ export function ExpertResultCard({ person }) {
         <ChipRow items={person.methods} color={NAVY} bg="#F8FAFC" />
       </div>
 
-      {person.explanation ? <WhyThisPerson explanation={person.explanation} /> : <CompatibilityBadge compatibility={person.compatibility} />}
+      {person.explanation ? (
+        <WhyThisPerson
+          explanation={person.explanation}
+          contribution={person.contribution}
+          relevanceLabels={person.relevance_labels}
+          evidence={person.evidence}
+        />
+      ) : (
+        <CompatibilityBadge compatibility={person.compatibility} />
+      )}
     </Card>
   );
 }
