@@ -6,6 +6,7 @@ import { TID } from "../lib/testIds";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import { ACCENT, EMERALD, NAVY, WARM } from "@/lib/tokens";
+import { isOrcidAuthenticated } from "@/lib/orcid";
 import { Avatar, Button, Input, Checkbox, NavTabs, Card } from "@/components/ds";
 import {
   Search, X, ChevronDown, ArrowRight,
@@ -31,8 +32,13 @@ function profileUrl(r) {
   return `/researcher/${slug}`;
 }
 
+// P1 Phase 7.1: this used to also accept a bare legacy ORCID string as
+// "has ORCID" — but the ORCID column below literally labels that state
+// "Verified" (line ~971), so a never-authenticated string was displayed as
+// a verified connection. Uses the same canonical helper as the Passport
+// (frontend/src/lib/orcid.js) so this can't drift again.
 function hasOrcid(r) {
-  return !!(r.orcid?.orcid_id || (typeof r.orcid === "string" && r.orcid));
+  return isOrcidAuthenticated(r.orcid);
 }
 
 // ── Section definitions ───────────────────────────────────────────────────────

@@ -144,6 +144,26 @@ class TestPublicProfilePrivacyDefault:
             await raw.cleanup()
 
     @pytest.mark.asyncio
+    async def test_public_profiles_doc_without_visibility_settings_does_not_crash(self):
+        """P1 Phase 7.1: reproduces a real production 500. claim_custom_slug()
+        only ever sets {slug, updated_at} — no visibility_settings field —
+        so any account that claims a slug without first visiting privacy
+        settings had a public_profiles doc missing that key entirely. The
+        old `profile_doc["visibility_settings"]` bracket-index raised an
+        unhandled KeyError for this exact, common shape."""
+        raw = _RawDB()
+        try:
+            uid = await raw.insert_user("Privacy No VisSettings Check")
+            await raw.db.public_profiles.insert_one({
+                "user_id": uid, "slug": f"noviz-{uid[:8]}", "updated_at": "2026-01-01T00:00:00Z",
+            })
+            profile = await get_full_profile(uid, raw.db, viewer_id=None)
+            assert profile["visibility_settings"] == {}
+            assert profile["email"] is None
+        finally:
+            await raw.cleanup()
+
+    @pytest.mark.asyncio
     async def test_different_anonymous_viewer_still_hidden_with_explicit_private(self):
         raw = _RawDB()
         try:

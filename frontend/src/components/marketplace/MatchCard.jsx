@@ -49,7 +49,7 @@ export default function MatchCard({ match, onInvite, onMessage, compact = false 
               >
                 {u.full_name || "Researcher"}
                 {u.orcid?.orcid_id && u.orcid?.verified_at && (
-                  <span className="ml-2 align-middle"><OrcidBadge orcidId={u.orcid.orcid_id} testId={`orcid-${u.id}`} /></span>
+                  <span className="ml-2 align-middle"><OrcidBadge orcidId={u.orcid.orcid_id} verified testId={`orcid-${u.id}`} /></span>
                 )}
               </Link>
               <div className="text-xs text-slate-500 mt-0.5 inline-flex items-center gap-2 flex-wrap">

@@ -1,17 +1,25 @@
 /**
- * OrcidBadge — verified academic-identity chip with the green iD glyph.
- * Renders only when verified=true.
+ * OrcidBadge — the green iD glyph linking to an ORCID profile.
+ *
+ * P1 Phase 7.1: this used to unconditionally title itself "ORCID verified:
+ * {id}" for ANY orcidId a caller passed — including ones sourced from a
+ * bare, never-authenticated legacy string. Since callers pass ORCID values
+ * of genuinely different provenance (some strictly authenticated via
+ * frontend/src/lib/orcid.js's getAuthenticatedOrcidId, some permissively
+ * self-declared), the component itself now only makes the "verified" claim
+ * when the caller explicitly confirms it with `verified`. Default is the
+ * neutral, always-true "ORCID: {id}".
  */
 import React from "react";
 
-export default function OrcidBadge({ orcidId, size = "sm", showId = false, testId = "orcid-badge" }) {
+export default function OrcidBadge({ orcidId, size = "sm", showId = false, verified = false, testId = "orcid-badge" }) {
   if (!orcidId) return null;
   const px = size === "lg" ? 18 : size === "md" ? 14 : 11;
   return (
     <a
       href={`https://orcid.org/${orcidId}`} target="_blank" rel="noreferrer"
       data-testid={testId}
-      title={`ORCID verified: ${orcidId}`}
+      title={verified ? `ORCID verified: ${orcidId}` : `ORCID: ${orcidId}`}
       onClick={(e) => e.stopPropagation()}
       className="inline-flex items-center gap-1 align-middle text-emerald-700 hover:text-emerald-900"
     >

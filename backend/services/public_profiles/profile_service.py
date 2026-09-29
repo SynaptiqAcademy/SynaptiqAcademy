@@ -134,7 +134,14 @@ async def get_full_profile(user_id: str, db, viewer_id: str = None) -> dict:
             "h_index": (research_impact or {}).get("h_index") or 0,
         },
         "showcase": showcase,
-        "visibility_settings": profile_doc["visibility_settings"] if profile_doc else {},
+        # P1 Phase 7.1: was profile_doc["visibility_settings"] (bracket
+        # indexing) — crashed with an unhandled KeyError (-> 500) whenever a
+        # public_profiles doc exists but has no visibility_settings field
+        # yet, which is exactly the state right after claim_custom_slug()
+        # (it only ever sets {slug, updated_at}) and before a user has ever
+        # visited privacy/visibility settings. Discovered live while
+        # verifying the C1.6 privacy fix against a fresh throwaway account.
+        "visibility_settings": (profile_doc.get("visibility_settings") or {}) if profile_doc else {},
         "view_count": (profile_doc.get("view_count") or 0) if profile_doc else 0,
     }
 

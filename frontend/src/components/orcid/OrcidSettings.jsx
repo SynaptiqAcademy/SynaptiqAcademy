@@ -149,7 +149,7 @@ export default function OrcidSettings() {
         <div className="grid sm:grid-cols-3 gap-3" data-testid="orcid-status-block">
           <StatTile label="ORCID iD" testId="orcid-id-value">
             {status.orcid_id ? (
-              <OrcidBadge orcidId={status.orcid_id} size="md" showId testId="orcid-id-badge" />
+              <OrcidBadge orcidId={status.orcid_id} size="md" showId verified testId="orcid-id-badge" />
             ) : <span style={{ ...TYPE.body, color: TEXT_MUTED }}>—</span>}
           </StatTile>
           <StatTile

@@ -186,7 +186,11 @@ function ResearcherCard({ u, repScore, savedIds, onSaveToggle, onInvite, current
         {/* Metrics row */}
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, paddingTop: 10, borderTop: `1px solid ${BORDER}` }}>
           <ReputationLevel reputation={repScore} variant="chip" />
-          {u.orcid?.orcid_id && <OrcidBadge orcid={u.orcid} />}
+          {/* P1 Phase 7.1: was passing prop `orcid` — OrcidBadge only
+              accepts `orcidId`, so this badge silently never rendered.
+              Already gated by the strict u.orcid?.orcid_id check above, so
+              this is a genuinely authenticated connection. */}
+          {u.orcid?.orcid_id && <OrcidBadge orcidId={u.orcid.orcid_id} verified />}
           {u.match_score > 0 && <MatchBadge score={u.match_score} />}
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
             {u.h_index > 0 && (

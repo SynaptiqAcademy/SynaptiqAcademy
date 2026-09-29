@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 import secrets
 from datetime import datetime, timezone
 from bson import ObjectId
@@ -134,3 +135,49 @@ def _safe_oid(s: str):
         return ObjectId(s)
     except Exception:
         return s
+
+
+async def sanitize_historical_verified_orcid(db) -> dict:
+    """P1 Phase 7.1 §1 — one-time (idempotent) sanitization for
+    trust_passports.verified_orcid documents written before the fix that
+    made build_passport() return only a plain orcid_id string. Historical
+    documents could hold the entire raw users.orcid object, including the
+    encrypted OAuth token envelope.
+
+    Only ever touches trust_passports.verified_orcid. Never touches
+    users.orcid, ORCID OAuth credentials, or any other field. Never logs or
+    returns token contents — only counts.
+
+    Safe to re-run: once every verified_orcid is a string or null/missing,
+    the $type: "object" query matches zero documents and this is a no-op.
+    """
+    query = {"verified_orcid": {"$type": "object"}}
+    docs = await db.trust_passports.find(query, {"verified_orcid": 1}).to_list(length=10_000)
+
+    migrated_to_string = 0
+    nulled_no_valid_id = 0
+
+    for doc in docs:
+        vo = doc.get("verified_orcid") or {}
+        orcid_id = vo.get("orcid_id")
+        # A valid ORCID iD is a non-empty string in the standard
+        # 0000-0000-0000-000X format — never guess/normalize beyond that.
+        is_valid = isinstance(orcid_id, str) and bool(re.match(r"^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$", orcid_id))
+        new_value = orcid_id if is_valid else None
+        await db.trust_passports.update_one(
+            {"_id": doc["_id"]},
+            {"$set": {"verified_orcid": new_value}},
+        )
+        if is_valid:
+            migrated_to_string += 1
+        else:
+            nulled_no_valid_id += 1
+
+    remaining_objects = await db.trust_passports.count_documents(query)
+
+    return {
+        "documents_found_as_object": len(docs),
+        "migrated_to_string": migrated_to_string,
+        "nulled_no_valid_id": nulled_no_valid_id,
+        "remaining_object_type_after": remaining_objects,
+    }

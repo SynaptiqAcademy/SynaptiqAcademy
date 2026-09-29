@@ -3,6 +3,7 @@ import { useParams, useNavigate, Navigate, Link } from "react-router-dom";
 import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { useAuth } from "../contexts/AuthContext";
+import { isOrcidAuthenticated, getAuthenticatedOrcidId } from "@/lib/orcid";
 import { ProfileLayout } from "@/layouts";
 import { Avatar } from "@/components/ds/Avatar";
 import { Button } from "@/components/ds/Button";
@@ -221,6 +222,12 @@ export default function Profile() {
   }
 
   const orcidId = extractOrcidId(profile.orcid);
+  // P1 Phase 7.1: `verified` below is an authenticated-connection claim, so
+  // it must use the strict dict+orcid_id check — not orcidId, which stays
+  // permissive on purpose for IdentifiersSection's plain outbound link
+  // (same treatment as Google Scholar/ResearchGate there, no verification
+  // implied). See frontend/src/lib/orcid.js.
+  const orcidAuthenticated = isOrcidAuthenticated(profile.orcid);
 
   const hIndex    = reputation?.publication?.h_index ?? profile.h_index ?? 0;
   const citations = reputation?.publication?.external_citations ?? 0;
@@ -300,7 +307,7 @@ export default function Profile() {
         title={profile.academic_role}
         institution={profile.institution}
         avatar={profile.avatar_url}
-        verified={!!orcidId}
+        verified={orcidAuthenticated}
         stats={profileStats}
         actions={profileActions}
         nav={profileNav}
@@ -1195,11 +1202,14 @@ function IdentifiersSection({ profile, orcidId }) {
 
 // ─── Achievements Section ─────────────────────────────────────────────────────
 function AchievementsSection({ profile, pubs }) {
-  const orcidId = extractOrcidId(profile.orcid);
+  // P1 Phase 7.1: this badge literally claims "ORCID Connected" / "Verified
+  // researcher identity" — must use the strict authenticated check, not the
+  // permissive extractOrcidId (which also accepts a bare legacy string).
+  const orcidAuthenticated = isOrcidAuthenticated(profile.orcid);
   const pubCount = pubs?.total ?? profile.publications_count ?? 0;
 
   const badges = [
-    orcidId && { icon: Shield, label: "ORCID Connected", desc: "Verified researcher identity", color: "#059669", bg: "#F0FDF4" },
+    orcidAuthenticated && { icon: Shield, label: "ORCID Connected", desc: "Verified researcher identity", color: "#059669", bg: "#F0FDF4" },
     profile.biography?.trim() && { icon: PenLine, label: "Researcher Profile", desc: "Biography added", color: "#0891B2", bg: "#F0F9FF" },
     pubCount > 0 && { icon: BookOpen, label: "Publications Imported", desc: `${pubCount} publication${pubCount !== 1 ? "s" : ""} on record`, color: NAVY, bg: "#EFF6FF" },
     (profile.research_areas || []).length > 0 && { icon: FlaskConical, label: "Research Areas Defined", desc: `${profile.research_areas.length} area${profile.research_areas.length !== 1 ? "s" : ""}`, color: "#7C3AED", bg: "#FAF5FF" },
@@ -1349,9 +1359,10 @@ function QuickActionsWidget({ profile }) {
 // ─── Edit Profile ─────────────────────────────────────────────────────────────
 
 function EditProfile({ profile, onClose }) {
-  const orcidId = profile.orcid && typeof profile.orcid === "object"
-    ? profile.orcid.orcid_id
-    : (typeof profile.orcid === "string" ? profile.orcid : null);
+  // P1 Phase 7.1: this drives a literal "connected"/"not connected" Alert
+  // below — must be the strict authenticated check, not the old permissive
+  // dict-or-string one (a bare legacy string was shown as "connected").
+  const orcidId = getAuthenticatedOrcidId(profile.orcid);
 
   const [f, setF] = useState({
     full_name:              profile.full_name || "",

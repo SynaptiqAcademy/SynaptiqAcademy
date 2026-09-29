@@ -125,7 +125,7 @@ export function PassportHero({ profile, passport, reputation, verification, rese
 
           <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
             {orcidId && (
-              <Pill><OrcidBadge orcidId={orcidId} size="sm" testId="passport-orcid-badge" /> {orcidId}</Pill>
+              <Pill><OrcidBadge orcidId={orcidId} size="sm" verified testId="passport-orcid-badge" /> {orcidId}</Pill>
             )}
             {isVerifiedResearcher && (
               <Pill><CheckCircle2 size={12} /> Verified Researcher</Pill>
