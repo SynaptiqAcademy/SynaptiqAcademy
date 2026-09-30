@@ -340,7 +340,7 @@ const MODULES = [
   },
   {
     icon: Network, title: "Research Network",
-    desc: "Discover and connect with 50K+ researchers across 150 countries by field, method and institution.",
+    desc: "Discover and connect with researchers by field, method and institution.",
     preview: ["Discover Researchers", "Send Invitations", "Collaboration Requests", "Mentorship"],
     color: "#0891b2",
   },
@@ -466,7 +466,7 @@ const COLLAB_FEATURES = [
 
 const JOURNEY_STEPS = [
   { num: "01", title: "Research Idea",        body: "Define your question. The AI immediately surfaces related literature, open gaps and potential co-investigators." },
-  { num: "02", title: "Find Experts",         body: "Search 50K+ researchers by field, method, institution, and availability. Filter by verified credentials." },
+  { num: "02", title: "Find Experts",         body: "Search researchers by field, method, institution, and availability. Filter by verified credentials." },
   { num: "03", title: "Invite Team",          body: "Send structured collaboration requests with your brief, expected roles, timeline and institutional affiliation." },
   { num: "04", title: "Research",             body: "Work in a shared workspace: literature, protocols, datasets, and notes — all synced and version-controlled." },
   { num: "05", title: "AI Assistance",        body: "Run literature reviews, gap detection, statistical analysis and integrity checks at any point in the workflow." },
@@ -742,19 +742,11 @@ export default function Platform() {
                   Research without geographical borders.
                 </h2>
                 <p style={{ fontSize: "0.92rem", color: SLATE, lineHeight: 1.8, marginBottom: 32 }}>
-                  A researcher in Nairobi can form a team with a professor in Uppsala and a PhD candidate in Kyoto — discovered by AI, connected in minutes, collaborating in a shared workspace without friction.
+                  A researcher in one country can form a team with collaborators anywhere Synaptiq is used — matched by AI, connected in minutes, working in a shared workspace without friction.
                 </p>
-                <div className="grid grid-cols-2 gap-5">
-                  {GLOBAL_STATS.map(({ target, suffix, label }) => (
-                    <StatCounter key={label} target={target} suffix={suffix} label={label} />
-                  ))}
-                </div>
               </div>
               <div className="flex flex-col items-center gap-6">
                 <WorldMap />
-                <div style={{ fontSize: "0.72rem", color: "#94a3b8", textAlign: "center" }}>
-                  Active research connections across 150+ countries
-                </div>
               </div>
             </div>
           </div>
@@ -966,20 +958,27 @@ export default function Platform() {
         </div>
       </section>
 
-      {/* ══════ SECTION 11 — STATS ═════════════════════════════════════════════ */}
+      {/* ══════ SECTION 11 — WHY SYNAPTIQ (replaces a fabricated "platform
+          statistics" section — see Phase 9A audit) ═══════════════════════ */}
       <section style={{ background: NAVY }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-24 lg:py-28">
           <div ref={rStats} className="sq-reveal">
             <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <div style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 14 }}>Platform Statistics</div>
+              <div style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 14 }}>Why Synaptiq</div>
               <h2 style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)", fontWeight: 900, letterSpacing: "-0.035em", color: "#fff", lineHeight: 1.08 }}>
-                The numbers speak for themselves.
+                Structural differences, not just more features.
               </h2>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {GLOBAL_STATS.map(({ target, suffix, label }) => (
-                <div key={label} className="text-center">
-                  <StatCtrDark target={target} suffix={suffix} label={label} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+              {[
+                { title: "From question to collaboration", desc: "A research need becomes a structured expertise requirement, not a keyword search." },
+                { title: "Explainable discovery", desc: "See why a profile is relevant instead of an unexplained recommendation." },
+                { title: "Interdisciplinary by design", desc: "A research problem can surface complementary disciplines, not only similar profiles." },
+                { title: "Work after discovery", desc: "A useful connection can continue into a collaboration request and real project work." },
+              ].map(({ title, desc }) => (
+                <div key={title} className="text-center">
+                  <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "#fff", marginBottom: 8 }}>{title}</div>
+                  <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>{desc}</div>
                 </div>
               ))}
             </div>
@@ -1001,9 +1000,9 @@ export default function Platform() {
               </p>
               <div className="grid sm:grid-cols-3 gap-6 text-left">
                 {[
-                  { num: "Phase I",   title: "Foundation",           body: "A unified platform replacing the fragmented toolchain for 50K+ researchers worldwide." },
-                  { num: "Phase II",  title: "Intelligence Layer",   body: "Autonomous AI agents assisting every stage of the research lifecycle with full academic rigor." },
-                  { num: "Phase III", title: "Global Infrastructure",body: "The world's largest verified network of researchers, institutions and scientific knowledge." },
+                  { num: "Phase I",   title: "Foundation",           body: "A unified platform replacing the fragmented research toolchain." },
+                  { num: "Phase II",  title: "Intelligence Layer",   body: "AI assistance across every stage of the research lifecycle, with a human deciding every consequential action." },
+                  { num: "Phase III", title: "Global Infrastructure",body: "A growing, verified network of researchers, institutions and scientific knowledge." },
                 ].map(({ num, title, body }) => (
                   <div key={num} style={{ padding: "24px 0", borderTop: `2px solid ${NAVY}` }}>
                     <div style={{ fontSize: "0.65rem", fontWeight: 800, color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>{num}</div>
@@ -1029,7 +1028,7 @@ export default function Platform() {
               Start Your Next Research Collaboration Today.
             </h2>
             <p style={{ fontSize: "1rem", color: "#64748b", lineHeight: 1.75, maxWidth: 460, margin: "0 auto 40px" }}>
-              Join 50,000+ researchers already building, collaborating, and publishing with Synaptiq.
+              Build, collaborate, and publish — all in one place.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/register"

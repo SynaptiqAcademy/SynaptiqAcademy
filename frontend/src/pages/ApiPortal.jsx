@@ -132,7 +132,7 @@ export default function ApiPortal() {
       {/* ── Trusted by ───────────────────────────────────────────────────────── */}
       <section style={{ background: LIGHT, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, padding: "32px 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: "10px 36px" }}>
-          <span style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94a3b8" }}>Trusted by</span>
+          <span style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94a3b8" }}>Built for</span>
           {["Universities", "Research Institutes", "Publishers", "Healthcare Organizations", "Government"].map(n => (
             <span key={n} style={{ fontSize: "0.87rem", fontWeight: 500, color: SLATE }}>{n}</span>
           ))}

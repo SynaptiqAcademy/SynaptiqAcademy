@@ -481,39 +481,6 @@ function HeroSection() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   TRUSTED BY RESEARCHERS
-═══════════════════════════════════════════════════════════════════════════════ */
-function TrustedSection() {
-  const ref = useReveal();
-  const unis = [
-    "MIT", "Stanford", "Oxford", "Cambridge", "Harvard",
-    "ETH Zürich", "Toronto", "Sorbonne", "NUS", "TU Delft",
-  ];
-  return (
-    <section style={{ background: LIGHT, padding: "48px 0" }}>
-      <Inner>
-        <div ref={ref} className="rl-fade" style={{ textAlign: "center" }}>
-          <div style={{ fontSize: "0.72rem", fontWeight: 600, color: "#94a3b8", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 28 }}>
-            Trusted by researchers at leading institutions
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "16px 36px", alignItems: "center" }}>
-            {unis.map((u) => (
-              <div
-                key={u}
-                className="rl-uni-logo"
-                style={{ fontSize: "0.85rem", fontWeight: 700, color: "#94a3b8", fontFamily: "Georgia, serif", letterSpacing: "-0.01em", opacity: 0.55 }}
-              >
-                {u}
-              </div>
-            ))}
-          </div>
-        </div>
-      </Inner>
-    </section>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
    RESEARCH LIFECYCLE TIMELINE
 ═══════════════════════════════════════════════════════════════════════════════ */
 const LIFECYCLE_STAGES = [
@@ -819,78 +786,6 @@ function WorkflowSection() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   TESTIMONIALS
-═══════════════════════════════════════════════════════════════════════════════ */
-const TESTIMONIALS = [
-  {
-    quote: "Synaptiq eliminated the gap between reading a paper and actually using it in my work. Everything I annotate shows up exactly where I need it.",
-    name: "Dr. Fatima Al-Rashid",
-    title: "Associate Professor of Molecular Biology",
-    institution: "King's College London",
-    stars: 5,
-  },
-  {
-    quote: "I used to switch between seven different tools to manage one project. Now everything — collaborators, data, literature, and my manuscript — lives in one place.",
-    name: "Prof. James Osei",
-    title: "Principal Investigator, Computational Neuroscience",
-    institution: "University of Toronto",
-    stars: 5,
-  },
-  {
-    quote: "The research impact dashboard helped me realize one of my 2019 papers was gaining unexpected traction in clinical circles. That insight shaped my next grant application.",
-    name: "Dr. Mei-Ling Tan",
-    title: "Senior Research Fellow",
-    institution: "National University of Singapore",
-    stars: 5,
-  },
-];
-
-function TestimonialsSection() {
-  const ref = useReveal();
-  return (
-    <section style={{ background: LIGHT, padding: "100px 0" }}>
-      <Inner>
-        <div ref={ref} className="rl-fade" style={{ textAlign: "center", marginBottom: 52 }}>
-          <Eyebrow>From researchers</Eyebrow>
-          <h2 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(1.8rem, 3vw, 2.4rem)", fontWeight: 700, color: "#0c1a2e", letterSpacing: "-0.02em", margin: 0 }}>
-            What researchers say.
-          </h2>
-        </div>
-
-        <div className="rl-quotes-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
-          {TESTIMONIALS.map((t, i) => (
-            <div
-              key={t.name}
-              className={`rl-fade rl-fade-d${i + 1} rl-quote-card`}
-              style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "28px 28px" }}
-            >
-              <div style={{ display: "flex", gap: 3, marginBottom: 16 }}>
-                {Array(t.stars).fill(0).map((_, j) => (
-                  <Star key={j} size={13} fill="#f59e0b" style={{ color: "#f59e0b" }} />
-                ))}
-              </div>
-              <p style={{ fontSize: "0.9rem", color: BODY, lineHeight: 1.75, marginBottom: 24, fontStyle: "italic" }}>
-                "{t.quote}"
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 20, borderTop: `1px solid ${BORDER}` }}>
-                <div style={{ width: 38, height: 38, borderRadius: "50%", background: NAVY + "18", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: "0.72rem", fontWeight: 700, color: NAVY }}>{t.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}</span>
-                </div>
-                <div>
-                  <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "#0f172a" }}>{t.name}</div>
-                  <div style={{ fontSize: "0.68rem", color: "#94a3b8" }}>{t.title}</div>
-                  <div style={{ fontSize: "0.65rem", color: SAGE, fontWeight: 600 }}>{t.institution}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Inner>
-    </section>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
    FINAL CTA
 ═══════════════════════════════════════════════════════════════════════════════ */
 function CTASection() {
@@ -953,12 +848,10 @@ export default function ResearchLanding() {
     <MarketingLayout>
       <InjectStyles />
       <HeroSection />
-      <TrustedSection />
       <LifecycleSection />
       {FEATURES.map((f) => <FeatureSection key={f.eyebrow} feature={f} />)}
       <AllFeaturesSection />
       <WorkflowSection />
-      <TestimonialsSection />
       <CTASection />
     </MarketingLayout>
   );

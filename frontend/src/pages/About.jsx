@@ -364,48 +364,14 @@ const USER_TYPES = [
   { icon: Globe,         title: "Publishers",           body: "Connecting journals to a global pipeline of verified researchers." },
 ];
 
-const STATS = [
-  { target: 150,  suffix: "+", label: "Countries",            sub: "Active researchers" },
-  { target: 50,   suffix: "K+",label: "Researchers",          sub: "On the platform" },
-  { target: 8,    suffix: "K+",label: "Institutions",         sub: "Universities & research centers" },
-  { target: 250,  suffix: "K+",label: "Research Teams",       sub: "Formed on the platform" },
-  { target: 1200, suffix: "K+",label: "Projects Created",     sub: "Active and archived" },
-  { target: 2,    suffix: "M+",label: "AI Sessions",          sub: "Research queries processed" },
-  { target: 90,   suffix: "K+",label: "Publications Tracked", sub: "Across all plans" },
-];
-
-const TESTIMONIALS = [
-  {
-    quote: "Synaptiq gave me a co-author I never would have found through my institution alone. We submitted to Nature Methods three months after connecting.",
-    author: "Dr. Kenji Watanabe", role: "Postdoctoral Researcher", institution: "Kyoto University",
-    initials: "KW", color: "#0F2847",
-  },
-  {
-    quote: "I run a research office for 140 faculty. The institution dashboard replaced four separate tools and gave us real-time visibility into our grant pipeline.",
-    author: "Prof. Ingrid Sörensen", role: "Head of Research Office", institution: "Uppsala University",
-    initials: "IS", color: "#1d4ed8",
-  },
-  {
-    quote: "The AI literature review saved me four weeks. It read 600 papers, identified three underexplored gaps, and cited them correctly. That's just the start.",
-    author: "Dr. Amara Diallo", role: "PhD Candidate", institution: "ETH Zürich",
-    initials: "AD", color: "#059669",
-  },
-];
-
 const TIMELINE_ITEMS = [
   { year: "2026 Q1", label: "Platform Launch", sub: "Core research platform live" },
   { year: "2026 Q2", label: "AI Workspace", sub: "Full AI suite deployed" },
-  { year: "2026 Q3", label: "Global Network", sub: "50K researchers onboarded" },
+  { year: "2026 Q3", label: "Global Network", sub: "Research collaboration network live" },
   { year: "2026 Q4", label: "Institution Platform", sub: "University deployments" },
   { year: "2027",    label: "Academic Marketplace", sub: "Expert services ecosystem" },
   { year: "2027",    label: "Knowledge Graph", sub: "Living research graph" },
   { year: "2028+",   label: "Future Vision", sub: "Autonomous research agents" },
-];
-
-const TRUSTED_ORGS = [
-  "MIT",       "Oxford",         "ETH Zürich",    "Kyoto Univ.",
-  "Uppsala",   "TU Berlin",      "CNRS",           "Nature Publishing",
-  "IEEE",      "Springer",       "Elsevier",       "arXiv",
 ];
 
 const WORKFLOW_STEPS = [
@@ -810,82 +776,6 @@ export default function About() {
         </div>
       </section>
 
-      {/* ══════ SECTION 10 — BY THE NUMBERS (white) ═══════════════════════════ */}
-      <section style={{ background: "#f8fafc", borderBottom: "1px solid #f1f5f9" }}>
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-24 lg:py-32">
-          <div ref={rStats} className="sq-reveal">
-            <div style={{ textAlign: "center", marginBottom: 64 }}>
-              <div className="overline mb-3">By the Numbers</div>
-              <h2 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, letterSpacing: "-0.035em", color: "#0a0f1a", lineHeight: 1.08, textWrap: "balance" }}>
-                The world's researchers trust Synaptiq.
-              </h2>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 32 }} className="grid-cols-2 lg:grid-cols-4">
-              {STATS.slice(0, 4).map((s) => <StatCounter key={s.label} {...s} />)}
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 32, marginTop: 48, maxWidth: 760, margin: "48px auto 0" }} className="grid-cols-1 md:grid-cols-3">
-              {STATS.slice(4).map((s) => <StatCounter key={s.label} {...s} />)}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════ SECTION 11 — TESTIMONIALS ══════════════════════════════════════ */}
-      <section style={{ background: "#fff", borderBottom: "1px solid #f1f5f9" }}>
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-24 lg:py-32">
-          <div ref={rTestimonials} className="sq-reveal">
-            <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <div className="overline mb-3">Testimonials</div>
-              <h2 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 900, letterSpacing: "-0.035em", color: "#0a0f1a", lineHeight: 1.08 }}>
-                What researchers say.
-              </h2>
-            </div>
-            <div className="grid md:grid-cols-3 gap-6">
-              {TESTIMONIALS.map(({ quote, author, role, institution, initials, color }) => (
-                <div key={author} style={{ background: "#f8fafc", border: "1px solid #e8edf3", borderRadius: 16, padding: "32px 28px", display: "flex", flexDirection: "column" }}>
-                  <div style={{ display: "flex", gap: 2, marginBottom: 20 }}>
-                    {[1,2,3,4,5].map((s) => <Star key={s} size={12} fill="#0F2847" strokeWidth={0} style={{ color: "#0F2847" }} />)}
-                  </div>
-                  <p style={{ fontSize: "0.88rem", color: "#334155", lineHeight: 1.8, flex: 1, marginBottom: 24 }}>
-                    &ldquo;{quote}&rdquo;
-                  </p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 20, borderTop: "1px solid #f1f5f9" }}>
-                    <div style={{ width: 38, height: 38, borderRadius: "50%", background: color, color: "#fff", fontSize: "0.68rem", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      {initials}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0a0f1a" }}>{author}</div>
-                      <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: 1 }}>{role} · {institution}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════ SECTION 12 — TRUSTED BY ════════════════════════════════════════ */}
-      <section style={{ background: "#f8fafc", borderBottom: "1px solid #f1f5f9" }}>
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-20">
-          <div ref={rMedia} className="sq-reveal">
-            <div style={{ textAlign: "center", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 28 }}>
-              Trusted by the academic community
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "12px 28px" }}>
-              {TRUSTED_ORGS.map((name) => (
-                <div key={name} style={{
-                  fontSize: "0.82rem", fontWeight: 700, color: "#94a3b8",
-                  padding: "7px 18px", border: "1px solid #e2e8f0", borderRadius: 8, background: "#fff",
-                }}>
-                  {name}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ══════ SECTION 13 — JOIN CTA (dark) ═══════════════════════════════════ */}
       <section style={{ background: "#0F2847" }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-32 lg:py-40">
@@ -898,7 +788,7 @@ export default function About() {
               Help shape the future of scientific collaboration.
             </h2>
             <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.75, maxWidth: 480, margin: "0 auto 40px" }}>
-              Join 50,000+ researchers already using Synaptiq. Start for free, upgrade when your research demands it.
+              Start for free, upgrade when your research demands it.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/register"

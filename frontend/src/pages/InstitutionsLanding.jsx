@@ -429,51 +429,6 @@ const SECURITY_FEATURES = [
   { icon: AlertCircle, title: "Academic Integrity",         desc: "AI-powered plagiarism detection" },
 ];
 
-const CASE_STUDIES = [
-  {
-    type: "National Research University", flag: "🇵🇱", institution: "University of Warsaw",
-    color: "#1d4ed8",
-    challenge: "Fragmented research data across 18 faculties. Grant management was manual, publication tracking impossible at scale.",
-    solution: "Deployed Synaptiq Institution Twin + Knowledge Graph + Grant Lifecycle Manager.",
-    results: [{ m: "40%", l: "reduction in reporting time" }, { m: "3×", l: "grant success rate" }, { m: "98%", l: "researcher adoption" }],
-    quote: "For the first time we have a single source of truth for 4,200 researchers.",
-    author: "Prof. Dr. M. Kowalska, Vice-Rector for Research",
-  },
-  {
-    type: "University Medical Center", flag: "🇩🇪", institution: "Charité Berlin",
-    color: "#059669",
-    challenge: "Clinical research compliance and GDPR obligations consumed 60% of research office capacity.",
-    solution: "Synaptiq Research Governance + Academic Integrity Engine + AI compliance advisor.",
-    results: [{ m: "100%", l: "audit compliance" }, { m: "65%", l: "faster ethics approvals" }, { m: "€8.4M", l: "new grants year one" }],
-    quote: "Our compliance burden dropped dramatically while our research output doubled.",
-    author: "Dr. T. Hoffmann, Director of Research Office",
-  },
-  {
-    type: "Technical University", flag: "🇸🇬", institution: "Nanyang Technological University",
-    color: "#7c3aed",
-    challenge: "Managing 45+ industry partnerships alongside academic research without a unified system.",
-    solution: "Synaptiq Collaboration Hub + Reviewer Marketplace + Institution Intelligence Platform.",
-    results: [{ m: "€12M", l: "new industry funding" }, { m: "45", l: "active partnerships" }, { m: "89", l: "patents filed" }],
-    quote: "Synaptiq is the backbone of our research commercialization strategy.",
-    author: "Prof. S. Chen, Dean of Research",
-  },
-];
-
-const TESTIMONIALS = [
-  {
-    quote: "Synaptiq transformed how we manage our 4,200 researchers. For the first time, we have a single source of truth for our entire research ecosystem — from funding to publication to impact.",
-    author: "Prof. Dr. Maria Kowalska", role: "Vice-Rector for Research, University of Warsaw", initials: "MK", color: NAVY,
-  },
-  {
-    quote: "The grant management and collaboration features alone justified the investment. Our funding success rate doubled in the first year. I cannot imagine running our research office without it.",
-    author: "Dr. James Okonkwo", role: "Director of Research Office, University of Cape Town", initials: "JO", color: "#1d4ed8",
-  },
-  {
-    quote: "Our institution's research output is now fully traceable, from idea to publication to global impact. Synaptiq is the operating system our research strategy was built on.",
-    author: "Prof. Sarah Chen", role: "Dean of Research, Nanyang Technological University", initials: "SC", color: "#059669",
-  },
-];
-
 const INTEGRATIONS = [
   "ORCID", "Crossref", "OpenAlex", "Scopus", "Web of Science", "PubMed",
   "OpenAIRE", "ROR", "DOI Foundation", "Zenodo", "Dataverse", "GitHub",
@@ -584,7 +539,7 @@ export default function InstitutionsLanding() {
       <section style={{ background: LIGHT, borderBottom: `1px solid ${BORDER}`, padding: "28px 0" }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
           <div style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94a3b8", textAlign: "center", marginBottom: 18 }}>
-            Trusted by leading institutions worldwide
+            Built for research-intensive organizations
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 10 }}>
             {TRUST_ORGS.map((org, i) => (
@@ -688,7 +643,7 @@ export default function InstitutionsLanding() {
           <div style={{ textAlign: "center", marginBottom: 64 }}>
             <div style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 14 }}>Security</div>
             <h2 style={{ fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 900, letterSpacing: "-0.04em", color: "#0a0f1a", lineHeight: 1.1, marginBottom: 14 }}>
-              Enterprise-grade security.<br className="hidden lg:block" /> For the world's most sensitive research.
+              Security built for research data.<br className="hidden lg:block" /> Not an afterthought.
             </h2>
             <p style={{ fontSize: "1rem", color: SLATE, maxWidth: 500, margin: "0 auto" }}>
               Built to meet the security and compliance requirements of research universities, medical institutions and government agencies.
@@ -706,86 +661,6 @@ export default function InstitutionsLanding() {
           <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 8, marginTop: 40 }}>
             {["GDPR Aligned","TLS 1.3 Encrypted","SOC 2 (Coming Soon)","ISO 27001 Alignment","ORCID Integrated","Zero AI Training"].map((b) => (
               <span key={b} style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: SLATE, border: `1px solid ${BORDER}`, background: "#fff", padding: "4px 12px", borderRadius: 4 }}>{b}</span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CASE STUDIES ────────────────────────────────────────────────────── */}
-      <section style={{ background: "#fff", padding: "96px 0", borderBottom: `1px solid ${BORDER}` }}>
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
-          <div style={{ textAlign: "center", marginBottom: 64 }}>
-            <div style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 14 }}>Case Studies</div>
-            <h2 style={{ fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 900, letterSpacing: "-0.04em", color: "#0a0f1a", lineHeight: 1.1 }}>
-              Institutions already operating<br className="hidden lg:block" /> on a different level.
-            </h2>
-          </div>
-          <div className="grid lg:grid-cols-3 gap-6">
-            {CASE_STUDIES.map((cs, i) => (
-              <div key={i} style={{ background: LIGHT, border: `1px solid ${BORDER}`, borderRadius: 18, overflow: "hidden" }}>
-                <div style={{ height: 5, background: cs.color }} />
-                <div style={{ padding: "28px 28px 0" }}>
-                  <div style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: cs.color, marginBottom: 8 }}>{cs.type}</div>
-                  <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "#0a0f1a", marginBottom: 20, letterSpacing: "-0.025em" }}>
-                    {cs.flag} {cs.institution}
-                  </div>
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>Challenge</div>
-                    <p style={{ fontSize: "0.78rem", color: SLATE, lineHeight: 1.65 }}>{cs.challenge}</p>
-                  </div>
-                  <div style={{ marginBottom: 20 }}>
-                    <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>Solution</div>
-                    <p style={{ fontSize: "0.78rem", color: SLATE, lineHeight: 1.65 }}>{cs.solution}</p>
-                  </div>
-                  <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
-                    {cs.results.map((r, j) => (
-                      <div key={j} style={{ flex: 1, background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 9, padding: "10px 8px", textAlign: "center" }}>
-                        <div style={{ fontSize: "1.1rem", fontWeight: 900, color: cs.color, letterSpacing: "-0.03em" }}>{r.m}</div>
-                        <div style={{ fontSize: "0.6rem", color: "#94a3b8", marginTop: 3, lineHeight: 1.4 }}>{r.l}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ padding: "20px 28px 28px", borderTop: `1px solid ${BORDER}` }}>
-                  <p style={{ fontSize: "0.82rem", color: "#0a0f1a", fontStyle: "italic", lineHeight: 1.65, marginBottom: 10 }}>"{cs.quote}"</p>
-                  <div style={{ fontSize: "0.72rem", color: SLATE, fontWeight: 600 }}>{cs.author}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ textAlign: "center", marginTop: 40 }}>
-            <Link to="/resources/customer-stories"
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: "0.85rem", fontWeight: 700, color: NAVY, textDecoration: "none" }}>
-              Read all customer stories <ArrowRight size={14} strokeWidth={2.5} />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ────────────────────────────────────────────────────── */}
-      <section style={{ background: LIGHT, padding: "96px 0", borderBottom: `1px solid ${BORDER}` }}>
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
-          <div style={{ textAlign: "center", marginBottom: 56 }}>
-            <div style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 14 }}>Testimonials</div>
-            <h2 style={{ fontSize: "clamp(1.75rem, 3.5vw, 2.8rem)", fontWeight: 900, letterSpacing: "-0.04em", color: "#0a0f1a", lineHeight: 1.1 }}>
-              What institutional leaders say.
-            </h2>
-          </div>
-          <div className="grid lg:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t, i) => (
-              <div key={i} style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 18, padding: "36px 32px" }}>
-                <div style={{ fontSize: "2.5rem", color: "#e2e8f0", lineHeight: 1, marginBottom: 20, fontFamily: "Georgia, serif" }}>"</div>
-                <p style={{ fontSize: "0.9rem", color: "#0a0f1a", lineHeight: 1.75, marginBottom: 28 }}>{t.quote}</p>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 42, height: 42, borderRadius: "50%", background: t.color, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "0.75rem", fontWeight: 700, flexShrink: 0 }}>
-                    {t.initials}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#0a0f1a" }}>{t.author}</div>
-                    <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: 2 }}>{t.role}</div>
-                  </div>
-                </div>
-              </div>
             ))}
           </div>
         </div>
@@ -833,7 +708,7 @@ export default function InstitutionsLanding() {
             Transform your institution<br className="hidden lg:block" /> with Synaptiq.
           </h2>
           <p style={{ fontSize: "1.1rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.75, maxWidth: 540, margin: "0 auto 44px" }}>
-            One platform for research, teaching and institutional intelligence. Join the world's leading research universities already operating on Synaptiq.
+            One platform for research, teaching and institutional intelligence.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12 }}>
             <Link to="/contact"

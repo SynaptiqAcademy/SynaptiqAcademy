@@ -51,7 +51,7 @@ export default function Resources() {
             Everything you need to know<br className="hidden lg:block" /> about Synaptiq.
           </h1>
           <p style={{ fontSize: "1rem", color: "#64748b", lineHeight: 1.75, maxWidth: 520, marginBottom: 56 }}>
-            Product updates, customer stories and editorial content from the world's leading academic collaboration platform.
+            Product updates, customer stories and editorial content from Synaptiq.
           </p>
           <div className="grid md:grid-cols-3 gap-6">
             {SECTIONS.map(({ icon: Icon, eyebrow, title, desc, cta, href, color, badge }) => (

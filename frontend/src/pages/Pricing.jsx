@@ -39,7 +39,7 @@ const STATIC_PLANS = [
   {
     code: "researcher", name: "Researcher", tagline: "For active researchers & PhDs",
     price_eur_monthly: 9.99, price_eur_annual: 7.99,
-    future_price_eur_monthly: 14.99, badge: "Most Popular",
+    future_price_eur_monthly: 14.99, badge: "For active individual research",
     credits_per_month: 300,
     limits: { active_projects: -1, workspaces: 10, repository_gb: 100, team_seats: 1,
                journal_recs_per_month: -1, conference_recs_per_month: -1, grant_recs_per_month: -1 },
@@ -57,7 +57,7 @@ const STATIC_PLANS = [
   {
     code: "pro_researcher", name: "Pro Researcher", tagline: "For power users & senior researchers",
     price_eur_monthly: 29.99, price_eur_annual: 23.99,
-    future_price_eur_monthly: null, badge: "Best Value",
+    future_price_eur_monthly: null, badge: "For high-output researchers",
     credits_per_month: 1000,
     limits: { active_projects: -1, workspaces: -1, repository_gb: 500, team_seats: 1,
                journal_recs_per_month: -1, conference_recs_per_month: -1, grant_recs_per_month: -1 },
@@ -459,17 +459,6 @@ export default function Pricing() {
             ))}
           </div>
 
-          {/* Trusted-by strip */}
-          <div className="flex flex-wrap items-center gap-x-8 gap-y-3 mt-10">
-            <span style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-              Trusted by researchers at
-            </span>
-            {["MIT", "Oxford", "ETH Zürich", "Kyoto Univ.", "Uppsala", "TU Berlin", "CNRS", "Nature Publishing"].map((name) => (
-              <span key={name} style={{ fontSize: "0.8rem", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.01em" }}>
-                {name}
-              </span>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -519,7 +508,7 @@ export default function Pricing() {
                       boxShadow: "0 2px 8px rgba(15,40,71,0.1)",
                       whiteSpace: "nowrap",
                     }}>
-                      Most Popular
+                      For active individual research
                     </div>
                   )}
 
@@ -701,7 +690,7 @@ export default function Pricing() {
                         background: isPopular ? "rgba(15,40,71,0.025)" : "transparent",
                       }}>
                         <div style={{ fontSize: "0.7rem", fontWeight: 700, color: isPopular ? "#0F2847" : "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>
-                          {isPopular && <span style={{ display: "block", fontSize: "0.58rem", color: "#0F2847", marginBottom: 4 }}>MOST POPULAR</span>}
+                          {isPopular && <span style={{ display: "block", fontSize: "0.58rem", color: "#0F2847", marginBottom: 4 }}>FOR ACTIVE RESEARCH</span>}
                           {plan?.name ?? c}
                         </div>
                         <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "#0a0f1a", letterSpacing: "-0.025em", lineHeight: 1 }}>

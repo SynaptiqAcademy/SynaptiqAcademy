@@ -606,84 +606,16 @@ function PrivacySection() {
           ))}
         </div>
 
-        {/* Compliance badges */}
+        {/* Compliance badges — must stay in sync with the honestly-hedged
+            wording in MarketingLayout.jsx's footer (the previous version of
+            this list claimed SOC 2 Type II / HIPAA Ready / ISO 27001 as
+            already achieved, contradicting the footer's own "(Coming Soon)"
+            wording — fixed to match). */}
         <div style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap", marginTop: 48 }}>
-          {["GDPR Compliant", "SOC 2 Type II", "HIPAA Ready", "ISO 27001"].map((b) => (
+          {["GDPR Aligned", "SOC 2 (Coming Soon)", "ISO 27001 Alignment"].map((b) => (
             <div key={b} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
               <CheckCircle2 size={12} strokeWidth={2} style={{ color: "#10b981" }} />
               <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "rgba(255,255,255,0.55)" }}>{b}</span>
-            </div>
-          ))}
-        </div>
-      </Inner>
-    </section>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════════
-   TESTIMONIALS
-═══════════════════════════════════════════════════════════════════════════════ */
-const TESTIMONIALS = [
-  {
-    quote: "The Literature Review AI saved me six weeks on my last project. It surfaced three papers I'd never have found on my own — two of them became key references in my submission.",
-    name: "Dr. Amara Diallo",
-    title: "Research Fellow, Computational Biology",
-    institution: "Karolinska Institute",
-    stars: 5,
-  },
-  {
-    quote: "I used the Grant Assistant for an NIH R01 application. The feedback on my Specific Aims section was more actionable than anything I received from my department review committee.",
-    name: "Prof. Thomas Eriksen",
-    title: "Chair, Department of Neuroscience",
-    institution: "University of Copenhagen",
-    stars: 5,
-  },
-  {
-    quote: "The Statistical Analysis tool caught a methodological error that would have come back in peer review. It paid for itself on day one.",
-    name: "Dr. Yuki Yamamoto",
-    title: "Assistant Professor, Medical Statistics",
-    institution: "University of Tokyo",
-    stars: 5,
-  },
-];
-
-function TestimonialsSection() {
-  const ref = useReveal();
-  return (
-    <section style={{ background: "#fff", padding: "100px 0" }}>
-      <Inner>
-        <div ref={ref} className="ai-fade" style={{ textAlign: "center", marginBottom: 52 }}>
-          <Eyebrow>Researcher stories</Eyebrow>
-          <h2 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(1.8rem, 3vw, 2.4rem)", fontWeight: 700, color: "#0c1a2e", letterSpacing: "-0.02em", margin: 0 }}>
-            What researchers say.
-          </h2>
-        </div>
-
-        <div className="ai-quotes-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
-          {TESTIMONIALS.map((t, i) => (
-            <div
-              key={t.name}
-              className={`ai-fade ai-fade-d${i + 1} ai-quote-card`}
-              style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "28px 28px" }}
-            >
-              <div style={{ display: "flex", gap: 3, marginBottom: 16 }}>
-                {Array(t.stars).fill(0).map((_, j) => (
-                  <Star key={j} size={13} fill="#f59e0b" style={{ color: "#f59e0b" }} />
-                ))}
-              </div>
-              <p style={{ fontSize: "0.875rem", color: BODY, lineHeight: 1.75, marginBottom: 24, fontStyle: "italic" }}>
-                "{t.quote}"
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 20, borderTop: `1px solid ${BORDER}` }}>
-                <div style={{ width: 38, height: 38, borderRadius: "50%", background: BLUE + "18", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: "0.72rem", fontWeight: 700, color: BLUE }}>{t.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}</span>
-                </div>
-                <div>
-                  <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "#0f172a" }}>{t.name}</div>
-                  <div style={{ fontSize: "0.68rem", color: "#94a3b8" }}>{t.title}</div>
-                  <div style={{ fontSize: "0.65rem", color: BLUE, fontWeight: 600 }}>{t.institution}</div>
-                </div>
-              </div>
             </div>
           ))}
         </div>
@@ -704,10 +636,10 @@ function CTASection() {
         <div ref={ref} className="ai-fade" style={{ textAlign: "center" }}>
           <div style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(59,130,246,0.6)", marginBottom: 20 }}>Start today</div>
           <h2 style={{ fontFamily: "Georgia, serif", fontSize: "clamp(2rem, 4vw, 3.2rem)", fontWeight: 700, color: "#fff", lineHeight: 1.12, letterSpacing: "-0.025em", margin: "0 0 20px", maxWidth: 620, marginLeft: "auto", marginRight: "auto" }}>
-            Experience the future of academic AI.
+            AI-assisted research tools, built for academic work.
           </h2>
           <p style={{ fontSize: "1.05rem", color: "rgba(255,255,255,0.45)", maxWidth: 440, margin: "0 auto 40px", lineHeight: 1.7 }}>
-            The most advanced AI research tools ever built for academia. Now available to every researcher.
+            Available to every researcher on Synaptiq.
           </p>
           <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
             <Link
@@ -760,7 +692,6 @@ export default function AIWorkspaceLanding() {
       <AIToolsSection />
       {SHOWCASES.map((s) => <ShowcaseSection key={s.eyebrow} s={s} />)}
       <PrivacySection />
-      <TestimonialsSection />
       <CTASection />
     </MarketingLayout>
   );

@@ -63,12 +63,14 @@ function useCounter(target, duration = 1800) {
 function HeroIllustration() {
   const [activeNode, setActiveNode] = useState(null);
 
+  {/* Illustrative expertise areas, not real people or matches — see §6/§7:
+      the public site must never fabricate researchers or fake matches. */}
   const nodes = [
-    { id: "a", x: 52, y: 28, label: "Dr. K. Sato",  sub: "Kyoto Univ.", color: "#0F2847", initials: "KS" },
-    { id: "b", x: 82, y: 52, label: "Prof. M. Osei",sub: "ETH Zürich",  color: "#1d4ed8", initials: "MO" },
-    { id: "c", x: 60, y: 78, label: "Dr. R. Silva",  sub: "USP Brazil",  color: "#0F2847", initials: "RS" },
-    { id: "d", x: 22, y: 72, label: "Dr. I. Patel",  sub: "Oxford",      color: "#1d4ed8", initials: "IP" },
-    { id: "e", x: 14, y: 40, label: "J. Williams",   sub: "MIT",         color: "#0F2847", initials: "JW" },
+    { id: "a", x: 52, y: 28, label: "Machine Learning",     sub: "Expertise area", color: "#0F2847", initials: "ML" },
+    { id: "b", x: 82, y: 52, label: "Public Health",        sub: "Expertise area", color: "#1d4ed8", initials: "PH" },
+    { id: "c", x: 60, y: 78, label: "Policy Research",      sub: "Expertise area", color: "#0F2847", initials: "PR" },
+    { id: "d", x: 22, y: 72, label: "Clinical Methods",     sub: "Expertise area", color: "#1d4ed8", initials: "CM" },
+    { id: "e", x: 14, y: 40, label: "Data Science",         sub: "Expertise area", color: "#0F2847", initials: "DS" },
   ];
 
   const edges = [["a","b"],["b","c"],["c","d"],["d","e"],["e","a"],["a","c"],["b","d"]];
@@ -161,22 +163,22 @@ function HeroIllustration() {
           </svg>
         </div>
 
-        {/* Bottom status bar */}
+        {/* Bottom status bar — qualitative, not fabricated usage numbers */}
         <div style={{ padding: "12px 20px", borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 16 }}>
           {[
-            { label: "Researchers", value: "142K+", color: "#0F2847" },
-            { label: "Countries", value: "150+", color: "#1d4ed8" },
-            { label: "Collaborations", value: "250K+", color: "#059669" },
-          ].map(({ label, value, color }) => (
+            { label: "Explainable matches", color: "#0F2847" },
+            { label: "Real profiles only", color: "#1d4ed8" },
+            { label: "Human-approved contact", color: "#059669" },
+          ].map(({ label, color }) => (
             <div key={label} style={{ flex: 1, textAlign: "center" }}>
-              <div style={{ fontSize: "1rem", fontWeight: 800, color, lineHeight: 1 }}>{value}</div>
-              <div style={{ fontSize: "0.62rem", color: "#94a3b8", marginTop: 2 }}>{label}</div>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: color, margin: "0 auto 4px" }} />
+              <div style={{ fontSize: "0.62rem", color: "#64748b", fontWeight: 600 }}>{label}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Floating notification card */}
+      {/* Floating notification card — illustrative UI state, not a real match */}
       <div style={{
         position: "absolute", top: 8, right: "0%",
         background: "#fff", borderRadius: 10, border: "1px solid #e2e8f0",
@@ -185,24 +187,9 @@ function HeroIllustration() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981", flexShrink: 0 }} />
-          <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#0f172a" }}>New match found</span>
+          <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#0f172a" }}>Relevant expertise found</span>
         </div>
-        <div style={{ fontSize: "0.6rem", color: "#64748b", marginTop: 4, lineHeight: 1.5 }}>Prof. S. Nakamura · Osaka Univ.<br />Quantum Computing · 3 papers in common</div>
-      </div>
-
-      {/* Floating quality card */}
-      <div style={{
-        position: "absolute", bottom: 16, left: "2%",
-        background: "#0F2847", borderRadius: 10,
-        boxShadow: "0 4px 20px rgba(15,40,71,0.25)", padding: "12px 16px",
-        maxWidth: 180, zIndex: 10,
-      }}>
-        <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.55)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>AI Manuscript Review</div>
-        <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#fff", lineHeight: 1, marginTop: 4 }}>89<span style={{ fontSize: "0.8rem" }}>%</span></div>
-        <div style={{ height: 3, background: "rgba(255,255,255,0.15)", borderRadius: 2, marginTop: 8 }}>
-          <div style={{ width: "89%", height: "100%", background: "#10b981", borderRadius: 2 }} />
-        </div>
-        <div style={{ fontSize: "0.58rem", color: "rgba(255,255,255,0.45)", marginTop: 4 }}>Ready for submission</div>
+        <div style={{ fontSize: "0.6rem", color: "#64748b", marginTop: 4, lineHeight: 1.5 }}>Complementary methods identified<br />You decide who to contact</div>
       </div>
     </div>
   );
@@ -310,6 +297,13 @@ function AIWorkspaceMockup() {
         <div style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
         <div style={{ flex: 1, background: "rgba(255,255,255,0.06)", borderRadius: 4, height: 6 }} />
         <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: "0.06em" }}>AI COPILOT</div>
+      </div>
+      {/* Explicit "example" label — this mockup's numbers are illustrative,
+          not a real live result; never blur that boundary (§7). */}
+      <div style={{ padding: "8px 20px 0" }}>
+        <span style={{ fontSize: "0.58rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#f59e0b", background: "rgba(245,158,11,0.12)", padding: "3px 8px", borderRadius: 4 }}>
+          Example output
+        </span>
       </div>
       {/* Tool tabs — horizontally scrollable so 4 fixed labels never force the
           grid cell (and the page) wider than the viewport on narrow screens */}
@@ -447,24 +441,6 @@ const SHOWCASE = [
   },
 ];
 
-const TESTIMONIALS = [
-  {
-    quote: "Synaptiq didn't just help me find collaborators — it rebuilt how I run research. The workspace keeps the entire team aligned without the email overhead.",
-    author: "Dr. Mara Osei", role: "Postdoctoral Researcher", institution: "ETH Zürich",
-    initials: "MO", color: "#0F2847",
-  },
-  {
-    quote: "I submitted my manuscript three weeks after finding a co-author through Synaptiq. The AI review caught methodological gaps I'd missed after three rounds of revision.",
-    author: "Kenji Watanabe", role: "PhD Candidate", institution: "Kyoto University",
-    initials: "KW", color: "#1d4ed8",
-  },
-  {
-    quote: "Running an institution plan for our department. The analytics alone justified the cost — we now track our collective research output in one dashboard.",
-    author: "Prof. Ingrid Sörensen", role: "Head of Research Office", institution: "Uppsala University",
-    initials: "IS", color: "#059669",
-  },
-];
-
 const PRICING_TIERS = [
   {
     name: "Free",         price: "€0",     period: "/mo",
@@ -493,17 +469,12 @@ const PRICING_TIERS = [
 ];
 
 const FAQ = [
-  { q: "What is Synaptiq?", a: "Synaptiq is the world's academic collaboration platform. It unifies researcher networking, project management, manuscript workflows, AI assistance, and publication tools into one workspace — built for the full academic lifecycle." },
+  { q: "What is Synaptiq?", a: "Synaptiq is a research collaboration platform. It connects researcher identity, expert discovery, collaboration, project workspaces, AI-assisted research tools, and publication workflows into one environment — built for the full academic lifecycle." },
   { q: "Who is Synaptiq for?", a: "Synaptiq supports undergraduate students, PhD candidates, postdoctoral researchers, professors, educators, research offices, and industry professionals. The platform adapts to your role." },
   { q: "How does collaboration work?", a: "Post an open collaboration with your requirements. Other researchers apply with a pitch. You accept, and a shared workspace is automatically created with literature, tasks, milestones, and manuscript." },
   { q: "Is ORCID supported?", a: "Yes. Link your ORCID iD and your public publications sync automatically via the ORCID API." },
   { q: "How is research data protected?", a: "All data is encrypted in transit (TLS 1.2+) and at rest. Authentication uses httpOnly cookies and bcrypt. We are GDPR-aligned and never sell user data." },
   { q: "Can universities use Synaptiq?", a: "Yes. The Institution plan includes 25 seats, institutional analytics, department management, and dedicated support." },
-];
-
-const TRUSTED_LOGOS = [
-  "MIT", "Oxford", "ETH Zürich", "Kyoto Univ.", "Uppsala", "TU Berlin",
-  "Nature Publishing", "IEEE", "Springer", "Elsevier",
 ];
 
 /* ─── Landing Page ───────────────────────────────────────────────────────── */
@@ -608,22 +579,21 @@ export default function Landing() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          SECTION 2 — TRUSTED BY
+          SECTION 2 — WHAT SYNAPTIQ CONNECTS (replaces a fake "trusted by"
+          logo wall — no real customer/partner relationships to show yet;
+          an honest capability strip instead of vanity social proof)
       ══════════════════════════════════════════════════════════════════════ */}
       <section style={{ background: "#f8fafc", borderBottom: "1px solid #f1f5f9" }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-14">
           <div ref={refTrusted} className="sq-reveal">
-            <div style={{ textAlign: "center", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 24 }}>
-              Trusted by researchers worldwide
-            </div>
             <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
-              {TRUSTED_LOGOS.map((logo) => (
-                <div key={logo} style={{
-                  fontSize: "0.82rem", fontWeight: 700, color: "#94a3b8",
+              {["Identity", "Expertise", "Discovery", "Collaboration", "Research Execution", "Publishing"].map((label) => (
+                <div key={label} style={{
+                  fontSize: "0.82rem", fontWeight: 700, color: "#64748b",
                   letterSpacing: "0.04em", padding: "6px 16px",
                   border: "1px solid #e2e8f0", borderRadius: 8, background: "#fff",
                 }}>
-                  {logo}
+                  {label}
                 </div>
               ))}
             </div>
@@ -692,7 +662,7 @@ export default function Landing() {
                 Find collaborators.<br />Build global research teams.
               </h2>
               <p style={{ fontSize: "0.95rem", color: "#64748b", lineHeight: 1.75, marginBottom: 32, maxWidth: 460 }}>
-                Post a collaboration call, get matched by AI, and create a shared workspace in minutes. Synaptiq's network spans 150+ countries and every academic discipline.
+                Post a collaboration call, get AI-assisted matches with a clear explanation of why each one is relevant, and create a shared workspace in minutes. You decide who to contact — Synaptiq never sends outreach on your behalf.
               </p>
 
               <div className="flex flex-col gap-4">
@@ -879,66 +849,31 @@ export default function Landing() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          SECTION 8 — STATISTICS  (dark)
+          SECTION 8 — WHY SYNAPTIQ  (dark) — replaces a fabricated "by the
+          numbers" vanity-metrics section (Synaptiq is early-stage; per the
+          Phase 9A audit, none of those figures were real). Structural
+          differentiators instead of scale, per §11/§25.
       ══════════════════════════════════════════════════════════════════════ */}
       <section style={{ background: "#0a1220" }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-24 lg:py-32">
           <div ref={refStats} className="sq-reveal">
             <div style={{ textAlign: "center", marginBottom: 64 }}>
-              <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 16 }}>By the numbers</div>
+              <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 16 }}>Why Synaptiq</div>
               <h2 style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 900, letterSpacing: "-0.035em", color: "#fff", lineHeight: 1.1, textWrap: "balance" }}>
-                Researchers worldwide trust Synaptiq.
+                Structural differences, not just more features.
               </h2>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8">
-              <StatCounter target={150} suffix="+"  label="Countries"         sub="Global research coverage" />
-              <StatCounter target={50}  suffix="K+" label="Researchers"       sub="Active platform users" />
-              <StatCounter target={8}   suffix="K+" label="Institutions"      sub="Universities & research centers" />
-              <StatCounter target={250} suffix="K+" label="Collaborations"    sub="Teams formed on the platform" />
-              <StatCounter target={2}   suffix="M+" label="AI Interactions"   sub="Research queries processed" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          SECTION 9 — TESTIMONIALS
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: "#f8fafc", borderBottom: "1px solid #f1f5f9" }}>
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-24 lg:py-32">
-          <div ref={refTestimonials} className="sq-reveal">
-            <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <div className="overline mb-3">Testimonials</div>
-              <h2 style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 900, letterSpacing: "-0.035em", color: "#0a0f1a", lineHeight: 1.1, textWrap: "balance" }}>
-                What researchers say.
-              </h2>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              {TESTIMONIALS.map(({ quote, author, role, institution, initials, color }) => (
-                <div key={author} style={{
-                  background: "#fff", border: "1px solid #e8edf3", borderRadius: 16,
-                  padding: "32px 28px", boxShadow: "0 2px 12px rgba(15,40,71,0.04)",
-                  display: "flex", flexDirection: "column",
-                }}>
-                  <div className="flex gap-0.5 mb-6">
-                    {[1,2,3,4,5].map((s) => <Star key={s} size={12} fill="#0F2847" strokeWidth={0} style={{ color: "#0F2847" }} />)}
-                  </div>
-                  <p style={{ fontSize: "0.87rem", color: "#334155", lineHeight: 1.8, flex: 1, marginBottom: 24 }}>
-                    &ldquo;{quote}&rdquo;
-                  </p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 20, borderTop: "1px solid #f1f5f9" }}>
-                    <div style={{
-                      width: 38, height: 38, borderRadius: "50%", background: color,
-                      color: "#fff", fontSize: "0.68rem", fontWeight: 800,
-                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                    }}>{initials}</div>
-                    <div>
-                      <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0a0f1a" }}>{author}</div>
-                      <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: 1 }}>{role} · {institution}</div>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
+              {[
+                { title: "From question to collaboration", desc: "A research need becomes a structured expertise requirement, not a keyword search." },
+                { title: "Explainable discovery", desc: "See why a profile is relevant instead of receiving an unexplained recommendation." },
+                { title: "Interdisciplinary by design", desc: "A research problem can surface complementary disciplines, not only similar profiles." },
+                { title: "Work after discovery", desc: "A useful connection can continue into a collaboration request and real project work." },
+              ].map(({ title, desc }) => (
+                <div key={title}>
+                  <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "#fff", marginBottom: 8, letterSpacing: "-0.01em" }}>{title}</div>
+                  <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>{desc}</div>
                 </div>
               ))}
             </div>
@@ -1068,7 +1003,7 @@ export default function Landing() {
               Ready to build your next research collaboration?
             </h2>
             <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.75, marginTop: 20, maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
-              Join 50,000+ researchers already using Synaptiq to discover collaborators, write better manuscripts, and measure their impact.
+              Discover collaborators, run your research, and track your impact — all in one place. Free to start.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4" style={{ marginTop: 40 }}>
               <Link
