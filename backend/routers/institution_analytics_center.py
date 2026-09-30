@@ -23,7 +23,7 @@ async def _require_member_or_admin(institution_id: str, user: dict, db) -> bool:
     if zt_is_admin(user):
         return True
     mem = await db.institution_memberships.find_one({
-        "institution_id": institution_id, "user_id": user["id"], "status": "active"
+        "institution_id": institution_id, "user_id": user["id"], "status": "approved"
     })
     if not mem:
         raise HTTPException(status_code=403, detail="Must be an active member of this institution")
@@ -35,7 +35,7 @@ async def _require_inst_admin(institution_id: str, user: dict, db):
         return
     mem = await db.institution_memberships.find_one({
         "institution_id": institution_id, "user_id": user["id"],
-        "role": {"$in": ["owner", "admin"]}, "status": "active"
+        "role": {"$in": ["owner", "admin"]}, "status": "approved"
     })
     if not mem:
         raise HTTPException(status_code=403, detail="Institution admin access required")
@@ -514,7 +514,7 @@ async def get_collaboration_analytics(
 
     # Fetch member IDs
     member_cursor = db.institution_memberships.find(
-        {"institution_id": institution_id, "status": "active"},
+        {"institution_id": institution_id, "status": "approved"},
         {"user_id": 1}
     )
     members = await member_cursor.to_list(length=10000)
@@ -546,7 +546,7 @@ async def get_collaboration_analytics(
             international_count += 1
             # Try to find partner institution memberships
             partner_cursor = db.institution_memberships.find(
-                {"user_id": {"$in": outside}, "status": "active"},
+                {"user_id": {"$in": outside}, "status": "approved"},
                 {"institution_id": 1}
             )
             partner_mems = await partner_cursor.to_list(length=1000)

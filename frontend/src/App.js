@@ -6,6 +6,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UnreadProvider } from "@/contexts/UnreadContext";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
+import RequireInstitution from "@/components/auth/RequireInstitution";
 import AppShell from "@/components/layout/AppShell";
 
 // Critical path — loaded eagerly (no auth, hit on first visit)
@@ -467,9 +468,9 @@ function App() {
               <Route path="/units/:id" element={<Protected><UnitDetail /></Protected>} />
               <Route path="/research-centers/:id" element={<Protected><UnitDetail /></Protected>} />
               <Route path="/labs/:id" element={<Protected><UnitDetail /></Protected>} />
-              <Route path="/institution/analytics" element={<Protected><InstitutionAnalytics /></Protected>} />
-              <Route path="/institution/departments" element={<Protected><Departments /></Protected>} />
-              <Route path="/institution/departments/:did" element={<Protected><DepartmentDetail /></Protected>} />
+              <Route path="/institution/analytics" element={<Protected><RequireInstitution><InstitutionAnalytics /></RequireInstitution></Protected>} />
+              <Route path="/institution/departments" element={<Protected><RequireInstitution><Departments /></RequireInstitution></Protected>} />
+              <Route path="/institution/departments/:did" element={<Protected><RequireInstitution><DepartmentDetail /></RequireInstitution></Protected>} />
               <Route path="/faculty/:id" element={<Protected><FacultyProfile /></Protected>} />
               <Route path="/notifications" element={<Protected><Notifications /></Protected>} />
               <Route path="/settings" element={<Protected><Settings /></Protected>} />
@@ -532,9 +533,9 @@ function App() {
               <Route path="/ai-suite"   element={<Protected><AISuite /></Protected>} />
               <Route path="/ai-credits" element={<Protected><AICredits /></Protected>} />
               {/* Phase XXIV — Institution Hub */}
-              <Route path="/institution-hub" element={<Protected><InstitutionHub /></Protected>} />
+              <Route path="/institution-hub" element={<Protected><RequireInstitution><InstitutionHub /></RequireInstitution></Protected>} />
               <Route path="/institution-hub/:id" element={<Protected><InstitutionProfile /></Protected>} />
-              <Route path="/institution-hub/:id/admin" element={<Protected><InstitutionAdminConsole /></Protected>} />
+              <Route path="/institution-hub/:id/admin" element={<Protected><RequireInstitution requireAdmin><InstitutionAdminConsole /></RequireInstitution></Protected>} />
               <Route path="/institution-leaderboards" element={<Protected><InstitutionLeaderboards /></Protected>} />
               {/* Phase XXV — Grant Collaboration Hub */}
               <Route path="/grant-collaboration-hub" element={<Protected><GrantCollaborationHub /></Protected>} />
@@ -551,7 +552,7 @@ function App() {
               <Route path="/reviewer-marketplace" element={<Protected><ReviewerMarketplace /></Protected>} />
               <Route path="/review-workspace/:id" element={<Protected><ReviewWorkspace /></Protected>} />
               {/* Phase XXVIII — Institution Analytics Center */}
-              <Route path="/institution-analytics/:id" element={<Protected><InstitutionAnalyticsCenter /></Protected>} />
+              <Route path="/institution-analytics/:id" element={<Protected><RequireInstitution><InstitutionAnalyticsCenter /></RequireInstitution></Protected>} />
               {/* Phase XXIX — Verification & Trust */}
               <Route path="/verification" element={<Protected><VerificationCenter /></Protected>} />
 

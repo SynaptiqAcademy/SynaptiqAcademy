@@ -52,7 +52,6 @@ const LS = {
   COLLAPSED: "sq_sidebar_collapsed",
   SECTION:   "sq_nav_v2_section",
   FAVORITES: "sq_nav_favorites",
-  EXPERT:    "sq_expert_mode",
 };
 
 function getSectionRouteItems(section) {
@@ -110,18 +109,42 @@ function useNavMemory() {
 }
 
 function AppSidebarBody() {
-  const { user, logout } = useAuth();
+  const { user, logout, entitlements } = useAuth();
   const navigate         = useNavigate();
   const location         = useLocation();
   const { total: unreadTotal } = useUnread();
 
-  const dashboardMode   = getDashboardMode(user);
-  const showInstitution = ["institution_admin", "admin", "super_admin"].includes(user?.role);
+  const dashboardMode = getDashboardMode(user);
+  // Institution access is real, approved organization membership ONLY — never
+  // a plan tier, institution_verified, ORCID affiliation, or professional_role.
+  // Platform staff (super_admin / admin) keep the section so they don't lose
+  // access to institution tooling for support, mirroring the backend's own
+  // zt_is_admin bypass on every institution route.
+  const isInstitutionMember = !!entitlements?.institution?.is_member;
+  const isInstitutionAdmin  = !!entitlements?.institution?.is_admin;
+  const isPlatformStaff     = ["admin", "super_admin"].includes(user?.role) || !!entitlements?.is_super_admin;
+  const showInstitution     = isInstitutionMember || isPlatformStaff;
+  // "Administration" (§26) links into the separate Institution Intelligence
+  // Platform, whose backend authorization is still the legacy platform-wide
+  // institution_admin/admin/super_admin ROLE (routers/institution_platform.py
+  // _require_admin), not real per-institution membership — a known,
+  // documented architectural gap this pass didn't rewire (see final report).
+  // Gate visibility on whichever signal would actually let the request
+  // through server-side, so this never becomes a dead link.
+  const canSeeInstitutionAdminItems =
+    isInstitutionAdmin || isPlatformStaff || user?.role === "institution_admin";
 
-  const sections = useMemo(
-    () => getOrderedSections(dashboardMode, showInstitution),
-    [dashboardMode, showInstitution]
-  );
+  const sections = useMemo(() => {
+    const ordered = getOrderedSections(dashboardMode, showInstitution);
+    if (!canSeeInstitutionAdminItems) {
+      return ordered.map((section) =>
+        section.id !== "institution"
+          ? section
+          : { ...section, items: section.items.filter((item) => !item.adminOnly) }
+      );
+    }
+    return ordered;
+  }, [dashboardMode, showInstitution, canSeeInstitutionAdminItems]);
 
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem(LS.COLLAPSED) === "true"; }
@@ -162,19 +185,6 @@ function AppSidebarBody() {
   const [searchQuery, setSearchQuery] = useState("");
   const searchRef = useRef(null);
 
-  const [expertMode, setExpertMode] = useState(() => {
-    try { return localStorage.getItem(LS.EXPERT) === "true"; }
-    catch { return false; }
-  });
-
-  const toggleExpertMode = useCallback(() => {
-    setExpertMode((prev) => {
-      const next = !prev;
-      try { localStorage.setItem(LS.EXPERT, String(next)); } catch {}
-      return next;
-    });
-  }, []);
-
   const { favorites, toggleFavorite } = useNavMemory();
 
   useEffect(() => {
@@ -204,18 +214,13 @@ function AppSidebarBody() {
     if (!q) return null;
     const out = [];
     sections.forEach((section) => {
-      const expertOnlyPaths = expertMode ? new Set() : new Set(
-        section.items
-          .filter((item) => item._type === "subgroup" && item.expertOnly)
-          .flatMap((sg) => sg.items.map((sub) => sub.to))
-      );
       const matches = getSectionRouteItems(section).filter(
-        (i) => !expertOnlyPaths.has(i.to) && i.label.toLowerCase().includes(q)
+        (i) => i.label.toLowerCase().includes(q)
       );
       if (matches.length > 0) out.push({ section, items: matches });
     });
     return out;
-  }, [searchQuery, sections, expertMode]);
+  }, [searchQuery, sections]);
 
   const handleExpandAndOpen = useCallback((sectionId) => {
     if (collapsed) {
@@ -248,7 +253,7 @@ function AppSidebarBody() {
         transition: "width 220ms cubic-bezier(0.16,1,0.3,1)",
         willChange: "width",
       }}
-      className="hidden lg:flex flex-col border-r border-[rgba(15,23,42,0.07)] bg-white h-screen sticky top-0 overflow-hidden shrink-0"
+      className="hidden lg:flex flex-col border-r border-[rgba(15,23,42,0.11)] bg-[#FAFBFC] h-screen sticky top-0 overflow-hidden shrink-0"
     >
       {/* ── Wordmark ─────────────────────────────────────────────────────── */}
       <div
@@ -356,7 +361,6 @@ function AppSidebarBody() {
               pathname={location.pathname}
               sectionFavorites={favorites[section.id] || []}
               onToggleFavorite={(itemTo) => toggleFavorite(section.id, itemTo)}
-              expertMode={expertMode}
             />
           ))
         )}
@@ -393,33 +397,6 @@ function AppSidebarBody() {
             </div>
           )}
         </div>
-
-        <button
-          onClick={toggleExpertMode}
-          title={expertMode ? "Expert Mode: ON — click to show essential navigation only" : "Expert Mode: OFF — click to show advanced tools"}
-          aria-pressed={expertMode}
-          className={`w-full flex items-center gap-2.5 text-[12px] transition-colors duration-100 ${
-            expertMode
-              ? "text-[#0F2847] hover:bg-slate-50"
-              : "text-slate-400 hover:text-slate-700 hover:bg-slate-50"
-          }`}
-          style={{
-            padding: collapsed ? "5px 0" : "5px 14px",
-            justifyContent: collapsed ? "center" : "flex-start",
-          }}
-        >
-          <Cpu size={13} strokeWidth={1.5} />
-          {!collapsed && (
-            <span className="flex-1 text-left">Expert Mode</span>
-          )}
-          {!collapsed && (
-            <span className={`text-[10px] font-mono px-1 rounded ${
-              expertMode ? "bg-[#0F2847] text-white" : "bg-slate-100 text-slate-400"
-            }`}>
-              {expertMode ? "ON" : "OFF"}
-            </span>
-          )}
-        </button>
 
         <button
           onClick={handleLogout}
@@ -462,8 +439,8 @@ const SearchResultGroup = memo(function SearchResultGroup({ section, items, quer
   return (
     <div>
       <div className="flex items-center gap-1.5 px-3.5 pt-3 pb-1">
-        <SectionIcon size={9} strokeWidth={1.5} className="text-slate-300" />
-        <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-slate-300">
+        <SectionIcon size={9} strokeWidth={1.5} className="text-slate-400" />
+        <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-slate-400">
           {section.label}
         </span>
       </div>
@@ -502,7 +479,6 @@ const SidebarSection = memo(function SidebarSection({
   unreadTotal, pathname,
   sectionFavorites,
   onToggleFavorite,
-  expertMode,
 }) {
   const SectionIcon     = section.icon;
   const sectionBodyRef  = useRef(null);
@@ -531,7 +507,7 @@ const SidebarSection = memo(function SidebarSection({
 
   const colorClass = isSectionActive
     ? "text-[#0F2847]"
-    : "text-slate-400 hover:text-slate-700";
+    : "text-slate-500 hover:text-slate-900";
 
   return (
     <div>
@@ -574,7 +550,7 @@ const SidebarSection = memo(function SidebarSection({
             onClick={onToggle}
             aria-expanded={isOpen}
             aria-label={`${isOpen ? "Collapse" : "Expand"} ${section.label}`}
-            className="px-2 py-2.5 hover:bg-slate-50 transition-colors text-slate-300 hover:text-slate-500"
+            className="px-2 py-2.5 hover:bg-slate-50 transition-colors text-slate-400 hover:text-slate-700"
           >
             <ChevronRight
               size={10}
@@ -619,7 +595,7 @@ const SidebarSection = memo(function SidebarSection({
               )}
 
               {section.items
-                .filter((item) => (!item.expertOnly || expertMode) && !item.sidebarHidden)
+                .filter((item) => !item.sidebarHidden)
                 .map((item) =>
                   item._type === "subgroup" ? (
                     <SubGroup
@@ -647,7 +623,7 @@ const SidebarSection = memo(function SidebarSection({
 
 function MiniLabel({ icon, text }) {
   return (
-    <div className="flex items-center gap-1.5 px-3.5 pt-2 pb-0.5 text-slate-300">
+    <div className="flex items-center gap-1.5 px-3.5 pt-2 pb-0.5 text-slate-400">
       {icon}
       <span className="text-[9px] font-semibold uppercase tracking-[0.1em]">{text}</span>
     </div>
@@ -683,9 +659,11 @@ const SubGroup = memo(function SubGroup({ subGroup, pathname }) {
       </div>
 
       <div className="ml-3.5 pl-3 border-l border-slate-100 mb-0.5 mt-0.5">
-        {subGroup.items.map((item) => (
-          <SubGroupItem key={item.to} item={item} />
-        ))}
+        {subGroup.items
+          .filter((item) => !item.sidebarHidden)
+          .map((item) => (
+            <SubGroupItem key={item.to} item={item} />
+          ))}
       </div>
     </div>
   );
@@ -806,7 +784,7 @@ function CreditsWidget({ collapsed }) {
             Credits
           </span>
         </div>
-        <span className="text-[9px] font-mono text-slate-400 capitalize">{state.plan_code}</span>
+        <span className="text-[9px] font-semibold text-slate-500">{state.plan_name || state.plan_code}</span>
       </div>
       <div className="flex items-baseline gap-1 mb-1.5">
         <span className="text-base font-bold text-slate-900 tracking-tight">

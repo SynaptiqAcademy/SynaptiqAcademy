@@ -5,6 +5,10 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null); // null = loading, false = anon, obj = authenticated
+  // Single entitlement source (GET /api/permissions/me): plan, feature gates,
+  // credits, and real institution membership — never derived from user.role,
+  // plan_code, or institution_verified on their own. null while loading/anon.
+  const [entitlements, setEntitlements] = useState(null);
 
   // On app load: restore session and fetch CSRF token
   useEffect(() => {
@@ -47,6 +51,21 @@ export function AuthProvider({ children }) {
 
     return () => { mounted = false; };
   }, []);
+
+  // Load the entitlement summary once per authenticated session (and again on
+  // any explicit user refresh) — never on every render, and never guessed
+  // client-side from user.role/plan_code/institution_verified.
+  useEffect(() => {
+    let mounted = true;
+    if (!user || typeof user !== "object") {
+      setEntitlements(null);
+      return;
+    }
+    api.get("/permissions/me")
+      .then((r) => { if (mounted) setEntitlements(r.data); })
+      .catch(() => { if (mounted) setEntitlements(null); });
+    return () => { mounted = false; };
+  }, [user]);
 
   // Handle session expiry events (from axios interceptor)
   useEffect(() => {
@@ -137,7 +156,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, mfaVerify, register, logout, refreshMe }}>
+    <AuthContext.Provider value={{ user, setUser, login, mfaVerify, register, logout, refreshMe, entitlements }}>
       {children}
     </AuthContext.Provider>
   );

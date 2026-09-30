@@ -90,7 +90,7 @@ export const NAV_SECTIONS = {
         icon: Brain,
         sidebarHidden: true,
         items: [
-          { to: "/sie",                 label: "Command Center",      icon: Command,       testid: null, exact: true },
+          { to: "/sie",                 label: "Planner Home",        icon: Command,       testid: null, exact: true },
           { to: "/sie/goals",           label: "Research Goals",      icon: Target,        testid: null },
           { to: "/sie/missions",        label: "Research Missions",   icon: CheckSquare,   testid: null },
           { to: "/sie/planning",        label: "Research Roadmaps",   icon: BookMarked,    testid: null },
@@ -125,7 +125,6 @@ export const NAV_SECTIONS = {
         id: "advanced-research",
         label: "Advanced Tools",
         icon: Cpu,
-        expertOnly: true,
         sidebarHidden: true,
         items: [
           { to: "/akg/explorer",        label: "Graph Explorer",      icon: Map,        testid: null },
@@ -174,20 +173,29 @@ export const NAV_SECTIONS = {
       // Secondary — reachable via the sidebar filter / ⌘K, not shown by default
       { to: "/publication-hub",    label: "Publication Hub",      icon: Layers,         testid: TID.navPublicationHub, sidebarHidden: true },
       { to: "/citation-monitoring",label: "Citation Monitoring",  icon: Eye,            testid: TID.navCitationMonitoring, sidebarHidden: true },
-      // Impact subgroup
+      // Impact subgroup — consolidated (§13). "Research Impact" and "Impact
+      // Dashboard" are two separately-named entries for the same concept;
+      // Impact Dashboard is kept as the one visible umbrella. Leaderboards is
+      // removed from primary nav (§14 — prestige-bias/gamification risk, not
+      // deleted, still reachable via ⌘K/direct URL). Verification is removed
+      // from here too (§16 — Trust & Verification, under the avatar menu, is
+      // the one canonical verification destination; having a second
+      // "Verification" entry here duplicated that concept). None of the
+      // underlying routes/pages were deleted — only what's separately listed
+      // in the sidebar changed.
       {
         _type: "subgroup",
         id: "pub-impact",
         label: "Impact",
         icon: TrendingUp,
         items: [
-          { to: "/research-impact",  label: "Research Impact", icon: Activity,  testid: TID.navResearchImpact },
           { to: "/impact-dashboard", label: "Impact Dashboard",icon: TrendingUp, testid: null },
           { to: "/citations",        label: "Citations",       icon: Link2,      testid: TID.navCitations },
           { to: "/analytics",        label: "Analytics",       icon: BarChart3,  testid: TID.navAnalytics },
-          { to: "/leaderboards",     label: "Leaderboards",    icon: Trophy,     testid: null },
           { to: "/reputation",       label: "Reputation",      icon: Award,      testid: null },
-          { to: "/verification",     label: "Verification",    icon: ShieldCheck,testid: null },
+          { to: "/research-impact",  label: "Research Impact", icon: Activity,  testid: TID.navResearchImpact, sidebarHidden: true },
+          { to: "/leaderboards",     label: "Leaderboards",    icon: Trophy,     testid: null, sidebarHidden: true },
+          { to: "/verification",     label: "Verification",    icon: ShieldCheck,testid: null, sidebarHidden: true },
         ],
       },
     ],
@@ -250,7 +258,7 @@ export const NAV_SECTIONS = {
   // ── Academic Network ──────────────────────────────────────────────────────
   network: {
     id: "network",
-    label: "Academic Network",
+    label: "Network",
     icon: Users2,
     items: [
       // Visible
@@ -355,14 +363,16 @@ export const NAV_SECTIONS = {
       { to: "/institution-platform/faculty", label: "Faculty",               icon: Users,         testid: null },
       { to: "/institution/departments",      label: "Departments",           icon: School,        testid: TID.navDepartments },
       { to: "/institution/analytics",        label: "Analytics",             icon: BarChart3,     testid: null },
-      { to: "/institution-platform",         label: "Administration",        icon: LayoutDashboard, testid: null, exact: true },
+      // Admin-only (§26) — filtered out for plain institution members by
+      // Sidebar.jsx/MobileDrawer.jsx using real institution_memberships role
+      // data (entitlements.institution.is_admin), never user.role alone.
+      { to: "/institution-platform",         label: "Administration",        icon: LayoutDashboard, testid: null, exact: true, adminOnly: true },
       { to: "/institution-leaderboards",     label: "Rankings",              icon: Trophy,        testid: null, sidebarHidden: true },
       {
         _type: "subgroup",
         id: "institution-intel",
         label: "Executive Intelligence",
         icon: LayoutDashboard,
-        expertOnly: true,
         sidebarHidden: true,
         items: [
           { to: "/institution-platform/health",         label: "Institution Health",       icon: Activity,       testid: null },

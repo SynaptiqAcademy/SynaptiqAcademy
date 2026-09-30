@@ -102,6 +102,7 @@ async def ensure_user_credits(user_id: str) -> dict:
     pack = user.get("credits_pack_balance", 0)
     return {
         "plan_code": user.get("plan_code", "free"),
+        "plan_name": get_plan(user.get("plan_code", "free")).get("name", "Free"),
         "balance": monthly + pack,
         "monthly_balance": monthly,
         "pack_balance": pack,

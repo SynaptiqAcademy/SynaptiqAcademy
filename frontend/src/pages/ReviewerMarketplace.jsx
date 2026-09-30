@@ -192,7 +192,7 @@ export default function ReviewerMarketplace() {
         { label: "Reviewers",     value: total > 0 ? `${total}+` : "—" },
         { label: "Available now", value: availableCount > 0 ? `${availableCount}` : "—" },
         { label: "Countries",     value: "Global" },
-        { label: "Integrity",     value: "Guaranteed" },
+        { label: "Reviews",       value: "Conflict-aware" },
       ]}
       sidebar={<ReviewerMarketplaceSidebar myProfile={myProfile} compareList={compareList} />}
       actions={

@@ -458,7 +458,7 @@ function SearchTrigger({ onOpen }) {
         textOverflow: "ellipsis",
         color: TEXT_MUTED,
       }}>
-        Search or jump to…
+        Jump to a page…
       </span>
       <kbd style={{
         fontSize: 10,

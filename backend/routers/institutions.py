@@ -50,6 +50,7 @@ from auth_utils import get_current_user, JWT_ALGORITHM
 from db import get_db
 from rate_limit import limiter, AUTH_RATE
 from services.institutions import analytics as A
+from services.permissions import require_institution_member
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 from zt.deps import zt_check, zt_is_admin, zt_is_super_admin
@@ -892,30 +893,40 @@ async def unit_members(uid: str, payload: UnitMembershipIn,
 
 
 # ============================= ANALYTICS ====================================
+# Every analytics route requires real, approved membership in THIS institution
+# (or a platform admin) — previously these only required generic login, which
+# let any authenticated user pull any institution's analytics by iid (IDOR).
 @router.get("/api/institutions/{iid}/analytics")
 async def analytics_overview(iid: str, user: dict = Depends(get_current_user)):
+    await require_institution_member(iid, user)
     return await A.institution_overview(iid)
 
 @router.get("/api/institutions/{iid}/analytics/publications")
 async def analytics_publications(iid: str, user: dict = Depends(get_current_user)):
+    await require_institution_member(iid, user)
     return await A.publications_breakdown(iid)
 
 @router.get("/api/institutions/{iid}/analytics/collaboration")
 async def analytics_collaboration(iid: str, user: dict = Depends(get_current_user)):
+    await require_institution_member(iid, user)
     return await A.collaboration_breakdown(iid)
 
 @router.get("/api/institutions/{iid}/analytics/funding")
 async def analytics_funding(iid: str, user: dict = Depends(get_current_user)):
+    await require_institution_member(iid, user)
     return await A.funding_breakdown(iid)
 
 @router.get("/api/institutions/{iid}/analytics/reputation")
 async def analytics_reputation(iid: str, user: dict = Depends(get_current_user)):
+    await require_institution_member(iid, user)
     return await A.reputation_top(iid)
 
 @router.get("/api/institutions/{iid}/analytics/marketplace")
 async def analytics_marketplace(iid: str, user: dict = Depends(get_current_user)):
+    await require_institution_member(iid, user)
     return await A.marketplace_activity(iid)
 
 @router.get("/api/institutions/{iid}/analytics/health")
 async def analytics_health(iid: str, user: dict = Depends(get_current_user)):
+    await require_institution_member(iid, user)
     return await A.research_health(iid)

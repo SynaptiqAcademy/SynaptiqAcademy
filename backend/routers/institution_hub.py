@@ -49,6 +49,10 @@ from db import get_db
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 from zt.deps import zt_check, zt_is_admin, zt_is_super_admin
+from services.permissions import (
+    require_institution_member as _require_institution_member,
+    require_institution_admin as _require_institution_admin_canonical,
+)
 
 log = logging.getLogger("synaptiq.institution_hub")
 
@@ -89,20 +93,15 @@ def _require_platform_admin(user: dict) -> None:
 
 
 async def _require_institution_admin(iid: str, user: dict) -> None:
-    """Raise 403 unless user is institution owner/admin or platform admin."""
-    if zt_is_admin(user):
-        return
-    db = get_db()
-    db = DBProxy(db, SecurityContext.from_user(user))
+    """Raise 403 unless user is institution owner/admin or platform admin.
 
-    membership = await db.institution_memberships.find_one({
-        "institution_id": iid,
-        "user_id": user["id"],
-        "role": {"$in": ["owner", "admin"]},
-        "status": "active",
-    })
-    if not membership:
-        raise HTTPException(status_code=403, detail="Institution admin access required")
+    Delegates to the canonical services.permissions check, which uses the
+    real membership status value ("approved") — this used to query
+    status="active", a value institution_memberships never actually has, so
+    every real institution admin was locked out of their own admin console
+    (only the zt_is_admin platform-admin bypass ever worked).
+    """
+    await _require_institution_admin_canonical(iid, user)
 
 
 async def _get_institution_or_404(iid: str):
@@ -203,7 +202,7 @@ async def list_institutions(
     for inst in institutions_raw:
         iid_str = str(inst["_id"])
         member_count = await db.institution_memberships.count_documents(
-            {"institution_id": iid_str, "status": "active"}
+            {"institution_id": iid_str, "status": "approved"}
         )
         verification_doc = await db.institution_verifications.find_one(
             {"institution_id": iid_str},
@@ -252,7 +251,7 @@ async def get_public_profile(iid: str):
     db = DBProxy(db, SecurityContext.system())
 
     member_count = await db.institution_memberships.count_documents(
-        {"institution_id": iid, "status": "active"}
+        {"institution_id": iid, "status": "approved"}
     )
     publication_count = await db.publications.count_documents(
         {"institution_id": iid}
@@ -264,7 +263,7 @@ async def get_public_profile(iid: str):
 
     # Top research areas: aggregate from member users
     member_user_ids_cursor = db.institution_memberships.find(
-        {"institution_id": iid, "status": "active"}, {"user_id": 1}
+        {"institution_id": iid, "status": "approved"}, {"user_id": 1}
     )
     member_user_ids_raw = await member_user_ids_cursor.to_list(length=500)
     member_user_ids = [m["user_id"] for m in member_user_ids_raw if m.get("user_id")]
@@ -307,6 +306,7 @@ async def get_impact(
         raise HTTPException(status_code=503, detail="Institution Hub services not available")
 
     await _get_institution_or_404(iid)
+    await _require_institution_member(iid, user)
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
@@ -333,6 +333,7 @@ async def get_publications(
         raise HTTPException(status_code=503, detail="Institution Hub services not available")
 
     await _get_institution_or_404(iid)
+    await _require_institution_member(iid, user)
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
@@ -362,6 +363,7 @@ async def get_grants(
         raise HTTPException(status_code=503, detail="Institution Hub services not available")
 
     await _get_institution_or_404(iid)
+    await _require_institution_member(iid, user)
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
@@ -384,6 +386,7 @@ async def get_research_directory(
         raise HTTPException(status_code=503, detail="Institution Hub services not available")
 
     await _get_institution_or_404(iid)
+    await _require_institution_member(iid, user)
     db = get_db()
 
     db = DBProxy(db, SecurityContext.from_user(user))
@@ -391,7 +394,7 @@ async def get_research_directory(
     top_researchers_task = get_top_researchers_in_institution(iid, db, limit=100)
 
     memberships_cursor = db.institution_memberships.find(
-        {"institution_id": iid, "status": "active"},
+        {"institution_id": iid, "status": "approved"},
         {"user_id": 1, "role": 1, "joined_at": 1}
     )
     memberships_raw = await memberships_cursor.to_list(length=1000)
@@ -436,6 +439,7 @@ async def get_internal_leaderboard(
         raise HTTPException(status_code=503, detail="Institution Hub services not available")
 
     await _get_institution_or_404(iid)
+    await _require_institution_member(iid, user)
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
@@ -455,6 +459,7 @@ async def get_unit_rankings(
         raise HTTPException(status_code=503, detail="Institution Hub services not available")
 
     await _get_institution_or_404(iid)
+    await _require_institution_member(iid, user)
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
@@ -478,6 +483,7 @@ async def get_recommendations(
         raise HTTPException(status_code=503, detail="Institution Hub services not available")
 
     await _get_institution_or_404(iid)
+    await _require_institution_member(iid, user)
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
@@ -500,6 +506,7 @@ async def get_timeline(
 ):
     """Institution activity timeline — last 50 audit events sorted by created_at desc."""
     await _get_institution_or_404(iid)
+    await _require_institution_member(iid, user)
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
@@ -518,13 +525,14 @@ async def get_collaboration_hub(
 ):
     """Active collaborations involving institution members."""
     await _get_institution_or_404(iid)
+    await _require_institution_member(iid, user)
     db = get_db()
 
     db = DBProxy(db, SecurityContext.from_user(user))
 
     # Gather member user IDs
     memberships_cursor = db.institution_memberships.find(
-        {"institution_id": iid, "status": "active"}, {"user_id": 1}
+        {"institution_id": iid, "status": "approved"}, {"user_id": 1}
     )
     memberships_raw = await memberships_cursor.to_list(length=1000)
     member_user_ids = [m["user_id"] for m in memberships_raw if m.get("user_id")]
@@ -558,6 +566,7 @@ async def get_verification_status_endpoint(
         raise HTTPException(status_code=503, detail="Institution Hub services not available")
 
     await _get_institution_or_404(iid)
+    await _require_institution_member(iid, user)
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
@@ -578,6 +587,7 @@ async def submit_verification_request(
         raise HTTPException(status_code=503, detail="Institution Hub services not available")
 
     await _get_institution_or_404(iid)
+    await _require_institution_member(iid, user)
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
@@ -602,7 +612,7 @@ async def admin_overview(
     db = DBProxy(db, SecurityContext.from_user(user))
 
     member_count, pending_count, publication_count, grant_count = await asyncio.gather(
-        db.institution_memberships.count_documents({"institution_id": iid, "status": "active"}),
+        db.institution_memberships.count_documents({"institution_id": iid, "status": "approved"}),
         db.institution_memberships.count_documents({"institution_id": iid, "status": "pending"}),
         db.publications.count_documents({"institution_id": iid}),
         db.grants.count_documents({"institution_id": iid}),
@@ -610,7 +620,7 @@ async def admin_overview(
 
     # Recent joins (last 5)
     recent_cursor = db.institution_memberships.find(
-        {"institution_id": iid, "status": "active"},
+        {"institution_id": iid, "status": "approved"},
         {"user_id": 1, "role": 1, "joined_at": 1}
     ).sort("joined_at", -1).limit(5)
     recent_joins = await recent_cursor.to_list(length=5)
@@ -782,7 +792,7 @@ async def admin_export(
     db = DBProxy(db, SecurityContext.from_user(user))
 
     member_count, publication_count, grant_count = await asyncio.gather(
-        db.institution_memberships.count_documents({"institution_id": iid, "status": "active"}),
+        db.institution_memberships.count_documents({"institution_id": iid, "status": "approved"}),
         db.publications.count_documents({"institution_id": iid}),
         db.grants.count_documents({"institution_id": iid}),
     )
@@ -792,7 +802,7 @@ async def admin_export(
     )
 
     members_cursor = db.institution_memberships.find(
-        {"institution_id": iid, "status": "active"},
+        {"institution_id": iid, "status": "approved"},
         {"user_id": 1, "role": 1, "joined_at": 1, "email": 1}
     )
     members_raw = await members_cursor.to_list(length=5000)
@@ -833,7 +843,7 @@ async def platform_admin_all_institutions(
     for inst in institutions_raw:
         iid_str = str(inst["_id"])
         member_count, verification_doc, impact_doc = await asyncio.gather(
-            db.institution_memberships.count_documents({"institution_id": iid_str, "status": "active"}),
+            db.institution_memberships.count_documents({"institution_id": iid_str, "status": "approved"}),
             db.institution_verifications.find_one(
                 {"institution_id": iid_str}, {"verification_level": 1, "verified_at": 1}
             ),

@@ -104,7 +104,7 @@ export default function CommandPalette({ open, onClose }) {
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); }}
             onKeyDown={handleKeyDown}
-            placeholder="Search pages, start a workflow, or ask AI…"
+            placeholder="Search pages or start a workflow…"
             className="flex-1 text-[14px] text-slate-900 placeholder:text-slate-400 bg-transparent outline-none"
             aria-label="Command search"
             autoComplete="off"

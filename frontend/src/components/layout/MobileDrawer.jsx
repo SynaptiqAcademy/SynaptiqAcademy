@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import {
   X, Sparkles, User, LogOut, BrainCircuit, ChevronRight,
@@ -173,16 +173,18 @@ function DrawerSubGroup({ subGroup, onClose, pathname }) {
         <span className="text-[12px] font-medium">{subGroup.label}</span>
       </div>
 
-      {subGroup.items.map((item) => (
-        <DrawerSubItem
-          key={item.to}
-          to={item.to}
-          label={item.label}
-          icon={item.icon}
-          exact={item.exact}
-          onClick={onClose}
-        />
-      ))}
+      {subGroup.items
+        .filter((item) => !item.sidebarHidden)
+        .map((item) => (
+          <DrawerSubItem
+            key={item.to}
+            to={item.to}
+            label={item.label}
+            icon={item.icon}
+            exact={item.exact}
+            onClick={onClose}
+          />
+        ))}
     </div>
   );
 }
@@ -213,7 +215,7 @@ function CreditsWidget({ onClose }) {
           <Sparkles size={11} strokeWidth={1.5} className="text-[#0F2847]" />
           <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">Credits</span>
         </div>
-        <span className="text-xs font-mono text-slate-500 capitalize">{state.plan_code}</span>
+        <span className="text-xs font-semibold text-slate-600">{state.plan_name || state.plan_code}</span>
       </div>
       <div className="mt-2 flex items-baseline gap-1">
         <span className="font-serif text-xl text-slate-900">{state.balance}</span>
@@ -229,17 +231,36 @@ function CreditsWidget({ onClose }) {
 // ─── Main Drawer ──────────────────────────────────────────────────────────────
 
 export default function MobileDrawer({ open, onClose }) {
-  const { user, logout } = useAuth();
+  const { user, logout, entitlements } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { total: msgUnread } = useUnread();
   const panelRef = useRef(null);
 
-  const dashboardMode   = getDashboardMode(user);
-  const showInstitution = ["institution_admin", "admin", "super_admin"].includes(user?.role);
+  const dashboardMode = getDashboardMode(user);
+  // Real institution membership only — see components/ds/Sidebar.jsx for the
+  // same rule on desktop (kept in sync intentionally, not duplicated logic).
+  const isInstitutionMember = !!entitlements?.institution?.is_member;
+  const isInstitutionAdmin  = !!entitlements?.institution?.is_admin;
+  const isPlatformStaff     = ["admin", "super_admin"].includes(user?.role) || !!entitlements?.is_super_admin;
+  const showInstitution     = isInstitutionMember || isPlatformStaff;
   const showAdmin       = Boolean(user?.is_super_admin);
+  // Kept in sync with components/ds/Sidebar.jsx — see its comment for why
+  // this also checks the legacy institution_admin role.
+  const canSeeInstitutionAdminItems =
+    isInstitutionAdmin || isPlatformStaff || user?.role === "institution_admin";
 
-  const sections = getOrderedSections(dashboardMode, showInstitution);
+  const sections = useMemo(() => {
+    const ordered = getOrderedSections(dashboardMode, showInstitution);
+    if (!canSeeInstitutionAdminItems) {
+      return ordered.map((section) =>
+        section.id !== "institution"
+          ? section
+          : { ...section, items: section.items.filter((item) => !item.adminOnly) }
+      );
+    }
+    return ordered;
+  }, [dashboardMode, showInstitution, canSeeInstitutionAdminItems]);
 
   // ── Single open section (same accordion behavior as desktop) ─────────────
   const [openSection, setOpenSection] = useState(() => {

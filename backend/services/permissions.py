@@ -348,6 +348,79 @@ async def check_discovery_quota(user: dict, kind: str) -> None:
         )
 
 
+# ---------------------------- institution membership ----------------------------
+# Canonical institution-access check. Institution access is granted ONLY by a
+# real, approved row in institution_memberships — never by plan_code (an
+# individual can self-purchase the "institution" plan tier without joining any
+# real organization), institution_verified, ORCID affiliation, or
+# professional_role. Every institution-scoped route should call one of these
+# instead of hand-rolling its own membership query.
+
+async def get_institution_membership(institution_id: str, user: dict) -> dict | None:
+    """The caller's own approved institution_memberships row, or None."""
+    db = get_db()
+    db = DBProxy(db, SecurityContext.from_user(user))
+    return await db.institution_memberships.find_one({
+        "institution_id": institution_id,
+        "user_id": user.get("id"),
+        "status": "approved",
+    })
+
+
+async def require_institution_member(institution_id: str, user: dict) -> dict:
+    """Raise 403 unless the user has real, approved membership in this
+    institution (platform admin/super_admin bypass). Returns the membership
+    row (or a synthetic platform-admin marker)."""
+    from zt.deps import zt_is_admin
+    if zt_is_admin(user):
+        return {"role": "platform_admin", "status": "approved"}
+    m = await get_institution_membership(institution_id, user)
+    if not m:
+        raise HTTPException(status_code=403, detail="Not a member of this institution")
+    return m
+
+
+async def require_institution_admin(institution_id: str, user: dict) -> dict:
+    """Raise 403 unless the user is an owner/admin of this institution (or a
+    platform admin)."""
+    m = await require_institution_member(institution_id, user)
+    if m.get("role") == "platform_admin":
+        return m
+    if m.get("role") not in ("owner", "admin"):
+        raise HTTPException(status_code=403, detail="Institution admin access required")
+    return m
+
+
+async def get_my_institution_context(user: dict) -> dict:
+    """The single source of truth the frontend uses to decide whether to show
+    the Institution navigation section at all — real approved membership only,
+    never plan/verification/affiliation/role heuristics."""
+    db = get_db()
+    db = DBProxy(db, SecurityContext.from_user(user))
+    m = await db.institution_memberships.find_one(
+        {"user_id": user.get("id"), "status": "approved"},
+        sort=[("joined_at", 1)],
+    )
+    if not m:
+        return {"is_member": False}
+    inst = await db.institutions.find_one({"_id": _to_object_id(m["institution_id"])}, {"name": 1})
+    return {
+        "is_member": True,
+        "institution_id": m["institution_id"],
+        "institution_name": (inst or {}).get("name", ""),
+        "role": m.get("role"),
+        "is_admin": m.get("role") in ("owner", "admin"),
+    }
+
+
+def _to_object_id(value: str):
+    from bson import ObjectId
+    try:
+        return ObjectId(value)
+    except Exception:
+        return value
+
+
 # ---------------------------- introspection endpoint helper ----------------------------
 
 async def access_summary(user: dict) -> dict:
@@ -355,11 +428,14 @@ async def access_summary(user: dict) -> dict:
     plan_code = user.get("plan_code") or "free"
     state = await ensure_user_credits(user["id"])
     features = {f: has_plan_at_least(user, m, feature=f) for f, m in FEATURE_MIN_PLAN.items()}
+    institution = await get_my_institution_context(user)
     return {
         "is_super_admin": is_super_admin(user),
         "plan": plan_code,
+        "plan_name": get_plan(plan_code).get("name", plan_code),
         "subscription_status": user.get("subscription_status") or ("active" if plan_code == "free" else None),
         "features": features,
         "quotas": PLAN_QUOTAS.get(plan_code, {}),
         "credits": state,
+        "institution": institution,
     }

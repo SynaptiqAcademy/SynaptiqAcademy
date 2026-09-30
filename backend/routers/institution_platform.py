@@ -54,9 +54,27 @@ def _require_admin(user: dict):
 
 
 def _get_institution(user: dict, institution: Optional[str]) -> str:
+    """Resolve which institution's IIP dashboards this request is scoped to.
+
+    Only a super_admin may override via the ?institution= query param — a
+    non-super-admin institution_admin/admin used to fall through to that same
+    client-supplied param whenever their own profile `institution` string was
+    empty, which would let them view any institution's IIP data just by
+    passing its name. Non-super-admins are now scoped strictly to their own
+    profile `institution` string, never the query param.
+
+    Known remaining limitation (not fixed here — out of scope for this
+    navigation/entitlements pass): this still trusts the free-text, user-
+    editable `users.institution` field rather than the real
+    institution_memberships table, so a user holding the platform-wide
+    institution_admin/admin role can still self-edit their profile's
+    institution string to view a different institution's IIP dashboards.
+    Fixing that properly means rewiring services/iip/* to institution_id,
+    a larger change flagged for a follow-up phase.
+    """
     if zt_is_super_admin(user) and institution:
         return institution
-    return user.get("institution") or institution or ""
+    return user.get("institution") or ""
 
 
 def _require_institution(institution: str):
