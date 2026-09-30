@@ -14,6 +14,7 @@
  * for the evidence block.
  */
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "@/lib/api";
 import { NAVY, TEXT_SECONDARY, TEXT_MUTED, BRD } from "@/lib/tokens";
 import { Card, Button, Input, Checkbox, EmptyState, LoadingOverlay } from "@/components/ds";
@@ -91,6 +92,7 @@ function CoverageMap({ coverage }) {
 }
 
 export default function ResearchNeedPanel() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [cost, setCost] = useState(null);
   const [interpreting, setInterpreting] = useState(false);
@@ -107,6 +109,21 @@ export default function ResearchNeedPanel() {
   const [includeMethods, setIncludeMethods] = useState(true);
   const [prioritize, setPrioritize] = useState("");
   const [inviteTarget, setInviteTarget] = useState(null); // person object, or null when closed
+  const [buildingTeam, setBuildingTeam] = useState(false);
+
+  const buildTeam = async (useAi) => {
+    if (!need) return;
+    setBuildingTeam(true);
+    setError("");
+    try {
+      const r = await api.post("/team-builder/blueprints", { need, use_ai: useAi });
+      navigate(`/team-builder/${r.data.blueprint.id}`);
+    } catch (e) {
+      setError(e?.response?.data?.detail || "Could not start the team builder. Please try again.");
+    } finally {
+      setBuildingTeam(false);
+    }
+  };
 
   useEffect(() => {
     api.get("/research-need/cost").then((r) => setCost(r.data.cost)).catch(() => setCost(null));
@@ -221,9 +238,17 @@ export default function ResearchNeedPanel() {
             <Checkbox label="Include methods specialists" checked={includeMethods} onChange={(e) => setIncludeMethods(e.target.checked)} />
           </div>
 
-          <Button type="button" variant="primary" onClick={runMatch} disabled={matching} style={{ marginTop: 6 }}>
-            {matching ? "Searching…" : "Find relevant collaborators"}
-          </Button>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginTop: 6 }}>
+            <Button type="button" variant="primary" onClick={runMatch} disabled={matching}>
+              {matching ? "Searching…" : "Find relevant collaborators"}
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => buildTeam(true)} disabled={buildingTeam}>
+              {buildingTeam ? "Preparing…" : "Build interdisciplinary team"}
+            </Button>
+          </div>
+          <p style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 6, marginBottom: 0 }}>
+            See which expertise your research may require and explore Synaptiq members who could contribute.
+          </p>
         </div>
       )}
 

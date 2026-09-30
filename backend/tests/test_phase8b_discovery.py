@@ -182,7 +182,12 @@ class TestExtendedDiscoveryFilters:
             uid_auth = await _insert_user(raw.db, f"OrcidFilter Auth {suffix}",
                                            orcid={"orcid_id": "0000-0001-1111-1111"})
             uid_self = await _insert_user(raw.db, f"OrcidFilter Self {suffix}", orcid="0000-0002-2222-2222")
-            result = await search_people(raw.db, {"orcid_verified": True}, viewer_id=None)
+            # Scoped by q — without it, this relies on both fixtures landing
+            # within the default page size (20) of an unfiltered
+            # orcid_verified=True query, which a shared, growing local test
+            # DB (accumulated fixtures from many other test files/runs) can
+            # no longer guarantee.
+            result = await search_people(raw.db, {"orcid_verified": True, "q": suffix}, viewer_id=None)
             ids = {r["id"] for r in result["results"]}
             assert uid_auth in ids
             assert uid_self not in ids

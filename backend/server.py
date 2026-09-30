@@ -118,6 +118,7 @@ from routers import (
     sie as sie_router,
     network as network_router,
     research_need as research_need_router,
+    team_builder as team_builder_router,
     acad_market as acad_market_router,
     akg as akg_router,
     proactive as proactive_router,
@@ -446,6 +447,7 @@ app.include_router(institution_platform_router.admin_router)
 app.include_router(sie_router.router)
 app.include_router(network_router.router)
 app.include_router(research_need_router.router)
+app.include_router(team_builder_router.router)
 app.include_router(acad_market_router.router)
 app.include_router(acad_market_router.admin_router)
 app.include_router(akg_router.router)
@@ -1514,6 +1516,21 @@ async def startup():
                 partialFilterExpression={"status": "pending"},
                 name="unique_pending_collaboration_request",
             )
+            # P1 Phase 8F — this blanket unique index on
+            # collaboration_requests(sender_id, receiver_id) for
+            # status=pending directly contradicts Phase 8E/8F's
+            # context-scoped duplicate protection (routers/
+            # collaboration_requests.py's send_request(): the same two
+            # people may legitimately have separate simultaneous pending
+            # requests for different projects/research-need topics, e.g.
+            # Team Builder inviting the same person to two different
+            # roles/needs). The application-level check there is now the
+            # sole enforcement — drop the stale DB-level constraint so it
+            # can't silently reject a legitimate second invitation.
+            try:
+                await db.collaboration_requests.drop_index("unique_pending_collaboration_request")
+            except Exception:
+                pass  # already absent (fresh env, or already dropped by a prior run)
             # Subscriptions for active-subscription lookups
             await db.subscriptions.create_index([("user_id", 1), ("current_period_end", -1)])
             # User research goals (impact dashboard)

@@ -225,6 +225,7 @@ CREDIT_COSTS = {
     "ai_grant_matching":          5,
     "ai_abstract_generator":      5,
     "research_need_interpret":   5,   # Phase 8C — one structured extraction call; retrieval/matching stays free
+    "team_blueprint_generate":   5,   # Phase 8F — one structured role-breakdown call; candidate retrieval/selection/invitation stays free
 
     # Lightweight assistants
     "ai_research_assistant":      2,

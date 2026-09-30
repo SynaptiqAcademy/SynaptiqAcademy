@@ -196,6 +196,7 @@ const GrantOpportunityWorkspace  = lazy(() => import("@/pages/GrantOpportunityWo
 const ResearcherProfile          = lazy(() => import("@/pages/ResearcherProfile"));
 const Researchers                = lazy(() => import("@/pages/Researchers"));
 const ResearchExperts            = lazy(() => import("@/pages/ResearchExperts"));
+const TeamBuilder                = lazy(() => import("@/pages/TeamBuilder"));
 const ReviewerMarketplace        = lazy(() => import("@/pages/ReviewerMarketplace"));
 const ReviewWorkspace            = lazy(() => import("@/pages/ReviewWorkspace"));
 const InstitutionAnalyticsCenter = lazy(() => import("@/pages/InstitutionAnalyticsCenter"));
@@ -545,6 +546,7 @@ function App() {
                   privacy-consistent endpoint per the Phase 8A audit) is left
                   in place but unrouted rather than deleted. */}
               <Route path="/researchers" element={<Protected><ResearchExperts /></Protected>} />
+              <Route path="/team-builder/:id" element={<Protected><TeamBuilder /></Protected>} />
               {/* Phase XXVII — Reviewer Marketplace */}
               <Route path="/reviewer-marketplace" element={<Protected><ReviewerMarketplace /></Protected>} />
               <Route path="/review-workspace/:id" element={<Protected><ReviewWorkspace /></Protected>} />
