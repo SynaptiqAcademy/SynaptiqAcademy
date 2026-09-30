@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import MarketingLayout from "../components/layout/MarketingLayout";
+import ResearchPreviewDemo from "../components/marketing/ResearchPreviewDemo";
 import {
   ArrowRight, Users, FileText, Globe, Shield, BarChart3, Sparkles,
   CheckCircle2, Building2, Zap, FlaskConical, BrainCircuit, Target,
@@ -470,11 +471,21 @@ const PRICING_TIERS = [
 
 const FAQ = [
   { q: "What is Synaptiq?", a: "Synaptiq is a research collaboration platform. It connects researcher identity, expert discovery, collaboration, project workspaces, AI-assisted research tools, and publication workflows into one environment — built for the full academic lifecycle." },
-  { q: "Who is Synaptiq for?", a: "Synaptiq supports undergraduate students, PhD candidates, postdoctoral researchers, professors, educators, research offices, and industry professionals. The platform adapts to your role." },
-  { q: "How does collaboration work?", a: "Post an open collaboration with your requirements. Other researchers apply with a pitch. You accept, and a shared workspace is automatically created with literature, tasks, milestones, and manuscript." },
-  { q: "Is ORCID supported?", a: "Yes. Link your ORCID iD and your public publications sync automatically via the ORCID API." },
+  { q: "Who is Synaptiq for?", a: "Researchers, doctoral candidates, educators, health and scientific professionals, policy and public-sector experts, and interdisciplinary collaborators. The platform adapts to how you use it, not to a fixed role." },
+  { q: "Can I use Synaptiq without ORCID?", a: "Yes. ORCID is optional — connecting it strengthens your research record with synced publications, but you can create a full profile and use Synaptiq without it." },
+  { q: "What is Academic Passport?", a: "Academic Passport is your structured research identity: research areas and interests, methods, professional expertise, institution affiliation, ORCID connection, research record, and collaboration preferences. Different elements have different verification states — it isn't marketed as universally \"verified.\"" },
+  { q: "What does \"verified\" mean on Synaptiq?", a: "It depends on the specific badge. ORCID connection confirms you control that ORCID account. Institution verification confirms an affiliation claim, typically via an institutional email or admin approval. Neither verifies a professional license or credential — see below." },
+  { q: "Can I use Synaptiq if my university doesn't subscribe?", a: "Yes. An individual account (Free or Pro) works independently of any institutional subscription. Institutional features are separate and only apply to verified members of a Synaptiq institution." },
+  { q: "What's the difference between Pro and Institutional?", a: "Pro is an individual subscription for one person's research, collaboration, and teaching work. Institutional is an organization product — it provisions a shared institution workspace with member management and departments for a university or research organization. Buying Pro never grants institutional access, and institutional membership isn't purchased on an individual account." },
+  { q: "Does Pro include Teaching?", a: "Yes. Teaching tools (lesson planner, assessment builder, teaching workspace) are included from the Researcher tier up — Teaching doesn't require an Institutional plan." },
+  { q: "What uses AI credits?", a: "AI-assisted actions — literature review, manuscript review, statistical review, research design advice, gap detection, journal/conference/grant matching, and similar — have a fixed, documented credit cost. Discovering people, creating your profile, and sending collaboration requests never use credits." },
+  { q: "Does finding or collaborating with people use AI credits?", a: "No. Discovery, viewing profiles, and sending or responding to collaboration requests are always free — only the optional AI-assisted steps (like interpreting a research question with AI) can cost credits, and the cost is shown before you commit to it." },
+  { q: "Can Synaptiq guarantee publication or funding?", a: "No. Synaptiq can help you find relevant people, methods, and opportunities, but it doesn't and can't guarantee publication acceptance, peer-review outcomes, or funding success." },
+  { q: "Does Synaptiq verify professional licenses or credentials?", a: "No. Synaptiq doesn't independently verify professional licensure (e.g., that someone is a licensed physician or lawyer). ORCID and institution verification confirm specific, narrower claims — see \"What does verified mean\" above." },
+  { q: "How does collaboration work?", a: "Post an open collaboration with your requirements, or send a direct collaboration request to someone you've discovered. The other person reviews and accepts — nothing is sent on your behalf without your approval, and acceptance creates a shared workspace." },
   { q: "How is research data protected?", a: "All data is encrypted in transit (TLS 1.2+) and at rest. Authentication uses httpOnly cookies and bcrypt. We are GDPR-aligned and never sell user data." },
-  { q: "Can universities use Synaptiq?", a: "Yes. The Institution plan includes 25 seats, institutional analytics, department management, and dedicated support." },
+  { q: "Can I cancel Pro?", a: "Yes, any time from your account settings. You keep access until the end of your current billing period, then your plan reverts to Free." },
+  { q: "What happens to my work if I cancel or downgrade?", a: "Nothing is deleted. Your projects, workspaces, and files stay fully accessible — a lower plan only limits creating new resources beyond that plan's included amount, it never removes what you already have." },
 ];
 
 /* ─── Landing Page ───────────────────────────────────────────────────────── */
@@ -530,8 +541,8 @@ export default function Landing() {
                 letterSpacing: "-0.04em", color: "#0a0f1a",
                 textWrap: "balance",
               }}>
-                Build Research Teams<br />
-                <span style={{ color: "#0F2847" }}>Without Borders.</span>
+                Research starts with<br />
+                <span style={{ color: "#0F2847" }}>a question.</span>
               </h1>
 
               <p className="sq-fade-up sq-delay-2" style={{
@@ -539,7 +550,8 @@ export default function Landing() {
                 color: "#475569", lineHeight: 1.75,
                 maxWidth: 520, marginTop: 24,
               }}>
-                Synaptiq connects researchers, PhD candidates, professors and universities worldwide into collaborative research workspaces powered by AI.
+                Synaptiq turns it into expertise, then people, then a collaboration —
+                with a research identity, AI-assisted tools, and project workspaces to carry the work forward.
               </p>
 
               <div className="flex items-center gap-4 flex-wrap sq-fade-up sq-delay-3" style={{ marginTop: 36 }}>
@@ -556,7 +568,7 @@ export default function Landing() {
                   className="inline-flex items-center gap-2 font-semibold transition-colors"
                   style={{ color: "#0F2847", fontSize: "0.93rem", border: "1px solid #e2e8f0", padding: "12px 24px", borderRadius: 10 }}
                 >
-                  Book a Demo
+                  Request a Demo
                 </Link>
               </div>
 
@@ -577,6 +589,11 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          SIGNATURE MOMENT — "What are you researching?" (§17-19)
+      ══════════════════════════════════════════════════════════════════════ */}
+      <ResearchPreviewDemo />
 
       {/* ══════════════════════════════════════════════════════════════════════
           SECTION 2 — WHAT SYNAPTIQ CONNECTS (replaces a fake "trusted by"

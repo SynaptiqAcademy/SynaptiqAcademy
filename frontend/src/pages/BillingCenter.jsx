@@ -100,8 +100,7 @@ export default function BillingCenter() {
       toast.success("Subscription will not renew.");
       await refresh();
     } catch (e) {
-      const d = e?.response?.data?.detail;
-      toast.error((d && d.message) || (typeof d === "string" ? d : "Could not cancel."));
+      toast.error("Could not cancel your subscription right now. Please try again, or contact support.");
     } finally {
       setCancelling(false);
       setConfirmCancelOpen(false);
@@ -113,8 +112,7 @@ export default function BillingCenter() {
       const r = await api.post("/billing/portal-session", { return_url: window.location.href });
       if (r.data?.url) window.location.href = r.data.url;
     } catch (e) {
-      const d = e?.response?.data?.detail;
-      toast.info((d && d.message) || "Billing portal is available once Stripe is configured.");
+      toast.info("Billing management isn't available yet for this account.");
     }
   };
 

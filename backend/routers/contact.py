@@ -69,17 +69,27 @@ class ContactRequest(BaseModel):
     @field_validator("topic")
     @classmethod
     def topic_allowed(cls, v: str) -> str:
-        allowed = {"general", "institution", "press", "support"}
-        if v not in allowed:
-            raise ValueError(f"Topic must be one of: {', '.join(sorted(allowed))}")
+        if v not in TOPIC_LABELS:
+            raise ValueError(f"Topic must be one of: {', '.join(sorted(TOPIC_LABELS))}")
         return v
 
 
+# Must stay in sync with frontend/src/pages/Contact.jsx's TOPICS list — a
+# mismatch here means the form silently 400s for any option not covered
+# (this previously happened for "enterprise", the exact topic Pricing.jsx's
+# Institution CTA links to — every institutional inquiry through that path
+# was failing validation before this fix).
 TOPIC_LABELS = {
     "general": "General enquiry",
-    "institution": "Institution plan",
+    "individual": "Individual subscription",
+    "institution": "Institution",
+    "enterprise": "Enterprise",
+    "support": "Technical support",
+    "security": "Security",
+    "partnership": "Partnership",
+    "research": "Research collaboration",
     "press": "Press / partnerships",
-    "support": "Product support",
+    "other": "Other",
 }
 
 

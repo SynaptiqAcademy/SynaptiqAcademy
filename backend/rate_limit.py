@@ -160,6 +160,42 @@ AUTH_RATE = os.environ.get("RATE_LIMIT_AUTH", "5/minute")
 # membership checks already, not a credential-stuffing surface.
 WRITE_RATE = os.environ.get("RATE_LIMIT_WRITE", "30/minute")
 
+# Public, unauthenticated preview surface (the landing-page "what are you
+# researching?" demo, Phase 9A Part 2 §19) — IP-keyed since there's no user
+# yet. Looser than AUTH_RATE (this is read-only and deterministic, no AI
+# cost) but still real: unauthenticated + no DB write means it's the
+# cheapest possible target for a scripted loop.
+PUBLIC_DEMO_RATE = os.environ.get("RATE_LIMIT_PUBLIC_DEMO", "10/minute")
+
+_public_demo_rate_item = None
+
+
+def check_public_demo_rate_limit(ip: str) -> None:
+    """Raise HTTPException(429) if `ip` exceeds PUBLIC_DEMO_RATE.
+
+    Same fail-open-on-backend-error pattern as check_ai_rate_limit /
+    check_write_rate_limit — an unreachable rate-limit store must never
+    block a legitimate anonymous visitor trying the product.
+    """
+    if not limiter.enabled:
+        return
+    global _public_demo_rate_item
+    try:
+        if _public_demo_rate_item is None:
+            from limits import parse
+            _public_demo_rate_item = parse(PUBLIC_DEMO_RATE)
+        if not limiter.limiter.hit(_public_demo_rate_item, "public_demo", ip):
+            from fastapi import HTTPException
+            raise HTTPException(
+                status_code=429,
+                detail="Too many requests. Please wait a moment and try again.",
+            )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.warning("Public demo rate limiter check failed (allowing request): %s", exc)
+
+
 # Per-user AI-action policy — every credit-billed AI feature (research
 # assistant, manuscript review, literature review, collaborator matching,
 # etc. — ~25 routers) funnels through services.credits_service.consume_credits

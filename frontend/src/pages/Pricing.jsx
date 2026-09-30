@@ -13,6 +13,15 @@ import { TID } from "../lib/testIds";
 import { toast } from "sonner";
 import { EMERALD, NAVY } from "@/lib/tokens";
 
+// Shown for ANY checkout failure — deliberately never repeats the backend's
+// raw error detail, which names the billing vendor and internal config
+// state (not customer-appropriate). Paid checkout is genuinely not live
+// yet in production (see Phase 9A Part 2 report) — this is an honest,
+// calm statement of that, not a generic error.
+const BILLING_NOT_READY_MESSAGE =
+  "Paid plans aren't open for purchase yet — we're finishing billing setup. " +
+  "You're welcome to keep using the Free plan in the meantime, or reach out and we'll let you know when it's ready.";
+
 /* ─── Static fallback data — mirrors plans_catalogue.py exactly ──────────── */
 
 const STATIC_PLANS = [
@@ -294,6 +303,11 @@ export default function Pricing() {
   const [plans,    setPlans]    = useState(STATIC_PLANS);
   const [packs,    setPacks]    = useState(STATIC_PACKS);
   const [usageCat, setUsageCat] = useState(STATIC_USAGE);
+  // The primary decision (§8/§32 of the Phase 9A commercial redesign):
+  // Pro is an individual product, Institutional is an organization product.
+  // This is deliberately the FIRST choice on the page, not a fourth card in
+  // the same row as Free/Pro.
+  const [audience, setAudience] = useState("individual"); // "individual" | "organization"
   const [matrix,   setMatrix]   = useState(STATIC_MATRIX);
   const [annual,   setAnnual]   = useState(false);
   const [busy,     setBusy]     = useState("");
@@ -312,7 +326,7 @@ export default function Pricing() {
   const startCheckout = async (code) => {
     if (!user) { navigate("/register"); return; }
     if (code === "free") { toast.success("You're on the Free plan."); navigate("/discover"); return; }
-    if (code === "institution") { navigate("/contact?topic=enterprise"); return; }
+    if (code === "institution") { navigate("/contact?topic=institution"); return; }
     setBusy(code);
     try {
       const res = await api.post("/billing/checkout-session", {
@@ -322,13 +336,13 @@ export default function Pricing() {
         cancel_url:  window.location.origin + "/pricing",
       });
       if (res.data.url) { window.location.href = res.data.url; return; }
-      toast.info("Checkout will be available once billing is activated.");
+      toast.info(BILLING_NOT_READY_MESSAGE);
     } catch (e) {
-      const detail = e.response?.data?.detail;
-      const msg = (detail && typeof detail === "object")
-        ? (detail.message || "Billing activates once Stripe is wired.")
-        : (typeof detail === "string" ? detail : "Billing not yet activated.");
-      toast.info(msg);
+      // Never surface the backend's raw error detail here — it names the
+      // billing vendor and internal config state, which isn't customer-
+      // appropriate (§3). A 402/403/etc from a signed-in, entitled request
+      // still deserves a generic apology, not implementation detail.
+      toast.info(BILLING_NOT_READY_MESSAGE);
     } finally { setBusy(""); }
   };
 
@@ -342,13 +356,9 @@ export default function Pricing() {
         cancel_url:  window.location.origin + "/pricing#credit-packs",
       });
       if (res.data.url) { window.location.href = res.data.url; return; }
-      toast.info("Credit pack purchase will be available once billing is activated.");
+      toast.info(BILLING_NOT_READY_MESSAGE);
     } catch (e) {
-      const detail = e.response?.data?.detail;
-      const msg = (detail && typeof detail === "object")
-        ? (detail.message || "Credit pack purchase activates once Stripe is wired.")
-        : (typeof detail === "string" ? detail : "Credit pack purchase not yet activated.");
-      toast.info(msg);
+      toast.info(BILLING_NOT_READY_MESSAGE);
     } finally { setPackBusy(""); }
   };
 
@@ -365,10 +375,13 @@ export default function Pricing() {
     return Math.round(monthly - ann);
   };
 
-  const VISIBLE_CODES = new Set(["free", "researcher", "pro_researcher", "institution"]);
+  const VISIBLE_CODES = audience === "organization"
+    ? new Set(["institution"])
+    : new Set(["free", "researcher", "pro_researcher"]);
   const sortedPlans = [...plans]
     .filter((p) => VISIBLE_CODES.has(p.code))
     .sort((a, b) => (PLAN_ORDER[a.code] ?? 9) - (PLAN_ORDER[b.code] ?? 9));
+  const institutionPlan = plans.find((p) => p.code === "institution") || STATIC_PLANS.find((p) => p.code === "institution");
 
   // Map visible column codes to their indices in matrix.columns (handles enterprise injection)
   const visibleMatrixCols = matrix.columns.reduce((acc, c, i) => {
@@ -398,10 +411,37 @@ export default function Pricing() {
           </h1>
 
           <p style={{ fontSize: "1.05rem", color: "#64748b", lineHeight: 1.7, marginTop: 20, maxWidth: 540 }}>
-            Choose the perfect workspace for your academic journey — from solo researchers to entire institutions.
+            {audience === "organization"
+              ? "For universities, research institutes and organizations."
+              : "For individual research, collaboration and teaching."}
           </p>
 
-          {/* Billing toggle */}
+          {/* ── Primary decision: individual vs organization (§8/§32) ── */}
+          <div style={{ marginTop: 32, display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 12, maxWidth: 560 }} className="grid-cols-1 sm:grid-cols-2">
+            {[
+              { key: "individual",   title: "For myself",        desc: "Individual research, collaboration and teaching." },
+              { key: "organization", title: "For an organization", desc: "Universities, research institutes and organizations." },
+            ].map(({ key, title, desc }) => (
+              <button
+                key={key}
+                onClick={() => setAudience(key)}
+                data-testid={`pricing-audience-${key}`}
+                style={{
+                  textAlign: "left", padding: "16px 18px", borderRadius: 12, cursor: "pointer",
+                  border: audience === key ? "2px solid #0F2847" : "1px solid #e2e8f0",
+                  background: audience === key ? "#0F2847" : "#fff",
+                  transition: "all 150ms ease",
+                }}
+              >
+                <div style={{ fontSize: "0.9rem", fontWeight: 800, color: audience === key ? "#fff" : "#0a0f1a", marginBottom: 4 }}>{title}</div>
+                <div style={{ fontSize: "0.75rem", color: audience === key ? "rgba(255,255,255,0.6)" : "#94a3b8", lineHeight: 1.5 }}>{desc}</div>
+              </button>
+            ))}
+          </div>
+
+          {/* Billing toggle — individual plans only; Institutional has no self-service price */}
+          {audience === "individual" && (
+          <>
           <div className="flex items-center gap-4 flex-wrap" style={{ marginTop: 36 }}>
             <div style={{
               display: "inline-flex", alignItems: "center",
@@ -458,6 +498,8 @@ export default function Pricing() {
               </div>
             ))}
           </div>
+          </>
+          )}
 
         </div>
       </section>
@@ -470,9 +512,15 @@ export default function Pricing() {
         className="bg-white"
         style={{ paddingTop: 64, paddingBottom: 88 }}
       >
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 20, alignItems: "stretch" }}
-               className="grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+        <div className={audience === "organization" ? "max-w-[560px] mx-auto px-6 lg:px-10" : "max-w-[1280px] mx-auto px-6 lg:px-10"}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: audience === "organization" ? "1fr" : "repeat(4,1fr)",
+              gap: 20, alignItems: "stretch",
+            }}
+            className={audience === "organization" ? "" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"}
+          >
             {sortedPlans.map((p) => {
               const price    = annual ? p.price_eur_annual : p.price_eur_monthly;
               const isFree   = p.code === "free";
@@ -532,6 +580,11 @@ export default function Pricing() {
 
                   {/* Price block */}
                   <div style={{ marginBottom: 8 }}>
+                    {isInst && (
+                      <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 4 }}>
+                        Starting at
+                      </div>
+                    )}
                     <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
                       <span style={{
                         fontSize: "3rem", fontWeight: 900, lineHeight: 1, letterSpacing: "-0.045em",
@@ -639,14 +692,20 @@ export default function Pricing() {
           </div>
 
           <p style={{ textAlign: "center", marginTop: 24, fontSize: "0.75rem", color: "#94a3b8" }}>
-            All prices in EUR, excluding VAT where applicable. Stripe processes all payments securely.
+            {audience === "organization"
+              ? "Institutional pricing is negotiated based on seat count and needs — the figure above is a starting reference, not a fixed price."
+              : "All prices in EUR, excluding VAT where applicable."}
           </p>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
           PLANS AND FEATURES — sticky comparison table (Notion-style)
+          Individual-only: comparing Free/Researcher/Pro Researcher. The
+          Institutional capability list gets its own section below instead
+          (§12 — organization value isn't "Pro + a checkbox").
       ══════════════════════════════════════════════════════════════════════ */}
+      {audience === "individual" && (
       <section
         data-testid="comparison-matrix"
         style={{ background: "#fff", borderTop: "1px solid #f1f5f9" }}
@@ -809,6 +868,39 @@ export default function Pricing() {
           </div>
         </div>
       </section>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          INSTITUTIONAL CAPABILITIES — organization audience only (§12).
+          Real, production functionality only — no invented capability.
+      ══════════════════════════════════════════════════════════════════════ */}
+      {audience === "organization" && institutionPlan && (
+        <section style={{ background: "#fff", borderTop: "1px solid #f1f5f9" }}>
+          <div className="max-w-[820px] mx-auto px-6 lg:px-10 py-20">
+            <h2 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0a0f1a", letterSpacing: "-0.02em", marginBottom: 8 }}>
+              What Institutional includes
+            </h2>
+            <p style={{ fontSize: "0.9rem", color: "#64748b", lineHeight: 1.7, marginBottom: 28, maxWidth: 620 }}>
+              Institutional is an organization product, not a bigger individual plan — it provisions
+              a real institution workspace with member management, departments and organization-level
+              analytics, scoped to your organization's actual membership.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-3">
+              {institutionPlan.features.map((f) => (
+                <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                  <Check size={14} strokeWidth={2.5} style={{ color: "#0F2847", marginTop: 2, flexShrink: 0 }} />
+                  <span style={{ fontSize: "0.85rem", color: "#334155", lineHeight: 1.6 }}>{f}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: "0.78rem", color: "#94a3b8", marginTop: 28, lineHeight: 1.7 }}>
+              Institution access is granted to verified members of your organization's Synaptiq
+              institution — not by an individual's personal subscription. An existing Pro subscription
+              doesn't grant it, and it isn't purchasable from an individual account.
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* ══════════════════════════════════════════════════════════════════════
           RESEARCH CREDITS EXPLANATION

@@ -144,7 +144,16 @@ async def subscription_history(limit: int = 50, user: dict = Depends(get_current
 
 # ----------------------------- CHECKOUT -----------------------------
 
-VALID_PAID_PLANS = {"researcher", "pro_researcher", "institution", "enterprise"}
+# "institution" is deliberately NOT self-serve here (Phase 9A Part 2, §13):
+# it's an individual-account plan_code with no real organization binding —
+# real institution access is granted only via institution_memberships
+# (services/permissions.py::require_institution_member), never plan_code.
+# Letting an individual self-checkout "institution" would silently sell
+# something that doesn't provide what its name implies. "enterprise" is
+# intentionally excluded too — contact-sales/custom-invoiced only, per
+# plans_catalogue.py's own "contact_sales": True flag.
+VALID_PAID_PLANS = {"researcher", "pro_researcher"}
+NOT_SELF_SERVE_PLANS = {"institution", "enterprise"}
 
 
 @router.post("/checkout-session")
@@ -152,6 +161,14 @@ async def create_checkout(body: dict, user: dict = Depends(get_current_user)):
     """Subscription Stripe Checkout."""
     plan_code = body.get("plan_code")
     billing_period = body.get("billing_period", "monthly")
+    if plan_code in NOT_SELF_SERVE_PLANS:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "This plan isn't available for self-service purchase — please contact us.",
+                "code": "not_self_serve",
+            },
+        )
     if plan_code not in VALID_PAID_PLANS:
         raise HTTPException(status_code=400,
                             detail=f"Invalid plan_code (use one of {sorted(VALID_PAID_PLANS)}).")
