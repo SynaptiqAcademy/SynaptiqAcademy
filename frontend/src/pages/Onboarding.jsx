@@ -4,6 +4,7 @@ import api, { formatApiError, getErrorMessage } from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { TID } from "../lib/testIds";
 import { toast } from "sonner";
+import { trackFeatureUse } from "../lib/analytics";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { ACCENT, NAVY } from "@/lib/tokens";
 
@@ -160,6 +161,7 @@ export default function Onboarding() {
       };
       await api.post("/users/me/onboarding", payload);
       await refreshMe();
+      trackFeatureUse("onboarding_completed", { primary_domain: payload.primary_domain, user_type: payload.user_type });
       toast.success("Welcome to Synaptiq");
       navigate("/profile-setup", { replace: true });
     } catch (e) {

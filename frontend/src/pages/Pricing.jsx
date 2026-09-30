@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import MarketingLayout from "../components/layout/MarketingLayout";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
+import { trackMarketingEvent as track } from "../lib/marketingAnalytics";
+import { setPageSeo } from "../lib/seo";
 import {
   Check, Minus, Sparkles, ArrowRight,
   Shield, Globe, Zap, Lock, CheckCircle2, ChevronDown,
@@ -46,7 +48,7 @@ const STATIC_PLANS = [
     cta: "Start Free",
   },
   {
-    code: "researcher", name: "Researcher", tagline: "For active researchers & PhDs",
+    code: "researcher", name: "Researcher", tagline: "For active research and collaboration",
     price_eur_monthly: 9.99, price_eur_annual: 7.99,
     future_price_eur_monthly: 14.99, badge: "For active individual research",
     credits_per_month: 300,
@@ -64,7 +66,7 @@ const STATIC_PLANS = [
     cta: "Get Started",
   },
   {
-    code: "pro_researcher", name: "Pro Researcher", tagline: "For power users & senior researchers",
+    code: "pro_researcher", name: "Pro Researcher", tagline: "For advanced research workflows",
     price_eur_monthly: 29.99, price_eur_annual: 23.99,
     future_price_eur_monthly: null, badge: "For high-output researchers",
     credits_per_month: 1000,
@@ -297,8 +299,13 @@ const PLAN_ORDER = { free: 0, researcher: 1, pro_researcher: 2, institution: 3 }
 
 export default function Pricing() {
   useEffect(() => {
-    document.title = "Pricing — Synaptiq";
-    return () => { document.title = "Synaptiq"; };
+    const restore = setPageSeo({
+      title: "Pricing — Synaptiq",
+      description: "Free to start. Pro for active individual research and collaboration. Institutional for organizations — contact sales.",
+      path: "/pricing",
+    });
+    track("pricing_viewed");
+    return restore;
   }, []);
   const [plans,    setPlans]    = useState(STATIC_PLANS);
   const [packs,    setPacks]    = useState(STATIC_PACKS);
@@ -324,16 +331,18 @@ export default function Pricing() {
   }, []);
 
   const startCheckout = async (code) => {
+    track("plan_selected", { plan_code: code, billing_period: annual ? "annual" : "monthly" });
     if (!user) { navigate("/register"); return; }
     if (code === "free") { toast.success("You're on the Free plan."); navigate("/discover"); return; }
     if (code === "institution") { navigate("/contact?topic=institution"); return; }
     setBusy(code);
+    track("checkout_started", { plan_code: code, billing_period: annual ? "annual" : "monthly" });
     try {
       const res = await api.post("/billing/checkout-session", {
         plan_code: code,
         billing_period: annual ? "annual" : "monthly",
-        success_url: window.location.origin + "/settings?upgraded=1",
-        cancel_url:  window.location.origin + "/pricing",
+        success_url: window.location.origin + "/payment/success?type=plan",
+        cancel_url:  window.location.origin + "/payment/cancelled",
       });
       if (res.data.url) { window.location.href = res.data.url; return; }
       toast.info(BILLING_NOT_READY_MESSAGE);
@@ -352,8 +361,8 @@ export default function Pricing() {
     try {
       const res = await api.post("/billing/credit-pack-checkout", {
         pack_code:   pack.code,
-        success_url: window.location.origin + "/settings?pack=" + pack.code,
-        cancel_url:  window.location.origin + "/pricing#credit-packs",
+        success_url: window.location.origin + "/payment/success?type=pack&pack=" + pack.code,
+        cancel_url:  window.location.origin + "/payment/cancelled",
       });
       if (res.data.url) { window.location.href = res.data.url; return; }
       toast.info(BILLING_NOT_READY_MESSAGE);
@@ -578,29 +587,34 @@ export default function Pricing() {
                     {p.name}
                   </div>
 
-                  {/* Price block */}
+                  {/* Price block — Institutional shows no public price (§37):
+                      organization-level billing doesn't exist yet, so a
+                      number here would imply a self-service purchase that
+                      isn't real. The €299 reference value stays in
+                      plans_catalogue.py for internal/sales use, just not
+                      rendered publicly. */}
                   <div style={{ marginBottom: 8 }}>
-                    {isInst && (
-                      <div style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 4 }}>
-                        Starting at
+                    {isInst ? (
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                        <span style={{ fontSize: "2rem", fontWeight: 900, lineHeight: 1, letterSpacing: "-0.03em", color: "#0a0f1a" }}>
+                          Custom
+                        </span>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                        <span style={{
+                          fontSize: "3rem", fontWeight: 900, lineHeight: 1, letterSpacing: "-0.045em",
+                          color: isPopular ? "#fff" : "#0a0f1a",
+                        }}>
+                          €{price % 1 === 0 ? price : price.toFixed(2).replace(".00", "")}
+                        </span>
+                        {!isFree && (
+                          <span style={{ fontSize: "0.78rem", color: isPopular ? "rgba(255,255,255,0.45)" : "#94a3b8", fontWeight: 500 }}>
+                            {annual ? "/ mo, billed annually" : "/ month"}
+                          </span>
+                        )}
                       </div>
                     )}
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                      <span style={{
-                        fontSize: "3rem", fontWeight: 900, lineHeight: 1, letterSpacing: "-0.045em",
-                        color: isPopular ? "#fff" : "#0a0f1a",
-                      }}>
-                        €{price % 1 === 0 ? price : price.toFixed(2).replace(".00", "")}
-                      </span>
-                      {!isFree && !isInst && (
-                        <span style={{ fontSize: "0.78rem", color: isPopular ? "rgba(255,255,255,0.45)" : "#94a3b8", fontWeight: 500 }}>
-                          {annual ? "/ mo, billed annually" : "/ month"}
-                        </span>
-                      )}
-                      {isInst && (
-                        <span style={{ fontSize: "0.78rem", color: "#94a3b8", fontWeight: 500 }}>/ month</span>
-                      )}
-                    </div>
 
                     {savings && (
                       <div style={{ fontSize: "0.72rem", fontWeight: 600, marginTop: 4,
@@ -693,7 +707,7 @@ export default function Pricing() {
 
           <p style={{ textAlign: "center", marginTop: 24, fontSize: "0.75rem", color: "#94a3b8" }}>
             {audience === "organization"
-              ? "Institutional pricing is negotiated based on seat count and needs — the figure above is a starting reference, not a fixed price."
+              ? "Institutional pricing is negotiated with our team based on your organization's seat count and needs."
               : "All prices in EUR, excluding VAT where applicable."}
           </p>
         </div>

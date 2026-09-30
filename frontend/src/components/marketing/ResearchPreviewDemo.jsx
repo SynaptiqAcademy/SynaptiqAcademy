@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Sparkles, Loader2 } from "lucide-react";
 import api from "@/lib/api";
+import { trackMarketingEvent as track } from "@/lib/marketingAnalytics";
 
 const NAVY = "#0F2847";
 const BORDER = "#e8edf3";
@@ -33,9 +34,11 @@ export default function ResearchPreviewDemo() {
     if (!trimmed) return;
     setLoading(true);
     setError("");
+    track("research_demo_started");
     try {
       const { data } = await api.post("/public/research-preview", { query: trimmed });
       setResult(data);
+      track("research_demo_completed", { matched_taxonomy: !!data?.matched_taxonomy });
       // Move focus/scroll to the result for keyboard and screen-reader users.
       setTimeout(() => resultRef.current?.focus(), 50);
     } catch (err) {
@@ -52,6 +55,7 @@ export default function ResearchPreviewDemo() {
 
   return (
     <section
+      id="research-preview"
       aria-labelledby="research-preview-heading"
       style={{ background: "#f8fafc", borderBottom: `1px solid ${BORDER}`, padding: "72px 0" }}
     >

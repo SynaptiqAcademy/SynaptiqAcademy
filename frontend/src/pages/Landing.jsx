@@ -3,6 +3,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import MarketingLayout from "../components/layout/MarketingLayout";
 import ResearchPreviewDemo from "../components/marketing/ResearchPreviewDemo";
+import ResearchThread from "../components/marketing/ResearchThread";
+import ProductProof from "../components/marketing/ProductProof";
+import { trackMarketingEvent as track } from "../lib/marketingAnalytics";
+import { setPageSeo } from "../lib/seo";
 import {
   ArrowRight, Users, FileText, Globe, Shield, BarChart3, Sparkles,
   CheckCircle2, Building2, Zap, FlaskConical, BrainCircuit, Target,
@@ -434,14 +438,18 @@ const SHOWCASE = [
     bg: "#fef9f0",
   },
   {
-    eyebrow: "Verification & Trust",
+    eyebrow: "Research Identity",
     title: "Your Academic Passport.",
-    body: "Build a verified academic identity with ORCID integration, institutional verification, publication credentials, and a trust score that travels with you.",
-    features: ["ORCID integration", "Institutional verify", "Publication credentials", "Trust score"],
+    body: "Research areas, methods, and expertise you declare yourself, alongside what's independently connected — ORCID, institutional affiliation, your publication record. Each element shows its own status; the Passport as a whole isn't marketed as \"verified.\"",
+    features: ["Connected: ORCID", "Verified: institution", "Self-declared: expertise", "Research record"],
     bg: "#f5f0ff",
   },
 ];
 
+// featured: false on every tier — §24/§42, no "Most Popular" without real
+// usage data. Institution shows no public price (§37) — organization
+// billing doesn't exist yet; a number here would imply self-service
+// purchase that isn't real.
 const PRICING_TIERS = [
   {
     name: "Free",         price: "€0",     period: "/mo",
@@ -451,21 +459,21 @@ const PRICING_TIERS = [
   },
   {
     name: "Researcher",   price: "€9.99",  period: "/mo",
-    desc: "The complete research and publishing toolkit.",
+    desc: "For active research and collaboration.",
     features: ["300 AI credits / month", "Unlimited projects", "AI Research Assistant", "AI Manuscript Copilot", "Publication tracking", "Priority support"],
-    cta: "Get started", featured: true, href: "/register",
+    cta: "Get started", featured: false, href: "/register",
   },
   {
     name: "Pro Researcher", price: "€29.99", period: "/mo",
-    desc: "For high-output researchers and senior academics.",
+    desc: "For advanced research workflows.",
     features: ["1,000 AI credits / month", "Unlimited workspaces", "Collaboration Intelligence", "Research Analytics Suite", "Citation monitoring", "Impact dashboard"],
     cta: "Get started", featured: false, href: "/register",
   },
   {
-    name: "Institution",  price: "€299",   period: "/mo",
+    name: "Institution",  price: "Custom",   period: "",
     desc: "For research offices and university departments.",
     features: ["20,000 AI credits / month", "25 researcher seats", "Institutional analytics", "Department management", "SSO / SAML integration", "Dedicated support"],
-    cta: "Contact sales", featured: false, href: "/contact",
+    cta: "Contact sales", featured: false, href: "/contact?topic=institution",
   },
 ];
 
@@ -492,14 +500,16 @@ const FAQ = [
 
 export default function Landing() {
   useEffect(() => {
-    document.title = "Synaptiq — Research Platform for Academics";
-    return () => { document.title = "Synaptiq"; };
+    return setPageSeo({
+      title: "Synaptiq — Research starts with a question",
+      description: "Synaptiq connects research identity, expert discovery, collaboration, and project workspaces in one environment — with AI assistance, never AI in charge.",
+      path: "/",
+    });
   }, []);
   const refTrusted   = useReveal();
   const refPlatform  = useReveal();
   const refCollab    = useReveal();
   const refAI        = useReveal();
-  const refWorkflow  = useReveal();
   const refShowcase  = useReveal();
   const refStats     = useReveal();
   const refTestimonials = useReveal();
@@ -558,18 +568,23 @@ export default function Landing() {
                 <Link
                   to="/register"
                   data-testid={TID.landingGetStarted}
+                  onClick={() => track("landing_primary_cta", { label: "Start Free" })}
                   className="inline-flex items-center gap-2.5 font-semibold transition-all duration-150 active:scale-[.98]"
                   style={{ background: "#0F2847", color: "#fff", padding: "13px 28px", borderRadius: 10, fontSize: "0.93rem" }}
                 >
                   Start Free <ArrowRight size={15} strokeWidth={2.5} />
                 </Link>
-                <Link
-                  to="/contact"
+                <a
+                  href="#research-preview"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById("research-preview")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
                   className="inline-flex items-center gap-2 font-semibold transition-colors"
-                  style={{ color: "#0F2847", fontSize: "0.93rem", border: "1px solid #e2e8f0", padding: "12px 24px", borderRadius: 10 }}
+                  style={{ color: "#0F2847", fontSize: "0.93rem", border: "1px solid #e2e8f0", padding: "12px 24px", borderRadius: 10, cursor: "pointer" }}
                 >
-                  Request a Demo
-                </Link>
+                  See how it works
+                </a>
               </div>
 
               <div className="flex flex-wrap items-center gap-6 sq-fade-up sq-delay-4" style={{ marginTop: 32 }}>
@@ -594,6 +609,8 @@ export default function Landing() {
           SIGNATURE MOMENT — "What are you researching?" (§17-19)
       ══════════════════════════════════════════════════════════════════════ */}
       <ResearchPreviewDemo />
+      <ResearchThread />
+      <ProductProof />
 
       {/* ══════════════════════════════════════════════════════════════════════
           SECTION 2 — WHAT SYNAPTIQ CONNECTS (replaces a fake "trusted by"
@@ -711,97 +728,6 @@ export default function Landing() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          SECTION 5 — AI RESEARCH WORKSPACE  (dark)
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section style={{ background: "#0F2847" }}>
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-24 lg:py-32">
-          <div ref={refAI} className="sq-reveal grid lg:grid-cols-2 gap-16 items-start">
-
-            {/* Left: mockup */}
-            <AIWorkspaceMockup />
-
-            {/* Right: text */}
-            <div>
-              <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 16 }}>AI Research Suite</div>
-              <h2 style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.9rem)", fontWeight: 900, letterSpacing: "-0.035em", color: "#fff", lineHeight: 1.1, textWrap: "balance", marginBottom: 20 }}>
-                AI built for academic rigor.
-              </h2>
-              <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.75, marginBottom: 36, maxWidth: 460 }}>
-                Synaptiq's AI understands methodology, statistical design, and academic publishing standards — not just autocomplete.
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {AI_FEATURES.map(({ icon: Icon, label, body }) => (
-                  <div key={label} style={{ display: "flex", gap: 12, alignItems: "flex-start", minWidth: 0 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 7, background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <Icon size={13} strokeWidth={1.5} style={{ color: "rgba(255,255,255,0.7)" }} />
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", marginBottom: 2 }}>{label}</div>
-                      <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", lineHeight: 1.55 }}>{body}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ marginTop: 36 }}>
-                <Link to="/register"
-                  className="inline-flex items-center gap-2.5 font-semibold transition-all active:scale-[.98]"
-                  style={{ background: "#fff", color: "#0F2847", padding: "12px 24px", borderRadius: 10, fontSize: "0.9rem" }}
-                >
-                  Try the AI tools <ArrowRight size={14} strokeWidth={2.5} />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          SECTION 6 — RESEARCH WORKFLOW
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-white" style={{ borderBottom: "1px solid #f1f5f9" }}>
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-24 lg:py-32">
-          <div ref={refWorkflow} className="sq-reveal">
-            <div style={{ textAlign: "center", marginBottom: 64 }}>
-              <div className="overline mb-3">Research workflow</div>
-              <h2 style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", fontWeight: 900, letterSpacing: "-0.035em", color: "#0a0f1a", lineHeight: 1.1, textWrap: "balance" }}>
-                From first question to final publication.
-              </h2>
-            </div>
-
-            {/* 8-step timeline */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1">
-              {WORKFLOW.map(({ step, title, icon: Icon, body }, i) => (
-                <div key={step} style={{ position: "relative", textAlign: "center", padding: "0 8px" }}>
-                  {/* Connector */}
-                  {i < WORKFLOW.length - 1 && (
-                    <div className="hidden lg:block" style={{
-                      position: "absolute", top: 20, left: "calc(50% + 20px)", right: 0, height: 1,
-                      background: "linear-gradient(to right, #cbd5e1, #e2e8f0)",
-                    }} />
-                  )}
-                  {/* Icon circle */}
-                  <div style={{
-                    width: 40, height: 40, borderRadius: "50%",
-                    background: i === 0 ? "#0F2847" : "#f1f5f9",
-                    border: i === 0 ? "none" : "1px solid #e2e8f0",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    margin: "0 auto 14px",
-                  }}>
-                    <Icon size={16} strokeWidth={1.5} style={{ color: i === 0 ? "#fff" : "#64748b" }} />
-                  </div>
-                  <div style={{ fontSize: "0.6rem", fontWeight: 800, color: "#94a3b8", letterSpacing: "0.08em", marginBottom: 4 }}>{step}</div>
-                  <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "#0a0f1a", marginBottom: 5, lineHeight: 1.3 }}>{title}</div>
-                  <div style={{ fontSize: "0.68rem", color: "#64748b", lineHeight: 1.55 }}>{body}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════════
           SECTION 7 — FEATURE SHOWCASE (alternating)
       ══════════════════════════════════════════════════════════════════════ */}
       <section style={{ background: "#f8fafc" }}>
@@ -866,6 +792,58 @@ export default function Landing() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
+          AI ASSISTANCE — repositioned later and reframed as contextual
+          assistance rather than an early defining pillar (§16: the public
+          hierarchy should primarily communicate research/expertise/people/
+          collaboration/work, with AI appearing as assistance within that,
+          not the other way around). Genuine capability, not hidden — just
+          not the second thing a visitor sees.
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section style={{ background: "#0F2847" }}>
+        <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-24 lg:py-32">
+          <div ref={refAI} className="sq-reveal grid lg:grid-cols-2 gap-16 items-start">
+
+            {/* Left: mockup */}
+            <AIWorkspaceMockup />
+
+            {/* Right: text */}
+            <div>
+              <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 16 }}>AI Assistance</div>
+              <h2 style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.9rem)", fontWeight: 900, letterSpacing: "-0.035em", color: "#fff", lineHeight: 1.1, textWrap: "balance", marginBottom: 20 }}>
+                AI that assists the research, not the other way around.
+              </h2>
+              <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.75, marginBottom: 36, maxWidth: 460 }}>
+                Synaptiq's AI understands methodology, statistical design, and academic publishing standards — assistance within your workflow, not the product itself.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {AI_FEATURES.map(({ icon: Icon, label, body }) => (
+                  <div key={label} style={{ display: "flex", gap: 12, alignItems: "flex-start", minWidth: 0 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 7, background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Icon size={13} strokeWidth={1.5} style={{ color: "rgba(255,255,255,0.7)" }} />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#fff", marginBottom: 2 }}>{label}</div>
+                      <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", lineHeight: 1.55 }}>{body}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ marginTop: 36 }}>
+                <Link to="/register"
+                  className="inline-flex items-center gap-2.5 font-semibold transition-all active:scale-[.98]"
+                  style={{ background: "#fff", color: "#0F2847", padding: "12px 24px", borderRadius: 10, fontSize: "0.9rem" }}
+                >
+                  Try the AI tools <ArrowRight size={14} strokeWidth={2.5} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
           SECTION 8 — WHY SYNAPTIQ  (dark) — replaces a fabricated "by the
           numbers" vanity-metrics section (Synaptiq is early-stage; per the
           Phase 9A audit, none of those figures were real). Structural
@@ -881,12 +859,16 @@ export default function Landing() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
+            {/* Trimmed from 4 to 3 pillars (§19) — "From question to
+                collaboration" and "Work after discovery" are now shown,
+                not just claimed, by the Research Thread and Product Proof
+                sections above; keeping them here too was pure repetition.
+                These three are the ground neither section covers. */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 lg:gap-8">
               {[
-                { title: "From question to collaboration", desc: "A research need becomes a structured expertise requirement, not a keyword search." },
                 { title: "Explainable discovery", desc: "See why a profile is relevant instead of receiving an unexplained recommendation." },
                 { title: "Interdisciplinary by design", desc: "A research problem can surface complementary disciplines, not only similar profiles." },
-                { title: "Work after discovery", desc: "A useful connection can continue into a collaboration request and real project work." },
+                { title: "Human-approved contact", desc: "Synaptiq identifies the expertise. You decide who to contact — nothing is sent on your behalf." },
               ].map(({ title, desc }) => (
                 <div key={title}>
                   <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "#fff", marginBottom: 8, letterSpacing: "-0.01em" }}>{title}</div>

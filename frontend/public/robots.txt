@@ -1,0 +1,25 @@
+User-agent: *
+Allow: /$
+Allow: /pricing
+Allow: /platform
+Allow: /research
+Allow: /ai-workspace
+Allow: /for-institutions
+Allow: /about
+Allow: /contact
+Allow: /resources
+Allow: /resources/
+Allow: /login
+Allow: /register
+Allow: /terms
+Allow: /privacy
+Allow: /cookies
+Allow: /gdpr
+Allow: /security
+Allow: /ai-policy
+
+# Everything else is either the authenticated application (no value to
+# crawl, and most of it requires a session anyway) or account/auth flows.
+Disallow: /
+
+Sitemap: https://synaptiq.academy/sitemap.xml

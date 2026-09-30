@@ -1,11 +1,22 @@
-"""Department Management router — institutional subscribers only.
+"""Department Management router — for real, approved institution members.
 
 Departments are units with type="department" in the existing `units` collection.
 This router provides richer, department-specific endpoints on top of the existing
 units system: member roster, linked projects, aggregated metrics, and rankings.
 
-Gate: Institution must have a paid institution plan. Individual user's plan_code
-is NOT checked — access is determined by institution subscription + membership.
+Gate: real, approved institution_memberships only (assert_dept_membership /
+assert_dept_admin) — never plan_code. This used to also require
+assert_institution_plan(iid) (a paid institutions.plan_code), but no
+institution has ever had a path to acquire one (organization-level billing
+doesn't exist yet — every institution is created with plan_code
+"institution_free" and nothing ever changes it), so that gate was
+permanently unsatisfiable and Department Management was completely dead for
+every real institution regardless of membership. Removed (Phase 9A Part 3,
+§8) rather than advertise a feature that can never actually activate.
+Department Management is core institution functionality, available to any
+approved member of a real institution — not an upsell tier. If organization-
+level billing is built later, gating additional institution features behind
+it is a real option, but shouldn't retroactively re-break this.
 
 Read endpoints  → approved institution member required
 Write endpoints → department admin or institution admin required
@@ -44,7 +55,6 @@ from pydantic import BaseModel, Field
 from auth_utils import get_current_user
 from db import get_db
 from services.institutions.department_service import (
-    assert_institution_plan,
     assert_dept_membership,
     assert_dept_admin,
     get_dept_user_ids,
@@ -142,7 +152,6 @@ async def list_departments(
     user: dict = Depends(get_current_user),
 ):
     """List all departments for an institution. Requires approved membership."""
-    await assert_institution_plan(iid)
     await assert_dept_membership(iid, user["id"])
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
@@ -185,7 +194,6 @@ async def create_department(
     user: dict = Depends(get_current_user),
 ):
     """Create a new department. Requires institution admin role + institution plan."""
-    await assert_institution_plan(iid)
     # Must be institution admin
     from services.institutions.department_service import assert_dept_membership
     m = await assert_dept_membership(iid, user["id"])
@@ -236,7 +244,6 @@ async def get_department(did: str, user: dict = Depends(get_current_user)):
         if not d:
             raise HTTPException(404, "Not found")
     iid = d["institution_id"]
-    await assert_institution_plan(iid)
     await assert_dept_membership(iid, user["id"])
 
     # Membership check: is the user in this department?
@@ -292,7 +299,6 @@ async def update_department(
 ):
     """Update department metadata. Requires department admin or institution admin."""
     iid = await _get_dept_iid(did)
-    await assert_institution_plan(iid)
     await assert_dept_admin(iid, did, user["id"])
     db  = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
@@ -311,7 +317,6 @@ async def update_department(
 async def delete_department(did: str, user: dict = Depends(get_current_user)):
     """Delete department. Requires institution admin (not just dept admin)."""
     iid = await _get_dept_iid(did)
-    await assert_institution_plan(iid)
     # Only institution admin or platform admin may delete
     platform_admin = zt_is_admin(user)
     if not platform_admin:
@@ -348,7 +353,6 @@ async def db_check_inst_admin(iid: str, user_id: str) -> Optional[dict]:
 async def list_dept_members(did: str, user: dict = Depends(get_current_user)):
     """List all faculty and staff in this department."""
     iid = await _get_dept_iid(did)
-    await assert_institution_plan(iid)
     await assert_dept_membership(iid, user["id"])
     members = await get_dept_members_enriched(iid, did)
     # Enrich role labels
@@ -365,7 +369,6 @@ async def manage_dept_members(
 ):
     """Add or remove members from this department."""
     iid = await _get_dept_iid(did)
-    await assert_institution_plan(iid)
     await assert_dept_admin(iid, did, user["id"])
     db  = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
@@ -391,7 +394,6 @@ async def update_member_role(
 ):
     """Update a member's role within the institution (dept-scoped)."""
     iid = await _get_dept_iid(did)
-    await assert_institution_plan(iid)
     await assert_dept_admin(iid, did, user["id"])
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
@@ -412,7 +414,6 @@ async def update_member_role(
 async def list_dept_projects(did: str, user: dict = Depends(get_current_user)):
     """List projects linked to this department."""
     iid = await _get_dept_iid(did)
-    await assert_institution_plan(iid)
     await assert_dept_membership(iid, user["id"])
     return await get_dept_projects(did)
 
@@ -425,7 +426,6 @@ async def link_project(
 ):
     """Link an existing project to this department."""
     iid = await _get_dept_iid(did)
-    await assert_institution_plan(iid)
     await assert_dept_admin(iid, did, user["id"])
     db  = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
@@ -463,7 +463,6 @@ async def unlink_project(
 ):
     """Remove a project link from this department."""
     iid = await _get_dept_iid(did)
-    await assert_institution_plan(iid)
     await assert_dept_admin(iid, did, user["id"])
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
@@ -482,7 +481,6 @@ async def dept_metrics(did: str, refresh: bool = False,
                         user: dict = Depends(get_current_user)):
     """Aggregated research output KPIs for this department."""
     iid = await _get_dept_iid(did)
-    await assert_institution_plan(iid)
     await assert_dept_membership(iid, user["id"])
     if refresh:
         await db_invalidate_cache(did)
@@ -493,7 +491,6 @@ async def dept_metrics(did: str, refresh: bool = False,
 async def dept_rankings(did: str, user: dict = Depends(get_current_user)):
     """Rankings of all departments within the institution."""
     iid = await _get_dept_iid(did)
-    await assert_institution_plan(iid)
     await assert_dept_membership(iid, user["id"])
     all_ranks = await rank_departments(iid)
     # Mark the requested department
@@ -506,7 +503,6 @@ async def dept_rankings(did: str, user: dict = Depends(get_current_user)):
 async def dept_collaboration(did: str, user: dict = Depends(get_current_user)):
     """Collaboration network for department members."""
     iid = await _get_dept_iid(did)
-    await assert_institution_plan(iid)
     await assert_dept_membership(iid, user["id"])
     return await get_dept_collaboration(iid, did)
 
@@ -519,7 +515,6 @@ async def dept_publications(
 ):
     """Publication list scoped to department members, sorted by citations."""
     iid     = await _get_dept_iid(did)
-    await assert_institution_plan(iid)
     await assert_dept_membership(iid, user["id"])
     db      = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
@@ -564,7 +559,6 @@ async def dept_publications(
 async def dept_funding(did: str, user: dict = Depends(get_current_user)):
     """Grants and funding breakdown for department members."""
     iid  = await _get_dept_iid(did)
-    await assert_institution_plan(iid)
     await assert_dept_membership(iid, user["id"])
     db   = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))

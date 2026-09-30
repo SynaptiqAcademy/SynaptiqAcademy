@@ -59,7 +59,7 @@ PLANS = [
     {
         "code": "researcher",
         "name": "Researcher",
-        "tagline": "For active researchers",
+        "tagline": "For active research and collaboration",
         "price_eur_monthly": 9.99,
         "price_eur_annual": 7.99,
         "future_price_eur_monthly": 14.99,
@@ -96,7 +96,7 @@ PLANS = [
     {
         "code": "pro_researcher",
         "name": "Pro Researcher",
-        "tagline": "For power users",
+        "tagline": "For advanced research workflows",
         "price_eur_monthly": 29.99,
         "price_eur_annual": 23.99,
         "future_price_eur_monthly": None,

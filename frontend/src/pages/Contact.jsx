@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Mail, ArrowRight, Send, CheckCircle2, ChevronDown } from "lucide-react";
 import { TID } from "../lib/testIds";
 import { fetchApi } from "@/lib/api";
+import { trackMarketingEvent as track } from "@/lib/marketingAnalytics";
 
 /* ─── Design tokens ──────────────────────────────────────────────────────── */
 const NAVY   = "#0F2847";
@@ -228,6 +229,9 @@ export default function Contact() {
       });
       if (!res.ok) throw new Error("Server error");
       setSent(true);
+      if (["institution", "enterprise"].includes(form.topic)) {
+        track("institutional_inquiry_submitted", { topic: form.topic });
+      }
       toast.success("Message sent — we'll reply within 2 working days.");
     } catch {
       toast.error("Could not send message. Please email hello@synaptiq.academy directly.");
@@ -252,6 +256,7 @@ export default function Contact() {
       });
       if (!res.ok) throw new Error("Server error");
       setDemoSent(true);
+      track("institutional_inquiry_submitted", { topic: "institution", source: "demo_form" });
       toast.success("Demo request received — we'll be in touch shortly.");
     } catch {
       toast.error("Could not send request. Please email sales@synaptiq.academy directly.");

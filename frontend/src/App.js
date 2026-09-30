@@ -56,6 +56,8 @@ const Notifications = lazy(() => import("@/pages/Notifications"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const AccountSecurity = lazy(() => import("@/pages/AccountSecurity"));
 const BillingCenter = lazy(() => import("@/pages/BillingCenter"));
+const PaymentSuccess = lazy(() => import("@/pages/PaymentSuccess"));
+const PaymentCancelled = lazy(() => import("@/pages/PaymentCancelled"));
 
 // Phase II
 const Journals = lazy(() => import("@/pages/Journals"));
@@ -344,6 +346,8 @@ function App() {
               <Route path="/unsubscribed" element={<Unsubscribed />} />
               <Route path="/auth/google/callback" element={<GoogleCallback />} />
               <Route path="/settings/billing" element={<ProtectedRoute><AppShell><BillingCenter /></AppShell></ProtectedRoute>} />
+              <Route path="/payment/success" element={<ProtectedRoute><AppShell><PaymentSuccess /></AppShell></ProtectedRoute>} />
+              <Route path="/payment/cancelled" element={<ProtectedRoute><AppShell><PaymentCancelled /></AppShell></ProtectedRoute>} />
               <Route path="/settings/security" element={<Protected><AccountSecurity /></Protected>} />
               {/* Admin Operating System — separate application, requires is_super_admin */}
               <Route path="/admin" element={<AdminProtectedRoute><AdminShell /></AdminProtectedRoute>}>

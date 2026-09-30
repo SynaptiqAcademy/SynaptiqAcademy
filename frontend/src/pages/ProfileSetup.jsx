@@ -706,9 +706,16 @@ export default function ProfileSetup() {
         if (payload[k] === undefined) delete payload[k];
       });
       await api.patch("/users/me", payload);
-      await refreshMe();
+      const refreshed = await refreshMe();
       toast.success("Profile saved");
-      if (andNavigate) navigate("/discover");
+      if (andNavigate) {
+        // First-value routing (Phase 9A Part 3, §26-28): send the user
+        // toward the workflow their own onboarding intent pointed at,
+        // instead of a generic dashboard landing — never a permanent gate,
+        // just where "Home" resolves to right after setup.
+        const domain = (refreshed || user)?.primary_domain;
+        navigate(domain === "teaching" ? "/teaching" : "/researchers");
+      }
     } catch (e) {
       toast.error("Could not save profile. Please try again.");
     } finally {

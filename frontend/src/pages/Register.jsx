@@ -4,6 +4,7 @@ import { Link, useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import api, { getErrorMessage } from "../lib/api";
 import { TID } from "../lib/testIds";
+import { trackMarketingEvent as track } from "../lib/marketingAnalytics";
 import {
   AuthLayout, AuthCard, AuthHeader, AuthTitle, AuthInput, PasswordInput,
   AuthButton, AuthDivider, SocialButtons, ErrorBanner,
@@ -54,8 +55,10 @@ export default function Register() {
     if (submittingRef.current) return;
     submittingRef.current = true;
     setLoading(true);
+    track("signup_started");
     try {
       const data = await register(fullName, email, password);
+      track("signup_completed");
       if (data?.is_super_admin) navigate("/admin", { replace: true });
       else if (data?.email_verified === false) navigate("/verify-email-pending", { replace: true, state: { email: data?.email || email } });
       else navigate("/onboarding", { replace: true });
