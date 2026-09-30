@@ -4,7 +4,7 @@ import api from "../lib/api";
 import { TID } from "../lib/testIds";
 import { Avatar } from "../components/ds/Avatar";
 import { toast } from "sonner";
-import { Plus, Check, MessageSquare, Award, AlertTriangle, Users, Search } from "lucide-react";
+import { Plus, Check, MessageSquare, Award, AlertTriangle, Users, Search, Layers, FileText } from "lucide-react";
 import { userTypeLabel } from "../lib/userTypes";
 import AssistantLauncher from "../components/ai/AssistantLauncher";
 import FilePanel from "../components/files/FilePanel";
@@ -53,6 +53,25 @@ export default function ProjectDetail() {
     finally { setSaving(false); }
   };
 
+  // P1 Phase 8G — reuses the existing canonical POST /api/manuscripts
+  // directly (project_id/workspace_id/keywords are already first-class
+  // fields there); deliberately does NOT pass coauthors, so no project
+  // member is silently declared an author — authorship stays an explicit
+  // action via the manuscript's own /authors endpoint.
+  const createManuscript = async () => {
+    try {
+      const { data } = await api.post("/manuscripts", {
+        title: `${project.title} — Manuscript`,
+        project_id: id,
+        workspace_id: project.workspace_id || "",
+        keywords: project.keywords || [],
+      });
+      navigate(`/manuscripts/${data.id}`);
+    } catch {
+      toast.error("Could not create manuscript.");
+    }
+  };
+
   if (!project) return <div className="p-6"><SkeletonCard rows={4} /></div>;
 
   return (
@@ -79,6 +98,14 @@ export default function ProjectDetail() {
                 variant="ghost"
               >
                 <MessageSquare size={12} strokeWidth={1.5} /> Project chat
+              </Button>
+              {project.workspace_id && (
+                <Button as={Link} to={`/workspaces/${project.workspace_id}`} variant="ghost">
+                  <Layers size={12} strokeWidth={1.5} /> Open Workspace
+                </Button>
+              )}
+              <Button onClick={createManuscript} variant="ghost">
+                <FileText size={12} strokeWidth={1.5} /> Create Manuscript
               </Button>
               <AssistantLauncher entityKind="project" entityId={id} entityTitle={project.title} />
             </div>

@@ -58,5 +58,10 @@ class TeamBlueprint(BaseModel):
     research_need: dict = Field(default_factory=dict)
     roles: list[TeamRole] = Field(default_factory=list)
     status: str = "draft"
+    # P1 Phase 8G — set once "Create Research Project" has been used (§2:
+    # project creation is human-initiated, never automatic). Presence of
+    # this field is what lets the UI show "Open Research Project" instead
+    # of "Create" on a second visit, and makes creation idempotent.
+    project_id: str | None = None
     created_at: str = ""
     updated_at: str = ""

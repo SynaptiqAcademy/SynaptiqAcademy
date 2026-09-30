@@ -279,6 +279,98 @@ function ReviewAndInvite({ blueprint, onChange }) {
   );
 }
 
+// P1 Phase 8G — human-initiated project creation (§2/§3): pre-filled from
+// the Research Need, but every field is a review-and-edit step, and only
+// accepted collaborators (never proposed/pending/declined/withdrawn) are
+// offered as project members.
+function CreateProjectSection({ blueprint, onCreated }) {
+  const [reviewing, setReviewing] = useState(false);
+  const [title, setTitle] = useState(blueprint.research_need?.original_query?.slice(0, 120) || "");
+  const [description, setDescription] = useState(blueprint.research_need?.concise_problem_statement || "");
+  const [objectives, setObjectives] = useState((blueprint.research_need?.required_expertise || []).map((t) => `Address ${t}`).join("\n"));
+  const [visibility, setVisibility] = useState("private");
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState("");
+
+  const accepted = [];
+  for (const role of blueprint.roles) {
+    for (const c of role.selected_candidates || []) {
+      if (c.status === "accepted") accepted.push({ role, candidate: c });
+    }
+  }
+
+  if (blueprint.project_id) {
+    return (
+      <Card padding="lg" style={{ marginTop: 20, border: `1px solid ${EMERALD}30` }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, marginBottom: 6 }}>Research project created</div>
+        <Link to={`/projects/${blueprint.project_id}`}><Button variant="primary">Open Research Project</Button></Link>
+      </Card>
+    );
+  }
+
+  if (accepted.length === 0) return null;
+
+  const create = async () => {
+    setCreating(true);
+    setError("");
+    try {
+      const r = await api.post(`/team-builder/blueprints/${blueprint.id}/create-project`, {
+        title: title.trim() || "Untitled Research Project",
+        description,
+        objectives: objectives.split("\n").map((o) => o.trim()).filter(Boolean),
+        visibility,
+      });
+      onCreated({ ...blueprint, project_id: r.data.project_id });
+    } catch (e) {
+      setError(e?.response?.data?.detail || "Could not create the project. Please try again.");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  return (
+    <Card padding="lg" style={{ marginTop: 20, border: `1px solid ${NAVY}25` }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: NAVY, marginBottom: 4 }}>Accepted collaborators</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
+        {accepted.map(({ role, candidate: c }) => (
+          <div key={c.candidate_id} style={{ fontSize: 12.5, color: TEXT_SECONDARY }}>
+            <strong style={{ color: NAVY }}>{c.candidate_name || "Researcher"}</strong> — {role.label}
+          </div>
+        ))}
+      </div>
+
+      {!reviewing ? (
+        <Button variant="primary" onClick={() => setReviewing(true)}>Create Research Project</Button>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: TEXT_SECONDARY, display: "block", marginBottom: 3 }}>Project title</label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} size="sm" />
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: TEXT_SECONDARY, display: "block", marginBottom: 3 }}>Research question / description</label>
+            <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+          </div>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: TEXT_SECONDARY, display: "block", marginBottom: 3 }}>Objectives (one per line)</label>
+            <Textarea rows={4} value={objectives} onChange={(e) => setObjectives(e.target.value)} />
+          </div>
+          <FormSelect label="Visibility" size="sm" value={visibility} onChange={(e) => setVisibility(e.target.value)}>
+            <option value="private">Private</option>
+            <option value="team">Team only</option>
+            <option value="public">Public</option>
+          </FormSelect>
+          {error && <div style={{ fontSize: 12, color: "#B91C1C" }}>{error}</div>}
+          <div style={{ display: "flex", gap: 8 }}>
+            <Button variant="primary" onClick={create} loading={creating}>Create Project</Button>
+            <Button variant="ghost" onClick={() => setReviewing(false)} disabled={creating}>Cancel</Button>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 export default function TeamBuilder() {
   const { id } = useParams();
   const [blueprint, setBlueprint] = useState(null);
@@ -322,6 +414,7 @@ export default function TeamBuilder() {
       </Card>
 
       <ReviewAndInvite blueprint={blueprint} onChange={setBlueprint} />
+      <CreateProjectSection blueprint={blueprint} onCreated={setBlueprint} />
     </ResearchLayout>
   );
 }

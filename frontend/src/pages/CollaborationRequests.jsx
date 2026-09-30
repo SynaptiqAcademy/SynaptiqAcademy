@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Users, Check, X, RotateCcw, Clock, MessageSquare, FolderPlus,
   Layers, ArrowRight, AlertCircle, Send, Building2, Globe,
@@ -56,7 +56,6 @@ function InvTypeLabel({ type }) {
 // ─────────────────────── request card ────────────────────────────────────────
 
 function RequestCard({ req, isSender, onStatusChange }) {
-  const navigate = useNavigate();
   const [acting, setActing] = useState(false);
   const [error, setError] = useState(null);
   const [declining, setDeclining] = useState(false);
@@ -75,12 +74,13 @@ function RequestCard({ req, isSender, onStatusChange }) {
     setActing(true);
     setError(null);
     try {
+      // P1 Phase 8G: PATCH /collaboration-requests/{id} never returns a
+      // workspace_id — accepting a single request must not itself create a
+      // project/workspace (that's Team Builder's explicit, human-initiated
+      // "Create Research Project" action). Previously this branch expected
+      // one anyway and silently never fired; removed rather than left dead.
       const res = await api.patch(`/collaboration-requests/${req.id}`, { status, ...extras });
-      onStatusChange(req.id, status, res.data?.workspace_id);
-      if (status === "accepted" && res.data?.workspace_id) {
-        navigate(`/workspaces/${res.data.workspace_id}`);
-        return;
-      }
+      onStatusChange(req.id, status);
       if (status === "declined") setDeclining(false);
       if (status === "withdrawn" || status === "cancelled") setWithdrawConfirm(false);
     } catch (err) {
@@ -280,22 +280,17 @@ function RequestCard({ req, isSender, onStatusChange }) {
         </div>
       )}
 
-      {/* Post-accept — the shared workspace is auto-provisioned on accept (see
-          `act()` above, which navigates there immediately). This row is the
-          fallback for a request the user already accepted in a past visit. */}
+      {/* Post-accept — P1 Phase 8G: accepting a request never itself creates
+          a project/workspace (that requires the sender's explicit "Create
+          Research Project" action in Team Builder, once collaborators have
+          accepted). This is a general link, not a link to a specific
+          project this acceptance produced. */}
       {req.status === "accepted" && (
         <div className="px-5 pb-4 pt-3 border-t border-slate-100 flex flex-wrap gap-2">
-          {req.workspace_id ? (
-            <Button as={Link} to={`/workspaces/${req.workspace_id}`} size="sm" variant="outline">
-              <Layers size={11} strokeWidth={1.5} />
-              Open Workspace
-            </Button>
-          ) : (
-            <Button as={Link} to="/workspaces" size="sm" variant="ghost">
-              <Layers size={11} strokeWidth={1.5} />
-              Workspaces
-            </Button>
-          )}
+          <Button as={Link} to="/projects" size="sm" variant="ghost">
+            <Layers size={11} strokeWidth={1.5} />
+            Projects
+          </Button>
           {other?.id && (
             <Button as={Link} to={`/messages/${other.id}`} size="sm" variant="ghost">
               <MessageSquare size={11} strokeWidth={1.5} />
@@ -375,11 +370,11 @@ export default function CollaborationRequests() {
     loadBoth();
   }, []);
 
-  const handleStatusChangeReceived = (id, status, workspaceId) => {
-    setReceivedReqs((prev) => prev.map((r) => r.id === id ? { ...r, status, workspace_id: workspaceId ?? r.workspace_id } : r));
+  const handleStatusChangeReceived = (id, status) => {
+    setReceivedReqs((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
   };
-  const handleStatusChangeSent = (id, status, workspaceId) => {
-    setSentReqsList((prev) => prev.map((r) => r.id === id ? { ...r, status, workspace_id: workspaceId ?? r.workspace_id } : r));
+  const handleStatusChangeSent = (id, status) => {
+    setSentReqsList((prev) => prev.map((r) => r.id === id ? { ...r, status } : r));
   };
 
   const pendingCount = receivedReqs.filter((r) => r.status === "pending" || r.status === "viewed").length;

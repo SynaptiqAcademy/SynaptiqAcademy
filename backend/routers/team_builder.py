@@ -1,12 +1,17 @@
-"""P1 Phase 8F — Interdisciplinary Research Team Builder.
+"""P1 Phase 8F/8G — Interdisciplinary Research Team Builder.
 
 Research Need -> Team Blueprint -> real Synaptiq candidates per role ->
-user-selected team -> individual Phase 8E collaboration requests. Every
-invitation is sent by calling routers.collaboration_requests.send_request()
-directly — this router never writes to the collaboration_requests
-collection itself, so every Phase 8E protection (authorization, blocking,
-demo rejection, context-scoped deduplication, rate limiting, notifications)
-applies with zero duplication.
+user-selected team -> individual Phase 8E collaboration requests -> (8G)
+Research Project + Workspace. Every invitation is sent by calling
+routers.collaboration_requests.send_request() directly — this router never
+writes to the collaboration_requests collection itself, so every Phase 8E
+protection (authorization, blocking, demo rejection, context-scoped
+deduplication, rate limiting, notifications) applies with zero duplication.
+
+Phase 8G's create-project endpoint reuses the exact canonical `projects`
+document shape routers/projects.py's own create_project() builds (audited
+directly, not assumed) and services.workspace_provisioning.provision_workspace()
+for the linked workspace — no second project or workspace model.
 """
 from __future__ import annotations
 
@@ -27,6 +32,8 @@ from services.research_need.models import ResearchNeed
 from services.research_need.relevance import find_relevant_people
 from services.team_builder.blueprint_generator import generate_blueprint_roles, CREDIT_ACTION
 from services.team_builder.models import TeamRole, PRIORITIES, CATEGORIES
+from services.permissions import assert_quota
+from services.workspace_provisioning import provision_workspace
 from routers.collaboration_requests import send_request as _send_collab_request, SendRequestBody
 
 router = APIRouter(prefix="/api/team-builder", tags=["team-builder"])
@@ -74,6 +81,18 @@ class InviteCandidateRequest(BaseModel):
     collaboration_purpose: Optional[str] = None
     expected_contribution: Optional[str] = None
     message: str = ""
+
+
+class CreateProjectRequest(BaseModel):
+    """§3 — a review step, not a silent copy: every field here is what the
+    user confirmed on the review screen, pre-filled but editable. visibility
+    defaults to private (§28), not this model's own "team" default elsewhere
+    in the app, since a project seeded from private research-need content
+    must not default more open than that."""
+    title: str
+    description: str = ""
+    objectives: list[str] = Field(default_factory=list)
+    visibility: str = "private"
 
 
 async def _get_owned_blueprint(db, blueprint_id: str, uid: str) -> dict:
@@ -500,3 +519,89 @@ async def invite_candidate(
     )
     bp["status"] = "inviting"
     return await _enrich_blueprint(dbp, bp)
+
+
+@router.post("/blueprints/{blueprint_id}/create-project")
+async def create_project_from_blueprint(
+    blueprint_id: str, payload: CreateProjectRequest,
+    db=Depends(get_db), user=Depends(get_current_user),
+):
+    """§2/§3 — human-initiated only; never called automatically by
+    selection, invitation, or acceptance. Creates the canonical
+    routers/projects.py `projects` document directly (same shape that
+    endpoint builds) — NOT via that endpoint's own initial_member_ids path,
+    which fires brand-new collaboration_requests inserts that bypass Phase
+    8E's blocking/dedup/rate-limit entirely; every member added here has
+    already been through a real, accepted Phase 8E request, so no new
+    invitation is sent (§4: only accepted collaborators become members —
+    proposed/pending/declined/withdrawn never do). Then links a workspace
+    via the canonical services.workspace_provisioning.provision_workspace(),
+    preserving each collaborator's Team Blueprint role label as their
+    workspace member_role (§5) — never overwriting professional_role.
+    Idempotent: calling this twice on the same blueprint returns the
+    already-created project rather than creating a duplicate (§54's
+    "do not force duplicate projects", applied to the blueprint's own
+    project too).
+    """
+    db = make_db_proxy(db, user)
+    uid = _uid(user)
+    bp = await _get_owned_blueprint(db, blueprint_id, uid)
+
+    if bp.get("project_id"):
+        existing = await db.projects.find_one({"_id": ObjectId(bp["project_id"])})
+        if existing:
+            return {"project_id": bp["project_id"], "workspace_id": existing.get("workspace_id"), "already_existed": True}
+
+    await assert_quota(user, "projects")
+    await assert_quota(user, "workspaces")
+
+    enriched = await _enrich_blueprint(db, bp)
+    accepted: dict[str, str] = {}  # candidate_id -> team role label
+    for role in enriched["roles"]:
+        for c in role.get("selected_candidates", []):
+            if c.get("status") == "accepted":
+                accepted[c["candidate_id"]] = role["label"]
+
+    now = _now()
+    need = bp.get("research_need") or {}
+    project_doc = {
+        "title": payload.title.strip() or need.get("original_query", "Untitled Research Project"),
+        "description": payload.description or need.get("concise_problem_statement", ""),
+        "visibility": payload.visibility if payload.visibility in ("private", "team", "public") else "private",
+        "owner_id": uid,
+        "members": [uid] + list(accepted.keys()),
+        "problem_statement": need.get("concise_problem_statement", ""),
+        "research_gap": "",
+        "objectives": payload.objectives or [],
+        "research_questions": [],
+        "hypotheses": [],
+        "expected_contributions": "",
+        "methodology": "",
+        "data_sources": "",
+        "sampling": "",
+        "analysis_methods": "",
+        "ethics": "",
+        "keywords": need.get("research_keywords", []),
+        "source": "team_builder",
+        "team_blueprint_id": blueprint_id,
+        "workspace_id": None,  # filled in immediately below
+        "created_at": now,
+    }
+    result = await db.projects.insert_one(project_doc)
+    project_id = str(result.inserted_id)
+
+    workspace = await provision_workspace(
+        db, uid, user.get("full_name", "Someone"),
+        name=project_doc["title"], workspace_type="Research Project",
+        extra_members=accepted, project_id=project_id,
+        description=project_doc["description"],
+        keywords=project_doc["keywords"],
+        visibility=project_doc["visibility"],
+        activity_message=f"Workspace created for research project: {project_doc['title']}",
+    )
+    workspace_id = workspace["id"]
+
+    await db.projects.update_one({"_id": result.inserted_id}, {"$set": {"workspace_id": workspace_id}})
+    await db.team_blueprints.update_one({"_id": bp["_id"]}, {"$set": {"project_id": project_id, "updated_at": now}})
+
+    return {"project_id": project_id, "workspace_id": workspace_id, "already_existed": False}
