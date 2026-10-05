@@ -34,11 +34,16 @@ admin_router = APIRouter(
     tags=["admin-statistical-intelligence"],
 )
 
-_CREDIT_COSTS = {
-    AnalysisDepth.QUICK:    10,
-    AnalysisDepth.STANDARD: 20,
-    AnalysisDepth.DEEP:     35,
-}
+# Every depth is charged the same catalogue price ('ai_statistical_review' ->
+# plans_catalogue.AI_OPERATIONS); the displayed cost is read from the same
+# table so it always matches the charge.
+class _DepthCosts(dict):
+    def __missing__(self, depth):
+        from plans_catalogue import CREDIT_COSTS
+        return CREDIT_COSTS["ai_statistical_review"]
+
+
+_CREDIT_COSTS = _DepthCosts()
 
 ALLOWED_MIME = {
     "text/plain", "text/csv", "application/csv", "application/json", "text/json",

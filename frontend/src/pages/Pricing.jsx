@@ -125,12 +125,25 @@ export default function Pricing() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    api.get("/billing/plans").then((r) => setPlans(r.data)).catch(() => {});
-    api.get("/billing/credit-packs").then((r) => setPacks(r.data)).catch(() => {});
-    api.get("/billing/credit-usage-catalogue").then((r) => setUsageCat(r.data.display || [])).catch(() => {});
-    api.get("/billing/feature-matrix").then((r) => setMatrix(r.data)).catch(() => {});
-  }, []);
+  // Plans/packs/costs come only from the API (no stale static copy). A failed
+  // load shows an explicit retry state instead of empty sections.
+  const [loadState, setLoadState] = useState("loading"); // loading | ready | error
+  const loadCatalogue = () => {
+    setLoadState("loading");
+    Promise.all([
+      api.get("/billing/plans"),
+      api.get("/billing/credit-packs"),
+      api.get("/billing/credit-usage-catalogue"),
+      api.get("/billing/feature-matrix"),
+    ]).then(([pl, pk, uc, fm]) => {
+      setPlans(pl.data || []);
+      setPacks(pk.data || []);
+      setUsageCat(uc.data?.display || []);
+      setMatrix(fm.data || { columns: [], rows: [] });
+      setLoadState("ready");
+    }).catch(() => setLoadState("error"));
+  };
+  useEffect(() => { loadCatalogue(); }, []);
 
   const startCheckout = async (code) => {
     track("plan_selected", { plan_code: code, billing_period: "monthly" });
@@ -142,12 +155,10 @@ export default function Pricing() {
     track("checkout_started", { plan_code: code, billing_period: "monthly" });
     trackMonetizationEvent("checkout_started", { plan_code: code });
     try {
-      const res = await api.post("/billing/checkout-session", {
-        plan_code: code,
-        billing_period: "monthly",
-        success_url: window.location.origin + "/payment/success?type=plan",
-        cancel_url:  window.location.origin + "/payment/cancelled",
-      });
+      // Only the public plan key is sent; the server maps it to its own
+      // configured Stripe price and builds the redirect URLs itself.
+      const planKey = (plans.find((p) => p.code === code) || {}).key || code;
+      const res = await api.post("/billing/checkout-session", { plan: planKey, billing_period: "monthly" });
       if (res.data.url) { window.location.href = res.data.url; return; }
       if (res.data.changed) { toast.success(res.data.message || "Your plan change is being confirmed."); return; }
       toast.info(BILLING_NOT_READY_MESSAGE);
@@ -169,11 +180,7 @@ export default function Pricing() {
     trackMonetizationEvent("credit_pack_checkout_started", { pack_code: pack.code, source: "pricing" });
     setPackBusy(pack.code);
     try {
-      const res = await api.post("/billing/credit-pack-checkout", {
-        pack_code:   pack.code,
-        success_url: window.location.origin + "/payment/success?kind=credits&pack=" + pack.code,
-        cancel_url:  window.location.origin + "/payment/cancelled",
-      });
+      const res = await api.post("/billing/credit-pack-checkout", { pack: pack.key || pack.code });
       if (res.data.url) { window.location.href = res.data.url; return; }
       toast.info(BILLING_NOT_READY_MESSAGE);
     } catch (e) {
@@ -288,10 +295,27 @@ export default function Pricing() {
         style={{ paddingTop: 64, paddingBottom: 88 }}
       >
         <div className={audience === "organization" ? "max-w-[560px] mx-auto px-6 lg:px-10" : "max-w-[1280px] mx-auto px-6 lg:px-10"}>
+          {loadState !== "ready" && (
+            <div data-testid="pricing-load-state" role={loadState === "error" ? "alert" : "status"}
+              style={{ textAlign: "center", padding: "48px 16px", border: "1px solid #e2e8f0", borderRadius: 16 }}>
+              {loadState === "loading" ? (
+                <span style={{ fontSize: "0.9rem", color: "#64748b" }}>Loading plans…</span>
+              ) : (
+                <>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#0a0f1a" }}>Plans couldn't be loaded right now.</div>
+                  <button onClick={loadCatalogue} style={{ marginTop: 12, padding: "9px 18px", borderRadius: 8, border: "1px solid #0F2847", color: "#0F2847", background: "#fff", fontWeight: 700, cursor: "pointer" }}>
+                    Try again
+                  </button>
+                </>
+              )}
+            </div>
+          )}
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: audience === "organization" ? "1fr" : "repeat(3,1fr)",
+              // Columns come from the responsive classes below (1 on phones,
+              // 3 from md) — an inline repeat(3,1fr) overrode them on mobile.
+              ...(audience === "organization" ? { gridTemplateColumns: "1fr" } : {}),
               gap: 20, alignItems: "stretch",
             }}
             className={audience === "organization" ? "" : "grid-cols-1 md:grid-cols-3"}
@@ -374,18 +398,16 @@ export default function Pricing() {
                         }}>
                           €{price % 1 === 0 ? price : price.toFixed(2).replace(".00", "")}
                         </span>
-                        {!isFree && (
-                          <span style={{ fontSize: "0.78rem", color: isPopular ? "rgba(255,255,255,0.45)" : "#94a3b8", fontWeight: 500 }}>
-                            {annual ? "/ mo, billed annually" : "/ month"}
-                          </span>
-                        )}
+                        <span style={{ fontSize: "0.78rem", color: isPopular ? "rgba(255,255,255,0.45)" : "#94a3b8", fontWeight: 500 }}>
+                          {isFree ? (p.price_label || "Forever") : "/ month"}
+                        </span>
                       </div>
                     )}
 
                     {p.future_price_eur_monthly && !isInst && (
                       <div data-testid={`pricing-future-price-${p.code}`} style={{ fontSize: "0.72rem", fontWeight: 600, marginTop: 6,
                         color: isPopular ? "rgba(255,255,255,0.65)" : "#64748b" }}>
-                        Early Access price · €{Number(p.future_price_eur_monthly).toFixed(2)}/month after early access
+                        Early Access · Future price €{Number(p.future_price_eur_monthly).toFixed(2)}/month
                       </div>
                     )}
 
@@ -399,8 +421,8 @@ export default function Pricing() {
                     
                   </div>
 
-                  {/* Credits chip */}
-                  <div style={{
+                  {/* Credits chip (Free has no AI credits — no chip) */}
+                  {!isFree && <div style={{
                     display: "inline-flex", alignItems: "center", gap: 6,
                     background: isPopular ? "rgba(255,255,255,0.1)" : "#f1f5f9",
                     borderRadius: 7, padding: "7px 12px", marginTop: 16, marginBottom: 24, alignSelf: "flex-start",
@@ -411,7 +433,7 @@ export default function Pricing() {
                         : p.credits_per_month > 0 ? `${p.credits_per_month.toLocaleString()} AI Credits / month`
                         : "No AI credits"}
                     </span>
-                  </div>
+                  </div>}
 
                   {/* Divider */}
                   <div style={{ height: 1, background: isPopular ? "rgba(255,255,255,0.12)" : "#f1f5f9", marginBottom: 22 }} />
@@ -690,7 +712,7 @@ export default function Pricing() {
       ══════════════════════════════════════════════════════════════════════ */}
       <section id="credit-packs" data-testid="credit-usage-grid" style={{ background: "#f8fafc", borderTop: "1px solid #f1f5f9" }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-20 lg:py-24">
-          <div className="grid lg:grid-cols-2 gap-16 items-start">
+          <div className="grid lg:grid-cols-2 gap-16 items-start [&>*]:min-w-0">
 
             {/* Left: explanation */}
             <div>
@@ -760,7 +782,7 @@ export default function Pricing() {
               {/* Credit packs */}
               <div data-testid="credit-packs" style={{ marginTop: 20 }}>
                 <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Credit packs — Pro & Pro Advanced</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: 10 }}>
                   {packs.map((pk) => (
                     <div key={pk.code} data-testid={`pack-card-${pk.code}`}
                       style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10 }}

@@ -13,8 +13,28 @@ import time
 from typing import Optional
 
 
+def stripe_mode() -> str:
+    """'test' (default) or 'live'. TEST and LIVE are separated by configuration
+    only: the same code runs with test keys + test price ids, or live keys +
+    live price ids. A key that doesn't match the declared mode is refused."""
+    return "live" if os.environ.get("STRIPE_MODE", "test").strip().lower() == "live" else "test"
+
+
+def _key_matches_mode(key: str) -> bool:
+    prefixes = ("sk_live_", "rk_live_") if stripe_mode() == "live" else ("sk_test_", "rk_test_")
+    return key.startswith(prefixes)
+
+
 def is_configured() -> bool:
-    return bool(os.environ.get("STRIPE_SECRET_KEY"))
+    key = os.environ.get("STRIPE_SECRET_KEY", "")
+    if not key:
+        return False
+    if not _key_matches_mode(key):
+        import logging
+        logging.getLogger("synaptiq.stripe").error(
+            "STRIPE_SECRET_KEY does not match STRIPE_MODE=%s — Stripe disabled (fail closed)", stripe_mode())
+        return False
+    return True
 
 
 def _tax_enabled() -> bool:
@@ -58,6 +78,7 @@ def create_checkout_session(
     success_url: str,
     cancel_url: str,
     stripe_price_id: str,
+    customer_id: str = "",
 ) -> Optional[dict]:
     """Create a Stripe Checkout Session for a subscription plan.
 
@@ -75,7 +96,6 @@ def create_checkout_session(
     sub_metadata = {"user_id": user_id, "plan_code": plan_code, "billing_period": billing_period}
     kwargs: dict = dict(
         mode="subscription",
-        customer_email=user_email,
         client_reference_id=user_id,
         line_items=[{"price": stripe_price_id, "quantity": 1}],
         success_url=success_url,
@@ -84,6 +104,11 @@ def create_checkout_session(
         subscription_data={"metadata": sub_metadata},
         allow_promotion_codes=True,
     )
+    # Reuse the user's Stripe customer when known (never match by email alone).
+    if customer_id:
+        kwargs["customer"] = customer_id
+    else:
+        kwargs["customer_email"] = user_email
     if _tax_enabled():
         kwargs["automatic_tax"] = {"enabled": True}
         kwargs["tax_id_collection"] = {"enabled": True}
@@ -104,6 +129,7 @@ def create_credit_pack_checkout_session(
     success_url: str,
     cancel_url: str,
     stripe_price_id: str,
+    customer_id: str = "",
 ) -> Optional[dict]:
     """One-time Stripe Checkout for a credit pack.
 
@@ -113,17 +139,23 @@ def create_credit_pack_checkout_session(
     if stripe is None:
         return None
 
+    pack_metadata = {"user_id": user_id, "pack_code": pack_code, "kind": "credit_pack"}
     kwargs: dict = dict(
         mode="payment",
-        customer_email=user_email,
         client_reference_id=user_id,
         line_items=[{"price": stripe_price_id, "quantity": 1}],
         success_url=success_url,
         cancel_url=cancel_url,
-        metadata={"user_id": user_id, "pack_code": pack_code, "credits": str(credits),
-                  "kind": "credit_pack"},
-        allow_promotion_codes=True,
+        metadata=pack_metadata,
+        # Copied onto the PaymentIntent/Charge so refunds can be attributed.
+        payment_intent_data={"metadata": pack_metadata},
+        allow_promotion_codes=False,
     )
+    if customer_id:
+        kwargs["customer"] = customer_id
+    else:
+        kwargs["customer_email"] = user_email
+        kwargs["customer_creation"] = "always"
     if _tax_enabled():
         kwargs["automatic_tax"] = {"enabled": True}
         kwargs["tax_id_collection"] = {"enabled": True}

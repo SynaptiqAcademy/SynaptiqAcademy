@@ -12,6 +12,15 @@
 
 A guard rejection raises HTTPException; the monetization middleware then
 releases the request's reservation, so the user is never charged for it.
+
+Billing classification of every AI call (recorded on ai_requests):
+  USER_BILLABLE           a credit reservation is attached (user pays)
+  INTERNAL_NON_BILLABLE   feature explicitly listed in INTERNAL_NON_BILLABLE_FEATURES
+  BACKGROUND_UNATTRIBUTED no HTTP request and no reservation (scheduled/system
+                          jobs) — monitored in admin metrics
+Inside a user HTTP request, an AI call that is neither billed nor explicitly
+internal is BLOCKED (UnbilledAIBlocked) — no user-triggered path can spend
+provider money without consuming credits.
 """
 from __future__ import annotations
 
@@ -29,6 +38,38 @@ from services.ai.pricing import (
 logger = logging.getLogger("synaptiq.ai.cost_guard")
 
 _ESTIMATE_MODEL = "claude-sonnet-4-6"   # conservative when no model is pinned
+
+USER_BILLABLE = "USER_BILLABLE"
+INTERNAL_NON_BILLABLE = "INTERNAL_NON_BILLABLE"
+BACKGROUND_UNATTRIBUTED = "BACKGROUND_UNATTRIBUTED"
+
+# AI features allowed to run inside an HTTP request without a credit
+# reservation. Each entry must say why it is not billed to a user.
+INTERNAL_NON_BILLABLE_FEATURES: dict[str, str] = {
+    "admin_copilot": "Admin OS copilot — admin/super-admin only (routers/admin_expansion.py)",
+    "validation": "Evidence check run inside an already-billed request (gateway/response_validator.py)",
+}
+
+
+class UnbilledAIBlocked(HTTPException):
+    """A user-request AI call with no credit reservation and no internal
+    classification. Optional AI enrichments catch this and degrade
+    gracefully; anything else surfaces as 503 and is logged as a defect."""
+
+    def __init__(self, feature: str):
+        super().__init__(status_code=503, detail={
+            "code": "ai_unavailable",
+            "message": "This AI action isn't available right now.",
+        })
+        self.feature = feature
+
+
+def classify(billing: dict | None, feature: str | None) -> str:
+    if billing and billing.get("id"):
+        return USER_BILLABLE
+    if (feature or "") in INTERNAL_NON_BILLABLE_FEATURES:
+        return INTERNAL_NON_BILLABLE
+    return BACKGROUND_UNATTRIBUTED
 
 
 @dataclass
@@ -77,6 +118,16 @@ def _cloud_provider_is_anthropic(request) -> bool:
 async def preflight(request, system: str, user_text: str) -> GuardContext:
     """Route, clamp and enforce guards on a GatewayRequest (mutated in place)."""
     g = _attribution(request)
+
+    # Unbilled-path enforcement (see module docstring).
+    from services.credits_service import current_request_context
+    feature = getattr(request, "feature", None) or "general"
+    if (g.reservation_id is None and current_request_context() is not None
+            and feature not in INTERNAL_NON_BILLABLE_FEATURES):
+        logger.error("UNBILLED_AI_BLOCKED feature=%s — user-request AI call without a credit "
+                     "reservation; add consume_credits() or classify it as internal", feature)
+        raise UnbilledAIBlocked(feature)
+
     limits = guards_for(g.tier)
 
     # Cost-aware routing by catalogue operation.
@@ -145,24 +196,29 @@ async def preflight(request, system: str, user_text: str) -> GuardContext:
     return g
 
 
-async def record_usage(g: GuardContext, *, model: str, input_tokens: int, output_tokens: int,
-                       cache_read_tokens: int, cache_write_tokens: int, cost_usd: float) -> None:
-    """Attach usage to the reservation and bump the user's cost counters."""
-    if g.reservation_id:
+async def record_provider_usage(billing: dict | None, *, model: str, input_tokens: int,
+                                output_tokens: int, cache_read_tokens: int, cache_write_tokens: int,
+                                cost_usd: float) -> None:
+    """Called for EVERY provider call (services/ai/request_logger.py): attach
+    usage to the request's reservation and bump the paying user's cost
+    counters. Never raises."""
+    billing = billing or {}
+    if billing.get("id"):
         from services.credits_service import attach_telemetry
-        await attach_telemetry(g.reservation_id, input_tokens=input_tokens,
+        await attach_telemetry(billing["id"], input_tokens=input_tokens,
                                output_tokens=output_tokens, cache_read_tokens=cache_read_tokens,
                                cache_write_tokens=cache_write_tokens, cost_usd=cost_usd, model=model)
-    if g.user_id and cost_usd:
+    uid = billing.get("user_id")
+    if uid and cost_usd:
         now = datetime.now(timezone.utc)
-        day_id, month_id = _counter_ids(g.user_id, now)
+        day_id, month_id = _counter_ids(uid, now)
         try:
             db = _db()
             for cid, period in ((day_id, f"{now:%Y-%m-%d}"), (month_id, f"{now:%Y-%m}")):
                 await db.ai_user_cost_counters.update_one(
                     {"_id": cid},
                     {"$inc": {"cost_usd": float(cost_usd), "requests": 1},
-                     "$setOnInsert": {"user_id": g.user_id, "period": period}},
+                     "$setOnInsert": {"user_id": uid, "period": period}},
                     upsert=True,
                 )
         except Exception as exc:

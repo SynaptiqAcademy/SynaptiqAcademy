@@ -193,6 +193,19 @@ async def send_message(sid: str, body: SendMessageIn, user: dict = Depends(get_c
         f"DIRECTIVE: {directive}\n\n"
         f"CONTEXT:\n{json.dumps(context)}"
     )
+    # Section-aware context: when the request names manuscript sections
+    # ("improve the Discussion"), include those sections' current text —
+    # not the whole manuscript — so the model works on the real section.
+    if context.get("entity") == "manuscript" and context.get("id"):
+        try:
+            from services.ai.manuscript_context import build_section_context
+            m = await db.manuscripts.find_one({"_id": ObjectId(context["id"])}, {"sections": 1, "authors": 1})
+            if m and user["id"] in (m.get("authors") or []):
+                relevant = build_section_context(body.text, m.get("sections") or {})
+                if relevant:
+                    system += "\n\nRELEVANT MANUSCRIPT SECTIONS (current text):\n" + relevant
+        except Exception:
+            pass
 
     from services.ai.llm import call_llm
     # Build full conversation history from DB for multi-turn context.

@@ -121,8 +121,8 @@ class AIGateway:
             system, user_text = self._resolve_prompt(request, context_block)
 
             # 4b. Cost control: attribution, model routing, token/cost guards.
-            from services.ai.cost_guard import preflight, record_usage
-            guard = await preflight(request, system, user_text)
+            from services.ai.cost_guard import preflight
+            await preflight(request, system, user_text)
 
             # 5. Cache check
             memory = get_memory()
@@ -148,14 +148,9 @@ class AIGateway:
             response.from_cache     = getattr(ai_response, "from_cache", False)
             response.fallback_reason = ai_response.fallback_reason
 
-            if ai_response.provider not in FAILURE_PROVIDERS:
-                await record_usage(
-                    guard, model=ai_response.model,
-                    input_tokens=response.tokens_in, output_tokens=response.tokens_out,
-                    cache_read_tokens=getattr(ai_response, "cache_read_tokens", 0),
-                    cache_write_tokens=getattr(ai_response, "cache_write_tokens", 0),
-                    cost_usd=getattr(ai_response, "cost_usd", 0.0),
-                )
+            # Provider usage is attributed per call by the engine's request
+            # logger (services/ai/request_logger.py), which also sees
+            # validator calls that don't pass through this gateway.
 
             # 7. Response validation (real evidence grounding, not regex)
             require_ev = request.require_evidence or (

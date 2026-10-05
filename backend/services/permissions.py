@@ -265,15 +265,22 @@ async def assert_quota(user: dict, resource: str) -> None:
 # ---------------------------- storage quota ----------------------------
 
 async def get_user_storage_bytes(user_id: str) -> int:
-    """Sum size_bytes of all latest-version files owned by the user."""
+    """Real stored bytes owned by the user, across every place user uploads
+    are kept: repository files (latest versions), message attachments, and
+    knowledge-base documents. Never taken from the client."""
     db = get_db()
     db = DBProxy(db, SecurityContext.system())
 
-    result = await db.files.aggregate([
-        {"$match": {"owner_id": user_id, "is_latest": True}},
-        {"$group": {"_id": None, "total": {"$sum": "$size_bytes"}}},
-    ]).to_list(1)
-    return result[0]["total"] if result else 0
+    async def _sum(coll: str, match: dict, field: str) -> int:
+        r = await db[coll].aggregate([
+            {"$match": match},
+            {"$group": {"_id": None, "total": {"$sum": f"${field}"}}},
+        ]).to_list(1)
+        return int((r[0]["total"] if r else 0) or 0)
+
+    return (await _sum("files", {"owner_id": user_id, "is_latest": True}, "size_bytes")
+            + await _sum("message_attachments", {"owner_id": user_id, "is_deleted": {"$ne": True}}, "size")
+            + await _sum("knowledge_documents", {"user_id": user_id}, "file_size_bytes"))
 
 
 async def assert_storage_quota(user: dict, upload_size_bytes: int) -> None:

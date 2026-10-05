@@ -41,6 +41,17 @@ class WorkflowExecuteRequest(BaseModel):
     session_id: Optional[str] = None
 
 
+# Multi-agent orchestration makes several model calls per run, so one run is
+# priced as a DEEP_RESEARCH operation (plans_catalogue.AI_OPERATIONS). Credits
+# are reserved before any agent runs; a failed request is released by the
+# monetization middleware (and explicitly for mid-stream failures).
+async def _charge_execution(user: dict) -> dict:
+    from services.entitlements import assert_capability
+    from services.credits_service import consume_credits
+    assert_capability(user, "can_use_research_assistant")
+    return await consume_credits(user["id"], "DEEP_RESEARCH", metadata={"feature": "copilot.multi_agent"})
+
+
 # ── SSE streaming endpoint ────────────────────────────────────────────────────
 
 @router.post("/execute")
@@ -56,6 +67,8 @@ async def execute(
     Each SSE frame is:  data: {json}\n\n
     """
     db = make_db_proxy(db, user)
+    reservation = await _charge_execution(user)
+
     async def _stream():
         try:
             async for event in orchestrator.stream_execute(
@@ -67,6 +80,11 @@ async def execute(
                 yield f"data: {json.dumps(event)}\n\n"
         except Exception as exc:
             logger.exception("Stream error: %s", exc)
+            # The 200 status is already sent — refund explicitly so a failed
+            # orchestration is never charged.
+            from services.credits_service import release_reservation
+            if reservation.get("reservation_id"):
+                await release_reservation(reservation["reservation_id"], "copilot_stream_error")
             yield f"data: {json.dumps({'event': 'error', 'data': {'message': str(exc)[:200]}})}\n\n"
         finally:
             yield "data: {\"event\": \"done\"}\n\n"
@@ -92,6 +110,7 @@ async def execute_sync(
 ):
     """Blocking version — collects all events and returns after completion."""
     db = make_db_proxy(db, user)
+    await _charge_execution(user)
     events    = []
     final_evt = None
 
@@ -153,6 +172,7 @@ async def execute_workflow(
     db = make_db_proxy(db, user)
     if workflow_id not in WORKFLOWS:
         return {"error": f"Unknown workflow: {workflow_id}"}
+    await _charge_execution(user)
 
     # Override the intent detection by injecting a workflow-specific phrase
     trigger = WORKFLOWS[workflow_id]["phrases"][0] if WORKFLOWS[workflow_id]["phrases"] else ""

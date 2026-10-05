@@ -1264,7 +1264,7 @@ function RightPanel({ state, dispatch, onRefreshContext, onDeleteMemory, onClear
                 <span style={{fontSize:"0.8rem",fontWeight:700,color:NAVY}}>{ctx.credits_remaining}</span>
               </div>
               <div style={{height:4,background:"#E2E8F0",borderRadius:999,overflow:"hidden"}}>
-                <div style={{height:"100%",background:NAVY,borderRadius:999,width:Math.min(100,(ctx.credits_remaining/(ctx.credits_total||300))*100)+"%",transition:"width 600ms"}}/>
+                <div style={{height:"100%",background:NAVY,borderRadius:999,width:Math.min(100,(ctx.credits_remaining/(ctx.credits_total||ctx.credits_remaining||1))*100)+"%",transition:"width 600ms"}}/>
               </div>
             </div>
           )}

@@ -183,12 +183,21 @@ async def search_papers(
 # ANALYSIS PIPELINE
 # ═════════════════════════════════════════════════════════════════════════════
 
+async def _charge(user: dict, operation: str, session_id: str) -> dict:
+    """Reserve credits before an AI step (Pro Advanced feature). A failed step
+    returns 4xx/5xx, so the monetization middleware releases the reservation."""
+    return await consume_credits(_user_id(user), operation,
+                                 metadata={"feature": "literature_intelligence", "session_id": session_id})
+
+
 @router.post("/sessions/{session_id}/analyze")
 async def analyze_papers(
     session_id: str,
     user=Depends(require_feature("ai_literature_review")),
 ):
-    """Run 19-field AI analysis on all papers in the session."""
+    """Run 19-field AI analysis on all papers in the session (one model call per
+    paper) — priced as one MULTI_PAPER_SYNTHESIS operation."""
+    await _charge(user, "MULTI_PAPER_SYNTHESIS", session_id)
     engine = await _get_engine()
     result = await engine.analyze_papers(session_id, _user_id(user))
     if not result.get("ok"):
@@ -197,8 +206,9 @@ async def analyze_papers(
 
 
 @router.post("/sessions/{session_id}/compare")
-async def compare_papers(session_id: str, user=Depends(get_current_user)):
+async def compare_papers(session_id: str, user=Depends(require_feature("ai_literature_review"))):
     """Run multi-paper comparative analysis."""
+    await _charge(user, "LITERATURE_SYNTHESIS", session_id)
     engine = await _get_engine()
     result = await engine.compare_papers(session_id, _user_id(user))
     if not result.get("ok"):
@@ -228,9 +238,10 @@ class DetectGapsRequest(BaseModel):
 async def detect_gaps(
     session_id: str,
     body: DetectGapsRequest,
-    user=Depends(get_current_user),
+    user=Depends(require_feature("ai_literature_review")),
 ):
     """Detect research gaps across the corpus."""
+    await _charge(user, "LITERATURE_SYNTHESIS", session_id)
     engine = await _get_engine()
     return await engine.detect_gaps_session(session_id, _user_id(user), body.topic)
 
@@ -247,6 +258,7 @@ async def generate_review(
     user=Depends(require_feature("ai_literature_review")),
 ):
     """Generate the full AI-written academic review (costs credits)."""
+    await _charge(user, "MULTI_PAPER_SYNTHESIS", session_id)
     engine = await _get_engine()
     result = await engine.generate_review_session(
         session_id, _user_id(user), body.topic, body.additional_instructions

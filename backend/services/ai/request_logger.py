@@ -72,6 +72,14 @@ class AIRequestLogger:
 
             billing = billing or {}
             failed = response.provider in ("error_fallback", "budget_manager", "emergency_fallback")
+            from services.ai.cost_guard import classify, record_provider_usage
+            if not failed:
+                await record_provider_usage(
+                    billing, model=response.model, input_tokens=response.input_tokens,
+                    output_tokens=response.output_tokens,
+                    cache_read_tokens=getattr(response, "cache_read_tokens", 0),
+                    cache_write_tokens=getattr(response, "cache_write_tokens", 0),
+                    cost_usd=response.cost_usd)
             await db.ai_requests.insert_one(
                 {
                     # Per-request cost telemetry (internal only — never
@@ -83,6 +91,7 @@ class AIRequestLogger:
                     "reservation_id": billing.get("id"),
                     "credits_charged": billing.get("credits", 0),
                     "billed": bool(billing),
+                    "billing_class": classify(billing, request.feature),
                     "status": "failed" if failed else "succeeded",
                     "cache_read_tokens": getattr(response, "cache_read_tokens", 0),
                     "cache_write_tokens": getattr(response, "cache_write_tokens", 0),

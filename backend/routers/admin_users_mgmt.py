@@ -537,6 +537,8 @@ async def set_plan(
     await db.credit_transactions.insert_one({
         "user_id": uid,
         "kind": "admin_grant" if delta >= 0 else "admin_deduct",
+        "ledger_type": "ADMIN_ADJUSTMENT",
+        "balance_effect": delta,
         "bucket": "monthly",
         "amount": abs(delta),
         "action": "plan_change",
@@ -598,6 +600,8 @@ async def adjust_credits(
     await db.credit_transactions.insert_one({
         "user_id": uid,
         "kind": kind,
+        "ledger_type": "ADMIN_ADJUSTMENT",
+        "balance_effect": body.amount,
         "bucket": "pack",
         "amount": abs(body.amount),
         "action": "admin_adjust",
@@ -786,3 +790,75 @@ async def delete_user(
         ip=meta["ip"], user_agent=meta["user_agent"],
     )
     return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# POST /api/admin/users/{uid}/billing-simulate — TEST-MODE ONLY
+# ---------------------------------------------------------------------------
+# Lets a super admin exercise the real credit/plan code paths for QA without a
+# Stripe event: plan change, renewal (cycle allocation), end of subscription,
+# purchased-credit grant. Refused when STRIPE_MODE=live. Every call is audited.
+
+class BillingSimulateRequest(BaseModel):
+    action: str                     # set_plan | renew | end_subscription | grant_purchased
+    plan_code: Optional[str] = None
+    credits: Optional[int] = None
+
+
+@router.post("/users/{uid}/billing-simulate")
+async def billing_simulate(
+    uid: str,
+    body: BillingSimulateRequest,
+    request: Request,
+    admin: dict = Depends(require_super_admin),
+):
+    from services import stripe_service
+    from services.credits_service import (
+        allocate_subscription_credits, apply_plan_change_credits, grant_pack_credits,
+    )
+    from plans_catalogue import PLANS
+    if stripe_service.stripe_mode() == "live":
+        raise HTTPException(status_code=403, detail="Billing simulation is disabled in live mode.")
+    db = DBProxy(get_db(), SecurityContext.system())
+    oid = _parse_oid(uid)
+    user = await db.users.find_one({"_id": oid})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    current = user.get("plan_code") or "free"
+    now = datetime.now(timezone.utc)
+    cycle = f"sim:{uid}:{int(now.timestamp())}"
+
+    if body.action == "set_plan":
+        if body.plan_code not in {p["code"] for p in PLANS}:
+            raise HTTPException(status_code=400, detail="Unknown plan_code")
+        await db.users.update_one({"_id": oid}, {"$set": {"plan_code": body.plan_code,
+                                                          "subscription_status": "active"}})
+        await apply_plan_change_credits(uid, from_plan=current, to_plan=body.plan_code,
+                                        cycle_key=user.get("credits_cycle_key") if current != "free" else cycle)
+    elif body.action == "renew":
+        if current == "free":
+            raise HTTPException(status_code=400, detail="Free has no renewal")
+        await allocate_subscription_credits(uid, plan_code=current, cycle_key=cycle,
+                                            reason="Simulated renewal (admin, test mode)")
+    elif body.action == "end_subscription":
+        await db.users.update_one({"_id": oid}, {"$set": {"plan_code": "free", "subscription_status": "expired"}})
+        await apply_plan_change_credits(uid, from_plan=current, to_plan="free")
+    elif body.action == "grant_purchased":
+        n = int(body.credits or 0)
+        if n <= 0 or n > 10_000:
+            raise HTTPException(status_code=400, detail="credits must be 1..10000")
+        await grant_pack_credits(uid, pack_code="admin_simulation", credits=n,
+                                 stripe_checkout_session_id=f"sim_{uid}_{int(now.timestamp() * 1000)}")
+    else:
+        raise HTTPException(status_code=400, detail="Unknown action")
+
+    invalidate_user_cache(uid)
+    meta = request_meta(request)
+    await log_event("admin.user.billing_simulate", actor_id=admin["id"], actor_email=admin.get("email"),
+                    target_id=uid, target_type="user", target_email=user.get("email"),
+                    ip=meta["ip"], user_agent=meta["user_agent"],
+                    extra={"action": body.action, "plan_code": body.plan_code, "credits": body.credits})
+    fresh = await db.users.find_one({"_id": oid})
+    return {"ok": True, "plan_code": fresh.get("plan_code"),
+            "subscription_credits": fresh.get("credits_balance", 0),
+            "purchased_credits": fresh.get("credits_pack_balance", 0)}

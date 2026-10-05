@@ -45,6 +45,9 @@ async def upload_document(
         raise HTTPException(status_code=413, detail="File too large (max 50 MB)")
     if len(content) == 0:
         raise HTTPException(status_code=400, detail="Empty file")
+    from services.permissions import assert_storage_quota
+    _u = dict(user, id=str(user.get("id") or user.get("_id", "")))
+    await assert_storage_quota(_u, len(content))   # plan storage limit (server-side)
 
     if visibility not in ("private", "workspace", "public"):
         visibility = "private"

@@ -559,6 +559,8 @@ async def monetization_metrics(
                 "requests": {"$sum": 1},
                 "failed": {"$sum": {"$cond": [{"$eq": ["$status", "failed"]}, 1, 0]}},
                 "unbilled": {"$sum": {"$cond": [{"$eq": ["$billed", False]}, 1, 0]}},
+                "internal": {"$sum": {"$cond": [{"$eq": ["$billing_class", "INTERNAL_NON_BILLABLE"]}, 1, 0]}},
+                "background_unattributed": {"$sum": {"$cond": [{"$eq": ["$billing_class", "BACKGROUND_UNATTRIBUTED"]}, 1, 0]}},
                 "input_tokens": {"$sum": "$input_tokens"},
                 "output_tokens": {"$sum": "$output_tokens"},
                 "cache_read_tokens": {"$sum": {"$ifNull": ["$cache_read_tokens", 0]}},
@@ -620,8 +622,50 @@ async def monetization_metrics(
         cache_ratio = round((t.get("cache_read_tokens") or 0) /
                             ((t.get("input_tokens") or 0) + (t.get("cache_read_tokens") or 0)), 4)
 
+    import os as _os
+    usd_per_eur = float(_os.environ.get("AI_USD_PER_EUR", "1.08"))
+    now = _now()
+    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+    async def _cost_since(iso: str) -> float:
+        r = await db.ai_requests.aggregate([
+            {"$match": {"timestamp": {"$gte": iso}}},
+            {"$group": {"_id": None, "c": {"$sum": "$cost_usd"}}}]).to_list(1)
+        return round((r[0]["c"] if r else 0) or 0, 4)
+
+    paid_users = await db.users.count_documents(
+        {"plan_code": {"$in": ["researcher", "pro_researcher"]},
+         "subscription_status": {"$in": ["active", "trialing", "past_due"]},
+         "role": {"$nin": ["super_admin", "moderator"]}})
+    consumed = await db.credit_reservations.aggregate([
+        {"$match": {"created_at": {"$gte": since}, "status": {"$in": ["COMPLETED", "RESERVED"]}}},
+        {"$group": {"_id": None, "c": {"$sum": "$credits"}}}]).to_list(1)
+    packs = await db.credit_purchases.aggregate([
+        {"$match": {"created_at": {"$gte": since}, "status": "paid",
+                    "pack_code": {"$in": ["pack_100", "pack_300", "pack_750"]},
+                    "stripe_checkout_session_id": {"$not": {"$regex": "^sim_"}}}},
+        {"$group": {"_id": "$pack_code", "purchases": {"$sum": 1}, "credits": {"$sum": "$credits"}}}]).to_list(20)
+    revenue = await db.billing_history.aggregate([
+        {"$match": {"created_at": {"$gte": since}, "status": "paid"}},
+        {"$group": {"_id": "$kind", "eur": {"$sum": "$amount_eur"}}}]).to_list(20)
+    rev = {r["_id"]: round(r.get("eur") or 0, 2) for r in revenue}
+    gross_revenue_eur = round(sum(rev.values()), 2)
+    cost_eur = round((t.get("cost_usd") or 0) / usd_per_eur, 2)
+
     return {
         "period_days": days,
+        "ai_cost_today_usd": await _cost_since(day_start),
+        "ai_cost_this_month_usd": await _cost_since(month_start),
+        "active_paid_users": paid_users,
+        "avg_ai_cost_per_paid_user_usd": (round((t.get("cost_usd") or 0) / paid_users, 4) if paid_users else None),
+        "credits_consumed": (consumed[0]["c"] if consumed else 0),
+        "purchased_credits_sold": [{"pack_code": p["_id"], "purchases": p["purchases"], "credits": p["credits"]}
+                                   for p in packs],
+        "revenue_eur_by_kind": rev,     # invoice = subscriptions, pack_purchase = credit packs (gross, incl. VAT)
+        "estimated_ai_gross_margin_eur": round(gross_revenue_eur - cost_eur, 2),
+        "margin_note": ("Gross revenue (incl. VAT, before Stripe fees) minus provider cost converted at "
+                        f"{usd_per_eur} USD/EUR — an estimate, not accounting data."),
         "total_provider_cost_usd": round(t.get("cost_usd") or 0, 4),
         "total_provider_calls": t.get("requests", 0),
         "prompt_cache_hit_ratio": cache_ratio,

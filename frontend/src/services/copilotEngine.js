@@ -38,6 +38,13 @@ export async function streamExecute(userInput, sessionId, callbacks = {}) {
   }
 
   if (!response.ok) {
+    // 402 = plan/credits gate: show the standard upgrade / buy-credits modal.
+    if (response.status === 402) {
+      try {
+        const body = await response.json();
+        if (body?.detail?.code) window.dispatchEvent(new CustomEvent("synaptiq:gate", { detail: body.detail }));
+      } catch (_) {}
+    }
     onError?.({ message: `HTTP ${response.status}` });
     return;
   }

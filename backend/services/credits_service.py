@@ -33,6 +33,7 @@ and use kind='ai_consumption' so existing 'consume' sums do not double count.
 """
 from __future__ import annotations
 
+import contextlib
 import contextvars
 import logging
 from datetime import datetime, timezone, timedelta
@@ -378,6 +379,10 @@ async def consume_credits(user_id: str, action: str, metadata: dict | None = Non
                               metadata={**(metadata or {}),
                                         "from_monthly": from_monthly, "from_pack": from_pack})
 
+    await _track(user_id, "ai_operation_started",
+                 {"feature": action, "operation": reservation["operation"], "credits": cost,
+                  "reservation_id": reservation_id})
+
     if ctx is not None:
         ctx["reservations"].append({"id": reservation_id, "user_id": user_id, "action": action,
                                     "operation": reservation["operation"], "credits": cost,
@@ -388,6 +393,14 @@ async def consume_credits(user_id: str, action: str, metadata: dict | None = Non
     return {"consumed": cost, "from_monthly": from_monthly, "from_pack": from_pack,
             "balance": state["balance"] - cost, "action": action,
             "reservation_id": reservation_id}
+
+
+async def _track(user_id: str, event: str, props: dict) -> None:
+    try:
+        from services.product_analytics import track_server_event
+        await track_server_event(user_id, event, props)
+    except Exception:
+        pass
 
 
 async def _restore_buckets(db, user_id: str, from_monthly: int, from_pack: int) -> None:
@@ -419,6 +432,9 @@ async def release_reservation(reservation_id: str, reason: str = "") -> bool:
                               reason=reason[:300], reservation_id=reservation_id,
                               balance_effect=res["credits"],
                               metadata={"from_monthly": fm, "from_pack": fp})
+    await _track(res["user_id"], "ai_operation_failed",
+                 {"feature": res["action"], "operation": res.get("operation"),
+                  "credits_refunded": res["credits"], "reason": reason[:120]})
     return True
 
 
@@ -438,6 +454,8 @@ async def complete_reservation(reservation_id: str) -> bool:
                               reservation_id=reservation_id, balance_effect=0,
                               metadata={"operation": res.get("operation"),
                                         "telemetry": res.get("telemetry")})
+    await _track(res["user_id"], "ai_operation_completed",
+                 {"feature": res["action"], "operation": res.get("operation"), "credits": res["credits"]})
     return True
 
 
@@ -470,6 +488,29 @@ async def finalize_request_reservations(ctx: dict, *, success: bool, reason: str
                 await release_reservation(r["id"], reason or "request_failed")
         except Exception as exc:
             logger.error("finalize reservation %s failed: %s", r.get("id"), exc)
+
+
+@contextlib.asynccontextmanager
+async def billed_background_operation(user_id: str, action: str, metadata: dict | None = None):
+    """Credit-billed AI work that runs outside an HTTP request (worker jobs,
+    scheduled missions). Reserves before the body runs; completes on success,
+    releases (refunds) if the body raises. Raises the usual 402 when the user's
+    plan has no AI or the balance is too low — so background AI can never run
+    unbilled for a user."""
+    token = open_request_context()
+    try:
+        res = await consume_credits(user_id, action, metadata)
+        try:
+            yield res
+        except BaseException:
+            if res.get("reservation_id"):
+                await release_reservation(res["reservation_id"], "background_operation_failed")
+            raise
+        else:
+            if res.get("reservation_id"):
+                await complete_reservation(res["reservation_id"])
+    finally:
+        close_request_context(token)
 
 
 async def refund_credits(user_id: str, action: str, reason: str = "",
@@ -667,6 +708,9 @@ async def ensure_credit_indexes(db) -> None:
             [("ledger_type", 1), ("created_at", -1)])),
         ("cost counters", lambda: db.ai_user_cost_counters.create_index([("user_id", 1), ("period", 1)])),
         ("ai_requests by user", lambda: db.ai_requests.create_index([("user_id", 1), ("timestamp", -1)])),
+        # Same spec/name as server.py's startup index — webhook idempotency.
+        ("billing event idempotency", lambda: db.billing_events.create_index(
+            [("stripe_event_id", 1)], unique=True, sparse=True, name="billing_events_idempotency")),
     ]
     for label, step in steps:
         try:

@@ -8,7 +8,7 @@ publication risk, recommended additional analyses, simulated reviewer criticisms
 publication readiness score, and a revision roadmap.
 
 Endpoints:
-  POST /api/statistical-review          — run review (costs 25 credits)
+  POST /api/statistical-review          — run review (MANUSCRIPT_SECTION_REVIEW credits)
   GET  /api/statistical-review/history  — list caller's past reviews
   GET  /api/statistical-review/{id}     — fetch one review (owner only)
 """
@@ -328,7 +328,7 @@ async def create_review(
     body: StatisticalReviewRequest,
     user: dict = Depends(require_feature("ai_statistical_review")),
 ):
-    """Run a statistical review. Costs 25 credits; refunded automatically on failure."""
+    """Run a statistical review (priced by the AI operation catalogue); refunded automatically on failure."""
     charged = await consume_credits(
         user["id"], "ai_statistical_review",
         metadata={"topic": body.topic[:100]},

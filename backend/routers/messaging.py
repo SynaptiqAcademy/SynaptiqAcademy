@@ -815,6 +815,8 @@ async def upload_file(file: UploadFile = File(...), user: dict = Depends(get_cur
     data = await file.read()
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="File too large (max 25 MB)")
+    from services.permissions import assert_storage_quota
+    await assert_storage_quota(user, len(data))   # plan storage limit (server-side)
     ext = ALLOWED_MIME[file.content_type]
     path = build_path(user["id"], ext)
     try:

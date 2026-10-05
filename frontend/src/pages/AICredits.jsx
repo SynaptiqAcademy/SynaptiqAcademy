@@ -59,9 +59,13 @@ export default function AICredits() {
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [catalogue, setCatalogue] = useState([]);
+  const [ledger, setLedger] = useState([]);
 
   useEffect(() => {
     loadCreditCatalogue().then((c) => setCatalogue(c.display || []));
+    api.get("/credits/transactions?limit=15")
+      .then((r) => setLedger((r.data || []).filter((t) => t.ledger_type && t.ledger_type !== "AI_CONSUMPTION" && t.balance_effect)))
+      .catch(() => {});
     Promise.all([
       api.get("/billing/subscription").catch(() => ({ data: null })),
       api.get("/ai/usage").catch(() => ({ data: null })),
@@ -133,6 +137,26 @@ export default function AICredits() {
                 Full analytics <ChevronRight size={10} strokeWidth={1.5} />
               </Link>
             </Card>
+
+            {/* ── Recent credit activity (ledger) ─────────────────────── */}
+            {ledger.length > 0 && (
+              <Card padding="none" data-testid="credit-activity">
+                <div className="px-5 py-4 border-b border-slate-200 overline">Recent credit activity</div>
+                <List border={false} divided>
+                  {ledger.map((t) => (
+                    <ListItem
+                      key={t.id}
+                      title={t.label}
+                      trailing={
+                        <span className={`text-xs font-mono shrink-0 ${t.balance_effect < 0 ? "text-slate-700" : "text-emerald-700"}`}>
+                          {t.balance_effect > 0 ? "+" : ""}{t.balance_effect}
+                        </span>
+                      }
+                    />
+                  ))}
+                </List>
+              </Card>
+            )}
 
             {/* ── Credit packs ───────────────────────────────────────── */}
             <section id="buy-credits">

@@ -186,11 +186,11 @@ export default function BillingCenter() {
                 </div>
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
                   <div style={{ fontFamily: "Georgia, serif", fontSize: 24, fontWeight: 700 }}>
-                    {plan.price_eur_monthly ? `€${plan.price_eur_monthly}` : "Custom"}
+                    {plan.code === "free" ? "€0" : plan.price_eur_monthly ? `€${plan.price_eur_monthly}` : "Custom"}
                     {plan.price_eur_monthly > 0 && <span style={{ fontSize: 12, fontWeight: 400, color: "rgba(255,255,255,0.55)" }}>/month</span>}
                   </div>
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>
-                    {plan.price_eur_monthly > 0 ? "Billed monthly" : "Contact sales"}
+                    {plan.code === "free" ? "Forever" : plan.price_eur_monthly > 0 ? "Billed monthly" : "Contact sales"}
                   </div>
                   <Button size="sm" variant="subtle" onClick={openPortal} style={{ marginTop: 10 }}>Manage Plan</Button>
                 </div>
@@ -210,7 +210,7 @@ export default function BillingCenter() {
 
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "0 24px 20px" }}>
               <Link to="/pricing"><Button as="span" size="sm">Upgrade Plan</Button></Link>
-              <Link to="/pricing#credit-packs"><Button as="span" size="sm" variant="outline">Buy Credits</Button></Link>
+              <Link to={plan.code === "free" ? "/pricing" : "/ai-credits#buy-credits"}><Button as="span" size="sm" variant="outline">Buy Credits</Button></Link>
               {subscription && !cancelAtPeriodEnd && (
                 <Button size="sm" variant="ghost" onClick={() => setConfirmCancelOpen(true)} loading={cancelling}>Cancel Subscription</Button>
               )}
@@ -249,7 +249,7 @@ export default function BillingCenter() {
               <div style={{ marginTop: 16, display: "flex", gap: 24 }}>
                 <div>
                   <div style={{ fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700 }}>{(credits.pack_balance ?? 0).toLocaleString()}</div>
-                  <div style={{ ...TYPE.meta, marginTop: 2 }}>Pack Credits (never expire)</div>
+                  <div style={{ ...TYPE.meta, marginTop: 2 }}>Purchased credits (never expire)</div>
                 </div>
                 <div>
                   <div style={{ fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700, color: EMERALD }}>{totalBalance.toLocaleString()}</div>
@@ -296,10 +296,10 @@ export default function BillingCenter() {
             )}
           </Card>
 
-          {/* Credit Pack Purchases */}
+          {/* AI Credit Purchases */}
           <Card padding="none" data-testid="credit-purchases">
             <div style={{ padding: "18px 24px", borderBottom: `1px solid ${BRD}` }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a" }}>Credit Pack Purchases</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a" }}>AI Credit Purchases</div>
             </div>
             {purchases.length === 0 ? (
               <div style={{ padding: 24 }}><EmptyState icon={<Sparkles />} title="No credit pack purchases yet." size="sm" /></div>
@@ -401,7 +401,7 @@ export default function BillingCenter() {
                 </div>
               ))}
             </div>
-            <Link to="/pricing#credit-packs">
+            <Link to={plan.code === "free" ? "/pricing" : "/ai-credits#buy-credits"}>
               <Button as="span" size="sm" style={{ width: "100%", marginTop: 14 }}>Buy Additional Credits</Button>
             </Link>
           </Card>

@@ -70,6 +70,18 @@ async def provision_workspace(
     other party in an accepted collaboration request). The owner always gets
     the "Owner" role regardless of what's passed for their id in extra_members.
     """
+    # Plan workspace limit, enforced here so EVERY creation path (workspaces,
+    # team builder, grant applications, conference teams…) is covered. The
+    # limit belongs to the owner's plan.
+    from bson import ObjectId as _OID
+    from services.permissions import assert_quota
+    try:
+        _owner = await db.users.find_one({"_id": _OID(owner_id)})
+    except Exception:
+        _owner = None
+    if _owner:
+        await assert_quota(dict(_owner, id=owner_id), "workspaces")
+
     ws_type = workspace_type if workspace_type in WORKSPACE_TYPES else "Research Project"
     now = _now()
 

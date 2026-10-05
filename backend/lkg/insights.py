@@ -73,21 +73,27 @@ async def generate_user_insights(db, uid: str, limit: int = 6) -> dict:
             "generated_at": datetime.now(timezone.utc).isoformat(),
         }
 
+    # The AI phrasing is an optional enrichment on a GET (dashboard) path, so it
+    # is not credit-billed; the gateway blocks unbilled AI inside user requests
+    # (services/ai/cost_guard.py). Fall back to the graph facts themselves.
     from services.ai.llm import call_llm
-    insight_text = await call_llm(
-        system=(
-            "You generate concise academic insights from knowledge graph data. "
-            "ONLY reference data explicitly provided. Never add statistics, predictions, or outcomes not in the data. "
-            "Generate up to 5 distinct one-sentence insights."
-        ),
-        user_msg=(
-            f"Researcher in graph:\n" + "\n".join(f"• {c}" for c in context_parts) +
-            "\n\nGenerate 5 distinct insights about this researcher's knowledge graph position. "
-            "Each insight should be one sentence. Focus on what the graph data reveals about their research network."
-        ),
-        feature="lkg.insights",
-        max_tokens=400,
-    )
+    try:
+        insight_text = await call_llm(
+            system=(
+                "You generate concise academic insights from knowledge graph data. "
+                "ONLY reference data explicitly provided. Never add statistics, predictions, or outcomes not in the data. "
+                "Generate up to 5 distinct one-sentence insights."
+            ),
+            user_msg=(
+                f"Researcher in graph:\n" + "\n".join(f"• {c}" for c in context_parts) +
+                "\n\nGenerate 5 distinct insights about this researcher's knowledge graph position. "
+                "Each insight should be one sentence. Focus on what the graph data reveals about their research network."
+            ),
+            feature="lkg.insights",
+            max_tokens=400,
+        )
+    except Exception:
+        insight_text = "\n".join(context_parts)
 
     # Parse numbered insights
     raw_lines = [l.strip() for l in insight_text.split("\n") if l.strip()]

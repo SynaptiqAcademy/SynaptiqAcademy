@@ -18,9 +18,9 @@ from typing import Optional
 # ══════════════════════════════════════════════════════════════════════════════
 
 class ReviewDepth(str, Enum):
-    QUICK = "quick"        # 5 credits  — AI review only
-    STANDARD = "standard"  # 15 credits — rule-based + AI
-    DEEP = "deep"          # 25 credits — full pipeline + lit session
+    QUICK = "quick"        # MANUSCRIPT_SECTION_REVIEW — AI review only
+    STANDARD = "standard"  # FULL_MANUSCRIPT_REVIEW — rule-based + AI
+    DEEP = "deep"          # ADVANCED_MANUSCRIPT_INTELLIGENCE — full pipeline + lit session
 
 
 class ExportFormat(str, Enum):

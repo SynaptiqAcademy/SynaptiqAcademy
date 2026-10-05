@@ -61,7 +61,8 @@ RULES: tuple[Rule, ...] = (
     # Messaging: history stays readable after a downgrade; sending is Pro.
     _r(r"^/api/(conversations|uploads)(/|$)", WRITE, "can_message_researchers"),
     # Research network, researcher discovery and matching.
-    _r(r"^/api/(network|researchers|discover|research-need|expertise|reviewer-marketplace|marketplace|acad-market)(/|$)",
+    _r(r"^/api/(researchers|discover)(/|$)", ALL, "can_discover_researchers"),
+    _r(r"^/api/(network|research-need|expertise|reviewer-marketplace|marketplace|acad-market)(/|$)",
        ALL, "can_use_research_network"),
     # Journal / conference / grant discovery.
     _r(r"^/api/journals(/|$)", ALL, "can_use_journal_discovery"),

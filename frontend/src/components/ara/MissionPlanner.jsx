@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { approvePlan, refinePlan } from "../../services/araEngine";
 import { toast } from "sonner";
+import CreditCost from "@/components/billing/CreditCost";
 
 const STEP_TYPE_META = {
   safe:     { icon: CheckCircle, color: "text-green-500",  label: "Auto" },
@@ -94,6 +95,10 @@ export default function MissionPlanner({ mission, steps, onApproved, onCancelled
           <strong>Safety guarantee:</strong> Agents never submit, send emails, or apply for grants
           without your explicit approval — regardless of autonomy level.
         </p>
+      </div>
+
+      <div className="px-4 pb-2">
+        <CreditCost operation="MANUSCRIPT_SECTION_REVIEW" prefix={`${(steps || []).length} AI steps · each uses`} />
       </div>
 
       {/* Actions */}

@@ -48,6 +48,9 @@ async def _insert_user(db, full_name: str, **extra) -> str:
         "email": f"{full_name.lower().replace(' ', '')}-{_oid()[:8]}@synaptiq-test.io",
         "is_demo": False,
         "profile_visibility": "public",
+        # Creating projects/workspaces is a Pro capability; the plan limit is
+        # enforced against the owner's stored plan (services/workspace_provisioning.py).
+        "plan_code": "researcher",
         **extra,
     }
     res = await db.users.insert_one(doc)

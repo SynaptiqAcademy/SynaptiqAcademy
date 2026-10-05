@@ -785,6 +785,10 @@ function CreditsWidget({ collapsed }) {
   const usable = state.credits_usable !== false;
   const pct = allowance > 0 ? Math.min(100, Math.round((sub / allowance) * 100)) : 0;
   const total = sub + purchased;
+  let renews = null;
+  try {
+    if (state.reset_at) renews = new Date(state.reset_at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  } catch (_) {}
 
   if (collapsed) {
     return (
@@ -801,7 +805,7 @@ function CreditsWidget({ collapsed }) {
 
   return (
     <Link
-      to={usable ? "/ai-credits" : "/pricing"}
+      to={usable ? "/ai-credits#buy-credits" : "/pricing"}
       data-testid={TID.creditsWidget}
       className="block px-3 py-2 mx-2.5 mb-1 border border-[rgba(15,23,42,0.07)] rounded-md hover:border-[#0F2847]/30 transition-colors duration-150"
     >
@@ -818,14 +822,17 @@ function CreditsWidget({ collapsed }) {
         <>
           <div className="flex items-baseline gap-1 mb-1.5" data-testid="credits-widget-balance">
             <span className="text-base font-bold text-slate-900 tracking-tight">{sub.toLocaleString()}</span>
-            <span className="text-[10px] text-slate-400">/ {allowance.toLocaleString()} this month</span>
+            <span className="text-[10px] text-slate-400">/ {allowance.toLocaleString()} monthly credits available</span>
           </div>
           <div className="h-px bg-slate-100 rounded-full overflow-hidden">
             <div className="h-full bg-[#0F2847] rounded-full transition-[width] duration-500" style={{ width: `${pct}%` }} />
           </div>
-          {purchased > 0 && (
-            <div className="text-[10px] text-slate-500 mt-1.5">+ {purchased.toLocaleString()} purchased</div>
-          )}
+          <div className="text-[10px] text-slate-500 mt-1.5 space-y-0.5">
+            <div>Purchased credits: {purchased.toLocaleString()}</div>
+            <div className="font-semibold text-slate-700">Total available: {total.toLocaleString()}</div>
+            {renews && <div>Renews {renews}</div>}
+            <div className="text-[#0F2847] font-semibold pt-0.5">Buy Credits →</div>
+          </div>
         </>
       ) : (
         <div className="text-[11px] text-slate-600 leading-snug" data-testid="credits-widget-upgrade">

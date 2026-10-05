@@ -47,13 +47,12 @@ PLANS = [
             "conference_recs_per_month": 0,
             "grant_recs_per_month": 0,
         },
+        "price_label": "Forever",
         "features": [
             "Academic profile",
             "Public research page",
             "ORCID integration",
-            "ORCID publication import",
-            "Discoverable by Pro researchers",
-            "Receive collaboration invitations",
+            "Publication import from ORCID",
         ],
         "excluded": [
             "AI tools and AI credits",
@@ -76,7 +75,8 @@ PLANS = [
         # product access, not a professional identity.
         "code": "researcher",
         "name": "Pro",
-        "tagline": "For active research, collaboration and AI-assisted workflows",
+        "key": "pro",
+        "tagline": "For active researchers who want to collaborate, publish and work with AI.",
         "price_eur_monthly": 9.99,
         "price_eur_annual": 7.99,
         "future_price_eur_monthly": 14.99,
@@ -93,32 +93,36 @@ PLANS = [
             "grant_recs_per_month": -1,
         },
         "features": [
-            "200 AI Credits / month",
-            "Research network, researcher discovery and matching",
-            "Messaging and collaboration requests",
-            "Collaboration workflows",
+            "Everything in Free",
+            "Research network & researcher matching",
+            "Direct messaging & collaboration",
             "Unlimited projects",
-            "Up to 10 workspaces",
+            "10 workspaces",
             "10 GB storage",
-            "Journal, conference and grant discovery",
+            "Journal, conference & grant discovery",
             "AI Research Assistant",
             "Manuscript Copilot",
             "Teaching Hub",
             "Publication tracking",
-            "Standard analytics",
+            "Research analytics",
             "Priority support",
         ],
         "excluded": [],
         "cta": "Choose Pro",
         # Stripe price ids come from the environment only — never hardcoded.
         "stripe_price_id_monthly": os.environ.get("STRIPE_PRICE_PRO_MONTHLY", ""),
+        # Older prices of this plan still recognised on webhooks (e.g. the
+        # €9.99 Early Access price after a future €14.99 price becomes the
+        # default for new subscribers). Comma-separated env list.
+        "stripe_price_ids_legacy": [x.strip() for x in os.environ.get("STRIPE_PRICE_PRO_LEGACY_IDS", "").split(",") if x.strip()],
         "stripe_price_id_annual": "",   # annual billing is not offered
     },
     {
         # Backend code stays "pro_researcher" — see note on "researcher" above.
         "code": "pro_researcher",
         "name": "Pro Advanced",
-        "tagline": "For advanced research intelligence, analysis and impact workflows",
+        "key": "pro_advanced",
+        "tagline": "For researchers who need advanced intelligence, analytics and research impact tools.",
         "price_eur_monthly": 29.99,
         "price_eur_annual": 23.99,
         "future_price_eur_monthly": None,
@@ -135,22 +139,23 @@ PLANS = [
         },
         "features": [
             "Everything in Pro",
-            "750 AI Credits / month",
             "Unlimited workspaces",
             "50 GB storage",
             "Advanced AI Research Assistant",
-            "Extended context",
+            "Extended research context",
             "Priority AI processing",
             "Collaboration Intelligence",
-            "Impact Dashboard",
+            "Research Impact Dashboard",
             "Citation Monitoring",
-            "Advanced Analytics",
+            "Advanced Research Analytics",
             "Advanced Manuscript Intelligence",
-            "Advanced AI Teaching",
+            "Advanced AI Teaching Tools",
+            "Priority support",
         ],
         "excluded": [],
         "cta": "Choose Pro Advanced",
         "stripe_price_id_monthly": os.environ.get("STRIPE_PRICE_PRO_ADVANCED_MONTHLY", ""),
+        "stripe_price_ids_legacy": [x.strip() for x in os.environ.get("STRIPE_PRICE_PRO_ADVANCED_LEGACY_IDS", "").split(",") if x.strip()],
         "stripe_price_id_annual": "",   # annual billing is not offered
     },
     {
@@ -561,6 +566,7 @@ TIER_BY_PLAN = {
 # only mirrors these (GET /api/permissions/me) to decide what to render.
 _PRO_CAPS = {
     "can_use_research_network":         True,
+    "can_discover_researchers":         True,
     "can_message_researchers":          True,
     "can_send_collaboration_request":   True,
     "can_accept_collaboration":         True,
@@ -605,6 +611,7 @@ CAPABILITIES = sorted(TIER_CAPABILITIES[TIER_PRO_ADVANCED])
 # admin grant of e.g. "citation_monitoring" also unlocks the capability.
 CAPABILITY_FEATURE = {
     "can_use_research_network":         "network",
+    "can_discover_researchers":         "network",
     "can_message_researchers":          "messaging",
     "can_send_collaboration_request":   "collaboration_request",
     "can_accept_collaboration":         "collaboration_request",
@@ -645,12 +652,13 @@ def capability_min_plan(capability: str) -> str:
 # Prices are configurable (CREDIT_PACK_PRICES_JSON='{"pack_100": 4.99}');
 # Stripe price ids come only from the environment.
 CREDIT_PACKS = [
-    {"code": "pack_100", "credits": 100, "price_eur": 4.99,  "label": "100 AI Credits",
-     "stripe_price_id": os.environ.get("STRIPE_PRICE_CREDITS_100", "")},
-    {"code": "pack_300", "credits": 300, "price_eur": 11.99, "label": "300 AI Credits",
-     "stripe_price_id": os.environ.get("STRIPE_PRICE_CREDITS_300", "")},
-    {"code": "pack_750", "credits": 750, "price_eur": 24.99, "label": "750 AI Credits",
-     "stripe_price_id": os.environ.get("STRIPE_PRICE_CREDITS_750", "")},
+    # code = stable internal id (stored on purchases); key = what the browser sends.
+    {"code": "pack_100", "key": "small", "name": "AI Small", "credits": 100, "price_eur": 4.99,
+     "label": "100 AI Credits", "stripe_price_id": os.environ.get("STRIPE_PRICE_CREDITS_100", "")},
+    {"code": "pack_300", "key": "plus", "name": "AI Plus", "credits": 300, "price_eur": 11.99,
+     "label": "300 AI Credits", "stripe_price_id": os.environ.get("STRIPE_PRICE_CREDITS_300", "")},
+    {"code": "pack_750", "key": "max", "name": "AI Max", "credits": 750, "price_eur": 24.99,
+     "label": "750 AI Credits", "stripe_price_id": os.environ.get("STRIPE_PRICE_CREDITS_750", "")},
 ]
 
 
@@ -684,10 +692,17 @@ def get_credit_cost(key: str, default: int = 0) -> int:
 
 
 def get_credit_pack(code: str) -> dict | None:
+    """Resolve a pack by internal code (pack_100) or public key (small/plus/max).
+    Anything else — including a Stripe price id or an amount — resolves to None."""
     for p in CREDIT_PACKS:
-        if p["code"] == code:
+        if code and code in (p["code"], p["key"]):
             return p
     return None
+
+
+# Public plan keys the browser may send -> internal plan codes.
+PLAN_KEY_TO_CODE = {"pro": "researcher", "pro_advanced": "pro_researcher",
+                    "researcher": "researcher", "pro_researcher": "pro_researcher"}
 
 
 def get_plan_by_price_id(stripe_price_id: str) -> tuple[str, str] | None:
@@ -701,6 +716,8 @@ def get_plan_by_price_id(stripe_price_id: str) -> tuple[str, str] | None:
         return None
     for p in PLANS:
         if p.get("stripe_price_id_monthly") == stripe_price_id:
+            return p["code"], "monthly"
+        if stripe_price_id in (p.get("stripe_price_ids_legacy") or []):
             return p["code"], "monthly"
         if p.get("stripe_price_id_annual") == stripe_price_id:
             return p["code"], "annual"

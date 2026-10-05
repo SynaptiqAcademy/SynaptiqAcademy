@@ -29,6 +29,7 @@ import { Card } from "@/components/ds/Card";
 import { EmptyState } from "@/components/ds/EmptyState";
 import { Alert } from "@/components/ds/Alert";
 import { List, ListItem } from "@/components/ds/List";
+import CreditCost from "@/components/billing/CreditCost";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -360,7 +361,7 @@ export default function Copilot() {
           </form>
 
           <p className="text-[10px] text-slate-400 mt-2">
-            All recommendations are sourced from verified platform data. No statistics are fabricated.
+            <CreditCost operation="DEEP_RESEARCH" prefix="Each run uses" /> · All recommendations are sourced from verified platform data. No statistics are fabricated.
           </p>
         </div>
 

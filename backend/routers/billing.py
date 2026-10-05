@@ -42,6 +42,8 @@ def _safe_plan(p: dict) -> dict:
         "future_price_eur_monthly": p.get("future_price_eur_monthly"),
         "badge": p.get("badge"),
         "recommended": bool(p.get("recommended")),
+        "key": p.get("key"),
+        "price_label": p.get("price_label"),
         "credits_per_month": p["credits_per_month"],
         "limits": p["limits"],
         "features": p["features"],
@@ -62,7 +64,8 @@ async def list_plans():
 async def list_credit_packs():
     """Public list of credit packs (one-time purchases for Pro / Pro Advanced;
     purchased credits never expire)."""
-    return [{"code": p["code"], "credits": p["credits"], "price_eur": p["price_eur"],
+    return [{"code": p["code"], "key": p["key"], "name": p["name"], "credits": p["credits"],
+             "price_eur": p["price_eur"],
              "label": p["label"], "available": bool(p.get("stripe_price_id"))
              and stripe_service.is_configured()} for p in CREDIT_PACKS]
 
@@ -123,6 +126,41 @@ async def get_subscription(user: dict = Depends(get_current_user)):
     return out
 
 
+@router.get("/me")
+async def billing_me(user: dict = Depends(get_current_user)):
+    """Authoritative billing state for the UI (no Stripe internals)."""
+    from services.entitlements import get_entitlements
+    db = DBProxy(get_db(), SecurityContext.system())
+    credits = await ensure_user_credits(user["id"])
+    fresh = await db.users.find_one({"_id": ObjectId(user["id"])}) or user
+    fresh = dict(fresh, id=user["id"])
+    ent = get_entitlements(fresh)
+    sub = await db.subscriptions.find_one(
+        {"user_id": user["id"], "status": {"$in": ["active", "trialing", "past_due", "unpaid"]}},
+        sort=[("updated_at", -1)])
+    period_end = (sub or {}).get("current_period_end")
+    return {
+        "plan": ent["effective_plan_code"],
+        "plan_name": ent["plan_name"],
+        "tier": ent["tier"],
+        "subscription_status": (sub or {}).get("status") or fresh.get("subscription_status") or None,
+        "cancel_at_period_end": bool((sub or {}).get("cancel_at_period_end")),
+        "current_period_end": _ts_iso(period_end) if isinstance(period_end, (int, float)) else period_end,
+        "subscription_credits": credits["subscription_credits"],
+        "monthly_credit_allowance": ent["monthly_ai_credits"],
+        "purchased_credits": credits["purchased_credits"],
+        "total_available_credits": credits["total_credits"] if credits["credits_usable"] else 0,
+        "credits_usable": credits["credits_usable"],
+        "credits_renew_at": credits["reset_at"] if ent["tier"] != "FREE" else None,
+        "workspace_limit": ent["workspace_limit"],
+        "project_limit": ent["project_limit"],
+        "storage_limit_bytes": ent["storage_limit_bytes"],
+        "can_purchase_ai_credits": ent["capabilities"]["can_purchase_ai_credits"],
+        "billing_mode": stripe_service.stripe_mode(),
+        "checkout_available": stripe_service.is_configured(),
+    }
+
+
 @router.get("/history")
 async def billing_history(limit: int = 50, user: dict = Depends(get_current_user)):
     """User-visible billing history (invoices, pack purchases, refunds)."""
@@ -173,6 +211,26 @@ VALID_PAID_PLANS = {"researcher", "pro_researcher"}
 NOT_SELF_SERVE_PLANS = {"institution", "enterprise"}
 
 
+def _frontend_url(path: str) -> str:
+    """Redirect targets are built server-side from FRONTEND_BASE_URL — the
+    browser never supplies them (no open redirects via Stripe)."""
+    base = (os.environ.get("FRONTEND_BASE_URL") or os.environ.get("APP_BASE_URL") or "").rstrip("/")
+    if not base:
+        raise HTTPException(status_code=503, detail={"code": "billing_not_configured",
+                                                     "message": "Online checkout isn't available yet."})
+    return f"{base}{path}"
+
+
+async def _stripe_customer_id(db, user_id: str) -> str:
+    """The user's existing Stripe customer, if any (reused for new checkouts)."""
+    u = await db.users.find_one({"_id": ObjectId(user_id)}, {"stripe_customer_id": 1})
+    if (u or {}).get("stripe_customer_id"):
+        return u["stripe_customer_id"]
+    sub = await db.subscriptions.find_one(
+        {"user_id": user_id, "stripe_customer_id": {"$nin": [None, ""]}}, sort=[("updated_at", -1)])
+    return (sub or {}).get("stripe_customer_id", "")
+
+
 _LIVE_SUB_STATUSES = ["active", "trialing", "past_due"]
 
 
@@ -183,7 +241,9 @@ async def create_checkout(body: dict, user: dict = Depends(get_current_user)):
     Nothing here grants access or credits: the plan and credits change only
     when Stripe's verified webhook confirms the subscription.
     """
-    plan_code = body.get("plan_code")
+    from plans_catalogue import PLAN_KEY_TO_CODE
+    requested = body.get("plan") or body.get("plan_code")
+    plan_code = PLAN_KEY_TO_CODE.get(requested, requested) if isinstance(requested, str) else None
     billing_period = body.get("billing_period", "monthly")
     if plan_code in NOT_SELF_SERVE_PLANS:
         raise HTTPException(
@@ -194,8 +254,8 @@ async def create_checkout(body: dict, user: dict = Depends(get_current_user)):
             },
         )
     if plan_code not in VALID_PAID_PLANS:
-        raise HTTPException(status_code=400,
-                            detail=f"Invalid plan_code (use one of {sorted(VALID_PAID_PLANS)}).")
+        raise HTTPException(status_code=400, detail={
+            "code": "invalid_plan", "message": "Choose 'pro' or 'pro_advanced'."})
     if billing_period != "monthly":
         raise HTTPException(status_code=400, detail={
             "code": "billing_period_unavailable",
@@ -215,7 +275,7 @@ async def create_checkout(body: dict, user: dict = Depends(get_current_user)):
             },
         )
 
-    db = DBProxy(get_db(), SecurityContext.from_user(user))
+    db = DBProxy(get_db(), SecurityContext.system())
     live = await db.subscriptions.find_one(
         {"user_id": user["id"], "status": {"$in": _LIVE_SUB_STATUSES},
          "stripe_subscription_id": {"$nin": [None, ""]}},
@@ -248,9 +308,10 @@ async def create_checkout(body: dict, user: dict = Depends(get_current_user)):
         user_id=user["id"],
         plan_code=plan_code,
         billing_period="monthly",
-        success_url=body.get("success_url") or "",
-        cancel_url=body.get("cancel_url") or "",
+        success_url=_frontend_url("/payment/success?type=plan"),
+        cancel_url=_frontend_url("/payment/cancelled"),
         stripe_price_id=price_id,
+        customer_id=await _stripe_customer_id(db, user["id"]),
     )
     if result is None:
         raise HTTPException(status_code=503, detail="Stripe SDK unavailable.")
@@ -264,10 +325,12 @@ async def create_credit_pack_checkout(body: dict, user: dict = Depends(get_curre
     from services.entitlements import assert_capability
     assert_capability(user, "can_purchase_ai_credits")
 
-    pack_code = body.get("pack_code")
-    pack = get_credit_pack(pack_code)
+    requested = body.get("pack") or body.get("pack_code")
+    pack = get_credit_pack(requested) if isinstance(requested, str) else None
     if not pack:
-        raise HTTPException(status_code=400, detail=f"Unknown pack_code: {pack_code}")
+        raise HTTPException(status_code=400, detail={
+            "code": "invalid_pack", "message": "Choose 'small', 'plus' or 'max'."})
+    pack_code = pack["code"]
 
     if not stripe_service.is_configured() or not pack.get("stripe_price_id"):
         raise HTTPException(
@@ -279,14 +342,16 @@ async def create_credit_pack_checkout(body: dict, user: dict = Depends(get_curre
             },
         )
 
+    db = DBProxy(get_db(), SecurityContext.system())
     result = stripe_service.create_credit_pack_checkout_session(
         user_email=user["email"],
         user_id=user["id"],
         pack_code=pack_code,
         credits=pack["credits"],
-        success_url=body.get("success_url") or "",
-        cancel_url=body.get("cancel_url") or "",
+        success_url=_frontend_url(f"/payment/success?kind=credits&pack={pack_code}"),
+        cancel_url=_frontend_url("/payment/cancelled?kind=credits"),
         stripe_price_id=pack["stripe_price_id"],
+        customer_id=await _stripe_customer_id(db, user["id"]),
     )
     if result is None:
         raise HTTPException(status_code=503, detail="Stripe SDK unavailable.")
@@ -298,14 +363,14 @@ async def create_portal(body: dict, user: dict = Depends(get_current_user)):
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
-    sub = await db.subscriptions.find_one({"user_id": user["id"]})
-    customer_id = (sub or {}).get("stripe_customer_id", "")
+    customer_id = await _stripe_customer_id(DBProxy(get_db(), SecurityContext.system()), user["id"])
     if not stripe_service.is_configured() or not customer_id:
         raise HTTPException(
             status_code=503,
-            detail={"message": "Billing portal unavailable until Stripe is configured and a subscription exists."},
+            detail={"code": "portal_unavailable",
+                    "message": "Billing management is available once you have a paid plan."},
         )
-    url = stripe_service.create_billing_portal_session(customer_id, body.get("return_url") or "")
+    url = stripe_service.create_billing_portal_session(customer_id, _frontend_url("/settings/billing"))
     if not url:
         raise HTTPException(status_code=503, detail="Could not create portal session.")
     return {"url": url}
@@ -360,7 +425,26 @@ async def cancel_subscription(user: dict = Depends(get_current_user)):
 # If processing fails, the event marker is removed and 500 is returned so
 # Stripe retries — a failed delivery is never silently swallowed as a duplicate.
 
-_ENDED_STATUSES = ("canceled", "unpaid", "incomplete_expired")
+_ENDED_STATUSES = ("canceled", "incomplete_expired")
+_STALE_PROCESSING = timedelta(minutes=10)
+
+
+_EVENT_INDEX_READY = False
+
+
+async def _event_index_ready(db) -> bool:
+    """True once the unique stripe_event_id index is confirmed (cached per
+    process). Creates it if missing; False if it can't be guaranteed."""
+    global _EVENT_INDEX_READY
+    if _EVENT_INDEX_READY:
+        return True
+    try:
+        await db.billing_events.create_index(
+            [("stripe_event_id", 1)], unique=True, sparse=True, name="billing_events_idempotency")
+        _EVENT_INDEX_READY = True
+    except Exception as exc:
+        logger.error("[billing/webhook] cannot ensure billing_events unique index: %s", exc)
+    return _EVENT_INDEX_READY
 
 
 def _ts_iso(ts) -> str | None:
@@ -440,6 +524,16 @@ async def _track(user_id: str, event: str, props: dict) -> None:
     await track_server_event(user_id, event, props)
 
 
+def _invalidate(user_id: str) -> None:
+    """Drop the auth layer's 60s user cache so entitlement checks see the
+    webhook's plan/status change on the very next request."""
+    try:
+        from auth_utils import invalidate_user_cache
+        invalidate_user_cache(user_id)
+    except Exception:
+        pass
+
+
 async def _fulfil_credit_pack(db, obj: dict, user_id: str, stripe_event_id: str) -> None:
     if obj.get("payment_status") not in ("paid", "no_payment_required"):
         # Async payment methods: wait for checkout.session.async_payment_succeeded.
@@ -506,7 +600,26 @@ async def _handle_subscription_change(db, obj: dict, event_type: str, stripe_eve
     user = await db.users.find_one({"_id": ObjectId(user_id)})
     prior_plan = (user or {}).get("plan_code") or "free"
 
+    if obj.get("customer"):
+        await db.users.update_one({"_id": ObjectId(user_id)},
+                                  {"$set": {"stripe_customer_id": obj["customer"]}})
+
     if status in ("active", "trialing", "past_due"):
+        # Duplicate-subscription guard: a second live subscription for the same
+        # user (e.g. two checkouts completed in parallel tabs) is flagged for
+        # admin action — never silently double-billed or auto-cancelled.
+        other = await db.subscriptions.find_one({
+            "user_id": user_id, "stripe_subscription_id": {"$ne": sub_id},
+            "status": {"$in": ["active", "trialing", "past_due"]}})
+        if other:
+            await db.billing_alerts.update_one(
+                {"kind": "duplicate_subscription", "user_id": user_id,
+                 "subscriptions": sorted([sub_id, other["stripe_subscription_id"]])},
+                {"$setOnInsert": {"created_at": datetime.now(timezone.utc).isoformat(),
+                                  "resolved": False}},
+                upsert=True)
+            logger.error("[billing/webhook] user %s has two live subscriptions (%s, %s)",
+                         user_id, sub_id, other["stripe_subscription_id"])
         await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": {
             "plan_code": plan_code, "subscription_status": status}})
         if prior_plan != plan_code:
@@ -529,6 +642,12 @@ async def _handle_subscription_change(db, obj: dict, event_type: str, stripe_eve
             await _track(user_id, "subscription_cancelled", {"plan_code": plan_code, "at_period_end": True})
     elif status in _ENDED_STATUSES:
         await _end_subscription(db, user_id, plan_code, sub_id, status, event_type)
+    elif status == "unpaid":
+        # Stripe exhausted payment retries but kept the subscription. Paid
+        # access is suspended (entitlements treat 'unpaid' as Free) while the
+        # plan, data and credits stay — paying the open invoice restores it.
+        await db.users.update_one({"_id": ObjectId(user_id), "plan_code": plan_code},
+                                  {"$set": {"subscription_status": "unpaid"}})
     # 'incomplete': first payment pending — no access change until it succeeds.
 
     await record_billing_event(
@@ -589,14 +708,31 @@ async def _handle_invoice_paid(db, inv: dict, stripe_event_id: str) -> None:
     await db.subscriptions.update_many({"stripe_subscription_id": sub_id, "status": "past_due"},
                                        {"$set": {"status": "active",
                                                  "updated_at": datetime.now(timezone.utc).isoformat()}})
-    await db.users.update_one({"_id": ObjectId(user_id), "subscription_status": "past_due"},
+    await db.users.update_one({"_id": ObjectId(user_id), "subscription_status": {"$in": ["past_due", "unpaid"]}},
                               {"$set": {"subscription_status": "active"}})
 
 
 async def _handle_pack_refund(db, charge: dict, user_id: str) -> None:
-    """A refunded credit-pack charge removes the unspent part of that pack."""
+    """Credit-pack refund policy (deterministic, idempotent):
+      - only a FULL refund (charge.refunded == true) reverses a pack; partial
+        refunds are recorded in billing_alerts for manual review;
+      - the reversal removes min(pack credits, current purchased balance) —
+        balances never go negative; if part of the pack was already spent the
+        shortfall is recorded (ledger metadata + billing_alerts) for review;
+      - the purchase row flips paid -> refunded exactly once (atomic), so a
+        duplicate refund event can't adjust twice.
+    """
     pi = charge.get("payment_intent") or ""
     if not pi:
+        return
+    if not charge.get("refunded"):
+        purchase = await db.credit_purchases.find_one({"stripe_payment_intent_id": pi})
+        if purchase:
+            await db.billing_alerts.update_one(
+                {"kind": "partial_pack_refund", "payment_intent": pi},
+                {"$set": {"user_id": purchase["user_id"], "amount_refunded": charge.get("amount_refunded"),
+                          "updated_at": datetime.now(timezone.utc).isoformat()},
+                 "$setOnInsert": {"resolved": False}}, upsert=True)
         return
     purchase = await db.credit_purchases.find_one_and_update(
         {"stripe_payment_intent_id": pi, "status": "paid"},
@@ -605,17 +741,32 @@ async def _handle_pack_refund(db, charge: dict, user_id: str) -> None:
     if not purchase:
         return
     uid = purchase["user_id"]
-    user = await db.users.find_one({"_id": ObjectId(uid)}, {"credits_pack_balance": 1})
-    remove = min(int(purchase.get("credits", 0)), max((user or {}).get("credits_pack_balance", 0) or 0, 0))
-    if remove > 0:
-        await db.users.update_one({"_id": ObjectId(uid), "credits_pack_balance": {"$gte": remove}},
-                                  {"$inc": {"credits_pack_balance": -remove}})
+    credits = int(purchase.get("credits", 0))
+    removed = 0
+    for _ in range(3):   # retry on concurrent spend
+        user = await db.users.find_one({"_id": ObjectId(uid)}, {"credits_pack_balance": 1})
+        bal = max((user or {}).get("credits_pack_balance", 0) or 0, 0)
+        want = min(credits, bal)
+        if want <= 0:
+            break
+        r = await db.users.update_one({"_id": ObjectId(uid), "credits_pack_balance": {"$gte": want}},
+                                      {"$inc": {"credits_pack_balance": -want}})
+        if r.modified_count:
+            removed = want
+            break
+    shortfall = credits - removed
     await db.credit_transactions.insert_one({
         "user_id": uid, "kind": "admin_deduct", "ledger_type": "ADMIN_ADJUSTMENT",
-        "bucket": "pack", "amount": remove, "balance_effect": -remove,
+        "bucket": "pack", "amount": removed, "balance_effect": -removed,
         "action": "pack_refund", "reason": f"Credit pack refunded ({purchase.get('pack_code')})",
-        "metadata": {"payment_intent": pi}, "created_at": datetime.now(timezone.utc).isoformat(),
+        "metadata": {"payment_intent": pi, "pack_credits": credits, "already_spent": shortfall},
+        "created_at": datetime.now(timezone.utc).isoformat(),
     })
+    if shortfall:
+        await db.billing_alerts.insert_one({
+            "kind": "refunded_pack_partly_spent", "user_id": uid, "payment_intent": pi,
+            "credits_already_spent": shortfall, "resolved": False,
+            "created_at": datetime.now(timezone.utc).isoformat()})
 
 
 @router.post("/webhook")
@@ -659,40 +810,78 @@ async def stripe_webhook(request: Request):
     if not stripe_event_id:
         raise HTTPException(status_code=400, detail="Missing event id")
 
-    # Event-level idempotency: unique index on billing_events.stripe_event_id.
+    # Deduplication depends on the unique index — never process without it.
+    if not await _event_index_ready(db):
+        logger.error("[billing/webhook] billing_events unique index unavailable — refusing to process %s",
+                     stripe_event_id)
+        raise HTTPException(status_code=503, detail="Billing temporarily unavailable; Stripe will retry.")
+
+    # Event state machine (unique index on billing_events.stripe_event_id):
+    #   PROCESSING -> COMPLETED | FAILED
+    # Only COMPLETED blocks reprocessing. A FAILED event, or one stuck in
+    # PROCESSING longer than _STALE_PROCESSING (worker crashed mid-way), is
+    # re-claimed atomically by the next delivery. Handlers are idempotent on
+    # their own, so re-running a partially applied event is safe.
+    now = datetime.now(timezone.utc)
     try:
         await db.billing_events.insert_one({
             "stripe_event_id": stripe_event_id,
             "type": event_type,
             "payload": payload,
-            "received_at": datetime.now(timezone.utc).isoformat(),
+            "received_at": now.isoformat(),
+            "status": "PROCESSING",
+            "processing_started_at": now.isoformat(),
+            "attempts": 1,
             "processed": False,
         })
     except Exception as dup_exc:
-        if "E11000" in str(dup_exc) or "duplicate key" in str(dup_exc).lower():
-            logger.info("[billing/webhook] duplicate event %s ignored (idempotency)", stripe_event_id)
+        if not ("E11000" in str(dup_exc) or "duplicate key" in str(dup_exc).lower()):
+            raise
+        stale_before = (now - _STALE_PROCESSING).isoformat()
+        claimed = await db.billing_events.find_one_and_update(
+            {"stripe_event_id": stripe_event_id,
+             "processed": {"$ne": True},
+             "$or": [{"status": "FAILED"},
+                     {"status": "PROCESSING", "processing_started_at": {"$lt": stale_before}},
+                     {"status": {"$exists": False}}]},       # legacy marker never completed
+            {"$set": {"status": "PROCESSING", "processing_started_at": now.isoformat()},
+             "$inc": {"attempts": 1}},
+        )
+        if claimed is None:
+            logger.info("[billing/webhook] duplicate event %s ignored (completed or in progress)", stripe_event_id)
             return {"received": True, "processed": False, "reason": "duplicate"}
-        raise
+        logger.warning("[billing/webhook] reprocessing event %s (previous status %s)",
+                       stripe_event_id, claimed.get("status"))
 
     obj = (payload.get("data") or {}).get("object") or {}
     try:
         await _dispatch_event(db, event_type, obj, stripe_event_id)
     except Exception as exc:
-        # Remove the marker so Stripe's retry is processed, and ask for a retry.
         logger.exception("[billing/webhook] processing %s (%s) failed: %s", stripe_event_id, event_type, exc)
         try:
-            await db.billing_events.delete_one({"stripe_event_id": stripe_event_id, "processed": False})
+            await db.billing_events.update_one(
+                {"stripe_event_id": stripe_event_id},
+                {"$set": {"status": "FAILED", "last_error": str(exc)[:500],
+                          "failed_at": datetime.now(timezone.utc).isoformat()}})
         except Exception:
             pass
         raise HTTPException(status_code=500, detail="Webhook processing failed; Stripe will retry.")
 
-    try:
-        await db.billing_events.update_one(
-            {"stripe_event_id": stripe_event_id},
-            {"$set": {"processed": True, "processed_at": datetime.now(timezone.utc).isoformat()}},
-        )
-    except Exception:
-        pass
+    uid_for_cache = (obj.get("metadata") or {}).get("user_id")
+    if not uid_for_cache:
+        try:
+            uid_for_cache = await _resolve_user_id(db, obj, subscription_id=obj.get("id", "") if
+                                                   str(obj.get("id", "")).startswith("sub_") else _invoice_subscription_id(obj))
+        except Exception:
+            uid_for_cache = ""
+    if uid_for_cache:
+        _invalidate(uid_for_cache)
+
+    await db.billing_events.update_one(
+        {"stripe_event_id": stripe_event_id},
+        {"$set": {"status": "COMPLETED", "processed": True,
+                  "processed_at": datetime.now(timezone.utc).isoformat()}},
+    )
     try:
         from services.realtime import manager
         await manager.broadcast_admin({"type": "payment_received", "stripe_event_type": event_type})

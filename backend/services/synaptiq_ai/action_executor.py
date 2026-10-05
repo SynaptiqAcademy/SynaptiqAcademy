@@ -121,6 +121,10 @@ async def _create_project(user_id: str, params: dict, db) -> dict:
         "updated_at": now,
         "created_by_ai": True,
     }
+    from bson import ObjectId as _OID
+    from services.permissions import assert_quota
+    _owner = await db.users.find_one({"_id": _OID(user_id)}) if _OID.is_valid(user_id) else None
+    await assert_quota(dict(_owner or {}, id=user_id), "projects")
     result = await db.projects.insert_one(doc)
     project_id = str(result.inserted_id)
 

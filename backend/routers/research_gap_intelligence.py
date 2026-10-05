@@ -35,11 +35,16 @@ admin_router = APIRouter(
     tags=["admin-research-gap"],
 )
 
-_CREDIT_COSTS = {
-    AnalysisDepth.QUICK: 5,
-    AnalysisDepth.STANDARD: 10,
-    AnalysisDepth.DEEP: 20,
-}
+# Every depth is charged the same catalogue price ('ai_research_gap_finder' ->
+# plans_catalogue.AI_OPERATIONS); the displayed cost is read from the same
+# table so it always matches the charge.
+class _DepthCosts(dict):
+    def __missing__(self, depth):
+        from plans_catalogue import CREDIT_COSTS
+        return CREDIT_COSTS["ai_research_gap_finder"]
+
+
+_CREDIT_COSTS = _DepthCosts()
 
 
 # ── Auth helpers ───────────────────────────────────────────────────────────────

@@ -128,14 +128,23 @@ async def _execute_step(db, step: dict, memory: mem_store.MissionMemory,
     )
 
     try:
-        response = await call_llm(
-            system=system,
-            user_msg=user_msg,
-            feature=f"ara_{step['agent_name']}",
-            user_id=str(user.get("_id") or user.get("user_id") or ""),
-            mission_id=step.get("mission_id", ""),
-            db=db,
-        )
+        # Each AI step is credit-billed to the mission owner (one
+        # MANUSCRIPT_SECTION_REVIEW-priced analysis). No plan / no credits ->
+        # 402 -> the step fails without calling the provider; a provider
+        # failure refunds the step.
+        from services.credits_service import billed_background_operation
+        _uid = str(user.get("_id") or user.get("id") or user.get("user_id") or "")
+        async with billed_background_operation(
+                _uid, "MANUSCRIPT_SECTION_REVIEW",
+                {"feature": f"ara_{step['agent_name']}", "mission_id": step.get("mission_id", "")}):
+            response = await call_llm(
+                system=system,
+                user_msg=user_msg,
+                feature=f"ara_{step['agent_name']}",
+                user_id=_uid,
+                mission_id=step.get("mission_id", ""),
+                db=db,
+            )
         outputs = {
             "summary":     _extract_section(response, "summary"),
             "findings":    _extract_section(response, "findings"),

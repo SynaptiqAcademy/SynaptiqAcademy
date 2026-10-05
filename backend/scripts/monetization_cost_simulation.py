@@ -72,9 +72,15 @@ def cost_per_request(op: str, profiles: dict) -> float:
 
 def simulate(plan_code: str, usage: str, profiles: dict, usd_per_eur: float, vat: float) -> dict:
     plan = get_plan(plan_code)
-    credits = plan["credits_per_month"] * USAGE_MIXES[usage]["spend_ratio"]
+    if usage == "worst":
+        w = worst_case(plan_code, profiles, usd_per_eur)
+        mix = {w["worst_operation"]: 1.0}
+        credits = plan["credits_per_month"]
+    else:
+        mix = USAGE_MIXES[usage]["mix"]
+        credits = plan["credits_per_month"] * USAGE_MIXES[usage]["spend_ratio"]
     cost = 0.0
-    for op, share in USAGE_MIXES[usage]["mix"].items():
+    for op, share in mix.items():
         if plan_code == "researcher" and op in ("DEEP_RESEARCH", "ADVANCED_MANUSCRIPT_INTELLIGENCE"):
             op = "FULL_MANUSCRIPT_REVIEW"   # advanced operations are Pro Advanced features
         n_requests = credits * share / AI_OPERATIONS[op]["credits"]
@@ -84,6 +90,7 @@ def simulate(plan_code: str, usage: str, profiles: dict, usd_per_eur: float, vat
     cost_eur = cost / usd_per_eur
     return {
         "plan": plan["name"], "usage": usage, "credits_used": round(credits),
+        "subscription_revenue_eur": plan["price_eur_monthly"],
         "ai_cost_usd": round(cost, 3), "ai_cost_eur": round(cost_eur, 3),
         "net_revenue_eur": round(net_revenue_eur, 2),
         "gross_margin_eur": round(net_revenue_eur - cost_eur, 2),
@@ -137,7 +144,7 @@ def main() -> None:
                            "usd_per_credit": round(cost_per_request(op, profiles) / AI_OPERATIONS[op]["credits"], 5)}
                           for op in AI_OPERATIONS],
         "scenarios": [simulate(p, u, profiles, a.usd_per_eur, a.vat)
-                      for p in ("researcher", "pro_researcher") for u in ("light", "typical", "heavy")],
+                      for p in ("researcher", "pro_researcher") for u in ("light", "typical", "heavy", "worst")],
         "worst_case": [worst_case(p, profiles, a.usd_per_eur) for p in ("researcher", "pro_researcher")],
         "credit_packs": pack_economics(profiles, a.usd_per_eur, a.vat),
     }
@@ -149,7 +156,7 @@ def main() -> None:
         print(f"  {r['operation']:34s} {r['credits']:3d} cr  {r['model']:28s} ${r['cost_usd']:.4f}  (${r['usd_per_credit']:.5f}/credit)")
     print("\nScenarios (monthly, per user):")
     for r in out["scenarios"]:
-        print(f"  {r['plan']:13s} {r['usage']:8s} credits={r['credits_used']:4d}  AI cost €{r['ai_cost_eur']:6.2f}"
+        print(f"  {r['plan']:13s} {r['usage']:8s} price €{r['subscription_revenue_eur']:5.2f}  credits={r['credits_used']:4d}  AI cost €{r['ai_cost_eur']:6.2f}"
               f"  net revenue €{r['net_revenue_eur']:6.2f}  margin €{r['gross_margin_eur']:6.2f}"
               f"  ({r['ai_cost_pct_of_net_revenue']}% of net)")
     print("\nWorst case (all credits on the costliest operation per credit):")
@@ -159,7 +166,9 @@ def main() -> None:
     for r in out["credit_packs"]:
         print(f"  {r['pack']:9s} €{r['price_eur']:6.2f}  net €{r['net_revenue_eur']:6.2f}"
               f"  worst AI cost €{r['worst_case_ai_cost_eur']:6.2f}  margin €{r['worst_case_margin_eur']:6.2f}")
-    print("\nAssumptions: token profiles are estimates; prices from services/ai/pricing.py "
+    print("\nESTIMATES ONLY — token profiles are assumptions, not measured production data. "
+          "Net revenue removes VAT and an estimated Stripe fee.")
+    print("Assumptions: token profiles are estimates; prices from services/ai/pricing.py "
           "(verify AI_PROVIDER_PRICING_JSON). Calibrate with /api/admin/ai/monetization-metrics.")
 
 

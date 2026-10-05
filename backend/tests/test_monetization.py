@@ -187,7 +187,7 @@ class TestRoutePolicy:
         ("POST", "/api/conversations", "can_message_researchers"),
         ("POST", "/api/conversations/abc/messages", "can_message_researchers"),
         ("GET", "/api/network/people", "can_use_research_network"),
-        ("GET", "/api/researchers/discover/sections", "can_use_research_network"),
+        ("GET", "/api/researchers/discover/sections", "can_discover_researchers"),
         ("POST", "/api/projects", "can_create_project"),
         ("POST", "/api/workspaces", "can_create_workspace"),
         ("GET", "/api/journals", "can_use_journal_discovery"),
@@ -799,3 +799,431 @@ class TestFrontendNoHardcodedCosts:
         src = (FRONTEND / "pages" / "Pricing.jsx").read_text()
         assert "STATIC_PLANS" not in src and "STATIC_PACKS" not in src
         assert 'api.get("/billing/plans")' in src
+
+
+# ═════════════════════ reconciliation phase (post-6114726) ═════════════════════
+
+class TestUnbilledAIEnforcement:
+    async def test_user_request_without_reservation_is_blocked(self):
+        from services.ai import cost_guard
+        from services.credits_service import open_request_context, close_request_context
+        tok = open_request_context()
+        try:
+            req = _Req(); req.feature = "lkg.search"
+            with pytest.raises(cost_guard.UnbilledAIBlocked):
+                await cost_guard.preflight(req, "s", "u")
+        finally:
+            close_request_context(tok)
+
+    async def test_internal_feature_allowed_in_request(self, monkeypatch):
+        from services.ai import cost_guard
+        from services.credits_service import open_request_context, close_request_context
+        monkeypatch.setattr(cost_guard, "_db", lambda: _NoCounters())
+        tok = open_request_context()
+        try:
+            req = _Req(); req.feature = "admin_copilot"
+            await cost_guard.preflight(req, "s", "u")
+        finally:
+            close_request_context(tok)
+
+    async def test_background_without_request_context_allowed_and_classified(self, monkeypatch):
+        from services.ai import cost_guard
+        monkeypatch.setattr(cost_guard, "_db", lambda: _NoCounters())
+        req = _Req(); req.feature = "scheduled.digest"
+        await cost_guard.preflight(req, "s", "u")
+        assert cost_guard.classify(None, "scheduled.digest") == "BACKGROUND_UNATTRIBUTED"
+        assert cost_guard.classify({"id": "r1"}, "x") == "USER_BILLABLE"
+        assert cost_guard.classify(None, "admin_copilot") == "INTERNAL_NON_BILLABLE"
+
+
+class TestBilledBackgroundOperation:
+    async def test_success_completes_and_failure_refunds(self, mdb):
+        from services.credits_service import billed_background_operation
+        uid = await _mk_user(mdb, sub=30)
+        async with billed_background_operation(uid, "MANUSCRIPT_SECTION_REVIEW") as res:
+            pass
+        assert (await mdb.credit_reservations.find_one({"_id": ObjectId(res["reservation_id"])}))["status"] == "COMPLETED"
+        with pytest.raises(RuntimeError):
+            async with billed_background_operation(uid, "MANUSCRIPT_SECTION_REVIEW"):
+                raise RuntimeError("provider down")
+        assert await _bal(mdb, uid) == (20, 0)
+
+    async def test_free_user_background_ai_refused(self, mdb):
+        from services.credits_service import billed_background_operation
+        uid = await _mk_user(mdb, plan="free", sub=0)
+        with pytest.raises(HTTPException) as exc:
+            async with billed_background_operation(uid, "MANUSCRIPT_SECTION_REVIEW"):
+                pytest.fail("body must not run")
+        assert exc.value.status_code == 402
+
+
+class TestWebhookStateMachine:
+    async def test_failed_event_is_retryable_and_completed_is_not(self, mdb, webhook_env, monkeypatch):
+        billing = webhook_env
+        uid = await _mk_user(mdb, plan="researcher", sub=0, pack=0)
+        sess = {"id": "cs_test_" + str(ObjectId()), "payment_status": "paid", "amount_total": 1199,
+                "metadata": {"user_id": uid, "kind": "credit_pack", "pack_code": "plus"}}
+        evt = _evt("checkout.session.completed", sess)
+        real = billing._fulfil_credit_pack
+        calls = {"n": 0}
+
+        async def flaky(*a, **k):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise RuntimeError("db blip")
+            return await real(*a, **k)
+        monkeypatch.setattr(billing, "_fulfil_credit_pack", flaky)
+        with pytest.raises(HTTPException) as exc:
+            await billing.stripe_webhook(_signed_request(evt))
+        assert exc.value.status_code == 500
+        assert (await mdb.billing_events.find_one({"stripe_event_id": evt["id"]}))["status"] == "FAILED"
+        await billing.stripe_webhook(_signed_request(evt))          # Stripe retry
+        assert await _bal(mdb, uid) == (0, 300)
+        doc = await mdb.billing_events.find_one({"stripe_event_id": evt["id"]})
+        assert doc["status"] == "COMPLETED" and doc["attempts"] == 2
+        out = await billing.stripe_webhook(_signed_request(evt))    # duplicate after success
+        assert out.get("reason") == "duplicate" and await _bal(mdb, uid) == (0, 300)
+
+    async def test_stale_processing_event_is_reclaimed(self, mdb, webhook_env):
+        billing = webhook_env
+        uid = await _mk_user(mdb, plan="researcher", sub=0, pack=0)
+        sess = {"id": "cs_test_" + str(ObjectId()), "payment_status": "paid",
+                "metadata": {"user_id": uid, "kind": "credit_pack", "pack_code": "small"}}
+        evt = _evt("checkout.session.completed", sess)
+        await mdb.billing_events.insert_one({"stripe_event_id": evt["id"], "status": "PROCESSING",
+                                             "processing_started_at": "2000-01-01T00:00:00+00:00",
+                                             "attempts": 1, "processed": False})
+        await billing.stripe_webhook(_signed_request(evt))
+        assert await _bal(mdb, uid) == (0, 100)
+
+    async def test_in_flight_event_not_double_processed(self, mdb, webhook_env):
+        billing = webhook_env
+        evt = _evt("checkout.session.completed", {"id": "cs_x", "metadata": {}})
+        from datetime import datetime, timezone
+        await mdb.billing_events.insert_one({"stripe_event_id": evt["id"], "status": "PROCESSING",
+                                             "processing_started_at": datetime.now(timezone.utc).isoformat(),
+                                             "attempts": 1, "processed": False})
+        out = await billing.stripe_webhook(_signed_request(evt))
+        assert out.get("reason") == "duplicate"
+
+
+class TestPacksByKey:
+    @pytest.mark.parametrize("key,credits", [("small", 100), ("plus", 300), ("max", 750)])
+    async def test_each_pack_grants_exactly(self, mdb, webhook_env, key, credits):
+        billing = webhook_env
+        uid = await _mk_user(mdb, plan="researcher", sub=0, pack=0)
+        for _ in range(2):   # the same pack bought twice = two real purchases
+            sess = {"id": "cs_test_" + str(ObjectId()), "payment_status": "paid",
+                    "metadata": {"user_id": uid, "kind": "credit_pack", "pack_code": key}}
+            await billing.stripe_webhook(_signed_request(_evt("checkout.session.completed", sess)))
+        assert await _bal(mdb, uid) == (0, 2 * credits)
+
+
+class TestRefundPolicy:
+    async def _buy(self, mdb, billing, uid):
+        sess = {"id": "cs_test_" + str(ObjectId()), "payment_status": "paid", "payment_intent": "pi_test_" + str(ObjectId()),
+                "metadata": {"user_id": uid, "kind": "credit_pack", "pack_code": "plus"}}
+        await billing.stripe_webhook(_signed_request(_evt("checkout.session.completed", sess)))
+        return sess["payment_intent"]
+
+    async def test_full_refund_partly_spent_never_negative_and_once(self, mdb, webhook_env):
+        billing = webhook_env
+        uid = await _mk_user(mdb, plan="researcher", sub=0, pack=0)
+        pi = await self._buy(mdb, billing, uid)
+        await mdb.users.update_one({"_id": ObjectId(uid)}, {"$set": {"credits_pack_balance": 120}})  # 180 spent
+        charge = {"id": "ch_1", "payment_intent": pi, "refunded": True, "amount_refunded": 1199,
+                  "metadata": {"user_id": uid}}
+        await billing.stripe_webhook(_signed_request(_evt("charge.refunded", charge)))
+        await billing.stripe_webhook(_signed_request(_evt("charge.refunded", charge)))   # duplicate refund
+        assert await _bal(mdb, uid) == (0, 0)
+        alert = await mdb.billing_alerts.find_one({"payment_intent": pi, "kind": "refunded_pack_partly_spent"})
+        assert alert and alert["credits_already_spent"] == 180
+        await mdb.billing_alerts.delete_many({"payment_intent": pi})
+
+    async def test_partial_refund_does_not_touch_balance(self, mdb, webhook_env):
+        billing = webhook_env
+        uid = await _mk_user(mdb, plan="researcher", sub=0, pack=0)
+        pi = await self._buy(mdb, billing, uid)
+        charge = {"id": "ch_2", "payment_intent": pi, "refunded": False, "amount_refunded": 500,
+                  "metadata": {"user_id": uid}}
+        await billing.stripe_webhook(_signed_request(_evt("charge.refunded", charge)))
+        assert await _bal(mdb, uid) == (0, 300)
+        await mdb.billing_alerts.delete_many({"payment_intent": pi})
+
+
+class TestSubscriptionEdgeCases:
+    async def test_unpaid_suspends_access_but_keeps_plan_and_credits(self, mdb, webhook_env):
+        billing = webhook_env
+        uid = await _mk_user(mdb, plan="free", sub=0, pack=50)
+        sub_id = "sub_test_" + str(ObjectId())
+        await billing.stripe_webhook(_signed_request(_evt("customer.subscription.created", _sub(uid, sub_id, "price_pro", 1000))))
+        await billing.stripe_webhook(_signed_request(_evt("customer.subscription.updated", _sub(uid, sub_id, "price_pro", 1000, "unpaid"))))
+        u = await mdb.users.find_one({"_id": ObjectId(uid)})
+        assert u["plan_code"] == "researcher" and u["subscription_status"] == "unpaid"
+        assert ent.tier_for(dict(u, id=uid)) == "FREE"
+        assert (u["credits_balance"], u["credits_pack_balance"]) == (200, 50)
+
+    async def test_cancel_at_period_end_keeps_access(self, mdb, webhook_env):
+        billing = webhook_env
+        uid = await _mk_user(mdb, plan="free", sub=0, pack=0)
+        sub_id = "sub_test_" + str(ObjectId())
+        await billing.stripe_webhook(_signed_request(_evt("customer.subscription.created", _sub(uid, sub_id, "price_adv", 1000))))
+        s = _sub(uid, sub_id, "price_adv", 1000); s["cancel_at_period_end"] = True
+        await billing.stripe_webhook(_signed_request(_evt("customer.subscription.updated", s)))
+        u = await mdb.users.find_one({"_id": ObjectId(uid)})
+        assert u["plan_code"] == "pro_researcher" and ent.tier_for(dict(u, id=uid)) == "PRO_ADVANCED"
+        local = await mdb.subscriptions.find_one({"stripe_subscription_id": sub_id})
+        assert local["cancel_at_period_end"] is True
+
+    async def test_failed_invoice_grants_nothing_and_is_grace(self, mdb, webhook_env):
+        billing = webhook_env
+        uid = await _mk_user(mdb, plan="free", sub=0, pack=0)
+        sub_id = "sub_test_" + str(ObjectId())
+        await billing.stripe_webhook(_signed_request(_evt("customer.subscription.created", _sub(uid, sub_id, "price_pro", 1000))))
+        await mdb.users.update_one({"_id": ObjectId(uid)}, {"$set": {"credits_balance": 3}})
+        inv = {"id": "in_f", "subscription": sub_id, "billing_reason": "subscription_cycle", "amount_due": 999,
+               "lines": {"data": [{"type": "subscription", "price": {"id": "price_pro"}, "period": {"start": 9_000_000}}]}}
+        await billing.stripe_webhook(_signed_request(_evt("invoice.payment_failed", inv)))
+        u = await mdb.users.find_one({"_id": ObjectId(uid)})
+        assert u["credits_balance"] == 3 and u["subscription_status"] == "past_due"
+        assert ent.tier_for(dict(u, id=uid)) == "PRO"     # grace while Stripe retries
+
+    async def test_second_live_subscription_is_flagged(self, mdb, webhook_env):
+        billing = webhook_env
+        uid = await _mk_user(mdb, plan="free", sub=0, pack=0)
+        a, b = "sub_test_" + str(ObjectId()), "sub_test_" + str(ObjectId())
+        await billing.stripe_webhook(_signed_request(_evt("customer.subscription.created", _sub(uid, a, "price_pro", 1000))))
+        await billing.stripe_webhook(_signed_request(_evt("customer.subscription.created", _sub(uid, b, "price_adv", 1000))))
+        alert = await mdb.billing_alerts.find_one({"kind": "duplicate_subscription", "user_id": uid})
+        assert alert is not None
+        await mdb.billing_alerts.delete_many({"user_id": uid})
+
+
+class TestCheckoutInputs:
+    @pytest.fixture
+    def stripe_on(self, monkeypatch):
+        monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_dummy")
+        monkeypatch.setenv("STRIPE_MODE", "test")
+        monkeypatch.setenv("FRONTEND_BASE_URL", "https://synaptiq.academy")
+        from routers import billing
+        for p in pc.PLANS:
+            if p["code"] in ("researcher", "pro_researcher"):
+                monkeypatch.setitem(p, "stripe_price_id_monthly", f"price_test_{p['code']}")
+        for p in CREDIT_PACKS:
+            monkeypatch.setitem(p, "stripe_price_id", f"price_test_{p['code']}")
+        captured = {}
+        monkeypatch.setattr(billing.stripe_service, "create_checkout_session",
+                            lambda **kw: captured.update(kw) or {"id": "cs_1", "url": "https://checkout.stripe.com/x"})
+        monkeypatch.setattr(billing.stripe_service, "create_credit_pack_checkout_session",
+                            lambda **kw: captured.update(kw) or {"id": "cs_2", "url": "https://checkout.stripe.com/y"})
+        monkeypatch.setattr(billing.stripe_service, "change_subscription_plan",
+                            lambda *a, **kw: captured.update({"changed": kw}) or {"id": a[0], "status": "active"})
+        monkeypatch.setattr(billing.stripe_service, "create_billing_portal_session",
+                            lambda cid, url: captured.update({"portal": (cid, url)}) or "https://billing.stripe.com/p")
+        return captured
+
+    async def test_plan_keys_and_server_side_urls(self, mdb, stripe_on):
+        from routers.billing import create_checkout
+        uid = await _mk_user(mdb, plan="free", sub=0)
+        for key, code in (("pro", "researcher"), ("pro_advanced", "pro_researcher")):
+            out = await create_checkout({"plan": key, "success_url": "https://evil.example/x"},
+                                        user={**_u("free", id=uid), "email": "u@synaptiq-test.io"})
+            assert out["url"].startswith("https://checkout.stripe.com/")
+            assert stripe_on["plan_code"] == code and stripe_on["stripe_price_id"] == f"price_test_{code}"
+            assert stripe_on["success_url"].startswith("https://synaptiq.academy/")
+
+    @pytest.mark.parametrize("bad", ["price_1UN7g6IjD6Qlwfj8erUQX6CW", "institution", "9.99", "", None, {"$ne": 1}])
+    async def test_arbitrary_plan_or_price_rejected(self, mdb, stripe_on, bad):
+        from routers.billing import create_checkout
+        with pytest.raises(HTTPException) as exc:
+            await create_checkout({"plan": bad}, user=_u("free"))
+        assert exc.value.status_code == 400
+
+    @pytest.mark.parametrize("bad", ["price_1UN7n5IjD6Qlwfj8AD9VIxYQ", "pack_9999", "1000", {"credits": 1000}])
+    async def test_arbitrary_pack_rejected(self, mdb, stripe_on, bad):
+        from routers.billing import create_credit_pack_checkout
+        with pytest.raises(HTTPException) as exc:
+            await create_credit_pack_checkout({"pack": bad, "credits": 99999, "amount": 1}, user=_u("researcher"))
+        assert exc.value.status_code == 400
+
+    async def test_pack_checkout_resolves_server_side(self, mdb, stripe_on):
+        from routers.billing import create_credit_pack_checkout
+        uid = await _mk_user(mdb, plan="researcher", sub=0)
+        await create_credit_pack_checkout({"pack": "max", "credits": 5000}, user={**_u("researcher", id=uid), "email": "u@x.io"})
+        assert stripe_on["credits"] == 750 and stripe_on["stripe_price_id"] == "price_test_pack_750"
+
+    async def test_upgrade_modifies_existing_subscription(self, mdb, stripe_on):
+        from routers.billing import create_checkout
+        uid = await _mk_user(mdb, plan="researcher", sub=0)
+        await mdb.subscriptions.insert_one({"user_id": uid, "stripe_subscription_id": "sub_live_1",
+                                            "status": "active", "plan_code": "researcher",
+                                            "stripe_customer_id": "cus_1", "updated_at": "2026-10-01"})
+        out = await create_checkout({"plan": "pro_advanced"}, user={**_u("researcher", id=uid), "email": "u@x.io"})
+        assert out["changed"] is True and out["upgrade"] is True
+        assert "plan_code" not in stripe_on      # no new Checkout Session / subscription
+        with pytest.raises(HTTPException) as exc:
+            await create_checkout({"plan": "pro"}, user={**_u("researcher", id=uid), "email": "u@x.io"})
+        assert exc.value.detail["code"] == "already_subscribed"
+
+    async def test_portal_uses_server_return_url(self, mdb, stripe_on):
+        from routers.billing import create_portal
+        uid = await _mk_user(mdb, plan="researcher", sub=0, stripe_customer_id="cus_9")
+        out = await create_portal({"return_url": "https://evil.example"}, user=_u("researcher", id=uid))
+        assert out["url"].startswith("https://billing.stripe.com/")
+        assert stripe_on["portal"] == ("cus_9", "https://synaptiq.academy/settings/billing")
+
+    async def test_unauthenticated_checkout_rejected(self):
+        import logging
+        logging.disable(logging.CRITICAL)
+        from fastapi.testclient import TestClient
+        from server import app
+        with TestClient(app) as c:
+            r = c.post("/api/billing/checkout-session", json={"plan": "pro"})
+            assert r.status_code in (401, 403)
+            r = c.post("/api/billing/credit-pack-checkout", json={"pack": "small"})
+            assert r.status_code in (401, 403)
+
+
+class TestStripeModeSeparation:
+    def test_key_must_match_mode(self, monkeypatch):
+        from services import stripe_service as ss
+        monkeypatch.setenv("STRIPE_MODE", "test")
+        monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_live_x")
+        assert not ss.is_configured()
+        monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_x")
+        assert ss.is_configured()
+        monkeypatch.setenv("STRIPE_MODE", "live")
+        assert not ss.is_configured()
+
+    def test_historical_price_ids_still_map(self, monkeypatch):
+        for p in pc.PLANS:
+            if p["code"] == "researcher":
+                monkeypatch.setitem(p, "stripe_price_id_monthly", "price_new_1499")
+                monkeypatch.setitem(p, "stripe_price_ids_legacy", ["price_early_999"])
+        assert pc.get_plan_by_price_id("price_early_999") == ("researcher", "monthly")
+        assert pc.get_plan_by_price_id("price_new_1499") == ("researcher", "monthly")
+
+    def test_no_stripe_secrets_in_tracked_source(self):
+        import subprocess
+        out = subprocess.run(["git", "grep", "-nE", r"(sk|rk)_(test|live)_[A-Za-z0-9]{10,}|whsec_[A-Za-z0-9]{10,}"],
+                             cwd=BACKEND.parent, capture_output=True, text=True)
+        assert out.stdout.strip() == "", out.stdout
+
+
+class TestStorageAndWorkspaces:
+    async def test_usage_counts_attachments_and_knowledge_docs(self, mdb):
+        from services.permissions import get_user_storage_bytes
+        uid = str(ObjectId())
+        await mdb.files.insert_one({"owner_id": uid, "is_latest": True, "size_bytes": 1000})
+        await mdb.message_attachments.insert_one({"owner_id": uid, "size": 200, "is_deleted": False})
+        await mdb.knowledge_documents.insert_one({"user_id": uid, "file_size_bytes": 30})
+        try:
+            assert await get_user_storage_bytes(uid) == 1230
+        finally:
+            for c, f in (("files", "owner_id"), ("message_attachments", "owner_id"), ("knowledge_documents", "user_id")):
+                await mdb[c].delete_many({f: uid})
+
+    async def test_pro_storage_limit(self, mdb):
+        from services.permissions import assert_storage_quota
+        uid = str(ObjectId())
+        await mdb.files.insert_one({"owner_id": uid, "is_latest": True, "size_bytes": 10 * GB - 10})
+        try:
+            await assert_storage_quota(_u("researcher", id=uid), 10)
+            with pytest.raises(HTTPException):
+                await assert_storage_quota(_u("researcher", id=uid), 11)
+            await assert_storage_quota(_u("pro_researcher", id=uid), 40 * GB)
+        finally:
+            await mdb.files.delete_many({"owner_id": uid})
+
+    async def test_eleventh_workspace_blocked_on_every_path(self, mdb):
+        from services.workspace_provisioning import provision_workspace
+        uid = await _mk_user(mdb, plan="researcher", sub=0)
+        try:
+            for i in range(10):
+                await provision_workspace(mdb, uid, "Owner", f"w{i}", "Research Project")
+            with pytest.raises(HTTPException) as exc:
+                await provision_workspace(mdb, uid, "Owner", "w11", "Research Project")
+            assert exc.value.status_code == 402
+            await mdb.users.update_one({"_id": ObjectId(uid)}, {"$set": {"plan_code": "pro_researcher"}})
+            await provision_workspace(mdb, uid, "Owner", "w11", "Research Project")   # unlimited on Pro Advanced
+        finally:
+            ids = [str(w["_id"]) async for w in mdb.workspaces.find({"owner_id": uid}, {"_id": 1})]
+            await mdb.workspaces.delete_many({"owner_id": uid})
+            await mdb.conversations.delete_many({"context_id": {"$in": ids}})
+
+
+class TestFreeIdentityAndDiscoverability:
+    @pytest.mark.parametrize("method,path", [
+        ("GET", "/api/users/me"), ("PATCH", "/api/users/me"),
+        ("GET", "/api/orcid/status"), ("POST", "/api/orcid/sync"),
+        ("POST", "/api/research-record/doi-confirm"), ("GET", "/api/research-record/mine"),
+        ("GET", "/api/profiles/someone"), ("GET", "/api/collaboration-requests"),
+    ])
+    def test_identity_routes_open_to_free(self, method, path):
+        assert match_rule(method, path) is None
+
+    def test_free_profiles_are_discoverable_and_free_cannot_browse(self):
+        import logging
+        logging.disable(logging.CRITICAL)
+        from fastapi.testclient import TestClient
+        from motor.motor_asyncio import AsyncIOMotorClient
+        from auth_utils import hash_password
+        from server import app
+        suffix = str(ObjectId())[-8:]
+        pro_email, free_email = f"pv-{suffix}@synaptiq-test.io", f"fv-{suffix}@synaptiq-test.io"
+
+        async def _setup():
+            c = AsyncIOMotorClient(os.environ["MONGODB_URI"]); d = c[os.environ["MONGODB_DB_NAME"]]
+            base = {"password_hash": hash_password("TestPass1!"), "role": "user", "status": "active",
+                    "email_verified": True, "connections": []}
+            await d.users.insert_one({**base, "full_name": "Pro Viewer", "email": pro_email, "plan_code": "researcher"})
+            await d.users.insert_one({**base, "full_name": f"Free Scholar {suffix}", "email": free_email,
+                                      "plan_code": "free", "profile_visibility": "public"})
+            c.close()
+
+        async def _cleanup():
+            c = AsyncIOMotorClient(os.environ["MONGODB_URI"]); d = c[os.environ["MONGODB_DB_NAME"]]
+            await d.users.delete_many({"email": {"$in": [pro_email, free_email]}}); c.close()
+        asyncio.run(_setup())
+        try:
+            with TestClient(app) as c:
+                assert c.post("/api/auth/login", json={"email": pro_email, "password": "TestPass1!"}).status_code == 200
+                h = {"Authorization": f"Bearer {c.cookies.get('access_token')}"}
+                r = c.get(f"/api/network/people?limit=50&q={suffix}", headers=h)
+                assert r.status_code == 200, r.text
+                assert any(f"Free Scholar {suffix}" == i.get("name") for i in r.json()["results"])
+            with TestClient(app) as c:
+                assert c.post("/api/auth/login", json={"email": free_email, "password": "TestPass1!"}).status_code == 200
+                h = {"Authorization": f"Bearer {c.cookies.get('access_token')}"}
+                assert c.get("/api/auth/me", headers=h).status_code == 200
+                r = c.get(f"/api/network/people?q={suffix}", headers=h)
+                assert r.status_code == 402 and r.json()["detail"]["code"] == "upgrade_required"
+                assert c.get("/api/journals", headers=h).status_code == 402
+                assert c.get("/api/conferences", headers=h).status_code == 402
+                assert c.get("/api/grants", headers=h).status_code == 402
+                assert c.post("/api/projects", json={"title": "x"}, headers=h).status_code == 402
+                assert c.post("/api/workspaces", json={"name": "x"}, headers=h).status_code == 402
+        finally:
+            asyncio.run(_cleanup())
+
+
+class TestManuscriptContext:
+    def test_selects_requested_section_with_abstract(self):
+        from services.ai.manuscript_context import build_section_context
+        secs = {"abstract": "ABS", "discussion": "DISC " * 10, "results": "RES"}
+        out = build_section_context("Improve the Discussion please", secs)
+        assert "DISC" in out and "ABS" in out and "RES" not in out
+
+    def test_no_section_named_returns_empty(self):
+        from services.ai.manuscript_context import build_section_context
+        assert build_section_context("make it better", {"discussion": "x"}) == ""
+
+
+class TestAdminSimulation:
+    async def test_refused_in_live_mode(self, monkeypatch):
+        from routers.admin_users_mgmt import billing_simulate, BillingSimulateRequest
+        monkeypatch.setenv("STRIPE_MODE", "live")
+        with pytest.raises(HTTPException) as exc:
+            await billing_simulate(str(ObjectId()), BillingSimulateRequest(action="renew"), request=None,
+                                   admin={"id": "a", "role": "super_admin"})
+        assert exc.value.status_code == 403

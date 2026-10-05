@@ -34,11 +34,30 @@ admin_router = APIRouter(
     tags=["admin-manuscript-intelligence"],
 )
 
-_CREDIT_COSTS = {
-    ReviewDepth.QUICK: 5,
-    ReviewDepth.STANDARD: 15,
-    ReviewDepth.DEEP: 25,
+# Each depth is priced by a catalogue operation (plans_catalogue.AI_OPERATIONS),
+# so the cost shown is exactly what is charged. Deep review is Pro Advanced's
+# "Advanced Manuscript Intelligence".
+_DEPTH_OPERATION = {
+    ReviewDepth.QUICK: "MANUSCRIPT_SECTION_REVIEW",
+    ReviewDepth.STANDARD: "FULL_MANUSCRIPT_REVIEW",
+    ReviewDepth.DEEP: "ADVANCED_MANUSCRIPT_INTELLIGENCE",
 }
+
+
+class _DepthCosts(dict):
+    def __missing__(self, depth):
+        from plans_catalogue import AI_OPERATIONS
+        return AI_OPERATIONS[_DEPTH_OPERATION[depth]]["credits"]
+
+
+_CREDIT_COSTS = _DepthCosts()
+
+
+def _charge_depth(user: dict, depth):
+    if depth == ReviewDepth.DEEP:
+        from services.entitlements import assert_capability
+        assert_capability(user, "can_use_advanced_manuscript_intelligence")
+    return _DEPTH_OPERATION[depth]
 
 ALLOWED_MIME = {
     "application/pdf",
@@ -113,7 +132,7 @@ async def review_upload(
     fmt = detect_format(file.filename or "manuscript", file.content_type or "")
 
     charged = await consume_credits(
-        _uid(user), "ai_manuscript_review",
+        _uid(user), _charge_depth(user, depth),
         metadata={"filename": file.filename, "depth": depth.value},
     )
     credits_used = charged.get("consumed", _CREDIT_COSTS[depth])
@@ -134,7 +153,7 @@ async def review_upload(
         result = await engine.review(request)
         result.credits_used = credits_used
     except Exception as exc:
-        await refund_credits(_uid(user), "ai_manuscript_review", reason=str(exc)[:200])
+        await refund_credits(_uid(user), _DEPTH_OPERATION[depth], reason=str(exc)[:200], reservation_id=charged.get("reservation_id"))
         log.error("Manuscript intelligence review failed: %s", exc)
         raise HTTPException(503, "Review failed. Credits refunded.")
 
@@ -160,7 +179,7 @@ async def review_text(
     fmt = fmt_map.get(body.input_format.lower(), InputFormat.TXT)
 
     charged = await consume_credits(
-        _uid(user), "ai_manuscript_review",
+        _uid(user), _charge_depth(user, depth),
         metadata={"filename": body.filename, "depth": depth.value},
     )
     credits_used = charged.get("consumed", _CREDIT_COSTS[depth])
@@ -181,7 +200,7 @@ async def review_text(
         result = await engine.review(request)
         result.credits_used = credits_used
     except Exception as exc:
-        await refund_credits(_uid(user), "ai_manuscript_review", reason=str(exc)[:200])
+        await refund_credits(_uid(user), _DEPTH_OPERATION[depth], reason=str(exc)[:200], reservation_id=charged.get("reservation_id"))
         log.error("Text manuscript review failed: %s", exc)
         raise HTTPException(503, "Review failed. Credits refunded.")
 
@@ -301,9 +320,9 @@ async def list_review_depths(_=Depends(get_current_user)):
                 "value": d.value,
                 "credits": _CREDIT_COSTS[d],
                 "description": {
-                    "quick": "AI review only — fast, 5 credits",
-                    "standard": "Rule-based + AI review — recommended, 15 credits",
-                    "deep": "Full pipeline + journal matching — comprehensive, 25 credits",
+                    "quick": "AI review only — fast",
+                    "standard": "Rule-based + AI review — recommended",
+                    "deep": "Full pipeline + journal matching — comprehensive (Pro Advanced)",
                 }[d.value],
             }
             for d in ReviewDepth

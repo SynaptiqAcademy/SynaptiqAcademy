@@ -10,6 +10,19 @@ from repo.security_context import SecurityContext
 router = APIRouter(prefix="/api/credits", tags=["credits"])
 
 
+def _label(d: dict) -> str:
+    """Customer-facing name for a ledger row (no provider/token terms)."""
+    from plans_catalogue import AI_OPERATIONS, operation_for_action
+    lt = d.get("ledger_type")
+    if lt in ("AI_RESERVATION", "AI_REFUND", "AI_CONSUMPTION"):
+        op = operation_for_action(d.get("action") or "")
+        base = AI_OPERATIONS[op]["label"] if op else (d.get("action") or "AI action").replace("_", " ").capitalize()
+        return f"{base} (refunded)" if lt == "AI_REFUND" else base
+    return {"SUBSCRIPTION_ALLOCATION": "Monthly credits",
+            "CREDIT_PACK_PURCHASE": "Credit purchase",
+            "ADMIN_ADJUSTMENT": "Adjustment"}.get(lt, (d.get("reason") or d.get("kind") or "").strip())
+
+
 @router.get("/balance")
 async def balance(user: dict = Depends(get_current_user)):
     state = await ensure_user_credits(user["id"])
@@ -49,6 +62,7 @@ async def transactions(limit: int = 50, user: dict = Depends(get_current_user)):
         "id": str(d["_id"]),
         "kind": d.get("kind"),
         "ledger_type": d.get("ledger_type"),
+        "label": _label(d),
         "balance_effect": d.get("balance_effect"),
         "bucket": d.get("bucket"),
         "amount": d.get("amount", 0),

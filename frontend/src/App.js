@@ -24,6 +24,7 @@ import Unsubscribed from "@/pages/Unsubscribed";
 import { Toaster } from "@/components/ui/sonner";
 import CookieConsentBanner from "@/components/consent/CookieConsentBanner";
 import UpgradeModal from "@/components/billing/UpgradeModal";
+import RouteEntitlementGate from "@/components/billing/RouteEntitlementGate";
 import { ConfirmDialogHost, PromptDialogHost } from "@/components/ds/ConfirmDialog";
 
 // All remaining pages loaded on demand — each route only pays for its own JS
@@ -322,7 +323,7 @@ const IIPStrategicPlanning       = lazy(() => import("@/pages/institution_platfo
 function Protected({ children }) {
   return (
     <ProtectedRoute requireOnboarded={true}>
-      <AppShell>{children}</AppShell>
+      <AppShell><RouteEntitlementGate>{children}</RouteEntitlementGate></AppShell>
     </ProtectedRoute>
   );
 }

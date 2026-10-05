@@ -32,12 +32,9 @@ export default function BuyCreditsPanel() {
     setError("");
     trackMonetizationEvent("credit_pack_checkout_started", { pack_code: pack.code });
     try {
-      const origin = window.location.origin;
-      const { data } = await api.post("/billing/credit-pack-checkout", {
-        pack_code: pack.code,
-        success_url: `${origin}/payment/success?kind=credits`,
-        cancel_url: `${origin}/payment/cancelled?kind=credits`,
-      });
+      // Only the pack key is sent; credits, amount and Stripe price are
+      // resolved server-side from the catalogue.
+      const { data } = await api.post("/billing/credit-pack-checkout", { pack: pack.key || pack.code });
       if (data?.url) window.location.assign(data.url);
     } catch (e) {
       setError(getErrorMessage(e));
