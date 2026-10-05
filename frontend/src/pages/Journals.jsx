@@ -12,6 +12,7 @@ import {
   ChevronDown, ChevronUp, Clock,
   Zap, Target, Eye, Gauge, Sparkles,
 } from "lucide-react";
+import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const BORDER = "#E4E8EF";
@@ -963,7 +964,7 @@ function GatedState({ tabLinks }) {
           title={
             <>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: NAVY, marginBottom: 8 }}>
-                Researcher Plan Required
+                {PLAN_DISPLAY_NAMES.researcher} Plan Required
               </div>
               Full journal access is a paid feature
             </>

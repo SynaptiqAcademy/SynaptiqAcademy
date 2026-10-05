@@ -147,7 +147,7 @@ def require_plan(min_plan: str, *, feature: str | None = None) -> Callable:
                 status_code=status.HTTP_402_PAYMENT_REQUIRED,
                 detail={
                     "code": "upgrade_required",
-                    "message": f"This action requires the {min_plan.replace('_',' ').title()} plan or higher.",
+                    "message": f"This action requires the {get_plan(min_plan).get('name', 'Pro')} plan or higher.",
                     "required_plan": min_plan,
                     "current_plan": user.get("plan_code") or "free",
                     "upgrade_url": "/pricing",
@@ -338,7 +338,7 @@ async def check_discovery_quota(user: dict, kind: str) -> None:
                 "code": "quota_exceeded",
                 "message": (
                     f"You've used your {limit} {kind} recommendations for this month. "
-                    "Upgrade to Researcher for unlimited access."
+                    f"Upgrade to {get_plan('researcher').get('name', 'Pro')} for unlimited access."
                 ),
                 "resource": limit_key,
                 "limit": limit,

@@ -6,6 +6,7 @@ import { WARM } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { AI_NAV_ITEMS } from "@/lib/navItems";
 import { Button, Card, Input, Textarea, Tag, TagGroup, EmptyState } from "@/components/ds";
+import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
 
 
 
@@ -33,11 +34,11 @@ function GateView() {
       icon={<Lock />}
       title={
         <>
-          <div className="overline text-[#0F2847] mb-2">Researcher plan required</div>
+          <div className="overline text-[#0F2847] mb-2">{PLAN_DISPLAY_NAMES.researcher} plan required</div>
           AI Abstract Generator is a Researcher feature
         </>
       }
-      description="Upgrade to Researcher to generate publication-quality abstracts from your paper content — keywords, key contribution, and multiple academic styles included."
+      description={`Upgrade to ${PLAN_DISPLAY_NAMES.researcher} to generate publication-quality abstracts from your paper content — keywords, key contribution, and multiple academic styles included.`}
       action={<Button as={Link} to="/pricing">View Plans</Button>}
       size="lg"
     />

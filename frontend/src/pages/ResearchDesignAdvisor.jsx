@@ -19,6 +19,7 @@ import { Tag as DsTag } from "@/components/ds/Tag";
 import { Input } from "@/components/ds/Input";
 import { Textarea } from "@/components/ds/Textarea";
 import { InlineError } from "@/components/ds/Alert";
+import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
 
 
 
@@ -164,9 +165,9 @@ function GateView() {
           <Lock size={22} strokeWidth={1.5} />
         </div>
         <div>
-          <h1 className="font-serif text-2xl text-slate-900 mb-2">Pro Researcher Required</h1>
+          <h1 className="font-serif text-2xl text-slate-900 mb-2">{PLAN_DISPLAY_NAMES.pro_researcher} Required</h1>
           <p className="text-slate-600 text-sm leading-relaxed">
-            AI Research Design Advisor requires a Pro Researcher or Institution plan.
+            AI Research Design Advisor requires the {PLAN_DISPLAY_NAMES.pro_researcher} plan.
             Transform any research idea into a defensible, publishable study design.
           </p>
         </div>
@@ -188,7 +189,7 @@ function GateView() {
           ))}
         </Card>
         <Button as={Link} to="/pricing" variant="primary" size="lg" className="w-full">
-          Upgrade to Pro Researcher
+          Upgrade to {PLAN_DISPLAY_NAMES.pro_researcher}
         </Button>
         <p className="text-xs text-slate-500">10 credits per advisory · Refunded if advisory fails</p>
       </div>
@@ -255,7 +256,7 @@ function InputView({ onResult }) {
       <div className="max-w-2xl mx-auto">
         {/* header */}
         <div className="mb-8">
-          <p className="text-xs text-slate-500">Pro Researcher · 10 credits per advisory</p>
+          <p className="text-xs text-slate-500">{PLAN_DISPLAY_NAMES.pro_researcher} · 10 credits per advisory</p>
         </div>
 
         {/* form */}

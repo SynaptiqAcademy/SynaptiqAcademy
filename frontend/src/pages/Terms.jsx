@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { LegalLayout, Section } from "./legal/LegalLayout";
+import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
 
 const SECTIONS = [
   { id: "acceptance",     label: "1. Acceptance" },
@@ -54,8 +55,8 @@ export default function Terms() {
         <p>SYNAPTIQ is available on four subscription tiers:</p>
         <ul className="mt-3 space-y-1 text-sm">
           <li><strong>Free</strong> — 50 Research Credits / month, 1 project, 1 workspace, 500 MB repository storage.</li>
-          <li><strong>Researcher</strong> — 300 Credits / month, unlimited projects, 10 workspaces, 100 GB storage.</li>
-          <li><strong>Pro Researcher</strong> — 1,000 Credits / month, unlimited projects, unlimited workspaces, 500 GB storage.</li>
+          <li><strong>{PLAN_DISPLAY_NAMES.researcher}</strong> — 300 Credits / month, unlimited projects, 10 workspaces, 100 GB storage.</li>
+          <li><strong>{PLAN_DISPLAY_NAMES.pro_researcher}</strong> — 1,000 Credits / month, unlimited projects, unlimited workspaces, 500 GB storage.</li>
           <li><strong>Institution</strong> — 20,000 Credits / month, 25 user seats, unlimited projects and workspaces, 2 TB storage.</li>
         </ul>
         <p className="mt-3"><strong>Credit Packs</strong> are available as one-time purchases (100 credits for €5, 250 for €10, 1,000 for €29, 5,000 for €99). Credit Pack credits never expire and are not affected by plan changes or cancellation.</p>
@@ -135,7 +136,7 @@ export default function Terms() {
 
       <Section id="repository" title="11. Repository & File Storage">
         <p><strong>File types.</strong> The repository accepts: PDF, DOCX, DOC, XLSX, XLS, PPTX, PPT, CSV, ZIP, PNG, JPEG, WEBP, and GIF files. Individual file uploads are limited to 50 MB.</p>
-        <p className="mt-3"><strong>Storage limits.</strong> Available repository storage depends on your plan (Free: 500 MB; Researcher: 100 GB; Pro Researcher: 500 GB; Institution: 2 TB). Uploads beyond your plan&rsquo;s storage quota will be rejected.</p>
+        <p className="mt-3"><strong>Storage limits.</strong> Available repository storage depends on your plan (Free: 500 MB; {PLAN_DISPLAY_NAMES.researcher}: 100 GB; {PLAN_DISPLAY_NAMES.pro_researcher}: 500 GB; Institution: 2 TB). Uploads beyond your plan&rsquo;s storage quota will be rejected.</p>
         <p className="mt-3"><strong>Version history.</strong> Files are versioned within their parent entity. Deleting a file version removes it from the repository interface; it may be retained in backup systems for up to 14 days.</p>
         <p className="mt-3"><strong>Your responsibility.</strong> You must not upload files that infringe third-party intellectual property rights or that contain malicious content. We reserve the right to remove files that violate these Terms.</p>
         <p className="mt-3"><strong>Storage location.</strong> Files are stored in AWS S3-compatible object storage. Your data is encrypted in transit and at rest.</p>

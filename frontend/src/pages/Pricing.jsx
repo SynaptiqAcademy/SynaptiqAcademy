@@ -6,6 +6,7 @@ import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { trackMarketingEvent as track } from "../lib/marketingAnalytics";
 import { setPageSeo } from "../lib/seo";
+import { PLAN_DISPLAY_NAMES } from "../lib/planNames";
 import {
   Check, Minus, Sparkles, ArrowRight,
   Shield, Globe, Zap, Lock, CheckCircle2, ChevronDown,
@@ -28,16 +29,21 @@ const BILLING_NOT_READY_MESSAGE =
 
 const STATIC_PLANS = [
   {
-    code: "free", name: "Free", tagline: "Get started for free",
+    code: "free", name: "Free", tagline: "Explore Synaptiq and start building your research network",
     price_eur_monthly: 0, price_eur_annual: 0,
     future_price_eur_monthly: null, badge: null,
     credits_per_month: 50,
     limits: { active_projects: 1, workspaces: 1, repository_gb: 0.5, team_seats: 1,
                journal_recs_per_month: -1, conference_recs_per_month: -1, grant_recs_per_month: -1 },
     features: [
-      "50 Research Credits / month", "Academic Profile", "ORCID Integration",
-      "Research Network Access", "1 Active Project", "1 Workspace",
-      "500 MB Repository Storage", "Full Journal, Conference & Grant Search",
+      "50 Research Credits / month",
+      "Academic Profile",
+      "ORCID Integration",
+      "Research Network Access",
+      "1 Active Project",
+      "1 Workspace",
+      "500 MB Repository Storage",
+      "Full Journal, Conference & Grant Search",
       "Basic Profile Visibility",
     ],
     excluded: [
@@ -48,53 +54,65 @@ const STATIC_PLANS = [
     cta: "Start Free",
   },
   {
-    code: "researcher", name: "Researcher", tagline: "For active research and collaboration",
+    code: "researcher", name: "Pro", tagline: "For active research, collaboration and AI-assisted workflows",
     price_eur_monthly: 9.99, price_eur_annual: 7.99,
     future_price_eur_monthly: 14.99, badge: "For active individual research",
     credits_per_month: 300,
     limits: { active_projects: -1, workspaces: 10, repository_gb: 100, team_seats: 1,
                journal_recs_per_month: -1, conference_recs_per_month: -1, grant_recs_per_month: -1 },
     features: [
-      "300 Research Credits / month", "Unlimited Projects", "Up to 10 Workspaces",
-      "Repository 100 GB", "Full Journal Discovery", "Full Conference Discovery",
-      "Full Grant Discovery", "Publication Tracking", "Advanced Analytics",
-      "AI Research Assistant", "AI Manuscript Copilot",
-      "Teaching Hub — lesson planner, assessments, portfolio",
+      "300 Research Credits / month",
+      "Unlimited Projects",
+      "Up to 10 Workspaces",
+      "Repository 100 GB",
+      "AI Journal, Conference & Grant Matching",
+      "Publication Tracking",
+      "Advanced Analytics",
+      "AI Research Assistant",
+      "AI Manuscript Copilot",
       "Priority Support",
     ],
     excluded: [],
     cta: "Get Started",
   },
   {
-    code: "pro_researcher", name: "Pro Researcher", tagline: "For advanced research workflows",
+    code: "pro_researcher", name: "Pro Advanced", tagline: "For advanced research intelligence, analysis and impact workflows",
     price_eur_monthly: 29.99, price_eur_annual: 23.99,
-    future_price_eur_monthly: null, badge: "For high-output researchers",
+    future_price_eur_monthly: null, badge: "For advanced research intelligence",
     credits_per_month: 1000,
     limits: { active_projects: -1, workspaces: -1, repository_gb: 500, team_seats: 1,
                journal_recs_per_month: -1, conference_recs_per_month: -1, grant_recs_per_month: -1 },
     features: [
-      "1,000 Research Credits / month", "Unlimited Projects", "Unlimited Workspaces",
-      "Repository 500 GB", "Advanced AI Research Assistant", "Advanced Manuscript Copilot",
-      "Collaboration Intelligence", "Research Analytics Suite", "Citation Monitoring",
+      "1,000 Research Credits / month",
+      "Unlimited Projects",
+      "Unlimited Workspaces",
+      "Repository 500 GB",
+      "Advanced AI Research Assistant",
+      "Advanced Manuscript Copilot",
+      "AI Literature Review, Statistical Review & Research Gap Discovery",
+      "Collaboration Intelligence",
+      "Research Analytics Suite",
+      "Citation Monitoring",
       "Research Impact Dashboard",
-      "AI Teaching Tools — lesson & assessment generator",
       "Priority Support",
     ],
     excluded: [],
     cta: "Get Started",
   },
   {
-    code: "institution", name: "Institution", tagline: "Universities & research labs",
+    code: "institution", name: "Institution", tagline: "For universities, research institutions and organizations",
     price_eur_monthly: 299, price_eur_annual: 239,
     future_price_eur_monthly: null, badge: null,
     credits_per_month: 20000,
     limits: { active_projects: -1, workspaces: -1, repository_gb: 2048, team_seats: 25,
                journal_recs_per_month: -1, conference_recs_per_month: -1, grant_recs_per_month: -1 },
     features: [
-      "20,000 Research Credits / month", "25 Researcher Seats", "Unlimited Projects",
-      "Unlimited Workspaces", "Repository 2 TB",
-      "Institutional Analytics Dashboard", "Department Management",
-      "SSO / SAML Integration", "Audit Logs", "Dedicated Support",
+      "Institution workspace for approved members",
+      "Member and department management",
+      "Institutional analytics",
+      "Admin permissions for institution owners and admins",
+      "Institution audit log for admins",
+      "Seats, credits and storage set per agreement",
     ],
     excluded: [],
     cta: "Contact Sales",
@@ -130,78 +148,59 @@ const STATIC_USAGE = [
   { label: "Collaboration Requests",     cost: 0,  unit: "",               free: true  },
 ];
 
+// Offline fallback only — an exact mirror of backend plans_catalogue.FEATURE_MATRIX
+// (visible columns). GET /billing/feature-matrix is the real source and
+// overwrites this on load; the table below looks rows up by exact label, so
+// the labels here and in COMPARISON_GROUPS must match the backend's
+// verbatim. Every row reflects a real entitlement (FEATURE_MIN_PLAN /
+// PLAN_QUOTAS) — the previous fallback marked AI literature review, gap
+// finder, statistical review and study design as available on Researcher
+// (they're gated at pro_researcher), showed Teaching as paid-only (it isn't
+// plan-gated), capped Free search at 5/5/3 a month (it's unlimited), and
+// claimed end-to-end encryption.
 const STATIC_MATRIX = {
   columns: ["free", "researcher", "pro_researcher", "institution"],
   rows: [
-    // General
-    { label: "Research Credits / month",   values: ["50",      "300",       "1,000",     "20,000"]    },
-    { label: "Active Projects",            values: ["1",       "Unlimited", "Unlimited", "Unlimited"] },
-    { label: "Workspaces",                 values: ["1",       "10",        "Unlimited", "Unlimited"] },
-    { label: "Repository Storage",         values: ["500 MB",  "100 GB",    "500 GB",    "2 TB"]      },
-    { label: "Version History",            values: ["7 days",  "90 days",   "Unlimited", "Unlimited"] },
-    { label: "Users Included",             values: ["1",       "1",         "1",         "25"]        },
-    { label: "Private Workspaces",         values: [false,     true,        true,        true]        },
-    // Research Tools
-    { label: "Academic Profile",           values: [true,      true,        true,        true]        },
-    { label: "ORCID Integration",          values: [true,      true,        true,        true]        },
-    { label: "Research Network Access",    values: [true,      true,        true,        true]        },
-    { label: "Journal Discovery",          values: ["5 / mo",  "Full",      "Full",      "Full"]      },
-    { label: "Conference Discovery",       values: ["5 / mo",  "Full",      "Full",      "Full"]      },
-    { label: "Grant Discovery",            values: ["3 / mo",  "Full",      "Full",      "Full"]      },
-    // AI Suite
-    { label: "AI Research Assistant",      values: [false,     true,        "Advanced",  "Advanced"]  },
-    { label: "AI Manuscript Copilot",      values: [false,     true,        "Advanced",  "Advanced"]  },
-    { label: "AI Literature Review",       values: [false,     true,        true,        true]        },
-    { label: "AI Research Gap Finder",     values: [false,     true,        true,        true]        },
-    { label: "AI Statistical Review",      values: [false,     true,        true,        true]        },
-    { label: "AI Study Design Advisor",    values: [false,     true,        true,        true]        },
-    { label: "AI Agent Automation",        values: [false,     false,       true,        true]        },
-    { label: "AI Teaching Tools",          values: [false,     false,       true,        true]        },
-    // Collaboration
-    { label: "Team Formation",             values: [true,      true,        true,        true]        },
-    { label: "Real-time Collaboration",    values: [false,     true,        true,        true]        },
-    { label: "Collaboration Intelligence", values: [false,     false,       true,        true]        },
-    // Publishing
-    { label: "Publication Tracking",       values: [false,     true,        true,        true]        },
-    { label: "Citation Monitoring",        values: [false,     false,       true,        true]        },
-    { label: "Research Impact Dashboard",  values: [false,     false,       true,        true]        },
-    // Teaching
-    { label: "Teaching Hub",               values: [false,     true,        true,        true]        },
-    // Analytics
-    { label: "Advanced Analytics",         values: [false,     true,        true,        true]        },
-    { label: "Research Analytics Suite",   values: [false,     false,       true,        true]        },
-    // Verification & Trust
-    { label: "Academic Passport",          values: [true,      true,        true,        true]        },
-    { label: "Verification Badge",         values: [false,     true,        true,        true]        },
-    { label: "Trust Score",                values: [false,     true,        true,        true]        },
-    // Institution
-    { label: "Institutional Analytics",    values: [false,     false,       false,       true]        },
-    { label: "Department Management",      values: [false,     false,       false,       true]        },
-    { label: "Seat Administration",        values: [false,     false,       false,       true]        },
-    { label: "SSO / SAML",                 values: [false,     false,       false,       true]        },
-    // Admin & Security
-    { label: "2-Factor Authentication",    values: [true,      true,        true,        true]        },
-    { label: "End-to-end Encryption",      values: [true,      true,        true,        true]        },
-    { label: "Audit Logs",                 values: [false,     false,       false,       true]        },
-    { label: "GDPR Data Exports",          values: [true,      true,        true,        true]        },
-    // Support
-    { label: "Support Level",              values: ["Community","Priority", "Priority",  "Dedicated"] },
-    { label: "Dedicated Success Manager",  values: [false,     false,       false,       true]        },
+    { label: "Research Credits / month", values: ["50", "300", "1,000", "20,000"] },
+    { label: "Active Projects", values: ["1", "Unlimited", "Unlimited", "Unlimited"] },
+    { label: "Workspaces", values: ["1", "10", "Unlimited", "Unlimited"] },
+    { label: "Repository Storage", values: ["500 MB", "100 GB", "500 GB", "2 TB"] },
+    { label: "Users Included", values: ["1", "1", "1", "25"] },
+    { label: "Academic Profile", values: [true, true, true, true] },
+    { label: "ORCID Integration", values: [true, true, true, true] },
+    { label: "Research Network Access", values: [true, true, true, true] },
+    { label: "Research Need, expert discovery & collaboration requests", values: [true, true, true, true] },
+    { label: "Journal, conference & grant search", values: [true, true, true, true] },
+    { label: "AI journal, conference & grant matching", values: [false, true, true, true] },
+    { label: "Teaching tools — courses, lessons, assessments", values: [true, true, true, true] },
+    { label: "Publication Tracking", values: [false, true, true, true] },
+    { label: "Advanced Analytics", values: [false, true, true, true] },
+    { label: "AI Research Assistant", values: [false, true, "Advanced", "Advanced"] },
+    { label: "AI Manuscript Copilot", values: [false, true, "Advanced", "Advanced"] },
+    { label: "AI literature review, statistical review & research gap discovery", values: [false, false, true, true] },
+    { label: "Collaboration Intelligence", values: [false, false, true, true] },
+    { label: "Research Analytics Suite", values: [false, false, true, true] },
+    { label: "Citation Monitoring", values: [false, false, true, true] },
+    { label: "Research Impact Dashboard", values: [false, false, true, true] },
+    { label: "Institutional Analytics", values: [false, false, false, true] },
+    { label: "Department Management", values: [false, false, false, true] },
+    { label: "Support", values: ["Community", "Priority", "Priority", "Dedicated"] },
   ],
 };
 
+// Grouped by workflow (§40 of the earlier commercial spec). The Institution
+// group intentionally renders as dashes for every individual plan: no
+// individual subscription grants institution features — those come only
+// from approved organization membership.
 const COMPARISON_GROUPS = [
-  { label: "General", rows: ["Research Credits / month", "Active Projects", "Workspaces", "Repository Storage", "Version History", "Users Included", "Private Workspaces"] },
-  { label: "Research Tools", rows: ["Academic Profile", "ORCID Integration", "Research Network Access", "Journal Discovery", "Conference Discovery", "Grant Discovery"] },
-  { label: "AI Suite", rows: ["AI Research Assistant", "AI Manuscript Copilot", "AI Literature Review", "AI Research Gap Finder", "AI Statistical Review", "AI Study Design Advisor", "AI Agent Automation", "AI Teaching Tools"] },
-  { label: "Collaboration", rows: ["Team Formation", "Real-time Collaboration", "Collaboration Intelligence"] },
-  { label: "Publishing", rows: ["Publication Tracking", "Citation Monitoring", "Research Impact Dashboard"] },
-  { label: "Teaching", rows: ["Teaching Hub"] },
-  { label: "Analytics & Intelligence", rows: ["Advanced Analytics", "Research Analytics Suite"] },
-  { label: "Verification & Trust", rows: ["Academic Passport", "Verification Badge", "Trust Score"] },
-  { label: "Institution", rows: ["Institutional Analytics", "Department Management", "Seat Administration", "SSO / SAML"] },
-  { label: "Admin & Security", rows: ["2-Factor Authentication", "End-to-end Encryption", "Audit Logs", "GDPR Data Exports"] },
-  { label: "Support", rows: ["Support Level", "Dedicated Success Manager"] },
+  { label: "Usage", rows: ["Research Credits / month", "Active Projects", "Workspaces", "Repository Storage", "Users Included"] },
+  { label: "Identity & discovery", rows: ["Academic Profile", "ORCID Integration", "Research Network Access", "Research Need, expert discovery & collaboration requests", "Journal, conference & grant search", "AI journal, conference & grant matching"] },
+  { label: "AI-assisted research", rows: ["AI Research Assistant", "AI Manuscript Copilot", "AI literature review, statistical review & research gap discovery"] },
+  { label: "Collaboration", rows: ["Collaboration Intelligence"] },
+  { label: "Publishing & impact", rows: ["Publication Tracking", "Advanced Analytics", "Research Analytics Suite", "Citation Monitoring", "Research Impact Dashboard"] },
+  { label: "Teaching", rows: ["Teaching tools — courses, lessons, assessments"] },
+  { label: "Institution (organization membership only)", rows: ["Institutional Analytics", "Department Management"] },
+  { label: "Support", rows: ["Support"] },
 ];
 
 const TRUST_ITEMS = [
@@ -220,7 +219,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Can I cancel anytime?",
-    a: "Yes. Subscriptions are month-to-month (or annual) with no long-term commitment. Cancel at any time from your account settings and you keep full access until the end of the current billing period. No cancellation fees, no lock-in.",
+    a: "Yes. Paid plans are month-to-month with no long-term commitment. Cancel at any time from your account settings and you keep access until the end of the current billing period, then your account returns to Free. Your projects, workspaces and files are never deleted on cancellation.",
   },
   {
     q: "Do unused credits roll over?",
@@ -228,66 +227,75 @@ const FAQ_ITEMS = [
   },
   {
     q: "How secure is Synaptiq?",
-    a: "All data is encrypted in transit (TLS 1.2+) and at rest. Authentication uses httpOnly cookies, bcrypt password hashing, and optional 2FA. We are GDPR-aligned and never sell your data. Institution plans additionally support SSO/SAML, audit logs, and advanced access controls.",
+    a: "All data is encrypted in transit (TLS 1.2+) and at rest. Authentication uses httpOnly cookies, bcrypt password hashing, and optional 2FA. We are GDPR-aligned and never sell your data. Institutions additionally get role-based admin permissions and an admin audit log.",
   },
   {
     q: "Can universities negotiate pricing?",
-    a: "Yes. The Institution plan is the starting point for university deployments, but we work with research offices, consortia, and funding bodies on custom arrangements — including custom seat counts, data residency, and procurement documentation. Contact our team for a tailored quote.",
+    a: "Institutional pricing is always set per agreement — there is no fixed public price. We work with research offices, departments and consortia on seat counts and needs. Contact our team.",
   },
   {
     q: "Can I upgrade later?",
-    a: "Absolutely. You can change plans at any time from Settings. Upgrades take effect immediately and your credit balance tops up to the new plan's allowance. Downgrades take effect at the start of your next billing cycle. Your Credit Pack balance is always preserved.",
+    a: "Yes. Once paid plans open, you can move from Free to Pro or Pro Advanced at any time; the new plan applies as soon as the payment is confirmed. Moving to a lower plan never deletes existing work, and any Credit Pack balance is always preserved.",
   },
   {
     q: "Do students receive discounts?",
-    a: "We offer a permanent Free plan with no credit card required, which covers research profiles, collaboration discovery, and a starter credit allowance. Students and early PhD candidates can do meaningful work on Free before needing to upgrade. Educational institution pricing is available for departments.",
+    a: "We offer a permanent Free plan with no credit card required, which covers research profiles, collaboration discovery, and a starter credit allowance. Students and early PhD candidates can do meaningful work on Free before needing to upgrade. Departments interested in institutional access can contact our team.",
   },
   {
     q: "Can institutions invite researchers?",
-    a: "Yes. The Institution plan includes 25 researcher seats. Administrators can invite researchers, manage allocations, and monitor collective research activity from a unified dashboard. For larger deployments beyond 25 seats, contact our team.",
+    a: "Yes. Institution owners and admins can invite members, approve membership requests, and manage departments. Seat counts are set per agreement — contact our team.",
   },
   {
     q: "Can I buy extra credits?",
-    a: "Yes. Credit Packs (100, 250, 1,000, or 5,000 credits) are available as one-time purchases on any plan including Free. They stack with your monthly allowance and never expire. You can purchase from the Pricing page or from Settings → AI Credits.",
+    a: "Credit Packs (100, 250, 1,000 or 5,000 credits) will be available as one-time purchases on any plan, including Free, once paid billing opens. They stack with your monthly allowance and never expire.",
   },
   {
     q: "How is billing calculated?",
-    a: "Monthly plans are charged on the same date each month. Annual plans are charged once per year at a 20% discount. All prices are in EUR, excluding VAT where applicable. Stripe processes all transactions — Synaptiq never stores card details. Institutions can request invoicing.",
+    a: "Paid plans are billed monthly, on the same date each month. All prices are in EUR, excluding VAT where applicable. Card payments are handled by our payment processor — Synaptiq never stores card details. Institutional agreements are invoiced.",
   },
 ];
 
+// Real entitlements only (Phase 9A final decisions, §12). Credit counts are
+// NOT repeated here — each card renders p.credits_per_month from the
+// canonical catalogue, so there's one number, not two that can drift.
+// Teaching is available on every plan (not plan-gated; AI teaching actions
+// use credits), and manual journal/conference/grant search is unlimited on
+// every plan — earlier copy implied both were paid-only.
 const PLAN_HIGHLIGHTS = {
   free: [
-    "Academic profile & public research page",
+    "Academic Passport & public research profile",
     "ORCID integration",
-    "Research network & collaboration discovery",
+    "Research Need, expert discovery & collaboration requests",
+    "Journal, conference & grant search",
+    "Teaching tools — courses, lessons, assessments",
     "1 active project · 1 workspace · 500 MB storage",
-    "Limited discovery (5 journals, 5 conferences, 3 grants / mo)",
   ],
   researcher: [
     "Everything in Free",
-    "Unlimited projects · 10 workspaces · 100 GB",
-    "Full journal, conference & grant discovery",
     "AI Research Assistant & Manuscript Copilot",
-    "Teaching Hub — lesson planner, assessments, portfolio",
+    "AI journal, conference & grant matching",
     "Publication tracking & advanced analytics",
+    "Unlimited projects · 10 workspaces · 100 GB",
     "Priority support",
   ],
   pro_researcher: [
-    "Everything in Researcher",
-    "1,000 credits / month · Unlimited workspaces · 500 GB",
-    "Advanced AI — deeper context, priority processing",
-    "Collaboration Intelligence & Research Impact Dashboard",
-    "Citation Monitoring & Research Analytics Suite",
-    "AI Teaching Tools — lesson & assessment generator",
+    `Everything in ${PLAN_DISPLAY_NAMES.researcher}`,
+    "Advanced AI Research Assistant",
+    "AI literature review, statistical review & research gap discovery",
+    "Collaboration Intelligence & Research Analytics Suite",
+    "Citation Monitoring & Research Impact Dashboard",
+    "Unlimited workspaces · 500 GB",
   ],
+  // Organization product — membership-based capabilities, not a bigger
+  // individual plan. No "Everything in Pro Advanced": institution access is
+  // granted by approved membership, which doesn't automatically confer any
+  // individual plan's entitlements, so that line overstated what members get.
   institution: [
-    "Everything in Pro Researcher",
-    "25 researcher seats included",
-    "20,000 credits / month · 2 TB shared storage",
-    "Institutional Analytics Dashboard",
-    "Department Management & seat administration",
-    "SSO / SAML · Audit Logs · Dedicated support",
+    "Institution workspace for approved members",
+    "Member and department management",
+    "Institutional analytics",
+    "Admin permissions for institution owners and admins",
+    "Seats, credits and storage set per agreement",
   ],
 };
 
@@ -316,7 +324,9 @@ export default function Pricing() {
   // the same row as Free/Pro.
   const [audience, setAudience] = useState("individual"); // "individual" | "organization"
   const [matrix,   setMatrix]   = useState(STATIC_MATRIX);
-  const [annual,   setAnnual]   = useState(false);
+  // Annual billing isn't offered until the owner approves it and annual Stripe
+  // prices exist (§6) — constant, not state, so nothing can switch it on.
+  const annual = false;
   const [busy,     setBusy]     = useState("");
   const [packBusy, setPackBusy] = useState("");
   const [openFaq,  setOpenFaq]  = useState(null);
@@ -448,56 +458,11 @@ export default function Pricing() {
             ))}
           </div>
 
-          {/* Billing toggle — individual plans only; Institutional has no self-service price */}
+          {/* Trust row — individual plans only. (The monthly/annual toggle was removed: no annual
+              Stripe price exists and annual billing isn't approved yet, so showing it implied a
+              purchasable option that doesn't exist — §6. Annual prices stay in plans_catalogue.py.) */}
           {audience === "individual" && (
           <>
-          <div className="flex items-center gap-4 flex-wrap" style={{ marginTop: 36 }}>
-            <div style={{
-              display: "inline-flex", alignItems: "center",
-              border: "1px solid #e2e8f0", borderRadius: 10, overflow: "hidden",
-              background: "#f8fafc",
-            }}>
-              <button
-                data-testid={TID.pricingBillMonthly}
-                onClick={() => setAnnual(false)}
-                style={{
-                  padding: "9px 22px", fontSize: "0.85rem", fontWeight: 600,
-                  border: "none", cursor: "pointer",
-                  background: !annual ? "#fff" : "transparent",
-                  color: !annual ? "#0a0f1a" : "#64748b",
-                  boxShadow: !annual ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
-                  borderRadius: !annual ? 8 : 0,
-                  transition: "all 150ms ease",
-                  margin: !annual ? 2 : 0,
-                }}
-              >
-                Pay monthly
-              </button>
-              <button
-                data-testid={TID.pricingBillAnnual}
-                onClick={() => setAnnual(true)}
-                style={{
-                  padding: "9px 22px", fontSize: "0.85rem", fontWeight: 600,
-                  border: "none", cursor: "pointer",
-                  background: annual ? "#fff" : "transparent",
-                  color: annual ? "#0a0f1a" : "#64748b",
-                  boxShadow: annual ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
-                  borderRadius: annual ? 8 : 0,
-                  transition: "all 150ms ease",
-                  margin: annual ? 2 : 0,
-                  display: "flex", alignItems: "center", gap: 8,
-                }}
-              >
-                Pay yearly
-              </button>
-            </div>
-            {!annual && (
-              <span style={{ fontSize: "0.82rem", color: "#059669", fontWeight: 600 }}>
-                Save up to 20% with yearly billing
-              </span>
-            )}
-          </div>
-
           {/* Trust micro-row */}
           <div className="flex flex-wrap items-center gap-6 mt-8">
             {["Cancel any time", "No credit card required for Free", "Research data owned by you"].map((t) => (
@@ -590,7 +555,7 @@ export default function Pricing() {
                   {/* Price block — Institutional shows no public price (§37):
                       organization-level billing doesn't exist yet, so a
                       number here would imply a self-service purchase that
-                      isn't real. The €299 reference value stays in
+                      isn't real. The historical reference value stays in
                       plans_catalogue.py for internal/sales use, just not
                       rendered publicly. */}
                   <div style={{ marginBottom: 8 }}>
@@ -623,12 +588,7 @@ export default function Pricing() {
                       </div>
                     )}
 
-                    {p.code === "researcher" && p.future_price_eur_monthly && (
-                      <div style={{ fontSize: "0.68rem", marginTop: 4,
-                        color: isPopular ? "rgba(255,255,255,0.4)" : "#b45309", fontWeight: 500 }}>
-                        Early Access — future price €{p.future_price_eur_monthly} / mo
-                      </div>
-                    )}
+                    
                   </div>
 
                   {/* Credits chip */}
@@ -708,14 +668,14 @@ export default function Pricing() {
           <p style={{ textAlign: "center", marginTop: 24, fontSize: "0.75rem", color: "#94a3b8" }}>
             {audience === "organization"
               ? "Institutional pricing is negotiated with our team based on your organization's seat count and needs."
-              : "All prices in EUR, excluding VAT where applicable."}
+              : "AI-assisted actions use credits. Research Need, expert discovery, networking and collaboration requests never do. All prices in EUR, excluding VAT where applicable."}
           </p>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
           PLANS AND FEATURES — sticky comparison table (Notion-style)
-          Individual-only: comparing Free/Researcher/Pro Researcher. The
+          Individual-only: comparing Free/Pro/Pro Advanced. The
           Institutional capability list gets its own section below instead
           (§12 — organization value isn't "Pro + a checkbox").
       ══════════════════════════════════════════════════════════════════════ */}

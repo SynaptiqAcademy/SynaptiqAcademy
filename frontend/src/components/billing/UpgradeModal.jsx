@@ -13,6 +13,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Sparkles, X, ArrowRight, Zap } from "lucide-react";
+import { planDisplayName } from "@/lib/planNames";
 
 export default function UpgradeModal() {
   const [gate, setGate] = useState(null);
@@ -40,7 +41,7 @@ export default function UpgradeModal() {
     ? "You have exhausted your monthly credits"
     : isQuota
     ? "You've reached your plan limit"
-    : `Upgrade to ${(gate.required_plan || "Researcher").replace("_", " ")}`;
+    : `Upgrade to ${planDisplayName(gate.required_plan)}`;
 
   return (
     <div className="fixed inset-0 z-[10500] flex items-center justify-center p-6 bg-slate-900/50"

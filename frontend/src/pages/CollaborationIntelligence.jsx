@@ -13,6 +13,7 @@ import { WARM } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { AI_NAV_ITEMS } from "@/lib/navItems";
 import { Card } from "@/components/ds/Card";
+import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
 
 // ─────────────────────── ai nav ──────────────────────────────────────────────
 
@@ -120,7 +121,7 @@ function GateView() {
           </div>
           <div>
             <div className="font-serif text-lg text-slate-900">Collaboration Intelligence</div>
-            <div className="text-xs text-slate-500 mt-0.5">Pro Researcher · Institution</div>
+            <div className="text-xs text-slate-500 mt-0.5">{PLAN_DISPLAY_NAMES.pro_researcher}</div>
           </div>
         </div>
         <p className="text-sm text-slate-600 leading-relaxed mb-6">
@@ -148,7 +149,7 @@ function GateView() {
           to="/pricing"
           className="flex items-center justify-between w-full border border-[#0F2847] bg-[#0F2847] text-white px-4 py-3 text-sm font-medium hover:bg-slate-800 transition-colors"
         >
-          <span>Upgrade to Pro Researcher</span>
+          <span>Upgrade to {PLAN_DISPLAY_NAMES.pro_researcher}</span>
           <ArrowRight size={15} strokeWidth={1.5} />
         </Link>
         <div className="mt-3 text-center text-xs text-slate-400">

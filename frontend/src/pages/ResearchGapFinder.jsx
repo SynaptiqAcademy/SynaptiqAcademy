@@ -22,6 +22,7 @@ import { Input } from "@/components/ds/Input";
 import { Textarea } from "@/components/ds/Textarea";
 import { InlineError, Callout } from "@/components/ds/Alert";
 import { Modal } from "@/components/ds/Modal";
+import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
 
 
 
@@ -180,9 +181,9 @@ function GateView() {
           <Lock size={22} strokeWidth={1.5} />
         </div>
         <div>
-          <h1 className="font-serif text-2xl text-slate-900 mb-2">Pro Researcher Required</h1>
+          <h1 className="font-serif text-2xl text-slate-900 mb-2">{PLAN_DISPLAY_NAMES.pro_researcher} Required</h1>
           <p className="text-slate-600 text-sm leading-relaxed">
-            AI Research Gap Finder requires a Pro Researcher or Institution plan.
+            AI Research Gap Finder requires the {PLAN_DISPLAY_NAMES.pro_researcher} plan.
             Uncover underexplored areas, contradictions, and publishable opportunities in any field.
           </p>
         </div>
@@ -202,7 +203,7 @@ function GateView() {
           ))}
         </Card>
         <Button as={Link} to="/pricing" variant="primary" size="lg" className="w-full">
-          Upgrade to Pro Researcher
+          Upgrade to {PLAN_DISPLAY_NAMES.pro_researcher}
         </Button>
         <p className="text-xs text-slate-500">10 credits per analysis · Refunded if analysis fails</p>
       </div>
@@ -310,7 +311,7 @@ function InputView({ onResult }) {
       <div className="max-w-2xl mx-auto">
         {/* header */}
         <div className="mb-8">
-          <p className="text-xs text-slate-500 mb-3">Pro Researcher · 10 credits per analysis</p>
+          <p className="text-xs text-slate-500 mb-3">{PLAN_DISPLAY_NAMES.pro_researcher} · 10 credits per analysis</p>
 
           {/* disclaimer */}
           <Callout variant="warning">

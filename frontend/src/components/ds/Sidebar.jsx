@@ -22,6 +22,7 @@ import api from "@/lib/api";
 import { getOrderedSections, findSectionForPath } from "@/config/navigation";
 import { ADMIN_SECTIONS } from "@/config/adminNavigation";
 import { SIDEBAR_W, SIDEBAR_W_COLLAPSED, HEADER_H } from "@/lib/tokens";
+import { planDisplayName } from "@/lib/planNames";
 
 /**
  * Sidebar — the one canonical navigation sidebar in the product.
@@ -784,7 +785,7 @@ function CreditsWidget({ collapsed }) {
             Credits
           </span>
         </div>
-        <span className="text-[9px] font-semibold text-slate-500">{state.plan_name || state.plan_code}</span>
+        <span className="text-[9px] font-semibold text-slate-500">{state.plan_name || planDisplayName(state.plan_code)}</span>
       </div>
       <div className="flex items-baseline gap-1 mb-1.5">
         <span className="text-base font-bold text-slate-900 tracking-tight">

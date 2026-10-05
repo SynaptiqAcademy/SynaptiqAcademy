@@ -20,6 +20,7 @@ import { Input } from "@/components/ds/Input";
 import { Tag, TagGroup } from "@/components/ds/Tag";
 import { Modal } from "@/components/ds/Modal";
 import { StatCard, StatGrid } from "@/components/ds/StatCard";
+import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const EMRL  = "#059669";
@@ -379,12 +380,12 @@ export default function PublicationHub() {
             title={
               <>
                 <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: NAVY, marginBottom: 8 }}>
-                  Researcher Plan Required
+                  {PLAN_DISPLAY_NAMES.researcher} Plan Required
                 </div>
                 Publication Tracking is a paid feature
               </>
             }
-            description="Upgrade to Researcher to manage your manuscript submission pipeline, track review stages, and link to journals and conferences."
+            description={`Upgrade to ${PLAN_DISPLAY_NAMES.researcher} to manage your manuscript submission pipeline, track review stages, and link to journals and conferences.`}
             action={<Button as={Link} to="/pricing">View Plans</Button>}
             size="lg"
           />

@@ -15,6 +15,7 @@ import {
   getOrderedSections,
   findSectionForPath,
 } from "../../config/navigation";
+import { planDisplayName } from "@/lib/planNames";
 
 // ─── DrawerNavItem ────────────────────────────────────────────────────────────
 
@@ -215,7 +216,7 @@ function CreditsWidget({ onClose }) {
           <Sparkles size={11} strokeWidth={1.5} className="text-[#0F2847]" />
           <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">Credits</span>
         </div>
-        <span className="text-xs font-semibold text-slate-600">{state.plan_name || state.plan_code}</span>
+        <span className="text-xs font-semibold text-slate-600">{state.plan_name || planDisplayName(state.plan_code)}</span>
       </div>
       <div className="mt-2 flex items-baseline gap-1">
         <span className="font-serif text-xl text-slate-900">{state.balance}</span>

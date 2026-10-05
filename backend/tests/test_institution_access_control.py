@@ -276,7 +276,7 @@ class TestAccessSummaryIncludesInstitution:
             uid = await _insert_user(raw.db, "SummaryUser", plan_code="pro_researcher")
             summary = await access_summary({**_user(uid), "plan_code": "pro_researcher"})
             assert summary["institution"] == {"is_member": False}
-            assert summary["plan_name"] == "Pro Researcher"
+            assert summary["plan_name"] == "Pro Advanced"
         finally:
             raw.close()
 

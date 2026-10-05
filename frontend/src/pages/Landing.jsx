@@ -446,33 +446,33 @@ const SHOWCASE = [
   },
 ];
 
-// featured: false on every tier — §24/§42, no "Most Popular" without real
+// featured: false on every tier — §24/§42, no popularity badge without real
 // usage data. Institution shows no public price (§37) — organization
 // billing doesn't exist yet; a number here would imply self-service
 // purchase that isn't real.
 const PRICING_TIERS = [
   {
     name: "Free",         price: "€0",     period: "/mo",
-    desc: "Start exploring — no credit card required.",
-    features: ["50 AI credits / month", "Researcher profile", "Discovery network", "1 active project", "Community access"],
+    desc: "Explore Synaptiq and start building your research network.",
+    features: ["50 AI credits / month", "Academic Passport", "Research Need & expert discovery", "Collaboration requests", "Teaching tools", "1 active project"],
     cta: "Start free", featured: false, href: "/register",
   },
   {
-    name: "Researcher",   price: "€9.99",  period: "/mo",
-    desc: "For active research and collaboration.",
-    features: ["300 AI credits / month", "Unlimited projects", "AI Research Assistant", "AI Manuscript Copilot", "Publication tracking", "Priority support"],
-    cta: "Get started", featured: false, href: "/register",
+    name: "Pro",   price: "€9.99",  period: "/mo",
+    desc: "For active research, collaboration and AI-assisted workflows.",
+    features: ["300 AI credits / month", "Unlimited projects", "AI Research Assistant", "AI Manuscript Copilot", "AI journal, conference & grant matching", "Publication tracking"],
+    cta: "See plans", featured: false, href: "/pricing",
   },
   {
-    name: "Pro Researcher", price: "€29.99", period: "/mo",
-    desc: "For advanced research workflows.",
-    features: ["1,000 AI credits / month", "Unlimited workspaces", "Collaboration Intelligence", "Research Analytics Suite", "Citation monitoring", "Impact dashboard"],
-    cta: "Get started", featured: false, href: "/register",
+    name: "Pro Advanced", price: "€29.99", period: "/mo",
+    desc: "For advanced research intelligence, analysis and impact workflows.",
+    features: ["1,000 AI credits / month", "Unlimited workspaces", "AI literature review, statistical review & gap discovery", "Collaboration Intelligence", "Citation monitoring", "Impact dashboard"],
+    cta: "See plans", featured: false, href: "/pricing",
   },
   {
     name: "Institution",  price: "Custom",   period: "",
-    desc: "For research offices and university departments.",
-    features: ["20,000 AI credits / month", "25 researcher seats", "Institutional analytics", "Department management", "SSO / SAML integration", "Dedicated support"],
+    desc: "For universities, research institutions and organizations.",
+    features: ["Institution workspace for approved members", "Member and department management", "Institutional analytics", "Admin permissions", "Seats and credits set per agreement"],
     cta: "Contact sales", featured: false, href: "/contact?topic=institution",
   },
 ];
@@ -483,16 +483,16 @@ const FAQ = [
   { q: "Can I use Synaptiq without ORCID?", a: "Yes. ORCID is optional — connecting it strengthens your research record with synced publications, but you can create a full profile and use Synaptiq without it." },
   { q: "What is Academic Passport?", a: "Academic Passport is your structured research identity: research areas and interests, methods, professional expertise, institution affiliation, ORCID connection, research record, and collaboration preferences. Different elements have different verification states — it isn't marketed as universally \"verified.\"" },
   { q: "What does \"verified\" mean on Synaptiq?", a: "It depends on the specific badge. ORCID connection confirms you control that ORCID account. Institution verification confirms an affiliation claim, typically via an institutional email or admin approval. Neither verifies a professional license or credential — see below." },
-  { q: "Can I use Synaptiq if my university doesn't subscribe?", a: "Yes. An individual account (Free or Pro) works independently of any institutional subscription. Institutional features are separate and only apply to verified members of a Synaptiq institution." },
-  { q: "What's the difference between Pro and Institutional?", a: "Pro is an individual subscription for one person's research, collaboration, and teaching work. Institutional is an organization product — it provisions a shared institution workspace with member management and departments for a university or research organization. Buying Pro never grants institutional access, and institutional membership isn't purchased on an individual account." },
-  { q: "Does Pro include Teaching?", a: "Yes. Teaching tools (lesson planner, assessment builder, teaching workspace) are included from the Researcher tier up — Teaching doesn't require an Institutional plan." },
+  { q: "Can I use Synaptiq if my university doesn't subscribe?", a: "Yes. An individual account (Free, Pro or Pro Advanced) works independently of any institutional subscription. Institutional features are separate and only apply to verified members of a Synaptiq institution." },
+  { q: "What's the difference between Pro and Institutional?", a: "Pro and Pro Advanced are individual subscriptions for one person's research, collaboration, and teaching work. Institutional is an organization product — it provisions a shared institution workspace with member management and departments for a university or research organization. No individual subscription grants institutional access, and institutional membership isn't purchased on an individual account." },
+  { q: "Do I need a paid plan for Teaching?", a: "No. Teaching tools (courses, lesson planner, assessment builder, teaching workspace) are available on every plan, including Free, and don't require an Institutional plan. AI-assisted teaching actions, like generating a lesson or assessment, use credits." },
   { q: "What uses AI credits?", a: "AI-assisted actions — literature review, manuscript review, statistical review, research design advice, gap detection, journal/conference/grant matching, and similar — have a fixed, documented credit cost. Discovering people, creating your profile, and sending collaboration requests never use credits." },
   { q: "Does finding or collaborating with people use AI credits?", a: "No. Discovery, viewing profiles, and sending or responding to collaboration requests are always free — only the optional AI-assisted steps (like interpreting a research question with AI) can cost credits, and the cost is shown before you commit to it." },
   { q: "Can Synaptiq guarantee publication or funding?", a: "No. Synaptiq can help you find relevant people, methods, and opportunities, but it doesn't and can't guarantee publication acceptance, peer-review outcomes, or funding success." },
   { q: "Does Synaptiq verify professional licenses or credentials?", a: "No. Synaptiq doesn't independently verify professional licensure (e.g., that someone is a licensed physician or lawyer). ORCID and institution verification confirm specific, narrower claims — see \"What does verified mean\" above." },
   { q: "How does collaboration work?", a: "Post an open collaboration with your requirements, or send a direct collaboration request to someone you've discovered. The other person reviews and accepts — nothing is sent on your behalf without your approval, and acceptance creates a shared workspace." },
   { q: "How is research data protected?", a: "All data is encrypted in transit (TLS 1.2+) and at rest. Authentication uses httpOnly cookies and bcrypt. We are GDPR-aligned and never sell user data." },
-  { q: "Can I cancel Pro?", a: "Yes, any time from your account settings. You keep access until the end of your current billing period, then your plan reverts to Free." },
+  { q: "Can I cancel a paid plan?", a: "Yes, any time from your account settings. You keep access until the end of your current billing period, then your plan reverts to Free." },
   { q: "What happens to my work if I cancel or downgrade?", a: "Nothing is deleted. Your projects, workspaces, and files stay fully accessible — a lower plan only limits creating new resources beyond that plan's included amount, it never removes what you already have." },
 ];
 
@@ -906,11 +906,6 @@ export default function Landing() {
                   display: "flex", flexDirection: "column",
                   transform: featured ? "scale(1.02)" : "none",
                 }}>
-                  {featured && (
-                    <div style={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.12)", padding: "3px 10px", borderRadius: 999, display: "inline-block", marginBottom: 14, alignSelf: "flex-start" }}>
-                      Most popular
-                    </div>
-                  )}
                   <div style={{ fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: featured ? "rgba(255,255,255,0.6)" : "#94a3b8", marginBottom: 8 }}>{name}</div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 8 }}>
                     <span style={{ fontSize: "2.4rem", fontWeight: 900, color: featured ? "#fff" : "#0a0f1a", lineHeight: 1, letterSpacing: "-0.04em" }}>{price}</span>

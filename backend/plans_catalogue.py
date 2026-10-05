@@ -14,7 +14,7 @@ PLANS = [
     {
         "code": "free",
         "name": "Free",
-        "tagline": "Get started",
+        "tagline": "Explore Synaptiq and start building your research network",
         "price_eur_monthly": 0,
         "price_eur_annual": 0,
         "future_price_eur_monthly": None,
@@ -57,9 +57,16 @@ PLANS = [
         "stripe_price_id_annual": "",
     },
     {
+        # Backend code stays "researcher" — entitlement logic, quotas, and
+        # FEATURE_MIN_PLAN all key off this and are unchanged. "name" is the
+        # canonical customer-facing display name (already the established
+        # pattern via get_plan(code)["name"] — see credits_service.py,
+        # services/permissions.py::access_summary) — renamed per the owner's
+        # Phase 9A commercial decision: a subscription tier describes
+        # product access, not a professional identity.
         "code": "researcher",
-        "name": "Researcher",
-        "tagline": "For active research and collaboration",
+        "name": "Pro",
+        "tagline": "For active research, collaboration and AI-assisted workflows",
         "price_eur_monthly": 9.99,
         "price_eur_annual": 7.99,
         "future_price_eur_monthly": 14.99,
@@ -79,9 +86,7 @@ PLANS = [
             "Unlimited Projects",
             "Up to 10 Workspaces",
             "Repository 100 GB",
-            "Full Journal Discovery",
-            "Full Conference Discovery",
-            "Full Grant Discovery",
+            "AI Journal, Conference & Grant Matching",
             "Publication Tracking",
             "Advanced Analytics",
             "AI Research Assistant",
@@ -89,14 +94,15 @@ PLANS = [
             "Priority Support",
         ],
         "excluded": [],
-        "cta": "Choose Researcher",
+        "cta": "Choose Pro",
         "stripe_price_id_monthly": "",
         "stripe_price_id_annual": "",
     },
     {
+        # Backend code stays "pro_researcher" — see note on "researcher" above.
         "code": "pro_researcher",
-        "name": "Pro Researcher",
-        "tagline": "For advanced research workflows",
+        "name": "Pro Advanced",
+        "tagline": "For advanced research intelligence, analysis and impact workflows",
         "price_eur_monthly": 29.99,
         "price_eur_annual": 23.99,
         "future_price_eur_monthly": None,
@@ -118,6 +124,7 @@ PLANS = [
             "Repository 500 GB",
             "Advanced AI Research Assistant",
             "Advanced Manuscript Copilot",
+            "AI Literature Review, Statistical Review & Research Gap Discovery",
             "Collaboration Intelligence",
             "Research Analytics Suite",
             "Citation Monitoring",
@@ -125,14 +132,22 @@ PLANS = [
             "Priority Support",
         ],
         "excluded": [],
-        "cta": "Choose Pro",
+        "cta": "Choose Pro Advanced",
         "stripe_price_id_monthly": "",
         "stripe_price_id_annual": "",
     },
     {
+        # No self-service checkout (§7) — institution access is granted only
+        # via real organization membership, never a purchasable plan_code
+        # on an individual account (see services/permissions.py's
+        # require_institution_member). price_eur_monthly/annual are kept as
+        # an internal/sales reference only — never render them publicly
+        # (frontend already doesn't; this is what would leak if a future
+        # caller ever rendered plan.price_eur_monthly generically for every
+        # plan without institution's existing special-case).
         "code": "institution",
         "name": "Institution",
-        "tagline": "Universities & labs",
+        "tagline": "For universities, research institutions and organizations",
         "price_eur_monthly": 299,
         "price_eur_annual": 239,
         "future_price_eur_monthly": None,
@@ -147,18 +162,21 @@ PLANS = [
             "conference_recs_per_month": -1,
             "grant_recs_per_month": -1,
         },
+        # Public-facing description of the organization product — real,
+        # membership-based capabilities only. Seat count, credits and storage
+        # are set per agreement (Custom / Contact Sales), so fixed numbers
+        # aren't advertised here; the limits dict above remains the internal
+        # reference for this legacy plan_code.
         "features": [
-            "20,000 Research Credits / month",
-            "25 Users Included",
-            "Unlimited Projects",
-            "Unlimited Workspaces",
-            "Repository 2 TB",
-            "Institutional Analytics",
-            "Department Management",
-            "Dedicated Support",
+            "Institution workspace for approved members",
+            "Member and department management",
+            "Institutional analytics",
+            "Admin permissions for institution owners and admins",
+            "Institution audit log for admins",
+            "Seats, credits and storage set per agreement",
         ],
         "excluded": [],
-        "cta": "Choose Institution",
+        "cta": "Contact Sales",
         "stripe_price_id_monthly": "",
         "stripe_price_id_annual": "",
     },
@@ -495,8 +513,17 @@ def get_plan_by_price_id(stripe_price_id: str) -> tuple[str, str] | None:
 # =====================================================================
 # Tuple shape: (label, free_value, researcher_value, pro_value, institution_value)
 # Use True/False booleans or strings; the frontend renders them uniformly.
+def _credits_label(code: str) -> str:
+    """Credit allocation for the matrix, derived from PLANS — never a second
+    hardcoded copy that can drift from credits_per_month (§13)."""
+    n = next((p["credits_per_month"] for p in PLANS if p["code"] == code), 0)
+    return "Unlimited" if n == -1 else f"{n:,}"
+
+
 FEATURE_MATRIX = [
-    ("Research Credits / month",       "50",         "300",        "1,000",      "20,000",    "Unlimited"),
+    ("Research Credits / month",       _credits_label("free"), _credits_label("researcher"),
+                                       _credits_label("pro_researcher"), _credits_label("institution"),
+                                       _credits_label("enterprise")),
     ("Active Projects",                "1",          "Unlimited",  "Unlimited",  "Unlimited", "Unlimited"),
     ("Workspaces",                     "1",          "10",         "Unlimited",  "Unlimited", "Unlimited"),
     ("Repository Storage",             "500 MB",     "100 GB",     "500 GB",     "2 TB",      "Custom"),
@@ -504,13 +531,24 @@ FEATURE_MATRIX = [
     ("Academic Profile",               True,         True,         True,         True,        True),
     ("ORCID Integration",              True,         True,         True,         True,        True),
     ("Research Network Access",        True,         True,         True,         True,        True),
-    ("Journal Discovery",              "5 / mo",     "Full",       "Full",       "Full",      "Full"),
-    ("Conference Discovery",           "5 / mo",     "Full",       "Full",       "Full",      "Full"),
-    ("Grant Discovery",                "3 / mo",     "Full",       "Full",       "Full",      "Full"),
+    # Rows below describe real entitlements only (Phase 9A final decisions,
+    # §12/§18). Previously this matrix claimed Free had "5 / mo" journal and
+    # conference discovery and "3 / mo" grant discovery — but every plan's
+    # journal/conference/grant_recs_per_month limit is -1 (unlimited) and
+    # manual search is deliberately core functionality (see the Free plan's
+    # limits comment above). What IS plan-gated is AI *matching*
+    # (FEATURE_MIN_PLAN ai_*_matching = researcher). Teaching isn't plan-gated
+    # at all (no require_plan/require_feature in routers/teaching*.py; AI
+    # teaching actions cost credits on any plan).
+    ("Research Need, expert discovery & collaboration requests", True, True, True, True, True),
+    ("Journal, conference & grant search", True,  True,         True,         True,        True),
+    ("AI journal, conference & grant matching", False, True,    True,         True,        True),
+    ("Teaching tools — courses, lessons, assessments", True, True, True,    True,        True),
     ("Publication Tracking",           False,        True,         True,         True,        True),
     ("Advanced Analytics",             False,        True,         True,         True,        True),
     ("AI Research Assistant",          False,        True,         "Advanced",   "Advanced",  "Advanced"),
     ("AI Manuscript Copilot",          False,        True,         "Advanced",   "Advanced",  "Advanced"),
+    ("AI literature review, statistical review & research gap discovery", False, False, True, True, True),
     ("Collaboration Intelligence",     False,        False,        True,         True,        True),
     ("Research Analytics Suite",       False,        False,        True,         True,        True),
     ("Citation Monitoring",            False,        False,        True,         True,        True),

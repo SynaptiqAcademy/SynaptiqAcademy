@@ -18,6 +18,7 @@ import { Input } from "@/components/ds/Input";
 import { Textarea } from "@/components/ds/Textarea";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { InlineError, Callout } from "@/components/ds/Alert";
+import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
 
 // ─────────────────────── shared primitives ───────────────────────────────────
 
@@ -118,10 +119,10 @@ function GateView() {
       <Card padding="xl" className="!p-16 flex flex-col items-center text-center gap-5">
         <Lock size={28} strokeWidth={1} className="text-slate-300" />
         <div>
-          <div className="overline text-[#0F2847] mb-2">Pro Researcher plan required</div>
+          <div className="overline text-[#0F2847] mb-2">{PLAN_DISPLAY_NAMES.pro_researcher} plan required</div>
           <h2 className="font-serif text-2xl text-slate-900">AI Literature Review is a Pro feature</h2>
           <p className="text-slate-500 text-sm mt-3 max-w-sm mx-auto">
-            Upgrade to Pro Researcher to generate structured, publication-ready literature reviews
+            Upgrade to {PLAN_DISPLAY_NAMES.pro_researcher} to generate structured, publication-ready literature reviews
             covering themes, debates, theoretical foundations, and future research directions.
           </p>
         </div>

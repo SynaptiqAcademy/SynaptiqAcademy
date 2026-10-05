@@ -30,6 +30,7 @@ import {
   useImpactCitationChart,
   useSaveGoals,
 } from "../hooks/useResearchImpact";
+import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
 
 // ─────────────────────────── research intelligence nav ───────────────────────
 
@@ -240,11 +241,11 @@ const PERIOD_LABELS  = { "30d": "30 days", "90d": "90 days", "365d": "1 year", "
 
 function UpgradeWall() {
   return (
-    <ResearchLayout title="Research Impact Dashboard" subtitle="Pro Researcher">
+    <ResearchLayout title="Research Impact Dashboard" subtitle={PLAN_DISPLAY_NAMES.pro_researcher}>
       <Card padding="xl" className="!p-16 flex flex-col items-center text-center gap-6">
         <Lock size={28} strokeWidth={1} className="text-slate-300" />
         <div>
-          <div className="overline text-[#0F2847] mb-2">Pro Researcher plan required</div>
+          <div className="overline text-[#0F2847] mb-2">{PLAN_DISPLAY_NAMES.pro_researcher} plan required</div>
           <h2 className="font-serif text-3xl text-slate-900">Your central research intelligence hub</h2>
           <p className="text-slate-500 text-sm mt-3 max-w-lg mx-auto">
             The Research Impact Dashboard combines all SYNAPTIQ modules into a single executive view:
@@ -268,7 +269,7 @@ function UpgradeWall() {
           ))}
         </div>
         <Button as={Link} to="/pricing" variant="primary" size="lg">
-          Upgrade to Pro Researcher
+          Upgrade to {PLAN_DISPLAY_NAMES.pro_researcher}
         </Button>
       </Card>
     </ResearchLayout>

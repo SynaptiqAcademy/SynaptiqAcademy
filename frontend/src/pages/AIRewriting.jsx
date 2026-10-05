@@ -7,6 +7,7 @@ import { ErrorState } from "@/components/ds/ErrorState";
 import { Button, Card, Input, Textarea, EmptyState } from "@/components/ds";
 import { ResearchLayout } from "@/layouts";
 import { AI_NAV_ITEMS } from "@/lib/navItems";
+import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
 
 // ─────────────────────────── shared primitives ───────────────────────────────
 
@@ -32,11 +33,11 @@ function GateView() {
       icon={<Lock />}
       title={
         <>
-          <div className="overline text-[#0F2847] mb-2">Researcher plan required</div>
+          <div className="overline text-[#0F2847] mb-2">{PLAN_DISPLAY_NAMES.researcher} plan required</div>
           AI Rewriting is a Researcher feature
         </>
       }
-      description="Upgrade to Researcher to rewrite and refine your academic writing — improve clarity, tone, and style while preserving your original meaning."
+      description={`Upgrade to ${PLAN_DISPLAY_NAMES.researcher} to rewrite and refine your academic writing — improve clarity, tone, and style while preserving your original meaning.`}
       action={<Button as={Link} to="/pricing">View Plans</Button>}
       size="lg"
     />

@@ -90,13 +90,13 @@ class TestCanonicalPlanNamesOnly:
         for plan in PLANS:
             assert plan["name"], f"Plan {plan['code']} has no display name"
             # A real display name should read like English, not the raw
-            # snake_case internal code (e.g. "Pro Researcher", not
+            # snake_case internal code (e.g. "Pro Advanced", not
             # "pro_researcher") — the exact bug the Navigation-phase pass
             # fixed for the sidebar.
             assert "_" not in plan["name"]
 
     def test_get_plan_pro_researcher_name_is_display_ready(self):
-        assert get_plan("pro_researcher")["name"] == "Pro Researcher"
+        assert get_plan("pro_researcher")["name"] == "Pro Advanced"
 
     def test_get_plan_institution_name_is_display_ready(self):
         assert get_plan("institution")["name"] == "Institution"

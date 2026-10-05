@@ -19,6 +19,7 @@ import { Badge } from "@/components/ds/Badge";
 import { StatCard } from "@/components/ds/StatCard";
 import { DataTable } from "@/components/ds/DataTable";
 import { Callout } from "@/components/ds/Alert";
+import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
 
 // ─────────────────────────── research intelligence nav ───────────────────────
 
@@ -91,7 +92,7 @@ function GateView() {
       <Card padding="xl" className="!p-16 flex flex-col items-center text-center gap-5">
         <Lock size={28} strokeWidth={1} className="text-slate-300" />
         <div>
-          <div className="overline text-[#0F2847] mb-2">Pro Researcher plan required</div>
+          <div className="overline text-[#0F2847] mb-2">{PLAN_DISPLAY_NAMES.pro_researcher} plan required</div>
           <h2 className="font-serif text-2xl text-slate-900">Citation Monitoring is a Pro feature</h2>
           <p className="text-slate-500 text-sm mt-3 max-w-sm mx-auto">
             Track your citation impact, monitor publication performance, compare against your institution,
