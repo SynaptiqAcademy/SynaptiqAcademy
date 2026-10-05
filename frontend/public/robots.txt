@@ -22,4 +22,4 @@ Allow: /ai-policy
 # crawl, and most of it requires a session anyway) or account/auth flows.
 Disallow: /
 
-Sitemap: https://synaptiq.academy/sitemap.xml
+Sitemap: https://www.synaptiq.academy/sitemap.xml

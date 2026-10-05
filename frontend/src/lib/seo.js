@@ -26,7 +26,7 @@ export function setPageSeo({ title, description, path }) {
     canonicalEl.setAttribute("rel", "canonical");
     document.head.appendChild(canonicalEl);
   }
-  if (path) canonicalEl.setAttribute("href", `https://synaptiq.academy${path}`);
+  if (path) canonicalEl.setAttribute("href", `https://www.synaptiq.academy${path}`);
 
   return () => {
     document.title = prevTitle;

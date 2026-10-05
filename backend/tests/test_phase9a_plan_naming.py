@@ -140,6 +140,8 @@ class TestPaidIndividualPlansDoNotGrantInstitution:
 PUBLIC_PRICING_FILES = [
     FRONTEND / "pages" / "Pricing.jsx",
     FRONTEND / "pages" / "Landing.jsx",
+    FRONTEND / "components" / "landing" / "content.js",
+    FRONTEND / "components" / "landing" / "Sections.jsx",
 ]
 
 
@@ -168,14 +170,14 @@ class TestPublicCommercialTruth:
         assert not offenders, offenders
 
     def test_landing_preview_has_no_researcher_plan_card(self):
-        src = (FRONTEND / "pages" / "Landing.jsx").read_text()
-        tiers = src[src.index("const PRICING_TIERS"):src.index("const FAQ")]
+        src = (FRONTEND / "components" / "landing" / "content.js").read_text()
+        tiers = src[src.index("export const PLAN_PREVIEW"):src.index("export const FAQ")]
         names = re.findall(r'name:\s*"([^"]+)"', tiers)
-        assert names == ["Free", "Pro", "Pro Advanced", "Institution"]
+        assert names == ["Free", "Pro", "Pro Advanced", "Institutional"]
 
     def test_landing_paid_ctas_do_not_hit_checkout(self):
-        src = (FRONTEND / "pages" / "Landing.jsx").read_text()
-        tiers = src[src.index("const PRICING_TIERS"):src.index("const FAQ")]
+        src = (FRONTEND / "components" / "landing" / "content.js").read_text()
+        tiers = src[src.index("export const PLAN_PREVIEW"):src.index("export const FAQ")]
         assert "checkout" not in tiers
         assert 'href: "/contact?topic=institution"' in tiers
 

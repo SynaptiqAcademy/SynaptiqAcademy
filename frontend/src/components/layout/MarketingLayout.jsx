@@ -25,7 +25,6 @@ const NAV_ITEMS = [
 
 const RESOURCES = [
   { href: "/resources/whats-new",        label: "What's New"       },
-  { href: "/resources/customer-stories", label: "Customer Stories" },
   { href: "/resources/blog",             label: "Blog"             },
 ];
 
@@ -340,8 +339,8 @@ export default function MarketingLayout({ children }) {
           {/* Brand */}
           <div style={{ marginBottom: 56 }}>
             <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", marginBottom: 10 }}>SYNAPTIQ</div>
-            <p style={{ fontSize: "0.82rem", lineHeight: 1.75, color: "#64748b", maxWidth: 320, margin: 0 }}>
-              The research platform for modern academics. Research, collaborate, and publish without borders.
+            <p style={{ fontSize: "0.82rem", lineHeight: 1.75, color: "#a3adbb", maxWidth: 340, margin: 0 }}>
+              Research starts with a question. Synaptiq helps you find the expertise and the people it needs, and keeps the work together.
             </p>
           </div>
 
@@ -353,15 +352,14 @@ export default function MarketingLayout({ children }) {
               <FL href="/research">Research</FL>
               <FL href="/ai-workspace">AI Workspace</FL>
               <FL href="/for-institutions">Institutions</FL>
-              <FL href="/pricing">Pricing</FL>
             </FCol>
 
             <FCol title="Resources">
+              <FL href="/pricing">Pricing</FL>
               <FL href="/documentation">Documentation</FL>
               <FL href="/help-center">Help Center</FL>
               <FL href="/developers">Developers</FL>
               <FL href="/resources/whats-new">What's New</FL>
-              <FL href="/resources/customer-stories">Customer Stories</FL>
               <FL href="/resources/blog">Blog</FL>
             </FCol>
 
@@ -379,22 +377,17 @@ export default function MarketingLayout({ children }) {
             </FCol>
           </div>
 
-          {/* Compliance badges */}
-          <div className="flex flex-wrap items-center gap-3 pb-10" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-            {["ORCID Integrated", "GDPR Aligned", "TLS 1.2+ Encrypted", "SOC 2 (Coming Soon)", "ISO 27001 (Coming Soon)"].map(function(b) {
-              return (
-                <span key={b} style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#475569", border: "1px solid rgba(255,255,255,0.08)", padding: "3px 10px", borderRadius: 4 }}>{b}</span>
-              );
-            })}
-          </div>
+          {/* No certification-style badges: none are held. Factual security and
+              privacy detail lives on /security and /privacy. */}
+          <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }} />
 
           {/* Bottom bar */}
           <div className="ft-bottom" style={{ paddingTop: 28, paddingBottom: 40 }}>
-            <div style={{ fontSize: "0.75rem", color: "#475569" }}>© 2026 Synaptiq. All rights reserved.</div>
+            <div style={{ fontSize: "0.75rem", color: "#a3adbb" }}>© 2026 Synaptiq. All rights reserved.</div>
             <div className="ft-legal-links">
               {[["Privacy Policy", "/privacy"], ["Terms", "/terms"], ["Cookies", "/cookies"], ["GDPR", "/gdpr"], ["Security", "/security"], ["Status", "/status"]].map(function([label, href]) {
                 return (
-                  <Link key={label} to={href} className="hover:text-white transition-colors" style={{ fontSize: "0.75rem", color: "#475569", textDecoration: "none" }}>{label}</Link>
+                  <Link key={label} to={href} className="hover:text-white transition-colors" style={{ fontSize: "0.75rem", color: "#a3adbb", textDecoration: "none" }}>{label}</Link>
                 );
               })}
             </div>
@@ -416,7 +409,7 @@ function FCol({ title, children }) {
 
 function FL({ href, children }) {
   return (
-    <Link to={href} className="hover:text-white transition-colors block" style={{ fontSize: "0.82rem", color: "#64748b", textDecoration: "none" }}>
+    <Link to={href} className="hover:text-white transition-colors block" style={{ fontSize: "0.82rem", color: "#a3adbb", textDecoration: "none" }}>
       {children}
     </Link>
   );

@@ -665,6 +665,18 @@ async def get_csrf_token(response: Response):
     return {"csrf_token": token}
 
 
+@router.get("/registration-status")
+async def registration_status():
+    """Public: whether new sign-ups are currently open (admin feature flag),
+    so marketing pages can say so before a visitor fills in the form."""
+    db = DBProxy(get_db(), SecurityContext.system())
+    try:
+        is_open = await is_registration_open(db)
+    except Exception:
+        is_open = True   # same default as the flag itself
+    return {"open": is_open}
+
+
 # ══ EMAIL VERIFICATION ═══════════════════════════════════════════════════════
 
 @router.post("/verify-email")

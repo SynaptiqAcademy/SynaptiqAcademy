@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://synaptiq.academy/</loc><priority>1.0</priority></url>
-  <url><loc>https://synaptiq.academy/pricing</loc><priority>0.9</priority></url>
-  <url><loc>https://synaptiq.academy/platform</loc><priority>0.7</priority></url>
-  <url><loc>https://synaptiq.academy/research</loc><priority>0.7</priority></url>
-  <url><loc>https://synaptiq.academy/ai-workspace</loc><priority>0.6</priority></url>
-  <url><loc>https://synaptiq.academy/for-institutions</loc><priority>0.7</priority></url>
-  <url><loc>https://synaptiq.academy/about</loc><priority>0.5</priority></url>
-  <url><loc>https://synaptiq.academy/contact</loc><priority>0.6</priority></url>
-  <url><loc>https://synaptiq.academy/resources</loc><priority>0.4</priority></url>
-  <url><loc>https://synaptiq.academy/register</loc><priority>0.8</priority></url>
-  <url><loc>https://synaptiq.academy/login</loc><priority>0.3</priority></url>
-  <url><loc>https://synaptiq.academy/terms</loc><priority>0.2</priority></url>
-  <url><loc>https://synaptiq.academy/privacy</loc><priority>0.2</priority></url>
-  <url><loc>https://synaptiq.academy/cookies</loc><priority>0.2</priority></url>
-  <url><loc>https://synaptiq.academy/security</loc><priority>0.2</priority></url>
+  <url><loc>https://www.synaptiq.academy/</loc><priority>1.0</priority></url>
+  <url><loc>https://www.synaptiq.academy/pricing</loc><priority>0.9</priority></url>
+  <url><loc>https://www.synaptiq.academy/platform</loc><priority>0.7</priority></url>
+  <url><loc>https://www.synaptiq.academy/research</loc><priority>0.7</priority></url>
+  <url><loc>https://www.synaptiq.academy/ai-workspace</loc><priority>0.6</priority></url>
+  <url><loc>https://www.synaptiq.academy/for-institutions</loc><priority>0.7</priority></url>
+  <url><loc>https://www.synaptiq.academy/about</loc><priority>0.5</priority></url>
+  <url><loc>https://www.synaptiq.academy/contact</loc><priority>0.6</priority></url>
+  <url><loc>https://www.synaptiq.academy/resources</loc><priority>0.4</priority></url>
+  <url><loc>https://www.synaptiq.academy/register</loc><priority>0.8</priority></url>
+  <url><loc>https://www.synaptiq.academy/login</loc><priority>0.3</priority></url>
+  <url><loc>https://www.synaptiq.academy/terms</loc><priority>0.2</priority></url>
+  <url><loc>https://www.synaptiq.academy/privacy</loc><priority>0.2</priority></url>
+  <url><loc>https://www.synaptiq.academy/cookies</loc><priority>0.2</priority></url>
+  <url><loc>https://www.synaptiq.academy/security</loc><priority>0.2</priority></url>
 </urlset>

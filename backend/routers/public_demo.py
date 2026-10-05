@@ -34,9 +34,16 @@ class PreviewRequest(BaseModel):
 
 
 def _client_ip(request: Request) -> str:
+    """Rate-limit key. The LEFTMOST X-Forwarded-For entry is whatever the
+    client chose to send (rotating it would bypass the limit); the platform
+    proxy appends the real peer address, so trust X-Real-IP when set, else
+    the RIGHTMOST X-Forwarded-For entry."""
+    real = request.headers.get("x-real-ip", "").strip()
+    if real:
+        return real
     xff = request.headers.get("x-forwarded-for", "")
     if xff:
-        return xff.split(",")[0].strip()
+        return xff.split(",")[-1].strip()
     return request.client.host if request.client else "unknown"
 
 

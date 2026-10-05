@@ -210,6 +210,63 @@ def _extract_keywords(query: str, limit: int = 10) -> list[str]:
     return list(seen.values())[:limit]
 
 
+_CONSTRAINT_SPLIT = re.compile(
+    r"\s*,?\s+\b(without|while|whilst|but|given that|given|despite|whereas|without compromising)\b\s+",
+    re.IGNORECASE)
+_LEAD = re.compile(
+    r"^(how|what|why|which|when|where|can|could|does|do|is|are|to what extent|in what ways)\b"
+    r"(\s+(can|could|should|might|may|do|does|would|will|is|are|to))?\s+",
+    re.IGNORECASE)
+_AIM_VERBS = (
+    "reduce", "improve", "increase", "decrease", "lower", "raise", "predict", "measure",
+    "prevent", "detect", "explain", "understand", "support", "optimise", "optimize",
+    "design", "evaluate", "compare", "identify", "assess", "estimate", "enable",
+    "promote", "shorten", "accelerate", "protect", "strengthen", "integrate",
+    "address", "manage", "limit", "minimise", "minimize", "maximise", "maximize",
+    "affect", "influence", "shape", "drive", "cause", "contribute",
+)
+
+
+def _read_structure(q: str) -> dict:
+    """Split the question's OWN wording into its parts. Pure string
+    handling — nothing is inferred beyond the words the visitor typed, so the
+    UI labels it "read from your wording".
+
+    kind="aim"     ("How can X reduce Y …")  -> subject X, aim "reduce Y"
+    kind="inquiry" ("What drives Y …")       -> the question itself, minus constraints
+    constraints: clauses introduced by without / while / but / given / despite …
+    """
+    text = q.strip().rstrip("?.! ")
+    parts = _CONSTRAINT_SPLIT.split(text, maxsplit=1)
+    main = parts[0].strip()
+    constraints = []
+    if len(parts) >= 3 and parts[2].strip():
+        constraints.append(f"{parts[1].lower()} {parts[2].strip()}")
+    lead = _LEAD.match(main)
+    lead_word = (lead.group(1).lower() if lead else "")
+    body = main[lead.end():] if lead else main
+    kind, objective, subject = "", "", ""
+    if lead_word in ("what", "why", "which", "when", "where", "in what ways"):
+        kind, objective = "inquiry", f"{lead_word} {body}".strip()
+    else:
+        words = body.split()
+        for i, w in enumerate(words):
+            lw = w.lower().strip(",;:")
+            if any(lw.startswith(v) for v in _AIM_VERBS):
+                kind = "aim"
+                objective = " ".join(words[i:])
+                subject = " ".join(words[:i]).strip(",;: ")
+                break
+    if subject.lower() in ("we", "i", "you", "one", "they", "it", "there"):
+        subject = ""
+    return {
+        "kind": kind,
+        "objective": objective[:160],
+        "subject": subject[:120],
+        "constraints": [c[:160] for c in constraints],
+    }
+
+
 def preview_research_themes(query: str) -> dict:
     """Deterministic-only, zero-cost theme extraction for anonymous visitors.
 
@@ -248,5 +305,6 @@ def preview_research_themes(query: str) -> dict:
         "complementary_disciplines": list(complementary.keys())[:6],
         "methods": list(methods.keys())[:5],
         "keywords": keywords,
+        "structure": _read_structure(q),
         "matched_taxonomy": bool(complementary or (themes and list(themes.keys())[:6] != keywords[:5])),
     }

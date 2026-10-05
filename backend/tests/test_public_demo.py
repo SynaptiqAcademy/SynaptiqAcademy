@@ -48,8 +48,14 @@ class TestDeterministicTaxonomy:
         """Structural guarantee, not just a spot-check: the response shape
         itself has no field that could ever carry a person/institution."""
         result = preview_research_themes("cybersecurity policy for hospitals")
-        allowed_keys = {"themes", "complementary_disciplines", "methods", "keywords", "matched_taxonomy"}
+        allowed_keys = {"themes", "complementary_disciplines", "methods", "keywords", "matched_taxonomy", "structure"}
         assert set(result.keys()) == allowed_keys
+        # `structure` only re-segments the visitor's own words — never a lookup.
+        q = "How can hospitals in Lyon reduce delays without new staff?"
+        s = preview_research_themes(q)["structure"]
+        assert set(s) == {"kind", "objective", "subject", "constraints"}
+        for part in [s["objective"], s["subject"], *s["constraints"]]:
+            assert part.lower() in q.lower()
 
     def test_long_query_is_truncated_not_rejected(self):
         long_query = "climate policy " * 100  # far over _MAX_QUERY_LEN

@@ -4,14 +4,14 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#000000" />
-        <meta name="description" content="Synaptiq — the research platform for modern academics. Collaborate, write, publish, and measure your impact in one workspace." />
+        <meta name="description" content="Describe a research question and see the expertise it needs. Synaptiq helps researchers find the people who bring it, and keeps the collaboration, the project and the writing together." />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Synaptiq" />
-        <meta property="og:title" content="Synaptiq — Research Platform for Academics" />
-        <meta property="og:description" content="The research platform for modern academics. Collaborate, write, publish, and measure your impact in one workspace." />
+        <meta property="og:title" content="Synaptiq — Research starts with a question" />
+        <meta property="og:description" content="Describe a research question and see the expertise it needs. Synaptiq helps researchers find the people who bring it, and keeps the collaboration, the project and the writing together." />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Synaptiq — Research Platform for Academics" />
-        <meta name="twitter:description" content="The research platform for modern academics. Collaborate, write, publish, and measure your impact in one workspace." />
+        <meta name="twitter:title" content="Synaptiq — Research starts with a question" />
+        <meta name="twitter:description" content="Describe a research question and see the expertise it needs. Synaptiq helps researchers find the people who bring it, and keeps the collaboration, the project and the writing together." />
         <!--
             AUTH-004: Content-Security-Policy meta tag.
             'unsafe-inline' removed from script-src.
@@ -33,12 +33,27 @@
         " />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <title>Synaptiq — Research Platform for Academics</title>
+        <title>Synaptiq — Research starts with a question</title>
+        <!-- Structured data: organization and site only. No ratings, reviews or usage statistics. -->
+        <script type="application/ld+json">
+        {"@context":"https://schema.org","@graph":[
+          {"@type":"Organization","@id":"https://www.synaptiq.academy/#org","name":"Synaptiq","url":"https://www.synaptiq.academy/"},
+          {"@type":"WebSite","@id":"https://www.synaptiq.academy/#site","name":"Synaptiq","url":"https://www.synaptiq.academy/","publisher":{"@id":"https://www.synaptiq.academy/#org"}}
+        ]}
+        </script>
         <!-- AUTH-004: Moved from inline script to external file (no unsafe-inline needed) -->
         <script src="%PUBLIC_URL%/error-handler.js"></script>
     </head>
     <body>
-        <noscript>You need to enable JavaScript to run this app.</noscript>
+        <noscript>
+            <main style="max-width:720px;margin:40px auto;padding:0 20px;font-family:Georgia,serif;line-height:1.6;color:#10141c">
+                <h1>Research starts with a question.</h1>
+                <p>Synaptiq shows you what a research question will need: the fields, the methods and the perspectives you don't have yet. It helps you find the people who bring them, and keeps the collaboration, the project and the writing together.</p>
+                <p>Free: Academic Passport, public research page, ORCID connection and publication import. Pro (€9.99/month, Early Access): research network, messaging, collaboration, projects, journal, conference and grant discovery, AI tools with 200 AI Credits a month. Pro Advanced (€29.99/month): advanced research intelligence, analytics and impact, 750 AI Credits a month. Institutional: custom.</p>
+                <p><a href="/pricing">Plans</a> · <a href="/platform">Platform</a> · <a href="/about">About</a> · <a href="/contact">Contact</a></p>
+                <p>The Synaptiq app needs JavaScript enabled.</p>
+            </main>
+        </noscript>
         <div id="root"></div>
         <!-- AUTH-004: PostHog moved from inline to external script -->
         <script src="%PUBLIC_URL%/analytics-init.js"></script>
