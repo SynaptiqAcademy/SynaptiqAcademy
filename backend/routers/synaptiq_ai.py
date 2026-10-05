@@ -590,6 +590,10 @@ async def send_message(
             status_code=503,
             detail="AI orchestrator service is not available.",
         )
+    # Reserve credits BEFORE the AI call (402 when the plan has no AI or the
+    # balance is too low); refunded below if the orchestrator fails.
+    from services.credits_service import consume_credits, refund_credits
+    await consume_credits(user_id, "ai_os_message")
     try:
         response = await route_and_respond(
             body.message,
@@ -600,6 +604,7 @@ async def send_message(
         )
     except Exception as exc:
         logger.error("Orchestrator error for user %s: %s", user_id, exc)
+        await refund_credits(user_id, "ai_os_message", reason="orchestrator_error")
         # Fallback minimal response
         response = {
             "content": "I'm sorry, I encountered an issue processing your request. Please try again.",
@@ -615,12 +620,6 @@ async def send_message(
     sources: list = response.get("sources", [])
     tokens_used: int = response.get("tokens_used", 0)
 
-    # 6. Deduct credits (never block AI response on credit failure)
-    if _credits_available:
-        try:
-            await consume_credits(user_id, _AI_MESSAGE_COST, db, "ai_os_message")
-        except Exception as exc:
-            logger.warning("Credit deduction failed for user %s: %s", user_id, exc)
 
     now_str = _now_iso()
 

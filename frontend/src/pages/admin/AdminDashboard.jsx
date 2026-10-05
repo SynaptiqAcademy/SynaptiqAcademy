@@ -89,8 +89,8 @@ export default function AdminDashboard() {
           <H2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3">Users by Plan</H2>
           <List radius={0} border={false}>
             <ListItem compact title="Free" trailing={users.free?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
-            <ListItem compact title="Researcher" trailing={users.researcher?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
-            <ListItem compact title="Pro Researcher" trailing={users.pro_researcher?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
+            <ListItem compact title="Pro" trailing={users.researcher?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
+            <ListItem compact title="Pro Advanced" trailing={users.pro_researcher?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
             <ListItem compact title="Institution" trailing={users.institution?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
             <ListItem compact title="ORCID Connected" trailing={users.orcid_connected?.toLocaleString() ?? "—"} style={{ padding: "8px 0" }} />
             <ListItem

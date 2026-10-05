@@ -86,3 +86,14 @@ export function trackPageView(path) {
 export function trackFeatureUse(feature, metadata) {
   post({ event: "feature_use", feature, metadata });
 }
+
+/**
+ * Monetization funnel events (pricing_viewed, upgrade_clicked,
+ * paid_feature_attempted, paywall_viewed, checkout_started,
+ * credit_pack_viewed, credit_pack_checkout_started). Server-side billing
+ * facts (subscription_*, credit_pack_purchased, credits_exhausted) are
+ * recorded by the backend, not here.
+ */
+export function trackMonetizationEvent(event, metadata = {}) {
+  post({ event, path: window.location.pathname, feature: metadata.feature, metadata });
+}

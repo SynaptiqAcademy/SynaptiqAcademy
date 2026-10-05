@@ -9,6 +9,7 @@ Opt-in features (controlled via env vars):
 """
 import hashlib
 import os
+import time
 from typing import Optional
 
 
@@ -25,8 +26,15 @@ def _idempotency_enabled() -> bool:
 
 
 def _idempotency_key(*parts: str) -> str:
-    """Deterministic idempotency key from user_id + price_id (safe to retry same request)."""
-    raw = ":".join(p for p in parts if p)
+    """Idempotency key from user_id + price_id + a 10-minute window.
+
+    Double-clicks and client retries within the window return the same
+    Checkout Session (no duplicate sessions); a deliberate new purchase later
+    (e.g. a second credit pack) gets a fresh session. A purely deterministic
+    key would hand back the first — already completed — session for 24h.
+    """
+    window = str(int(time.time() // 600))
+    raw = ":".join(p for p in (*parts, window) if p)
     return hashlib.sha256(raw.encode()).hexdigest()[:40]
 
 
@@ -126,6 +134,30 @@ def create_credit_pack_checkout_session(
 
     session = stripe.checkout.Session.create(**kwargs, **idempotency_kwargs)
     return {"id": session.id, "url": session.url}
+
+
+def change_subscription_plan(stripe_subscription_id: str, *, new_price_id: str,
+                             plan_code: str, upgrade: bool) -> Optional[dict]:
+    """Switch an existing subscription to another plan's price (no second
+    subscription). Upgrades are prorated and invoiced immediately; downgrades
+    are prorated as account credit on the next invoice. Credits/plan in our
+    DB change only when the resulting customer.subscription.updated webhook
+    arrives — never from this call's return value."""
+    stripe = _stripe()
+    if stripe is None:
+        return None
+    sub = stripe.Subscription.retrieve(stripe_subscription_id)
+    item_id = sub["items"]["data"][0]["id"]
+    metadata = dict(sub.get("metadata") or {})
+    metadata["plan_code"] = plan_code
+    updated = stripe.Subscription.modify(
+        stripe_subscription_id,
+        items=[{"id": item_id, "price": new_price_id}],
+        proration_behavior="always_invoice" if upgrade else "create_prorations",
+        cancel_at_period_end=False,
+        metadata=metadata,
+    )
+    return {"id": updated["id"], "status": updated["status"]}
 
 
 def create_billing_portal_session(customer_id: str, return_url: str) -> Optional[str]:

@@ -69,8 +69,8 @@ function SubscriptionAction({ uid, onDone }) {
       {(action === "upgrade" || action === "downgrade") && (
         <FormSelect value={plan} onChange={(e) => setPlan(e.target.value)} size="sm" wrapperClassName="!mb-0">
           <option value="free">Free</option>
-          <option value="researcher">Researcher</option>
-          <option value="pro_researcher">Pro Researcher</option>
+          <option value="researcher">Pro (researcher)</option>
+          <option value="pro_researcher">Pro Advanced (pro_researcher)</option>
           <option value="institution">Institution</option>
         </FormSelect>
       )}
@@ -182,8 +182,8 @@ export default function AdminSubscriptions() {
           >
             <option value="">All plans</option>
             <option value="free">Free</option>
-            <option value="researcher">Researcher</option>
-            <option value="pro_researcher">Pro Researcher</option>
+            <option value="researcher">Pro (researcher)</option>
+            <option value="pro_researcher">Pro Advanced (pro_researcher)</option>
             <option value="institution">Institution</option>
           </FormSelect>
         </div>

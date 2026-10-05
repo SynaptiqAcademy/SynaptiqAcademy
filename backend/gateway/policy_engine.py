@@ -67,25 +67,16 @@ class PolicyEngine:
 
     async def _check_credits(self, request: GatewayRequest, db,
                               user: dict | None) -> None:
-        """
-        Hard-stop if the user has exceeded their AI credit budget.
-        Only enforced when db and user are provided.
-        """
-        if db is None or user is None:
-            return
+        """Hard-stop when a caller passes an explicit, exhausted budget
+        (e.g. an ARA mission). User credits and plan entitlements are enforced
+        before the gateway is reached — services/credits_service.consume_credits
+        reserves credits per request and services/ai/cost_guard.py applies the
+        per-user cost ceilings — so no plan table is duplicated here."""
         limit = request.cost_limit_credits
-        if limit is None:
-            # Read from user subscription
-            try:
-                tier = user.get("subscription_tier") or user.get("plan_type") or "free"
-                limits = {"free": 50.0, "pro": 500.0, "institution": 5000.0}
-                limit = limits.get(tier, 50.0)
-            except Exception:
-                return
-        if limit <= 0:
+        if limit is not None and limit <= 0:
             raise PolicyViolation(
                 "budget_exhausted",
-                "AI credit budget exhausted. Please upgrade your plan or try again tomorrow.",
+                "AI budget for this task is exhausted.",
             )
 
     def _check_injection(self, request: GatewayRequest) -> None:

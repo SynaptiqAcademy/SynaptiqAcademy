@@ -6,7 +6,7 @@ import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { trackMarketingEvent as track } from "../lib/marketingAnalytics";
 import { setPageSeo } from "../lib/seo";
-import { PLAN_DISPLAY_NAMES } from "../lib/planNames";
+import { trackMonetizationEvent } from "../lib/analytics";
 import {
   Check, Minus, Sparkles, ArrowRight,
   Shield, Globe, Zap, Lock, CheckCircle2, ChevronDown,
@@ -25,182 +25,17 @@ const BILLING_NOT_READY_MESSAGE =
   "Paid plans aren't open for purchase yet — we're finishing billing setup. " +
   "You're welcome to keep using the Free plan in the meantime, or reach out and we'll let you know when it's ready.";
 
-/* ─── Static fallback data — mirrors plans_catalogue.py exactly ──────────── */
+/* ─── Plans, packs, credit costs and the comparison matrix all come from the
+   API (backend/plans_catalogue.py) — there is no second copy here that could
+   drift. Rows of the matrix are grouped by their position in the backend
+   FEATURE_MATRIX, which is ordered usage → identity → Pro → Pro Advanced. ── */
 
-const STATIC_PLANS = [
-  {
-    code: "free", name: "Free", tagline: "Explore Synaptiq and start building your research network",
-    price_eur_monthly: 0, price_eur_annual: 0,
-    future_price_eur_monthly: null, badge: null,
-    credits_per_month: 50,
-    limits: { active_projects: 1, workspaces: 1, repository_gb: 0.5, team_seats: 1,
-               journal_recs_per_month: -1, conference_recs_per_month: -1, grant_recs_per_month: -1 },
-    features: [
-      "50 Research Credits / month",
-      "Academic Profile",
-      "ORCID Integration",
-      "Research Network Access",
-      "1 Active Project",
-      "1 Workspace",
-      "500 MB Repository Storage",
-      "Full Journal, Conference & Grant Search",
-      "Basic Profile Visibility",
-    ],
-    excluded: [
-      "AI Research Assistant", "AI Manuscript Copilot", "Publication Tracking",
-      "Advanced Analytics",
-      "Advanced Collaboration Features", "Priority Support",
-    ],
-    cta: "Start Free",
-  },
-  {
-    code: "researcher", name: "Pro", tagline: "For active research, collaboration and AI-assisted workflows",
-    price_eur_monthly: 9.99, price_eur_annual: 7.99,
-    future_price_eur_monthly: 14.99, badge: "For active individual research",
-    credits_per_month: 300,
-    limits: { active_projects: -1, workspaces: 10, repository_gb: 100, team_seats: 1,
-               journal_recs_per_month: -1, conference_recs_per_month: -1, grant_recs_per_month: -1 },
-    features: [
-      "300 Research Credits / month",
-      "Unlimited Projects",
-      "Up to 10 Workspaces",
-      "Repository 100 GB",
-      "AI Journal, Conference & Grant Matching",
-      "Publication Tracking",
-      "Advanced Analytics",
-      "AI Research Assistant",
-      "AI Manuscript Copilot",
-      "Priority Support",
-    ],
-    excluded: [],
-    cta: "Get Started",
-  },
-  {
-    code: "pro_researcher", name: "Pro Advanced", tagline: "For advanced research intelligence, analysis and impact workflows",
-    price_eur_monthly: 29.99, price_eur_annual: 23.99,
-    future_price_eur_monthly: null, badge: "For advanced research intelligence",
-    credits_per_month: 1000,
-    limits: { active_projects: -1, workspaces: -1, repository_gb: 500, team_seats: 1,
-               journal_recs_per_month: -1, conference_recs_per_month: -1, grant_recs_per_month: -1 },
-    features: [
-      "1,000 Research Credits / month",
-      "Unlimited Projects",
-      "Unlimited Workspaces",
-      "Repository 500 GB",
-      "Advanced AI Research Assistant",
-      "Advanced Manuscript Copilot",
-      "AI Literature Review, Statistical Review & Research Gap Discovery",
-      "Collaboration Intelligence",
-      "Research Analytics Suite",
-      "Citation Monitoring",
-      "Research Impact Dashboard",
-      "Priority Support",
-    ],
-    excluded: [],
-    cta: "Get Started",
-  },
-  {
-    code: "institution", name: "Institution", tagline: "For universities, research institutions and organizations",
-    price_eur_monthly: 299, price_eur_annual: 239,
-    future_price_eur_monthly: null, badge: null,
-    credits_per_month: 20000,
-    limits: { active_projects: -1, workspaces: -1, repository_gb: 2048, team_seats: 25,
-               journal_recs_per_month: -1, conference_recs_per_month: -1, grant_recs_per_month: -1 },
-    features: [
-      "Institution workspace for approved members",
-      "Member and department management",
-      "Institutional analytics",
-      "Admin permissions for institution owners and admins",
-      "Institution audit log for admins",
-      "Seats, credits and storage set per agreement",
-    ],
-    excluded: [],
-    cta: "Contact Sales",
-  },
-];
-
-const STATIC_PACKS = [
-  { code: "pack_100",  credits: 100,  price_eur: 5,  label: "100 Credits"   },
-  { code: "pack_250",  credits: 250,  price_eur: 10, label: "250 Credits"   },
-  { code: "pack_1000", credits: 1000, price_eur: 29, label: "1,000 Credits" },
-  { code: "pack_5000", credits: 5000, price_eur: 99, label: "5,000 Credits" },
-];
-
-const STATIC_USAGE = [
-  { label: "AI Manuscript Review",       cost: 20, unit: "per review",     free: false },
-  { label: "AI Literature Review",       cost: 20, unit: "per review",     free: false },
-  { label: "AI Statistical Review",      cost: 25, unit: "per review",     free: false },
-  { label: "AI Methodology Builder",     cost: 10, unit: "per build",      free: false },
-  { label: "AI Research Design Advisor", cost: 10, unit: "per session",    free: false },
-  { label: "AI Research Gap Finder",     cost: 10, unit: "per scan",       free: false },
-  { label: "AI Journal Matching",        cost: 5,  unit: "per match",      free: false },
-  { label: "AI Conference Matching",     cost: 5,  unit: "per match",      free: false },
-  { label: "AI Grant Matching",          cost: 5,  unit: "per match",      free: false },
-  { label: "AI Abstract Generator",      cost: 5,  unit: "per abstract",   free: false },
-  { label: "AI Research Assistant",      cost: 2,  unit: "per query",      free: false },
-  { label: "AI Manuscript Copilot",      cost: 2,  unit: "per message",    free: false },
-  { label: "AI Rewriting",               cost: 2,  unit: "per request",    free: false },
-  { label: "AI Lesson Generator",        cost: 10, unit: "per lesson",     free: false },
-  { label: "AI Assessment Generator",    cost: 10, unit: "per assessment", free: false },
-  { label: "AI Teaching Assistant",      cost: 2,  unit: "per message",    free: false },
-  { label: "Researcher Discovery",       cost: 0,  unit: "",               free: true  },
-  { label: "Profile Creation",           cost: 0,  unit: "",               free: true  },
-  { label: "Collaboration Requests",     cost: 0,  unit: "",               free: true  },
-];
-
-// Offline fallback only — an exact mirror of backend plans_catalogue.FEATURE_MATRIX
-// (visible columns). GET /billing/feature-matrix is the real source and
-// overwrites this on load; the table below looks rows up by exact label, so
-// the labels here and in COMPARISON_GROUPS must match the backend's
-// verbatim. Every row reflects a real entitlement (FEATURE_MIN_PLAN /
-// PLAN_QUOTAS) — the previous fallback marked AI literature review, gap
-// finder, statistical review and study design as available on Researcher
-// (they're gated at pro_researcher), showed Teaching as paid-only (it isn't
-// plan-gated), capped Free search at 5/5/3 a month (it's unlimited), and
-// claimed end-to-end encryption.
-const STATIC_MATRIX = {
-  columns: ["free", "researcher", "pro_researcher", "institution"],
-  rows: [
-    { label: "Research Credits / month", values: ["50", "300", "1,000", "20,000"] },
-    { label: "Active Projects", values: ["1", "Unlimited", "Unlimited", "Unlimited"] },
-    { label: "Workspaces", values: ["1", "10", "Unlimited", "Unlimited"] },
-    { label: "Repository Storage", values: ["500 MB", "100 GB", "500 GB", "2 TB"] },
-    { label: "Users Included", values: ["1", "1", "1", "25"] },
-    { label: "Academic Profile", values: [true, true, true, true] },
-    { label: "ORCID Integration", values: [true, true, true, true] },
-    { label: "Research Network Access", values: [true, true, true, true] },
-    { label: "Research Need, expert discovery & collaboration requests", values: [true, true, true, true] },
-    { label: "Journal, conference & grant search", values: [true, true, true, true] },
-    { label: "AI journal, conference & grant matching", values: [false, true, true, true] },
-    { label: "Teaching tools — courses, lessons, assessments", values: [true, true, true, true] },
-    { label: "Publication Tracking", values: [false, true, true, true] },
-    { label: "Advanced Analytics", values: [false, true, true, true] },
-    { label: "AI Research Assistant", values: [false, true, "Advanced", "Advanced"] },
-    { label: "AI Manuscript Copilot", values: [false, true, "Advanced", "Advanced"] },
-    { label: "AI literature review, statistical review & research gap discovery", values: [false, false, true, true] },
-    { label: "Collaboration Intelligence", values: [false, false, true, true] },
-    { label: "Research Analytics Suite", values: [false, false, true, true] },
-    { label: "Citation Monitoring", values: [false, false, true, true] },
-    { label: "Research Impact Dashboard", values: [false, false, true, true] },
-    { label: "Institutional Analytics", values: [false, false, false, true] },
-    { label: "Department Management", values: [false, false, false, true] },
-    { label: "Support", values: ["Community", "Priority", "Priority", "Dedicated"] },
-  ],
-};
-
-// Grouped by workflow (§40 of the earlier commercial spec). The Institution
-// group intentionally renders as dashes for every individual plan: no
-// individual subscription grants institution features — those come only
-// from approved organization membership.
 const COMPARISON_GROUPS = [
-  { label: "Usage", rows: ["Research Credits / month", "Active Projects", "Workspaces", "Repository Storage", "Users Included"] },
-  { label: "Identity & discovery", rows: ["Academic Profile", "ORCID Integration", "Research Network Access", "Research Need, expert discovery & collaboration requests", "Journal, conference & grant search", "AI journal, conference & grant matching"] },
-  { label: "AI-assisted research", rows: ["AI Research Assistant", "AI Manuscript Copilot", "AI literature review, statistical review & research gap discovery"] },
-  { label: "Collaboration", rows: ["Collaboration Intelligence"] },
-  { label: "Publishing & impact", rows: ["Publication Tracking", "Advanced Analytics", "Research Analytics Suite", "Citation Monitoring", "Research Impact Dashboard"] },
-  { label: "Teaching", rows: ["Teaching tools — courses, lessons, assessments"] },
-  { label: "Institution (organization membership only)", rows: ["Institutional Analytics", "Department Management"] },
-  { label: "Support", rows: ["Support"] },
+  { label: "Usage", from: 0, to: 4 },
+  { label: "Academic identity (every plan)", from: 4, to: 7 },
+  { label: "Research, collaboration & AI", from: 7, to: 17 },
+  { label: "Advanced intelligence", from: 17, to: 24 },
+  { label: "Support", from: 24, to: 25 },
 ];
 
 const TRUST_ITEMS = [
@@ -214,90 +49,46 @@ const TRUST_ITEMS = [
 
 const FAQ_ITEMS = [
   {
-    q: "How do AI Credits work?",
-    a: "Research Credits are the currency for AI-powered tools on Synaptiq. Each AI action consumes a fixed, documented number of credits — for example, a literature review costs 20 credits, while a research assistant query costs 2 credits. Your plan's monthly allowance refreshes at each billing cycle. Credit packs (one-time purchases) never expire.",
+    q: "What does the Free plan include?",
+    a: "Free is your academic identity: a profile and public research page, ORCID integration and publication import, and being discoverable by Pro researchers. Pro researchers can invite you to collaborate; responding, messaging, projects, workspaces, discovery and AI tools are part of Pro.",
   },
   {
-    q: "Can I cancel anytime?",
-    a: "Yes. Paid plans are month-to-month with no long-term commitment. Cancel at any time from your account settings and you keep access until the end of the current billing period, then your account returns to Free. Your projects, workspaces and files are never deleted on cancellation.",
+    q: "How do AI Credits work?",
+    a: "Each AI action has a fixed, published credit cost that's shown before you run it — the full list is on this page. Pro includes 200 AI credits a month and Pro Advanced 750. Credits are only charged when a request completes; failed requests are refunded automatically.",
   },
   {
     q: "Do unused credits roll over?",
-    a: "Monthly plan credits do not roll over — they reset each billing cycle. However, credits from purchased Credit Packs are permanent and never expire, even if you cancel or downgrade your plan.",
+    a: "Monthly credits reset at each successful renewal and don't roll over. Credits from purchased credit packs never expire and are used after your monthly credits.",
+  },
+  {
+    q: "Can I buy extra credits?",
+    a: "Yes — on Pro and Pro Advanced you can buy packs of 100, 300 or 750 AI credits. Credits are added as soon as the payment is confirmed. Purchased credits stay on your account if you change plan; they can be used whenever you're on a paid plan.",
+  },
+  {
+    q: "What does Early Access mean for Pro?",
+    a: "Pro is €9.99/month during Early Access. The regular price will be €14.99/month; we'll tell you before any change applies to your subscription.",
+  },
+  {
+    q: "Can I cancel anytime?",
+    a: "Yes. Paid plans are month-to-month. Cancel from your account settings and you keep access until the end of the current billing period, then your account returns to Free. Nothing is deleted: anything above the Free plan becomes read-only, and purchased credits are kept.",
+  },
+  {
+    q: "Can I upgrade or downgrade?",
+    a: "Yes. Upgrading from Pro to Pro Advanced applies immediately (prorated) and tops your monthly credits up to the Pro Advanced allowance for the current month. Downgrading keeps all your data; workspaces above the new plan's limit become read-only until you upgrade again or make room.",
   },
   {
     q: "How secure is Synaptiq?",
-    a: "All data is encrypted in transit (TLS 1.2+) and at rest. Authentication uses httpOnly cookies, bcrypt password hashing, and optional 2FA. We are GDPR-aligned and never sell your data. Institutions additionally get role-based admin permissions and an admin audit log.",
+    a: "All data is encrypted in transit (TLS 1.2+) and at rest. Authentication uses httpOnly cookies, bcrypt password hashing, and optional 2FA. We are GDPR-aligned and never sell your data.",
   },
   {
     q: "Can universities negotiate pricing?",
     a: "Institutional pricing is always set per agreement — there is no fixed public price. We work with research offices, departments and consortia on seat counts and needs. Contact our team.",
   },
   {
-    q: "Can I upgrade later?",
-    a: "Yes. Once paid plans open, you can move from Free to Pro or Pro Advanced at any time; the new plan applies as soon as the payment is confirmed. Moving to a lower plan never deletes existing work, and any Credit Pack balance is always preserved.",
-  },
-  {
-    q: "Do students receive discounts?",
-    a: "We offer a permanent Free plan with no credit card required, which covers research profiles, collaboration discovery, and a starter credit allowance. Students and early PhD candidates can do meaningful work on Free before needing to upgrade. Departments interested in institutional access can contact our team.",
-  },
-  {
-    q: "Can institutions invite researchers?",
-    a: "Yes. Institution owners and admins can invite members, approve membership requests, and manage departments. Seat counts are set per agreement — contact our team.",
-  },
-  {
-    q: "Can I buy extra credits?",
-    a: "Credit Packs (100, 250, 1,000 or 5,000 credits) will be available as one-time purchases on any plan, including Free, once paid billing opens. They stack with your monthly allowance and never expire.",
-  },
-  {
     q: "How is billing calculated?",
     a: "Paid plans are billed monthly, on the same date each month. All prices are in EUR, excluding VAT where applicable. Card payments are handled by our payment processor — Synaptiq never stores card details. Institutional agreements are invoiced.",
   },
 ];
-
-// Real entitlements only (Phase 9A final decisions, §12). Credit counts are
-// NOT repeated here — each card renders p.credits_per_month from the
-// canonical catalogue, so there's one number, not two that can drift.
-// Teaching is available on every plan (not plan-gated; AI teaching actions
-// use credits), and manual journal/conference/grant search is unlimited on
-// every plan — earlier copy implied both were paid-only.
-const PLAN_HIGHLIGHTS = {
-  free: [
-    "Academic Passport & public research profile",
-    "ORCID integration",
-    "Research Need, expert discovery & collaboration requests",
-    "Journal, conference & grant search",
-    "Teaching tools — courses, lessons, assessments",
-    "1 active project · 1 workspace · 500 MB storage",
-  ],
-  researcher: [
-    "Everything in Free",
-    "AI Research Assistant & Manuscript Copilot",
-    "AI journal, conference & grant matching",
-    "Publication tracking & advanced analytics",
-    "Unlimited projects · 10 workspaces · 100 GB",
-    "Priority support",
-  ],
-  pro_researcher: [
-    `Everything in ${PLAN_DISPLAY_NAMES.researcher}`,
-    "Advanced AI Research Assistant",
-    "AI literature review, statistical review & research gap discovery",
-    "Collaboration Intelligence & Research Analytics Suite",
-    "Citation Monitoring & Research Impact Dashboard",
-    "Unlimited workspaces · 500 GB",
-  ],
-  // Organization product — membership-based capabilities, not a bigger
-  // individual plan. No "Everything in Pro Advanced": institution access is
-  // granted by approved membership, which doesn't automatically confer any
-  // individual plan's entitlements, so that line overstated what members get.
-  institution: [
-    "Institution workspace for approved members",
-    "Member and department management",
-    "Institutional analytics",
-    "Admin permissions for institution owners and admins",
-    "Seats, credits and storage set per agreement",
-  ],
-};
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -313,17 +104,18 @@ export default function Pricing() {
       path: "/pricing",
     });
     track("pricing_viewed");
+    trackMonetizationEvent("pricing_viewed");
     return restore;
   }, []);
-  const [plans,    setPlans]    = useState(STATIC_PLANS);
-  const [packs,    setPacks]    = useState(STATIC_PACKS);
-  const [usageCat, setUsageCat] = useState(STATIC_USAGE);
+  const [plans,    setPlans]    = useState([]);
+  const [packs,    setPacks]    = useState([]);
+  const [usageCat, setUsageCat] = useState([]);
   // The primary decision (§8/§32 of the Phase 9A commercial redesign):
   // Pro is an individual product, Institutional is an organization product.
   // This is deliberately the FIRST choice on the page, not a fourth card in
   // the same row as Free/Pro.
   const [audience, setAudience] = useState("individual"); // "individual" | "organization"
-  const [matrix,   setMatrix]   = useState(STATIC_MATRIX);
+  const [matrix,   setMatrix]   = useState({ columns: [], rows: [] });
   // Annual billing isn't offered until the owner approves it and annual Stripe
   // prices exist (§6) — constant, not state, so nothing can switch it on.
   const annual = false;
@@ -341,20 +133,23 @@ export default function Pricing() {
   }, []);
 
   const startCheckout = async (code) => {
-    track("plan_selected", { plan_code: code, billing_period: annual ? "annual" : "monthly" });
+    track("plan_selected", { plan_code: code, billing_period: "monthly" });
+    if (code !== "free" && code !== "institution") trackMonetizationEvent("upgrade_clicked", { plan_code: code, source: "pricing" });
     if (!user) { navigate("/register"); return; }
-    if (code === "free") { toast.success("You're on the Free plan."); navigate("/discover"); return; }
+    if (code === "free") { navigate("/profile"); return; }
     if (code === "institution") { navigate("/contact?topic=institution"); return; }
     setBusy(code);
-    track("checkout_started", { plan_code: code, billing_period: annual ? "annual" : "monthly" });
+    track("checkout_started", { plan_code: code, billing_period: "monthly" });
+    trackMonetizationEvent("checkout_started", { plan_code: code });
     try {
       const res = await api.post("/billing/checkout-session", {
         plan_code: code,
-        billing_period: annual ? "annual" : "monthly",
+        billing_period: "monthly",
         success_url: window.location.origin + "/payment/success?type=plan",
         cancel_url:  window.location.origin + "/payment/cancelled",
       });
       if (res.data.url) { window.location.href = res.data.url; return; }
+      if (res.data.changed) { toast.success(res.data.message || "Your plan change is being confirmed."); return; }
       toast.info(BILLING_NOT_READY_MESSAGE);
     } catch (e) {
       // Never surface the backend's raw error detail here — it names the
@@ -367,16 +162,22 @@ export default function Pricing() {
 
   const buyPack = async (pack) => {
     if (!user) { navigate("/register"); return; }
+    if ((user.plan_code || "free") === "free") {
+      toast.info("Extra AI credits are available on Pro and Pro Advanced.");
+      return;
+    }
+    trackMonetizationEvent("credit_pack_checkout_started", { pack_code: pack.code, source: "pricing" });
     setPackBusy(pack.code);
     try {
       const res = await api.post("/billing/credit-pack-checkout", {
         pack_code:   pack.code,
-        success_url: window.location.origin + "/payment/success?type=pack&pack=" + pack.code,
+        success_url: window.location.origin + "/payment/success?kind=credits&pack=" + pack.code,
         cancel_url:  window.location.origin + "/payment/cancelled",
       });
       if (res.data.url) { window.location.href = res.data.url; return; }
       toast.info(BILLING_NOT_READY_MESSAGE);
     } catch (e) {
+      if (e?.response?.status === 402) return; // upgrade modal explains it
       toast.info(BILLING_NOT_READY_MESSAGE);
     } finally { setPackBusy(""); }
   };
@@ -400,7 +201,7 @@ export default function Pricing() {
   const sortedPlans = [...plans]
     .filter((p) => VISIBLE_CODES.has(p.code))
     .sort((a, b) => (PLAN_ORDER[a.code] ?? 9) - (PLAN_ORDER[b.code] ?? 9));
-  const institutionPlan = plans.find((p) => p.code === "institution") || STATIC_PLANS.find((p) => p.code === "institution");
+  const institutionPlan = plans.find((p) => p.code === "institution");
 
   // Map visible column codes to their indices in matrix.columns (handles enterprise injection)
   const visibleMatrixCols = matrix.columns.reduce((acc, c, i) => {
@@ -490,18 +291,18 @@ export default function Pricing() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: audience === "organization" ? "1fr" : "repeat(4,1fr)",
+              gridTemplateColumns: audience === "organization" ? "1fr" : "repeat(3,1fr)",
               gap: 20, alignItems: "stretch",
             }}
-            className={audience === "organization" ? "" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"}
+            className={audience === "organization" ? "" : "grid-cols-1 md:grid-cols-3"}
           >
             {sortedPlans.map((p) => {
               const price    = annual ? p.price_eur_annual : p.price_eur_monthly;
               const isFree   = p.code === "free";
-              const isPopular = p.code === "researcher";
+              const isPopular = !!p.recommended;
               const isInst   = p.code === "institution";
               const savings  = annualSavings(p);
-              const highlights = PLAN_HIGHLIGHTS[p.code] || p.features.slice(0, 6);
+              const highlights = p.features || [];
 
               return (
                 <div
@@ -530,7 +331,7 @@ export default function Pricing() {
                       boxShadow: "0 2px 8px rgba(15,40,71,0.1)",
                       whiteSpace: "nowrap",
                     }}>
-                      For active individual research
+                      Recommended{p.badge ? ` · ${p.badge}` : ""}
                     </div>
                   )}
 
@@ -581,6 +382,13 @@ export default function Pricing() {
                       </div>
                     )}
 
+                    {p.future_price_eur_monthly && !isInst && (
+                      <div data-testid={`pricing-future-price-${p.code}`} style={{ fontSize: "0.72rem", fontWeight: 600, marginTop: 6,
+                        color: isPopular ? "rgba(255,255,255,0.65)" : "#64748b" }}>
+                        Early Access price · €{Number(p.future_price_eur_monthly).toFixed(2)}/month after early access
+                      </div>
+                    )}
+
                     {savings && (
                       <div style={{ fontSize: "0.72rem", fontWeight: 600, marginTop: 4,
                         color: isPopular ? "rgba(255,255,255,0.6)" : "#059669" }}>
@@ -599,7 +407,9 @@ export default function Pricing() {
                   }}>
                     <Sparkles size={12} strokeWidth={2} style={{ color: isPopular ? "rgba(255,255,255,0.7)" : "#0F2847" }} />
                     <span style={{ fontSize: "0.75rem", fontWeight: 700, color: isPopular ? "rgba(255,255,255,0.85)" : "#0F2847" }}>
-                      {p.credits_per_month.toLocaleString()} Credits / month
+                      {isInst ? "AI credits set per agreement"
+                        : p.credits_per_month > 0 ? `${p.credits_per_month.toLocaleString()} AI Credits / month`
+                        : "No AI credits"}
                     </span>
                   </div>
 
@@ -668,7 +478,7 @@ export default function Pricing() {
           <p style={{ textAlign: "center", marginTop: 24, fontSize: "0.75rem", color: "#94a3b8" }}>
             {audience === "organization"
               ? "Institutional pricing is negotiated with our team based on your organization's seat count and needs."
-              : "AI-assisted actions use credits. Research Need, expert discovery, networking and collaboration requests never do. All prices in EUR, excluding VAT where applicable."}
+              : "Only AI-assisted actions use credits; networking, messaging and collaboration never do. Monthly credits reset at each renewal. All prices in EUR, excluding VAT where applicable."}
           </p>
         </div>
       </section>
@@ -711,7 +521,7 @@ export default function Pricing() {
                   </th>
                   {matrix.columns.filter((c) => VISIBLE_CODES.has(c)).map((c) => {
                     const plan     = sortedPlans.find((p) => p.code === c) || plans.find((p) => p.code === c);
-                    const isPopular = c === "researcher";
+                    const isPopular = !!plan?.recommended;
                     const price    = plan ? (annual ? plan.price_eur_annual : plan.price_eur_monthly) : 0;
                     const isFree   = c === "free";
                     const isInst   = c === "institution";
@@ -723,7 +533,7 @@ export default function Pricing() {
                         background: isPopular ? "rgba(15,40,71,0.025)" : "transparent",
                       }}>
                         <div style={{ fontSize: "0.7rem", fontWeight: 700, color: isPopular ? "#0F2847" : "#64748b", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>
-                          {isPopular && <span style={{ display: "block", fontSize: "0.58rem", color: "#0F2847", marginBottom: 4 }}>FOR ACTIVE RESEARCH</span>}
+                          {isPopular && <span style={{ display: "block", fontSize: "0.58rem", color: "#0F2847", marginBottom: 4 }}>RECOMMENDED</span>}
                           {plan?.name ?? c}
                         </div>
                         <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "#0a0f1a", letterSpacing: "-0.025em", lineHeight: 1 }}>
@@ -743,7 +553,7 @@ export default function Pricing() {
                             cursor: "pointer", width: "100%",
                           }}
                         >
-                          {isFree ? "Sign up" : isInst ? "Contact us" : "Get started"}
+                          {plan?.cta || (isFree ? "Create Free Profile" : isInst ? "Contact us" : `Choose ${plan?.name}`)}
                         </button>
                       </th>
                     );
@@ -754,9 +564,7 @@ export default function Pricing() {
               {/* ── Body ── */}
               <tbody>
                 {COMPARISON_GROUPS.map((group) => {
-                  const groupRows = group.rows
-                    .map((label) => matrix.rows.find((r) => r.label === label))
-                    .filter(Boolean);
+                  const groupRows = matrix.rows.slice(group.from, group.to);
                   if (groupRows.length === 0) return null;
                   return (
                     <React.Fragment key={group.label}>
@@ -792,7 +600,7 @@ export default function Pricing() {
                             {row.label}
                           </td>
                           {visibleMatrixCols.map(({ code, index }) => {
-                            const isPopular = code === "researcher";
+                            const isPopular = !!plans.find((p) => p.code === code)?.recommended;
                             return (
                               <td key={code} style={{
                                 padding: "13px 12px", textAlign: "center",
@@ -812,7 +620,8 @@ export default function Pricing() {
                 <tr style={{ borderTop: "2px solid #e2e8f0" }}>
                   <td style={{ padding: "24px 0", position: "sticky", left: 0, background: "#fff", zIndex: 5 }} />
                   {matrix.columns.filter((c) => VISIBLE_CODES.has(c)).map((c) => {
-                    const isPopular = c === "researcher";
+                    const plan     = plans.find((p) => p.code === c);
+                    const isPopular = !!plan?.recommended;
                     const isFree   = c === "free";
                     const isInst   = c === "institution";
                     return (
@@ -831,7 +640,7 @@ export default function Pricing() {
                             cursor: "pointer", width: "100%",
                           }}
                         >
-                          {isFree ? "Sign up" : isInst ? "Contact us" : "Get started"}
+                          {plan?.cta || (isFree ? "Create Free Profile" : isInst ? "Contact us" : `Choose ${plan?.name}`)}
                         </button>
                       </td>
                     );
@@ -885,20 +694,20 @@ export default function Pricing() {
 
             {/* Left: explanation */}
             <div>
-              <div className="overline mb-4">Research Credits</div>
+              <div className="overline mb-4">AI Credits</div>
               <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.6rem)", fontWeight: 900, letterSpacing: "-0.035em", color: "#0a0f1a", lineHeight: 1.1, marginBottom: 16 }}>
                 AI usage, transparent by design.
               </h2>
               <p style={{ fontSize: "0.92rem", color: "#64748b", lineHeight: 1.75, marginBottom: 28, maxWidth: 480 }}>
-                Every AI action has a fixed, documented credit cost. Your plan's monthly allowance refreshes automatically. Credit Packs top up instantly and never expire.
+                Every AI action has a fixed, published credit cost, shown before you run it. Pro includes monthly AI credits; Pro Advanced includes more. Failed requests are refunded automatically.
               </p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 {[
-                  { icon: Zap,          label: "Monthly credits refresh",         body: "Your plan's credit allowance resets at each billing cycle." },
-                  { icon: Database,     label: "Pack credits never expire",        body: "One-time pack purchases stack with monthly credits and stay forever." },
-                  { icon: CheckCircle2, label: "Core features always free",        body: "Discovery, profiles, and collaboration requests cost zero credits." },
-                  { icon: CreditCard,   label: "Top up anytime",                  body: "Buy 100, 250, 1,000 or 5,000 credit packs — on any plan, at any time." },
+                  { icon: Zap,          label: "Monthly credits reset at renewal",  body: "Your plan's monthly AI credits reset at each successful renewal. Unused monthly credits don't roll over." },
+                  { icon: Database,     label: "Purchased credits never expire",    body: "Credit packs are used after your monthly credits and stay on your account, even if you change plan." },
+                  { icon: CheckCircle2, label: "Collaboration never uses credits",  body: "Networking, messaging and collaboration requests on Pro cost zero credits." },
+                  { icon: CreditCard,   label: "Top up on Pro and Pro Advanced",    body: "Extra credit packs are available on both paid plans." },
                 ].map(({ icon: Icon, label, body }) => (
                   <div key={label} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: "#fff", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -916,7 +725,7 @@ export default function Pricing() {
             {/* Right: credit cost table + packs */}
             <div>
               {/* Always free */}
-              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "14px 18px", marginBottom: 16 }}>
+              {usageCat.some((r) => r.free) && <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "14px 18px", marginBottom: 16 }}>
                 <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "#059669", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>Always free</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 20px" }}>
                   {usageCat.filter((r) => r.free).map((r) => (
@@ -925,7 +734,7 @@ export default function Pricing() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </div>}
 
               {/* AI credit costs */}
               <div style={{ border: "1px solid #e2e8f0", borderRadius: 10, overflow: "hidden" }}>
@@ -941,7 +750,7 @@ export default function Pricing() {
                     }}>
                       <span style={{ fontSize: "0.79rem", color: "#334155" }}>{r.label}</span>
                       <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#0F2847", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
-                        {r.cost} cr {r.unit}
+                        {r.cost} credit{r.cost === 1 ? "" : "s"}
                       </span>
                     </div>
                   ))}
@@ -950,15 +759,15 @@ export default function Pricing() {
 
               {/* Credit packs */}
               <div data-testid="credit-packs" style={{ marginTop: 20 }}>
-                <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Credit Packs — one-time purchase</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Credit packs — Pro & Pro Advanced</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
                   {packs.map((pk) => (
                     <div key={pk.code} data-testid={`pack-card-${pk.code}`}
                       style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10 }}
                     >
                       <div style={{ fontSize: "1rem", fontWeight: 800, color: "#0a0f1a", letterSpacing: "-0.02em" }}>{pk.label}</div>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                        <span style={{ fontSize: "1.5rem", fontWeight: 900, color: "#0a0f1a", letterSpacing: "-0.03em", lineHeight: 1 }}>€{pk.price_eur}</span>
+                        <span style={{ fontSize: "1.5rem", fontWeight: 900, color: "#0a0f1a", letterSpacing: "-0.03em", lineHeight: 1 }}>€{Number(pk.price_eur).toFixed(2)}</span>
                         <span style={{ fontSize: "0.68rem", color: "#94a3b8" }}>one-time</span>
                       </div>
                       <button

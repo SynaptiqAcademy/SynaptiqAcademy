@@ -68,14 +68,21 @@ async def call_llm(
         prompt_id=prompt_id,
         variables=variables or {},
     )
+    from gateway.gateway import FAILURE_PROVIDERS
     response = await get_gateway().execute(request, db=db)
-    if response.provider == "error_fallback":
-        # cloud_ai.CloudAILayer._provider_error_response sets this exact
-        # sentinel only when every real provider failed (billing/quota/auth
-        # error, outage, etc.) — response.response is then a human-readable
-        # explanation, not usable content. Callers that expect structured
-        # output (JSON, etc.) would otherwise fail parsing it and surface a
-        # confusing "malformed output" error that hides the real cause.
+    if response.provider in FAILURE_PROVIDERS or response.validation_status in ("error", "policy_rejected"):
+        # No usable answer: every real provider failed (cloud_ai error
+        # response), the smart-router budget stopped the call, the engine hit
+        # a catastrophic error, or the gateway itself errored / rejected the
+        # request by policy. response.response is then an explanation, not
+        # content. Raising (instead of returning it as if it were an answer)
+        # means callers refund, and the monetization middleware releases the
+        # request's credit reservation — users are never charged for it.
+        if response.validation_status == "policy_rejected":
+            raise HTTPException(status_code=422, detail={
+                "code": "ai_policy_rejected",
+                "message": "This request couldn't be processed. Please rephrase it and try again.",
+            })
         raise HTTPException(
             status_code=503,
             detail="AI service is temporarily unavailable. Please try again in a moment.",

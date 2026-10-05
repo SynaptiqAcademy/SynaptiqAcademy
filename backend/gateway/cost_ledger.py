@@ -10,13 +10,8 @@ Responsibilities:
   - ARA mission used_credits increment (FIXES the audit finding)
   - Budget ceiling enforcement (pre-execution check)
 
-Cost model (approximate, updated periodically):
-  Anthropic claude-sonnet-4-6:      $3.00 / 1M in, $15.00 / 1M out
-  Anthropic claude-haiku-4-5:       $0.25 / 1M in, $1.25 / 1M out
-  OpenAI gpt-4o:                    $5.00 / 1M in, $15.00 / 1M out
-  OpenAI gpt-4o-mini:               $0.15 / 1M in, $0.60 / 1M out
-  Local (Ollama/vLLM):              $0.00 (compute only)
-  Mock/Rule:                        $0.00
+Provider prices live in services/ai/pricing.py (configurable via
+AI_PROVIDER_PRICING_JSON) — this module no longer keeps its own table.
 """
 from __future__ import annotations
 
@@ -28,37 +23,20 @@ from repo.shim import make_db_proxy
 
 logger = logging.getLogger("gateway.cost_ledger")
 
-USD_PER_CREDIT = 0.001  # 1 credit = $0.001
-
-# (input_usd_per_1M, output_usd_per_1M)
-_PROVIDER_COSTS: dict[str, tuple[float, float]] = {
-    # Anthropic
-    "claude-sonnet-4-6":         (3.00, 15.00),
-    "claude-sonnet-4-5":         (3.00, 15.00),
-    "claude-opus-4-8":           (15.00, 75.00),
-    "claude-haiku-4-5-20251001": (0.25,  1.25),
-    "claude-haiku-4-5":          (0.25,  1.25),
-    # OpenAI
-    "gpt-4o":                    (5.00, 15.00),
-    "gpt-4o-mini":               (0.15,  0.60),
-    "o1":                        (15.00, 60.00),
-    "o1-mini":                   (3.00, 12.00),
-    # Local / rule engine
-    "local":                     (0.00,  0.00),
-    "mock":                      (0.00,  0.00),
-    "rule_engine":               (0.00,  0.00),
-}
-_DEFAULT_COST = (3.00, 15.00)  # assume Sonnet if unknown
+USD_PER_CREDIT = 0.001  # internal cost unit for ARA missions — NOT customer AI credits
 
 
 def calculate_cost(
     model: str,
     input_tokens: int,
     output_tokens: int,
+    cache_read_tokens: int = 0,
+    cache_write_tokens: int = 0,
 ) -> tuple[float, float]:
-    """Return (cost_usd, cost_credits)."""
-    rates = _PROVIDER_COSTS.get(model, _DEFAULT_COST)
-    cost_usd = (input_tokens / 1_000_000) * rates[0] + (output_tokens / 1_000_000) * rates[1]
+    """Return (cost_usd, cost_credits). Prices come from services/ai/pricing.py."""
+    from services.ai.pricing import estimate_cost_usd
+    cost_usd = estimate_cost_usd(model, input_tokens, output_tokens,
+                                 cache_read_tokens, cache_write_tokens)
     cost_credits = cost_usd / USD_PER_CREDIT
     return round(cost_usd, 8), round(cost_credits, 4)
 

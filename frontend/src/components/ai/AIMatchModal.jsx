@@ -17,16 +17,17 @@ import api from "../../lib/api";
 import { toast } from "sonner";
 import { userTypeLabel } from "../../lib/userTypes";
 import { NAVY } from "@/lib/tokens";
+import { CreditCostNumber } from "@/components/billing/CreditCost";
 import {
   Sparkles, X, BookOpen, CalendarDays, Coins, UserPlus, ExternalLink,
   ShieldAlert, Loader2, Plus,
 } from "lucide-react";
 
 const KIND_META = {
-  journal:    { label: "AI Journal Match",    endpoint: "/matching/journal",    cost: 10, icon: BookOpen },
-  conference: { label: "AI Conference Match", endpoint: "/matching/conference", cost: 5,  icon: CalendarDays },
-  grant:      { label: "AI Grant Match",      endpoint: "/matching/grant",      cost: 10, icon: Coins },
-  reviewer:   { label: "AI Reviewer Match",   endpoint: "/matching/reviewer",   cost: 10, icon: UserPlus },
+  journal:    { label: "AI Journal Match",    endpoint: "/matching/journal",    op: "JOURNAL_FIT", icon: BookOpen },
+  conference: { label: "AI Conference Match", endpoint: "/matching/conference", op: "CONFERENCE_FIT", icon: CalendarDays },
+  grant:      { label: "AI Grant Match",      endpoint: "/matching/grant",      op: "GRANT_FIT", icon: Coins },
+  reviewer:   { label: "AI Reviewer Match",   endpoint: "/matching/reviewer",   op: "ai_reviewer_matching", icon: UserPlus },
 };
 
 function ScoreRing({ score }) {
@@ -210,7 +211,7 @@ export default function AIMatchModal({ open, onClose, kind, manuscriptId, projec
           <div className="flex items-center gap-3">
             <Icon size={18} strokeWidth={1.5} className="text-[#0F2847]"/>
             <div>
-              <div className="overline text-[#0F2847]">SYNAPTIQ AI · {meta.cost} credits</div>
+              <div className="overline text-[#0F2847]">SYNAPTIQ AI · <CreditCostNumber operation={meta.op} /> credits</div>
               <h3 className="font-serif text-xl text-slate-900">{meta.label}</h3>
             </div>
           </div>

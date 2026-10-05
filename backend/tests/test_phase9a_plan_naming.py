@@ -2,7 +2,7 @@
 
 Backend codes stay `researcher` / `pro_researcher`; customers see "Pro" and
 "Pro Advanced". This file locks in: the display mapping (backend + the one
-frontend mirror), that entitlements did NOT move between tiers, that no
+frontend mirror), the owner-approved entitlement bundles per tier, that no
 individual plan grants Institution, that the public pages carry no old
 persona-style plan names / public Institutional price / popularity badge /
 annual purchase toggle, and that the credits row in the comparison matrix
@@ -58,15 +58,18 @@ class TestCanonicalDisplayNames:
         assert exc.value.detail["required_plan"] == "pro_researcher"
 
 
-# ───────────────────────────── entitlements unchanged ─────────────────────────────
+# ───────────────────────────── entitlement bundles ─────────────────────────────
 
-class TestEntitlementsDidNotMove:
-    """A naming pass must not move features between tiers (§4). These are the
-    audited bundles at the time of the rename."""
+class TestEntitlementBundles:
+    """Bundles as set by the owner's monetization decision (Free = identity
+    only; Pro = network, collaboration, discovery, AI; Pro Advanced = advanced
+    intelligence). Locked here so a later naming/copy pass can't move them."""
 
     def test_pro_bundle(self):
         pro = {k for k, v in FEATURE_MIN_PLAN.items() if v == "researcher"}
         assert pro == {
+            "network", "messaging", "basic_discovery", "project_create", "workspace_create",
+            "collaboration_request", "teaching_hub", "credit_purchase",
             "ai_assistant", "ai_manuscript_copilot", "publication_tracking", "advanced_analytics",
             "full_discovery", "ai_journal_matching", "ai_conference_matching", "ai_grant_matching",
             "ai_manuscript_review", "ai_methodology_builder", "ai_research_assistant",
@@ -79,23 +82,24 @@ class TestEntitlementsDidNotMove:
             "ai_advanced_assistant", "ai_literature_review", "ai_statistical_review",
             "ai_research_design_advisor", "ai_research_gap_finder", "collaboration_intelligence",
             "research_analytics_suite", "citation_monitoring", "research_impact_dashboard",
-            "premium_collaboration",
+            "premium_collaboration", "advanced_manuscript_intelligence", "advanced_ai_teaching",
         }
 
-    def test_core_collaboration_stays_free(self):
-        for k in ("collaboration_request", "basic_discovery", "network", "messaging", "academic_profile", "orcid"):
-            assert FEATURE_MIN_PLAN[k] == "free", k
+    def test_free_is_identity_only(self):
+        free = {k for k, v in FEATURE_MIN_PLAN.items() if v == "free"}
+        assert free == {"academic_profile", "orcid", "public_profile"}
 
-    def test_quotas_prices_and_credits_unchanged(self):
+    def test_quotas_prices_and_credits(self):
+        assert PLAN_QUOTAS["free"] == {"projects": 0, "workspaces": 0, "manuscripts": 0}
         assert PLAN_QUOTAS["researcher"] == {"projects": -1, "workspaces": 10, "manuscripts": -1}
         assert PLAN_QUOTAS["pro_researcher"] == {"projects": -1, "workspaces": -1, "manuscripts": -1}
         assert get_plan("free")["price_eur_monthly"] == 0
         assert get_plan("researcher")["price_eur_monthly"] == 9.99
         assert get_plan("pro_researcher")["price_eur_monthly"] == 29.99
-        assert [get_plan(c)["credits_per_month"] for c in ("free", "researcher", "pro_researcher")] == [50, 300, 1000]
+        assert [get_plan(c)["credits_per_month"] for c in ("free", "researcher", "pro_researcher")] == [0, 200, 750]
 
     def test_matrix_credits_row_derived_from_catalogue(self):
-        row = next(r for r in FEATURE_MATRIX if r[0] == "Research Credits / month")
+        row = next(r for r in FEATURE_MATRIX if r[0] == "AI Credits / month")
         expected = [f"{get_plan(c)['credits_per_month']:,}" for c in ("free", "researcher", "pro_researcher", "institution")]
         assert list(row[1:5]) == expected
 

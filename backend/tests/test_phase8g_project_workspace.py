@@ -55,7 +55,8 @@ async def _insert_user(db, full_name: str, **extra) -> str:
 
 
 def _user(uid: str, name: str = "Owner") -> dict:
-    return {"id": uid, "full_name": name, "email": f"{name}@synaptiq-test.io"}
+    # Projects/workspaces are Pro features — the acting user is on Pro.
+    return {"id": uid, "full_name": name, "email": f"{name}@synaptiq-test.io", "plan_code": "researcher"}
 
 
 def _patch_get_db(monkeypatch, raw_db):

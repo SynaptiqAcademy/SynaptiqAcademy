@@ -37,6 +37,7 @@ import {
   Coins, ArrowRight, Info, AlertTriangle, Clock, GitBranch, ListTodo,
 } from "lucide-react";
 import { confirmDialog } from "@/lib/confirm";
+import { CreditCostNumber } from "@/components/billing/CreditCost";
 
 const TABS = [
   { key: "overview",      label: "Overview"      },
@@ -1321,14 +1322,14 @@ const STAGE_AI_MAP = {
 };
 
 const AI_TOOLS = {
-  "literature-review":        { to: "/literature-review",       label: "Literature Review",    icon: BookMarked, cost: 20, unit: "per review",   desc: "Survey the field. Identify what's been done and what's missing." },
-  "research-gap-finder":      { to: "/research-gap-finder",     label: "Research Gap Finder",  icon: Target,     cost: 10, unit: "per analysis",  desc: "Find novel angles and underexplored questions in your field." },
-  "research-design-advisor":  { to: "/research-design-advisor", label: "Study Design Advisor", icon: Beaker,     cost: 10, unit: "per session",   desc: "Validate your methodology and study design before data collection." },
-  "ai-assistant":             { to: "/ai",                      label: "AI Research Assistant",icon: BrainCircuit, cost: 2, unit: "per message", desc: "Expert guidance on any research question or writing challenge." },
-  "ai-rewrite":               { to: "/ai/rewrite",              label: "Academic Rewriting",   icon: PenLine,    cost: 2,  unit: "per rewrite",   desc: "Elevate academic writing — clarity, tone, and register." },
-  "statistical-review":       { to: "/statistical-review",      label: "Statistical Analysis", icon: BarChart2,  cost: 25, unit: "per analysis",  desc: "Review statistical methods, assumptions, and reporting." },
-  "manuscript-review":        { to: "/manuscript-review",       label: "Manuscript Review",    icon: Microscope, cost: 20, unit: "per review",   desc: "Simulated peer review with structured feedback across all sections." },
-  "abstract-generator":       { to: "/ai/abstract",             label: "Abstract Generator",   icon: AlignLeft,  cost: 5,  unit: "per abstract",  desc: "Generate a structured, publication-ready abstract from your text." },
+  "literature-review":        { to: "/literature-review",       label: "Literature Review",    icon: BookMarked, op: "LITERATURE_SYNTHESIS", unit: "per review",   desc: "Survey the field. Identify what's been done and what's missing." },
+  "research-gap-finder":      { to: "/research-gap-finder",     label: "Research Gap Finder",  icon: Target,     op: "LITERATURE_SYNTHESIS", unit: "per analysis",  desc: "Find novel angles and underexplored questions in your field." },
+  "research-design-advisor":  { to: "/research-design-advisor", label: "Study Design Advisor", icon: Beaker,     op: "MANUSCRIPT_SECTION_REVIEW", unit: "per session",   desc: "Validate your methodology and study design before data collection." },
+  "ai-assistant":             { to: "/ai",                      label: "AI Research Assistant",icon: BrainCircuit, op: "AI_ASSISTANT_SIMPLE", unit: "per message", desc: "Expert guidance on any research question or writing challenge." },
+  "ai-rewrite":               { to: "/ai/rewrite",              label: "Academic Rewriting",   icon: PenLine,    op: "QUICK_ACADEMIC_REWRITE", unit: "per rewrite",   desc: "Elevate academic writing — clarity, tone, and register." },
+  "statistical-review":       { to: "/statistical-review",      label: "Statistical Analysis", icon: BarChart2,  op: "MANUSCRIPT_SECTION_REVIEW", unit: "per analysis",  desc: "Review statistical methods, assumptions, and reporting." },
+  "manuscript-review":        { to: "/manuscript-review",       label: "Manuscript Review",    icon: Microscope, op: "FULL_MANUSCRIPT_REVIEW", unit: "per review",   desc: "Simulated peer review with structured feedback across all sections." },
+  "abstract-generator":       { to: "/ai/abstract",             label: "Abstract Generator",   icon: AlignLeft,  op: "ABSTRACT_ANALYSIS", unit: "per abstract",  desc: "Generate a structured, publication-ready abstract from your text." },
 };
 
 function AIToolCard({ toolKey }) {
@@ -1340,7 +1341,7 @@ function AIToolCard({ toolKey }) {
       <div className="flex items-start justify-between gap-2 mb-3">
         <Icon size={17} strokeWidth={1.5} className="text-[#0F2847] shrink-0" />
         <span className="text-[10px] font-mono text-slate-400 shrink-0">
-          {tool.cost === 0 ? "Free" : `${tool.cost} credits ${tool.unit}`}
+          <><CreditCostNumber operation={tool.op} /> credits {tool.unit}</>
         </span>
       </div>
       <div className="font-serif text-sm text-slate-900 group-hover:text-[#0F2847] transition-colors mb-1.5">
@@ -1420,7 +1421,7 @@ function AIEnhancementTab({ workspace, docStage }) {
                   <Icon size={14} strokeWidth={1.5} className="text-[#0F2847] shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-slate-900 group-hover:text-[#0F2847] transition-colors truncate">{tool.label}</div>
-                    <div className="text-[10px] font-mono text-slate-400">{tool.cost === 0 ? "Free" : `${tool.cost} credits`}</div>
+                    <div className="text-[10px] font-mono text-slate-400"><><CreditCostNumber operation={tool.op} /> credits</></div>
                   </div>
                   <ChevronRight size={12} strokeWidth={1.5} className="text-slate-300 shrink-0" />
                 </Card>

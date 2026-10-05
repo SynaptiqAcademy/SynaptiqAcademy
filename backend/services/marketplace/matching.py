@@ -285,7 +285,7 @@ async def llm_rerank(
         m = re.search(r"\{[\s\S]*\}", text)
         parsed = _json.loads(m.group(0)) if m else {"rankings": []}
     except Exception as e:
-        await refund_credits(requester_id, cost, reason="ai_marketplace_rerank_failed")
+        await refund_credits(requester_id, "ai_marketplace_rerank", reason="ai_marketplace_rerank_failed")
         raise HTTPException(503, f"LLM rerank failed: {str(e)[:200]}")
 
     latency_ms = int((time.time() - t0) * 1000)

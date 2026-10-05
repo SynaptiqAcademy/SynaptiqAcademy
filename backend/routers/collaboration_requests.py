@@ -225,14 +225,22 @@ async def send_request(
     sender_name = user.get("full_name") or "A researcher"
     notif_body = body.message[:120] if body.message else "Would like to collaborate with you."
     link = "/collaboration-requests"
+    # Free researchers stay discoverable and can be invited; responding is a
+    # Pro capability (enforced server-side on PATCH by the route policy). The
+    # notification carries only the sender's public name — no contact details.
+    from services.entitlements import has_capability
+    receiver_can_respond = has_capability(dict(receiver, id=str(receiver["_id"])), "can_accept_collaboration")
+    if not receiver_can_respond:
+        notif_body = "Upgrade to Pro to respond."
     await dispatch(NotificationEvent(
         user_id=body.receiver_id,
         kind="collaboration_request",
-        title=f"{sender_name} sent you a collaboration request",
+        title=f"{sender_name} would like to collaborate with you",
         body=notif_body,
-        link=link,
+        link=link if receiver_can_respond else "/pricing?from=collaboration-invite",
         actor_id=sender_id,
-        payload={"request_id": req_id, "project_id": body.project_id},
+        payload={"request_id": req_id, "project_id": body.project_id,
+                 "upgrade_required": not receiver_can_respond},
     ))
 
     # Track activity

@@ -25,7 +25,13 @@ class AIRequestLogger:
 
     async def log(self, request: AIRequest, response: AIResponse) -> None:
         self._log_structured(request, response)
-        asyncio.create_task(self._persist(request, response))
+        # Capture the billing attribution now (request context), persist later.
+        try:
+            from services.credits_service import current_reservation
+            billing = dict(current_reservation() or {})
+        except Exception:
+            billing = {}
+        asyncio.create_task(self._persist(request, response, billing))
 
     def _log_structured(self, request: AIRequest, response: AIResponse) -> None:
         logger.info(
@@ -46,7 +52,7 @@ class AIRequestLogger:
             request.user_id or "-",
         )
 
-    async def _persist(self, request: AIRequest, response: AIResponse) -> None:
+    async def _persist(self, request: AIRequest, response: AIResponse, billing: dict | None = None) -> None:
         try:
             from obs.metrics import get_metrics, M_AI_REQUESTS, M_AI_LATENCY, M_AI_TOKENS_IN, M_AI_TOKENS_OUT, M_AI_COST
             m = get_metrics()
@@ -64,8 +70,22 @@ class AIRequestLogger:
             db = get_db()
             db = DBProxy(db, SecurityContext.system())
 
+            billing = billing or {}
+            failed = response.provider in ("error_fallback", "budget_manager", "emergency_fallback")
             await db.ai_requests.insert_one(
                 {
+                    # Per-request cost telemetry (internal only — never
+                    # returned to ordinary users).
+                    "user_id": billing.get("user_id") or request.user_id,
+                    "plan_code": billing.get("plan_code"),
+                    "operation": billing.get("operation"),
+                    "action": billing.get("action"),
+                    "reservation_id": billing.get("id"),
+                    "credits_charged": billing.get("credits", 0),
+                    "billed": bool(billing),
+                    "status": "failed" if failed else "succeeded",
+                    "cache_read_tokens": getattr(response, "cache_read_tokens", 0),
+                    "cache_write_tokens": getattr(response, "cache_write_tokens", 0),
                     "feature": request.feature,
                     "layer": response.layer.value,
                     "provider": response.provider,
@@ -76,7 +96,6 @@ class AIRequestLogger:
                     "cost_usd": response.cost_usd,
                     "from_cache": response.from_cache,
                     "fallback_reason": response.fallback_reason,
-                    "user_id": request.user_id,
                     "workspace_id": request.workspace_id,
                     "subscription_tier": request.subscription_tier,
                     "timestamp": datetime.now(timezone.utc).isoformat(),

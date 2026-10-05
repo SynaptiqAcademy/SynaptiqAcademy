@@ -17,17 +17,23 @@ class ProviderCostConfig:
                 + output_tokens / 1_000_000 * self.output_per_m)
 
 
-# Current provider cost tables (2025 pricing)
+def _from_pricing(name: str, model: str) -> ProviderCostConfig:
+    from services.ai.pricing import rates_for
+    r = rates_for(model)
+    return ProviderCostConfig(name, r["input"], r["output"])
+
+
+# Derived from services/ai/pricing.py (single configurable price table).
 PROVIDER_COSTS: dict[str, ProviderCostConfig] = {
-    "claude-sonnet-4-6":           ProviderCostConfig("claude-sonnet-4-6",          3.00, 15.00),
-    "claude-haiku-4-5-20251001":   ProviderCostConfig("claude-haiku-4-5-20251001",  0.80,  4.00),
-    "claude-opus-4-8":             ProviderCostConfig("claude-opus-4-8",            15.00, 75.00),
-    "gpt-4o":                      ProviderCostConfig("gpt-4o",                      2.50, 10.00),
-    "gpt-4o-mini":                 ProviderCostConfig("gpt-4o-mini",                 0.15,  0.60),
-    "anthropic":                   ProviderCostConfig("anthropic",                   3.00, 15.00),
-    "openai":                      ProviderCostConfig("openai",                      2.50, 10.00),
-    "local":                       ProviderCostConfig("local",                       0.00,  0.00),
-    "rule_engine":                 ProviderCostConfig("rule_engine",                 0.00,  0.00),
+    "claude-sonnet-4-6":         _from_pricing("claude-sonnet-4-6", "claude-sonnet-4-6"),
+    "claude-haiku-4-5-20251001": _from_pricing("claude-haiku-4-5-20251001", "claude-haiku-4-5-20251001"),
+    "claude-opus-4-8":           _from_pricing("claude-opus-4-8", "claude-opus-4-8"),
+    "gpt-4o":                    _from_pricing("gpt-4o", "gpt-4o"),
+    "gpt-4o-mini":               _from_pricing("gpt-4o-mini", "gpt-4o-mini"),
+    "anthropic":                 _from_pricing("anthropic", "claude-sonnet-4-6"),
+    "openai":                    _from_pricing("openai", "gpt-4o"),
+    "local":                     _from_pricing("local", "local"),
+    "rule_engine":               _from_pricing("rule_engine", "rule_engine"),
 }
 
 # Default output token estimates per feature complexity

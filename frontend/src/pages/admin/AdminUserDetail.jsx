@@ -430,8 +430,8 @@ export default function AdminUserDetail() {
           <ActionCard id="action-plan" title="Change Plan" desc="Change the user's subscription plan immediately.">
             <select value={newPlan} onChange={(e) => setNewPlan(e.target.value)} className="w-full px-3 py-2 text-sm border border-slate-300 mb-2 focus:outline-none focus:ring-1 focus:ring-[#0F2847]">
               <option value="free">Free</option>
-              <option value="researcher">Researcher</option>
-              <option value="pro_researcher">Pro Researcher</option>
+              <option value="researcher">Pro (researcher)</option>
+              <option value="pro_researcher">Pro Advanced (pro_researcher)</option>
               <option value="institution">Institution</option>
             </select>
             <ActionResult onClick={() => action("set-plan", { plan_code: newPlan })} label={`Set to ${newPlan}`} loading={actLoading} />
@@ -440,8 +440,8 @@ export default function AdminUserDetail() {
           <ActionCard id="action-gift" title="Gift Subscription" desc="Give this user a paid plan for free, for N months — no card required. Extends their current subscription if they already have one.">
             <div className="flex gap-2 mb-2">
               <select value={giftPlan} onChange={(e) => setGiftPlan(e.target.value)} className="flex-1 px-3 py-2 text-sm border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0F2847]">
-                <option value="researcher">Researcher</option>
-                <option value="pro_researcher">Pro Researcher</option>
+                <option value="researcher">Pro (researcher)</option>
+                <option value="pro_researcher">Pro Advanced (pro_researcher)</option>
                 <option value="institution">Institution</option>
               </select>
               <input

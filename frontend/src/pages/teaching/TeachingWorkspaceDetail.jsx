@@ -21,6 +21,7 @@ import { NavTabs } from "@/components/ds/NavTabs";
 import { List, ListItem } from "@/components/ds/List";
 import { ResearchLayout } from "@/layouts";
 import { confirmDialog } from "@/lib/confirm";
+import { CreditCostNumber } from "@/components/billing/CreditCost";
 
 // ─── Role display helpers ─────────────────────────────────────────────────────
 
@@ -898,7 +899,7 @@ export default function TeachingWorkspaceDetail() {
               <div className="border-b border-slate-100 bg-slate-50 px-4 py-2 shrink-0">
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <Bot size={11} strokeWidth={1.5} className="text-[#0F2847]" />
-                  <span>AI Teaching Assistant · workspace-aware · {members.length} team members · 2 credits/message</span>
+                  <span>AI Teaching Assistant · workspace-aware · {members.length} team members · <CreditCostNumber operation="AI_ASSISTANT_SIMPLE" /> credits/message</span>
                 </div>
               </div>
 

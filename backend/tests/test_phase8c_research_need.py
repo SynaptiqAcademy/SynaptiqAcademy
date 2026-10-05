@@ -41,6 +41,8 @@ async def _insert_user(db, full_name: str, **extra) -> str:
         "email": f"{full_name.lower().replace(' ', '')}-{_oid()[:8]}@synaptiq-test.io",
         "is_demo": False,
         "profile_visibility": "public",
+        # AI interpretation is a Pro feature (Free has no AI credits).
+        "plan_code": "researcher",
         **extra,
     }
     res = await db.users.insert_one(doc)

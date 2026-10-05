@@ -49,20 +49,42 @@ export function getCsrfToken() {
 const _CSRF_SAFE_METHODS = new Set(["get", "head", "options"]);
 
 // ─── Request interceptor: attach CSRF token (AUTH-007) ───────────────────────
+function _newIdempotencyKey() {
+  try {
+    if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  } catch (_) {}
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
 api.interceptors.request.use((config) => {
   if (!_CSRF_SAFE_METHODS.has((config.method || "get").toLowerCase())) {
     const token = getCsrfToken();
     if (token) {
       config.headers["X-CSRF-Token"] = token;
     }
+    // One key per logical request; axios retries (401 refresh, network
+    // retry) reuse this same config, so the backend never charges AI
+    // credits twice for one user action.
+    if (!config._idempotencyKey) config._idempotencyKey = _newIdempotencyKey();
+    config.headers["Idempotency-Key"] = config._idempotencyKey;
   }
   return config;
 });
 
 // ─── Response interceptor: capture a fresh csrf_token wherever one appears ───
+let _creditsRefreshTimer = null;
+
 api.interceptors.response.use((r) => {
   if (r?.data && typeof r.data === "object" && r.data.csrf_token) {
     setCsrfToken(r.data.csrf_token);
+  }
+  // Any completed action may have spent AI credits: let the credit widgets
+  // re-read their balance (debounced; they fetch GET /credits/balance).
+  if (!_CSRF_SAFE_METHODS.has((r?.config?.method || "get").toLowerCase())) {
+    clearTimeout(_creditsRefreshTimer);
+    _creditsRefreshTimer = setTimeout(() => {
+      try { window.dispatchEvent(new Event("synaptiq:credits-changed")); } catch (_) {}
+    }, 800);
   }
   return r;
 });
@@ -84,8 +106,14 @@ api.interceptors.response.use(
     const config = err?.config;
 
     if (status === 402 && detail && typeof detail === "object" && detail.code && !config?.silentGate) {
+      // The explanation modal opens for user actions (writes) or when a page
+      // opts in with { gateModal: true }. Background GETs that a page makes
+      // on load (dashboard widgets etc.) must not pop a modal on their own —
+      // pages render their own locked state for those.
+      const isRead = _CSRF_SAFE_METHODS.has((config?.method || "get").toLowerCase());
+      const eventName = (!isRead || config?.gateModal) ? "synaptiq:gate" : "synaptiq:gate-soft";
       try {
-        window.dispatchEvent(new CustomEvent("synaptiq:gate", { detail }));
+        window.dispatchEvent(new CustomEvent(eventName, { detail }));
       } catch (_) {}
     }
 

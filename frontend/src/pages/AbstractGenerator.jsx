@@ -7,6 +7,7 @@ import { ResearchLayout } from "@/layouts";
 import { AI_NAV_ITEMS } from "@/lib/navItems";
 import { Button, Card, Input, Textarea, Tag, TagGroup, EmptyState } from "@/components/ds";
 import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
+import { CreditCostNumber } from "@/components/billing/CreditCost";
 
 
 
@@ -157,7 +158,7 @@ function InputView({ onResult, gated }) {
             {running ? "Generating abstract — this may take 15–30 seconds…" : (
               <>
                 <FileText size={15} strokeWidth={1.5} />
-                Generate Abstract · 5 Credits
+                Generate Abstract · <CreditCostNumber operation="ABSTRACT_ANALYSIS" /> Credits
               </>
             )}
           </Button>
@@ -178,8 +179,8 @@ function InputView({ onResult, gated }) {
           </Card>
           <Card padding="lg">
             <div className="overline mb-2">Credit cost</div>
-            <div className="font-serif text-3xl text-slate-900">5</div>
-            <div className="text-xs text-slate-500 mt-1">Research Credits per abstract</div>
+            <div className="font-serif text-3xl text-slate-900"><CreditCostNumber operation="ABSTRACT_ANALYSIS" /></div>
+            <div className="text-xs text-slate-500 mt-1">AI Credits per abstract</div>
           </Card>
           <Card padding="md" className="!border-amber-100 !bg-amber-50">
             <div className="overline text-[10px] text-amber-700 mb-1">Accuracy note</div>

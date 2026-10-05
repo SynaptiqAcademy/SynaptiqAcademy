@@ -114,7 +114,7 @@ export default function AIUsage() {
     <ResearchLayout
       navItems={AI_NAV_ITEMS}
       title="AI Usage"
-      subtitle={isAdmin ? "Platform-wide intelligence consumption, popular venues, and top users." : "Your Research Credit consumption, AI feature usage, and trends."}
+      subtitle={isAdmin ? "Platform-wide intelligence consumption, popular venues, and top users." : "Your AI Credit consumption, AI feature usage, and trends."}
       stats={!loading ? [
         { label: "Credits Remaining",                              value: (usage?.credits_balance ?? 0).toLocaleString() },
         { label: "Credits Used",                                   value: (totals.credits || 0).toLocaleString() },

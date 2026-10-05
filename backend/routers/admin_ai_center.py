@@ -12,6 +12,7 @@ GET  /api/admin/ai/actions-log         — recent AI actions log
 GET  /api/admin/ai/memory-stats        — memory usage statistics
 GET  /api/admin/ai/conversations       — recent conversations (anonymized)
 GET  /api/admin/ai/cost-analytics      — estimated cost analytics
+GET  /api/admin/ai/monetization-metrics — provider cost vs. credits by plan/operation/model
 """
 from __future__ import annotations
 
@@ -533,5 +534,105 @@ async def cost_analytics(
         "cost_per_token_usd": _COST_PER_TOKEN_USD,
         "cost_by_date": cost_by_date,
         "cost_by_agent_type": cost_by_agent,
+        "generated_at": _now_iso(),
+    }
+
+
+@router.get("/monetization-metrics")
+async def monetization_metrics(
+    days: int = Query(30, ge=1, le=365),
+    user: dict = Depends(get_current_user),
+):
+    """Internal AI cost vs. credit metrics (admin only — provider cost data is
+    never exposed to ordinary users). Sources: ai_requests (per-provider-call
+    telemetry, priced by services/ai/pricing.py) and credit_reservations (what
+    users were charged)."""
+    _require_admin(user)
+    db = DBProxy(get_db(), SecurityContext.from_user(user))
+    since = _days_ago_iso(days)
+
+    async def _group(by: str) -> list[dict]:
+        rows = await db.ai_requests.aggregate([
+            {"$match": {"timestamp": {"$gte": since}}},
+            {"$group": {
+                "_id": f"${by}",
+                "requests": {"$sum": 1},
+                "failed": {"$sum": {"$cond": [{"$eq": ["$status", "failed"]}, 1, 0]}},
+                "unbilled": {"$sum": {"$cond": [{"$eq": ["$billed", False]}, 1, 0]}},
+                "input_tokens": {"$sum": "$input_tokens"},
+                "output_tokens": {"$sum": "$output_tokens"},
+                "cache_read_tokens": {"$sum": {"$ifNull": ["$cache_read_tokens", 0]}},
+                "cost_usd": {"$sum": "$cost_usd"},
+                "avg_latency_ms": {"$avg": "$latency_ms"},
+            }},
+            {"$sort": {"cost_usd": -1}},
+            {"$limit": 50},
+        ]).to_list(50)
+        return [{**{k: v for k, v in r.items() if k != "_id"}, by: r["_id"] or "unattributed",
+                 "cost_usd": round(r.get("cost_usd") or 0, 4),
+                 "avg_latency_ms": int(r.get("avg_latency_ms") or 0)} for r in rows]
+
+    credits = await db.credit_reservations.aggregate([
+        {"$match": {"created_at": {"$gte": since}}},
+        {"$group": {
+            "_id": {"plan": "$plan_code", "status": "$status"},
+            "reservations": {"$sum": 1},
+            "credits": {"$sum": "$credits"},
+            "provider_cost_usd": {"$sum": "$telemetry.cost_usd"},
+        }},
+    ]).to_list(100)
+    by_plan: dict[str, dict] = {}
+    for r in credits:
+        plan = r["_id"].get("plan") or "unknown"
+        st = r["_id"].get("status") or "unknown"
+        p = by_plan.setdefault(plan, {"plan_code": plan, "credits_charged": 0, "credits_refunded": 0,
+                                      "operations_completed": 0, "operations_released": 0,
+                                      "provider_cost_usd": 0.0})
+        if st in ("COMPLETED", "RESERVED"):
+            p["credits_charged"] += r["credits"]
+            p["operations_completed"] += r["reservations"]
+            p["provider_cost_usd"] += r.get("provider_cost_usd") or 0
+        elif st == "RELEASED":
+            p["credits_refunded"] += r["credits"]
+            p["operations_released"] += r["reservations"]
+    for p in by_plan.values():
+        p["provider_cost_usd"] = round(p["provider_cost_usd"], 4)
+        p["cost_per_credit_usd"] = (round(p["provider_cost_usd"] / p["credits_charged"], 5)
+                                    if p["credits_charged"] else None)
+
+    top_users = await db.ai_requests.aggregate([
+        {"$match": {"timestamp": {"$gte": since}, "user_id": {"$nin": [None, ""]}}},
+        {"$group": {"_id": "$user_id", "cost_usd": {"$sum": "$cost_usd"}, "requests": {"$sum": 1},
+                    "plan_code": {"$last": "$plan_code"}}},
+        {"$sort": {"cost_usd": -1}},
+        {"$limit": 20},
+    ]).to_list(20)
+
+    total = await db.ai_requests.aggregate([
+        {"$match": {"timestamp": {"$gte": since}}},
+        {"$group": {"_id": None, "cost_usd": {"$sum": "$cost_usd"}, "requests": {"$sum": 1},
+                    "input_tokens": {"$sum": "$input_tokens"},
+                    "cache_read_tokens": {"$sum": {"$ifNull": ["$cache_read_tokens", 0]}}}},
+    ]).to_list(1)
+    t = total[0] if total else {}
+    cache_ratio = None
+    if t.get("input_tokens") or t.get("cache_read_tokens"):
+        cache_ratio = round((t.get("cache_read_tokens") or 0) /
+                            ((t.get("input_tokens") or 0) + (t.get("cache_read_tokens") or 0)), 4)
+
+    return {
+        "period_days": days,
+        "total_provider_cost_usd": round(t.get("cost_usd") or 0, 4),
+        "total_provider_calls": t.get("requests", 0),
+        "prompt_cache_hit_ratio": cache_ratio,
+        "by_plan": sorted(by_plan.values(), key=lambda p: p["plan_code"]),
+        "by_operation": await _group("operation"),
+        "by_feature": await _group("feature"),
+        "by_model": await _group("model"),
+        "top_users_by_cost": [{"user_id": r["_id"], "plan_code": r.get("plan_code"),
+                               "cost_usd": round(r["cost_usd"] or 0, 4), "requests": r["requests"]}
+                              for r in top_users],
+        "notes": ("cost_usd uses services/ai/pricing.py (verify AI_PROVIDER_PRICING_JSON). "
+                  "'unbilled' counts provider calls made without a credit reservation."),
         "generated_at": _now_iso(),
     }

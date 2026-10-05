@@ -497,9 +497,13 @@ function AppTopNavBody({ onOpenPalette }) {
   useClickOutside(avatarRef, avatarOpen ? () => setAvatarOpen(false) : null);
 
   useEffect(() => {
-    api.get("/credits/balance")
-      .then((r) => setCredits(r.data.balance))
+    // Free has no AI credits — the chip is only shown when credits are usable.
+    const load = () => api.get("/credits/balance")
+      .then((r) => setCredits(r.data.credits_usable === false ? null : r.data.balance))
       .catch(() => {});
+    load();
+    window.addEventListener("synaptiq:credits-changed", load);
+    return () => window.removeEventListener("synaptiq:credits-changed", load);
   }, []);
 
   useEffect(() => {
@@ -595,7 +599,7 @@ function AppTopNavBody({ onOpenPalette }) {
       {credits !== null && (
         <Link
           to="/ai-credits"
-          title="AI Credits remaining"
+          title="AI Credits remaining (this month + purchased)"
           className="flex items-center gap-1.5 text-[11.5px] font-mono text-slate-500 hover:text-[#0F2847] transition-colors px-1.5 py-1 hover:bg-slate-50 shrink-0"
           style={{ borderRadius: 4 }}
         >

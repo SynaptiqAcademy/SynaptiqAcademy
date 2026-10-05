@@ -85,7 +85,7 @@ export default function Privacy() {
 
         <p className="mt-4"><strong>Usage and behavioural data</strong> — collected automatically:</p>
         <ul className="mt-2 list-disc ml-6 space-y-1 text-sm">
-          <li>Pages visited, features accessed, Research Credit consumption, and feature interaction patterns — collected via our internal analytics system and PostHog (see Section 6).</li>
+          <li>Pages visited, features accessed, AI Credit consumption, and feature interaction patterns — collected via our internal analytics system and PostHog (see Section 6).</li>
           <li>Browser type, operating system, device type (collected by PostHog).</li>
           <li>Session recordings of your interactions with the Platform (collected by PostHog, subject to your consent).</li>
         </ul>

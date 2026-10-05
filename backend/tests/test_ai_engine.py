@@ -373,6 +373,10 @@ class TestCallLLMShim:
         from services.ai.engine.core import reset_engine
         reset_engine()
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        # No real provider configured -> mock provider. (With a stray
+        # OPENAI_API_KEY from .env the call fails for real, and call_llm now
+        # raises instead of returning the outage text as if it were content.)
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         from services.ai.engine.config import reload_config
         reload_config()
         reset_engine()

@@ -252,8 +252,8 @@ export default function AdminUsers() {
           >
             <option value="">All plans</option>
             <option value="free">Free</option>
-            <option value="researcher">Researcher</option>
-            <option value="pro_researcher">Pro Researcher</option>
+            <option value="researcher">Pro (researcher)</option>
+            <option value="pro_researcher">Pro Advanced (pro_researcher)</option>
             <option value="institution">Institution</option>
           </select>
           <select

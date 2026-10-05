@@ -43,7 +43,8 @@ async def session_event(payload: dict, request: Request, user: dict = Depends(ge
     db = DBProxy(db, SecurityContext.from_user(user))
 
     evt = payload.get("event")
-    if evt not in {"session_start", "session_end", "page_view", "feature_use"}:
+    from services.product_analytics import CLIENT_MONETIZATION_EVENTS
+    if evt not in {"session_start", "session_end", "page_view", "feature_use"} | CLIENT_MONETIZATION_EVENTS:
         return {"ok": False, "error": "unknown_event"}
     doc = {
         "user_id": user["id"],

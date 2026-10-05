@@ -519,6 +519,9 @@ async def seed_admin_and_demo(db):
     from plans_catalogue import CREDIT_PACKS
     for pk in CREDIT_PACKS:
         await db.credit_packs.update_one({"code": pk["code"]}, {"$set": pk}, upsert=True)
+    # Retired pack codes are catalogue rows only (purchase history lives in
+    # credit_purchases and is untouched).
+    await db.credit_packs.delete_many({"code": {"$nin": [pk["code"] for pk in CREDIT_PACKS]}})
 
     # Indexes
     await db.users.create_index("email", unique=True)

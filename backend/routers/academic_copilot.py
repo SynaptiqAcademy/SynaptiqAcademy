@@ -90,9 +90,7 @@ async def copilot_chat(
     user_id = str(user["id"])
     await require_feature(user, "ai_chat")
 
-    ok, balance = await consume_credits(user_id, CREDIT_CHAT, "copilot_chat", db)
-    if not ok:
-        raise HTTPException(402, detail={"error": "Insufficient credits", "required": CREDIT_CHAT, "balance": balance})
+    await consume_credits(user_id, "copilot_chat")
 
     try:
         engine = await get_copilot_engine()
@@ -104,7 +102,7 @@ async def copilot_chat(
         )
         return response.to_dict()
     except Exception as exc:
-        await refund_credits(user_id, CREDIT_CHAT, "copilot_chat_refund", db)
+        await refund_credits(user_id, "copilot_chat", reason="copilot_chat_failed")
         logger.error("copilot_chat error user=%s err=%s", user_id, exc)
         raise HTTPException(500, "Copilot encountered an error. Credits refunded.")
 
@@ -133,15 +131,13 @@ async def get_dashboard(
     """Return the personalised Academic Dashboard for the current user."""
     db = make_db_proxy(db, user)
     user_id = str(user["id"])
-    ok, balance = await consume_credits(user_id, CREDIT_DASHBOARD, "copilot_dashboard", db)
-    if not ok:
-        raise HTTPException(402, detail={"error": "Insufficient credits", "required": CREDIT_DASHBOARD, "balance": balance})
+    await consume_credits(user_id, "copilot_dashboard")
     try:
         engine = await get_copilot_engine()
         dash = await engine.get_dashboard(user_id, db)
         return dash.to_dict()
     except Exception as exc:
-        await refund_credits(user_id, CREDIT_DASHBOARD, "copilot_dashboard_refund", db)
+        await refund_credits(user_id, "copilot_dashboard", reason="copilot_dashboard_failed")
         logger.error("copilot_dashboard error: %s", exc)
         raise HTTPException(500, "Dashboard generation failed. Credits refunded.")
 
@@ -154,9 +150,7 @@ async def get_suggestions(
     """Return proactive suggestions based on user context."""
     db = make_db_proxy(db, user)
     user_id = str(user["id"])
-    ok, balance = await consume_credits(user_id, CREDIT_SUGGESTIONS, "copilot_suggestions", db)
-    if not ok:
-        raise HTTPException(402, detail={"error": "Insufficient credits", "required": CREDIT_SUGGESTIONS, "balance": balance})
+    await consume_credits(user_id, "copilot_suggestions")
     engine = await get_copilot_engine()
     suggestions = await engine.get_suggestions(user_id, db)
     return {"suggestions": suggestions, "count": len(suggestions)}
@@ -171,9 +165,7 @@ async def generate_roadmap(
     """Generate a personalised academic roadmap (research / publication / grant / career / conference)."""
     db = make_db_proxy(db, user)
     user_id = str(user["id"])
-    ok, balance = await consume_credits(user_id, CREDIT_ROADMAP, "copilot_roadmap", db)
-    if not ok:
-        raise HTTPException(402, detail={"error": "Insufficient credits", "required": CREDIT_ROADMAP, "balance": balance})
+    await consume_credits(user_id, "copilot_roadmap")
 
     try:
         roadmap_type_str = req.roadmap_type.lower()
@@ -198,7 +190,7 @@ async def generate_roadmap(
         )
         return roadmap.to_dict()
     except Exception as exc:
-        await refund_credits(user_id, CREDIT_ROADMAP, "copilot_roadmap_refund", db)
+        await refund_credits(user_id, "copilot_roadmap", reason="copilot_roadmap_failed")
         logger.error("roadmap generation error: %s", exc)
         raise HTTPException(500, "Roadmap generation failed. Credits refunded.")
 

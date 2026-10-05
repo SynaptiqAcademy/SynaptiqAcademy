@@ -105,17 +105,19 @@ def has_plan_at_least(user: dict, required: str, *, feature: str | None = None) 
         return True
     if has_feature_override(user, feature):
         return True
-    user_plan = user.get("plan_code") or "free"
+    from services.entitlements import effective_plan_code
+    user_plan = effective_plan_code(user)
     return PLAN_RANK.get(user_plan, 0) >= PLAN_RANK.get(required, 0)
 
 
 def has_active_subscription(user: dict) -> bool:
-    """Free plan is considered 'active' (always usable). Paid plans must be live."""
+    """Free plan is considered 'active' (always usable). Paid plans must be
+    live; past_due is a grace state while Stripe retries the payment."""
+    from services.entitlements import ENTITLED_STATUSES
     plan = user.get("plan_code") or "free"
     if plan == "free":
         return True
-    status_val = user.get("subscription_status") or "active"
-    return status_val in ("active", "trialing")
+    return (user.get("subscription_status") or None) in ENTITLED_STATUSES
 
 
 def can_access_feature(user: dict, feature: str) -> tuple[bool, str | None]:
@@ -221,11 +223,18 @@ async def assert_quota(user: dict, resource: str) -> None:
     """Raises 402 with upgrade hint when a resource quota would be exceeded."""
     if is_super_admin(user):
         return
-    plan = user.get("plan_code") or "free"
+    from services.entitlements import effective_plan_code, capability_denied
+    plan = effective_plan_code(user)
     quotas = PLAN_QUOTAS.get(plan, {})
     limit = quotas.get(resource, -1)
     if limit == -1:
         return
+    if limit == 0:
+        # Not part of this plan at all (Free has no projects/workspaces).
+        cap = {"projects": "can_create_project", "workspaces": "can_create_workspace",
+               "manuscripts": "can_create_project"}.get(resource)
+        if cap:
+            raise capability_denied(cap, user)
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
@@ -271,8 +280,11 @@ async def assert_storage_quota(user: dict, upload_size_bytes: int) -> None:
     """Raises 402 when a file upload would exceed the plan's storage limit."""
     if is_super_admin(user):
         return
-    plan = user.get("plan_code") or "free"
+    from services.entitlements import effective_plan_code
+    plan = effective_plan_code(user)
     limit = STORAGE_LIMITS_BYTES.get(plan, STORAGE_LIMITS_BYTES["free"])
+    if limit == -1:
+        return  # contract-defined / unlimited
     current = await get_user_storage_bytes(user["id"])
     if current + upload_size_bytes > limit:
         code = "storage_exceeded_after_downgrade" if current >= limit else "storage_limit_exceeded"
@@ -280,7 +292,8 @@ async def assert_storage_quota(user: dict, upload_size_bytes: int) -> None:
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail={
                 "code": code,
-                "message": "You've reached your repository storage limit.",
+                "message": ("File storage is part of Pro." if limit == 0
+                            else "You've reached your storage limit."),
                 "current_bytes": current,
                 "upload_bytes": upload_size_bytes,
                 "limit_bytes": limit,
@@ -315,6 +328,9 @@ async def check_discovery_quota(user: dict, kind: str) -> None:
     limit: int = (plan.get("limits") or {}).get(limit_key, -1)
     if limit == -1:
         return  # unlimited — paid plan
+    if limit == 0:
+        from services.entitlements import capability_denied
+        raise capability_denied(f"can_use_{kind}_discovery", user)
 
     month = datetime.now(timezone.utc).strftime("%Y-%m")
     db = get_db()
@@ -429,6 +445,8 @@ async def access_summary(user: dict) -> dict:
     state = await ensure_user_credits(user["id"])
     features = {f: has_plan_at_least(user, m, feature=f) for f, m in FEATURE_MIN_PLAN.items()}
     institution = await get_my_institution_context(user)
+    from services.entitlements import get_entitlements, CAPABILITY_MESSAGES
+    from plans_catalogue import capability_min_plan
     return {
         "is_super_admin": is_super_admin(user),
         "plan": plan_code,
@@ -438,4 +456,11 @@ async def access_summary(user: dict) -> dict:
         "quotas": PLAN_QUOTAS.get(plan_code, {}),
         "credits": state,
         "institution": institution,
+        "entitlements": get_entitlements(user),
+        # Paywall copy per capability, so the UI explains locked features with
+        # the same words the API uses when it refuses them.
+        "paywall": {cap: {"message": msg,
+                          "required_plan": capability_min_plan(cap),
+                          "required_plan_name": get_plan(capability_min_plan(cap)).get("name")}
+                    for cap, msg in CAPABILITY_MESSAGES.items()},
     }

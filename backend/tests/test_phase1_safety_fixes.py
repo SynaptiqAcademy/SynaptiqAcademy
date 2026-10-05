@@ -135,7 +135,7 @@ class TestDiscoveryPrivacy:
         async def _setup():
             raw = _RawDB()
             try:
-                await _insert_user(raw, "Network Viewer", email, password)
+                await _insert_user(raw, "Network Viewer", email, password, plan_code="researcher")
                 await _insert_user(raw, private_name, f"netpriv-{_oid()}@synaptiq-test.io",
                                     profile_visibility="private")
                 await _insert_user(raw, public_name, f"netpub-{_oid()}@synaptiq-test.io",
@@ -166,7 +166,7 @@ class TestDiscoveryPrivacy:
         async def _setup():
             raw = _RawDB()
             try:
-                viewer_id = await _insert_user(raw, "Network Viewer Two", viewer_email, password)
+                viewer_id = await _insert_user(raw, "Network Viewer Two", viewer_email, password, plan_code="researcher")
                 hidden_id = await _insert_user(raw, hidden_name, f"hidden-{_oid()}@synaptiq-test.io")
                 blocker_id = await _insert_user(raw, blocker_name, f"blocker-{_oid()}@synaptiq-test.io")
                 await raw.db.network_settings.insert_one({"user_id": hidden_id, "show_in_discovery": False})

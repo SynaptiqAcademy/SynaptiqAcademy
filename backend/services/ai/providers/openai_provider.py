@@ -12,25 +12,10 @@ from typing import AsyncIterator
 
 from services.ai.engine.config import ProviderConfig
 from services.ai.engine.types import AIRequest, AIResponse, ExecutionLayer, ProviderHealth
+from services.ai.pricing import estimate_cost_usd
 from services.ai.providers.base import AIProvider
 
 logger = logging.getLogger("synaptiq.ai.providers.openai")
-
-_PRICING: dict[str, tuple[float, float]] = {
-    "gpt-4o":       (5.0,  15.0),
-    "gpt-4o-mini":  (0.15,  0.60),
-    "gpt-4-turbo":  (10.0, 30.0),
-    "gpt-3.5-turbo": (0.5,  1.5),
-}
-_DEFAULT_PRICING = (5.0, 15.0)
-
-
-def _pricing(model: str) -> tuple[float, float]:
-    for prefix, rates in _PRICING.items():
-        if model.startswith(prefix):
-            return rates
-    return _DEFAULT_PRICING
-
 
 class OpenAIProvider(AIProvider):
     """Wraps AsyncOpenAI with lazy init, usage tracking, and health probing."""
@@ -92,7 +77,7 @@ class OpenAIProvider(AIProvider):
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             latency_ms=latency_ms,
-            cost_usd=self.estimate_cost(input_tokens, output_tokens),
+            cost_usd=estimate_cost_usd(model, input_tokens, output_tokens),
         )
 
     async def stream(self, request: AIRequest) -> AsyncIterator[str]:
@@ -145,8 +130,7 @@ class OpenAIProvider(AIProvider):
         return sum(len(str(m.get("content", ""))) for m in messages) // 4
 
     def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        in_rate, out_rate = _pricing(self._config.default_model or "")
-        return round((input_tokens * in_rate + output_tokens * out_rate) / 1_000_000, 6)
+        return estimate_cost_usd(self._config.default_model or "", input_tokens, output_tokens)
 
     async def validate(self) -> bool:
         h = await self.health()

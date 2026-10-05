@@ -408,8 +408,8 @@ export default function AdminCommandCenter() {
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { label: "Free",            value: u.free,           pct: u.total ? Math.round(u.free / u.total * 100) : 0,           color: TEXT_MUTED },
-                  { label: "Researcher",      value: u.researcher,     pct: u.total ? Math.round(u.researcher / u.total * 100) : 0,     color: INFO },
-                  { label: "Pro Researcher",  value: u.pro_researcher, pct: u.total ? Math.round(u.pro_researcher / u.total * 100) : 0, color: VIOLET },
+                  { label: "Pro",      value: u.researcher,     pct: u.total ? Math.round(u.researcher / u.total * 100) : 0,     color: INFO },
+                  { label: "Pro Advanced",  value: u.pro_researcher, pct: u.total ? Math.round(u.pro_researcher / u.total * 100) : 0, color: VIOLET },
                   { label: "Institution",     value: u.institution,    pct: u.total ? Math.round(u.institution / u.total * 100) : 0,    color: EMERALD },
                 ].map(({ label, value, pct, color }) => (
                   <div key={label}>

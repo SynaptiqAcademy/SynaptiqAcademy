@@ -115,7 +115,7 @@ export default function AssistantPanel({ open, onClose, entityKind, entityId, en
     const body = (text || "").trim();
     if (!body || busy) return;
     if (balance && balance.balance < ASSISTANT_COST) {
-      toast.error("Out of Research Credits. Upgrade plan or wait for monthly reset.");
+      toast.error("Not enough AI credits. Buy credits or wait for your monthly reset.");
       return;
     }
     setBusy(true);

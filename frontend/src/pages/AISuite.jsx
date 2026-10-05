@@ -261,7 +261,7 @@ function CreditWidget({ balance, loading }) {
     <Card padding="lg" style={{ background: "#0F2847", borderColor: "#0F2847", color: "#fff" }}>
       <div className="flex items-center justify-between gap-6">
         <div>
-          <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400">Research Credits</div>
+          <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400">AI Credits</div>
           <div className="font-serif text-4xl mt-1 flex items-center">
             {loading ? <Spinner size={24} color="#ffffff" /> : (balance ?? 0).toLocaleString()}
           </div>

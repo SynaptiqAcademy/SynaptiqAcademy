@@ -450,23 +450,26 @@ const SHOWCASE = [
 // usage data. Institution shows no public price (§37) — organization
 // billing doesn't exist yet; a number here would imply self-service
 // purchase that isn't real.
+// Summary only — the canonical plan definitions are served by
+// GET /api/billing/plans (backend/plans_catalogue.py) and rendered in full on
+// /pricing. Paid CTAs go to /pricing, never straight to checkout.
 const PRICING_TIERS = [
   {
     name: "Free",         price: "€0",     period: "/mo",
-    desc: "Explore Synaptiq and start building your research network.",
-    features: ["50 AI credits / month", "Academic Passport", "Research Need & expert discovery", "Collaboration requests", "Teaching tools", "1 active project"],
-    cta: "Start free", featured: false, href: "/register",
+    desc: "Build your academic presence.",
+    features: ["Academic profile & public research page", "ORCID integration & publication import", "Discoverable by Pro researchers", "Receive collaboration invitations"],
+    cta: "Create Free Profile", featured: false, href: "/register",
   },
   {
-    name: "Pro",   price: "€9.99",  period: "/mo",
+    name: "Pro",   price: "€9.99",  period: "/mo", badge: "Early Access · Recommended",
     desc: "For active research, collaboration and AI-assisted workflows.",
-    features: ["300 AI credits / month", "Unlimited projects", "AI Research Assistant", "AI Manuscript Copilot", "AI journal, conference & grant matching", "Publication tracking"],
-    cta: "See plans", featured: false, href: "/pricing",
+    features: ["200 AI credits / month", "Research network, messaging & collaboration", "Unlimited projects, up to 10 workspaces", "Journal, conference & grant discovery", "AI Research Assistant & Manuscript Copilot", "10 GB storage"],
+    cta: "See plans", featured: true, href: "/pricing",
   },
   {
     name: "Pro Advanced", price: "€29.99", period: "/mo",
     desc: "For advanced research intelligence, analysis and impact workflows.",
-    features: ["1,000 AI credits / month", "Unlimited workspaces", "AI literature review, statistical review & gap discovery", "Collaboration Intelligence", "Citation monitoring", "Impact dashboard"],
+    features: ["Everything in Pro", "750 AI credits / month", "Unlimited workspaces, 50 GB storage", "Collaboration Intelligence & Impact Dashboard", "Citation Monitoring & Advanced Analytics", "Advanced Manuscript Intelligence"],
     cta: "See plans", featured: false, href: "/pricing",
   },
   {
@@ -485,15 +488,16 @@ const FAQ = [
   { q: "What does \"verified\" mean on Synaptiq?", a: "It depends on the specific badge. ORCID connection confirms you control that ORCID account. Institution verification confirms an affiliation claim, typically via an institutional email or admin approval. Neither verifies a professional license or credential — see below." },
   { q: "Can I use Synaptiq if my university doesn't subscribe?", a: "Yes. An individual account (Free, Pro or Pro Advanced) works independently of any institutional subscription. Institutional features are separate and only apply to verified members of a Synaptiq institution." },
   { q: "What's the difference between Pro and Institutional?", a: "Pro and Pro Advanced are individual subscriptions for one person's research, collaboration, and teaching work. Institutional is an organization product — it provisions a shared institution workspace with member management and departments for a university or research organization. No individual subscription grants institutional access, and institutional membership isn't purchased on an individual account." },
-  { q: "Do I need a paid plan for Teaching?", a: "No. Teaching tools (courses, lesson planner, assessment builder, teaching workspace) are available on every plan, including Free, and don't require an Institutional plan. AI-assisted teaching actions, like generating a lesson or assessment, use credits." },
-  { q: "What uses AI credits?", a: "AI-assisted actions — literature review, manuscript review, statistical review, research design advice, gap detection, journal/conference/grant matching, and similar — have a fixed, documented credit cost. Discovering people, creating your profile, and sending collaboration requests never use credits." },
-  { q: "Does finding or collaborating with people use AI credits?", a: "No. Discovery, viewing profiles, and sending or responding to collaboration requests are always free — only the optional AI-assisted steps (like interpreting a research question with AI) can cost credits, and the cost is shown before you commit to it." },
+  { q: "What does the Free plan include?", a: "Free is your academic identity: a profile and public research page, ORCID integration and publication import, and being discoverable by Pro researchers — who can invite you to collaborate. Messaging, collaboration, projects, workspaces, discovery and AI tools are part of Pro." },
+  { q: "Do I need a paid plan for Teaching?", a: "Yes. The Teaching Hub — courses, lesson planner, assessment builder and teaching workspaces — is part of Pro. AI-assisted teaching actions, like generating a lesson or assessment, use AI credits; advanced AI teaching is part of Pro Advanced." },
+  { q: "What uses AI credits?", a: "AI-assisted actions — literature synthesis, manuscript review, statistical review, journal/conference/grant fit and similar — have a fixed, published credit cost, shown before you run them. Pro includes 200 AI credits a month and Pro Advanced 750; monthly credits reset at each renewal, and extra credit packs never expire. Failed requests are refunded automatically." },
+  { q: "Does finding or collaborating with people use AI credits?", a: "No. On Pro, discovery, messaging and sending or responding to collaboration requests never use credits — only optional AI-assisted steps (like interpreting a research question with AI) do, and the cost is shown before you commit to it." },
   { q: "Can Synaptiq guarantee publication or funding?", a: "No. Synaptiq can help you find relevant people, methods, and opportunities, but it doesn't and can't guarantee publication acceptance, peer-review outcomes, or funding success." },
   { q: "Does Synaptiq verify professional licenses or credentials?", a: "No. Synaptiq doesn't independently verify professional licensure (e.g., that someone is a licensed physician or lawyer). ORCID and institution verification confirm specific, narrower claims — see \"What does verified mean\" above." },
   { q: "How does collaboration work?", a: "Post an open collaboration with your requirements, or send a direct collaboration request to someone you've discovered. The other person reviews and accepts — nothing is sent on your behalf without your approval, and acceptance creates a shared workspace." },
   { q: "How is research data protected?", a: "All data is encrypted in transit (TLS 1.2+) and at rest. Authentication uses httpOnly cookies and bcrypt. We are GDPR-aligned and never sell user data." },
   { q: "Can I cancel a paid plan?", a: "Yes, any time from your account settings. You keep access until the end of your current billing period, then your plan reverts to Free." },
-  { q: "What happens to my work if I cancel or downgrade?", a: "Nothing is deleted. Your projects, workspaces, and files stay fully accessible — a lower plan only limits creating new resources beyond that plan's included amount, it never removes what you already have." },
+  { q: "What happens to my work if I cancel or downgrade?", a: "Nothing is deleted. Your projects, workspaces and files are kept. Anything above your new plan's limits becomes read-only until you upgrade again or make room. Purchased credits are kept too, ready for when you're back on a paid plan." },
 ];
 
 /* ─── Landing Page ───────────────────────────────────────────────────────── */
@@ -897,7 +901,7 @@ export default function Landing() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
-              {PRICING_TIERS.map(({ name, price, period, desc, features, cta, featured, href }) => (
+              {PRICING_TIERS.map(({ name, price, period, desc, features, cta, featured, href, badge }) => (
                 <div key={name} style={{
                   borderRadius: 16, padding: "28px 24px",
                   border: featured ? "2px solid #0F2847" : "1px solid #e8edf3",
@@ -907,6 +911,7 @@ export default function Landing() {
                   transform: featured ? "scale(1.02)" : "none",
                 }}>
                   <div style={{ fontSize: "0.78rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: featured ? "rgba(255,255,255,0.6)" : "#94a3b8", marginBottom: 8 }}>{name}</div>
+                  {badge && <div style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.04em", color: featured ? "#fff" : "#0F2847", marginBottom: 8 }}>{badge}</div>}
                   <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 8 }}>
                     <span style={{ fontSize: "2.4rem", fontWeight: 900, color: featured ? "#fff" : "#0a0f1a", lineHeight: 1, letterSpacing: "-0.04em" }}>{price}</span>
                     <span style={{ fontSize: "0.78rem", color: featured ? "rgba(255,255,255,0.4)" : "#94a3b8" }}>{period}</span>

@@ -14,6 +14,7 @@ import { Input } from "@/components/ds/Input";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { ResearchLayout } from "@/layouts";
 import { NAVY } from "@/lib/tokens";
+import { CreditCostNumber } from "@/components/billing/CreditCost";
 
 const SUBJECTS      = ["Mathematics","Economics","Management","Computer Science","Medicine","Engineering","Psychology","Education","Sciences","Humanities","Law","Business","History","Literature","Physics","Chemistry","Biology","Sociology","Political Science","Philosophy"];
 const LEVELS        = ["secondary","undergraduate","graduate","professional","adult","other"];
@@ -91,7 +92,7 @@ export default function AssessmentBuilder() {
         ...genForm,
         learning_objectives: objectives,
       });
-      toast.success("Assessment generated — 10 credits used");
+      toast.success("Assessment generated");
       navigate(`/teaching/assessments/${data.id}`);
     } catch (err) {
       const msg = err?.response?.data?.detail || "Generation failed";
@@ -153,7 +154,7 @@ export default function AssessmentBuilder() {
         <Card variant="flush" padding="lg" className="border-[#0F2847]/20 bg-slate-50">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles size={16} strokeWidth={1.5} className="text-[#0F2847]" />
-            <div className="overline text-[#0F2847]">AI Assessment Generator — 10 credits</div>
+            <div className="overline text-[#0F2847]">AI Assessment Generator — <CreditCostNumber operation="TEACHING_CONTENT_GENERATION" /> credits</div>
           </div>
           <form onSubmit={handleGenerate} className="space-y-4">
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

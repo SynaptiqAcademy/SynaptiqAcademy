@@ -20,6 +20,7 @@ import { Input } from "@/components/ds/Input";
 import { Textarea } from "@/components/ds/Textarea";
 import { InlineError } from "@/components/ds/Alert";
 import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
+import { CreditCostNumber } from "@/components/billing/CreditCost";
 
 
 
@@ -191,7 +192,7 @@ function GateView() {
         <Button as={Link} to="/pricing" variant="primary" size="lg" className="w-full">
           Upgrade to {PLAN_DISPLAY_NAMES.pro_researcher}
         </Button>
-        <p className="text-xs text-slate-500">10 credits per advisory · Refunded if advisory fails</p>
+        <p className="text-xs text-slate-500"><CreditCostNumber operation="MANUSCRIPT_SECTION_REVIEW" /> credits per advisory · Refunded if advisory fails</p>
       </div>
     </div>
   );
@@ -256,7 +257,7 @@ function InputView({ onResult }) {
       <div className="max-w-2xl mx-auto">
         {/* header */}
         <div className="mb-8">
-          <p className="text-xs text-slate-500">{PLAN_DISPLAY_NAMES.pro_researcher} · 10 credits per advisory</p>
+          <p className="text-xs text-slate-500">{PLAN_DISPLAY_NAMES.pro_researcher} · <CreditCostNumber operation="MANUSCRIPT_SECTION_REVIEW" /> credits per advisory</p>
         </div>
 
         {/* form */}
@@ -369,7 +370,7 @@ function InputView({ onResult }) {
             size="lg"
             className="w-full"
           >
-            {loading ? "Designing your study… (up to 3 min)" : "Design My Study — 10 Credits"}
+            {loading ? "Designing your study… (up to 3 min)" : <>Design My Study — <CreditCostNumber operation="MANUSCRIPT_SECTION_REVIEW" /> Credits</>}
           </Button>
         </form>
       </div>

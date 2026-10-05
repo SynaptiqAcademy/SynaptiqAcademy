@@ -73,7 +73,7 @@ const DOCS = [
     color: "#1d4ed8",
     bg: "#EFF6FF",
     title: "Terms of Service",
-    desc: "Platform rules, subscription terms, Research Credits, acceptable use, intellectual property, and account termination.",
+    desc: "Platform rules, subscription terms, AI Credits, acceptable use, intellectual property, and account termination.",
     updated: "29 Jun 2026",
     readingTime: "10 min",
     version: "v1.4",

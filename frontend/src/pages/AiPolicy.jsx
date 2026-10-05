@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { LegalLayout, Section } from "./legal/LegalLayout";
 import { ACCENT } from "@/lib/tokens";
+import { CreditCostNumber } from "@/components/billing/CreditCost";
 
 const SECTIONS = [
   { id: "overview",       label: "1. Overview" },
@@ -21,27 +22,27 @@ const AI_FEATURES = [
   {
     name: "AI Research Assistant",
     description: "Conversational assistant that answers research questions, suggests citations, and helps plan research activities. Context sent: your query, optional project context, conversation history.",
-    credits: "2 credits per query",
+    credits: { op: "AI_ASSISTANT_SIMPLE", unit: "per query" },
   },
   {
     name: "AI Manuscript Review",
     description: "Provides structured feedback on manuscript drafts: argument clarity, structure, methods critique, grammar, citation consistency, and journal fit suggestions. Context sent: manuscript text (or selected sections), target journal if specified.",
-    credits: "20 credits per review",
+    credits: { op: "FULL_MANUSCRIPT_REVIEW", unit: "per review" },
   },
   {
     name: "AI Literature Review",
     description: "Synthesises a body of literature, identifies themes, gaps, and contradictions, and generates structured review content. Context sent: selected papers, research topic, review type.",
-    credits: "20 credits per review",
+    credits: { op: "LITERATURE_SYNTHESIS", unit: "per review" },
   },
   {
     name: "AI Statistical Review",
     description: "Reviews statistical methodology, tests appropriateness of methods, identifies common errors, and provides suggestions for reporting. Context sent: methods section or full manuscript.",
-    credits: "25 credits per review",
+    credits: { op: "MANUSCRIPT_SECTION_REVIEW", unit: "per review" },
   },
   {
     name: "AI Research Gap Finder",
     description: "Analyses a research area and identifies under-explored gaps, open questions, and future directions. Context sent: research topic, provided or retrieved literature.",
-    credits: "Variable by scope",
+    credits: { op: "LITERATURE_SYNTHESIS", unit: "per analysis" },
   },
   {
     name: "AI Grant Assistant",
@@ -51,17 +52,17 @@ const AI_FEATURES = [
   {
     name: "AI Abstract Generator",
     description: "Generates a structured abstract from a manuscript or project description. Context sent: manuscript text or project description, target journal requirements.",
-    credits: "5 credits per abstract",
+    credits: { op: "ABSTRACT_ANALYSIS", unit: "per abstract" },
   },
   {
     name: "AI Writing Assistance (Rewriting)",
     description: "Improves prose clarity, reduces passive voice, adjusts academic register. Context sent: selected text passage.",
-    credits: "2 credits per request",
+    credits: { op: "QUICK_ACADEMIC_REWRITE", unit: "per request" },
   },
   {
     name: "AI Collaboration Intelligence",
     description: "Analyses project team composition and suggests complementary expertise. Context sent: project description, collaborator profiles (anonymised names).",
-    credits: "Variable",
+    credits: { op: "LITERATURE_SYNTHESIS", unit: "per run" },
   },
 ];
 
@@ -111,7 +112,7 @@ export default function AiPolicy() {
             <div key={f.name} style={{ padding: "14px 16px", background: "#F7F8FA", borderRadius: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4, flexWrap: "wrap", gap: 8 }}>
                 <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "#0f172a" }}>{f.name}</span>
-                <span style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "#64748b", background: "#e2e8f0", borderRadius: 4, padding: "2px 7px" }}>{f.credits}</span>
+                <span style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "#64748b", background: "#e2e8f0", borderRadius: 4, padding: "2px 7px" }}>{typeof f.credits === "string" ? f.credits : <><CreditCostNumber operation={f.credits.op} /> credits {f.credits.unit}</>}</span>
               </div>
               <p style={{ fontSize: "0.83rem", color: "#475569", lineHeight: 1.6, margin: 0 }}>{f.description}</p>
             </div>
@@ -202,7 +203,7 @@ export default function AiPolicy() {
       </Section>
 
       <Section id="credits" title="8. Credit Consumption">
-        <p>AI features consume Research Credits from your plan allowance or Credit Pack balance. Credits are consumed at the time a request is submitted to the AI provider, not at the time a response is received.</p>
+        <p>AI features consume AI Credits from your plan allowance or Credit Pack balance. Credits are reserved when a request is submitted and refunded automatically if the request fails because of a system error.</p>
         <p className="mt-3">If an AI request fails due to a system error on our side, credits are typically refunded automatically. If you believe credits were consumed incorrectly, contact <a href="mailto:contact@synaptiq.academy" className="editorial-link">contact@synaptiq.academy</a>.</p>
         <p className="mt-3">Credit costs vary by feature and are indicated in the platform UI before you confirm a feature use. The authoritative credit cost schedule is published on the <Link to="/pricing" className="editorial-link">Pricing page</Link>. Credit costs may change as AI model pricing changes; any such changes will be communicated in advance.</p>
       </Section>

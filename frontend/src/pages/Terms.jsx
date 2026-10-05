@@ -9,7 +9,7 @@ const SECTIONS = [
   { id: "plans",          label: "3. Plans & Credits" },
   { id: "subscriptions",  label: "4. Subscriptions & Billing" },
   { id: "refunds",        label: "5. Refunds" },
-  { id: "credits",        label: "6. Research Credits" },
+  { id: "credits",        label: "6. AI Credits" },
   { id: "acceptable-use", label: "7. Acceptable Use" },
   { id: "ip",             label: "8. Intellectual Property" },
   { id: "ai-content",     label: "9. AI-Generated Content" },
@@ -32,7 +32,7 @@ export default function Terms() {
     <LegalLayout
       eyebrow="Legal"
       title="Terms of Service"
-      subtitle="Platform rules, subscription terms, Research Credits, intellectual property, and your obligations as a user."
+      subtitle="Platform rules, subscription terms, AI Credits, intellectual property, and your obligations as a user."
       lastUpdated="29 June 2026"
       readingTime="10 min"
       version="v1.4"
@@ -51,24 +51,24 @@ export default function Terms() {
         <p className="mt-3"><strong>Account security.</strong> We implement account lockout after repeated failed login attempts (soft lock after 5 failures, hard lock after 10 failures for up to 24 hours). We use CSRF protection and signed, expiring tokens for all authentication flows.</p>
       </Section>
 
-      <Section id="plans" title="3. Plans & Research Credits">
-        <p>SYNAPTIQ is available on four subscription tiers:</p>
+      <Section id="plans" title="3. Plans & AI Credits">
+        <p>SYNAPTIQ offers three individual plans, plus institutional agreements:</p>
         <ul className="mt-3 space-y-1 text-sm">
-          <li><strong>Free</strong> — 50 Research Credits / month, 1 project, 1 workspace, 500 MB repository storage.</li>
-          <li><strong>{PLAN_DISPLAY_NAMES.researcher}</strong> — 300 Credits / month, unlimited projects, 10 workspaces, 100 GB storage.</li>
-          <li><strong>{PLAN_DISPLAY_NAMES.pro_researcher}</strong> — 1,000 Credits / month, unlimited projects, unlimited workspaces, 500 GB storage.</li>
-          <li><strong>Institution</strong> — 20,000 Credits / month, 25 user seats, unlimited projects and workspaces, 2 TB storage.</li>
+          <li><strong>Free</strong> — academic profile, public research page, ORCID integration and publication import. No AI Credits, projects, workspaces or general file storage.</li>
+          <li><strong>{PLAN_DISPLAY_NAMES.researcher}</strong> — 200 AI Credits / month, unlimited projects, up to 10 workspaces, 10 GB storage.</li>
+          <li><strong>{PLAN_DISPLAY_NAMES.pro_researcher}</strong> — 750 AI Credits / month, unlimited projects and workspaces, 50 GB storage.</li>
+          <li><strong>Institution</strong> — seats, credits and storage set per written agreement.</li>
         </ul>
-        <p className="mt-3"><strong>Credit Packs</strong> are available as one-time purchases (100 credits for €5, 250 for €10, 1,000 for €29, 5,000 for €99). Credit Pack credits never expire and are not affected by plan changes or cancellation.</p>
+        <p className="mt-3"><strong>Credit Packs</strong> are one-time purchases available on paid plans (100 credits for €4.99, 300 for €11.99, 750 for €24.99). Credit Pack credits never expire and are kept on plan changes and cancellation; they can be used while you are on a paid plan.</p>
         <p className="mt-3">Feature availability varies by plan. The authoritative feature matrix is published on the <Link to="/pricing" className="editorial-link">Pricing page</Link> and may be updated as new capabilities are introduced.</p>
       </Section>
 
       <Section id="subscriptions" title="4. Subscriptions & Billing">
         <p><strong>Billing currency.</strong> All subscription and credit-pack prices are quoted in Euros (EUR). Payment processing is handled by Stripe. We do not store card numbers or CVV codes.</p>
-        <p className="mt-3"><strong>Automatic renewal.</strong> Paid subscriptions renew automatically at the end of each billing period (monthly or annual) at the then-current price, unless cancelled before the renewal date.</p>
-        <p className="mt-3"><strong>Cancellation.</strong> You may cancel at any time from the Settings page. Your subscription remains active until the end of the current billing period. After that date, your account downgrades to the Free plan. Your data, projects, and Credit Pack balance are retained on cancellation.</p>
-        <p className="mt-3"><strong>Upgrades.</strong> When you upgrade mid-cycle, your monthly Research Credit balance is topped up to the new plan&rsquo;s allowance immediately. You are billed a prorated amount for the remainder of the current period (handled by Stripe).</p>
-        <p className="mt-3"><strong>Downgrades.</strong> When you downgrade, your monthly credit allowance adjusts to the new plan at the next billing cycle. Existing Credit Pack credits are unaffected.</p>
+        <p className="mt-3"><strong>Automatic renewal.</strong> Paid subscriptions renew automatically at the end of each monthly billing period at the then-current price, unless cancelled before the renewal date.</p>
+        <p className="mt-3"><strong>Cancellation.</strong> You may cancel at any time from the Settings page. Your subscription remains active until the end of the current billing period. After that date, your account moves to the Free plan. Your data, projects, workspaces and Credit Pack balance are retained; content above the Free plan&rsquo;s limits becomes read-only. Unused monthly AI Credits expire.</p>
+        <p className="mt-3"><strong>Upgrades.</strong> When you upgrade mid-cycle, your monthly AI Credits are topped up so that the credits granted for the current cycle equal the new plan&rsquo;s allowance. You are billed a prorated amount for the remainder of the current period (handled by Stripe).</p>
+        <p className="mt-3"><strong>Downgrades.</strong> When you downgrade, your remaining monthly AI Credits are capped at the new plan&rsquo;s allowance, and the new allowance applies from the next renewal. Workspaces above the new plan&rsquo;s limit become read-only; nothing is deleted. Existing Credit Pack credits are unaffected.</p>
         <p className="mt-3"><strong>Price changes.</strong> We will notify you of any price change by email at least 30 days before it takes effect. Continued use after the effective date constitutes acceptance. If you do not accept the new price, you may cancel before the effective date.</p>
         <p className="mt-3"><strong>Chargebacks.</strong> If you believe a charge is incorrect, contact <a href="mailto:contact@synaptiq.academy" className="editorial-link">contact@synaptiq.academy</a> before initiating a chargeback. Initiating a chargeback without first contacting support may result in account suspension pending investigation.</p>
       </Section>
@@ -80,12 +80,12 @@ export default function Terms() {
         <p className="mt-3"><strong>Credit Packs</strong> are non-refundable once credits have been consumed. Unconsumed Credit Pack credits on a cancelled account are forfeited; retained for accounts that downgrade to Free.</p>
       </Section>
 
-      <Section id="credits" title="6. Research Credits">
-        <p>Research Credits (&ldquo;Credits&rdquo;) are a consumable unit used to access AI-powered features on the Platform. Credits are not currency, have no cash value, and cannot be transferred between accounts or redeemed for cash.</p>
-        <p className="mt-3"><strong>Monthly Credits</strong> are granted at the start of each billing cycle and reset at the next renewal. Unused monthly Credits do not roll over.</p>
+      <Section id="credits" title="6. AI Credits">
+        <p>AI Credits (&ldquo;Credits&rdquo;) are a consumable unit used to access AI-powered features on the Platform. Credits are not currency, have no cash value, and cannot be transferred between accounts or redeemed for cash.</p>
+        <p className="mt-3"><strong>Monthly Credits</strong> are granted at the start of each billing cycle and reset at each successful renewal. Unused monthly Credits do not roll over.</p>
         <p className="mt-3"><strong>Credit Pack credits</strong> are one-time purchases. They do not expire and are consumed after your monthly Credits are exhausted in any given cycle.</p>
-        <p className="mt-3"><strong>Costs.</strong> Each AI action deducts a specific number of Credits. Representative costs: AI Research Assistant (2 credits/query), AI Manuscript Review (20 credits/review), AI Literature Review (20 credits/review), AI Statistical Review (25 credits/review). A full credit cost schedule is published on the <Link to="/pricing" className="editorial-link">Pricing page</Link>.</p>
-        <p className="mt-3"><strong>No guarantee.</strong> Credits are consumed when a request is submitted, not when a response is received. Failed requests due to system errors are typically refunded; we reserve the right to determine final credit dispositions.</p>
+        <p className="mt-3"><strong>Costs.</strong> Each AI action deducts a fixed number of Credits, shown before the action is run. The full credit cost schedule is published on the <Link to="/pricing" className="editorial-link">Pricing page</Link>.</p>
+        <p className="mt-3"><strong>Failed requests.</strong> Credits are reserved when a request is submitted and refunded automatically if the request fails because of a system error.</p>
       </Section>
 
       <Section id="acceptable-use" title="7. Acceptable Use & Prohibited Activities">
@@ -98,7 +98,7 @@ export default function Terms() {
           <li>Send unsolicited bulk communications or use the messaging system for spam.</li>
           <li>Scrape, harvest, or systematically extract data from the Platform without our written permission.</li>
           <li>Attempt to circumvent authentication, access controls, or rate limits.</li>
-          <li>Sell, resell, or commercially exploit access to the Platform or Research Credits without authorisation.</li>
+          <li>Sell, resell, or commercially exploit access to the Platform or AI Credits without authorisation.</li>
           <li>Create fake researcher profiles or manipulate discovery results.</li>
           <li>Engage in academic misconduct, research fraud, data fabrication, or plagiarism using Platform tools.</li>
           <li>Use AI features to fabricate citations, data, or results that are then submitted as genuine findings.</li>
@@ -136,7 +136,7 @@ export default function Terms() {
 
       <Section id="repository" title="11. Repository & File Storage">
         <p><strong>File types.</strong> The repository accepts: PDF, DOCX, DOC, XLSX, XLS, PPTX, PPT, CSV, ZIP, PNG, JPEG, WEBP, and GIF files. Individual file uploads are limited to 50 MB.</p>
-        <p className="mt-3"><strong>Storage limits.</strong> Available repository storage depends on your plan (Free: 500 MB; {PLAN_DISPLAY_NAMES.researcher}: 100 GB; {PLAN_DISPLAY_NAMES.pro_researcher}: 500 GB; Institution: 2 TB). Uploads beyond your plan&rsquo;s storage quota will be rejected.</p>
+        <p className="mt-3"><strong>Storage limits.</strong> Available file storage depends on your plan (Free: profile and ORCID data only; {PLAN_DISPLAY_NAMES.researcher}: 10 GB; {PLAN_DISPLAY_NAMES.pro_researcher}: 50 GB; Institution: per agreement). Uploads beyond your plan&rsquo;s storage quota will be rejected.</p>
         <p className="mt-3"><strong>Version history.</strong> Files are versioned within their parent entity. Deleting a file version removes it from the repository interface; it may be retained in backup systems for up to 14 days.</p>
         <p className="mt-3"><strong>Your responsibility.</strong> You must not upload files that infringe third-party intellectual property rights or that contain malicious content. We reserve the right to remove files that violate these Terms.</p>
         <p className="mt-3"><strong>Storage location.</strong> Files are stored in AWS S3-compatible object storage. Your data is encrypted in transit and at rest.</p>

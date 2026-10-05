@@ -826,6 +826,12 @@ async def _run_meeting_ai(kind: str, meeting: dict, db, user: dict, instructions
     if instructions:
         context += f"\n\nAdditional instructions from the requester: {instructions}"
 
+    # Credit-billed like every other AI action (previously uncharged). If the
+    # call fails, the request's reservation is released by the monetization
+    # middleware, so a failed generation is never charged.
+    from services.credits_service import consume_credits
+    await consume_credits(user["id"], "AI_ASSISTANT_SIMPLE", metadata={"feature": f"meetings.ai.{kind}"})
+
     text = await call_llm(
         system=_AI_SYSTEM_PROMPTS[kind],
         user_msg=context,

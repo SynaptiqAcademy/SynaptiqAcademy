@@ -1,6 +1,6 @@
 /* eslint-disable */
 /**
- * AICredits — Research Credit Economy Center.
+ * AICredits — AI Credit Economy Center.
  *
  * Separate from billing (subscriptions). Credits unlock AI — subscriptions
  * unlock collaboration. Both concepts displayed distinctly.
@@ -28,29 +28,8 @@ import { BarChart } from "@/components/ds/Chart";
 import { List, ListItem } from "@/components/ds/List";
 import { ResearchLayout } from "@/layouts";
 import { AI_NAV_ITEMS } from "@/lib/navItems";
-
-// ─── Credit packs (mirrors CREDIT_PACKS in plans_catalogue.py) ───────────────
-const CREDIT_PACKS = [
-  { code: "pack_100",  credits: 100,  price: "€5",  label: "100 Credits",   desc: "Try a few reviews" },
-  { code: "pack_250",  credits: 250,  price: "€10", label: "250 Credits",   desc: "Small project boost", popular: true },
-  { code: "pack_1000", credits: 1000, price: "€29", label: "1,000 Credits", desc: "Full manuscript cycle" },
-  { code: "pack_5000", credits: 5000, price: "€99", label: "5,000 Credits", desc: "Lab or team allocation" },
-];
-
-// ─── Frequently used tools with costs ────────────────────────────────────────
-const TOOL_COSTS = [
-  { label: "Literature Review",    cost: 20, icon: BookMarked, to: "/literature-review",    unit: "per review" },
-  { label: "Manuscript Review",    cost: 20, icon: Microscope, to: "/manuscript-review",    unit: "per review" },
-  { label: "Statistical Analysis", cost: 25, icon: BarChart2,  to: "/statistical-review",   unit: "per analysis" },
-  { label: "Research Gap Finder",  cost: 10, icon: Target,     to: "/research-gap-finder",  unit: "per analysis" },
-  { label: "Study Design Advisor", cost: 10, icon: FlaskConical, to: "/research-design-advisor", unit: "per session" },
-  { label: "Collaboration AI",     cost: 15, icon: Users,      to: "/collaboration-intelligence", unit: "per analysis" },
-  { label: "Abstract Generator",   cost:  5, icon: AlignLeft,  to: "/ai/abstract",          unit: "per abstract" },
-  { label: "Academic Rewriting",   cost:  2, icon: PenLine,    to: "/ai/rewrite",            unit: "per rewrite" },
-  { label: "AI Research Assistant",cost:  2, icon: Sparkles,   to: "/ai",                   unit: "per message" },
-  { label: "Research Copilot",     cost:  3, icon: Sparkles,   to: "/copilot",              unit: "per message" },
-  { label: "Agent Workflow",       cost:  8, icon: Bot,        to: "/agent-workforce",      unit: "per workflow" },
-];
+import BuyCreditsPanel from "@/components/billing/BuyCreditsPanel";
+import { loadCreditCatalogue } from "@/components/billing/creditCatalogue";
 
 function SparklineBars({ data }) {
   if (!data || data.length === 0) return (
@@ -79,8 +58,10 @@ export default function AICredits() {
   const [usage, setUsage]       = useState(null);
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading]   = useState(true);
+  const [catalogue, setCatalogue] = useState([]);
 
   useEffect(() => {
+    loadCreditCatalogue().then((c) => setCatalogue(c.display || []));
     Promise.all([
       api.get("/billing/subscription").catch(() => ({ data: null })),
       api.get("/ai/usage").catch(() => ({ data: null })),
@@ -102,21 +83,21 @@ export default function AICredits() {
   return (
     <ResearchLayout
       navItems={AI_NAV_ITEMS}
-      title="Research Credits"
-      subtitle="Credits unlock AI tools. Subscriptions unlock collaboration. Two separate economies."
+      title="AI Credits"
+      subtitle="Every AI action shows its credit cost before you run it. Failed requests are refunded automatically."
       stats={!loading ? [
-        { label: "Monthly Credits", value: (credits.monthly_balance ?? 0).toLocaleString() },
-        { label: "Pack Credits",    value: (credits.pack_balance ?? 0).toLocaleString() },
-        { label: "Total Available", value: (credits.balance ?? 0).toLocaleString() },
+        { label: "This month",      value: (credits.subscription_credits ?? credits.monthly_balance ?? 0).toLocaleString() },
+        { label: "Purchased",       value: (credits.purchased_credits ?? credits.pack_balance ?? 0).toLocaleString() },
+        { label: "Total available", value: (credits.credits_usable === false ? 0 : (credits.balance ?? 0)).toLocaleString() },
         { label: "Plan",            value: planLabel },
       ] : undefined}
       sidebar={!loading ? (
         <AICreditsSidebar byKind={byKind} lastPurchase={lastPurchase} planLabel={planLabel} monthlyAllowance={credits.monthly_allowance} />
       ) : undefined}
       actions={
-        <Button as={Link} to="/settings/billing" variant="hero" size="sm">
+        <Button as="a" href="#buy-credits" variant="hero" size="sm">
           <CreditCard size={12} strokeWidth={1.5} />
-          Buy more
+          Buy credits
         </Button>
       }
     >
@@ -153,76 +134,32 @@ export default function AICredits() {
               </Link>
             </Card>
 
-            {/* ── Credit packages ────────────────────────────────────── */}
-            <section>
-              <div className="overline mb-1">Purchase Credits</div>
+            {/* ── Credit packs ───────────────────────────────────────── */}
+            <section id="buy-credits">
+              <div className="overline mb-1">Buy credits</div>
               <p className="text-xs text-slate-500 mb-4">
-                Credits unlock AI tools and never expire. Subscription plans include monthly allocations.
+                Monthly credits reset at each renewal and don't roll over. Purchased credits never expire.
               </p>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {CREDIT_PACKS.map((pack) => (
-                  <Card
-                    key={pack.code}
-                    padding="lg"
-                    className="relative"
-                    style={pack.popular ? { borderColor: "#0F2847" } : undefined}
-                  >
-                    {pack.popular && (
-                      <div className="absolute -top-2.5 left-4">
-                        <Badge color="#0F2847">Most popular</Badge>
-                      </div>
-                    )}
-                    <div className="overline">{pack.label}</div>
-                    <div className="font-serif text-3xl text-slate-900 mt-2">{pack.price}</div>
-                    <div className="text-xs text-slate-500 mt-1 font-mono">{pack.desc}</div>
-                    <Button
-                      as={Link}
-                      to="/settings/billing"
-                      variant={pack.popular ? "primary" : "outline"}
-                      size="sm"
-                      className="mt-4 w-full"
-                    >
-                      Purchase <ExternalLink size={10} strokeWidth={1.5} />
-                    </Button>
-                  </Card>
-                ))}
-              </div>
-              <p className="text-[10px] text-slate-400 font-mono mt-3">
-                Upgrade your plan for higher monthly credit allowances →{" "}
-                <Link to="/pricing" className="underline hover:text-[#0F2847]">View plans</Link>
-              </p>
+              <BuyCreditsPanel />
             </section>
 
-            {/* ── Tool costs ──────────────────────────────────────────── */}
+            {/* ── Credit costs (server catalogue) ─────────────────────── */}
             <Card padding="none">
               <div className="px-5 py-4 border-b border-slate-200">
                 <div className="overline flex items-center gap-2">
                   <Info size={11} strokeWidth={1.5} className="text-[#0F2847]" />
-                  Credit cost reference
+                  Credit costs
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">Costs per AI tool use. Monthly plan credits refresh automatically.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Charged per completed request.</p>
               </div>
               <List border={false} divided>
-                {TOOL_COSTS.map((t) => {
-                  const Icon = t.icon;
-                  return (
-                    <ListItem
-                      key={t.to}
-                      to={t.to}
-                      leading={<Icon size={13} strokeWidth={1.5} className="text-[#0F2847] shrink-0" />}
-                      title={t.label}
-                      trailing={
-                        <span className="flex items-center gap-3">
-                          <span className="text-xs font-mono text-slate-500 shrink-0">
-                            {t.cost === 0 ? "Free" : `${t.cost} credits`}
-                          </span>
-                          <span className="text-[10px] font-mono text-slate-400 shrink-0 w-24 text-right">{t.unit}</span>
-                          <ChevronRight size={12} strokeWidth={1.5} className="text-slate-300 shrink-0" />
-                        </span>
-                      }
-                    />
-                  );
-                })}
+                {catalogue.map((t) => (
+                  <ListItem
+                    key={t.operation}
+                    title={t.label}
+                    trailing={<span className="text-xs font-mono text-slate-500 shrink-0">{t.cost} credit{t.cost === 1 ? "" : "s"}</span>}
+                  />
+                ))}
               </List>
             </Card>
 
@@ -262,7 +199,7 @@ function AICreditsSidebar({ byKind, lastPurchase, planLabel, monthlyAllowance })
         </div>
         <div className="font-serif text-2xl text-slate-900">{planLabel}</div>
         <p className="text-xs text-slate-500 mt-1">
-          {(monthlyAllowance ?? 0).toLocaleString()} credits/month allowance
+          {(monthlyAllowance ?? 0).toLocaleString()} AI credits / month
         </p>
         <Link to="/pricing" className="text-xs text-[#0F2847] border-b border-[#0F2847] inline-block mt-2 hover:opacity-70">
           Compare plans

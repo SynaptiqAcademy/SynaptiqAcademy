@@ -22,7 +22,9 @@ async def usage(limit: int = 50, user: dict = Depends(get_current_user)):
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
-    docs = await db.credit_transactions.find({"user_id": user["id"]}) \
+    # AI_CONSUMPTION rows are balance-neutral bookkeeping (the debit is the
+    # reservation row) — excluded so they don't read as refunds here.
+    docs = await db.credit_transactions.find({"user_id": user["id"], "kind": {"$ne": "ai_consumption"}}) \
         .sort("created_at", -1).limit(limit).to_list(limit)
     return [{
         "id": str(d["_id"]),
@@ -46,6 +48,8 @@ async def transactions(limit: int = 50, user: dict = Depends(get_current_user)):
     return [{
         "id": str(d["_id"]),
         "kind": d.get("kind"),
+        "ledger_type": d.get("ledger_type"),
+        "balance_effect": d.get("balance_effect"),
         "bucket": d.get("bucket"),
         "amount": d.get("amount", 0),
         "action": d.get("action", ""),

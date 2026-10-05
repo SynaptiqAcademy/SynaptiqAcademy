@@ -8,31 +8,34 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import threading
 import time
 from typing import AsyncIterator
 
 from services.ai.engine.config import ProviderConfig
 from services.ai.engine.types import AIRequest, AIResponse, ExecutionLayer, ProviderHealth
+from services.ai.pricing import estimate_cost_usd
 from services.ai.providers.base import AIProvider
 
 logger = logging.getLogger("synaptiq.ai.providers.anthropic")
 
-# Per-model pricing in USD per 1 M tokens (approximate, update as pricing changes)
-_PRICING: dict[str, tuple[float, float]] = {
-    "claude-sonnet-4-6":           (3.0,  15.0),
-    "claude-opus-4-8":             (15.0, 75.0),
-    "claude-haiku-4-5-20251001":   (0.25,  1.25),
-    "claude-haiku-4-5":            (0.25,  1.25),
-}
-_DEFAULT_PRICING = (3.0, 15.0)
+# Prompt caching: a system prompt at least this long is sent as a cacheable
+# block. Anthropic only caches prompts above a model-specific minimum
+# (1024 tokens for Sonnet/Opus, 2048 for Haiku); shorter ones are simply not
+# cached, so the threshold only avoids pointless cache_control on tiny prompts.
+# Savings are measurable via cache_read_tokens in ai_requests telemetry.
+_CACHE_MIN_CHARS = int(os.environ.get("AI_PROMPT_CACHE_MIN_CHARS", "4096"))
 
 
-def _pricing(model: str) -> tuple[float, float]:
-    for prefix, rates in _PRICING.items():
-        if model.startswith(prefix):
-            return rates
-    return _DEFAULT_PRICING
+def _prompt_caching_enabled() -> bool:
+    return os.environ.get("AI_PROMPT_CACHING", "1").lower() not in ("0", "false", "no")
+
+
+def _system_param(system: str):
+    if system and _prompt_caching_enabled() and len(system) >= _CACHE_MIN_CHARS:
+        return [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
+    return system
 
 
 class AnthropicProvider(AIProvider):
@@ -71,19 +74,22 @@ class AnthropicProvider(AIProvider):
         resp = await client.messages.create(
             model=model,
             max_tokens=request.max_tokens,
-            system=request.system,
+            system=_system_param(request.system),
             messages=request.messages,
             timeout=self._config.timeout_seconds,
         )
 
         latency_ms = int((time.monotonic() - start) * 1000)
         text = resp.content[0].text
-        input_tokens = getattr(resp.usage, "input_tokens", 0)
-        output_tokens = getattr(resp.usage, "output_tokens", 0)
+        input_tokens = getattr(resp.usage, "input_tokens", 0) or 0
+        output_tokens = getattr(resp.usage, "output_tokens", 0) or 0
+        cache_read = getattr(resp.usage, "cache_read_input_tokens", 0) or 0
+        cache_write = getattr(resp.usage, "cache_creation_input_tokens", 0) or 0
 
         logger.info(
-            "anthropic.generate model=%s input_tokens=%d output_tokens=%d latency_ms=%d",
-            model, input_tokens, output_tokens, latency_ms,
+            "anthropic.generate model=%s input_tokens=%d output_tokens=%d "
+            "cache_read=%d cache_write=%d latency_ms=%d",
+            model, input_tokens, output_tokens, cache_read, cache_write, latency_ms,
         )
 
         return AIResponse(
@@ -94,7 +100,9 @@ class AnthropicProvider(AIProvider):
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             latency_ms=latency_ms,
-            cost_usd=self.estimate_cost(input_tokens, output_tokens),
+            cost_usd=estimate_cost_usd(model, input_tokens, output_tokens, cache_read, cache_write),
+            cache_read_tokens=cache_read,
+            cache_write_tokens=cache_write,
         )
 
     async def stream(self, request: AIRequest) -> AsyncIterator[str]:
@@ -103,7 +111,7 @@ class AnthropicProvider(AIProvider):
         async with client.messages.stream(
             model=model,
             max_tokens=request.max_tokens,
-            system=request.system,
+            system=_system_param(request.system),
             messages=request.messages,
             timeout=self._config.timeout_seconds,
         ) as s:
@@ -155,8 +163,7 @@ class AnthropicProvider(AIProvider):
         return sum(len(str(m.get("content", ""))) for m in messages) // 4
 
     def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        in_rate, out_rate = _pricing(self._config.default_model or "")
-        return round((input_tokens * in_rate + output_tokens * out_rate) / 1_000_000, 6)
+        return estimate_cost_usd(self._config.default_model or "", input_tokens, output_tokens)
 
     async def validate(self) -> bool:
         h = await self.health()

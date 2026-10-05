@@ -309,6 +309,11 @@ else:
     _origins = [o.strip() for o in _cors_raw.split(",") if o.strip()]
     logger.info("CORS allowlist: %s", _origins)
 
+# Plan-access policy + per-request AI credit reservation lifecycle
+# (services/monetization_middleware.py). Inside CORS so its 402s carry CORS headers.
+from services.monetization_middleware import MonetizationMiddleware
+app.add_middleware(MonetizationMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -1323,7 +1328,9 @@ async def startup():
             await db.credit_transactions.create_index([("user_id", 1), ("created_at", -1)])
             await db.credit_transactions.create_index([("kind", 1), ("bucket", 1)])
             await db.credit_purchases.create_index([("user_id", 1), ("created_at", -1)])
-            await db.credit_purchases.create_index([("stripe_checkout_session_id", 1)], sparse=True)
+            # Reservations / idempotent pack fulfilment (unique indexes).
+            from services.credits_service import ensure_credit_indexes
+            await ensure_credit_indexes(db)
             await db.billing_history.create_index([("user_id", 1), ("created_at", -1)])
             await db.subscription_history.create_index([("user_id", 1), ("created_at", -1)])
             await db.subscriptions.create_index([("stripe_subscription_id", 1)], sparse=True)

@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ds/Textarea";
 import { InlineError, Callout } from "@/components/ds/Alert";
 import { Modal } from "@/components/ds/Modal";
 import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
+import { CreditCostNumber } from "@/components/billing/CreditCost";
 
 
 
@@ -205,7 +206,7 @@ function GateView() {
         <Button as={Link} to="/pricing" variant="primary" size="lg" className="w-full">
           Upgrade to {PLAN_DISPLAY_NAMES.pro_researcher}
         </Button>
-        <p className="text-xs text-slate-500">10 credits per analysis · Refunded if analysis fails</p>
+        <p className="text-xs text-slate-500"><CreditCostNumber operation="LITERATURE_SYNTHESIS" /> credits per analysis · Refunded if analysis fails</p>
       </div>
     </div>
   );
@@ -311,7 +312,7 @@ function InputView({ onResult }) {
       <div className="max-w-2xl mx-auto">
         {/* header */}
         <div className="mb-8">
-          <p className="text-xs text-slate-500 mb-3">{PLAN_DISPLAY_NAMES.pro_researcher} · 10 credits per analysis</p>
+          <p className="text-xs text-slate-500 mb-3">{PLAN_DISPLAY_NAMES.pro_researcher} · <CreditCostNumber operation="LITERATURE_SYNTHESIS" /> credits per analysis</p>
 
           {/* disclaimer */}
           <Callout variant="warning">
@@ -421,7 +422,7 @@ function InputView({ onResult }) {
             size="lg"
             className="w-full"
           >
-            {loading ? "Analysing research landscape… (up to 3 min)" : "Find Research Gaps — 10 Credits"}
+            {loading ? "Analysing research landscape… (up to 3 min)" : <>Find Research Gaps — <CreditCostNumber operation="LITERATURE_SYNTHESIS" /> Credits</>}
           </Button>
         </form>
       </div>

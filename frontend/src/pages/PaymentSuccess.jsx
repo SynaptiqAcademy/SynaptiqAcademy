@@ -18,11 +18,14 @@ const NAVY = "#0F2847";
  */
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
-  const type = searchParams.get("type") || "plan";
+  // ?kind=credits (credit packs) or ?type=plan|pack — display hint only.
+  const type = searchParams.get("kind") === "credits" ? "pack" : (searchParams.get("type") || "plan");
+  const packCode = searchParams.get("pack");
   const { user, refreshMe } = useAuth();
   const [sub, setSub] = useState(null);
   const [credits, setCredits] = useState(null);
   const [polling, setPolling] = useState(true);
+  const [packConfirmed, setPackConfirmed] = useState(false);
   const attemptsRef = useRef(0);
 
   useEffect(() => {
@@ -34,16 +37,23 @@ export default function PaymentSuccess() {
     let mounted = true;
     const poll = async () => {
       try {
-        const [subRes, creditsRes] = await Promise.all([
+        const [subRes, creditsRes, purchasesRes] = await Promise.all([
           api.get("/billing/subscription"),
           api.get("/credits/balance"),
+          type === "pack" ? api.get("/credits/purchases").catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
         ]);
         if (!mounted) return;
         setSub(subRes.data);
         setCredits(creditsRes.data);
         const planIsPaid = subRes.data?.plan?.code && subRes.data.plan.code !== "free";
-        const packJustCredited = type === "pack"; // pack credit changes balance, not plan
-        if (type === "plan" && !planIsPaid && attemptsRef.current < 6) {
+        // A pack is confirmed only when the webhook-recorded purchase exists
+        // (recent, and matching the pack when known) — never from the redirect.
+        const cutoff = Date.now() - 30 * 60 * 1000;
+        const recent = (purchasesRes.data || []).find((p) =>
+          (!packCode || p.pack_code === packCode) && Date.parse(p.created_at || 0) >= cutoff);
+        if (recent) setPackConfirmed(true);
+        const waiting = (type === "plan" && !planIsPaid) || (type === "pack" && !recent);
+        if (waiting && attemptsRef.current < 8) {
           attemptsRef.current += 1;
           setTimeout(poll, 2000);
           return;
@@ -70,7 +80,7 @@ export default function PaymentSuccess() {
 
   return (
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "64px 24px", textAlign: "center" }}>
-        {polling && type === "plan" ? (
+        {polling ? (
           <>
             <Loader2 size={32} className="animate-spin" style={{ color: NAVY, margin: "0 auto 20px" }} />
             <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0a0f1a", marginBottom: 8 }}>
@@ -80,7 +90,7 @@ export default function PaymentSuccess() {
               This usually takes a few seconds.
             </p>
           </>
-        ) : type === "pack" ? (
+        ) : type === "pack" && packConfirmed ? (
           <>
             <CheckCircle2 size={36} style={{ color: "#059669", margin: "0 auto 20px" }} />
             <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#0a0f1a", marginBottom: 8 }}>
@@ -100,7 +110,7 @@ export default function PaymentSuccess() {
               Your {sub.plan.name} plan is active.
             </h1>
             <p style={{ fontSize: "0.92rem", color: "#64748b", marginBottom: 28 }}>
-              {sub.plan.credits_per_month?.toLocaleString()} credits/month, effective now.
+              {sub.plan.credits_per_month?.toLocaleString()} AI credits a month, effective now.
             </p>
             <Link
               to={nextAction.to}
@@ -115,8 +125,8 @@ export default function PaymentSuccess() {
               Still confirming your payment.
             </h1>
             <p style={{ fontSize: "0.9rem", color: "#64748b", marginBottom: 24 }}>
-              This can take a minute to finish processing. Your plan will update automatically —
-              no action needed. If it doesn't update shortly, contact us and we'll sort it out.
+              This can take a minute to finish processing. Your {type === "pack" ? "credits" : "plan"} will update
+              automatically — no action needed. If nothing changes shortly, contact us and we'll sort it out.
             </p>
             <Link to="/settings/billing" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.88rem", fontWeight: 700, color: NAVY, textDecoration: "none" }}>
               Check billing status <ArrowRight size={14} />

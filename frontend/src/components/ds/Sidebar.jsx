@@ -23,6 +23,7 @@ import { getOrderedSections, findSectionForPath } from "@/config/navigation";
 import { ADMIN_SECTIONS } from "@/config/adminNavigation";
 import { SIDEBAR_W, SIDEBAR_W_COLLAPSED, HEADER_H } from "@/lib/tokens";
 import { planDisplayName } from "@/lib/planNames";
+import { useEntitlements, openPaywall } from "@/lib/entitlements";
 
 /**
  * Sidebar — the one canonical navigation sidebar in the product.
@@ -670,16 +671,30 @@ const SubGroup = memo(function SubGroup({ subGroup, pathname }) {
   );
 });
 
+// Locked nav items stay visible (so the feature is discoverable) but open
+// the paywall explanation instead of navigating. Server-side enforcement is
+// independent of this — it only decides what to render.
+function useLockedNav(item) {
+  const { lockedFor, paywall } = useEntitlements();
+  const cap = lockedFor(item.to);
+  const onClick = cap ? (e) => { e.preventDefault(); openPaywall(paywall(cap)); } : undefined;
+  return { locked: !!cap, onClick };
+}
+
 const SidebarNavItem = memo(function SidebarNavItem({
   item, badge, isFavorited, onToggleFavorite,
 }) {
   const Icon = item.icon;
+  const { locked, onClick } = useLockedNav(item);
   return (
     <div className="group relative">
       <NavLink
         to={item.to}
         end={item.exact ?? false}
         data-testid={item.testid}
+        onClick={onClick}
+        aria-disabled={locked || undefined}
+        title={locked ? "Upgrade to unlock" : undefined}
         className={({ isActive }) =>
           `flex items-center gap-2.5 border-l-2 text-[12.5px] font-medium transition-colors duration-100 ${
             isActive
@@ -691,6 +706,7 @@ const SidebarNavItem = memo(function SidebarNavItem({
       >
         <Icon size={14} strokeWidth={1.5} className="shrink-0" />
         <span className="flex-1 truncate">{item.label}</span>
+        {locked && <Lock size={11} strokeWidth={1.75} className="shrink-0 text-slate-400" aria-label="Locked" />}
         {badge > 0 && (
           <span
             data-testid="nav-unread-badge"
@@ -723,11 +739,15 @@ const SidebarNavItem = memo(function SidebarNavItem({
 
 const SubGroupItem = memo(function SubGroupItem({ item }) {
   const Icon = item.icon;
+  const { locked, onClick } = useLockedNav(item);
   return (
     <NavLink
       to={item.to}
       end={item.exact ?? false}
       data-testid={item.testid}
+      onClick={onClick}
+      aria-disabled={locked || undefined}
+      title={locked ? "Upgrade to unlock" : undefined}
       className={({ isActive }) =>
         `flex items-center gap-2 px-2 py-[5px] rounded-sm text-[12px] transition-colors duration-100 ${
           isActive
@@ -737,7 +757,8 @@ const SubGroupItem = memo(function SubGroupItem({ item }) {
       }
     >
       <Icon size={11} strokeWidth={1.5} className="shrink-0" />
-      <span className="truncate">{item.label}</span>
+      <span className="truncate flex-1">{item.label}</span>
+      {locked && <Lock size={10} strokeWidth={1.75} className="shrink-0 text-slate-400" aria-label="Locked" />}
     </NavLink>
   );
 });
@@ -747,24 +768,30 @@ function CreditsWidget({ collapsed }) {
 
   useEffect(() => {
     let mounted = true;
-    api.get("/credits/balance")
+    const load = () => api.get("/credits/balance")
       .then((r) => { if (mounted) setState(r.data); })
       .catch(() => {});
-    return () => { mounted = false; };
+    load();
+    // Refresh after AI actions / purchases (components dispatch this event).
+    window.addEventListener("synaptiq:credits-changed", load);
+    return () => { mounted = false; window.removeEventListener("synaptiq:credits-changed", load); };
   }, []);
 
   if (!state) return null;
 
-  const pct = state.monthly_allowance > 0
-    ? Math.min(100, Math.round((state.balance / state.monthly_allowance) * 100))
-    : 0;
+  const sub = state.subscription_credits ?? state.monthly_balance ?? 0;
+  const purchased = state.purchased_credits ?? state.pack_balance ?? 0;
+  const allowance = state.monthly_allowance || 0;
+  const usable = state.credits_usable !== false;
+  const pct = allowance > 0 ? Math.min(100, Math.round((sub / allowance) * 100)) : 0;
+  const total = sub + purchased;
 
   if (collapsed) {
     return (
       <Link
-        to="/settings"
+        to={usable ? "/ai-credits" : "/pricing"}
         data-testid={TID.creditsWidget}
-        title={`${state.balance.toLocaleString()} credits`}
+        title={usable ? `${total.toLocaleString()} AI credits` : "AI credits are part of Pro"}
         className="flex items-center justify-center py-2 hover:bg-slate-50 transition-colors duration-100"
       >
         <Sparkles size={13} strokeWidth={1.5} className="text-[#0F2847]" />
@@ -774,7 +801,7 @@ function CreditsWidget({ collapsed }) {
 
   return (
     <Link
-      to="/settings"
+      to={usable ? "/ai-credits" : "/pricing"}
       data-testid={TID.creditsWidget}
       className="block px-3 py-2 mx-2.5 mb-1 border border-[rgba(15,23,42,0.07)] rounded-md hover:border-[#0F2847]/30 transition-colors duration-150"
     >
@@ -782,25 +809,31 @@ function CreditsWidget({ collapsed }) {
         <div className="flex items-center gap-1.5">
           <Sparkles size={10} strokeWidth={1.5} className="text-[#0F2847]" />
           <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400">
-            Credits
+            AI Credits
           </span>
         </div>
         <span className="text-[9px] font-semibold text-slate-500">{state.plan_name || planDisplayName(state.plan_code)}</span>
       </div>
-      <div className="flex items-baseline gap-1 mb-1.5">
-        <span className="text-base font-bold text-slate-900 tracking-tight">
-          {state.balance.toLocaleString()}
-        </span>
-        <span className="text-[10px] text-slate-400">
-          / {state.monthly_allowance.toLocaleString()}
-        </span>
-      </div>
-      <div className="h-px bg-slate-100 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-[#0F2847] rounded-full transition-[width] duration-500"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
+      {usable ? (
+        <>
+          <div className="flex items-baseline gap-1 mb-1.5" data-testid="credits-widget-balance">
+            <span className="text-base font-bold text-slate-900 tracking-tight">{sub.toLocaleString()}</span>
+            <span className="text-[10px] text-slate-400">/ {allowance.toLocaleString()} this month</span>
+          </div>
+          <div className="h-px bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-full bg-[#0F2847] rounded-full transition-[width] duration-500" style={{ width: `${pct}%` }} />
+          </div>
+          {purchased > 0 && (
+            <div className="text-[10px] text-slate-500 mt-1.5">+ {purchased.toLocaleString()} purchased</div>
+          )}
+        </>
+      ) : (
+        <div className="text-[11px] text-slate-600 leading-snug" data-testid="credits-widget-upgrade">
+          AI tools and credits are part of Pro.
+          {purchased > 0 && <span className="block text-slate-400 mt-0.5">{purchased.toLocaleString()} purchased credits kept for when you upgrade.</span>}
+          <span className="block text-[#0F2847] font-semibold mt-1">Upgrade →</span>
+        </div>
+      )}
     </Link>
   );
 }

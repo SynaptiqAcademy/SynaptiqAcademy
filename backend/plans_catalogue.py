@@ -5,54 +5,64 @@ Single source of truth for monetisation. Loaded by:
 - routers/credits.py (cost transparency)
 - services/credits_service.py (consume/refund)
 - seed.py (DB upsert)
+
+Internal plan codes are stable identifiers that existing users, subscriptions
+and audit history already carry, so they are NOT renamed. Customer tiers:
+    free           -> FREE
+    researcher     -> PRO           ("Pro")
+    pro_researcher -> PRO_ADVANCED  ("Pro Advanced")
+institution / enterprise are legacy, non-self-serve codes and receive
+PRO_ADVANCED capabilities (see TIER_BY_PLAN).
 """
+import json
+import logging
+import os
+
+_log = logging.getLogger("synaptiq.plans_catalogue")
 
 # =====================================================================
 # Subscription plans
 # =====================================================================
 PLANS = [
     {
+        # FREE is identity only (owner decision, monetization spec §FREE):
+        # profile, public research page, ORCID + publication import, and being
+        # discoverable to paid researchers. No AI, no credits, no general
+        # storage, no projects/workspaces, no messaging/collaboration, no
+        # discovery. Enforced server-side by services/entitlements.py.
         "code": "free",
         "name": "Free",
-        "tagline": "Explore Synaptiq and start building your research network",
+        "tagline": "Build your academic presence",
         "price_eur_monthly": 0,
         "price_eur_annual": 0,
         "future_price_eur_monthly": None,
         "badge": None,
-        "credits_per_month": 50,
+        "credits_per_month": 0,
         "limits": {
-            "active_projects": 1,
-            "workspaces": 1,
-            "repository_gb": 0.5,           # 500 MB
+            "active_projects": 0,
+            "workspaces": 0,
+            "repository_gb": 0,
             "team_seats": 1,
-            # Unlimited on every plan, including Free — manual search/browse
-            # of journals, conferences and grants is core platform
-            # functionality, not a gated recommendation feature. See
-            # routers/grants.py's list_grants for the reasoning.
-            "journal_recs_per_month": -1,
-            "conference_recs_per_month": -1,
-            "grant_recs_per_month": -1,
+            "journal_recs_per_month": 0,
+            "conference_recs_per_month": 0,
+            "grant_recs_per_month": 0,
         },
         "features": [
-            "50 Research Credits / month",
-            "Academic Profile",
-            "ORCID Integration",
-            "Research Network Access",
-            "1 Active Project",
-            "1 Workspace",
-            "500 MB Repository Storage",
-            "Full Journal, Conference & Grant Search",
-            "Basic Profile Visibility",
+            "Academic profile",
+            "Public research page",
+            "ORCID integration",
+            "ORCID publication import",
+            "Discoverable by Pro researchers",
+            "Receive collaboration invitations",
         ],
         "excluded": [
-            "AI Research Assistant",
-            "AI Manuscript Copilot",
-            "Publication Tracking",
-            "Advanced Analytics",
-            "Advanced Collaboration Features",
-            "Priority Support",
+            "AI tools and AI credits",
+            "Messaging and collaboration requests",
+            "Projects and workspaces",
+            "Journal, conference and grant discovery",
+            "Analytics",
         ],
-        "cta": "Get Started Free",
+        "cta": "Create Free Profile",
         "stripe_price_id_monthly": "",
         "stripe_price_id_annual": "",
     },
@@ -71,32 +81,38 @@ PLANS = [
         "price_eur_annual": 7.99,
         "future_price_eur_monthly": 14.99,
         "badge": "Early Access",
-        "credits_per_month": 300,
+        "recommended": True,
+        "credits_per_month": 200,
         "limits": {
             "active_projects": -1,
             "workspaces": 10,
-            "repository_gb": 100,
+            "repository_gb": 10,
             "team_seats": 1,
             "journal_recs_per_month": -1,
             "conference_recs_per_month": -1,
             "grant_recs_per_month": -1,
         },
         "features": [
-            "300 Research Credits / month",
-            "Unlimited Projects",
-            "Up to 10 Workspaces",
-            "Repository 100 GB",
-            "AI Journal, Conference & Grant Matching",
-            "Publication Tracking",
-            "Advanced Analytics",
+            "200 AI Credits / month",
+            "Research network, researcher discovery and matching",
+            "Messaging and collaboration requests",
+            "Collaboration workflows",
+            "Unlimited projects",
+            "Up to 10 workspaces",
+            "10 GB storage",
+            "Journal, conference and grant discovery",
             "AI Research Assistant",
-            "AI Manuscript Copilot",
-            "Priority Support",
+            "Manuscript Copilot",
+            "Teaching Hub",
+            "Publication tracking",
+            "Standard analytics",
+            "Priority support",
         ],
         "excluded": [],
         "cta": "Choose Pro",
-        "stripe_price_id_monthly": "",
-        "stripe_price_id_annual": "",
+        # Stripe price ids come from the environment only — never hardcoded.
+        "stripe_price_id_monthly": os.environ.get("STRIPE_PRICE_PRO_MONTHLY", ""),
+        "stripe_price_id_annual": "",   # annual billing is not offered
     },
     {
         # Backend code stays "pro_researcher" — see note on "researcher" above.
@@ -106,35 +122,36 @@ PLANS = [
         "price_eur_monthly": 29.99,
         "price_eur_annual": 23.99,
         "future_price_eur_monthly": None,
-        "badge": "Best Value",
-        "credits_per_month": 1000,
+        "badge": None,
+        "credits_per_month": 750,
         "limits": {
             "active_projects": -1,
             "workspaces": -1,
-            "repository_gb": 500,
+            "repository_gb": 50,
             "team_seats": 1,
             "journal_recs_per_month": -1,
             "conference_recs_per_month": -1,
             "grant_recs_per_month": -1,
         },
         "features": [
-            "1,000 Research Credits / month",
-            "Unlimited Projects",
-            "Unlimited Workspaces",
-            "Repository 500 GB",
+            "Everything in Pro",
+            "750 AI Credits / month",
+            "Unlimited workspaces",
+            "50 GB storage",
             "Advanced AI Research Assistant",
-            "Advanced Manuscript Copilot",
-            "AI Literature Review, Statistical Review & Research Gap Discovery",
+            "Extended context",
+            "Priority AI processing",
             "Collaboration Intelligence",
-            "Research Analytics Suite",
+            "Impact Dashboard",
             "Citation Monitoring",
-            "Research Impact Dashboard",
-            "Priority Support",
+            "Advanced Analytics",
+            "Advanced Manuscript Intelligence",
+            "Advanced AI Teaching",
         ],
         "excluded": [],
         "cta": "Choose Pro Advanced",
-        "stripe_price_id_monthly": "",
-        "stripe_price_id_annual": "",
+        "stripe_price_id_monthly": os.environ.get("STRIPE_PRICE_PRO_ADVANCED_MONTHLY", ""),
+        "stripe_price_id_annual": "",   # annual billing is not offered
     },
     {
         # No self-service checkout (§7) — institution access is granted only
@@ -225,169 +242,223 @@ PLANS = [
 
 
 # =====================================================================
-# Credit cost per AI action (per updated academic-usage spec)
+# AI operation catalogue — the customer-facing credit price list
 # =====================================================================
-CREDIT_COSTS = {
-    # Heavy-weight reviews
-    "ai_manuscript_review":      20,
-    "ai_literature_review":      20,
-    "ai_statistical_review":     25,
-    # Mid-weight builders/advisors
-    "ai_methodology_builder":    10,
-    "ai_research_design_advisor":10,
-    "ai_research_gap_finder":    10,
-    "ai_collaboration_intelligence": 15,
-    # Recommendations
-    "ai_journal_matching":        5,
-    "ai_conference_matching":     5,
-    "ai_grant_matching":          5,
-    "ai_abstract_generator":      5,
-    "research_need_interpret":   5,   # Phase 8C — one structured extraction call; retrieval/matching stays free
-    "team_blueprint_generate":   5,   # Phase 8F — one structured role-breakdown call; candidate retrieval/selection/invitation stays free
+# Server-side only; the frontend reads it from /api/billing/credit-usage-catalogue
+# and never hardcodes costs. Each operation can be overridden at deploy time
+# with AI_OPERATION_COSTS_JSON='{"JOURNAL_FIT": 6}' (positive ints only).
+# `model_tier` drives cost-aware routing (services/ai/pricing.py):
+#   simple   -> cheapest configured model
+#   standard -> default model
+#   advanced -> default model with extended context/output budget
+AI_OPERATIONS: dict[str, dict] = {
+    "QUICK_ACADEMIC_REWRITE":           {"credits": 1,  "label": "Quick academic rewrite",            "model_tier": "simple"},
+    "RESEARCH_QUESTIONS":               {"credits": 2,  "label": "Research question generation",      "model_tier": "simple"},
+    "ABSTRACT_ANALYSIS":                {"credits": 2,  "label": "Abstract analysis",                 "model_tier": "simple"},
+    "AI_ASSISTANT_SIMPLE":              {"credits": 2,  "label": "AI assistant message",              "model_tier": "simple"},
+    "JOURNAL_FIT":                      {"credits": 5,  "label": "Journal fit analysis",              "model_tier": "standard"},
+    "CONFERENCE_FIT":                   {"credits": 5,  "label": "Conference fit analysis",           "model_tier": "standard"},
+    "GRANT_FIT":                        {"credits": 5,  "label": "Grant fit analysis",                "model_tier": "standard"},
+    "MANUSCRIPT_SECTION_REVIEW":        {"credits": 10, "label": "Manuscript section review",         "model_tier": "standard"},
+    "TEACHING_CONTENT_GENERATION":      {"credits": 10, "label": "Teaching content generation",       "model_tier": "standard"},
+    "LITERATURE_SYNTHESIS":             {"credits": 15, "label": "Literature synthesis",              "model_tier": "standard"},
+    "FULL_MANUSCRIPT_REVIEW":           {"credits": 30, "label": "Full manuscript review",            "model_tier": "advanced"},
+    "DEEP_RESEARCH":                    {"credits": 40, "label": "Deep research",                     "model_tier": "advanced"},
+    "MULTI_PAPER_SYNTHESIS":            {"credits": 40, "label": "Multi-paper synthesis",             "model_tier": "advanced"},
+    "ADVANCED_MANUSCRIPT_INTELLIGENCE": {"credits": 50, "label": "Advanced manuscript intelligence",  "model_tier": "advanced"},
+}
 
-    # Lightweight assistants
-    "ai_research_assistant":      2,
-    "ai_chat_message":            2,    # Manuscript Copilot — per message
-    "ai_os_message":              3,    # Synaptiq AI OS — per message (Phase XXIII)
-    # Academic Copilot (Phase XI)
-    "copilot_chat":               3,    # Copilot chat message (multi-engine)
-    "copilot_dashboard":          2,    # Personalised academic dashboard
-    "copilot_roadmap":            5,    # Academic roadmap generation
-    "copilot_suggestions":        1,    # Proactive suggestion scan
+
+def _apply_operation_cost_overrides() -> None:
+    raw = os.environ.get("AI_OPERATION_COSTS_JSON", "").strip()
+    if not raw:
+        return
+    try:
+        overrides = json.loads(raw)
+    except ValueError:
+        _log.error("AI_OPERATION_COSTS_JSON is not valid JSON — ignored")
+        return
+    for op, cost in (overrides or {}).items():
+        if op in AI_OPERATIONS and isinstance(cost, int) and not isinstance(cost, bool) and cost > 0:
+            AI_OPERATIONS[op]["credits"] = cost
+        else:
+            _log.error("AI_OPERATION_COSTS_JSON: ignored invalid entry %r=%r", op, cost)
+
+
+_apply_operation_cost_overrides()
+
+
+# Existing call sites charge by a feature "action" key (100+ call sites).
+# Rather than rewrite them, each action that corresponds to a catalogue
+# operation is priced BY that operation, so one table sets every price.
+ACTION_OPERATION: dict[str, str] = {
+    "ai_rewriting":               "QUICK_ACADEMIC_REWRITE",
+    "ai_citation_generation":     "QUICK_ACADEMIC_REWRITE",
+    "copilot_suggestions":        "QUICK_ACADEMIC_REWRITE",
+    "ai_abstract_generator":      "ABSTRACT_ANALYSIS",
+    "ai_research_assistant":      "AI_ASSISTANT_SIMPLE",
+    "ai_chat_message":            "AI_ASSISTANT_SIMPLE",   # Manuscript Copilot message
+    "ai_teaching_assistant":      "AI_ASSISTANT_SIMPLE",
+    "ai_os_message":              "AI_ASSISTANT_SIMPLE",
+    "copilot_chat":               "AI_ASSISTANT_SIMPLE",
+    "copilot_dashboard":          "AI_ASSISTANT_SIMPLE",
+    "research_need_interpret":    "RESEARCH_QUESTIONS",
+    "ai_journal_matching":        "JOURNAL_FIT",
+    "publishing_journal_match":   "JOURNAL_FIT",
+    "publishing_journal_analyse": "JOURNAL_FIT",
+    "ai_conference_matching":     "CONFERENCE_FIT",
+    "publishing_conference_match": "CONFERENCE_FIT",
+    "ai_grant_matching":          "GRANT_FIT",
+    "publishing_grant_match":     "GRANT_FIT",
+    "ai_methodology_builder":     "MANUSCRIPT_SECTION_REVIEW",
+    "ai_methodology_assistance":  "MANUSCRIPT_SECTION_REVIEW",
+    "ai_research_design_advisor": "MANUSCRIPT_SECTION_REVIEW",
+    "ai_statistical_review":      "MANUSCRIPT_SECTION_REVIEW",
+    "ai_lesson_plan_generate":    "TEACHING_CONTENT_GENERATION",
+    "ai_assessment_generate":     "TEACHING_CONTENT_GENERATION",
+    "ai_literature_review":       "LITERATURE_SYNTHESIS",
+    "ai_literature_synthesis":    "LITERATURE_SYNTHESIS",
+    "ai_research_gap_finder":     "LITERATURE_SYNTHESIS",
+    "ai_collaboration_intelligence": "LITERATURE_SYNTHESIS",
+    "ai_manuscript_review":       "FULL_MANUSCRIPT_REVIEW",
+}
+
+
+# Actions with no catalogue operation keep a per-action price. These are
+# secondary/experimental engines (knowledge graph, career, prediction, …);
+# they are still credit-billed and entitlement-gated like everything else.
+_LEGACY_ACTION_COSTS = {
+    "team_blueprint_generate":   5,
+    "copilot_roadmap":            5,
     # Publishing Intelligence (Phase XII)
-    "publishing_journal_analyse": 3,   # Journal fit analysis (30+ factors)
-    "publishing_journal_match":   5,   # Smart journal matching (6 types)
-    "publishing_conference_match":3,   # Conference matching
-    "publishing_grant_match":     3,   # Grant matching
-    "publishing_readiness_check": 2,   # Submission readiness (15+ checks)
-    "publishing_cover_letter":    4,   # AI cover letter generation
-    "publishing_reviewer_response":4,  # Reviewer response document
-    "publishing_strategy":        5,   # Publication strategy builder
-    "publishing_risk_analysis":   3,   # Risk analysis (8 dimensions)
-    "publishing_dashboard":       2,   # Publishing dashboard
-    "publishing_export":          2,   # Document export
+    "publishing_readiness_check": 2,
+    "publishing_cover_letter":    4,
+    "publishing_reviewer_response":4,
+    "publishing_strategy":        5,
+    "publishing_risk_analysis":   3,
+    "publishing_dashboard":       2,
+    "publishing_export":          2,
     # Autonomous Research Agents (Phase XIII)
-    "agents_workflow_run":        8,   # Full multi-agent workflow execution
-    "agents_task_run":            6,   # Auto-detected task workflow
-    "agents_single_run":          2,   # Single agent execution
-    "agents_parallel_run":        4,   # Parallel multi-agent execution
+    "agents_workflow_run":        8,
+    "agents_task_run":            6,
+    "agents_single_run":          2,
+    "agents_parallel_run":        4,
     # Research Collaboration Intelligence (Phase XIV)
-    "collab_match":               3,   # Two-researcher compatibility match
-    "collab_rank":                4,   # Rank candidates by compatibility
-    "collab_opportunities":       4,   # Detect collaboration opportunities
-    "collab_team_build":          6,   # Build optimal research team
-    "collab_team_simulate":       4,   # Simulate team composition
-    "collab_introduction":        2,   # Smart introduction narrative
-    "collab_network":             5,   # Network analysis
-    "collab_prediction":          3,   # Collaboration success prediction
-    "collab_recommendations":     4,   # Ranked recommendations
-    "collab_social_graph":        5,   # Build academic social graph
+    "collab_match":               3,
+    "collab_rank":                4,
+    "collab_opportunities":       4,
+    "collab_team_build":          6,
+    "collab_team_simulate":       4,
+    "collab_introduction":        2,
+    "collab_network":             5,
+    "collab_prediction":          3,
+    "collab_recommendations":     4,
+    "collab_social_graph":        5,
     # Institution Intelligence Engine (Phase XV)
-    "institution_profile":        3,   # Build institution profile
-    "institution_kpis":           2,   # Compute 20 KPIs
-    "institution_organizational": 4,   # Organizational intelligence
-    "institution_predict":        5,   # Multi-year forecasts
-    "institution_resources":      4,   # Resource optimization
-    "institution_talent":         4,   # Talent intelligence
-    "institution_portfolio":      3,   # Portfolio analysis
-    "institution_benchmark":      3,   # Peer benchmarking
-    "institution_risks":          3,   # Risk detection
-    "institution_recommendations":5,   # Executive recommendations
-    "institution_monitor":        2,   # Autonomous monitoring
-    "institution_knowledge_graph":4,   # Knowledge graph
-    "institution_visualization":  2,   # Visualization data
-    "institution_export":         5,   # Report export
-    "institution_full_analysis":  10,  # Full analysis (all engines)
+    "institution_profile":        3,
+    "institution_kpis":           2,
+    "institution_organizational": 4,
+    "institution_predict":        5,
+    "institution_resources":      4,
+    "institution_talent":         4,
+    "institution_portfolio":      3,
+    "institution_benchmark":      3,
+    "institution_risks":          3,
+    "institution_recommendations":5,
+    "institution_monitor":        2,
+    "institution_knowledge_graph":4,
+    "institution_visualization":  2,
+    "institution_export":         5,
+    "institution_full_analysis":  10,
     # Phase XVI — Academic Career Intelligence Engine
-    "career_profile":            2,   # Build career profile
-    "career_roadmap":            5,   # Generate 1/3/5/10-year roadmap
-    "career_goals":              3,   # Goal evaluation & tracking
-    "career_skill_gaps":         4,   # 15-domain skill gap analysis
-    "career_promotion":          5,   # Promotion readiness assessment
-    "career_productivity":       3,   # Research productivity analysis
-    "career_risks":              4,   # Career risk detection
-    "career_recommendations":    3,   # Personalized recommendations
-    "career_copilot":            2,   # Copilot suggestions
-    "career_visualization":      2,   # Visualization data
-    "career_export":             5,   # Report export (6 types × 3 formats)
-    "career_full_analysis":      12,  # Full career intelligence analysis
+    "career_profile":            2,
+    "career_roadmap":            5,
+    "career_goals":              3,
+    "career_skill_gaps":         4,
+    "career_promotion":          5,
+    "career_productivity":       3,
+    "career_risks":              4,
+    "career_recommendations":    3,
+    "career_copilot":            2,
+    "career_visualization":      2,
+    "career_export":             5,
+    "career_full_analysis":      12,
     # Knowledge Graph (Phase XVII)
-    "kg_import":                 10,  # Bulk platform data import
-    "kg_add_node":                1,  # Add a single node
-    "kg_add_edge":                1,  # Add a single edge
-    "kg_stats":                   1,  # Graph statistics
-    "kg_analytics":               5,  # PageRank / influence scores
-    "kg_communities":             5,  # Community detection
-    "kg_embeddings":              3,  # Node embeddings / similarity
-    "kg_reasoning":               6,  # Semantic reasoning (hidden collabs, etc.)
-    "kg_discovery":               4,  # Knowledge discovery
-    "kg_query":                   3,  # Graph queries
-    "kg_visualization":           3,  # Visualization data
-    "kg_copilot":                 4,  # Copilot context enrichment
+    "kg_import":                 10,
+    "kg_add_node":                1,
+    "kg_add_edge":                1,
+    "kg_stats":                   1,
+    "kg_analytics":               5,
+    "kg_communities":             5,
+    "kg_embeddings":              3,
+    "kg_reasoning":               6,
+    "kg_discovery":               4,
+    "kg_query":                   3,
+    "kg_visualization":           3,
+    "kg_copilot":                 4,
     # Prediction & Forecasting Intelligence (Phase XVIII)
-    "prediction_publication":     6,   # Full publication outcome prediction
-    "prediction_journal_ranking": 5,   # Journal selection ranking
-    "prediction_conference":      4,   # Conference outcome prediction
-    "prediction_grant":           8,   # Grant funding probability
-    "prediction_career_forecast": 7,   # Career forecasting (1/3/5/10 year)
-    "prediction_collaboration":   5,   # Collaboration success forecast
-    "prediction_institution":     8,   # Institution-level forecasting
-    "prediction_trend":           5,   # Research trend forecasting
-    "prediction_strategic":       4,   # Strategic decision advisor
-    "prediction_scenario":        8,   # Multi-scenario simulation
-    "prediction_what_if":         4,   # What-if analysis
-    "prediction_visualization":   2,   # Visualization data
-    "prediction_copilot":         3,   # Copilot forecast enrichment
+    "prediction_publication":     6,
+    "prediction_journal_ranking": 5,
+    "prediction_conference":      4,
+    "prediction_grant":           8,
+    "prediction_career_forecast": 7,
+    "prediction_collaboration":   5,
+    "prediction_institution":     8,
+    "prediction_trend":           5,
+    "prediction_strategic":       4,
+    "prediction_scenario":        8,
+    "prediction_what_if":         4,
+    "prediction_visualization":   2,
+    "prediction_copilot":         3,
     # Self-Improving Academic Intelligence Platform (Phase XX)
-    "si_query":       2,   # Performance metrics, quality reports
-    "si_diagnostics": 2,   # Engine health diagnostics
-    "si_benchmark":   5,   # Run benchmark suite (compute-intensive)
-    "si_experiment":  3,   # Create A/B experiment
-    "si_optimize":    4,   # Generate optimization candidates
-    "si_copilot":     2,   # Copilot improvement suggestions
+    "si_query":       2,
+    "si_diagnostics": 2,
+    "si_benchmark":   5,
+    "si_experiment":  3,
+    "si_optimize":    4,
+    "si_copilot":     2,
     # Academic OS (Phase XXI)
-    "aos_workflow":   5,   # Start a full workflow pipeline
-    "aos_project":    2,   # Create a research project
-    "aos_search":     2,   # Global cross-entity search
-    "aos_dashboard":  1,   # Generate personalized dashboard
-    "aos_automation": 3,   # Fire automation event
-    "ai_rewriting":               2,
+    "aos_workflow":   5,
+    "aos_project":    2,
+    "aos_search":     2,
+    "aos_dashboard":  1,
+    "aos_automation": 3,
     # Free actions (logged but never deducted)
     "researcher_discovery":       0,
     "profile_creation":           0,
     "collaboration_request":      0,
-    # Teaching Hub AI tools
-    "ai_lesson_plan_generate":   10,    # AI lesson plan generation
-    "ai_assessment_generate":    10,    # AI assessment generation
-    "ai_teaching_assistant":      2,    # AI teaching assistant per message
-    # Backwards-compat aliases for older call sites
+    # Matching aliases with no catalogue operation
     "ai_reviewer_matching":       5,
     "ai_collaborator_matching":   5,
-    "ai_literature_synthesis":   20,    # alias -> literature review
-    "ai_citation_generation":     2,    # alias -> rewriting cost
-    "ai_methodology_assistance": 10,    # alias -> methodology builder
     "ai_marketplace_rerank":      5,
 }
 
 
-# Human-readable display rows for the pricing page (Research Credit Usage section).
+def _build_credit_costs() -> dict[str, int]:
+    costs = dict(_LEGACY_ACTION_COSTS)
+    for action, op in ACTION_OPERATION.items():
+        costs[action] = AI_OPERATIONS[op]["credits"]
+    # Operation codes are valid action keys themselves, for new call sites.
+    for op, meta in AI_OPERATIONS.items():
+        costs[op] = meta["credits"]
+    return costs
+
+
+CREDIT_COSTS: dict[str, int] = _build_credit_costs()
+
+
+def operation_for_action(action: str) -> str | None:
+    """Catalogue operation an action is priced by (None for legacy actions)."""
+    if action in AI_OPERATIONS:
+        return action
+    return ACTION_OPERATION.get(action)
+
+
+# Display rows for the pricing page and the in-app credit catalogue —
+# generated from AI_OPERATIONS so there is exactly one price list.
 CREDIT_USAGE_DISPLAY = [
-    {"label": "AI Manuscript Review",       "cost": 20, "unit": "per review",  "free": False},
-    {"label": "AI Literature Review",       "cost": 20, "unit": "per review",  "free": False},
-    {"label": "AI Statistical Review",      "cost": 25, "unit": "per review",  "free": False},
-    {"label": "AI Methodology Builder",     "cost": 10, "unit": "per build",   "free": False},
-    {"label": "AI Research Design Advisor", "cost": 10, "unit": "per session", "free": False},
-    {"label": "AI Research Gap Finder",     "cost": 10, "unit": "per scan",    "free": False},
-    {"label": "AI Journal Matching",        "cost": 5,  "unit": "per match",   "free": False},
-    {"label": "AI Conference Matching",     "cost": 5,  "unit": "per match",   "free": False},
-    {"label": "AI Grant Matching",          "cost": 5,  "unit": "per match",   "free": False},
-    {"label": "AI Abstract Generator",      "cost": 5,  "unit": "per abstract","free": False},
-    {"label": "AI Research Assistant",      "cost": 2,  "unit": "per query",   "free": False},
-    {"label": "AI Manuscript Copilot",      "cost": 2,  "unit": "per message", "free": False},
-    {"label": "AI Rewriting",               "cost": 2,  "unit": "per request", "free": False},
-    {"label": "Researcher Discovery",       "cost": 0,  "unit": "",            "free": True},
-    {"label": "Profile Creation",           "cost": 0,  "unit": "",            "free": True},
-    {"label": "Collaboration Requests",     "cost": 0,  "unit": "",            "free": True},
+    {"operation": op, "label": meta["label"], "cost": meta["credits"], "unit": "per request", "free": False}
+    for op, meta in sorted(AI_OPERATIONS.items(), key=lambda kv: (kv[1]["credits"], kv[0]))
 ]
 
 
@@ -397,20 +468,24 @@ CREDIT_USAGE_DISPLAY = [
 # Use a stable string key. Endpoints declare `require_feature("ai_assistant")`.
 # Mapping kept tight; expand without code changes by adding rows.
 FEATURE_MIN_PLAN = {
-    # Free for everyone
+    # Free — identity only
     "academic_profile":            "free",
     "orcid":                       "free",
-    "network":                     "free",
-    "messaging":                   "free",
-    "basic_discovery":             "free",
-    "project_create":              "free",      # respects per-plan quota
-    "workspace_create":            "free",      # respects per-plan quota
-    "collaboration_request":       "free",
-    # Researcher+
+    "public_profile":              "free",
+    # Pro+ (Free is identity only — no network, messaging, collaboration,
+    # projects, workspaces, discovery or AI)
+    "network":                     "researcher",
+    "messaging":                   "researcher",
+    "basic_discovery":             "researcher",
+    "project_create":              "researcher",   # respects per-plan quota
+    "workspace_create":            "researcher",   # respects per-plan quota
+    "collaboration_request":       "researcher",
+    "teaching_hub":                "researcher",
+    "credit_purchase":             "researcher",
     "ai_assistant":                "researcher",
     "ai_manuscript_copilot":       "researcher",
     "publication_tracking":        "researcher",
-    "advanced_analytics":          "researcher",
+    "advanced_analytics":          "researcher",   # standard research analytics page
     "full_discovery":              "researcher",
     "ai_journal_matching":         "researcher",
     "ai_conference_matching":      "researcher",
@@ -420,17 +495,19 @@ FEATURE_MIN_PLAN = {
     "ai_research_assistant":       "researcher",
     "ai_rewriting":                "researcher",
     "ai_abstract_generator":       "researcher",
-    # Pro Researcher+
+    # Pro Advanced+
     "ai_advanced_assistant":       "pro_researcher",
     "ai_literature_review":        "pro_researcher",
     "ai_statistical_review":       "pro_researcher",
     "ai_research_design_advisor":  "pro_researcher",
     "ai_research_gap_finder":      "pro_researcher",
     "collaboration_intelligence":  "pro_researcher",
-    "research_analytics_suite":    "pro_researcher",
+    "research_analytics_suite":    "pro_researcher",   # "Advanced Analytics"
     "citation_monitoring":         "pro_researcher",
     "research_impact_dashboard":   "pro_researcher",
     "premium_collaboration":       "pro_researcher",
+    "advanced_manuscript_intelligence": "pro_researcher",
+    "advanced_ai_teaching":        "pro_researcher",
     # Institution
     "sso":                         "institution",
     "governance_console":          "institution",
@@ -439,22 +516,27 @@ FEATURE_MIN_PLAN = {
 }
 
 
-# Per-plan resource quotas (centralised for require_quota checks).
+# Per-plan resource quotas (centralised for assert_quota checks).
+# -1 = unlimited, 0 = not available on this plan.
 PLAN_QUOTAS = {
-    "free":           {"projects": 1,  "workspaces": 1,  "manuscripts": 3},
+    "free":           {"projects": 0,  "workspaces": 0,  "manuscripts": 0},
     "researcher":     {"projects": -1, "workspaces": 10, "manuscripts": -1},
     "pro_researcher": {"projects": -1, "workspaces": -1, "manuscripts": -1},
     "institution":    {"projects": -1, "workspaces": -1, "manuscripts": -1},
     "enterprise":     {"projects": -1, "workspaces": -1, "manuscripts": -1},
 }
 
-# Per-plan repository storage limits in bytes. Must match PLANS[].limits.repository_gb.
+_GB = 1024 * 1024 * 1024
+
+# Per-plan general storage limits in bytes. Must match PLANS[].limits.repository_gb.
+# Free has no general storage: profile photo / ORCID data are not counted
+# against this (they are not stored in the `files` collection).
 STORAGE_LIMITS_BYTES: dict[str, int] = {
-    "free":           500 * 1024 * 1024,               # 500 MB
-    "researcher":     100 * 1024 * 1024 * 1024,        # 100 GB
-    "pro_researcher": 500 * 1024 * 1024 * 1024,        # 500 GB
-    "institution":    2 * 1024 * 1024 * 1024 * 1024,   # 2 TB
-    "enterprise":     -1,                              # unlimited / contract-defined
+    "free":           0,
+    "researcher":     10 * _GB,
+    "pro_researcher": 50 * _GB,
+    "institution":    2048 * _GB,   # legacy contract plan — unchanged
+    "enterprise":     -1,           # contract-defined
 }
 
 
@@ -463,14 +545,131 @@ PLAN_RANK = {"free": 0, "researcher": 1, "pro_researcher": 2, "institution": 3, 
 
 
 # =====================================================================
-# Credit packs — one-time purchases, never expire
+# Customer tiers and capability entitlements
 # =====================================================================
+TIER_FREE, TIER_PRO, TIER_PRO_ADVANCED = "FREE", "PRO", "PRO_ADVANCED"
+
+TIER_BY_PLAN = {
+    "free":           TIER_FREE,
+    "researcher":     TIER_PRO,
+    "pro_researcher": TIER_PRO_ADVANCED,
+    "institution":    TIER_PRO_ADVANCED,   # legacy, non-self-serve
+    "enterprise":     TIER_PRO_ADVANCED,   # legacy, non-self-serve
+}
+
+# Boolean capabilities per tier. The backend is authoritative; the frontend
+# only mirrors these (GET /api/permissions/me) to decide what to render.
+_PRO_CAPS = {
+    "can_use_research_network":         True,
+    "can_message_researchers":          True,
+    "can_send_collaboration_request":   True,
+    "can_accept_collaboration":         True,
+    "can_join_collaboration_workflows": True,
+    "can_create_project":               True,
+    "can_create_workspace":             True,
+    "can_use_journal_discovery":        True,
+    "can_use_conference_discovery":     True,
+    "can_use_grant_discovery":          True,
+    "can_use_research_assistant":       True,
+    "can_use_manuscript_copilot":       True,
+    "can_use_teaching_hub":             True,
+    "can_use_teaching_ai":              True,
+    "can_use_publication_tracking":     True,
+    "can_view_research_analytics":      True,
+    "can_purchase_ai_credits":          True,
+    "can_use_collaboration_intelligence": False,
+    "can_use_citation_monitoring":      False,
+    "can_view_impact_dashboard":        False,
+    "can_view_advanced_analytics":      False,
+    "can_use_advanced_ai":              False,
+    "can_use_advanced_manuscript_intelligence": False,
+    "can_use_advanced_teaching_ai":     False,
+}
+TIER_CAPABILITIES: dict[str, dict[str, bool]] = {
+    TIER_FREE: {k: False for k in _PRO_CAPS},
+    TIER_PRO: dict(_PRO_CAPS),
+    TIER_PRO_ADVANCED: {k: True for k in _PRO_CAPS},
+}
+# Identity capabilities every tier has.
+for _caps in TIER_CAPABILITIES.values():
+    _caps.update({
+        "can_edit_academic_profile": True,
+        "can_publish_public_profile": True,
+        "can_connect_orcid": True,
+        "can_import_orcid_publications": True,
+        "can_receive_collaboration_invites": True,
+    })
+CAPABILITIES = sorted(TIER_CAPABILITIES[TIER_PRO_ADVANCED])
+
+# Capability -> FEATURE_MIN_PLAN key used for per-user admin overrides, so an
+# admin grant of e.g. "citation_monitoring" also unlocks the capability.
+CAPABILITY_FEATURE = {
+    "can_use_research_network":         "network",
+    "can_message_researchers":          "messaging",
+    "can_send_collaboration_request":   "collaboration_request",
+    "can_accept_collaboration":         "collaboration_request",
+    "can_join_collaboration_workflows": "collaboration_request",
+    "can_create_project":               "project_create",
+    "can_create_workspace":             "workspace_create",
+    "can_use_journal_discovery":        "basic_discovery",
+    "can_use_conference_discovery":     "basic_discovery",
+    "can_use_grant_discovery":          "basic_discovery",
+    "can_use_research_assistant":       "ai_research_assistant",
+    "can_use_manuscript_copilot":       "ai_manuscript_copilot",
+    "can_use_teaching_hub":             "teaching_hub",
+    "can_use_teaching_ai":              "teaching_hub",
+    "can_use_publication_tracking":     "publication_tracking",
+    "can_view_research_analytics":      "advanced_analytics",
+    "can_purchase_ai_credits":          "credit_purchase",
+    "can_use_collaboration_intelligence": "collaboration_intelligence",
+    "can_use_citation_monitoring":      "citation_monitoring",
+    "can_view_impact_dashboard":        "research_impact_dashboard",
+    "can_view_advanced_analytics":      "research_analytics_suite",
+    "can_use_advanced_ai":              "ai_advanced_assistant",
+    "can_use_advanced_manuscript_intelligence": "advanced_manuscript_intelligence",
+    "can_use_advanced_teaching_ai":     "advanced_ai_teaching",
+}
+
+# Minimum plan code that grants a capability (for upgrade prompts).
+def capability_min_plan(capability: str) -> str:
+    for code in ("free", "researcher", "pro_researcher"):
+        if TIER_CAPABILITIES[TIER_BY_PLAN[code]].get(capability):
+            return code
+    return "pro_researcher"
+
+
+# =====================================================================
+# Credit packs — one-time purchases for paid plans; purchased credits
+# never expire, but can only be used while on a paid plan.
+# =====================================================================
+# Prices are configurable (CREDIT_PACK_PRICES_JSON='{"pack_100": 4.99}');
+# Stripe price ids come only from the environment.
 CREDIT_PACKS = [
-    {"code": "pack_100",   "credits":  100, "price_eur":  5, "label": "100 Credits",   "stripe_price_id": ""},
-    {"code": "pack_250",   "credits":  250, "price_eur": 10, "label": "250 Credits",   "stripe_price_id": ""},
-    {"code": "pack_1000",  "credits": 1000, "price_eur": 29, "label": "1,000 Credits", "stripe_price_id": ""},
-    {"code": "pack_5000",  "credits": 5000, "price_eur": 99, "label": "5,000 Credits", "stripe_price_id": ""},
+    {"code": "pack_100", "credits": 100, "price_eur": 4.99,  "label": "100 AI Credits",
+     "stripe_price_id": os.environ.get("STRIPE_PRICE_CREDITS_100", "")},
+    {"code": "pack_300", "credits": 300, "price_eur": 11.99, "label": "300 AI Credits",
+     "stripe_price_id": os.environ.get("STRIPE_PRICE_CREDITS_300", "")},
+    {"code": "pack_750", "credits": 750, "price_eur": 24.99, "label": "750 AI Credits",
+     "stripe_price_id": os.environ.get("STRIPE_PRICE_CREDITS_750", "")},
 ]
+
+
+def _apply_pack_price_overrides() -> None:
+    raw = os.environ.get("CREDIT_PACK_PRICES_JSON", "").strip()
+    if not raw:
+        return
+    try:
+        overrides = json.loads(raw)
+    except ValueError:
+        _log.error("CREDIT_PACK_PRICES_JSON is not valid JSON — ignored")
+        return
+    for pack in CREDIT_PACKS:
+        v = (overrides or {}).get(pack["code"])
+        if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0:
+            pack["price_eur"] = float(v)
+
+
+_apply_pack_price_overrides()
 
 
 def get_plan(code: str) -> dict:
@@ -520,44 +719,55 @@ def _credits_label(code: str) -> str:
     return "Unlimited" if n == -1 else f"{n:,}"
 
 
+def _storage_label(code: str) -> str:
+    n = STORAGE_LIMITS_BYTES.get(code, 0)
+    if n == -1:
+        return "Custom"
+    if n == 0:
+        return "Profile only"
+    gb = n // _GB
+    return f"{gb // 1024} TB" if gb >= 1024 and gb % 1024 == 0 else f"{gb} GB"
+
+
+def _quota_label(code: str, resource: str) -> str:
+    n = PLAN_QUOTAS[code][resource]
+    return "Unlimited" if n == -1 else ("—" if n == 0 else str(n))
+
+
+_MATRIX_PLANS = ("free", "researcher", "pro_researcher", "institution", "enterprise")
+
+
+def _cap_row(label: str, capability: str):
+    return (label, *(TIER_CAPABILITIES[TIER_BY_PLAN[c]].get(capability, False) for c in _MATRIX_PLANS))
+
+
+# Columns: free, researcher (Pro), pro_researcher (Pro Advanced), institution, enterprise.
+# Every quantitative row is DERIVED from the canonical tables above, and every
+# capability row from TIER_CAPABILITIES — no second hardcoded copy to drift.
 FEATURE_MATRIX = [
-    ("Research Credits / month",       _credits_label("free"), _credits_label("researcher"),
-                                       _credits_label("pro_researcher"), _credits_label("institution"),
-                                       _credits_label("enterprise")),
-    ("Active Projects",                "1",          "Unlimited",  "Unlimited",  "Unlimited", "Unlimited"),
-    ("Workspaces",                     "1",          "10",         "Unlimited",  "Unlimited", "Unlimited"),
-    ("Repository Storage",             "500 MB",     "100 GB",     "500 GB",     "2 TB",      "Custom"),
-    ("Users Included",                 "1",          "1",          "1",          "25",        "Unlimited"),
-    ("Academic Profile",               True,         True,         True,         True,        True),
-    ("ORCID Integration",              True,         True,         True,         True,        True),
-    ("Research Network Access",        True,         True,         True,         True,        True),
-    # Rows below describe real entitlements only (Phase 9A final decisions,
-    # §12/§18). Previously this matrix claimed Free had "5 / mo" journal and
-    # conference discovery and "3 / mo" grant discovery — but every plan's
-    # journal/conference/grant_recs_per_month limit is -1 (unlimited) and
-    # manual search is deliberately core functionality (see the Free plan's
-    # limits comment above). What IS plan-gated is AI *matching*
-    # (FEATURE_MIN_PLAN ai_*_matching = researcher). Teaching isn't plan-gated
-    # at all (no require_plan/require_feature in routers/teaching*.py; AI
-    # teaching actions cost credits on any plan).
-    ("Research Need, expert discovery & collaboration requests", True, True, True, True, True),
-    ("Journal, conference & grant search", True,  True,         True,         True,        True),
-    ("AI journal, conference & grant matching", False, True,    True,         True,        True),
-    ("Teaching tools — courses, lessons, assessments", True, True, True,    True,        True),
-    ("Publication Tracking",           False,        True,         True,         True,        True),
-    ("Advanced Analytics",             False,        True,         True,         True,        True),
-    ("AI Research Assistant",          False,        True,         "Advanced",   "Advanced",  "Advanced"),
-    ("AI Manuscript Copilot",          False,        True,         "Advanced",   "Advanced",  "Advanced"),
-    ("AI literature review, statistical review & research gap discovery", False, False, True, True, True),
-    ("Collaboration Intelligence",     False,        False,        True,         True,        True),
-    ("Research Analytics Suite",       False,        False,        True,         True,        True),
-    ("Citation Monitoring",            False,        False,        True,         True,        True),
-    ("Research Impact Dashboard",      False,        False,        True,         True,        True),
-    ("Institutional Analytics",        False,        False,        False,        True,        True),
-    ("Department Management",          False,        False,        False,        True,        True),
-    ("SSO / SAML Integration",         False,        False,        False,        False,       True),
-    ("Custom AI Models",               False,        False,        False,        False,       True),
-    ("On-premise / Private Cloud",     False,        False,        False,        False,       True),
-    ("SLA-backed Uptime",              False,        False,        False,        False,       "99.9%"),
-    ("Support",                        "Community",  "Priority",   "Priority",   "Dedicated", "Account Manager"),
+    ("AI Credits / month", *(_credits_label(c) for c in _MATRIX_PLANS)),
+    ("Projects", *(_quota_label(c, "projects") for c in _MATRIX_PLANS)),
+    ("Workspaces", *(_quota_label(c, "workspaces") for c in _MATRIX_PLANS)),
+    ("Storage", *(_storage_label(c) for c in _MATRIX_PLANS)),
+    ("Academic profile & public research page", True, True, True, True, True),
+    ("ORCID integration & publication import", True, True, True, True, True),
+    ("Discoverable by Pro researchers", True, True, True, True, True),
+    _cap_row("Research network, discovery & matching", "can_use_research_network"),
+    _cap_row("Messaging", "can_message_researchers"),
+    _cap_row("Send & accept collaboration requests", "can_send_collaboration_request"),
+    _cap_row("Journal, conference & grant discovery", "can_use_journal_discovery"),
+    _cap_row("AI Research Assistant", "can_use_research_assistant"),
+    _cap_row("Manuscript Copilot", "can_use_manuscript_copilot"),
+    _cap_row("Teaching Hub", "can_use_teaching_hub"),
+    _cap_row("Publication tracking", "can_use_publication_tracking"),
+    _cap_row("Standard analytics", "can_view_research_analytics"),
+    _cap_row("Buy extra AI credits", "can_purchase_ai_credits"),
+    _cap_row("Advanced AI Research Assistant & extended context", "can_use_advanced_ai"),
+    _cap_row("Collaboration Intelligence", "can_use_collaboration_intelligence"),
+    _cap_row("Impact Dashboard", "can_view_impact_dashboard"),
+    _cap_row("Citation Monitoring", "can_use_citation_monitoring"),
+    _cap_row("Advanced Analytics", "can_view_advanced_analytics"),
+    _cap_row("Advanced Manuscript Intelligence", "can_use_advanced_manuscript_intelligence"),
+    _cap_row("Advanced AI Teaching", "can_use_advanced_teaching_ai"),
+    ("Support", "Community", "Priority", "Priority", "Dedicated", "Account Manager"),
 ]

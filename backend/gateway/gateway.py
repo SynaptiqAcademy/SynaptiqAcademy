@@ -46,6 +46,8 @@ import threading
 import time
 from typing import AsyncGenerator, Optional
 
+from fastapi import HTTPException
+
 from .context_builder import ContextBuilder
 from .cost_ledger import CostLedger
 from .observability import GatewayObservability
@@ -57,6 +59,10 @@ from .schemas import GatewayRequest, GatewayResponse, ValidationResult
 from .ai_memory import get_memory
 
 logger = logging.getLogger("gateway.core")
+
+# AIResponse.provider values that mean "no usable answer was produced"
+# (cloud_ai error response, smart-router budget stop, engine catastrophe).
+FAILURE_PROVIDERS = frozenset({"error_fallback", "budget_manager", "emergency_fallback"})
 
 
 class AIGateway:
@@ -114,6 +120,10 @@ class AIGateway:
             # 4. Prompt resolution
             system, user_text = self._resolve_prompt(request, context_block)
 
+            # 4b. Cost control: attribution, model routing, token/cost guards.
+            from services.ai.cost_guard import preflight, record_usage
+            guard = await preflight(request, system, user_text)
+
             # 5. Cache check
             memory = get_memory()
             if not request.stream and system and user_text:
@@ -137,6 +147,15 @@ class AIGateway:
             response.tokens_out     = getattr(ai_response, "output_tokens", 0)
             response.from_cache     = getattr(ai_response, "from_cache", False)
             response.fallback_reason = ai_response.fallback_reason
+
+            if ai_response.provider not in FAILURE_PROVIDERS:
+                await record_usage(
+                    guard, model=ai_response.model,
+                    input_tokens=response.tokens_in, output_tokens=response.tokens_out,
+                    cache_read_tokens=getattr(ai_response, "cache_read_tokens", 0),
+                    cache_write_tokens=getattr(ai_response, "cache_write_tokens", 0),
+                    cost_usd=getattr(ai_response, "cost_usd", 0.0),
+                )
 
             # 7. Response validation (real evidence grounding, not regex)
             require_ev = request.require_evidence or (
@@ -183,6 +202,9 @@ class AIGateway:
                 await memory.append_message(request.user_id, "user", request.user_message)
                 await memory.append_message(request.user_id, "assistant", response.response[:500])
 
+        except HTTPException:
+            # Cost-guard rejections (413/429) surface to the caller as-is.
+            raise
         except Exception as exc:
             logger.error("Gateway execute error (request %s): %s", request.request_id, exc)
             response.response          = (

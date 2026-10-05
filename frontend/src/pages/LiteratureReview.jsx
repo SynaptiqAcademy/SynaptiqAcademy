@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ds/Textarea";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { InlineError, Callout } from "@/components/ds/Alert";
 import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
+import { CreditCostNumber } from "@/components/billing/CreditCost";
 
 // ─────────────────────── shared primitives ───────────────────────────────────
 
@@ -295,7 +296,7 @@ function InputView({ onResult, gated }) {
             ) : (
               <>
                 <BookOpen size={15} strokeWidth={1.5} />
-                Generate Literature Review · 20 Credits
+                Generate Literature Review · <CreditCostNumber operation="LITERATURE_SYNTHESIS" /> Credits
               </>
             )}
           </Button>
@@ -327,8 +328,8 @@ function InputView({ onResult, gated }) {
           </Card>
           <Card padding="lg">
             <div className="overline mb-2">Credit cost</div>
-            <div className="font-serif text-3xl text-slate-900">20</div>
-            <div className="text-xs text-slate-500 mt-1">Research Credits per review</div>
+            <div className="font-serif text-3xl text-slate-900"><CreditCostNumber operation="LITERATURE_SYNTHESIS" /></div>
+            <div className="text-xs text-slate-500 mt-1">AI Credits per review</div>
           </Card>
           <Callout variant="warning" title="Knowledge basis">
             This review is synthesised from Claude's training knowledge — not live database

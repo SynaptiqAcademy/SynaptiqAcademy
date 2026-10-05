@@ -105,20 +105,24 @@ def _checks() -> List[Tuple[str, str, callable, str]]:
         return "://" in url and "@" in url and url.split("://")[1].startswith(":")
 
     def _stripe_plan_price_ids_set() -> bool:
-        # "enterprise" is intentionally excluded — it's fulfilled via custom
-        # Stripe invoices, not self-serve Checkout, and has no price IDs by
-        # design. "free" has no price at all. Only self-serve paid plans need
-        # both monthly and annual price IDs filled in for checkout to work.
+        # Only self-serve paid plans (Pro / Pro Advanced) are sold through
+        # Checkout, monthly only. Price ids come from STRIPE_PRICE_* env vars
+        # (plans_catalogue.py reads them) — never hardcoded.
         try:
             from plans_catalogue import PLANS
         except Exception:
             return False
         for p in PLANS:
-            if p["code"] in ("free", "enterprise"):
-                continue
-            if not p.get("stripe_price_id_monthly") or not p.get("stripe_price_id_annual"):
+            if p["code"] in ("researcher", "pro_researcher") and not p.get("stripe_price_id_monthly"):
                 return False
         return True
+
+    def _stripe_pack_price_ids_set() -> bool:
+        try:
+            from plans_catalogue import CREDIT_PACKS
+        except Exception:
+            return False
+        return all(p.get("stripe_price_id") for p in CREDIT_PACKS)
 
     return [
         # ---- Core ----
@@ -192,14 +196,12 @@ def _checks() -> List[Tuple[str, str, callable, str]]:
             "Required for billing checkout endpoints"),
         ("STRIPE_WEBHOOK_SECRET", "warn", lambda: has("STRIPE_WEBHOOK_SECRET"),
             "Required to verify Stripe webhooks"),
-        # NOTE: checkout price IDs are not environment variables — they live on
-        # each plan in plans_catalogue.PLANS (stripe_price_id_monthly/_annual).
-        # This check inspects that real runtime source of truth directly,
-        # rather than a STRIPE_PRICE_* env var that nothing in the app reads.
         ("STRIPE_PLAN_PRICE_IDS", "warn", _stripe_plan_price_ids_set,
-            "One or more paid plans in plans_catalogue.PLANS is missing a "
-            "stripe_price_id_monthly/_annual — checkout will 503 for that plan "
-            "until it's filled in (see STRIPE_SETUP.md)"),
+            "STRIPE_PRICE_PRO_MONTHLY / STRIPE_PRICE_PRO_ADVANCED_MONTHLY not set — "
+            "subscription checkout returns 503 until they are (see docs/STRIPE_SETUP.md)"),
+        ("STRIPE_PACK_PRICE_IDS", "warn", _stripe_pack_price_ids_set,
+            "STRIPE_PRICE_CREDITS_100 / _300 / _750 not set — credit packs show "
+            "'Coming soon' until they are (see docs/STRIPE_SETUP.md)"),
 
         # ---- Resend ----
         ("EMAIL_PROVIDER", "error", lambda: eq("EMAIL_PROVIDER", "resend"), "Must be 'resend' — only supported email provider"),

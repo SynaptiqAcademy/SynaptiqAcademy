@@ -47,6 +47,9 @@ class AIResponse:
     from_cache: bool = False
     fallback_reason: str | None = None
     cost_usd: float = 0.0
+    # Prompt-cache usage (Anthropic reports these separately from input_tokens).
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0
 
 
 @dataclass

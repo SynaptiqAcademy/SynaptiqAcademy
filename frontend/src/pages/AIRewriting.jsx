@@ -8,6 +8,7 @@ import { Button, Card, Input, Textarea, EmptyState } from "@/components/ds";
 import { ResearchLayout } from "@/layouts";
 import { AI_NAV_ITEMS } from "@/lib/navItems";
 import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
+import { CreditCostNumber } from "@/components/billing/CreditCost";
 
 // ─────────────────────────── shared primitives ───────────────────────────────
 
@@ -138,7 +139,7 @@ function InputView({ onResult, gated }) {
             {running ? "Rewriting — this may take 10–20 seconds…" : (
               <>
                 <PenLine size={15} strokeWidth={1.5} />
-                Rewrite · 2 Credits
+                Rewrite · <CreditCostNumber operation="QUICK_ACADEMIC_REWRITE" /> Credits
               </>
             )}
           </Button>
@@ -159,8 +160,8 @@ function InputView({ onResult, gated }) {
           </Card>
           <Card padding="lg">
             <div className="overline mb-2">Credit cost</div>
-            <div className="font-serif text-3xl text-slate-900">2</div>
-            <div className="text-xs text-slate-500 mt-1">Research Credits per rewrite</div>
+            <div className="font-serif text-3xl text-slate-900"><CreditCostNumber operation="QUICK_ACADEMIC_REWRITE" /></div>
+            <div className="text-xs text-slate-500 mt-1">AI Credits per rewrite</div>
           </Card>
           <Card padding="md" className="!border-amber-100 !bg-amber-50">
             <div className="overline text-[10px] text-amber-700 mb-1">Academic integrity</div>

@@ -131,9 +131,10 @@ async def get_workflow_types(user: dict = Depends(get_current_user)):
 
 @router.post("/workflow/start")
 async def start_workflow(req: StartWorkflowRequest, user: dict = Depends(get_current_user)):
-    cost    = get_credit_cost("aos_workflow", 5)
+    _action = "aos_workflow"
+    cost    = get_credit_cost(_action, 5)
     user_id = str(user.get("_id", ""))
-    await consume_credits(user_id, cost)
+    await consume_credits(user_id, _action)
     engine  = await get_academic_os_engine()
     result  = engine.start_workflow(
         workflow_type=req.workflow_type,
@@ -213,9 +214,10 @@ async def get_my_workflows(user: dict = Depends(get_current_user)):
 
 @router.post("/project/create")
 async def create_project(req: CreateProjectRequest, user: dict = Depends(get_current_user)):
-    cost    = get_credit_cost("aos_project", 2)
+    _action = "aos_project"
+    cost    = get_credit_cost(_action, 2)
     user_id = str(user.get("_id", ""))
-    await consume_credits(user_id, cost)
+    await consume_credits(user_id, _action)
     engine  = await get_academic_os_engine()
     result  = engine.create_project(req.name, user_id, req.description, req.tags)
     return {"success": True, "project": result}
@@ -274,9 +276,10 @@ async def get_my_projects(user: dict = Depends(get_current_user)):
 
 @router.post("/search")
 async def global_search(req: SearchRequest, user: dict = Depends(get_current_user)):
-    cost    = get_credit_cost("aos_search", 2)
+    _action = "aos_search"
+    cost    = get_credit_cost(_action, 2)
     user_id = str(user.get("_id", ""))
-    await consume_credits(user_id, cost)
+    await consume_credits(user_id, _action)
     engine  = await get_academic_os_engine()
     return engine.global_search(req.query, req.entity_types, user_id, req.limit)
 
@@ -356,9 +359,10 @@ async def dismiss_notification(notification_id: str, user: dict = Depends(get_cu
 
 @router.post("/dashboard")
 async def get_dashboard(req: DashboardRequest, user: dict = Depends(get_current_user)):
-    cost    = get_credit_cost("aos_dashboard", 1)
+    _action = "aos_dashboard"
+    cost    = get_credit_cost(_action, 1)
     user_id = str(user.get("_id", ""))
-    await consume_credits(user_id, cost)
+    await consume_credits(user_id, _action)
     engine  = await get_academic_os_engine()
     return engine.get_dashboard(req.user_role, req.metrics)
 
@@ -380,9 +384,10 @@ async def list_automation_rules(user: dict = Depends(get_current_user)):
 
 @router.post("/automation/fire-event")
 async def fire_automation_event(req: AutomationEventRequest, user: dict = Depends(get_current_user)):
-    cost    = get_credit_cost("aos_automation", 3)
+    _action = "aos_automation"
+    cost    = get_credit_cost(_action, 3)
     user_id = str(user.get("_id", ""))
-    await consume_credits(user_id, cost)
+    await consume_credits(user_id, _action)
     engine  = await get_academic_os_engine()
     return engine.fire_automation_event(req.event_type, req.payload)
 

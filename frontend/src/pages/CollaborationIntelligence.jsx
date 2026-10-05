@@ -14,6 +14,7 @@ import { ResearchLayout } from "@/layouts";
 import { AI_NAV_ITEMS } from "@/lib/navItems";
 import { Card } from "@/components/ds/Card";
 import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
+import { CreditCostNumber } from "@/components/billing/CreditCost";
 
 // ─────────────────────── ai nav ──────────────────────────────────────────────
 
@@ -153,7 +154,7 @@ function GateView() {
           <ArrowRight size={15} strokeWidth={1.5} />
         </Link>
         <div className="mt-3 text-center text-xs text-slate-400">
-          15 credits per recommendation run
+          <CreditCostNumber operation="LITERATURE_SYNTHESIS" /> credits per recommendation run
         </div>
       </div>
     </div>
@@ -710,7 +711,7 @@ function EmptyState({ onGenerate, loading }) {
         <Sparkles size={15} strokeWidth={1.5} />
         {loading ? "Generating…" : "Generate Recommendations"}
       </button>
-      <div className="mt-3 text-xs text-slate-400">15 credits per run</div>
+      <div className="mt-3 text-xs text-slate-400"><CreditCostNumber operation="LITERATURE_SYNTHESIS" /> credits per run</div>
     </div>
   );
 }

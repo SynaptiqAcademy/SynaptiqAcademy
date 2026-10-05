@@ -14,6 +14,7 @@ import { Card } from "@/components/ds/Card";
 import { Badge } from "@/components/ds/Badge";
 import { InlineError } from "@/components/ds/Alert";
 import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
+import { CreditCostNumber } from "@/components/billing/CreditCost";
 
 
 
@@ -400,7 +401,7 @@ function UploadView({ onReview }) {
             ) : (
               <>
                 <Microscope size={15} strokeWidth={1.5} />
-                Analyze Manuscript · 20 Credits
+                Analyze Manuscript · <CreditCostNumber operation="FULL_MANUSCRIPT_REVIEW" /> Credits
               </>
             )}
           </Button>
@@ -428,8 +429,8 @@ function UploadView({ onReview }) {
           </Card>
           <Card padding="lg">
             <div className="overline mb-2">Credit cost</div>
-            <div className="font-serif text-3xl text-slate-900">20</div>
-            <div className="text-xs text-slate-500 mt-1">Research Credits per review</div>
+            <div className="font-serif text-3xl text-slate-900"><CreditCostNumber operation="FULL_MANUSCRIPT_REVIEW" /></div>
+            <div className="text-xs text-slate-500 mt-1">AI Credits per review</div>
           </Card>
         </div>
       </div>
