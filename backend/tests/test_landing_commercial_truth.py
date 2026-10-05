@@ -14,18 +14,11 @@ from plans_catalogue import get_plan, PLAN_QUOTAS, STORAGE_LIMITS_BYTES
 
 FRONTEND = Path(__file__).resolve().parents[2] / "frontend"
 LANDING_DIR = FRONTEND / "src" / "components" / "landing"
-CONTENT = (LANDING_DIR / "content.js").read_text()
-LANDING_FILES = [FRONTEND / "src" / "pages" / "Landing.jsx", *LANDING_DIR.glob("*.jsx"), LANDING_DIR / "content.js"]
+LANDING_FILES = [FRONTEND / "src" / "pages" / "Landing.jsx", *LANDING_DIR.glob("*.js*")]
 ALL_LANDING = "\n".join(p.read_text() for p in LANDING_FILES)
 FOOTER = (FRONTEND / "src" / "components" / "layout" / "MarketingLayout.jsx").read_text()
 INDEX_HTML = (FRONTEND / "public" / "index.html").read_text()
 GB = 1024 ** 3
-
-
-def _plan_block(key: str) -> str:
-    start = CONTENT.index(f'key: "{key}"')
-    end = CONTENT.find("key: ", start + 5)
-    return CONTENT[start:end if end > 0 else len(CONTENT)]
 
 
 def _visible_text(src: str) -> str:
@@ -34,44 +27,27 @@ def _visible_text(src: str) -> str:
                      if not l.strip().startswith(("//", "*", "/*", "{/*")))
 
 
-class TestPlansMatchCatalogue:
-    def test_free(self):
-        b = _plan_block("free")
-        assert '"€0"' in b and "0 AI Credits" in b and get_plan("free")["credits_per_month"] == 0
-        assert PLAN_QUOTAS["free"]["projects"] == 0 and STORAGE_LIMITS_BYTES["free"] == 0
-        assert "Get Started Free" in b
+class TestNoPricingOnLanding:
+    """Plans, prices, credits and storage live on /pricing only."""
 
-    def test_free_never_claims_paid_capabilities(self):
-        b = _plan_block("free").lower()
-        includes = b[b.index("includes"):b.index("cta")]
-        for paid in ("messag", "project", "workspace", "journal", "conference", "grant", "ai research",
-                     "copilot", "collaboration request", "storage", "research need", "200", "750"):
-            assert paid not in includes, paid
+    def test_no_prices_credits_or_plan_cards(self):
+        text = _visible_text(ALL_LANDING)
+        for bad in ("€", "AI Credits /", "credits_per_month", "PLAN_PREVIEW", "Choose Pro", "Pro Advanced",
+                    "Contact Sales", " GB", "Early Access", "<Plans", "LandingFAQ", "lp-plan"):
+            assert bad not in text, bad
 
-    def test_pro(self):
-        b = _plan_block("pro")
-        assert get_plan("researcher")["price_eur_monthly"] == 9.99 and '"€9.99"' in b
-        assert '"Early Access"' in b and "€14.99/month" in b
-        assert get_plan("researcher")["credits_per_month"] == 200 and "200 AI Credits / month" in b
-        assert STORAGE_LIMITS_BYTES["researcher"] == 10 * GB and "10 GB" in b
-        assert PLAN_QUOTAS["researcher"]["workspaces"] == 10 and "10 workspaces" in b
-        assert "Choose Pro" in b
-
-    def test_pro_advanced(self):
-        b = _plan_block("pro_advanced")
-        assert get_plan("pro_researcher")["price_eur_monthly"] == 29.99 and '"€29.99"' in b
-        assert get_plan("pro_researcher")["credits_per_month"] == 750 and "750 AI Credits / month" in b
-        assert STORAGE_LIMITS_BYTES["pro_researcher"] == 50 * GB and "50 GB" in b
-        assert "Choose Pro Advanced" in b
-
-    def test_institutional(self):
-        b = _plan_block("institutional")
-        assert '"Custom"' in b and "Contact Sales" in b and "/contact?topic=institution" in b
-        assert "€" not in b
-
-    def test_paid_ctas_go_to_pricing_not_checkout(self):
-        assert 'href: "/pricing"' in _plan_block("pro") and 'href: "/pricing"' in _plan_block("pro_advanced")
+    def test_conversion_moment_is_start_free_and_pricing(self):
+        s = (LANDING_DIR / "Sections.jsx").read_text()
+        assert "You already have the question." in s
+        assert 'to="/register"' in s and "Start Free" in s
+        assert 'to="/pricing"' in s and "Explore Pricing" in s
         assert "checkout" not in _visible_text(ALL_LANDING)
+
+    def test_old_closing_and_faq_are_gone(self):
+        assert "Every project starts as a question." not in ALL_LANDING
+        assert "lp-close" not in ALL_LANDING
+        assert not (LANDING_DIR / "content.js").exists()
+        assert not (LANDING_DIR / "AfterMatch.jsx").exists()
 
 
 STALE = [r"\b300 (AI )?[Cc]redits", r"\b1,?000 (AI )?[Cc]redits", r"\b50 (AI )?[Cc]redits", r"\b25 (AI )?[Cc]redits",
@@ -119,14 +95,14 @@ class TestClaimSafety:
 
     def test_verification_language_is_precise(self):
         p = (LANDING_DIR / "Passport.jsx").read_text()
-        assert "doesn't verify degrees, licences or professional" in p
+        assert "doesn't verify" in p and "degrees, licences or professional competence" in p
         assert "Self-declared" in p and "Connected" in p and "Verified" in p
         assert "not a real person" in p
 
     def test_preview_never_promises_free_discovery(self):
         q = (LANDING_DIR / "ResearchQuestion.jsx").read_text()
-        assert "On Pro, a question like this becomes a Research Need" in q
-        assert "never shows people" in q
+        assert "On Pro, this becomes a search for the people" in q
+        assert "no people shown" in q
 
     def test_hero_h1_and_ctas(self):
         h = (LANDING_DIR / "Hero.jsx").read_text()

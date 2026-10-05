@@ -5,9 +5,8 @@ import { setPageSeo } from "../lib/seo";
 import Hero from "../components/landing/Hero";
 import ResearchQuestion from "../components/landing/ResearchQuestion";
 import Thread from "../components/landing/Thread";
-import AfterMatch from "../components/landing/AfterMatch";
 import Passport from "../components/landing/Passport";
-import { Workflows, AIAssistance, Audience, Plans, LandingFAQ, Closing } from "../components/landing/Sections";
+import { WhySynaptiq, FinalCTA } from "../components/landing/Sections";
 import "../components/landing/landing.css";
 
 // Newsreader is the Landing page's display serif; requested only here.
@@ -56,14 +55,9 @@ export default function Landing() {
         <Hero registrationOpen={registrationOpen} onSeeHow={scrollToQuestion} />
         <ResearchQuestion onResult={(data, q) => { setPreview(data); setQuestion(q); }} />
         <Thread question={question} preview={preview} />
-        <AfterMatch />
         <Passport />
-        <Workflows />
-        <AIAssistance />
-        <Audience />
-        <Plans />
-        <LandingFAQ />
-        <Closing registrationOpen={registrationOpen} onAsk={scrollToQuestion} />
+        <WhySynaptiq />
+        <FinalCTA registrationOpen={registrationOpen} />
       </div>
     </MarketingLayout>
   );

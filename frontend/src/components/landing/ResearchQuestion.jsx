@@ -1,5 +1,4 @@
 import React, { useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import api from "@/lib/api";
 import { trackMarketingEvent as track } from "@/lib/marketingAnalytics";
 
@@ -58,13 +57,9 @@ export default function ResearchQuestion({ onResult }) {
   return (
     <section id="research-question" className="lp-section lp-section--quiet" aria-labelledby="lp-q-title">
       <div className="lp-wrap">
-        <div className="lp-index"><b>01</b> The question</div>
+        <div className="lp-index"><b>01</b> Try it</div>
         <h2 id="lp-q-title" className="lp-h2">What are you researching?</h2>
-        <p className="lp-lede">
-          Write it the way you'd put it to a colleague. Synaptiq reads the question
-          for its structure and the expertise it implies. No account needed, and
-          nothing you type here is saved.
-        </p>
+        <p className="lp-lede">Write it the way you'd put it to a colleague.</p>
 
         <form className="lp-q-form" onSubmit={submit}>
           <label htmlFor="lp-q-input" className="lp-q-label lp-mono">Your question</label>
@@ -132,37 +127,21 @@ function marked(question, structure) {
 
 const ResearchMap = React.forwardRef(function ResearchMap({ question, result }, ref) {
   const s = result.structure || {};
-  const reading = [];
-  if (s.kind === "aim") {
-    if (s.subject) reading.push(["Subject", s.subject]);
-    if (s.objective) reading.push(["Aim", s.objective]);
-  } else if (s.kind === "inquiry" && s.objective) {
-    reading.push(["Asks", s.objective]);
-  }
-  (s.constraints || []).forEach((c) => reading.push(["Constraint", c]));
 
   const cols = [
-    { title: "Research areas", items: result.themes },
-    { title: "Methods that may apply", items: result.methods },
-    { title: "Perspectives you may not have yet", items: result.complementary_disciplines },
+    { title: "Research areas", items: result.themes?.slice(0, 4) },
+    { title: "Methods that may apply", items: result.methods?.slice(0, 4) },
+    { title: "Perspectives you may not have considered", items: result.complementary_disciplines?.slice(0, 4) },
   ];
 
   return (
     <figure className="lp-map" tabIndex={-1} ref={ref} aria-labelledby="lp-fig2-caption" style={{ outline: "none" }}>
       <figcaption id="lp-fig2-caption" className="lp-figcaption lp-mono">
         <span>Fig. 2 — Your question, read as a research need</span>
-        <span>{result.matched_taxonomy ? "fixed vocabulary" : "terms from your wording"}</span>
+        <span aria-hidden="true">preview</span>
       </figcaption>
 
       <p className="lp-map-question lp-in">{marked(question, s)}</p>
-
-      {reading.length > 0 && (
-        <dl className="lp-reading lp-in lp-in-2">
-          {reading.map(([k, v], i) => (
-            <div key={i}><dt>{k}</dt><dd>{v}</dd></div>
-          ))}
-        </dl>
-      )}
 
       <div className="lp-columns">
         {cols.map((c, i) => (
@@ -173,42 +152,21 @@ const ResearchMap = React.forwardRef(function ResearchMap({ question, result }, 
               <ul>{c.items.map((x) => <li key={x}>{x}</li>)}</ul>
             ) : (
               <p className="lp-empty">
-                Nothing specific from the vocabulary for this question. A full Research Need on Pro reads it in more depth.
+                Nothing specific for this question in the preview vocabulary.
               </p>
             )}
           </section>
         ))}
       </div>
 
-      {result.keywords?.length > 0 && (
-        <div className="lp-terms lp-mono" aria-label="Terms taken from your question">
-          <span>Terms in your question:</span>
-          {result.keywords.map((k) => <span key={k}>{k}</span>)}
-        </div>
-      )}
-
       <p className="lp-footnote lp-small">
-        This preview uses a fixed vocabulary, not a language model. It points to where
-        expertise may sit; it doesn't judge the question, and it never shows people.
+        Preview · fixed research vocabulary, not AI · no people shown · your question isn't stored
       </p>
 
-      <div className="lp-next">
-        <div>
-          <p style={{ fontWeight: 600, fontSize: "1rem" }}>What happens next is where Synaptiq is different.</p>
-          <p className="lp-small" style={{ marginTop: 6, maxWidth: "46rem" }}>
-            On Pro, a question like this becomes a Research Need: Synaptiq looks for
-            members whose work covers these areas and methods, and explains why each one
-            is relevant. You decide who to contact. A free account gives you your own
-            Academic Passport, so the right people can find you.
-          </p>
-        </div>
-        <div className="lp-next-actions">
-          <a href="#thread" className="lp-btn lp-btn--ghost">Follow the thread</a>
-          <Link to="/pricing" className="lp-btn lp-btn--ghost" onClick={() => track("pricing_viewed", { from: "research_map" })}>
-            What Pro adds
-          </Link>
-        </div>
-      </div>
+      <p className="lp-next-line">
+        On Pro, this becomes a search for the people who have that expertise.{" "}
+        <a href="#thread" className="lp-link">See how the work moves</a>
+      </p>
     </figure>
   );
 });

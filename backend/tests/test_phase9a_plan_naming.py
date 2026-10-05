@@ -140,7 +140,6 @@ class TestPaidIndividualPlansDoNotGrantInstitution:
 PUBLIC_PRICING_FILES = [
     FRONTEND / "pages" / "Pricing.jsx",
     FRONTEND / "pages" / "Landing.jsx",
-    FRONTEND / "components" / "landing" / "content.js",
     FRONTEND / "components" / "landing" / "Sections.jsx",
 ]
 
@@ -169,17 +168,12 @@ class TestPublicCommercialTruth:
                     offenders.append(f"{p.relative_to(FRONTEND)}: {bad}")
         assert not offenders, offenders
 
-    def test_landing_preview_has_no_researcher_plan_card(self):
-        src = (FRONTEND / "components" / "landing" / "content.js").read_text()
-        tiers = src[src.index("export const PLAN_PREVIEW"):src.index("export const FAQ")]
-        names = re.findall(r'name:\s*"([^"]+)"', tiers)
-        assert names == ["Free", "Pro", "Pro Advanced", "Institutional"]
-
-    def test_landing_paid_ctas_do_not_hit_checkout(self):
-        src = (FRONTEND / "components" / "landing" / "content.js").read_text()
-        tiers = src[src.index("export const PLAN_PREVIEW"):src.index("export const FAQ")]
-        assert "checkout" not in tiers
-        assert 'href: "/contact?topic=institution"' in tiers
+    def test_landing_has_no_plan_cards_and_no_checkout(self):
+        # Plans live on /pricing only; the Landing page links there.
+        landing = FRONTEND / "components" / "landing"
+        src = "\n".join(p.read_text() for p in [FRONTEND / "pages" / "Landing.jsx", *landing.glob("*.js*")])
+        assert "PLAN_PREVIEW" not in src and "checkout" not in src
+        assert 'to="/pricing"' in (landing / "Sections.jsx").read_text()
 
     def test_annual_billing_not_offered_as_purchasable(self):
         src = (FRONTEND / "pages" / "Pricing.jsx").read_text()

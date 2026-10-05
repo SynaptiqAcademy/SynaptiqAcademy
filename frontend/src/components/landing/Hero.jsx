@@ -16,10 +16,8 @@ export default function Hero({ registrationOpen, onSeeHow }) {
         <div>
           <h1 id="lp-hero-title" className="lp-h1">Research starts with a question.</h1>
           <p className="lp-hero-copy">
-            Synaptiq shows you what a question will need: the fields, the methods,
-            the perspectives you don't have yet. It helps you find the people who
-            bring them. And once the work starts, the project, the conversations
-            and the writing stay together.
+            Synaptiq turns it into the expertise it needs, the people who have it,
+            and the work you do together.
           </p>
           <div className="lp-hero-actions">
             <Link
@@ -36,8 +34,8 @@ export default function Hero({ registrationOpen, onSeeHow }) {
           </div>
           <p className="lp-hero-note lp-small">
             {registrationOpen === false
-              ? "New sign-ups are paused while we finish setting up billing. The research preview below works without an account."
-              : "Free account: Academic Passport, public research page and ORCID. No credit card."}
+              ? "New sign-ups are paused while billing is set up. You can still try the preview below."
+              : "Free: Academic Passport, public research page and ORCID. No credit card."}
           </p>
         </div>
 
@@ -56,10 +54,6 @@ export default function Hero({ registrationOpen, onSeeHow }) {
             <div><dt><span className="lp-swatch lp-swatch--aim" aria-hidden="true" />Aim</dt><dd>reduce waiting times</dd></div>
             <div><dt><span className="lp-swatch lp-swatch--constraint" aria-hidden="true" />Constraint</dt><dd>no added staff workload</dd></div>
           </dl>
-          <p className="lp-small" style={{ marginTop: 18 }}>
-            A constraint changes who you need. This one brings in operations research
-            and workforce expertise, not only clinical knowledge.
-          </p>
         </figure>
       </div>
     </section>

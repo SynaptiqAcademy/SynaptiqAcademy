@@ -56,15 +56,16 @@
 .lp :focus-visible { outline: 2px solid var(--mark); outline-offset: 3px; border-radius: 2px; }
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
-.lp-hero { padding: 88px 0 96px; background: var(--paper); }
+.lp-hero { padding: 128px 0 136px; background: var(--paper); }
+@media (max-width: 640px) { .lp-hero { padding: 72px 0 80px; } }
 .lp-hero-grid { display: grid; gap: 56px; align-items: center; }
 @media (min-width: 1024px) { .lp-hero-grid { grid-template-columns: 1.05fr 1fr; gap: 72px; } }
 .lp .lp-h1 {
   font-family: var(--serif); font-weight: 400; font-size: clamp(2.6rem, 6vw, 4.6rem);
   line-height: 1.02; letter-spacing: -0.02em; color: var(--ink); text-wrap: balance;
 }
-.lp-hero-copy { font-size: 1.12rem; line-height: 1.7; color: var(--ink-2); max-width: 34rem; margin-top: 26px; }
-.lp-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+.lp-hero-copy { font-size: 1.2rem; line-height: 1.6; color: var(--ink-2); max-width: 30rem; margin-top: 30px; }
+.lp-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px; }
 .lp-hero-note { margin-top: 18px; max-width: 34rem; }
 
 /* Fig. 1 — the annotated question */
@@ -121,6 +122,7 @@
 
 .lp-terms { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); }
 .lp-footnote { margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--rule); max-width: 46rem; }
+.lp-next-line { margin-top: 28px; font-size: 1rem; color: var(--ink); }
 .lp-next { margin-top: 40px; display: grid; gap: 20px; align-items: start; padding: 24px 0 0; border-top: 1px solid var(--ink); }
 @media (min-width: 900px) { .lp-next { grid-template-columns: 1fr auto; gap: 40px; } }
 .lp-next-actions { display: flex; flex-wrap: wrap; gap: 12px; }
@@ -187,75 +189,24 @@
   .lp-ledger, .lp-ledger tbody, .lp-ledger tr, .lp-ledger th, .lp-ledger td { display: block; width: auto; }
   .lp-ledger tr { padding: 10px 0; border-bottom: 1px solid var(--rule); }
   .lp-ledger th, .lp-ledger td { border: none; padding: 2px 0; }
+  .lp-ledger caption { display: block; width: auto; }
 }
 .lp-states { margin-top: 26px; display: grid; gap: 12px; }
 .lp-states div { display: grid; grid-template-columns: 110px 1fr; gap: 12px; font-size: 0.86rem; line-height: 1.55; color: var(--ink-2); }
 
-/* ── 05 Secondary workflows ───────────────────────────────────────────── */
-.lp-entries { margin-top: 48px; display: grid; gap: 36px; }
-@media (min-width: 768px) { .lp-entries { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 56px; } }
-@media (min-width: 1100px) { .lp-entries { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-.lp-entry { border-top: 1px solid var(--ink); padding-top: 12px; }
-.lp .lp-entry h3 { font-family: var(--serif); font-weight: 400; font-size: 1.45rem; margin: 6px 0 10px; }
-.lp-entry p { font-size: 0.9rem; line-height: 1.65; color: var(--ink-2); }
-.lp-entry .lp-plan { margin-top: 12px; color: var(--muted); }
+/* ── Why Synaptiq ──────────────────────────────────────────────────── */
+.lp-why-strip { margin-top: 56px; padding: 22px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule); display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px 32px; }
+.lp-why-strip > .lp-mono { color: var(--muted); }
+.lp-why-strip ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 28px; flex: 1; }
+.lp-why-strip li { font-family: var(--serif); font-size: 1.45rem; color: var(--ink); }
+@media (max-width: 640px) { .lp-why-strip ul { flex-basis: 100%; gap: 4px 20px; } .lp-why-strip li { font-size: 1.25rem; } }
+.lp-why-who { margin-top: 32px; font-size: 1rem; line-height: 1.7; color: var(--ink-2); max-width: 46rem; }
 
-/* ── 06 AI ────────────────────────────────────────────────────────────── */
-.lp-ai { display: grid; gap: 44px; margin-top: 48px; }
-@media (min-width: 900px) { .lp-ai { grid-template-columns: 1fr 1fr; gap: 64px; } }
-.lp-ai h3 { font-size: 0.95rem; font-weight: 700; padding-bottom: 10px; border-bottom: 1px solid var(--ink); }
-.lp-ai ul { list-style: none; margin: 0; padding: 0; }
-.lp-ai li { padding: 11px 0; border-bottom: 1px solid var(--rule); font-size: 0.95rem; color: var(--ink); display: flex; justify-content: space-between; gap: 16px; }
-.lp-ai .lp-cost { color: var(--muted); font-family: var(--mono); font-size: 0.74rem; white-space: nowrap; }
-.lp-caveat { margin-top: 36px; padding-left: 16px; border-left: 2px solid var(--mark); max-width: 52rem; }
-
-/* ── 07 Audience ──────────────────────────────────────────────────────── */
-.lp-audience { font-family: var(--serif); font-size: clamp(1.45rem, 2.8vw, 2.1rem); line-height: 1.4; color: var(--ink); max-width: 46rem; }
-.lp-audience em { font-style: italic; color: var(--mark); }
-
-/* ── 08 Plans ─────────────────────────────────────────────────────────── */
-.lp-plans { margin-top: 48px; display: grid; gap: 0; border-top: 1px solid var(--ink); }
-@media (min-width: 768px) { .lp-plans { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1100px) { .lp-plans { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-.lp-plan-col { padding: 26px 24px 28px 0; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; }
-@media (min-width: 1100px) { .lp-plan-col { border-bottom: none; padding: 26px 26px 8px 0; } .lp-plan-col + .lp-plan-col { padding-left: 26px; border-left: 1px solid var(--rule); } }
-.lp-plan-col--lead { position: relative; }
-.lp-plan-col--lead::before { content: ""; position: absolute; left: 0; right: 0; top: -1px; border-top: 3px solid var(--navy); }
-@media (min-width: 1100px) { .lp-plan-col--lead::before { left: 26px; } }
-.lp-plan-name { font-weight: 700; font-size: 1rem; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
-.lp-plan-status { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mark); }
-.lp-price { font-family: var(--serif); font-size: 2.3rem; line-height: 1; margin-top: 14px; }
-.lp-price small { font-family: inherit; font-size: 0.95rem; color: var(--muted); margin-left: 4px; }
-.lp-future { margin-top: 6px; }
-.lp-credits { margin-top: 12px; font-weight: 600; font-size: 0.9rem; }
-.lp-role { margin-top: 6px; font-size: 0.88rem; color: var(--ink-2); line-height: 1.5; min-height: 2.6em; }
-.lp-plan-col ul { list-style: none; padding: 0; margin: 16px 0 22px; flex: 1; }
-.lp-plan-col li { font-size: 0.85rem; line-height: 1.5; color: var(--ink-2); padding: 5px 0 5px 14px; position: relative; }
-.lp-plan-col li::before { content: ""; position: absolute; left: 0; top: 13px; width: 6px; border-top: 1px solid var(--ink-2); }
-.lp-plans-foot { margin-top: 28px; display: grid; gap: 10px; max-width: 52rem; }
-
-/* ── 09 FAQ ───────────────────────────────────────────────────────────── */
-.lp-faq-grid { display: grid; gap: 32px; }
-@media (min-width: 1024px) { .lp-faq-grid { grid-template-columns: 0.7fr 1.3fr; gap: 72px; } }
-.lp-faq details { border-top: 1px solid var(--rule); }
-.lp-faq details:last-child { border-bottom: 1px solid var(--rule); }
-.lp-faq summary { list-style: none; cursor: pointer; padding: 18px 32px 18px 0; position: relative; font-weight: 600; font-size: 0.98rem; color: var(--ink); }
-.lp-faq summary::-webkit-details-marker { display: none; }
-.lp-faq summary::after { content: "+"; position: absolute; right: 4px; top: 14px; font-family: var(--mono); font-size: 1.1rem; color: var(--muted); }
-.lp-faq details[open] summary::after { content: "−"; }
-.lp-faq details p { padding: 0 32px 20px 0; font-size: 0.93rem; line-height: 1.7; color: var(--ink-2); max-width: 62ch; }
-
-/* ── Closing ──────────────────────────────────────────────────────────── */
-.lp-close { padding: 120px 0 128px; background: var(--navy); color: #fff; border-top: none; }
-.lp-close .lp-index { color: rgba(255,255,255,0.55); }
-.lp-close .lp-index b { color: #e7b9a6; }
-.lp .lp-close h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 1.05; letter-spacing: -0.015em; max-width: 18ch; }
-.lp-close p { color: rgba(255,255,255,0.75); font-size: 1.05rem; line-height: 1.7; max-width: 40rem; margin-top: 20px; }
-.lp-close .lp-btn--primary { background: #fff; color: var(--navy); }
-.lp-close .lp-btn--primary:hover { background: #eef1f6; }
-.lp-close .lp-btn--ghost { color: #fff; border-color: rgba(255,255,255,0.45); }
-.lp-close .lp-btn--ghost:hover { border-color: #fff; }
-.lp-close :focus-visible { outline-color: #e7b9a6; }
+/* ── Final call to action: light, set apart from the dark footer ─────── */
+.lp-final { padding: 112px 0 120px; background: var(--paper); border-top: 1px solid var(--rule); }
+.lp-final-inner { border-top: 3px solid var(--ink); padding-top: 40px; max-width: 46rem; }
+.lp .lp-final h2 { font-size: clamp(2.2rem, 5vw, 3.6rem); }
+@media (max-width: 640px) { .lp-final { padding: 72px 0 88px; } }
 
 @media (prefers-reduced-motion: reduce) {
   .lp-in { animation: none !important; }
@@ -265,5 +216,13 @@
 /* Grid children may shrink below their content width (prevents horizontal
    overflow from no-wrap labels on narrow screens). */
 .lp-hero-grid > *, .lp-reading > *, .lp-columns > *, .lp-steps > *, .lp-step > *,
-.lp-passport-grid > *, .lp-entries > *, .lp-ai > *, .lp-plans > *, .lp-faq-grid > *, .lp-next > * { min-width: 0; }
-.lp-ai li span:first-child { min-width: 0; }
+.lp-passport-grid > *, .lp-next > * { min-width: 0; }
+
+/* Find → Invite → Work strip (under the thread) */
+.lp-proof { margin-top: 72px; display: grid; gap: 20px; align-items: start; }
+@media (min-width: 960px) { .lp-proof { grid-template-columns: 1fr auto 1fr auto 1fr; gap: 18px; } }
+.lp-proof > * { min-width: 0; }
+.lp-proof-step { font-family: var(--serif); font-size: 1.35rem; margin-bottom: 10px; color: var(--ink); }
+.lp-proof-arrow { font-family: var(--serif); font-size: 1.4rem; color: var(--mark); padding-top: 52px; }
+@media (max-width: 959px) { .lp-proof-arrow { padding: 0; transform: rotate(90deg); width: max-content; } }
+.lp-proof .lp-frag { max-width: none; }
