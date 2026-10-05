@@ -185,3 +185,16 @@ class TestPublicCommercialTruth:
         feats = " ".join(get_plan("institution")["features"])
         assert "€" not in feats and "299" not in feats
         assert get_plan("institution")["cta"] == "Contact Sales"
+
+
+class TestPublicPlansApi:
+    @pytest.mark.asyncio
+    async def test_public_plans_api_publishes_no_institutional_price(self):
+        from routers.billing import list_plans
+        plans = {p["code"]: p for p in await list_plans()}
+        for code in ("institution", "enterprise"):
+            assert plans[code]["price_eur_monthly"] is None
+            assert plans[code]["price_eur_annual"] is None
+        assert plans["researcher"]["price_eur_monthly"] == 9.99
+        assert plans["pro_researcher"]["price_eur_monthly"] == 29.99
+        assert plans["researcher"]["name"] == "Pro" and plans["pro_researcher"]["name"] == "Pro Advanced"

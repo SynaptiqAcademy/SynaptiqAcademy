@@ -25,13 +25,17 @@ router = APIRouter(prefix="/api/billing", tags=["billing"])
 
 
 def _safe_plan(p: dict) -> dict:
-    """Public-safe plan dict (strips internal stripe price ids)."""
+    """Public-safe plan dict (strips internal stripe price ids, and the
+    internal reference price of non-self-serve plans — Institutional/
+    Enterprise are Custom / Contact Sales, so no public price is published;
+    the values stay in plans_catalogue.py for internal/sales reference)."""
+    custom = p["code"] in NOT_SELF_SERVE_PLANS
     return {
         "code": p["code"],
         "name": p["name"],
         "tagline": p.get("tagline", ""),
-        "price_eur_monthly": p["price_eur_monthly"],
-        "price_eur_annual": p["price_eur_annual"],
+        "price_eur_monthly": None if custom else p["price_eur_monthly"],
+        "price_eur_annual": None if custom else p["price_eur_annual"],
         "future_price_eur_monthly": p.get("future_price_eur_monthly"),
         "badge": p.get("badge"),
         "credits_per_month": p["credits_per_month"],
