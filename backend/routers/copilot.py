@@ -85,7 +85,7 @@ async def execute(
             from services.credits_service import release_reservation
             if reservation.get("reservation_id"):
                 await release_reservation(reservation["reservation_id"], "copilot_stream_error")
-            yield f"data: {json.dumps({'event': 'error', 'data': {'message': str(exc)[:200]}})}\n\n"
+            yield f"data: {json.dumps({'event': 'error', 'data': {'message': 'The assistant could not finish this request. Your credits were returned.'}})}\n\n"
         finally:
             yield "data: {\"event\": \"done\"}\n\n"
 

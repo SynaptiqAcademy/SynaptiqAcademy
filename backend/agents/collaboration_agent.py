@@ -45,24 +45,22 @@ class CollaborationAgent(BaseAgent):
                 f"Research interests: {', '.join(interests[:4])}"
             ))
 
-        # Find platform researchers with matching interests
+        # Find platform researchers with matching interests. Goes through the
+        # canonical discovery layer so every eligibility/privacy rule applies
+        # (private profiles, opted-out, blocked either way, demo/staff, self).
         researchers = []
         try:
             if interests:
-                researchers = await db.users.find(
-                    {
-                        "$or": [
-                            {"research_interests": {"$in": interests}},
-                            {"research_areas": {"$in": interests}},
-                        ],
-                        "profile_visibility": {"$ne": "private"},
-                    },
-                    {"full_name": 1, "institution": 1, "research_interests": 1, "user_type": 1}
-                ).limit(8).to_list(8)
+                import re as _re
+                from services.network import discovery_engine as discovery
+                q = "|".join(_re.escape(str(t)) for t in interests[:10] if str(t).strip())
+                pool = await discovery.search_people(db, {"q": q}, page=1, limit=8,
+                                                     viewer_id=memory.get("uid"))
+                researchers = pool.get("results") or []
                 if researchers:
                     evidence.append(self._ev(
-                        "database_query", "Synaptiq platform database — users collection",
-                        f"{len(researchers)} researchers found with overlapping research interests (public profiles only)"
+                        "database_query", "Synaptiq platform database — researcher discovery",
+                        f"{len(researchers)} discoverable researchers with overlapping research interests"
                     ))
         except Exception as exc:
             logger.debug("Researcher search error: %s", exc)

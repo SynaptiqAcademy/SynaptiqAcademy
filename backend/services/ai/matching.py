@@ -382,9 +382,18 @@ async def match_reviewers(*, user_id: str, manuscript_id: str, top_n: int = 6) -
         ap = await db.projects.find({"members": {"$in": list(author_ids)}}, {"members": 1}).to_list(200)
         for pr in ap:
             author_projects.update(pr.get("members") or [])
-    # Pull a broad pool — onboarded users not in authors
+    # Pull a broad pool — onboarded users not in authors, under the same
+    # eligibility/privacy rules as researcher discovery (private profiles,
+    # opted-out, blocked either way, demo and staff accounts, the requester).
+    from services.permissions import REAL_CUSTOMER_FILTER
+    from services.network.discovery_engine import _discovery_exclusions
+    excluded = set(await _discovery_exclusions(db, user_id)) | set(author_ids) | {user_id}
     cursor = db.users.find({
-        "onboarded": True, "_id": {"$nin": [ObjectId(a) for a in author_ids if _safe_oid(a)]},
+        "onboarded": True,
+        "profile_visibility": {"$ne": "private"},
+        "is_demo": {"$ne": True},
+        **REAL_CUSTOMER_FILTER,
+        "_id": {"$nin": [ObjectId(a) for a in excluded if a and _safe_oid(str(a))]},
     }).limit(120)
     users = await cursor.to_list(120)
     cand_json = []
