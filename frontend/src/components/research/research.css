@@ -1,0 +1,122 @@
+/* /research — extends the Landing editorial grammar (landing.css tokens). */
+
+.rs .lp-h1 { max-width: 15ch; }
+.rs-state { margin-bottom: 18px; }
+
+/* Hero specimen: a research note with margin annotations */
+.rs-note { border-top: 1px solid var(--ink); padding-top: 14px; }
+.rs-note-q { font-family: var(--serif); font-size: clamp(1.35rem, 2.3vw, 1.75rem); line-height: 1.6; color: var(--ink); }
+.rs-u { border-bottom: 1px solid var(--ink-2); position: relative; }
+.rs-u::after { content: attr(data-n); position: relative; top: -0.7em; margin-left: 2px; font-family: var(--mono); font-size: 0.7rem; color: var(--mark); }
+.rs-note-marg { list-style: none; margin: 22px 0 0; padding: 12px 0 0 16px; border-left: 1px solid var(--mark); display: grid; gap: 8px; }
+.rs-note-marg li { font-size: 0.95rem; color: var(--ink-2); display: grid; grid-template-columns: 8.5rem 1fr; gap: 12px; align-items: baseline; }
+.rs-note-marg .lp-mono { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.rs-note-next { margin-top: 22px; color: var(--mark); }
+@media (max-width: 520px) { .rs-note-marg li { grid-template-columns: 1fr; gap: 2px; } }
+
+/* Body with the Research Margin */
+.rs-body { border-top: 1px solid var(--rule); }
+@media (min-width: 1100px) { .rs-body { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 56px; } }
+.rs-main { min-width: 0; }
+.rs-margin { display: none; }
+@media (min-width: 1100px) {
+  .rs-margin { display: block; position: sticky; top: 96px; align-self: start; padding-top: 96px; }
+}
+.rs-margin-head { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+.rs-margin ol { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 1px solid var(--rule-strong); }
+.rs-margin li { position: relative; }
+.rs-margin li::before { content: ""; position: absolute; left: -18px; top: 13px; width: 7px; height: 7px; border-radius: 50%; background: var(--paper); border: 1px solid var(--rule-strong); }
+.rs-margin a { display: block; padding: 6px 0; font-size: 0.9rem; color: var(--muted); text-decoration: none; }
+.rs-margin a .lp-mono { font-size: 0.7rem; margin-right: 6px; }
+.rs-margin li.is-on a { color: var(--ink); font-weight: 600; }
+.rs-margin li.is-on::before { background: var(--mark); border-color: var(--mark); }
+.rs-margin a:hover { color: var(--ink); }
+
+.rs-sec { padding: 96px 0; border-top: 1px solid var(--rule); scroll-margin-top: 72px; }
+.rs-sec:first-child { border-top: none; }
+@media (max-width: 640px) { .rs-sec { padding: 64px 0; } }
+
+/* Fig. 2 — Research Need record */
+.rs-record { margin-top: 40px; border-top: 1px solid var(--ink); padding-top: 14px; max-width: 52rem; }
+.rs-record dl { margin: 0; }
+.rs-record-row { display: grid; grid-template-columns: 12rem 1fr auto; gap: 4px 20px; padding: 12px 0; border-bottom: 1px solid var(--rule); align-items: baseline; }
+.rs-record-row dt { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.rs-record-row dd { font-size: 1rem; color: var(--ink); line-height: 1.5; min-width: 0; }
+.rs-edit { color: var(--navy); font-size: 0.7rem; text-decoration: underline; text-underline-offset: 3px; }
+.rs-record-foot { margin-top: 14px; max-width: 46rem; }
+@media (max-width: 640px) { .rs-record-row { grid-template-columns: 1fr auto; } .rs-record-row dt { grid-column: 1 / -1; } }
+
+/* Fig. 3 — expertise map */
+.rs-map { margin-top: 40px; border-top: 1px solid var(--ink); padding-top: 14px; }
+.rs-map-q { font-family: var(--serif); font-size: clamp(1.2rem, 2vw, 1.5rem); line-height: 1.6; color: var(--ink-2); margin-bottom: 30px; }
+.rs-part { padding: 0 2px; border-bottom: 1px dotted var(--rule-strong); transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease; }
+.rs-part.is-on { color: var(--ink); background: var(--mark-soft); border-bottom: 1.5px solid var(--mark); }
+.rs-map-cols { display: grid; gap: 28px; }
+@media (min-width: 768px) { .rs-map-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1200px) { .rs-map-cols { grid-template-columns: 0.8fr 1.3fr 1fr 0.9fr; gap: 24px; } }
+.rs-map-col { min-width: 0; border-top: 1px solid var(--ink); padding-top: 10px; }
+.rs-map-group { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.rs-map-col ul { list-style: none; margin: 0; padding: 0; }
+.rs-entry { display: block; width: 100%; text-align: left; background: none; border: none; border-left: 2px solid transparent; padding: 10px 0 10px 12px; cursor: pointer; }
+.rs-entry:hover { border-left-color: var(--rule-strong); }
+.rs-entry.is-sel { border-left-color: var(--mark); }
+.rs-entry-name { display: block; font-family: var(--serif); font-size: 1.15rem; color: var(--ink); line-height: 1.25; }
+.rs-entry-why { display: block; margin-top: 3px; font-size: 0.86rem; color: var(--muted); line-height: 1.45; }
+.rs-entry.is-sel .rs-entry-why { color: var(--ink-2); }
+
+/* Fig. 4 — candidate cards */
+.rs-cards { margin-top: 40px; display: grid; gap: 18px; }
+@media (min-width: 900px) { .rs-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; } }
+.rs-card { background: #fff; border: 1px solid var(--rule); border-radius: 4px; padding: 18px 20px; min-width: 0; }
+.rs-card header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; align-items: baseline; padding-bottom: 10px; border-bottom: 1px solid var(--rule); }
+.rs-card-name { font-family: var(--serif); font-size: 1.2rem; color: var(--ink); }
+.rs-card-group { font-size: 0.7rem; color: var(--mark); text-transform: uppercase; letter-spacing: 0.06em; }
+.rs-why-btn { margin-top: 8px; }
+.rs-evidence { margin: 6px 0 0; }
+.rs-evidence > div { padding: 7px 0; border-bottom: 1px dotted var(--rule); }
+.rs-evidence dt { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.rs-evidence dd { font-size: 0.92rem; color: var(--ink); margin-top: 2px; }
+.rs-contrib { margin-top: 10px; font-size: 0.92rem; color: var(--ink-2); font-style: italic; }
+.rs-card footer { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 0.7rem; }
+.rs-fields { margin-top: 22px; max-width: 52rem; }
+
+/* Fig. 5 — team blueprint */
+.rs-blueprint { margin-top: 40px; border-top: 1px solid var(--ink); padding-top: 14px; max-width: 56rem; }
+.rs-blueprint ul { list-style: none; margin: 0; padding: 0; }
+.rs-role { border-bottom: 1px solid var(--rule); }
+.rs-role summary, .rs-role-row { display: grid; grid-template-columns: minmax(0, 1.2fr) 6.5rem minmax(0, 1.4fr); gap: 4px 18px; align-items: baseline; padding: 14px 0; }
+.rs-role summary { list-style: none; cursor: pointer; }
+.rs-role summary::-webkit-details-marker { display: none; }
+.rs-role summary .rs-role-name::after { content: " +"; font-family: var(--mono); font-size: 0.8rem; color: var(--muted); }
+.rs-role details[open] summary .rs-role-name::after { content: " −"; }
+.rs-role-name { font-family: var(--serif); font-size: 1.15rem; color: var(--ink); }
+.rs-role-pri { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.rs-role-state { font-size: 0.92rem; color: var(--ink-2); }
+.rs-role--self .rs-role-state { color: var(--navy); font-weight: 600; }
+.rs-role--missing .rs-role-state { color: var(--mark); font-weight: 600; }
+.rs-role--missing { border-left: 2px solid var(--mark); padding-left: 12px; }
+.rs-role details p { padding: 0 0 14px; }
+.rs-blueprint-foot { margin-top: 14px; }
+@media (max-width: 640px) {
+  .rs-role summary, .rs-role-row { grid-template-columns: 1fr auto; }
+  .rs-role-state { grid-column: 1 / -1; }
+}
+
+/* 06 — hand-off */
+.rs-handoff { list-style: none; margin: 40px 0 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--ink); }
+@media (min-width: 900px) { .rs-handoff { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.rs-handoff li { position: relative; padding: 16px 20px 16px 0; border-bottom: 1px solid var(--rule); min-width: 0; }
+@media (min-width: 900px) {
+  .rs-handoff li { border-bottom: none; }
+  .rs-handoff li + li { padding-left: 20px; border-left: 1px solid var(--rule); }
+  .rs-handoff li + li::before { content: "→"; position: absolute; left: -8px; top: 14px; background: var(--paper); color: var(--mark); font-size: 0.9rem; }
+}
+.rs-handoff-k { display: block; font-family: var(--serif); font-size: 1.25rem; color: var(--ink); }
+.rs-handoff-v { display: block; margin-top: 4px; font-size: 0.88rem; color: var(--ink-2); line-height: 1.5; }
+.rs-bridge { margin-top: 32px; font-size: 1rem; line-height: 1.65; color: var(--ink-2); max-width: 46rem; }
+
+.rs .lp-final h2 { max-width: 18ch; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rs-part { transition: none; }
+}
