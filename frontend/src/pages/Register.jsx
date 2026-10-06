@@ -160,10 +160,13 @@ export default function Register() {
           />
 
           <AuthCheckbox checked={agreed} onChange={function(e) { setAgreed(e.target.checked); }}>
-            I'm 18 or older and agree to the{" "}
-            <Link to="/terms"   style={{ color: NAVY, fontWeight: 600, textDecoration: "none" }}>Terms of Service</Link>.
-            {" "}I've read the{" "}
-            <Link to="/privacy" style={{ color: NAVY, fontWeight: 600, textDecoration: "none" }}>Privacy Policy</Link>.
+            {/* One inline run, so the sentence wraps as text rather than as flex columns. */}
+            <span>
+              I'm 18 or older and agree to the{" "}
+              <Link to="/terms"   style={{ color: NAVY, fontWeight: 600, textDecoration: "none" }}>Terms of Service</Link>.
+              {" "}I've read the{" "}
+              <Link to="/privacy" style={{ color: NAVY, fontWeight: 600, textDecoration: "none" }}>Privacy Policy</Link>.
+            </span>
           </AuthCheckbox>
 
           <ErrorBanner error={err} testId={TID.registerError} />
