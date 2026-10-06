@@ -1,0 +1,65 @@
+/* /resources — the research index. More editorial than the product pages:
+   type, numbering and rules carry the identity. Extends landing.css tokens. */
+
+.rx .lp-h1 { max-width: 14ch; }
+.rx-hero { padding-bottom: 80px; }
+.rx-label { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; margin: 36px 0 0; padding-bottom: 10px; border-bottom: 1px solid var(--ink); }
+
+/* Empty state */
+.rx-empty { margin-top: 8px; max-width: 46rem; }
+
+/* Index rows */
+.rx-list { list-style: none; margin: 0; padding: 0; }
+.rx-entry { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: 0 20px; padding: 22px 0; border-bottom: 1px solid var(--rule); }
+.rx-num { font-size: 0.85rem; color: var(--mark); padding-top: 4px; }
+.rx-task { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.lp .rx-title { font-family: var(--serif); font-weight: 400; font-size: 1.45rem; line-height: 1.25; margin-top: 4px; }
+.rx-title a { color: var(--ink); text-decoration: none; }
+.rx-title a:hover { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.rx-desc { margin-top: 6px; font-size: 0.98rem; line-height: 1.6; color: var(--ink-2); max-width: 62ch; }
+.rx-meta { margin-top: 8px; font-size: 0.72rem; color: var(--muted); }
+@media (max-width: 560px) { .rx-entry { grid-template-columns: 1fr; } .rx-num { padding: 0 0 4px; } }
+
+/* Search and filters (appear only when the library is large enough) */
+.rx-tools { margin-top: 36px; display: grid; gap: 14px; }
+.rx-search input { width: 100%; max-width: 32rem; font: inherit; font-size: 1rem; padding: 11px 14px; border: 1px solid var(--rule-strong); border-radius: 3px; background: #fff; color: var(--ink); }
+.rx-search input:focus-visible { outline: 2px solid var(--mark); outline-offset: 1px; }
+.rx-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.rx-filters button { background: #fff; border: 1px solid var(--rule-strong); border-radius: 2px; padding: 7px 12px; font-size: 0.9rem; color: var(--ink-2); cursor: pointer; }
+.rx-filters button.is-sel { border-color: var(--mark); color: var(--ink); box-shadow: inset 0 -2px 0 var(--mark); }
+
+/* Elsewhere: each kind of writing labelled as what it is */
+.rx-else { margin-top: 8px; border-top: 1px solid var(--ink); }
+.rx-else > div { display: grid; gap: 4px 32px; padding: 18px 0; border-bottom: 1px solid var(--rule); align-items: baseline; }
+@media (min-width: 768px) { .rx-else > div { grid-template-columns: 22rem 1fr; } }
+.rx-else dt { display: flex; align-items: baseline; gap: 14px; }
+.rx-kind { font-size: 0.7rem; color: var(--mark); text-transform: uppercase; letter-spacing: 0.08em; min-width: 8.5rem; }
+.rx-else-link { font-family: var(--serif); font-size: 1.35rem; color: var(--ink); text-decoration: none; }
+.rx-else-link:hover { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.rx-else dd { font-size: 0.98rem; color: var(--ink-2); }
+@media (max-width: 560px) { .rx-else dt { flex-direction: column; gap: 2px; } }
+
+/* Quiet transition */
+.rx-quiet { padding: 72px 0; }
+.lp .rx-quiet-title { font-family: var(--serif); font-weight: 400; font-size: clamp(1.4rem, 2.6vw, 1.9rem); line-height: 1.3; color: var(--ink); max-width: 30ch; }
+.rx-quiet-links { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px 28px; }
+
+/* Guide detail: a reading page */
+.rx-article { padding: 96px 0 120px; }
+.rx-a-wrap { max-width: 760px; }
+.lp .rx-a-title { font-family: var(--serif); font-weight: 400; font-size: clamp(2.1rem, 4.4vw, 3.2rem); line-height: 1.1; color: var(--ink); }
+.rx-a-desc { margin-top: 16px; font-size: 1.15rem; line-height: 1.6; color: var(--ink-2); }
+.rx-a-meta { margin-top: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--ink); font-size: 0.74rem; color: var(--muted); }
+.rx-a-body { margin-top: 32px; font-size: 1.08rem; line-height: 1.75; color: var(--ink); }
+.rx-a-body p + p { margin-top: 1em; }
+.lp .rx-a-body h2 { font-family: var(--serif); font-weight: 400; font-size: 1.6rem; margin: 1.8em 0 0.5em; }
+.rx-a-body ul { margin: 0.8em 0 0.8em 1.2em; list-style: disc; }
+.rx-a-body li + li { margin-top: 0.35em; }
+.rx-a-note { margin: 1.4em 0; padding-left: 16px; border-left: 2px solid var(--mark); color: var(--ink-2); font-size: 1rem; }
+.rx-a-refs { margin-top: 48px; padding-top: 14px; border-top: 1px solid var(--rule-strong); }
+.rx-a-refs h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.rx-a-refs ol { margin: 10px 0 0 1.2em; font-size: 0.92rem; line-height: 1.6; color: var(--ink-2); }
+.rx-a-product { margin-top: 32px; }
+.rx-a-related ul { list-style: none; margin: 0; padding: 0; }
+.rx-a-related li { padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.rx-a-related a { font-family: var(--serif); font-size: 1.15rem; color: var(--ink); }

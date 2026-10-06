@@ -113,6 +113,7 @@ const Pricing = lazy(() => import("@/pages/Pricing"));
 const Contact = lazy(() => import("@/pages/Contact"));
 const About             = lazy(() => import("@/pages/About"));
 const Resources         = lazy(() => import("@/pages/resources/Resources"));
+const ResourceArticle   = lazy(() => import("@/pages/resources/ResourceArticle"));
 const WhatsNew          = lazy(() => import("@/pages/resources/WhatsNew"));
 const CustomerStories   = lazy(() => import("@/pages/resources/CustomerStories"));
 const ResourcesBlog     = lazy(() => import("@/pages/resources/Blog"));
@@ -418,6 +419,7 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/about" element={<About />} />
               <Route path="/resources" element={<Resources />} />
+              <Route path="/resources/guides/:slug" element={<ResourceArticle />} />
               <Route path="/resources/whats-new" element={<WhatsNew />} />
               <Route path="/resources/customer-stories" element={<CustomerStories />} />
               <Route path="/resources/blog" element={<ResourcesBlog />} />
