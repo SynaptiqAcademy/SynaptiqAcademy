@@ -75,10 +75,12 @@ async def _check_visibility(slug: str, section: str, db) -> str:
     if not doc:
         raise HTTPException(status_code=404, detail="Profile not found")
     from services.public_profiles.visibility import section_visibility
-    if section_visibility(doc.get("visibility_settings"), section) != "public":
-        raise HTTPException(status_code=403, detail=f"Section '{section}' is not public")
+    # A private profile doesn't exist publicly: 404 before anything reveals
+    # how its sections are configured.
     if await _owner_chose_private(doc["user_id"], db):
         raise HTTPException(status_code=404, detail="Profile not found")
+    if section_visibility(doc.get("visibility_settings"), section) != "public":
+        raise HTTPException(status_code=403, detail=f"Section '{section}' is not public")
     return doc["user_id"]
 
 

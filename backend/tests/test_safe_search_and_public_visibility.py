@@ -149,7 +149,9 @@ def app_db():
         {"user_id": str(ids["visible"]), "slug": f"zv-{tag}", "visibility_settings": {
             "contact": "private", "grants": "private", "projects": "private", "collaborations": "private"}},
         {"user_id": str(ids["pub"]), "slug": f"zb-{tag}", "visibility_settings": {
-            "contact": "private", "grants": "public", "projects": "public", "collaborations": "private"}},
+            "contact": "private", "grants": "public", "projects": "public", "collaborations": "private"},
+         # turned on deliberately (as PUT /me/visibility records it)
+         "visibility_explicit": {"grants": "2026-10-07", "projects": "2026-10-07"}},
     ])
     db.grant_applications.insert_many([
         {"user_id": str(ids["visible"]), "grant_title": "HIDDEN-GRANT", "status": "draft", "budget": 1, "notes": "INTERNAL"},
@@ -269,6 +271,9 @@ def test_migration_is_conservative_idempotent_and_keeps_explicit_choices():
             "visibility_settings.grants": "public", "visibility_explicit.grants": "2026-10-08"}})
         again = await M.migrate(db)
         startup = await M.run_at_startup(db)
+        # a second worker racing the first can't apply it again
+        await db.migrations.delete_one({"_id": "probe"})
+        await db.migrations.insert_one({"_id": "x"})
         later = await db.public_profiles.find_one({"user_id": "legacy"})
         project = await db.projects.find_one({"owner_id": "legacy"})
         record = await db.migrations.find_one({"_id": M.MIGRATION_ID})
@@ -287,7 +292,7 @@ def test_migration_is_conservative_idempotent_and_keeps_explicit_choices():
     assert after["explicit"]["visibility_settings"]["grants"] == "public"            # explicit evidence kept
     assert after["explicit"]["visibility_settings"]["contact"] == "private"
     assert "visibility_migrations" not in after["already_private"]
-    assert again == {"skipped": "already applied"} and startup == {"status": "done"}
+    assert again["skipped"] in ("already applied", "already claimed") and startup == {"status": "done"}
     assert later["visibility_settings"]["grants"] == "public"                          # new choice survives
     assert project["visibility"] == "public"                                           # project's own flag untouched
     assert record["status"] == "done" and record["summary"]["profiles_changed"] == 3
@@ -299,3 +304,25 @@ def test_migration_is_disabled_until_counts_are_reviewed_or_enabled_deliberately
     src = open("services/cleanup_service.py", encoding="utf-8").read()
     assert "apply_defaults_to_untouched" not in src and "retract_unconsented_email" not in src   # no recurring resets
     assert "if schedule else {}" in src                                                           # startup only
+
+
+def test_concurrent_workers_apply_the_migration_once():
+    from services.public_profiles import visibility_migration as M
+
+    async def go():
+        client = motor.AsyncIOMotorClient(MONGO, serverSelectionTimeoutMS=800)
+        try:
+            await client.admin.command("ping")
+        except Exception:
+            pytest.skip("local MongoDB not available")
+        db = client[f"synaptiq_race_{uuid.uuid4().hex[:8]}"]
+        await db.public_profiles.insert_many([{"user_id": str(i), "visibility_settings": {"grants": "public"}} for i in range(5)])
+        results = await asyncio.gather(*[M.migrate(db) for _ in range(4)])
+        record = await db.migrations.find_one({"_id": M.MIGRATION_ID})
+        await client.drop_database(db.name)
+        client.close()
+        return results, record
+    results, record = _run(go())
+    applied = [r for r in results if "profiles_changed" in r]
+    assert len(applied) == 1 and applied[0]["profiles_changed"] == 5
+    assert record["status"] == "done" and record["summary"]["profiles_changed"] == 5

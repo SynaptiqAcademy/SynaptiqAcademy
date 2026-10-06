@@ -34,8 +34,10 @@ logger = logging.getLogger("synaptiq.visibility_migration")
 MIGRATION_ID = "public_visibility_v2"
 SENSITIVE = ("contact", "grants", "projects", "collaborations")
 
-# Set to True only after the dry-run counts have been reviewed.
-ENABLED = False
+# Enabled after the production dry run (6 Oct 2026): 4 public pages; 2 with
+# grants, projects and collaborations public, 0 with explicit evidence;
+# email public on 0.
+ENABLED = True
 
 
 def _ambiguous(section: str) -> dict:
@@ -59,9 +61,15 @@ async def report(db) -> dict:
 
 async def migrate(db) -> dict:
     """Apply once. Returns aggregate counts."""
-    if await db.migrations.find_one({"_id": MIGRATION_ID, "status": "done"}):
+    if await db.migrations.find_one({"_id": MIGRATION_ID}):
         return {"skipped": "already applied"}
     now = datetime.now(timezone.utc).isoformat()
+    # Claim the migration atomically: with several workers starting at once,
+    # exactly one inserts this record and applies it.
+    try:
+        await db.migrations.insert_one({"_id": MIGRATION_ID, "status": "running", "started_at": now})
+    except Exception:
+        return {"skipped": "already claimed"}
     before = await report(db)
     changed_docs, per_section = 0, {s: 0 for s in SENSITIVE}
     flt = {"visibility_migrations.v2": {"$exists": False}, "$or": [_ambiguous(s) for s in SENSITIVE]}
@@ -88,8 +96,9 @@ async def migrate(db) -> dict:
 
 async def run_at_startup(db) -> dict:
     """Dry run (log counts) until ENABLED; then apply once."""
-    if await db.migrations.find_one({"_id": MIGRATION_ID, "status": "done"}):
-        return {"status": "done"}
+    existing = await db.migrations.find_one({"_id": MIGRATION_ID})
+    if existing:
+        return {"status": existing.get("status", "done")}
     counts = await report(db)
     logger.info("visibility_migration %s dry_run %s", MIGRATION_ID, counts)
     if not ENABLED:
