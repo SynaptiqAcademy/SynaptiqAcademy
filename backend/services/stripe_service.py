@@ -37,6 +37,14 @@ def is_configured() -> bool:
     return True
 
 
+def checkout_ready() -> bool:
+    """True only when a purchase can be completed AND fulfilled: a valid
+    secret key for the configured mode plus a webhook signing secret. Without
+    the webhook secret, Stripe would take payment but no subscription or
+    credit grant could ever be applied, so checkout must stay closed."""
+    return is_configured() and bool(os.environ.get("STRIPE_WEBHOOK_SECRET", ""))
+
+
 def _tax_enabled() -> bool:
     return os.environ.get("STRIPE_TAX_ENABLED", "").lower() in ("1", "true", "yes")
 

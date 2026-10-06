@@ -113,6 +113,7 @@ class TestTierCatalogue:
         assert rows["Workspaces"][:3] == ("—", "10", "Unlimited")
         assert rows["Messaging"][:3] == (False, True, True)
         assert rows["Impact Dashboard"][:3] == (False, False, True)
+        assert "Advanced Analytics" not in rows and "Support" not in rows
 
 
 # ═════════════════════════════ entitlements ═════════════════════════════
@@ -1005,6 +1006,7 @@ class TestCheckoutInputs:
         monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_dummy")
         monkeypatch.setenv("STRIPE_MODE", "test")
         monkeypatch.setenv("FRONTEND_BASE_URL", "https://synaptiq.academy")
+        monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "dummy-webhook-secret-for-tests")
         from routers import billing
         for p in pc.PLANS:
             if p["code"] in ("researcher", "pro_researcher"):

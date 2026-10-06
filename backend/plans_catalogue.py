@@ -105,7 +105,8 @@ PLANS = [
             "Teaching Hub",
             "Publication tracking",
             "Research analytics",
-            "Priority support",
+            # "Priority support" is not listed: there is no support queue or
+            # routing behind it yet. Re-add once it has an operational meaning.
         ],
         "excluded": [],
         "cta": "Choose Pro",
@@ -141,16 +142,19 @@ PLANS = [
             "Everything in Pro",
             "Unlimited workspaces",
             "50 GB storage",
-            "Advanced AI Research Assistant",
-            "Extended research context",
-            "Priority AI processing",
+            # The Advanced AI Research Assistant, as implemented: the four
+            # Pro Advanced research tools (FEATURE_MIN_PLAN) ...
+            "Literature review, research gap finder, study design advisor and statistical review",
+            # ... and extended context (services/ai/pricing.py guards:
+            # 150k vs 60k input tokens, 8k vs 4k output).
+            "Larger AI requests: about 112,000 words instead of 45,000",
             "Collaboration Intelligence",
             "Research Impact Dashboard",
             "Citation Monitoring",
-            "Advanced Research Analytics",
-            "Advanced Manuscript Intelligence",
-            "Advanced AI Teaching Tools",
-            "Priority support",
+            # Not listed until they exist as working features: Priority AI
+            # processing, Advanced Research Analytics, Advanced Manuscript
+            # Intelligence (API only, no screen), Advanced AI Teaching Tools,
+            # Priority support.
         ],
         "excluded": [],
         "cta": "Choose Pro Advanced",
@@ -168,7 +172,7 @@ PLANS = [
         # caller ever rendered plan.price_eur_monthly generically for every
         # plan without institution's existing special-case).
         "code": "institution",
-        "name": "Institution",
+        "name": "Institutional",
         "tagline": "For universities, research institutions and organizations",
         "price_eur_monthly": 299,
         "price_eur_annual": 239,
@@ -190,12 +194,10 @@ PLANS = [
         # aren't advertised here; the limits dict above remains the internal
         # reference for this legacy plan_code.
         "features": [
-            "Institution workspace for approved members",
-            "Member and department management",
-            "Institutional analytics",
-            "Admin permissions for institution owners and admins",
-            "Institution audit log for admins",
-            "Seats, credits and storage set per agreement",
+            "Approved membership: institutional email, invitation or admin review",
+            "Departments with their own admins and coordinators",
+            "Member directory by research area",
+            "Admin roles and an activity log of admin actions",
         ],
         "excluded": [],
         "cta": "Contact Sales",
@@ -768,7 +770,7 @@ FEATURE_MATRIX = [
     ("Storage", *(_storage_label(c) for c in _MATRIX_PLANS)),
     ("Academic profile & public research page", True, True, True, True, True),
     ("ORCID integration & publication import", True, True, True, True, True),
-    ("Discoverable by Pro researchers", True, True, True, True, True),
+    ("Can be found by Pro members", True, True, True, True, True),
     _cap_row("Research network, discovery & matching", "can_use_research_network"),
     _cap_row("Messaging", "can_message_researchers"),
     _cap_row("Send & accept collaboration requests", "can_send_collaboration_request"),
@@ -777,14 +779,38 @@ FEATURE_MATRIX = [
     _cap_row("Manuscript Copilot", "can_use_manuscript_copilot"),
     _cap_row("Teaching Hub", "can_use_teaching_hub"),
     _cap_row("Publication tracking", "can_use_publication_tracking"),
-    _cap_row("Standard analytics", "can_view_research_analytics"),
+    _cap_row("Research analytics", "can_view_research_analytics"),
     _cap_row("Buy extra AI credits", "can_purchase_ai_credits"),
-    _cap_row("Advanced AI Research Assistant & extended context", "can_use_advanced_ai"),
+    _cap_row("Advanced research tools & larger AI requests", "can_use_advanced_ai"),
     _cap_row("Collaboration Intelligence", "can_use_collaboration_intelligence"),
     _cap_row("Impact Dashboard", "can_view_impact_dashboard"),
     _cap_row("Citation Monitoring", "can_use_citation_monitoring"),
-    _cap_row("Advanced Analytics", "can_view_advanced_analytics"),
-    _cap_row("Advanced Manuscript Intelligence", "can_use_advanced_manuscript_intelligence"),
-    _cap_row("Advanced AI Teaching", "can_use_advanced_teaching_ai"),
-    ("Support", "Community", "Priority", "Priority", "Dedicated", "Account Manager"),
+    # Not listed until they exist as working features (capability flags only,
+    # no screen or behaviour yet): Advanced Analytics, Advanced Manuscript
+    # Intelligence, Advanced AI Teaching, Priority support / Priority AI.
 ]
+
+# Comparison grouping for the pricing page (by what the person wants to do).
+FEATURE_MATRIX_GROUPS = {
+    "Academic profile & public research page": "Identity",
+    "ORCID integration & publication import": "Identity",
+    "Can be found by Pro members": "Identity",
+    "Research network, discovery & matching": "Network & collaboration",
+    "Messaging": "Network & collaboration",
+    "Send & accept collaboration requests": "Network & collaboration",
+    "Collaboration Intelligence": "Network & collaboration",
+    "Projects": "Research work",
+    "Workspaces": "Research work",
+    "Storage": "Research work",
+    "Journal, conference & grant discovery": "Discovery",
+    "AI Credits / month": "AI",
+    "AI Research Assistant": "AI",
+    "Manuscript Copilot": "AI",
+    "Advanced research tools & larger AI requests": "AI",
+    "Buy extra AI credits": "AI",
+    "Publication tracking": "Impact & analytics",
+    "Research analytics": "Impact & analytics",
+    "Impact Dashboard": "Impact & analytics",
+    "Citation Monitoring": "Impact & analytics",
+    "Teaching Hub": "Teaching",
+}

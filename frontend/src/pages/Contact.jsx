@@ -66,7 +66,7 @@ const FAQ = [
   },
   {
     q: "Do you support universities?",
-    a: "Yes. Synaptiq is built specifically for academic institutions. We work with universities, medical schools, research institutes, doctoral schools, and government research agencies. Institutional plans include team management, analytics, compliance reporting, and dedicated support.",
+    a: "Yes. Institutional plans are arranged directly with us, for universities, research institutes and other research organisations. They cover approved membership, departments and a member directory by research area. Choose the Institution topic below and tell us what you need.",
   },
   {
     q: "How do I report a security issue?",

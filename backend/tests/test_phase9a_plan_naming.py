@@ -179,7 +179,7 @@ class TestPublicCommercialTruth:
         src = (FRONTEND / "pages" / "Pricing.jsx").read_text()
         assert "Pay yearly" not in src
         assert "Save up to 20%" not in src
-        assert "const annual = false;" in src
+        assert "price_eur_annual" not in src and "billing_period: \"monthly\"" in src
 
     def test_institution_catalogue_features_carry_no_fixed_price(self):
         feats = " ".join(get_plan("institution")["features"])

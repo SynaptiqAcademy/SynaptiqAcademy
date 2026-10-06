@@ -13,7 +13,7 @@ from auth_utils import get_current_user
 from db import get_db
 from plans_catalogue import (
     PLANS, PLAN_RANK, get_plan, get_plan_by_price_id, CREDIT_PACKS, get_credit_pack,
-    CREDIT_USAGE_DISPLAY, FEATURE_MATRIX, AI_OPERATIONS,
+    CREDIT_USAGE_DISPLAY, FEATURE_MATRIX, FEATURE_MATRIX_GROUPS, AI_OPERATIONS,
 )
 from services import stripe_service
 from services.credits_service import (
@@ -44,8 +44,13 @@ def _safe_plan(p: dict) -> dict:
         "recommended": bool(p.get("recommended")),
         "key": p.get("key"),
         "price_label": p.get("price_label"),
-        "credits_per_month": p["credits_per_month"],
-        "limits": p["limits"],
+        "credits_per_month": None if custom else p["credits_per_month"],
+        "limits": {} if custom else p["limits"],
+        # Server-authoritative: a paid plan can be bought only when Stripe can
+        # both take the payment and deliver the plan (price + webhook secret).
+        "checkout_available": (not custom and p["code"] != "free"
+                               and bool(p.get("stripe_price_id_monthly"))
+                               and stripe_service.checkout_ready()),
         "features": p["features"],
         "excluded": p.get("excluded", []),
         "cta": p.get("cta", f"Choose {p['name']}"),
@@ -67,7 +72,7 @@ async def list_credit_packs():
     return [{"code": p["code"], "key": p["key"], "name": p["name"], "credits": p["credits"],
              "price_eur": p["price_eur"],
              "label": p["label"], "available": bool(p.get("stripe_price_id"))
-             and stripe_service.is_configured()} for p in CREDIT_PACKS]
+             and stripe_service.checkout_ready()} for p in CREDIT_PACKS]
 
 
 @router.get("/credit-usage-catalogue")
@@ -85,11 +90,17 @@ async def credit_usage_catalogue():
 
 @router.get("/feature-matrix")
 async def feature_matrix():
-    """Feature comparison matrix for the pricing page."""
+    """Feature comparison for the pricing page: the three individual plans
+    (Institutional is arranged per organisation and not compared row by
+    row). Rows are grouped by intent; the extra-credits row is shown only
+    while credit packs can actually be bought."""
+    packs_on = any(p.get("stripe_price_id") for p in CREDIT_PACKS) and stripe_service.checkout_ready()
     return {
-        "columns": ["free", "researcher", "pro_researcher", "institution", "enterprise"],
+        "columns": ["free", "researcher", "pro_researcher"],
         "rows": [
-            {"label": r[0], "values": list(r[1:])} for r in FEATURE_MATRIX
+            {"label": r[0], "group": FEATURE_MATRIX_GROUPS.get(r[0], "Other"), "values": list(r[1:4])}
+            for r in FEATURE_MATRIX
+            if packs_on or r[0] != "Buy extra AI credits"
         ],
     }
 
@@ -265,7 +276,7 @@ async def create_checkout(body: dict, user: dict = Depends(get_current_user)):
     plan = get_plan(plan_code)
     price_id = plan.get("stripe_price_id_monthly") or ""
 
-    if not stripe_service.is_configured() or not price_id:
+    if not stripe_service.checkout_ready() or not price_id:
         raise HTTPException(
             status_code=503,
             detail={
@@ -332,7 +343,7 @@ async def create_credit_pack_checkout(body: dict, user: dict = Depends(get_curre
             "code": "invalid_pack", "message": "Choose 'small', 'plus' or 'max'."})
     pack_code = pack["code"]
 
-    if not stripe_service.is_configured() or not pack.get("stripe_price_id"):
+    if not stripe_service.checkout_ready() or not pack.get("stripe_price_id"):
         raise HTTPException(
             status_code=503,
             detail={
@@ -783,8 +794,11 @@ async def stripe_webhook(request: Request):
     sig_header = request.headers.get("stripe-signature", "")
 
     if not webhook_secret:
-        logger.warning("[billing/webhook] STRIPE_WEBHOOK_SECRET not set — event discarded (not processed).")
-        return {"received": True, "processed": False}
+        # Not acknowledged: a 2xx would tell Stripe the event was delivered and
+        # it would never be retried, losing a payment's plan/credit grant.
+        # 503 makes Stripe retry until the secret is configured.
+        logger.error("[billing/webhook] STRIPE_WEBHOOK_SECRET not set — event not processed; Stripe will retry.")
+        raise HTTPException(status_code=503, detail="Billing webhook not configured.")
 
     if not sig_header:
         raise HTTPException(status_code=400, detail="Missing stripe-signature header")

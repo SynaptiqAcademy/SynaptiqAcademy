@@ -173,6 +173,12 @@ export default function InstitutionsLanding() {
     path: "/for-institutions",
   }), []);
   useEffect(() => { track("institutions_page_viewed"); }, []);
+  // Arriving from another page at /for-institutions#inquiry (e.g. Pricing's
+  // Contact Sales) — the router doesn't scroll to hashes on its own.
+  useEffect(() => {
+    const id = window.location.hash.replace("#", "");
+    if (id) setTimeout(() => document.getElementById(id)?.scrollIntoView({ block: "start" }), 50);
+  }, []);
 
   const toInquiry = (location) => (e) => { scrollTo("inquiry", e); track("institutional_contact_started", { location }); };
 

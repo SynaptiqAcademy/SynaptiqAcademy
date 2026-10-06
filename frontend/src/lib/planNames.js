@@ -22,7 +22,7 @@ export const PLAN_DISPLAY_NAMES = {
   free: "Free",
   researcher: "Pro",
   pro_researcher: "Pro Advanced",
-  institution: "Institution",
+  institution: "Institutional",
   enterprise: "Enterprise",
 };
 

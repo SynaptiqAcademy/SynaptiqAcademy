@@ -99,7 +99,7 @@ class TestCanonicalPlanNamesOnly:
         assert get_plan("pro_researcher")["name"] == "Pro Advanced"
 
     def test_get_plan_institution_name_is_display_ready(self):
-        assert get_plan("institution")["name"] == "Institution"
+        assert get_plan("institution")["name"] == "Institutional"
 
 
 class TestNoFakeTrialLanguage:
