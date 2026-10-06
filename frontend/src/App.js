@@ -421,6 +421,7 @@ function App() {
               <Route path="/resources" element={<Resources />} />
               <Route path="/resources/guides/:slug" element={<ResourceArticle />} />
               <Route path="/resources/whats-new" element={<WhatsNew />} />
+              <Route path="/whats-new" element={<Navigate to="/resources/whats-new" replace />} />
               <Route path="/resources/customer-stories" element={<CustomerStories />} />
               <Route path="/resources/blog" element={<ResourcesBlog />} />
               <Route path="/legal" element={<LegalCenter />} />

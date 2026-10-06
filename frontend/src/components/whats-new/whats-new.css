@@ -1,0 +1,44 @@
+/* /resources/whats-new — the product ledger: a dated, ruled chronology. */
+
+.wn .lp-h1 { max-width: 16ch; }
+.wn-hero { padding-bottom: 72px; }
+.wn-key { margin-top: 32px; display: grid; gap: 6px 28px; max-width: 52rem; border-top: 1px solid var(--rule); padding-top: 14px; }
+@media (min-width: 768px) { .wn-key { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.wn-key > div { display: flex; gap: 12px; align-items: baseline; font-size: 0.9rem; color: var(--ink-2); }
+.wn-key dt { min-width: 5.5rem; color: var(--ink); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; }
+
+.wn-month { margin-top: 36px; }
+.wn-month:first-of-type { margin-top: 8px; }
+.lp .wn-month-label { font-size: 0.72rem; font-weight: 500; color: var(--mark); text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 10px; border-bottom: 1px solid var(--ink); }
+
+.wn-note { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 0 28px; padding: 24px 0; border-bottom: 1px solid var(--rule); scroll-margin-top: 80px; }
+.wn-note:target { background: linear-gradient(var(--mark-soft), var(--mark-soft)) no-repeat left / 3px 100%; }
+.wn-rail { display: flex; flex-direction: column; gap: 4px; padding-top: 3px; }
+.wn-date { font-size: 0.78rem; color: var(--ink); letter-spacing: 0.06em; }
+.wn-num { font-size: 0.72rem; color: var(--muted); text-decoration: none; }
+.wn-num:hover { text-decoration: underline; text-underline-offset: 3px; }
+.wn-kind { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.wn-type { color: var(--ink); font-weight: 600; padding: 1px 6px; border: 1px solid var(--rule-strong); border-radius: 2px; }
+.wn-type--new { border-color: var(--mark); color: var(--mark); }
+.wn-type--fixed { border-style: dashed; }
+.lp .wn-title { font-family: var(--serif); font-weight: 400; font-size: 1.45rem; line-height: 1.25; color: var(--ink); margin-top: 8px; }
+.wn-note.is-latest .wn-title { font-size: 1.85rem; }
+.wn-summary { margin-top: 8px; font-size: 1rem; line-height: 1.65; color: var(--ink-2); max-width: 62ch; }
+.wn-details { list-style: none; margin: 10px 0 0; padding: 0; max-width: 62ch; }
+.wn-details li { position: relative; padding: 4px 0 4px 16px; font-size: 0.94rem; line-height: 1.55; color: var(--ink-2); }
+.wn-details li::before { content: ""; position: absolute; left: 0; top: 13px; width: 8px; border-top: 1px solid var(--ink-2); }
+.wn-foot { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 24px; margin-top: 14px; }
+.wn-avail { font-size: 0.72rem; color: var(--muted); }
+.wn-foot .lp-link { font-size: 0.92rem; }
+@media (max-width: 640px) {
+  .wn-note { grid-template-columns: 1fr; }
+  .wn-rail { flex-direction: row; gap: 12px; padding: 0 0 6px; }
+}
+
+.wn-bridge { padding: 72px 0; }
+.wn-else { border-top: 1px solid var(--ink); max-width: 52rem; }
+.wn-else > div { display: grid; gap: 4px 28px; padding: 16px 0; border-bottom: 1px solid var(--rule); align-items: baseline; }
+@media (min-width: 768px) { .wn-else > div { grid-template-columns: 10rem 1fr; } }
+.wn-else-link { font-family: var(--serif); font-size: 1.35rem; color: var(--ink); text-decoration: none; }
+.wn-else-link:hover { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.wn-else dd { font-size: 0.98rem; color: var(--ink-2); }
