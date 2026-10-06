@@ -117,6 +117,7 @@ const ResourceArticle   = lazy(() => import("@/pages/resources/ResourceArticle")
 const WhatsNew          = lazy(() => import("@/pages/resources/WhatsNew"));
 const CustomerStories   = lazy(() => import("@/pages/resources/CustomerStories"));
 const ResourcesBlog     = lazy(() => import("@/pages/resources/Blog"));
+const BlogArticle       = lazy(() => import("@/pages/resources/BlogArticle"));
 const LegalCenter = lazy(() => import("@/pages/LegalCenter"));
 const Terms = lazy(() => import("@/pages/Terms"));
 const Privacy = lazy(() => import("@/pages/Privacy"));
@@ -424,6 +425,8 @@ function App() {
               <Route path="/whats-new" element={<Navigate to="/resources/whats-new" replace />} />
               <Route path="/resources/customer-stories" element={<CustomerStories />} />
               <Route path="/resources/blog" element={<ResourcesBlog />} />
+              <Route path="/resources/blog/:slug" element={<BlogArticle />} />
+              <Route path="/blog" element={<Navigate to="/resources/blog" replace />} />
               <Route path="/legal" element={<LegalCenter />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
