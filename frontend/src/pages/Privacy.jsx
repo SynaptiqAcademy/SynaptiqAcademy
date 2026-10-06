@@ -52,7 +52,7 @@ const SECTIONS = [
     <ul>
       <li><strong>Discovery.</strong> Members on Pro and Pro Advanced can find profiles in researcher discovery and matching, including profiles of Free members. You can hide yourself from discovery in your network settings, or make your profile private.</li>
       <li><strong>Search engines.</strong> Public research pages are not currently offered to search engines: our robots file asks them not to index profile pages.</li>
-      <li><strong>Not shown to others:</strong> your email address (except to institution admins, see <a href="#institutions">Institutions</a>), your messages, private projects and workspaces, your AI requests, your billing details, and any membership evidence.</li>
+      <li><strong>Not shown to others:</strong> your email address (except to institution admins, see <a href="#institutions">Institutions</a>, or if you choose to show it on your public research page), your messages, private projects and workspaces, your AI requests, your billing details, and any membership evidence.</li>
     </ul>
     <p>Blocking someone hides each of you from the other in discovery and stops them sending you collaboration requests.</p>
   </>) },
@@ -167,10 +167,7 @@ const SECTIONS = [
 export default function Privacy() {
   return (
     <LegalLayout
-      kind="Privacy"
-      title="Privacy Policy"
-      updated={LEGAL.privacy.updated}
-      version={LEGAL.privacy.version}
+      doc="privacy"
       seo={{ title: "Privacy Policy | Synaptiq", description: "How Synaptiq handles personal data: what we collect, why, who processes it, how long we keep it, and your rights.", path: "/privacy" }}
       summary={(<>
         <p>We use your account and research-profile information to run Synaptiq, connect your work with people and projects, provide the features you use, keep the service secure, and handle paid plans when they open.</p>

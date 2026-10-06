@@ -147,6 +147,14 @@ async def minimise_deletion_audit_records() -> int:
     return n
 
 
+async def _sync_discovery_preferences() -> int:
+    from services.discovery_preferences import sync_all
+    from services.public_profiles.visibility import apply_defaults_to_untouched
+    db = get_db()
+    db = DBProxy(db, SecurityContext.system())
+    return await sync_all(db) + await apply_defaults_to_untouched(db)
+
+
 _DAILY_STARTED = False
 _DAILY_INTERVAL_S = 24 * 3600
 
@@ -186,6 +194,7 @@ async def run_all(schedule: bool = True) -> dict:
         "expired_announcements":   await _run_with_label("expired_announcements", cleanup_expired_announcements()),
         "retention_schedule":      await _run_with_label("retention_schedule", enforce_retention_schedule()),
         "minimise_audit_records":  await _run_with_label("minimise_audit_records", minimise_deletion_audit_records()),
+        "discovery_preferences":   await _run_with_label("discovery_preferences", _sync_discovery_preferences()),
         "ran_at": _iso(_now()),
     }
     total = sum(v for v in results.values() if isinstance(v, int))

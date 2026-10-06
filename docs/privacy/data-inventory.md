@@ -27,6 +27,22 @@ Classification: **Public** (shown to anyone), **Members** (visible to signed-in 
 
 ## Public visibility and discovery
 
-- `profile_visibility: "private"` removes a member from researcher listings, discovery and search (`routers/discover.py`, `routers/researchers.py`, `routers/users.py` all filter `{"profile_visibility": {"$ne": "private"}}`).
-- Deleted accounts are set to private and marked `deleted`; their access tokens stop working at once (`auth_utils.get_current_user`).
-- Search engines: `robots.txt` disallows everything except marketing pages. Researcher profiles aren't offered to search engines.
+- **Member controls.** Network → Network Settings stores "Profile visibility" and "Show my profile in researcher discovery" in `network_settings`. Since 6 October 2026 (legal consolidation), saving them also sets `users.profile_visibility`, which every discovery surface filters on:
+  - `/discover`
+  - the researcher directory
+  - member search
+  - the public Passport
+
+  "Private" or discovery off becomes `private` (`services/discovery_preferences.py`). Previously the choice had no effect on those surfaces.
+- **A daily sync** applies existing saved choices (`cleanup_service`).
+- **The "Network" visibility option** is honoured by the network discovery engine only. The other surfaces treat it as visible to members. Product follow-up.
+- **The public Passport (`/researcher/:slug`) is visible without signing in.**
+  - Academic sections (publications, impact, teaching, reputation, timeline) are public by default.
+  - **Projects, grants (including grant applications), collaborations and the email address are private unless the member turns them on** (`services/public_profiles/visibility.py`).
+  - Before this change, all sections defaulted to public, and the page was created automatically when a member first opened their profile.
+  - Pages whose settings were never changed were moved to the new defaults; members' own choices are kept.
+  - Only projects marked `visibility: public` are listed.
+  - A member who chose Private has no public page (404 for everyone else).
+- **The researcher directory** (`/api/profiles/directory`) is unauthenticated. It shows name, photo, institution, department, country, career stage and research interests, and excludes members who chose Private or turned discovery off.
+- **Deleted accounts** are set to private and marked `deleted`. Their access tokens stop working at once (`auth_utils.get_current_user`).
+- **Search engines:** `robots.txt` disallows everything except marketing and legal pages. Researcher pages aren't offered to search engines.

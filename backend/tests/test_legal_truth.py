@@ -159,3 +159,68 @@ def test_published_retention_matches_retention_policy():
 def test_providers_table_matches_production_setup():
     privacy = PAGES["Privacy"]
     assert '["Railway", "Application servers", "United States"]' in privacy
+
+
+# ── Legal & Trust consolidation: one system for four documents ───────────────
+FOUR = {n: (SRC / "pages" / f"{n}.jsx").read_text() for n in ("Privacy", "Terms", "Cookies", "GDPR")}
+LAYOUT = (SRC / "components" / "legal" / "LegalLayout.jsx").read_text()
+
+
+@pytest.mark.parametrize("name,doc", [("Privacy", "privacy"), ("Terms", "terms"), ("Cookies", "cookies"), ("GDPR", "dataProtection")])
+def test_every_legal_document_uses_the_shared_system(name, doc):
+    src = FOUR[name]
+    assert 'from "../components/legal/LegalLayout"' in src
+    assert "pages/legal/LegalLayout" not in src and './legal/LegalLayout' not in src   # legacy layout can't return
+    assert f'doc="{doc}"' in src
+    # Dates and versions come only from content/legal/meta.js
+    assert not re.search(r'(lastUpdated|updated|version)=\{?"', src)
+
+
+def test_legal_registry_lists_the_four_documents():
+    for path in ('path: "/privacy"', 'path: "/terms"', 'path: "/cookies"', 'path: "/gdpr"'):
+        assert path in META
+    assert 'title: "Data Protection"' in META and "dataProtection: { updated:" in META
+    assert "LEGAL_DOCS.map" in LAYOUT and 'aria-current="page"' in LAYOUT and "LegalContinue" in LAYOUT
+
+
+def test_cookie_settings_actions_open_the_real_consent_control():
+    assert "onClick={openPreferences}" in FOUR["Cookies"] and 'import { openPreferences } from "../lib/cookieConsent"' in FOUR["Cookies"]
+    assert "Manage cookie settings" in FOUR["Cookies"]
+    assert "onClick={openPreferences}" in FOUR["GDPR"]
+    footer = (SRC / "components" / "layout" / "MarketingLayout.jsx").read_text()
+    assert 'data-testid="footer-cookie-settings"' in footer and "onClick={openPreferences}" in footer
+    assert '<FL href="/gdpr">Data Protection</FL>' in footer and '["GDPR", "/gdpr"]' not in footer
+
+
+def test_cookie_inventory_is_rendered_from_the_canonical_list_only():
+    src = FOUR["Cookies"]
+    assert "STORAGE_INVENTORY" in src and "access_token" not in src and "ph_<project key>" not in src
+    assert not re.search(r'category: "(marketing|preferences|advertising)"', INVENTORY)
+
+
+def test_data_protection_points_to_privacy_instead_of_duplicating_it():
+    src = FOUR["GDPR"]
+    assert "LegalTable" not in src                      # no second provider/retention table
+    for anchor in ("/privacy#providers", "/privacy#transfers", "/privacy#retention", "/privacy#deletion", "/privacy#security"):
+        assert anchor in src
+    assert "LegalOperator" in src                        # controller from canonical metadata
+
+
+@pytest.mark.parametrize("pattern", [
+    r"GDPR[- ]compliant", r"[Ff]ully compliant", r"(?<!provider is )[Cc]ertified", r"SOC ?2", r"ISO ?27001", r"HIPAA", r"zero[- ]knowledge",
+    r"(?<!not )end-to-end encrypted", r"daily backup", r"[Gg]uaranteed", r"48 hours", r"security@", r"Anthropic does not retain",
+    r"OpenAI \(optional", r"self-hosted AI", r"3 years", r"Google Fonts", r"military", r"bank[- ]level", r"GDPR Notice",
+])
+def test_four_documents_and_trust_pages_make_no_unverified_claims(pattern):
+    texts = dict(FOUR)
+    texts["Contact"] = (SRC / "pages" / "Contact.jsx").read_text()
+    texts["LegalCenter"] = (SRC / "pages" / "LegalCenter.jsx").read_text()
+    for name, text in texts.items():
+        if pattern == r"Google Fonts" and name == "Cookies":
+            continue   # Cookies says fonts are NOT loaded from Google Fonts
+        assert not re.search(pattern, text), f"{name}: {pattern}"
+
+
+def test_public_passport_copy_matches_privacy_by_default():
+    panel = (SRC / "components" / "passport" / "PublicPortfolioPanel.jsx").read_text()
+    assert "never see your email" not in panel and "stay private unless you turn them on" in panel

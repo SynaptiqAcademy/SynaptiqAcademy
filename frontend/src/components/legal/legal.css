@@ -1,7 +1,26 @@
 /* Legal documents: legibility first. Extends landing.css tokens. */
-.lg-head { padding: 72px 0 36px; border-bottom: 1px solid var(--rule); background: var(--paper); }
-.lp .lg-title { font-family: var(--serif); font-weight: 400; font-size: clamp(2rem, 4.4vw, 3rem); line-height: 1.1; color: var(--ink); margin-top: 6px; }
-.lg-meta { margin-top: 12px; font-size: 0.74rem; color: var(--muted); }
+.lg-head { padding: 64px 0 0; border-bottom: 1px solid var(--rule); background: var(--paper); }
+.lg-crumb { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lg-crumb b { color: var(--mark); font-weight: 600; }
+.lp .lg-title { font-family: var(--serif); font-weight: 400; font-size: clamp(2.1rem, 4.6vw, 3.25rem); line-height: 1.08; color: var(--ink); margin-top: 10px; }
+.lg-dek { margin-top: 12px; max-width: 38rem; font-size: 1.08rem; line-height: 1.55; color: var(--ink-2, #3a404b); }
+.lg-meta { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 22px 0 0; }
+.lg-meta div { display: flex; flex-direction: column; gap: 2px; }
+.lg-meta dt { font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lg-meta dd { margin: 0; font-size: 0.9rem; color: var(--ink); }
+.lg-actions { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 12px; }
+.lg-button { font: inherit; font-size: 0.9rem; font-weight: 600; color: #fff; background: var(--navy); border: 1px solid var(--navy); border-radius: 3px; padding: 10px 16px; cursor: pointer; }
+.lg-button:hover { background: var(--ink); }
+.lg-button:focus-visible, .lg-docnav a:focus-visible, .lg-continue a:focus-visible, .lg-toc a:focus-visible { outline: 2px solid var(--mark); outline-offset: 3px; }
+
+/* Cross-document navigation: four quiet labels, the current one underlined. */
+.lg-docnav { margin-top: 36px; }
+.lg-docnav ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 28px; }
+.lg-docnav li a, .lg-docnav-current { display: inline-block; padding: 12px 0 11px; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; border-bottom: 2px solid transparent; }
+.lg-docnav li a { color: var(--muted); }
+.lg-docnav li a:hover { color: var(--ink); border-bottom-color: var(--rule-strong); }
+.lg-docnav-current { color: var(--ink); font-weight: 700; border-bottom-color: var(--mark); }
+@media (max-width: 480px) { .lg-docnav ol { gap: 0 18px; } }
 
 .lg-body { display: grid; gap: 32px; padding-top: 40px; padding-bottom: 96px; }
 @media (min-width: 1100px) { .lg-body { grid-template-columns: 15rem minmax(0, 1fr); gap: 56px; } }
@@ -12,7 +31,8 @@
 }
 .lg-toc-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
 .lg-toc ol, .lg-toc-mobile ol { list-style: none; margin: 0; padding: 0; }
-.lg-toc li a, .lg-toc-mobile li a { display: block; padding: 4px 0; font-size: 0.86rem; line-height: 1.4; color: var(--ink-2); text-decoration: none; }
+.lg-toc li a, .lg-toc-mobile li a { display: flex; gap: 10px; padding: 4px 0; font-size: 0.86rem; line-height: 1.4; color: var(--ink-2); text-decoration: none; }
+.lg-toc-num { flex: none; min-width: 1.4rem; font-size: 0.72rem; line-height: 1.6; color: var(--faint); }
 .lg-toc li a:hover, .lg-toc-mobile li a:hover { color: var(--ink); text-decoration: underline; }
 .lg-toc-mobile { border: 1px solid var(--rule-strong); border-radius: 3px; padding: 10px 14px; background: #fff; }
 .lg-toc-mobile summary { cursor: pointer; font-weight: 600; font-size: 0.95rem; color: var(--ink); }
@@ -25,15 +45,44 @@
 .lg-summary ul { padding-left: 1.2em; list-style: disc; }
 .lg-summary-note { font-size: 0.86rem; color: var(--muted); }
 
-.lg-section { padding-top: 28px; margin-top: 8px; border-top: 1px solid var(--rule); scroll-margin-top: 84px; }
+.lg-section { padding-top: 28px; margin-top: 8px; border-top: 1px solid var(--rule); scroll-margin-top: 96px; }
 .lp .lg-section h2 { font-family: var(--serif); font-weight: 400; font-size: 1.5rem; line-height: 1.3; color: var(--ink); margin-bottom: 10px; display: flex; gap: 12px; align-items: baseline; }
-.lg-num { font-size: 0.8rem; color: var(--mark); min-width: 1.6rem; }
+.lg-num { font-size: 0.78rem; color: var(--mark); min-width: 1.8rem; flex: none; }
 .lp .lg-section h3 { font-size: 1.02rem; font-weight: 600; color: var(--ink); margin: 18px 0 4px; }
 .lg-section p + p { margin-top: 10px; }
 .lg-section ul { margin: 8px 0 8px 1.2em; list-style: disc; }
 .lg-section li + li { margin-top: 4px; }
 .lg-section a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
 .lg-note { margin-top: 12px; padding: 10px 14px; border-left: 2px solid var(--mark); background: var(--mark-soft); font-size: 0.94rem; }
+.lg-callout { margin: 16px 0 6px; padding: 14px 18px; border-left: 2px solid var(--mark); background: var(--mark-soft); }
+.lg-callout-label { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mark); margin-bottom: 4px; }
+.lg-callout p + p { margin-top: 8px; }
+
+/* Definition rows (visibility levels, rights index) */
+.lg-rows { list-style: none; margin: 14px 0 0; padding: 0; border-top: 1px solid var(--ink); }
+.lg-rows > li { display: grid; grid-template-columns: minmax(0, 13rem) minmax(0, 1fr); gap: 4px 24px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.lg-rows-term { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); line-height: 1.6; }
+.lg-rows-term .lg-rows-n { color: var(--mark); margin-right: 8px; }
+.lg-rows-def { margin: 0; }
+@media (max-width: 640px) { .lg-rows > li { grid-template-columns: minmax(0, 1fr); } }
+.lg-path { font-family: var(--mono); font-size: 0.86rem; white-space: nowrap; }
+
+.lg-operator { margin: 10px 0 0; }
+.lg-operator div { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 8px; padding: 4px 0; }
+.lg-operator dt { font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+.lg-operator dd { margin: 0; }
+@media (max-width: 640px) { .lg-operator div { grid-template-columns: minmax(0, 1fr); gap: 0; } }
+
+/* Closing index of the other legal documents */
+.lg-continue { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--ink); }
+.lg-continue h2 { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.lg-continue ul { list-style: none; margin: 0; padding: 0; }
+.lg-continue li { border-bottom: 1px solid var(--rule); }
+.lg-continue a { display: grid; grid-template-columns: minmax(0, 14rem) minmax(0, 1fr); gap: 2px 24px; padding: 14px 0; text-decoration: none; color: var(--ink); }
+.lg-continue a:hover .lg-continue-title { text-decoration: underline; text-underline-offset: 3px; }
+.lg-continue-title { font-family: var(--serif); font-size: 1.2rem; line-height: 1.3; }
+.lg-continue-dek { font-size: 0.92rem; color: var(--muted); line-height: 1.5; }
+@media (max-width: 640px) { .lg-continue a { grid-template-columns: minmax(0, 1fr); } }
 
 .lg-table { margin: 14px 0; overflow-x: auto; border-top: 1px solid var(--ink); }
 .lg-table table { width: 100%; border-collapse: collapse; font-size: 0.88rem; line-height: 1.5; }
@@ -51,9 +100,15 @@
 }
 
 @media print {
-  header, footer, .lg-toc, .lg-toc-mobile, nav[aria-label="Main"] { display: none !important; }
+  header:not(.lg-head), footer, .lg-toc, .lg-toc-mobile, .lg-docnav, .lg-actions, .lg-continue, nav[aria-label="Main"], [data-testid="cookie-consent-banner"] { display: none !important; }
+  .lg-head { padding-top: 0; border: none; }
   .lg-body { display: block; }
   .lg-article { max-width: none; }
   .lg-section { break-inside: avoid-page; }
 }
 .lg-linkbtn { background: none; border: none; padding: 0; font: inherit; color: var(--navy); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* Specificity fixes: structured lists and mono labels inside sections. */
+.lg-section .lg-rows { margin: 14px 0 0; list-style: none; }
+.lg-section .lg-rows > li + li { margin-top: 0; }
+.lp .lg-summary h2, .lp .lg-continue h2 { font-family: var(--mono); font-weight: 600; }

@@ -435,13 +435,13 @@ export default function MarketingLayout({ children }) {
               <FL href="/privacy">Privacy Policy</FL>
               <FL href="/terms">Terms of Service</FL>
               <FL href="/cookies">Cookie Policy</FL>
+              <FL href="/gdpr">Data Protection</FL>
               <div>
-                <button type="button" onClick={openPreferences} className="hover:text-white transition-colors"
+                <button type="button" onClick={openPreferences} className="hover:text-white transition-colors" data-testid="footer-cookie-settings"
                   style={{ fontSize: "0.82rem", color: "#a3adbb", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
                   Cookie settings
                 </button>
               </div>
-              <FL href="/gdpr">GDPR</FL>
             </FCol>
           </div>
 
@@ -453,7 +453,7 @@ export default function MarketingLayout({ children }) {
           <div className="ft-bottom" style={{ paddingTop: 28, paddingBottom: 40 }}>
             <div style={{ fontSize: "0.75rem", color: "#a3adbb" }}>© 2026 Synaptiq. All rights reserved.</div>
             <div className="ft-legal-links">
-              {[["Privacy Policy", "/privacy"], ["Terms", "/terms"], ["Cookies", "/cookies"], ["GDPR", "/gdpr"], ["Status", "/status"]].map(function([label, href]) {
+              {[["Privacy Policy", "/privacy"], ["Terms", "/terms"], ["Cookies", "/cookies"], ["Data Protection", "/gdpr"], ["Status", "/status"]].map(function([label, href]) {
                 return (
                   <Link key={label} to={href} className="hover:text-white transition-colors" style={{ fontSize: "0.75rem", color: "#a3adbb", textDecoration: "none" }}>{label}</Link>
                 );

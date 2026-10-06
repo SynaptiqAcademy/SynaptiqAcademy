@@ -36,13 +36,13 @@ class ShowcaseOrderBody(BaseModel):
 class VisibilityBody(BaseModel):
     publications: str = "public"
     impact: str = "public"
-    projects: str = "public"
-    grants: str = "public"
-    collaborations: str = "public"
+    projects: str = "private"
+    grants: str = "private"
+    collaborations: str = "private"
     teaching: str = "public"
     reputation: str = "public"
     timeline: str = "public"
-    contact: str = "public"
+    contact: str = "private"
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -73,10 +73,22 @@ async def _check_visibility(slug: str, section: str, db) -> str:
     doc = await db.public_profiles.find_one({"slug": slug}, {"user_id": 1, "visibility_settings": 1})
     if not doc:
         raise HTTPException(status_code=404, detail="Profile not found")
-    vs = doc.get("visibility_settings") or {}
-    if vs.get(section, "public") != "public":
+    from services.public_profiles.visibility import section_visibility
+    if section_visibility(doc.get("visibility_settings"), section) != "public":
         raise HTTPException(status_code=403, detail=f"Section '{section}' is not public")
+    if await _owner_chose_private(doc["user_id"], db):
+        raise HTTPException(status_code=404, detail="Profile not found")
     return doc["user_id"]
+
+
+async def _owner_chose_private(user_id: str, db) -> bool:
+    """A member who chose "Private" (or no discovery) in Network Settings has
+    no public Passport for anyone else."""
+    try:
+        u = await db.users.find_one({"_id": ObjectId(user_id)}, {"profile_visibility": 1, "deleted": 1})
+    except Exception:
+        return True
+    return not u or u.get("profile_visibility") == "private" or bool(u.get("deleted"))
 
 # ══════════════════════════════════════════════════════════════════════════════
 # MY PROFILE ENDPOINTS (authenticated) — registered BEFORE /{slug} routes
@@ -160,9 +172,9 @@ async def remove_from_showcase(showcase_id: str, user: dict = Depends(get_curren
 async def get_visibility(user: dict = Depends(get_current_user), db=Depends(get_db)):
     db = make_db_proxy(db, user)
     doc = await db.public_profiles.find_one({"user_id": user["id"]}, {"visibility_settings": 1})
-    default = {"publications": "public", "impact": "public", "projects": "public", "grants": "public",
-               "collaborations": "public", "teaching": "public", "reputation": "public", "timeline": "public", "contact": "public"}
-    return (doc or {}).get("visibility_settings", default)
+    from services.public_profiles.visibility import DEFAULT_VISIBILITY
+    saved = (doc or {}).get("visibility_settings") or {}
+    return {k: saved.get(k, v) for k, v in DEFAULT_VISIBILITY.items()}
 
 @router.put("/me/visibility")
 async def update_visibility(body: VisibilityBody, user: dict = Depends(get_current_user), db=Depends(get_db)):
@@ -327,14 +339,17 @@ async def get_public_profile(
     if not user_id:
         raise HTTPException(status_code=404, detail="Researcher profile not found")
     viewer_id = await _get_optional_viewer(credentials)
+    if viewer_id != user_id and await _owner_chose_private(user_id, db):
+        raise HTTPException(status_code=404, detail="Researcher profile not found")
     profile = await get_full_profile(user_id, db, viewer_id=viewer_id)
     # Apply visibility for non-owners
     if viewer_id != user_id:
+        from services.public_profiles.visibility import section_visibility
         vs = profile.get("visibility_settings") or {}
         for section in ["impact", "projects", "grants", "collaborations", "teaching", "reputation", "timeline"]:
-            if vs.get(section, "public") != "public":
+            if section_visibility(vs, section) != "public":
                 profile[section] = None
-        if vs.get("contact", "public") != "public":
+        if section_visibility(vs, "contact") != "public":
             profile["email"] = None
     # Fire-and-forget view tracking
     client_ip = request.client.host if request.client else ""

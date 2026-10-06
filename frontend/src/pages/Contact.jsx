@@ -18,7 +18,6 @@ const BG_ALT = "#f9fafb";
 const CHANNELS = [
   { label: "Sales",    email: "sales@synaptiq.academy",    description: "Questions about subscriptions, pricing and institutions." },
   { label: "Support",  email: "support@synaptiq.academy",  description: "Technical support and account assistance." },
-  { label: "Security", email: "security@synaptiq.academy", description: "Security reports and vulnerability disclosure." },
   { label: "Privacy",  email: "privacy@synaptiq.academy",  description: "GDPR and personal data requests." },
   { label: "General",  email: "hello@synaptiq.academy",    description: "General questions." },
 ];
@@ -54,7 +53,7 @@ const CONTACT_METHODS = [
 const FAQ = [
   {
     q: "How long does it take to receive a reply?",
-    a: "We aim to reply to all messages within 2 working days. For urgent security issues, email security@synaptiq.academy — we acknowledge all reports within 48 hours.",
+    a: "We aim to reply to all messages within 2 working days.",
   },
   {
     q: "Can institutions request custom pricing?",
@@ -70,16 +69,16 @@ const FAQ = [
   },
   {
     q: "How do I report a security issue?",
-    a: "Email security@synaptiq.academy with a description of the vulnerability and reproduction steps. We acknowledge all reports within 48 hours and credit researchers who disclose responsibly. Please do not disclose publicly until we have had time to respond.",
+    a: "Email contact@synaptiq.academy with a description of the issue and the steps to reproduce it. Please don't disclose it publicly until we've had a chance to investigate and respond.",
   },
 ];
 
+// Only statements that match current behaviour; see /privacy and /gdpr.
 const TRUST = [
-  { label: "GDPR Compliant",             desc: "Data processed in accordance with EU Regulation 2016/679." },
-  { label: "Privacy First",              desc: "No data sold. No advertising. No hidden profiling." },
-  { label: "Research Data Ownership",    desc: "Your research, manuscripts, and projects remain yours." },
-  { label: "Enterprise Security",        desc: "TLS 1.3, AES-256 at rest, HTTPS everywhere." },
-  { label: "AI Privacy",                 desc: "AI providers are contractually prohibited from training on your data." },
+  { label: "Your research stays yours",  desc: "You keep the rights in your manuscripts, projects and files." },
+  { label: "Analytics only with consent", desc: "Usage analytics run only if you allow them. No advertising cookies." },
+  { label: "AI and your content",        desc: "Under their API terms, our AI providers don't train on content sent through their APIs by default." },
+  { label: "Your data, your choice",     desc: "Export your data or delete your account in Settings → Privacy." },
 ];
 
 /* ─── Form primitives ────────────────────────────────────────────────────── */

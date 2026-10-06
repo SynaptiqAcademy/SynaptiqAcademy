@@ -56,10 +56,8 @@ const SECTIONS = [
 export default function Cookies() {
   return (
     <LegalLayout
-      kind="Cookies"
-      title="Cookie Policy"
-      updated={LEGAL.cookies.updated}
-      version={LEGAL.cookies.version}
+      doc="cookies"
+      actions={<button type="button" className="lg-button" onClick={openPreferences} data-testid="cookies-manage-settings">Manage cookie settings</button>}
       seo={{ title: "Cookie Policy | Synaptiq", description: "The cookies and browser storage Synaptiq uses, why, for how long, and how to change your choice.", path: "/cookies" }}
       summary={(<p>We use cookies to keep you signed in and secure. Analytics runs only if you allow it. There are no advertising cookies or third-party trackers.</p>)}
       sections={SECTIONS}

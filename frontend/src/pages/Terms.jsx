@@ -115,10 +115,7 @@ const SECTIONS = [
 export default function Terms() {
   return (
     <LegalLayout
-      kind="Terms"
-      title="Terms of Service"
-      updated={LEGAL.terms.updated}
-      version={LEGAL.terms.version}
+      doc="terms"
       seo={{ title: "Terms of Service | Synaptiq", description: "The agreement for using Synaptiq: accounts, your content, AI features, academic integrity, plans, AI Credits, cancellation and your rights.", path: "/terms" }}
       summary={(<>
         <ul>

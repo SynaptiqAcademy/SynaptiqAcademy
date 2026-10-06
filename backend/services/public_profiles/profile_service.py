@@ -102,6 +102,7 @@ async def get_full_profile(user_id: str, db, viewer_id: str = None) -> dict:
     # caller forgets its own redaction step.
     is_owner = bool(viewer_id) and viewer_id == user_id
     contact_visibility = ((profile_doc or {}).get("visibility_settings") or {}).get("contact")
+    # Only if the member explicitly made "Contact" public (default: private).
     email = user.get("email") if (is_owner or contact_visibility == "public") else None
 
     return {
@@ -214,8 +215,11 @@ async def get_impact_for_profile(user_id: str, db) -> dict:
 
 async def get_projects_for_profile(user_id: str, db) -> list:
     """Return up to 10 projects where user is creator or member."""
+    # Only projects their owners made public; private and team projects
+    # never appear on a public Passport.
     cursor = db.projects.find(
-        {"$or": [{"created_by": user_id}, {"members.user_id": user_id}]}
+        {"$or": [{"created_by": user_id}, {"owner_id": user_id}, {"members.user_id": user_id}],
+         "visibility": "public"}
     ).sort("created_at", -1).limit(10)
     projects = await cursor.to_list(length=10)
     result = []

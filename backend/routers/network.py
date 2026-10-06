@@ -801,4 +801,16 @@ async def update_network_settings(
     settings.pop("user_id", None)
     settings["user_id"] = uid
     await db["network_settings"].replace_one({"user_id": uid}, settings, upsert=True)
+    # Researcher discovery, the directory and member search filter on the
+    # user record, not on network_settings — mirror the choice there so
+    # "Private" and "don't show me in discovery" actually take effect.
+    from bson import ObjectId
+    from services.discovery_preferences import discovery_visibility
+    await db.users.update_one({"_id": ObjectId(uid)},
+                              {"$set": {"profile_visibility": discovery_visibility(settings)}})
+    try:
+        from auth_utils import invalidate_user_cache
+        invalidate_user_cache(uid)
+    except Exception:
+        pass
     return settings

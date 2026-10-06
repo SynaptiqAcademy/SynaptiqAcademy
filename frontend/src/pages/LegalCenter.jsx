@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import MarketingLayout from "../components/layout/MarketingLayout";
 import { LEGAL } from "../content/legal/meta";
 import {
-  Shield, FileText, Cookie, Globe, Lock,
+  Shield, FileText, Cookie, Globe,
   ArrowRight, Clock, Calendar, ChevronRight,
   Mail, ExternalLink,
 } from "lucide-react";
@@ -95,11 +95,11 @@ const DOCS = [
     icon: Globe,
     color: "#1e40af",
     bg: "#EFF6FF",
-    title: "GDPR Notice",
-    desc: "Your rights under the GDPR and how to use them. Details of processing and retention are in the Privacy Policy.",
-    updated: "6 October 2026",
-    readingTime: "3 min",
-    version: "2026-10-06",
+    title: "Data Protection",
+    desc: "What you control, who can see what, and your rights under European data-protection law.",
+    updated: LEGAL.dataProtection.updated,
+    readingTime: "5 min",
+    version: null,
   },
 ];
 
@@ -152,19 +152,6 @@ export default function LegalCenter() {
               Everything you need to know about privacy, security, and your use of Synaptiq — written to be read, not avoided.
             </p>
 
-            {/* Trust signals */}
-            <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 10 }}>
-              {[
-                { icon: Shield, label: "GDPR aligned" },
-                { icon: Lock,   label: "AES-256 encryption" },
-                { icon: Globe,  label: "No data selling" },
-              ].map((s) => (
-                <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 20, background: "#f8fafb", border: "1px solid #e4e8ef" }}>
-                  <s.icon size={12} strokeWidth={1.5} style={{ color: "#0F2847" }} />
-                  <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#475569" }}>{s.label}</span>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>

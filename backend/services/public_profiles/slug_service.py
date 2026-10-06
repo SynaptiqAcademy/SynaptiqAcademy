@@ -1,6 +1,7 @@
 import re
 from datetime import datetime, timezone
 from bson import ObjectId
+from services.public_profiles.visibility import DEFAULT_VISIBILITY
 
 
 def generate_slug_from_name(full_name: str) -> str:
@@ -41,17 +42,7 @@ async def get_or_create_profile(user_id: str, db) -> dict:
     doc = {
         "user_id": user_id,
         "slug": slug,
-        "visibility_settings": {
-            "publications": "public",
-            "impact": "public",
-            "projects": "public",
-            "grants": "public",
-            "collaborations": "public",
-            "teaching": "public",
-            "reputation": "public",
-            "timeline": "public",
-            "contact": "public",
-        },
+        "visibility_settings": dict(DEFAULT_VISIBILITY),
         "view_count": 0,
         "created_at": now,
         "updated_at": now,
