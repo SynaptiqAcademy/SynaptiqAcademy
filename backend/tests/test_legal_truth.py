@@ -1,0 +1,112 @@
+"""Privacy, Terms and Cookies: the documents must match what the code does."""
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+import pytest
+from fastapi import HTTPException
+
+ROOT = Path(__file__).resolve().parents[2]
+FE = ROOT / "frontend"
+SRC = FE / "src"
+PAGES = {n: (SRC / "pages" / f"{n}.jsx").read_text() for n in ("Privacy", "Terms", "Cookies")}
+ALL = "\n".join(PAGES.values())
+META = (SRC / "content" / "legal" / "meta.js").read_text()
+INVENTORY = (SRC / "content" / "legal" / "cookies.js").read_text()
+
+BANNED = [r"bulletproof", r"100% (GDPR|secure)", r"GDPR[- ](compliant|certified)", r"SOC ?2", r"ISO ?27001", r"HIPAA",
+          r"military", r"bank[- ](level|grade)", r"fully secure", r"[Ww]e never (use|train)", r"within 24 hours",
+          r"Synaptiq (SRL|Ltd|Inc|GmbH)", r"hereinafter", r"ABSOLUTE DISCRETION", r"ANY AND ALL", r"non-refundable",
+          r"Most Popular", r"Pro Researcher", r"Researcher plan", r"Institution plan", r"€"]
+
+
+@pytest.mark.parametrize("pattern", BANNED)
+def test_no_legal_theatre_or_unsupported_claims(pattern):
+    assert not re.search(pattern, ALL), pattern
+
+
+def test_versions_match_backend():
+    from legal_versions import TERMS_VERSION, PRIVACY_VERSION, COOKIES_VERSION
+    for key, v in (("terms", TERMS_VERSION), ("privacy", PRIVACY_VERSION), ("cookies", COOKIES_VERSION)):
+        assert re.search(rf'{key}:\s*\{{ version: "{v}"', META), key
+
+
+def test_operator_is_not_invented():
+    assert "operator: null" in META            # flip only with the real legal entity
+    assert "OPERATOR_PENDING" in PAGES["Privacy"] and "OPERATOR_PENDING" in PAGES["Terms"]
+
+
+def test_every_browser_storage_key_is_in_the_cookie_inventory():
+    names = set(re.findall(r'name: "([^"]+)"', INVENTORY))
+    covered = [k.strip() for n in names for k in n.split(",")]
+    exact = {k for k in covered if not k.endswith("*")}
+    prefixes = [k[:-1] for k in covered if k.endswith("*")]
+    keys = set()
+    for f in list(SRC.rglob("*.js")) + list(SRC.rglob("*.jsx")):
+        s = f.read_text()
+        consts = dict(re.findall(r'(?:const\s+)?([A-Z_]+)\s*[:=]\s*"([a-z][a-z0-9_.]+)"', s))
+        for m in re.findall(r'(?:localStorage|sessionStorage)\.setItem\(\s*([^,]+),', s):
+            m = m.strip()
+            if m.startswith('"'):
+                keys.add(m.strip('"'))
+            elif m.startswith("`"):
+                keys.add(re.sub(r"\$\{[^}]+\}.*", "", m.strip("`")))
+            elif m in consts:
+                keys.add(consts[m])
+            elif "." in m and m.split(".")[-1] in consts:
+                keys.add(consts[m.split(".")[-1]])
+        for m in re.findall(r'usePersistentSet\(\s*"([^"]+)"', s):
+            keys.add(m)
+    missing = [k for k in keys if k not in exact and not any(k.startswith(p) for p in prefixes)]
+    assert not missing, missing
+    auth = (ROOT / "backend" / "auth_utils.py").read_text()
+    for cookie in re.findall(r'key="([a-z_]+)"', auth):
+        assert cookie in exact, cookie
+
+
+def test_analytics_only_with_consent_and_no_content_capture():
+    init = (FE / "public" / "analytics-init.js").read_text()
+    assert "if (analyticsAllowed() && !initialized)" in init
+    assert "autocapture: false" in init and "disable_session_recording: true" in init
+    consent = (SRC / "lib" / "cookieConsent.js").read_text()
+    cats = re.findall(r'id: "([a-z]+)"', consent[consent.index("CATEGORY_META"):consent.index("DEFAULT_PREFS")])
+    assert cats == ["essential", "analytics"]
+    assert "analytics: false" in consent[consent.index("DEFAULT_PREFS"):]   # off by default
+    assert "ALL_ACCEPTED_PREFS = { essential: true, analytics: true, marketing: false, preferences: false }" in consent
+
+
+def test_reject_is_as_prominent_as_accept():
+    b = (SRC / "components" / "consent" / "CookieConsentBanner.jsx").read_text()
+    rej = re.search(r'className="([^"]+)"\s*data-testid="consent-reject-btn"', b).group(1)
+    acc = re.search(r'className="([^"]+)"\s*data-testid="consent-accept-btn"', b).group(1)
+    assert rej == acc
+    footer = (SRC / "components" / "layout" / "MarketingLayout.jsx").read_text()
+    assert "onClick={openPreferences}" in footer and "Cookie settings" in footer
+
+
+def test_self_service_rights_described_actually_exist():
+    users = (ROOT / "backend" / "routers" / "users.py").read_text()
+    assert '@router.get("/me/export")' in users and '@router.delete("/me")' in users
+    ui = (SRC / "components" / "settings" / "PrivacySection.jsx").read_text()
+    assert 'api.get("/users/me/export")' in ui and 'api.delete("/users/me")' in ui
+    assert "Export my data" in PAGES["Privacy"] and "Settings → Privacy" in PAGES["Privacy"]
+    robots = (FE / "public" / "robots.txt").read_text()
+    assert "Disallow: /" in robots and "Allow: /researcher" not in robots   # profile pages not offered to search engines
+
+
+@pytest.mark.asyncio
+async def test_signup_requires_terms_acceptance(monkeypatch):
+    from routers import auth
+    from models import RegisterIn
+    from starlette.requests import Request
+
+    async def _open(db):
+        return True
+    monkeypatch.setattr(auth, "is_registration_open", _open)
+    req = Request({"type": "http", "headers": [], "client": ("127.0.0.1", 1), "query_string": b""})
+    with pytest.raises(HTTPException) as e:
+        await auth.register(req, RegisterIn(email="x@synaptiq-test.io", password="Abcdef12!", full_name="X"), None)
+    assert e.value.status_code == 400
+    src = (ROOT / "backend" / "routers" / "auth.py").read_text()
+    assert '"terms_version": TERMS_VERSION' in src and '"terms_accepted_at"' in src

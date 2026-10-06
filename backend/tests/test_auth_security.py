@@ -73,7 +73,7 @@ def test_jwt_secret_strength_accepts_strong():
 # ─────────────────── AUTH-002: Register + verify flow ────────────────────────
 
 def test_register_creates_user(client, unique_email):
-    r = client.post("/api/auth/register", json={
+    r = client.post("/api/auth/register", json={"accepted_terms": True, 
         "full_name": "Security Test", "email": unique_email, "password": "TestPass1"
     })
     assert r.status_code == 200
@@ -83,14 +83,14 @@ def test_register_creates_user(client, unique_email):
 
 
 def test_register_duplicate_email(client, unique_email):
-    r = client.post("/api/auth/register", json={
+    r = client.post("/api/auth/register", json={"accepted_terms": True, 
         "full_name": "Dup", "email": unique_email, "password": "TestPass1"
     })
     assert r.status_code == 400
 
 
 def test_register_weak_password_rejected(client):
-    r = client.post("/api/auth/register", json={
+    r = client.post("/api/auth/register", json={"accepted_terms": True, 
         "full_name": "Weak", "email": f"weak-{uuid.uuid4().hex[:6]}@example.com",
         "password": "short"
     })
@@ -98,7 +98,7 @@ def test_register_weak_password_rejected(client):
 
 
 def test_register_no_letter_rejected(client):
-    r = client.post("/api/auth/register", json={
+    r = client.post("/api/auth/register", json={"accepted_terms": True, 
         "full_name": "NL", "email": f"nl-{uuid.uuid4().hex[:6]}@example.com",
         "password": "12345678"
     })
@@ -184,7 +184,7 @@ def test_token_rotation_on_refresh(client, unique_email):
 def test_account_lockout_triggers_after_failures(client):
     """5 consecutive wrong passwords should result in a 429."""
     test_email = f"lockout-{uuid.uuid4().hex[:8]}@example.com"
-    client.post("/api/auth/register", json={
+    client.post("/api/auth/register", json={"accepted_terms": True, 
         "full_name": "LockTest", "email": test_email, "password": "LockPass1"
     })
     for i in range(5):

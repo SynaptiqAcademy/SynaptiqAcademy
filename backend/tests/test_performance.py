@@ -47,7 +47,7 @@ def client():
 @pytest.fixture(scope="module")
 def auth_client(client):
     email = unique_email("pa")
-    client.post("/api/auth/register", json={
+    client.post("/api/auth/register", json={"accepted_terms": True, 
         "full_name": "Perf User", "email": email, "password": "PerfPass1!",
     })
     client.post("/api/auth/login", json={"email": email, "password": "PerfPass1!"})
@@ -86,7 +86,7 @@ class TestLatency:
     def test_login_p95(self, client):
         """POST /api/auth/login p95 < SLO (includes DB lookup + bcrypt verify)."""
         email = unique_email("lp")
-        client.post("/api/auth/register", json={
+        client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "Latency Login", "email": email, "password": "LatPass1!",
         })
         payload = {"email": email, "password": "LatPass1!"}
@@ -141,7 +141,7 @@ class TestThroughput:
         n = 5
         t0 = time.perf_counter()
         for i in range(n):
-            client.post("/api/auth/register", json={
+            client.post("/api/auth/register", json={"accepted_terms": True, 
                 "full_name": f"Tput {i}",
                 "email": unique_email(f"tput{i}"),
                 "password": "TputPass1!",
@@ -206,7 +206,7 @@ class TestConcurrency:
         from fastapi.testclient import TestClient
         with TestClient(app, raise_server_exceptions=False) as c:
             email = unique_email("conclogin")
-            c.post("/api/auth/register", json={
+            c.post("/api/auth/register", json={"accepted_terms": True, 
                 "full_name": "Conc Login", "email": email, "password": "ConcPass1!",
             })
             payload = {"email": email, "password": "ConcPass1!"}

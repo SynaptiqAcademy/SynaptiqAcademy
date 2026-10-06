@@ -170,10 +170,10 @@ export default function CookieConsentBanner() {
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               <div className="flex-1 min-w-0">
                 <div className="overline text-[#0F2847]">Privacy &amp; cookies</div>
-                <h3 className="font-serif text-lg text-slate-900 mt-1">We use cookies to power Synaptiq.</h3>
+                <h3 className="font-serif text-lg text-slate-900 mt-1">Cookies on Synaptiq</h3>
                 <p className="text-sm text-slate-600 mt-1 leading-relaxed">
-                  Essential cookies are required for authentication and core platform function. We also
-                  use optional cookies for analytics, preferences, and marketing. Read our{" "}
+                  We use strictly necessary cookies to keep you signed in and secure. With your permission,
+                  we also use analytics to see which pages and features are used. Read our{" "}
                   <Link to="/cookies" className="underline decoration-dotted hover:text-[#0F2847]">Cookie Policy</Link>{" "}
                   and{" "}
                   <Link to="/privacy" className="underline decoration-dotted hover:text-[#0F2847]">Privacy Policy</Link>.
@@ -185,17 +185,17 @@ export default function CookieConsentBanner() {
                   onClick={() => setShowPrefs(true)}
                   className="px-4 py-2 text-sm text-slate-700 border border-slate-300 hover:bg-slate-50 rounded-md transition-colors"
                   data-testid="consent-manage-btn"
-                >Manage Preferences</button>
+                >Choose</button>
                 <button
                   onClick={() => doRejectOptional("banner")}
-                  className="px-4 py-2 text-sm text-slate-700 border border-slate-300 hover:bg-slate-50 rounded-md transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-[#0F2847] border border-[#0F2847] hover:bg-slate-50 rounded-md transition-colors"
                   data-testid="consent-reject-btn"
-                >Reject Non-Essential</button>
+                >Reject analytics</button>
                 <button
                   onClick={() => doAcceptAll("banner")}
-                  className="px-4 py-2 text-sm bg-[#0F2847] text-white hover:bg-slate-800 rounded-md transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-[#0F2847] border border-[#0F2847] hover:bg-slate-50 rounded-md transition-colors"
                   data-testid="consent-accept-btn"
-                >Accept All</button>
+                >Allow analytics</button>
               </div>
             </div>
           ) : (

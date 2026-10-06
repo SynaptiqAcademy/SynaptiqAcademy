@@ -214,7 +214,7 @@ class TestAuthEndpointsWithoutRedis:
         h = self._csrf(client)
         r = client.post(
             "/api/auth/register",
-            json={"full_name": "Redis Test", "email": unique_email, "password": "TestPass1!"},
+            json={"accepted_terms": True, "full_name": "Redis Test", "email": unique_email, "password": "TestPass1!"},
             headers=h,
         )
         assert r.status_code not in (500, 502, 503), (

@@ -79,7 +79,7 @@ class TestAuth:
         s = _session()
         email = f"test_{uuid.uuid4().hex[:8]}@example.com"
         r = s.post(f"{API}/auth/register",
-                   json={"email": email, "password": "Pass1234!", "full_name": "TEST User"},
+                   json={"accepted_terms": True, "email": email, "password": "Pass1234!", "full_name": "TEST User"},
                    timeout=15)
         assert r.status_code in (200, 201), r.text
         data = r.json()

@@ -111,7 +111,7 @@ export function AuthProvider({ children }) {
 
   const register = async (full_name, email, password) => {
     try {
-      const { data } = await api.post("/auth/register", { full_name, email, password });
+      const { data } = await api.post("/auth/register", { full_name, email, password, accepted_terms: true });
       // Registration doesn't always establish a session — when email
       // verification is required, the backend intentionally skips issuing
       // auth cookies until the user verifies. Setting `user` from the raw

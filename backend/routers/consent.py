@@ -43,6 +43,7 @@ class ConsentIn(BaseModel):
     status: str  # accepted_all | rejected_non_essential | custom
     prefs: ConsentPrefs
     source: str = "banner"
+    version: Optional[str] = Field(None, max_length=20)   # cookie-policy version shown
 
 
 def _hash_ip(ip: str) -> str:
@@ -73,6 +74,7 @@ async def submit_consent(payload: ConsentIn, request: Request):
                                                        "custom") else "custom",
         "prefs": payload.prefs.model_dump(),
         "source": payload.source if payload.source in ("banner", "preferences_modal") else "banner",
+        "policy_version": payload.version,
         "user_agent": (request.headers.get("user-agent") or "")[:200],
         "ip_hash": _hash_ip(_client_ip(request)),
         "created_at": datetime.now(timezone.utc).isoformat(),

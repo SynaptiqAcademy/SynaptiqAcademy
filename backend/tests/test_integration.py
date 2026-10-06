@@ -54,7 +54,7 @@ def user(client):
     """Register + login a fresh user; return credentials + logged-in client."""
     email = unique_email("user")
     password = "IntPass1!"
-    r = client.post("/api/auth/register", json={
+    r = client.post("/api/auth/register", json={"accepted_terms": True, 
         "full_name": "Integration User", "email": email, "password": password,
     })
     assert r.status_code == 200, f"register failed: {r.status_code} {r.text[:200]}"
@@ -85,7 +85,7 @@ class TestAuthFlow:
     def test_register_login_me(self, client):
         """Full register → login → /me round-trip."""
         email = unique_email("auth")
-        r = client.post("/api/auth/register", json={
+        r = client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "Auth Test", "email": email, "password": "AuthPass1!",
         })
         assert r.status_code == 200
@@ -101,7 +101,7 @@ class TestAuthFlow:
     def test_logout_revokes_refresh(self, client):
         """After logout the refresh token must be rejected."""
         email = unique_email("logout")
-        client.post("/api/auth/register", json={
+        client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "Logout Test", "email": email, "password": "LogPass1!",
         })
         client.post("/api/auth/login", json={"email": email, "password": "LogPass1!"})
@@ -115,7 +115,7 @@ class TestAuthFlow:
     def test_password_reset_flow(self, client):
         """Forgot-password + reset-password + login with new password."""
         email = unique_email("reset")
-        client.post("/api/auth/register", json={
+        client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "Reset Test", "email": email, "password": "OldPass1!",
         })
 
@@ -138,14 +138,14 @@ class TestAuthFlow:
     def test_duplicate_register_rejected(self, client):
         """Second registration with same email must return 400."""
         email = unique_email("dup")
-        payload = {"full_name": "Dup", "email": email, "password": "DupPass1!"}
+        payload = {"full_name": "Dup", "email": email, "password": "DupPass1!", "accepted_terms": True}
         r1 = client.post("/api/auth/register", json=payload)
         assert r1.status_code == 200
         r2 = client.post("/api/auth/register", json=payload)
         assert r2.status_code == 400
 
     def test_weak_password_rejected(self, client):
-        r = client.post("/api/auth/register", json={
+        r = client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "Weak", "email": unique_email("weak"), "password": "abc",
         })
         assert r.status_code == 400
@@ -153,7 +153,7 @@ class TestAuthFlow:
     def test_refresh_token_rotation(self, client):
         """Two consecutive refreshes must both succeed."""
         email = unique_email("rot")
-        client.post("/api/auth/register", json={
+        client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "Rot Test", "email": email, "password": "RotPass1!",
         })
         client.post("/api/auth/login", json={"email": email, "password": "RotPass1!"})
@@ -399,7 +399,7 @@ class TestSecurityBoundaries:
 
     def test_xss_in_registration_sanitized(self, client):
         """XSS payload in full_name must not cause a 500."""
-        r = client.post("/api/auth/register", json={
+        r = client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "<script>alert('xss')</script>",
             "email": unique_email("xss"),
             "password": "XssPass1!",

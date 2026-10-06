@@ -46,7 +46,7 @@ def test_session():
     email = f"ai-test-{uuid.uuid4().hex[:8]}@test.synaptiq"
     password = "Test@1234!AI"
     s = requests.Session()
-    reg = s.post(f"{BASE_URL}/api/auth/register", json={
+    reg = s.post(f"{BASE_URL}/api/auth/register", json={"accepted_terms": True, 
         "full_name": "AI Chat Test",
         "email": email,
         "password": password,

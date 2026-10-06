@@ -15,6 +15,7 @@
  * that consent shouldn't be considered valid indefinitely.
  */
 import api from "./api";
+import { LEGAL } from "../content/legal/meta";
 
 export const STORAGE_KEY = "synaptiq_consent_v1";
 export const CONSENT_ID_KEY = "synaptiq_consent_id_v1";
@@ -23,43 +24,34 @@ export const OPEN_PREFERENCES_EVENT = "synaptiq:open-cookie-preferences";
 
 const CONSENT_EXPIRY_MONTHS = 12;
 
+// Only categories that actually control something are offered. Interface
+// preferences you set yourself (sidebar state, saved filters) are stored
+// locally as part of the feature you asked for, and Synaptiq uses no
+// marketing or advertising technologies, so neither is a separate choice.
 export const CATEGORY_META = [
   {
     id: "essential",
-    label: "Essential",
+    label: "Strictly necessary",
     locked: true,
-    description: "Required for sign-in, security, and core platform function.",
+    description: "Sign-in, security and remembering this choice.",
     explanation:
-      "These cookies are strictly necessary — session/auth tokens, CSRF protection, and load-balancing. The platform cannot function without them, so they cannot be disabled.",
-  },
-  {
-    id: "preferences",
-    label: "Preferences",
-    locked: false,
-    description: "Remember your UI choices (theme, sidebar state, recent searches).",
-    explanation:
-      "Lets Synaptiq remember non-essential settings across visits, like sidebar collapse state or recently used sections, so you don't have to reconfigure them every time.",
+      "Session and refresh cookies keep you signed in, a security cookie protects forms against cross-site requests, and your cookie choice is stored so we don't ask again. These can't be switched off.",
   },
   {
     id: "analytics",
     label: "Analytics",
     locked: false,
-    description: "Anonymous usage metrics to help us improve Synaptiq.",
+    description: "Anonymous usage statistics (PostHog).",
     explanation:
-      "Powers aggregate product analytics (PostHog) — which features are used, error rates, and performance. Disabling this stops all analytics scripts from running.",
-  },
-  {
-    id: "marketing",
-    label: "Marketing",
-    locked: false,
-    description: "Personalised research-community communications.",
-    explanation:
-      "Used only if you opt in to tailored communications about the platform. We do not currently serve advertising, and no ad-tracking pixels run on Synaptiq.",
+      "Counts which pages and features are used so we can improve Synaptiq. Off until you allow it. No research content is sent, and turning it off stops analytics immediately.",
   },
 ];
 
 export const DEFAULT_PREFS = { essential: true, analytics: false, marketing: false, preferences: false };
-export const ALL_ACCEPTED_PREFS = { essential: true, analytics: true, marketing: true, preferences: true };
+// Accepting covers the only optional purpose that exists (analytics). The
+// marketing/preferences keys stay false so records never show consent to
+// purposes Synaptiq doesn't have.
+export const ALL_ACCEPTED_PREFS = { essential: true, analytics: true, marketing: false, preferences: false };
 
 function uuid() {
   // Lightweight v4-ish UUID; collision risk is fine for a consent_id.
@@ -118,13 +110,13 @@ export function isCategoryEnabled(category) {
 export function saveConsent(prefs, status, source = "banner") {
   const consent_id = getOrCreateConsentId();
   const finalPrefs = { ...DEFAULT_PREFS, ...prefs, essential: true };
-  const record = { consent_id, status, prefs: finalPrefs, source, at: new Date().toISOString() };
+  const record = { consent_id, status, prefs: finalPrefs, source, version: LEGAL.cookies.version, at: new Date().toISOString() };
 
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(record)); } catch { /* no-op */ }
   window.synaptiqConsent = record;
   window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: record }));
 
-  api.post("/consent", { consent_id, status, prefs: finalPrefs, source }).catch(() => {});
+  api.post("/consent", { consent_id, status, prefs: finalPrefs, source, version: LEGAL.cookies.version }).catch(() => {});
   return record;
 }
 

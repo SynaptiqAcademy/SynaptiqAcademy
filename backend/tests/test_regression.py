@@ -50,7 +50,7 @@ class TestAuthRegressions:
         Invariant: 10 consecutive registrations never return 429 or 500.
         """
         for i in range(10):
-            r = client.post("/api/auth/register", json={
+            r = client.post("/api/auth/register", json={"accepted_terms": True, 
                 "full_name": f"Rate {i}",
                 "email": unique_email(f"rate{i}"),
                 "password": "RatePass1!",
@@ -68,7 +68,7 @@ class TestAuthRegressions:
         Invariant: 6 consecutive wrong-password attempts return 429 after lockout.
         """
         email = unique_email("lockout")
-        client.post("/api/auth/register", json={
+        client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "Lockout", "email": email, "password": "LockPass1!",
         })
         got_429 = False
@@ -94,7 +94,7 @@ class TestAuthRegressions:
         Invariant: logout must return 200 without a CSRF token.
         """
         email = unique_email("logout")
-        client.post("/api/auth/register", json={
+        client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "Logout", "email": email, "password": "LogoutPass1!",
         })
         client.post("/api/auth/login", json={"email": email, "password": "LogoutPass1!"})
@@ -106,7 +106,7 @@ class TestAuthRegressions:
         Invariant: after /auth/reset-password, the old refresh token is rejected.
         """
         email = unique_email("pwreset")
-        client.post("/api/auth/register", json={
+        client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "PW Reset", "email": email, "password": "OldPwd1!",
         })
         client.post("/api/auth/login", json={"email": email, "password": "OldPwd1!"})
@@ -131,7 +131,7 @@ class TestAuthRegressions:
     def test_reg005_duplicate_email_rejected(self, client):
         """Invariant: registering the same email twice returns 400, not 500."""
         email = unique_email("dup")
-        payload = {"full_name": "Dup", "email": email, "password": "DupPass1!"}
+        payload = {"full_name": "Dup", "email": email, "password": "DupPass1!", "accepted_terms": True}
         r1 = client.post("/api/auth/register", json=payload)
         assert r1.status_code == 200
         r2 = client.post("/api/auth/register", json=payload)
@@ -144,7 +144,7 @@ class TestAuthRegressions:
         Invariant: password_hash must never appear in any auth response body.
         """
         email = unique_email("nohash")
-        r = client.post("/api/auth/register", json={
+        r = client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "No Hash", "email": email, "password": "NoHashPass1!",
         })
         assert r.status_code == 200
@@ -172,7 +172,7 @@ class TestJWTRegressions:
         """Invariant: refresh token must contain a valid UUID4 jti for revocation."""
         import jwt as pyjwt
         email = unique_email("jti")
-        client.post("/api/auth/register", json={
+        client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "JTI", "email": email, "password": "JtiPass1!",
         })
         client.post("/api/auth/login", json={"email": email, "password": "JtiPass1!"})
@@ -191,7 +191,7 @@ class TestJWTRegressions:
         """Invariant: access token must contain a valid UUID4 jti."""
         import jwt as pyjwt
         email = unique_email("atjti")
-        client.post("/api/auth/register", json={
+        client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "AT JTI", "email": email, "password": "AtjtiPass1!",
         })
         client.post("/api/auth/login", json={"email": email, "password": "AtjtiPass1!"})
@@ -232,7 +232,7 @@ class TestCSRFRegressions:
     def test_reg011_state_change_blocked_without_csrf(self, client):
         """Invariant: POST to CSRF-protected endpoint without token returns 403."""
         email = unique_email("csrf")
-        client.post("/api/auth/register", json={
+        client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "CSRF", "email": email, "password": "CsrfPass1!",
         })
         client.post("/api/auth/login", json={"email": email, "password": "CsrfPass1!"})
@@ -245,7 +245,7 @@ class TestCSRFRegressions:
     def test_reg012_csrf_with_correct_token_reaches_endpoint(self, client):
         """Invariant: correct CSRF token allows the request to reach the endpoint."""
         email = unique_email("csrf2")
-        client.post("/api/auth/register", json={
+        client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "CSRF2", "email": email, "password": "CsrfPass1!",
         })
         client.post("/api/auth/login", json={"email": email, "password": "CsrfPass1!"})
@@ -323,7 +323,7 @@ class TestSecurityRegressions:
     def test_reg017_admin_requires_super_admin(self, client):
         """Invariant: /api/admin/* rejects regular users with 401 or 403."""
         email = unique_email("adm")
-        client.post("/api/auth/register", json={
+        client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "Admin Test", "email": email, "password": "AdminPass1!",
         })
         client.post("/api/auth/login", json={"email": email, "password": "AdminPass1!"})

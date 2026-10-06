@@ -273,6 +273,8 @@ async def register(request: Request, payload: RegisterIn, response: Response):
 
     if not await is_registration_open(db):
         raise HTTPException(status_code=403, detail=REGISTRATION_CLOSED_MESSAGE)
+    if not payload.accepted_terms:
+        raise HTTPException(status_code=400, detail="Please confirm you are 18 or older and accept the Terms of Service to create an account.")
 
     email = payload.email.lower().strip()
     logger.info("[STEP 4] register() called for %s", email)
@@ -310,9 +312,13 @@ async def register(request: Request, payload: RegisterIn, response: Response):
     parts = payload.full_name.strip().split(" ", 1)
     first_name = parts[0] if parts else ""
     last_name = parts[1] if len(parts) > 1 else ""
+    from legal_versions import TERMS_VERSION, PRIVACY_VERSION
     user_doc = {
         "email": email,
         "password_hash": hash_password(payload.password),
+        "terms_version": TERMS_VERSION,
+        "terms_accepted_at": _now(),
+        "privacy_version_acknowledged": PRIVACY_VERSION,
         "full_name": payload.full_name,
         "first_name": first_name,
         "last_name": last_name,

@@ -4,6 +4,7 @@ import { Button } from "@/components/ds";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { ChevronDown, Menu, X } from "lucide-react";
+import { openPreferences } from "../../lib/cookieConsent";
 
 const NAVY   = "#0F2847";
 const T_GRAY = "#64748b";
@@ -434,6 +435,12 @@ export default function MarketingLayout({ children }) {
               <FL href="/privacy">Privacy Policy</FL>
               <FL href="/terms">Terms of Service</FL>
               <FL href="/cookies">Cookie Policy</FL>
+              <div>
+                <button type="button" onClick={openPreferences} className="hover:text-white transition-colors"
+                  style={{ fontSize: "0.82rem", color: "#a3adbb", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
+                  Cookie settings
+                </button>
+              </div>
               <FL href="/gdpr">GDPR</FL>
               <FL href="/security">Security Center</FL>
             </FCol>

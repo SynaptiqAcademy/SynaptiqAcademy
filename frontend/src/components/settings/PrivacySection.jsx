@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Cookie, ShieldCheck } from "lucide-react";
+import { Cookie, ShieldCheck, Download, Trash2 } from "lucide-react";
+import api from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { SettingsGrid } from "./SettingsGrid";
 import { Button } from "@/components/ds/Button";
 import { Badge } from "@/components/ds/Badge";
@@ -81,7 +83,82 @@ export function PrivacySection() {
           </Button>
         </div>
       </PreferenceCard>
+      <YourData />
     </SettingsGrid>
+  );
+}
+
+/* Export (GET /api/users/me/export) and account deletion (DELETE /api/users/me).
+   What deletion does is stated exactly as implemented: the account is
+   anonymised and signed out everywhere; content shared with others is not
+   removed by this action. */
+function YourData() {
+  const { logout } = useAuth() || {};
+  const [busy, setBusy] = useState("");
+  const [msg, setMsg] = useState("");
+  const [confirmText, setConfirmText] = useState("");
+
+  const exportData = async () => {
+    setBusy("export"); setMsg("");
+    try {
+      const { data } = await api.get("/users/me/export");
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `synaptiq-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      setMsg("Your export has been downloaded.");
+    } catch {
+      setMsg("The export couldn't be created. Please try again, or email privacy@synaptiq.academy.");
+    } finally { setBusy(""); }
+  };
+
+  const deleteAccount = async () => {
+    if (confirmText !== "DELETE") return;
+    setBusy("delete"); setMsg("");
+    try {
+      await api.delete("/users/me");
+      if (logout) await logout();
+      window.location.href = "/";
+    } catch {
+      setMsg("Your account couldn't be deleted. Please try again, or email privacy@synaptiq.academy.");
+      setBusy("");
+    }
+  };
+
+  return (
+    <>
+      <PreferenceCard icon={Download} title="Export my data" description="A copy of your Synaptiq data">
+        <BodySmall style={{ margin: 0 }}>
+          Downloads a JSON file with your profile, your projects and workspaces, manuscripts you author, your
+          most recent messages and notifications, and the list of files you uploaded. For anything not included,
+          email privacy@synaptiq.academy.
+        </BodySmall>
+        <div style={{ marginTop: 6 }}>
+          <Button variant="outline" size="sm" onClick={exportData} disabled={busy === "export"} data-testid="privacy-export-btn">
+            {busy === "export" ? "Preparing…" : "Export my data"}
+          </Button>
+        </div>
+      </PreferenceCard>
+
+      <PreferenceCard icon={Trash2} title="Delete my account" description="Permanent">
+        <BodySmall style={{ margin: 0 }}>
+          Your name, email, profile details and ORCID link are removed and you are signed out everywhere. Content you
+          shared with others, such as messages, projects and co-authored manuscripts, stays with them. This can't be undone.
+        </BodySmall>
+        <label style={{ display: "block", marginTop: 8, fontSize: 13 }}>
+          Type DELETE to confirm
+          <input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} aria-label="Type DELETE to confirm"
+            style={{ display: "block", marginTop: 4, width: "100%", maxWidth: 220, padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: 4 }} />
+        </label>
+        <div style={{ marginTop: 6 }}>
+          <Button variant="outline" size="sm" onClick={deleteAccount} disabled={confirmText !== "DELETE" || busy === "delete"} data-testid="privacy-delete-btn">
+            {busy === "delete" ? "Deleting…" : "Delete my account"}
+          </Button>
+        </div>
+      </PreferenceCard>
+      {msg && <p role="status" style={{ fontSize: 13, color: "#334155" }}>{msg}</p>}
+    </>
   );
 }
 

@@ -39,7 +39,7 @@ def _unique_email() -> str:
 
 
 async def _register(client: httpx.AsyncClient, email: str, password: str = "TestPass1!", name: str = "Test User") -> dict:
-    r = await client.post(f"{BASE}/api/auth/register", json={"full_name": name, "email": email, "password": password})
+    r = await client.post(f"{BASE}/api/auth/register", json={"accepted_terms": True, "full_name": name, "email": email, "password": password})
     assert r.status_code == 200, f"Register failed: {r.status_code} {r.text}"
     return r.json()
 
@@ -73,7 +73,7 @@ async def test_register_duplicate_email_rejected():
     async with httpx.AsyncClient(timeout=10) as c:
         email = _unique_email()
         await _register(c, email)
-        r = await c.post(f"{BASE}/api/auth/register", json={"full_name": "Dup", "email": email, "password": "TestPass1!"})
+        r = await c.post(f"{BASE}/api/auth/register", json={"accepted_terms": True, "full_name": "Dup", "email": email, "password": "TestPass1!"})
         assert r.status_code == 400
         assert "already" in r.json()["detail"].lower()
 
@@ -81,14 +81,14 @@ async def test_register_duplicate_email_rejected():
 @pytest.mark.asyncio
 async def test_register_weak_password_rejected():
     async with httpx.AsyncClient(timeout=10) as c:
-        r = await c.post(f"{BASE}/api/auth/register", json={"full_name": "T", "email": _unique_email(), "password": "short1"})
+        r = await c.post(f"{BASE}/api/auth/register", json={"accepted_terms": True, "full_name": "T", "email": _unique_email(), "password": "short1"})
         assert r.status_code == 400
 
 
 @pytest.mark.asyncio
 async def test_register_no_digit_password_rejected():
     async with httpx.AsyncClient(timeout=10) as c:
-        r = await c.post(f"{BASE}/api/auth/register", json={"full_name": "T", "email": _unique_email(), "password": "NoDigitPass"})
+        r = await c.post(f"{BASE}/api/auth/register", json={"accepted_terms": True, "full_name": "T", "email": _unique_email(), "password": "NoDigitPass"})
         assert r.status_code == 400
 
 

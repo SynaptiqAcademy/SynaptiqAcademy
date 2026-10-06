@@ -38,14 +38,14 @@ class TestCORS:
 # ------------------ Password policy + registration ------------------
 class TestRegistrationPolicy:
     def test_weak_password_short_returns_400(self):
-        r = requests.post(f"{BASE_URL}/api/auth/register", json={
+        r = requests.post(f"{BASE_URL}/api/auth/register", json={"accepted_terms": True, 
             "email": _u("short"), "password": "abc", "full_name": "Short Pass",
         }, timeout=15)
         assert r.status_code == 400
         assert "at least 8" in r.json().get("detail", "")
 
     def test_password_missing_complexity_returns_400(self):
-        r = requests.post(f"{BASE_URL}/api/auth/register", json={
+        r = requests.post(f"{BASE_URL}/api/auth/register", json={"accepted_terms": True, 
             "email": _u("nocplx"), "password": "12345678", "full_name": "No Complex",
         }, timeout=15)
         assert r.status_code == 400
@@ -53,7 +53,7 @@ class TestRegistrationPolicy:
 
     def test_strong_password_registers_and_unverified(self):
         email = _u("strong")
-        r = requests.post(f"{BASE_URL}/api/auth/register", json={
+        r = requests.post(f"{BASE_URL}/api/auth/register", json={"accepted_terms": True, 
             "email": email, "password": "StrongPass123", "full_name": "Strong User",
         }, timeout=15)
         assert r.status_code == 200, r.text
@@ -136,7 +136,7 @@ class TestEmailVerification:
     def test_resend_verification_existing_unverified(self):
         # Create fresh unverified user
         email = _u("resend")
-        rr = requests.post(f"{BASE_URL}/api/auth/register", json={
+        rr = requests.post(f"{BASE_URL}/api/auth/register", json={"accepted_terms": True, 
             "email": email, "password": "StrongPass123", "full_name": "Resend User",
         }, timeout=15)
         if rr.status_code == 429:

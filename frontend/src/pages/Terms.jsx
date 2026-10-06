@@ -1,184 +1,134 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { LegalLayout, Section } from "./legal/LegalLayout";
-import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
+import { LegalLayout } from "../components/legal/LegalLayout";
+import { LEGAL, OPERATOR_PENDING } from "../content/legal/meta";
+
+const C = LEGAL.contact.general;
+const P = LEGAL.contact.privacy;
+const mail = (a) => <a href={`mailto:${a}`}>{a}</a>;
 
 const SECTIONS = [
-  { id: "acceptance",     label: "1. Acceptance" },
-  { id: "eligibility",    label: "2. Eligibility & Accounts" },
-  { id: "plans",          label: "3. Plans & Credits" },
-  { id: "subscriptions",  label: "4. Subscriptions & Billing" },
-  { id: "refunds",        label: "5. Refunds" },
-  { id: "credits",        label: "6. AI Credits" },
-  { id: "acceptable-use", label: "7. Acceptable Use" },
-  { id: "ip",             label: "8. Intellectual Property" },
-  { id: "ai-content",     label: "9. AI-Generated Content" },
-  { id: "collaboration",  label: "10. Collaboration" },
-  { id: "repository",     label: "11. Repository & Files" },
-  { id: "availability",   label: "12. Service Availability" },
-  { id: "liability",      label: "13. Limitation of Liability" },
-  { id: "termination",    label: "14. Termination" },
-  { id: "institution",    label: "15. Institutional Accounts" },
-  { id: "governing-law",  label: "16. Governing Law" },
-  { id: "general",        label: "17. General Provisions" },
+  { id: "about", title: "About these terms", body: (<>
+    <p>These terms are the agreement between you and the operator of Synaptiq ("we") for using synaptiq.academy and its application. {LEGAL.operator ? `The operator is ${LEGAL.operator.name}, ${LEGAL.operator.address}.` : OPERATOR_PENDING}</p>
+    <p>By creating an account you accept these terms. The <Link to="/privacy">Privacy Policy</Link> explains how we handle personal data.</p>
+  </>) },
+  { id: "eligibility", title: "Who can use Synaptiq", body: (<>
+    <p>You must be at least 18. If you use Synaptiq for an organisation, you confirm you may act for it.</p>
+  </>) },
+  { id: "accounts", title: "Your account", body: (<>
+    <p>Keep your sign-in details secure and tell us at {mail(C)} if you think someone else has accessed your account. You are responsible for what happens under your account unless it was used without your fault.</p>
+  </>) },
+  { id: "identity", title: "Academic and professional identity", body: (<>
+    <p>What you put on your Academic Passport must be true and yours: your name, roles, institution, credentials, publications, authorship and ORCID iD. Most of it is self-declared; Synaptiq marks connected and verified details separately and does not verify everything. Verification confirms only the specific fact checked, such as an institutional affiliation.</p>
+  </>) },
+  { id: "content", title: "Your content", body: (<>
+    <p>You keep the rights in what you create and upload: research questions, manuscripts, files, messages, projects and profile content. Synaptiq does not own it.</p>
+    <p>You give us a non-exclusive, worldwide, royalty-free licence to host, store, copy, process, format and display your content only as needed to run Synaptiq for you and for the people you share it with, including showing your public profile according to your settings. The licence ends when the content is deleted, except for copies others still have access to because you shared them, and for backups until they are overwritten.</p>
+    <p>You confirm you have the rights to everything you upload.</p>
+  </>) },
+  { id: "research", title: "Research content and ethics", body: (<>
+    <p>You are responsible for the research you carry out and the material you put into Synaptiq, including ethics approvals, participant consent, data protection for research participants, and your institution's rules. Synaptiq does not give ethics approval.</p>
+    <p>Do not upload identifiable personal data about research participants, or special categories of data such as health data, unless you have a lawful basis and permission to do so. Synaptiq is not a medical, legal or financial adviser, and nothing on it is official advice from a government or other authority.</p>
+  </>) },
+  { id: "collaboration", title: "Collaboration", body: (<>
+    <p>Suggestions and matches indicate possible relevance; they do not guarantee that someone is suitable. Accepting an invitation does not create employment, a partnership or any contract with Synaptiq.</p>
+    <p>Synaptiq is not a party to your collaborations. Authorship, contribution credit, ownership of results, inventorship and intellectual property between collaborators are for you, your collaborators and your institutions to agree.</p>
+    <p>Synaptiq doesn't keep ideas confidential beyond the sharing settings you choose, and placing an idea on Synaptiq does not protect it legally.</p>
+  </>) },
+  { id: "ai", title: "AI features", body: (<>
+    <p>Some features use AI, and they are labelled as such. AI output can be wrong, incomplete or unoriginal, and can contain incorrect citations. Review it before you rely on it. It does not replace your judgment and does not make a manuscript, grant application or study valid, accepted or funded.</p>
+    <p>You are responsible for how you use AI output, including disclosing AI assistance where your journal, funder or institution requires it.</p>
+  </>) },
+  { id: "integrity", title: "Academic integrity", body: (<>
+    <p>Do not use Synaptiq to fabricate or falsify data or citations, plagiarise, misrepresent authorship or credentials, impersonate someone, claim an affiliation you don't have, or manipulate peer review.</p>
+  </>) },
+  { id: "use", title: "Acceptable use", body: (<>
+    <p>Do not:</p>
+    <ul>
+      <li>access accounts or data you're not allowed to, or get around access controls, plan limits or AI Credit metering;</li>
+      <li>send spam or unsolicited bulk requests, or harass anyone;</li>
+      <li>upload malware or attack, overload or probe the service;</li>
+      <li>create accounts automatically, or collect other members' data by scraping or automated means;</li>
+      <li>post unlawful content, or content that infringes someone's rights or privacy.</li>
+    </ul>
+    <p>Search engines may index our public pages as our robots file allows.</p>
+    <p>To report content you believe is illegal, write to {mail(C)} with the link and the reason. We will review it and tell you what we decided.</p>
+  </>) },
+  { id: "ip", title: "Synaptiq's rights", body: (<>
+    <p>Synaptiq's software, design, name and documentation belong to the operator or its licensors, except open-source components under their own licences and bibliographic metadata, which belongs to its sources. You may use Synaptiq as these terms allow; nothing else is licensed to you.</p>
+  </>) },
+  { id: "third-party", title: "Other services", body: (<>
+    <p>Some features rely on other services, such as ORCID, OpenAlex, Crossref, AI providers and Stripe. Their terms apply to your use of them. We aren't responsible for their content or availability.</p>
+  </>) },
+  { id: "plans", title: "Plans", body: (<>
+    <p>Synaptiq has a Free plan and two paid individual plans, Pro and Pro Advanced. What each includes and costs is on the <Link to="/pricing">Pricing page</Link>. Institutional plans are agreed separately with organisations, under their own agreement.</p>
+    <p>Online purchase of paid plans is not open yet. The sections below on AI Credits, billing, changing plans, cancelling and withdrawal apply once it opens.</p>
+  </>) },
+  { id: "credits", title: "AI Credits", body: (<>
+    <p>AI Credits measure use of AI features. They are not money, have no cash value, can't be transferred or exchanged, and are used only on Synaptiq.</p>
+    <ul>
+      <li>Each AI action uses a fixed number of credits, shown before it runs. If an action fails, its credits are returned.</li>
+      <li>Paid plans include a monthly allowance. It renews at the start of each billing period; unused monthly credits don't carry over.</li>
+      <li>Credits bought as a pack don't expire, are used after your monthly credits, and can be used only while you have a paid plan.</li>
+      <li>If you delete your account, unused credits are lost.</li>
+    </ul>
+  </>) },
+  { id: "billing", title: "Billing and renewal", body: (<>
+    <p>Paid plans are monthly subscriptions paid in advance through Stripe. They renew automatically each month until you cancel. The price you pay is the one shown at checkout.</p>
+    <p>If we change the price of your plan, we will tell you at least 30 days before the next billing period it applies to; you can cancel before then.</p>
+    <p>If a payment fails, your plan continues while the payment is retried. If it still can't be collected, your account moves to the Free plan's features until it is.</p>
+  </>) },
+  { id: "changes-plan", title: "Changing plans", body: (<>
+    <p>Moving up from Pro to Pro Advanced takes effect once the payment is confirmed and is charged pro rata. Moving down is credited pro rata on your next invoice. If you move to a plan with lower limits, content above those limits becomes read-only; nothing is deleted.</p>
+  </>) },
+  { id: "cancellation", title: "Cancelling", body: (<>
+    <p>You can cancel at any time in your account. Your plan continues to the end of the period you've paid for and then moves to Free. Projects and workspaces then become read-only, and purchased credits stay on your account for when you're on a paid plan again.</p>
+  </>) },
+  { id: "withdrawal", title: "Your right of withdrawal", body: (<>
+    <p>If you are a consumer in the EU, you have the right to withdraw from a paid plan within 14 days of buying it, without giving a reason, by writing to {mail(C)}.</p>
+    <p>If you ask us to start the service during those 14 days and then withdraw, you pay only for the service provided up to the point you told us, in proportion to the full price. Where the law allows the right to end once a credit pack has been used with your agreement, we will ask for that agreement at checkout.</p>
+    <p>This doesn't limit any other rights you have under consumer law.</p>
+  </>) },
+  { id: "suspension", title: "Suspension and termination", body: (<>
+    <p>We may suspend or close an account, or remove content, if it poses a security risk, involves fraud, breaks these terms seriously or repeatedly, is unlawful, or if we are required to by law. Where possible and lawful we will tell you first, explain why, and give you the chance to respond or export your data.</p>
+    <p>You can close your account at any time in Settings → Privacy. What happens to your data is described in the <Link to="/privacy#deletion">Privacy Policy</Link>.</p>
+  </>) },
+  { id: "service", title: "Changes and availability", body: (<>
+    <p>Synaptiq is developing and features may change. If we remove something central to a paid plan you're on, we'll tell you in advance and you can cancel. We work to keep Synaptiq available but don't promise it will always be uninterrupted or error-free.</p>
+  </>) },
+  { id: "liability", title: "Liability", body: (<>
+    <p>We are responsible for loss we cause by breaking these terms where that loss was foreseeable. We are not responsible for loss that wasn't foreseeable, for business losses if you use Synaptiq for a business, or for decisions you make based on content or AI output on Synaptiq.</p>
+    <p>Nothing in these terms limits liability that can't be limited by law, including for death or personal injury caused by negligence, for fraud, for gross negligence or wilful misconduct, or your rights as a consumer.</p>
+  </>) },
+  { id: "law", title: "Law and disputes", body: (<>
+    <p>These terms are governed by Romanian law. If you are a consumer, you keep the protection of the mandatory laws of the country where you live, and you can bring a claim in the courts there or in Romania.</p>
+    <p>Please contact us first at {mail(C)} so we can try to resolve the issue.</p>
+  </>) },
+  { id: "changes", title: "Changes to these terms", body: (<>
+    <p>When we change these terms we update the date and version above. For material changes we will tell you in the product at least 30 days before they take effect. If you don't agree, you can close your account before then.</p>
+  </>) },
+  { id: "contact", title: "Contact", body: (<>
+    <p>Questions about these terms: {mail(C)}. Personal data: {mail(P)}.</p>
+  </>) },
 ];
 
 export default function Terms() {
-  React.useEffect(() => {
-    document.title = "Terms of Service — Synaptiq";
-    return () => { document.title = "Synaptiq"; };
-  }, []);
   return (
     <LegalLayout
-      eyebrow="Legal"
+      kind="Terms"
       title="Terms of Service"
-      subtitle="Platform rules, subscription terms, AI Credits, intellectual property, and your obligations as a user."
-      lastUpdated="29 June 2026"
-      readingTime="10 min"
-      version="v1.4"
+      updated={LEGAL.terms.updated}
+      version={LEGAL.terms.version}
+      seo={{ title: "Terms of Service | Synaptiq", description: "The agreement for using Synaptiq: accounts, your content, AI features, academic integrity, plans, AI Credits, cancellation and your rights.", path: "/terms" }}
+      summary={(<>
+        <ul>
+          <li>You keep the rights in your content. We use it only to run Synaptiq for you and the people you share it with.</li>
+          <li>Synaptiq doesn't decide authorship or ownership between collaborators. You and your institutions do.</li>
+          <li>AI output can be wrong. Review it; you're responsible for how you use it.</li>
+          <li>Paid plans are monthly, renew until cancelled, and can be cancelled any time. EU consumers have a 14-day right of withdrawal.</li>
+        </ul>
+      </>)}
       sections={SECTIONS}
-    >
-      <Section id="acceptance" title="1. Acceptance of Terms">
-        <p>By accessing or using SYNAPTIQ (the &ldquo;Service&rdquo;, &ldquo;Platform&rdquo;), you agree to be bound by these Terms of Service (&ldquo;Terms&rdquo;). If you do not agree, do not use the Service.</p>
-        <p className="mt-3">These Terms constitute a binding agreement between you and the entity operating SYNAPTIQ (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;). By creating an account, linking ORCID, or using any feature of the Platform, you confirm that you have read, understood, and accepted these Terms.</p>
-      </Section>
-
-      <Section id="eligibility" title="2. Eligibility & Accounts">
-        <p><strong>Eligibility.</strong> You must be at least 18 years old and capable of entering a binding contract. SYNAPTIQ is not directed at users under 18. We may require proof of academic or professional affiliation for certain account types.</p>
-        <p className="mt-3"><strong>Account registration.</strong> You must provide accurate, complete information during registration. You are responsible for keeping your credentials confidential and for all activity that occurs under your account. Notify us immediately at <a href="mailto:contact@synaptiq.academy" className="editorial-link">contact@synaptiq.academy</a> if you suspect unauthorised access.</p>
-        <p className="mt-3"><strong>Disposable emails.</strong> Registration with temporary or disposable email addresses is not permitted and will be rejected automatically.</p>
-        <p className="mt-3"><strong>One account per person.</strong> Creating multiple accounts to circumvent plan limits, credit allowances, or enforcement actions is prohibited.</p>
-        <p className="mt-3"><strong>Account security.</strong> We implement account lockout after repeated failed login attempts (soft lock after 5 failures, hard lock after 10 failures for up to 24 hours). We use CSRF protection and signed, expiring tokens for all authentication flows.</p>
-      </Section>
-
-      <Section id="plans" title="3. Plans & AI Credits">
-        <p>SYNAPTIQ offers three individual plans, plus institutional agreements:</p>
-        <ul className="mt-3 space-y-1 text-sm">
-          <li><strong>Free</strong> — academic profile, public research page, ORCID integration and publication import. No AI Credits, projects, workspaces or general file storage.</li>
-          <li><strong>{PLAN_DISPLAY_NAMES.researcher}</strong> — 200 AI Credits / month, unlimited projects, up to 10 workspaces, 10 GB storage.</li>
-          <li><strong>{PLAN_DISPLAY_NAMES.pro_researcher}</strong> — 750 AI Credits / month, unlimited projects and workspaces, 50 GB storage.</li>
-          <li><strong>Institution</strong> — seats, credits and storage set per written agreement.</li>
-        </ul>
-        <p className="mt-3"><strong>Credit Packs</strong> are one-time purchases available on paid plans (100 credits for €4.99, 300 for €11.99, 750 for €24.99). Credit Pack credits never expire and are kept on plan changes and cancellation; they can be used while you are on a paid plan.</p>
-        <p className="mt-3">Feature availability varies by plan. The authoritative feature matrix is published on the <Link to="/pricing" className="editorial-link">Pricing page</Link> and may be updated as new capabilities are introduced.</p>
-      </Section>
-
-      <Section id="subscriptions" title="4. Subscriptions & Billing">
-        <p><strong>Billing currency.</strong> All subscription and credit-pack prices are quoted in Euros (EUR). Payment processing is handled by Stripe. We do not store card numbers or CVV codes.</p>
-        <p className="mt-3"><strong>Automatic renewal.</strong> Paid subscriptions renew automatically at the end of each monthly billing period at the then-current price, unless cancelled before the renewal date.</p>
-        <p className="mt-3"><strong>Cancellation.</strong> You may cancel at any time from the Settings page. Your subscription remains active until the end of the current billing period. After that date, your account moves to the Free plan. Your data, projects, workspaces and Credit Pack balance are retained; content above the Free plan&rsquo;s limits becomes read-only. Unused monthly AI Credits expire.</p>
-        <p className="mt-3"><strong>Upgrades.</strong> When you upgrade mid-cycle, your monthly AI Credits are topped up so that the credits granted for the current cycle equal the new plan&rsquo;s allowance. You are billed a prorated amount for the remainder of the current period (handled by Stripe).</p>
-        <p className="mt-3"><strong>Downgrades.</strong> When you downgrade, your remaining monthly AI Credits are capped at the new plan&rsquo;s allowance, and the new allowance applies from the next renewal. Workspaces above the new plan&rsquo;s limit become read-only; nothing is deleted. Existing Credit Pack credits are unaffected.</p>
-        <p className="mt-3"><strong>Price changes.</strong> We will notify you of any price change by email at least 30 days before it takes effect. Continued use after the effective date constitutes acceptance. If you do not accept the new price, you may cancel before the effective date.</p>
-        <p className="mt-3"><strong>Chargebacks.</strong> If you believe a charge is incorrect, contact <a href="mailto:contact@synaptiq.academy" className="editorial-link">contact@synaptiq.academy</a> before initiating a chargeback. Initiating a chargeback without first contacting support may result in account suspension pending investigation.</p>
-      </Section>
-
-      <Section id="refunds" title="5. Refunds">
-        <p><strong>Subscription fees</strong> are non-refundable except where required by the EU Consumer Rights Directive or other mandatory consumer protection law applicable in your jurisdiction.</p>
-        <p className="mt-3"><strong>Right of withdrawal.</strong> EU consumers have a statutory 14-day right of withdrawal from a new subscription. By using AI features or otherwise accessing paid functionality before the 14-day period expires, you expressly acknowledge that performance has begun and waive this right to the extent permitted by applicable law.</p>
-        <p className="mt-3"><strong>Service credit.</strong> If the Service is unavailable for more than 48 consecutive hours due to our fault, you may request a pro-rata account credit by emailing <a href="mailto:contact@synaptiq.academy" className="editorial-link">contact@synaptiq.academy</a>. Credits issued in this way expire after 12 months.</p>
-        <p className="mt-3"><strong>Credit Packs</strong> are non-refundable once credits have been consumed. Unconsumed Credit Pack credits on a cancelled account are forfeited; retained for accounts that downgrade to Free.</p>
-      </Section>
-
-      <Section id="credits" title="6. AI Credits">
-        <p>AI Credits (&ldquo;Credits&rdquo;) are a consumable unit used to access AI-powered features on the Platform. Credits are not currency, have no cash value, and cannot be transferred between accounts or redeemed for cash.</p>
-        <p className="mt-3"><strong>Monthly Credits</strong> are granted at the start of each billing cycle and reset at each successful renewal. Unused monthly Credits do not roll over.</p>
-        <p className="mt-3"><strong>Credit Pack credits</strong> are one-time purchases. They do not expire and are consumed after your monthly Credits are exhausted in any given cycle.</p>
-        <p className="mt-3"><strong>Costs.</strong> Each AI action deducts a fixed number of Credits, shown before the action is run. The full credit cost schedule is published on the <Link to="/pricing" className="editorial-link">Pricing page</Link>.</p>
-        <p className="mt-3"><strong>Failed requests.</strong> Credits are reserved when a request is submitted and refunded automatically if the request fails because of a system error.</p>
-      </Section>
-
-      <Section id="acceptable-use" title="7. Acceptable Use & Prohibited Activities">
-        <p>You agree not to use the Platform to:</p>
-        <ul className="mt-3 list-disc ml-6 space-y-1 text-sm">
-          <li>Violate any applicable law or regulation.</li>
-          <li>Infringe intellectual property, privacy, or other rights of any person.</li>
-          <li>Upload or transmit malicious code, viruses, or scripts designed to interfere with the Platform or other users&rsquo; systems.</li>
-          <li>Misrepresent your academic identity, institutional affiliation, or credentials.</li>
-          <li>Send unsolicited bulk communications or use the messaging system for spam.</li>
-          <li>Scrape, harvest, or systematically extract data from the Platform without our written permission.</li>
-          <li>Attempt to circumvent authentication, access controls, or rate limits.</li>
-          <li>Sell, resell, or commercially exploit access to the Platform or AI Credits without authorisation.</li>
-          <li>Create fake researcher profiles or manipulate discovery results.</li>
-          <li>Engage in academic misconduct, research fraud, data fabrication, or plagiarism using Platform tools.</li>
-          <li>Use AI features to fabricate citations, data, or results that are then submitted as genuine findings.</li>
-        </ul>
-        <p className="mt-3">Violation of this section may result in immediate suspension or termination of your account.</p>
-      </Section>
-
-      <Section id="ip" title="8. Intellectual Property & Content Ownership">
-        <p><strong>Your content.</strong> You retain all copyright and moral rights over manuscripts, datasets, notes, annotations, and other content you create or upload (&ldquo;User Content&rdquo;). You grant SYNAPTIQ a limited, non-exclusive, royalty-free licence to store, display, and process your User Content solely to provide the Service. This licence terminates when you delete the content or close your account.</p>
-        <p className="mt-3"><strong>Collaboration content.</strong> Content you share within a collaboration is accessible to invited collaborators only for the purpose of that collaboration. Collaborators receive no broader rights to your User Content through the Platform.</p>
-        <p className="mt-3"><strong>Public profile.</strong> Information you choose to publish on your public researcher profile is visible to other authenticated users and, where applicable, to the public. You control which fields appear on your public profile.</p>
-        <p className="mt-3"><strong>AI-generated outputs.</strong> Text suggestions, summaries, and analysis generated by the AI assistant are produced in response to your inputs. You are responsible for reviewing, verifying, and taking ownership of any AI-assisted output before submitting it for publication or institutional use. We do not claim ownership over AI-generated content produced during your use of the Service. See Section 9 and our <Link to="/ai-policy" className="editorial-link">AI Usage Policy</Link> for limitations.</p>
-        <p className="mt-3"><strong>Platform.</strong> SYNAPTIQ retains all rights to the Platform, code, design, branding, trademarks, and research algorithms. Nothing in these Terms grants you any licence to those assets.</p>
-        <p className="mt-3"><strong>Feedback.</strong> If you provide suggestions, ideas, or feedback about the Platform, we may use them without compensation or attribution.</p>
-      </Section>
-
-      <Section id="ai-content" title="9. AI-Generated Content & Academic Integrity">
-        <p>AI features on SYNAPTIQ generate content using large language models operated by third-party providers (currently Anthropic Claude as primary; OpenAI GPT as optional). These outputs:</p>
-        <ul className="mt-3 list-disc ml-6 space-y-1 text-sm">
-          <li>Are not independently verified for accuracy, factual correctness, or originality.</li>
-          <li>May contain errors, outdated information, or fabricated content (&ldquo;hallucinations&rdquo;).</li>
-          <li>May reflect biases present in the underlying model&rsquo;s training data.</li>
-          <li>Should not be relied upon as legal, medical, or scientific advice without independent expert review.</li>
-        </ul>
-        <p className="mt-3"><strong>Citation risk.</strong> AI models can generate plausible-sounding but non-existent references. You must independently verify all citations before including them in submitted work.</p>
-        <p className="mt-3"><strong>Your responsibility.</strong> You are solely responsible for reviewing all AI-generated content before incorporating it into manuscripts, grant applications, or other academic submissions. Where your institution, target journal, conference, or funding body requires disclosure of AI tool use, you must make such disclosures. Failing to do so where required may constitute academic misconduct and is a violation of these Terms.</p>
-        <p className="mt-3">For full details on AI limitations, providers, and data handling, see the <Link to="/ai-policy" className="editorial-link">AI Usage Policy</Link>.</p>
-      </Section>
-
-      <Section id="collaboration" title="10. Collaboration & Co-authorship">
-        <p>SYNAPTIQ facilitates collaboration matching and project management but is not a party to any co-authorship agreement between researchers. The determination of authorship, contributor roles, and authorship order is the sole responsibility of the collaborating parties.</p>
-        <p className="mt-3">We strongly encourage all collaborators to document contribution roles within the project workspace from the outset, using recognised frameworks such as CRediT (Contributor Roles Taxonomy).</p>
-        <p className="mt-3">SYNAPTIQ will not adjudicate authorship or research disputes, but may take action under Section 7 where clear evidence of academic misconduct exists.</p>
-      </Section>
-
-      <Section id="repository" title="11. Repository & File Storage">
-        <p><strong>File types.</strong> The repository accepts: PDF, DOCX, DOC, XLSX, XLS, PPTX, PPT, CSV, ZIP, PNG, JPEG, WEBP, and GIF files. Individual file uploads are limited to 50 MB.</p>
-        <p className="mt-3"><strong>Storage limits.</strong> Available file storage depends on your plan (Free: profile and ORCID data only; {PLAN_DISPLAY_NAMES.researcher}: 10 GB; {PLAN_DISPLAY_NAMES.pro_researcher}: 50 GB; Institution: per agreement). Uploads beyond your plan&rsquo;s storage quota will be rejected.</p>
-        <p className="mt-3"><strong>Version history.</strong> Files are versioned within their parent entity. Deleting a file version removes it from the repository interface; it may be retained in backup systems for up to 14 days.</p>
-        <p className="mt-3"><strong>Your responsibility.</strong> You must not upload files that infringe third-party intellectual property rights or that contain malicious content. We reserve the right to remove files that violate these Terms.</p>
-        <p className="mt-3"><strong>Storage location.</strong> Files are stored in AWS S3-compatible object storage. Your data is encrypted in transit and at rest.</p>
-      </Section>
-
-      <Section id="availability" title="12. Service Availability & Modifications">
-        <p>We aim for high availability but make no guarantee of uninterrupted service. Scheduled maintenance will be communicated in advance where reasonably practicable. We are not liable for downtime attributable to third-party infrastructure, including MongoDB Atlas, AWS S3, Stripe, or AI provider outages.</p>
-        <p className="mt-3">We may add, modify, or remove features with reasonable notice. Material changes to the core functionality or pricing will be communicated by email or in-app notification at least 14 days before taking effect. Continued use after the effective date constitutes acceptance. If you do not accept a material change, you may cancel your subscription before the effective date and receive a pro-rata credit for any unused period.</p>
-      </Section>
-
-      <Section id="liability" title="13. Limitation of Liability">
-        <p>To the maximum extent permitted by applicable law, SYNAPTIQ&rsquo;s aggregate liability for any claim arising from these Terms or your use of the Service is limited to the fees you paid to us in the twelve months preceding the claim.</p>
-        <p className="mt-3">We are not liable for: (a) indirect, consequential, incidental, or punitive damages; (b) loss of data, revenue, research output, academic opportunities, or professional reputation; (c) errors or inaccuracies in AI-generated content; (d) reliance on recommendations produced by any matching, scoring, or prediction engine on the Platform.</p>
-        <p className="mt-3">Nothing in these Terms limits liability for death or personal injury caused by our negligence, fraud or fraudulent misrepresentation, or any other liability that cannot be excluded by law.</p>
-      </Section>
-
-      <Section id="termination" title="14. Termination & Account Suspension">
-        <p><strong>By you.</strong> You may request account deletion at any time by emailing <a href="mailto:privacy@synaptiq.academy" className="editorial-link">privacy@synaptiq.academy</a>. Account deletion is also available via the Settings page. Upon deletion, personal data is removed within 30 days, subject to legal retention obligations (see Privacy Policy).</p>
-        <p className="mt-3"><strong>By us.</strong> We may suspend or terminate accounts that violate these Terms, particularly Sections 7 (Acceptable Use) and 9 (Academic Integrity). Suspension takes effect immediately. If your account is suspended, you may appeal by emailing <a href="mailto:contact@synaptiq.academy" className="editorial-link">contact@synaptiq.academy</a>; we will respond within 5 business days. Accounts suspended for research misconduct, fraud, or illegal activity will not be reinstated.</p>
-        <p className="mt-3"><strong>Effect of termination.</strong> On termination, your right to use the Service ceases immediately. Your subscription is cancelled and Credit Pack credits are forfeited. Billing records are retained for 7 years as required by EU tax law.</p>
-      </Section>
-
-      <Section id="institution" title="15. Institutional Accounts">
-        <p>The Institution plan permits up to 25 named researcher seats. The account administrator is responsible for managing seat assignments, ensuring all seat holders comply with these Terms, and paying all fees associated with the institutional subscription.</p>
-        <p className="mt-3">Institutional customers may request a Data Processing Agreement (DPA) by emailing <a href="mailto:contact@synaptiq.academy" className="editorial-link">contact@synaptiq.academy</a>. The DPA governs data processing in the context of institutional use and is required for EU institutional customers processing personal data of EU residents.</p>
-        <p className="mt-3">Institutional seats cannot be shared between individuals. Each seat must be assigned to a named, individual researcher at the subscribing institution.</p>
-      </Section>
-
-      <Section id="governing-law" title="16. Governing Law & Dispute Resolution">
-        <p>These Terms are governed by the laws of the European Union and the country in which SYNAPTIQ is registered. You agree that disputes arising from these Terms or your use of the Service will be subject to the exclusive jurisdiction of the competent courts of that country, except where mandatory local consumer protection law provides otherwise.</p>
-        <p className="mt-3"><strong>Informal resolution.</strong> Before initiating formal legal proceedings, we ask that you contact us at <a href="mailto:contact@synaptiq.academy" className="editorial-link">contact@synaptiq.academy</a> to allow a good-faith attempt at informal resolution. Most concerns can be resolved this way.</p>
-        <p className="mt-3"><strong>EU Online Dispute Resolution.</strong> EU consumers may use the European Commission&rsquo;s Online Dispute Resolution (ODR) platform to resolve disputes. Nothing in this section limits your statutory consumer rights.</p>
-      </Section>
-
-      <Section id="general" title="17. General Provisions">
-        <p><strong>Entire agreement.</strong> These Terms, together with the <Link to="/privacy" className="editorial-link">Privacy Policy</Link>, <Link to="/cookies" className="editorial-link">Cookie Policy</Link>, <Link to="/ai-policy" className="editorial-link">AI Usage Policy</Link>, and any applicable DPA, constitute the entire agreement between you and SYNAPTIQ regarding the Service.</p>
-        <p className="mt-3"><strong>Severability.</strong> If any provision of these Terms is found unenforceable, that provision will be limited or eliminated to the minimum extent necessary, and the remaining provisions will continue in full force.</p>
-        <p className="mt-3"><strong>No waiver.</strong> Our failure to enforce any right or provision of these Terms is not a waiver of that right or provision.</p>
-        <p className="mt-3"><strong>Assignment.</strong> You may not transfer or assign your account or rights under these Terms without our prior written consent. We may assign our rights and obligations under these Terms in connection with a merger, acquisition, or sale of assets.</p>
-        <p className="mt-3"><strong>Changes to Terms.</strong> We may update these Terms from time to time. Material changes will be communicated by email or in-app notification at least 14 days before taking effect. Continued use after the effective date constitutes acceptance of the updated Terms.</p>
-        <p className="mt-3"><strong>Contact.</strong> Questions about these Terms? Email <a href="mailto:contact@synaptiq.academy" className="editorial-link">contact@synaptiq.academy</a>.</p>
-      </Section>
-    </LegalLayout>
+    />
   );
 }

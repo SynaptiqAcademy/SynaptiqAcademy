@@ -73,10 +73,11 @@
       posthog.init(POSTHOG_KEY, {
         api_host: "https://us.i.posthog.com",
         person_profiles: "identified_only",
-        session_recording: {
-          recordCrossOriginIframes: true,
-          capturePerformance: false,
-        },
+        // Only explicitly named events are sent (see src/lib/marketingAnalytics.js);
+        // no automatic click/text capture and no session replay, so research
+        // content typed or shown on screen never reaches analytics.
+        autocapture: false,
+        disable_session_recording: true,
         loaded: applyOptState,
       });
     }

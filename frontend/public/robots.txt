@@ -9,6 +9,8 @@ Allow: /about
 Allow: /contact
 Allow: /resources
 Allow: /resources/
+Allow: /blog
+Allow: /whats-new
 Allow: /login
 Allow: /register
 Allow: /terms

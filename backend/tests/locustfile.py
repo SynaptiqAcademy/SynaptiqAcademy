@@ -71,7 +71,7 @@ class AuthenticatedUser(HttpUser):
         self._access_cookies = {}
 
         # Register
-        r = self.client.post("/api/auth/register", json={
+        r = self.client.post("/api/auth/register", json={"accepted_terms": True, 
             "full_name": "Load Test User",
             "email":     self._email,
             "password":  self._password,

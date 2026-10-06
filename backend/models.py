@@ -118,6 +118,9 @@ class RegisterIn(BaseModel):
     email: EmailStr
     password: str
     full_name: str
+    # Explicit acceptance of the Terms (and confirmation of age 18+) and
+    # acknowledgement of the Privacy Policy. Recorded with versions + time.
+    accepted_terms: bool = False
 
 
 class LoginIn(BaseModel):

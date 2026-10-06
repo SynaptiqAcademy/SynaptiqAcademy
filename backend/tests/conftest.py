@@ -100,7 +100,7 @@ def registered_user(client):
     """Register a session-long user and return its credentials."""
     email = unique_email("session")
     password = "SessionPass1!"
-    r = client.post("/api/auth/register", json={
+    r = client.post("/api/auth/register", json={"accepted_terms": True, 
         "full_name": "Session User",
         "email": email,
         "password": password,

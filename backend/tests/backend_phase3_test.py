@@ -38,7 +38,7 @@ def fresh_user():
     email = f"phase3_{uuid.uuid4().hex[:8]}@example.com"
     password = "freshpass123"
     r = s.post(f"{BASE_URL}/api/auth/register",
-               json={"email": email, "password": password, "full_name": "Fresh User"})
+               json={"accepted_terms": True, "email": email, "password": password, "full_name": "Fresh User"})
     assert r.status_code == 200, f"register failed: {r.status_code} {r.text}"
     return {"session": s, "email": email, "password": password, "user": r.json()}
 

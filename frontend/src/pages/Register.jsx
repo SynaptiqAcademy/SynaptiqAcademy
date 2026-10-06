@@ -51,7 +51,7 @@ export default function Register() {
       return;
     }
     if (password !== confirm) { setErr("Passwords do not match."); return; }
-    if (!agreed) { setErr("Please accept the Terms and Privacy Policy to continue."); return; }
+    if (!agreed) { setErr("Please confirm you are 18 or older and accept the Terms of Service to continue."); return; }
     if (submittingRef.current) return;
     submittingRef.current = true;
     setLoading(true);
@@ -142,10 +142,10 @@ export default function Register() {
           />
 
           <AuthCheckbox checked={agreed} onChange={function(e) { setAgreed(e.target.checked); }}>
-            I agree to the{" "}
-            <Link to="/terms"   style={{ color: NAVY, fontWeight: 600, textDecoration: "none" }}>Terms of Service</Link>
-            {" "}and{" "}
-            <Link to="/privacy" style={{ color: NAVY, fontWeight: 600, textDecoration: "none" }}>Privacy Policy</Link>
+            I'm 18 or older and agree to the{" "}
+            <Link to="/terms"   style={{ color: NAVY, fontWeight: 600, textDecoration: "none" }}>Terms of Service</Link>.
+            {" "}I've read the{" "}
+            <Link to="/privacy" style={{ color: NAVY, fontWeight: 600, textDecoration: "none" }}>Privacy Policy</Link>.
           </AuthCheckbox>
 
           <ErrorBanner error={err} testId={TID.registerError} />
