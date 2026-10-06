@@ -447,6 +447,10 @@ async def delete_file(fid: str, user: dict = Depends(get_current_user)):
             metadata={"role": user.get("role")},
         )
     await db.files.delete_one({"_id": oid})
+    # Remove the stored bytes too — deleting a file must not leave its
+    # contents behind in object storage.
+    if d.get("storage_path"):
+        S.delete_object(d["storage_path"])
     await _log_activity(fid, user["id"], "delete", metadata={"filename": d.get("filename")})
     # Promote previous version to latest if any
     if d.get("is_latest") and d.get("root_id"):

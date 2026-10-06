@@ -3,8 +3,8 @@
 AUTH-011: All documents now include an `expires_at` datetime field so that MongoDB
 TTL indexes can auto-expire old records.
 
-  audit_log      → 90-day retention
-  security_events → 180-day retention
+Periods come from retention_policy.py (audit_log 90 days, security_events
+1 year, as published in the Privacy Policy).
 """
 from __future__ import annotations
 from datetime import datetime, timezone, timedelta
@@ -16,8 +16,9 @@ from repo.security_context import SecurityContext
 
 logger = logging.getLogger("synaptiq.admin.audit")
 
-_AUDIT_LOG_TTL_DAYS = 90
-_SECURITY_EVENT_TTL_DAYS = 180
+from retention_policy import BY_KEY as _RETENTION
+_AUDIT_LOG_TTL_DAYS = _RETENTION["audit_admin"].effective_days
+_SECURITY_EVENT_TTL_DAYS = _RETENTION["security_events"].effective_days
 
 
 async def log_event(

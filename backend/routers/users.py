@@ -1,8 +1,9 @@
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Depends, Query
+from pydantic import BaseModel
 
 from auth_utils import get_current_user, serialize_user, serialize_public_user, invalidate_user_cache
 from db import get_db
@@ -530,120 +531,84 @@ async def disconnect(user_id: str, user: dict = Depends(get_current_user)):
 
 @router.get("/me/export")
 async def export_my_data(user: dict = Depends(get_current_user)):
-    """GDPR Article 20 — Right to Data Portability. Returns all data the user has created."""
+    """GDPR Articles 15 and 20 — a structured copy of the member's data.
+    Built by services/account_lifecycle.build_export: no passwords, tokens,
+    secrets, internal storage paths or embeddings."""
+    from services.account_lifecycle import build_export
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
+    data = await build_export(db, user["id"])
+    try:
+        from services.admin_audit import log_event
+        await log_event("user.data_export", actor_id=user["id"], target_id=user["id"], target_type="user")
+    except Exception:
+        pass
+    return data
 
-    uid = user["id"]
 
-    # GDPR export: capped per collection to prevent OOM on large accounts.
-    # Users with more data can re-export in segments via the API.
-    manuscripts = await db.manuscripts.find({"authors": uid}).limit(200).to_list(200)
-    for d in manuscripts:
-        d["id"] = str(d.pop("_id"))
+class DeleteAccountIn(BaseModel):
+    confirm: str = ""
+    password: Optional[str] = None
 
-    projects = await db.projects.find(
-        {"$or": [{"owner_id": uid}, {"members": uid}]}
-    ).limit(100).to_list(100)
-    for d in projects:
-        d["id"] = str(d.pop("_id"))
 
-    workspaces = await db.workspaces.find(
-        {"$or": [{"owner_id": uid}, {"members": uid}]}
-    ).limit(100).to_list(100)
-    for d in workspaces:
-        d["id"] = str(d.pop("_id"))
-
-    messages_sent = await db.messages.find({"sender_id": uid}).sort("created_at", -1).limit(500).to_list(500)
-    for d in messages_sent:
-        d["id"] = str(d.pop("_id"))
-
-    notifications = await db.notifications.find({"user_id": uid}).sort("created_at", -1).limit(200).to_list(200)
-    for d in notifications:
-        d["id"] = str(d.pop("_id"))
-
-    files_uploaded = await db.files.find({"owner_id": uid, "is_latest": True}).limit(200).to_list(200)
-    for d in files_uploaded:
-        d.pop("storage_path", None)  # internal path — not exported
-        d["id"] = str(d.pop("_id"))
-
-    return {
-        "exported_at": _now(),
-        "user_id": uid,
-        "profile": user,
-        "manuscripts": manuscripts,
-        "projects": projects,
-        "workspaces": workspaces,
-        "messages_sent": messages_sent,
-        "notifications": notifications,
-        "files_uploaded": files_uploaded,
-    }
+REAUTH_WINDOW_MINUTES = 10
 
 
 @router.delete("/me")
-async def delete_my_account(user: dict = Depends(get_current_user)):
-    """GDPR Article 17 — Right to Erasure (self-service).
+async def delete_my_account(payload: DeleteAccountIn, user: dict = Depends(get_current_user)):
+    """GDPR Article 17 — self-service account deletion.
 
-    Anonymizes all PII and permanently revokes all active tokens.
-    The account record is retained (anonymized) to preserve referential integrity.
-    Super-admin accounts cannot be self-deleted via this endpoint.
+    Requires typing DELETE and proving it's really the member: their password,
+    or for accounts without one (ORCID/Google sign-in) a sign-in within the
+    last few minutes. What is deleted, anonymised, handed over or retained is
+    defined in services/account_lifecycle.py.
     """
-    import hashlib
+    from auth_utils import verify_password
+    from services.account_lifecycle import DeletionBlocked, delete_account, preflight
 
-    uid = user["id"]
-    role = user.get("role", "")
-    if role in ("super_admin",):
-        raise HTTPException(status_code=400, detail="Super admin accounts cannot be self-deleted. Contact platform operations.")
+    if (payload.confirm or "").strip() != "DELETE":
+        raise HTTPException(status_code=400, detail="Type DELETE to confirm.")
 
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
+    full = await db.users.find_one({"_id": ObjectId(user["id"])}, {"password_hash": 1, "last_successful_login": 1}) or {}
+    if full.get("password_hash"):
+        if not payload.password or not verify_password(payload.password, full["password_hash"]):
+            raise HTTPException(status_code=403, detail="That password isn't right.")
+    else:
+        last = full.get("last_successful_login")
+        try:
+            last_dt = datetime.fromisoformat(last) if isinstance(last, str) else last
+            if last_dt and last_dt.tzinfo is None:
+                last_dt = last_dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            last_dt = None
+        if not last_dt or datetime.now(timezone.utc) - last_dt > timedelta(minutes=REAUTH_WINDOW_MINUTES):
+            raise HTTPException(status_code=401, detail={
+                "code": "reauth_required",
+                "message": "For your security, sign out and sign in again, then delete your account within 10 minutes.",
+            })
 
-    uid_hash = hashlib.sha256(uid.encode()).hexdigest()[:8]
-    anon_email = f"deleted-{uid_hash}@deleted.synaptiq.invalid"
-
-    # Revoke all active sessions / tokens
     try:
-        from services.token_service import revoke_all_user_tokens
-        await revoke_all_user_tokens(uid)
+        await preflight(db, user)
+        summary = await delete_account(db, user, actor="self")
+    except DeletionBlocked as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    try:
+        invalidate_user_cache(user["id"])
     except Exception:
         pass
 
-    await db.users.update_one(
-        {"_id": ObjectId(uid)},
-        {"$set": {
-            "email": anon_email,
-            "full_name": "Deleted User",
-            "first_name": "Deleted",
-            "last_name": "User",
-            "biography": "",
-            "institution": "",
-            "department": "",
-            "country": "",
-            "avatar_url": "",
-            "orcid": None,
-            "google_id": None,
-            "google_email": None,
-            "research_areas": [],
-            "research_interests": [],
-            "research_keywords": [],
-            "skills": [],
-            "status": "banned",
-            "deleted": True,
-            "anonymized": True,
-            "anonymized_at": _now(),
-            "anonymized_by": "self",
-            "email_marketing_consent": False,
-        }},
-    )
-
     try:
-        from obs.audit import AuditLogger
-        al = AuditLogger()
-        await al.log(action="user.self_delete", actor_id=uid, resource_type="user", resource_id=uid, extra={"original_email": user.get("email")})
+        from services.admin_audit import log_event
+        # The record of the deletion keeps the account id only — never the
+        # email or name of the person who asked to be forgotten.
+        await log_event("user.self_delete", actor_id=user["id"], target_id=user["id"], target_type="user",
+                        extra={"summary": summary})
     except Exception:
         pass
 
-    return {"ok": True, "message": "Your account data has been anonymized per GDPR Article 17. All active sessions have been revoked."}
+    return {"ok": True, "message": "Your account has been deleted."}
 
 
 @router.get("/me/connection-requests")

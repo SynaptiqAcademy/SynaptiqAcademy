@@ -65,9 +65,14 @@ def _state_secret() -> str:
     return GOOGLE_STATE_SECRET
 
 
-def encode_state(mode: str, requesting_user_id: Optional[str] = None) -> str:
-    """Create HMAC-signed state blob to prevent CSRF in the OAuth callback."""
-    payload = json.dumps({"mode": mode, "uid": requesting_user_id, "ts": int(time.time())},
+def encode_state(mode: str, requesting_user_id: Optional[str] = None,
+                 terms_version: Optional[str] = None) -> str:
+    """Create HMAC-signed state blob to prevent CSRF in the OAuth callback.
+
+    ``terms`` is signed proof that the person confirmed 18+ and accepted these
+    Terms before leaving for Google; it is required to create a new account."""
+    payload = json.dumps({"mode": mode, "uid": requesting_user_id, "ts": int(time.time()),
+                          "terms": terms_version},
                          separators=(",", ":"), sort_keys=True).encode()
     sig = hmac.new(_state_secret().encode(), payload, hashlib.sha256).digest()
     return base64.urlsafe_b64encode(payload + b"." + sig).decode().rstrip("=")
@@ -78,7 +83,10 @@ def decode_state(state: str) -> dict:
     try:
         padded = state + "=" * (-len(state) % 4)
         raw = base64.urlsafe_b64decode(padded)
-        payload, sig = raw.rsplit(b".", 1)
+        # Fixed-length HMAC-SHA256 signature (32 bytes) that may contain ".".
+        if len(raw) < 34 or raw[-33:-32] != b".":
+            raise ValueError("Malformed state parameter")
+        payload, sig = raw[:-33], raw[-32:]
     except Exception:
         raise ValueError("Malformed state parameter")
     expected = hmac.new(_state_secret().encode(), payload, hashlib.sha256).digest()
@@ -90,7 +98,13 @@ def decode_state(state: str) -> dict:
     return data
 
 
-def authorization_url(mode: str, requesting_user_id: Optional[str] = None) -> str:
+def _terms_version() -> str:
+    from legal_versions import TERMS_VERSION
+    return TERMS_VERSION
+
+
+def authorization_url(mode: str, requesting_user_id: Optional[str] = None,
+                      accepted_terms: bool = False) -> str:
     _require_configured()
     redirect = GOOGLE_REDIRECT_URI or f"{os.environ.get('BACKEND_BASE_URL', '')}/api/google/callback"
     params = {
@@ -98,7 +112,7 @@ def authorization_url(mode: str, requesting_user_id: Optional[str] = None) -> st
         "redirect_uri": redirect,
         "response_type": "code",
         "scope": GOOGLE_SCOPES,
-        "state": encode_state(mode, requesting_user_id),
+        "state": encode_state(mode, requesting_user_id, _terms_version() if accepted_terms else None),
         "access_type": "offline",
         "prompt": "select_account",
     }

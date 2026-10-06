@@ -26,7 +26,8 @@ from repo.security_context import SecurityContext
 
 logger = logging.getLogger("synaptiq.security_events")
 
-_TTL_DAYS = 365  # keep security events 1 year
+from retention_policy import BY_KEY as _RETENTION
+_TTL_DAYS = _RETENTION["security_events"].effective_days  # retention_policy.py
 
 _SEVERITY_MAP: dict[str, str] = {
     # auth events

@@ -20,7 +20,7 @@ from plans_catalogue import get_plan
 from services.orcid import oauth as O
 from services.orcid.sync import sync_user, enrich_publications_with_openalex
 from services.encryption_service import encrypt_field
-from routers.auth import _issue_tokens_and_cookies
+from routers.auth import _issue_tokens_and_cookies, _record_successful_login
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -48,10 +48,12 @@ async def get_config():
 @router.get("/authorize")
 async def authorize(mode: Literal["login", "signup", "link"] = "login",
                     return_to: Optional[str] = None,
+                    accepted_terms: bool = False,
                     user: Optional[dict] = Depends(get_optional_user)):
     if mode == "link" and not user:
         raise HTTPException(401, "Sign in first to link your ORCID")
-    url = O.authorization_url(mode, requesting_user_id=user["id"] if user else None, return_to=return_to)
+    url = O.authorization_url(mode, requesting_user_id=user["id"] if user else None, return_to=return_to,
+                              accepted_terms=accepted_terms)
     return {"authorization_url": url, "configured": True}
 
 
@@ -119,8 +121,20 @@ async def callback(code: Optional[str] = None, state: Optional[str] = None,
                 }},
             )
         else:
+            # A new account: the same rules as email sign-up apply. Sign-ups
+            # must be open, and the person must have confirmed 18+ and
+            # accepted the current Terms before going to ORCID.
+            from services.platform_flags import is_registration_open
+            from legal_versions import TERMS_VERSION, PRIVACY_VERSION
+            if not await is_registration_open(db):
+                return RedirectResponse(f"{O.FRONTEND_BASE_URL}/register?orcid_error=registration_closed")
+            if payload.get("terms") != TERMS_VERSION:
+                return RedirectResponse(f"{O.FRONTEND_BASE_URL}/register?orcid_error=terms_required")
             now = datetime.now(timezone.utc).isoformat()
             doc = {
+                "terms_version": TERMS_VERSION,
+                "terms_accepted_at": datetime.now(timezone.utc),
+                "privacy_version_acknowledged": PRIVACY_VERSION,
                 "email": None, "password_hash": None,
                 "full_name": nt.get("name") or f"ORCID {orcid_id}",
                 "role": "researcher",
@@ -159,6 +173,8 @@ async def callback(code: Optional[str] = None, state: Optional[str] = None,
         path, _, fragment = return_to.partition("#")
         post_redirect = f"{O.FRONTEND_BASE_URL}{path}?orcid=connected" + (f"#{fragment}" if fragment else "")
     resp = RedirectResponse(post_redirect)
+    if mode != "link":
+        await _record_successful_login(db, uid_str)
     await _issue_tokens_and_cookies(resp, uid_str, user_doc.get("email") or "")
     try:
         await sync_user(uid_str, trigger="initial")

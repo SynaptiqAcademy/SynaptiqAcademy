@@ -13,7 +13,7 @@ const SECTIONS = [
   { id: "limitations",    label: "6. Limitations" },
   { id: "academic-use",   label: "7. Academic Integrity" },
   { id: "credits",        label: "8. Credit Consumption" },
-  { id: "local-ai",       label: "9. Local AI (Enterprise)" },
+  { id: "local-ai",       label: "9. Self-hosted AI" },
   { id: "moderation",     label: "10. Content Moderation" },
   { id: "changes",        label: "11. Policy Changes" },
 ];
@@ -71,7 +71,7 @@ export default function AiPolicy() {
     <LegalLayout
       eyebrow="Legal"
       title="AI Usage Policy"
-      lastUpdated="29 June 2026"
+      lastUpdated="6 October 2026"
       sections={SECTIONS}
     >
       <Section id="overview" title="1. Overview">
@@ -88,21 +88,21 @@ export default function AiPolicy() {
               Anthropic &mdash; Claude (primary)
             </div>
             <p style={{ fontSize: "0.84rem", color: "#475569", lineHeight: 1.65, margin: 0 }}>
-              Anthropic&rsquo;s Claude models (currently <code>claude-sonnet-4-6</code>) power the majority of AI features on the Platform. Anthropic is a US-based AI safety company. Data sent to Anthropic is governed by Anthropic&rsquo;s enterprise API terms, under which Anthropic does not use API inputs or outputs to train models. Data is transmitted via HTTPS and is not retained by Anthropic beyond the duration of the API call.
+              Anthropic&rsquo;s Claude models (currently <code>claude-sonnet-4-6</code>) power the majority of AI features on the Platform. Anthropic is a US-based AI safety company. Requests are sent over HTTPS under Anthropic&rsquo;s commercial terms for API customers, under which Anthropic does not train its models on API inputs or outputs by default. Anthropic keeps API data for a limited period under its own retention policy.
             </p>
           </div>
           <div style={{ padding: "16px 18px", border: "1px solid #e2e8f0", borderRadius: 8 }}>
             <div style={{ fontWeight: 700, fontSize: "0.92rem", color: "#0f172a", marginBottom: 4 }}>
-              OpenAI &mdash; GPT models (optional, environment-configured)
+              OpenAI &mdash; GPT models (fallback) and embeddings
             </div>
             <p style={{ fontSize: "0.84rem", color: "#475569", lineHeight: 1.65, margin: 0 }}>
-              OpenAI&rsquo;s GPT models may be used as a secondary or alternative AI provider on deployments where this is configured. OpenAI is a US-based AI company. Under OpenAI&rsquo;s API usage policies, data submitted via the API is not used to train OpenAI models. If OpenAI is not configured in a given deployment, no data is sent to OpenAI.
+              If Claude is unavailable, a request may be answered by an OpenAI GPT model instead. OpenAI also turns documents you add to your knowledge base into embeddings (numerical representations used for search). OpenAI is a US-based AI company. Under its API terms, OpenAI does not train its models on API data by default, and keeps it for a limited period under its own retention policy.
             </p>
           </div>
         </div>
 
         <p className="mt-4">All requests to AI providers are made server-side by the SYNAPTIQ backend, not directly from your browser. Your raw request is processed by SYNAPTIQ&rsquo;s backend before being forwarded to the AI provider with appropriate context extraction and minimisation.</p>
-        <p className="mt-3">AI providers are located in the United States. Data transfers are governed by Standard Contractual Clauses (SCCs) where required by GDPR. See the <Link to="/gdpr" className="editorial-link">GDPR Notice</Link> and <Link to="/privacy" className="editorial-link">Privacy Policy</Link> (Section 10) for details.</p>
+        <p className="mt-3">AI providers are located in the United States. How these transfers are safeguarded is explained in the <Link to="/privacy#transfers" className="editorial-link">Privacy Policy</Link>.</p>
       </Section>
 
       <Section id="features" title="3. AI Features on SYNAPTIQ">
@@ -132,12 +132,12 @@ export default function AiPolicy() {
           <li><strong>Rewriting:</strong> the text passage you have selected.</li>
         </ul>
         <p className="mt-3"><strong>No cross-user data mixing.</strong> Each AI request is scoped to your user context. Your data is never used to inform AI responses to other users&rsquo; requests.</p>
-        <p className="mt-3"><strong>Prompt caching.</strong> AI providers may use prompt caching mechanisms to improve performance. Cached data is held for a brief window (minutes, not days) and is isolated to your session. This does not constitute retention of your data by the AI provider.</p>
+        <p className="mt-3"><strong>Prompt caching.</strong> Some requests use the provider&rsquo;s prompt caching, which keeps parts of a request for a few minutes so repeated requests are faster.</p>
       </Section>
 
       <Section id="no-training" title="5. No Training on Your Data">
         <p>SYNAPTIQ does not use your manuscripts, research content, or AI feature outputs to train AI models &mdash; neither our own nor those of our AI providers.</p>
-        <p className="mt-3">Both Anthropic (Claude) and OpenAI (GPT) operate enterprise API tiers under which customer data submitted via the API is not used for model training. This applies to your queries, document text, and the AI&rsquo;s responses.</p>
+        <p className="mt-3">Under their API terms, Anthropic and OpenAI do not train their models on data sent through their APIs by default. This covers your queries, document text and the AI&rsquo;s responses.</p>
         <p className="mt-3">We may collect anonymised, aggregated information about how AI features are used (e.g., feature usage frequency, average response quality ratings) for the purpose of improving the platform&rsquo;s AI integration, but this does not include your content.</p>
       </Section>
 
@@ -208,15 +208,8 @@ export default function AiPolicy() {
         <p className="mt-3">Credit costs vary by feature and are indicated in the platform UI before you confirm a feature use. The authoritative credit cost schedule is published on the <Link to="/pricing" className="editorial-link">Pricing page</Link>. Credit costs may change as AI model pricing changes; any such changes will be communicated in advance.</p>
       </Section>
 
-      <Section id="local-ai" title="9. Local AI (Enterprise / Self-Hosted)">
-        <p>SYNAPTIQ&rsquo;s AI infrastructure is designed to support local AI model providers (Ollama, vLLM, LM Studio, and OpenAI-compatible endpoints). On self-hosted or enterprise deployments where local AI is configured, AI requests are processed on-premises or on your own infrastructure rather than being sent to Anthropic or OpenAI.</p>
-        <p className="mt-3">When a local AI provider is configured:</p>
-        <ul className="mt-2 list-disc ml-6 space-y-1 text-sm">
-          <li>No data is sent to Anthropic or OpenAI for the features using local models.</li>
-          <li>Data residency and processing remain entirely within the configured infrastructure.</li>
-          <li>Performance and output quality depend on the local model in use.</li>
-        </ul>
-        <p className="mt-3">Contact <a href="mailto:contact@synaptiq.academy" className="editorial-link">contact@synaptiq.academy</a> for enterprise deployment and local AI configuration options.</p>
+      <Section id="local-ai" title="9. Self-hosted AI">
+        <p>Synaptiq does not currently offer self-hosted deployments or AI models running on your own infrastructure. All AI features use the providers described in section 2.</p>
       </Section>
 
       <Section id="moderation" title="10. Content Moderation">

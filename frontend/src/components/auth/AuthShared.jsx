@@ -3,10 +3,10 @@
  * Shared authentication UI primitives.
  * All auth pages import from here — one design language, zero duplication.
  */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import api from "../../lib/api";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle2, ChevronDown } from "lucide-react";
-import { toast } from "sonner";
 
 export const NAVY   = "#0F2847";
 export const BORDER = "#E4E8EF";
@@ -391,13 +391,29 @@ function SocialBtn({ icon, label, onClick }) {
   );
 }
 
-export function SocialButtons({ onGoogle, onOrcid }) {
-  function comingSoon(name) { toast.info(name + " login coming soon."); }
+/**
+ * Sign-in providers that are actually configured on the server. A provider
+ * whose credentials aren't set is not shown, so no button leads to an error
+ * or a "coming soon" dead end.
+ */
+export function useOauthProviders() {
+  const [providers, setProviders] = useState({ google: false, orcid: false });
+  useEffect(function() {
+    let alive = true;
+    Promise.all(["google", "orcid"].map(function(p) {
+      return api.get("/" + p + "/config").then(function(r) { return !!(r.data && r.data.configured); }).catch(function() { return false; });
+    })).then(function(res) { if (alive) setProviders({ google: res[0], orcid: res[1] }); });
+    return function() { alive = false; };
+  }, []);
+  return providers;
+}
+
+export function SocialButtons({ onGoogle, onOrcid, providers }) {
+  if (!providers || (!providers.google && !providers.orcid)) return null;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <SocialBtn icon={<GoogleIcon />}    label="Continue with Google"    onClick={onGoogle} />
-      <SocialBtn icon={<MicrosoftIcon />} label="Continue with Microsoft" onClick={function() { comingSoon("Microsoft"); }} />
-      <SocialBtn icon={<OrcidIcon />}     label="Continue with ORCID"     onClick={onOrcid || function() { comingSoon("ORCID"); }} />
+      {providers.google && <SocialBtn icon={<GoogleIcon />} label="Continue with Google" onClick={onGoogle} />}
+      {providers.orcid && <SocialBtn icon={<OrcidIcon />} label="Continue with ORCID" onClick={onOrcid} />}
     </div>
   );
 }

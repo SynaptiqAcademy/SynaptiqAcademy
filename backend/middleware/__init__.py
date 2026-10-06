@@ -50,7 +50,7 @@ def _csp() -> str:
         "default-src 'self'",
         "img-src 'self' data: blob: https:",
         "style-src 'self' 'unsafe-inline'",      # Tailwind/Shadcn need inline styles
-        "font-src 'self' data: https://fonts.gstatic.com",
+        "font-src 'self' data:",
         # AUTH-004: no 'unsafe-inline' — use INLINE_RUNTIME_CHUNK=false in React build
         f"script-src 'self' https://js.stripe.com",
         f"connect-src {allowed_connect}",

@@ -442,19 +442,18 @@ export default function MarketingLayout({ children }) {
                 </button>
               </div>
               <FL href="/gdpr">GDPR</FL>
-              <FL href="/security">Security Center</FL>
             </FCol>
           </div>
 
           {/* No certification-style badges: none are held. Factual security and
-              privacy detail lives on /security and /privacy. */}
+              privacy detail lives in the Privacy Policy (/privacy#security). */}
           <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }} />
 
           {/* Bottom bar */}
           <div className="ft-bottom" style={{ paddingTop: 28, paddingBottom: 40 }}>
             <div style={{ fontSize: "0.75rem", color: "#a3adbb" }}>© 2026 Synaptiq. All rights reserved.</div>
             <div className="ft-legal-links">
-              {[["Privacy Policy", "/privacy"], ["Terms", "/terms"], ["Cookies", "/cookies"], ["GDPR", "/gdpr"], ["Security", "/security"], ["Status", "/status"]].map(function([label, href]) {
+              {[["Privacy Policy", "/privacy"], ["Terms", "/terms"], ["Cookies", "/cookies"], ["GDPR", "/gdpr"], ["Status", "/status"]].map(function([label, href]) {
                 return (
                   <Link key={label} to={href} className="hover:text-white transition-colors" style={{ fontSize: "0.75rem", color: "#a3adbb", textDecoration: "none" }}>{label}</Link>
                 );

@@ -13,17 +13,6 @@ import "../../components/whats-new/whats-new.css";
  * Each note has a stable anchor (#note-<slug>) for sharing and support.
  */
 
-const FONT_HREF = "https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap";
-
-function useDisplayFont() {
-  useEffect(() => {
-    if (document.querySelector(`link[href="${FONT_HREF}"]`)) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = FONT_HREF;
-    document.head.appendChild(link);
-  }, []);
-}
 
 function Note({ n, latest }) {
   return (
@@ -55,7 +44,6 @@ function Note({ n, latest }) {
 }
 
 export default function WhatsNew() {
-  useDisplayFont();
   const notes = useMemo(() => publishedNotes(), []);
 
   useEffect(() => setPageSeo({

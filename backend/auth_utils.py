@@ -215,7 +215,9 @@ def serialize_user(user: dict) -> dict:
         return None
     out = dict(user)
     out["id"] = str(out.pop("_id"))
-    out.pop("password_hash", None)
+    # Whether a password exists (never the hash) — e.g. to ask for it before
+    # deleting the account, or to ask for a fresh ORCID/Google sign-in instead.
+    out["has_password"] = bool(out.pop("password_hash", None))
     out["orcid"] = _scrub_orcid(out.get("orcid"))
     # Canonical default (see serialize_public_user below): absent/null means
     # "available", not "unavailable" — apply it here too so a user's own
@@ -381,6 +383,10 @@ async def get_current_user(request: Request) -> dict:
             raise HTTPException(status_code=403, detail="Account suspended. Contact support.")
         if status == "banned":
             raise HTTPException(status_code=403, detail="Account has been banned.")
+        if status == "deleted" or user.get("deleted"):
+            # A deleted account's access token may still be inside its
+            # 15-minute life; it must stop working immediately.
+            raise HTTPException(status_code=401, detail="This account has been deleted.")
 
         # Email verification gate — enforced when EMAIL_VERIFICATION_REQUIRED=1.
         # Super admins are exempt (their accounts are pre-verified in seed).

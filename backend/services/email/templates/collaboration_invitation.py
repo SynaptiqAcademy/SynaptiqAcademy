@@ -1,6 +1,7 @@
 """Collaboration Invitation / Application Update — migrated to the component system."""
 from __future__ import annotations
 
+from html import escape
 from typing import Tuple
 
 from ..categories import EmailCategory
@@ -14,27 +15,28 @@ CATEGORY = EmailCategory.TRANSACTIONAL
 def collaboration_invitation_email(*, recipient_name: str, collaboration_title: str,
                                    inviter_name: str, kind: str, action_url: str,
                                    message: str = "") -> Tuple[str, str, str]:
-    """`kind` is 'application' (someone applied to your collab) or 'decision' (your application was decided)."""
+    """`kind` is 'application' (someone applied to your collab) or 'decision' (your application was decided).
+
+    The collaboration title and the applicant's message stay in the app: they
+    can reveal research topics, and emails pass through our email provider.
+    """
+    who = escape(inviter_name or "A Synaptiq member")
     if kind == "application":
         overline = "New application"
         heading = "Someone applied to your collaboration"
-        body = f"<p><strong>{inviter_name}</strong> applied to your collaboration <strong>{collaboration_title}</strong>.</p>"
+        body = f"<p><strong>{who}</strong> applied to one of your collaborations.</p>"
         cta = "Review application"
-        text_body = f"{inviter_name} applied to your collaboration {collaboration_title}."
+        text_body = f"{inviter_name or 'A Synaptiq member'} applied to one of your collaborations."
     else:
         overline = "Application update"
         heading = "Your collaboration application was updated"
         body = (
-            f"<p>The status of your application to <strong>{collaboration_title}</strong> "
-            f"was updated by <strong>{inviter_name}</strong>.</p>"
+            f"<p>The status of one of your collaboration applications was updated by <strong>{who}</strong>.</p>"
         )
         cta = "Open collaboration"
-        text_body = f"The status of your application to {collaboration_title} was updated by {inviter_name}."
+        text_body = f"The status of one of your collaboration applications was updated by {inviter_name or 'a Synaptiq member'}."
 
-    msg_block = (
-        f"<blockquote style='margin:16px 0;padding:8px 14px;border-left:3px solid #0F2847;color:#475569;'>{message}</blockquote>"
-        if message else ""
-    )
+    msg_block = "<p>Open Synaptiq to read the details.</p>"
     subject = f"SYNAPTIQ: {heading}"
 
     html = render_email(
@@ -48,7 +50,7 @@ def collaboration_invitation_email(*, recipient_name: str, collaboration_title: 
     )
     text = render_text_email(sections=[
         text_heading(overline, heading),
-        text_paragraph(text_body + (f'\n"{message}"' if message else "")),
+        text_paragraph(text_body + " Open Synaptiq to read the details."),
         text_button(cta, action_url),
     ])
     return subject, html, text

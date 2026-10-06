@@ -89,7 +89,7 @@ def test_self_service_rights_described_actually_exist():
     users = (ROOT / "backend" / "routers" / "users.py").read_text()
     assert '@router.get("/me/export")' in users and '@router.delete("/me")' in users
     ui = (SRC / "components" / "settings" / "PrivacySection.jsx").read_text()
-    assert 'api.get("/users/me/export")' in ui and 'api.delete("/users/me")' in ui
+    assert 'api.get("/users/me/export")' in ui and 'api.delete("/users/me"' in ui
     assert "Export my data" in PAGES["Privacy"] and "Settings → Privacy" in PAGES["Privacy"]
     robots = (FE / "public" / "robots.txt").read_text()
     assert "Disallow: /" in robots and "Allow: /researcher" not in robots   # profile pages not offered to search engines
@@ -110,3 +110,52 @@ async def test_signup_requires_terms_acceptance(monkeypatch):
     assert e.value.status_code == 400
     src = (ROOT / "backend" / "routers" / "auth.py").read_text()
     assert '"terms_version": TERMS_VERSION' in src and '"terms_accepted_at"' in src
+
+
+# ── Phase 2: secondary legal pages, fonts, retention ─────────────────────────
+SECONDARY = {n: (SRC / "pages" / f"{n}.jsx").read_text() for n in ("GDPR", "AiPolicy", "LegalCenter")}
+
+
+@pytest.mark.parametrize("pattern", BANNED + [
+    r"7 years", r"3 years", r"30 days rolling", r"14 days \(point-in-time", r"session recording",
+    r"enterprise API (terms|tiers)", r"not retained by Anthropic", r"Cookie preferences",
+    r"EU data residency", r"security@synaptiq", r"Compliant",
+])
+def test_secondary_legal_pages_make_no_unverified_claims(pattern):
+    for name, text in SECONDARY.items():
+        assert not re.search(pattern, text), f"{name}: {pattern}"
+
+
+def test_security_center_with_unverified_claims_is_not_served():
+    app = (SRC / "App.js").read_text()
+    assert '<Route path="/security" element={<Navigate to="/privacy#security" replace />} />' in app
+    assert not (SRC / "pages" / "Security.jsx").exists()
+    assert "/security<" not in (FE / "public" / "sitemap.xml").read_text()
+
+
+def test_fonts_are_self_hosted():
+    offenders = []
+    for path in list(SRC.rglob("*.js")) + list(SRC.rglob("*.jsx")) + list(SRC.rglob("*.css")) + [FE / "public" / "index.html"]:
+        text = path.read_text(errors="ignore")
+        if "fonts.googleapis.com" in text or "fonts.gstatic.com" in text:
+            offenders.append(str(path.relative_to(FE)))
+    assert offenders == []
+    assert "Google Fonts" not in PAGES["Privacy"]
+    mw = (ROOT / "backend" / "middleware" / "__init__.py").read_text()
+    assert "fonts.gstatic.com" not in mw
+
+
+def test_published_retention_matches_retention_policy():
+    from retention_policy import BY_KEY
+    privacy = PAGES["Privacy"]
+    assert BY_KEY["security_events"].effective_days == 365 and '"Security event logs", "1 year"' in privacy
+    assert BY_KEY["audit_admin"].effective_days == 90
+    assert '(for example, that an account was deleted)", "90 days"]' in privacy
+    assert BY_KEY["email_log"].effective_days == 90 and BY_KEY["notifications_read"].effective_days == 90
+    assert BY_KEY["consent_anonymous"].effective_days == 730
+    assert '["Cookie choices not linked to an account", "2 years"]' in privacy
+
+
+def test_providers_table_matches_production_setup():
+    privacy = PAGES["Privacy"]
+    assert '["Railway", "Application servers", "United States"]' in privacy

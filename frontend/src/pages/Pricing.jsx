@@ -22,17 +22,6 @@ import "../components/pricing/pricing.css";
  * be completed and fulfilled (plan.checkout_available). Monthly billing only.
  */
 
-const FONT_HREF = "https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap";
-
-function useDisplayFont() {
-  useEffect(() => {
-    if (document.querySelector(`link[href="${FONT_HREF}"]`)) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = FONT_HREF;
-    document.head.appendChild(link);
-  }, []);
-}
 
 const PURPOSE = {
   free: "Your research identity, visible to the people looking for it.",
@@ -160,7 +149,6 @@ function Compare({ matrix, plans }) {
 }
 
 export default function Pricing() {
-  useDisplayFont();
   const { user } = useAuth() || {};
   const navigate = useNavigate();
   const [plans, setPlans] = useState(null);

@@ -23,10 +23,11 @@ from auth_utils import (
 )
 from db import get_db
 from plans_catalogue import get_plan
-from routers.auth import _issue_tokens_and_cookies, _make_mfa_pending_token
+from routers.auth import _issue_tokens_and_cookies, _make_mfa_pending_token, _record_successful_login
 from services.admin_audit import log_event as _audit, request_meta as _req_meta
 from services.permissions import SUPER_ADMIN_EMAILS
 from services.platform_flags import is_registration_open
+from legal_versions import TERMS_VERSION, PRIVACY_VERSION
 from services import google_oauth as G
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
@@ -43,11 +44,13 @@ async def get_config():
 @router.get("/authorize")
 async def authorize(
     mode: Literal["login", "signup", "link"] = "login",
+    accepted_terms: bool = False,
     user: Optional[dict] = Depends(get_optional_user),
 ):
     if mode == "link" and not user:
         raise HTTPException(401, "Sign in first to link your Google account")
-    url = G.authorization_url(mode, requesting_user_id=user["id"] if user else None)
+    url = G.authorization_url(mode, requesting_user_id=user["id"] if user else None,
+                              accepted_terms=accepted_terms)
     return {"authorization_url": url, "configured": True}
 
 
@@ -135,9 +138,16 @@ async def callback(
             return RedirectResponse(f"{frontend}/login?google_error=account_creation_blocked")
         if not user_doc and not await is_registration_open(db):
             return RedirectResponse(f"{frontend}/auth/google/callback?google_error=registration_closed")
+        if not user_doc and payload.get("terms") != TERMS_VERSION:
+            # Same rule as email sign-up: 18+ and the current Terms must be
+            # accepted before an account is created.
+            return RedirectResponse(f"{frontend}/register?google_error=terms_required")
         if not user_doc:
             # New account via Google
             doc = {
+                "terms_version": TERMS_VERSION,
+                "terms_accepted_at": datetime.now(timezone.utc),
+                "privacy_version_acknowledged": PRIVACY_VERSION,
                 "email": google_email,
                 "password_hash": None,
                 "full_name": google_name,
@@ -200,6 +210,8 @@ async def callback(
                      ip=meta["ip"], user_agent=meta["user_agent"], extra={"via": "google_oauth"})
         return RedirectResponse(f"{frontend}/login?mfa_token={mfa_token}")
 
+    if mode != "link":
+        await _record_successful_login(db, str(resp_obj["_id"]))
     await _issue_tokens_and_cookies(resp, str(resp_obj["_id"]), resp_obj.get("email") or google_email)
     return resp
 

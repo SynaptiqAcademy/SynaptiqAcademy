@@ -17,18 +17,8 @@ import "../../components/resources/resources.css";
  * linked separately and labelled as what they are.
  */
 
-const FONT_HREF = "https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap";
 const SEARCH_FROM = 6;   // show search/filters once the library has this many guides
 
-function useDisplayFont() {
-  useEffect(() => {
-    if (document.querySelector(`link[href="${FONT_HREF}"]`)) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = FONT_HREF;
-    document.head.appendChild(link);
-  }, []);
-}
 
 const num = (n) => String(n).padStart(3, "0");
 
@@ -52,7 +42,6 @@ function Entry({ r }) {
 }
 
 export default function Resources() {
-  useDisplayFont();
   const all = useMemo(() => publishedResources(), []);
   const [task, setTask] = useState("all");
   const [q, setQ] = useState("");

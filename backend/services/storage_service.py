@@ -9,6 +9,7 @@ Required env vars:
 Optional:
   S3_ENDPOINT_URL        — S3-compatible endpoint (MinIO, Supabase Storage, etc.)
 """
+import logging
 import os
 import uuid
 from typing import Tuple
@@ -72,6 +73,19 @@ def get_object(path: str) -> Tuple[bytes, str]:
         raise RuntimeError(f"S3 get failed: {exc}") from exc
     content_type = resp.get("ContentType") or "application/octet-stream"
     return resp["Body"].read(), content_type
+
+
+def delete_object(path: str) -> bool:
+    """Remove a stored object. Returns False (never raises) if storage is
+    unavailable, so callers can log and carry on."""
+    if not path:
+        return False
+    try:
+        _client().delete_object(Bucket=_bucket(), Key=path)
+        return True
+    except Exception as exc:  # BotoCoreError, ClientError, RuntimeError
+        logging.getLogger(__name__).warning("S3 delete failed for an object: %s", type(exc).__name__)
+        return False
 
 
 def build_path(user_id: str, ext: str) -> str:

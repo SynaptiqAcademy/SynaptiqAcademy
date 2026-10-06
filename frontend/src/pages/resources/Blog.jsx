@@ -14,18 +14,8 @@ import "../../components/blog/blog.css";
  * filters need more than one subject, search needs enough posts.
  */
 
-const FONT_HREF = "https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap";
 const SEARCH_FROM = 8;
 
-function useDisplayFont() {
-  useEffect(() => {
-    if (document.querySelector(`link[href="${FONT_HREF}"]`)) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = FONT_HREF;
-    document.head.appendChild(link);
-  }, []);
-}
 
 function Row({ p }) {
   return (
@@ -43,7 +33,6 @@ function Row({ p }) {
 }
 
 export default function Blog() {
-  useDisplayFont();
   const posts = useMemo(() => publishedPosts(), []);
   const [cat, setCat] = useState("all");
   const [q, setQ] = useState("");

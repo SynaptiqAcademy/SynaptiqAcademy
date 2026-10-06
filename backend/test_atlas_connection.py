@@ -5,8 +5,7 @@ Usage:
     python test_atlas_connection.py
 
 Before running, ensure MONGODB_URI in .env has the real password, e.g.:
-    MONGODB_URI=mongodb+srv://admin_db_user:YourRealPassword@synaptiq-prod.ici39nk.mongodb.net/
-                                            ^^^^^^^^^^^^^^^^
+    MONGODB_URI=mongodb+srv://<user>:<password>@<cluster-host>/
 """
 import asyncio
 import os

@@ -380,9 +380,11 @@ class ResendProvider(NotificationProvider):
             )
         # review_response / review_verdict: just fall through to a lightweight notification body
         else:
+            # Notification titles and bodies can name manuscripts, projects
+            # or research topics; they stay in the app.
             await send_email(
-                to=to, subject=f"[SYNAPTIQ] {event.title}",
-                html=f"<p>{event.body}</p><p><a href='{absolute_url(event.link or '/')}'>Open SYNAPTIQ</a></p>",
+                to=to, subject="You have a new notification on Synaptiq",
+                html=f"<p>You have a new notification on Synaptiq.</p><p><a href='{absolute_url(event.link or '/')}'>Open Synaptiq</a></p>",
                 event_kind=event.kind,
             )
 

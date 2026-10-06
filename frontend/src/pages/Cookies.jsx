@@ -31,8 +31,8 @@ const SECTIONS = [
     <LegalTable caption="Analytics (with your consent)" head={HEAD} rows={rows("analytics")} />
     <p>We don't use advertising or marketing cookies, and there are no social media embeds or tracking pixels.</p>
   </>) },
-  { id: "third-party", title: "Fonts from Google", body: (<>
-    <p>Our pages load their typefaces from Google Fonts. Your browser requests the font files from Google's servers, so Google receives your IP address and browser details as part of that request. Google Fonts doesn't set cookies. We plan to serve the fonts from our own servers instead.</p>
+  { id: "third-party", title: "Fonts", body: (<>
+    <p>Our typefaces are served from Synaptiq's own website. Loading a page doesn't send a request to Google Fonts or any other font service.</p>
   </>) },
   { id: "choice", title: "Changing your choice", body: (<>
     <p>When you first visit we ask whether you allow analytics, with equal choices to allow or reject it. You can change your mind at any time:</p>

@@ -32,6 +32,30 @@ from .risk_engine import get_risk_engine
 logger = logging.getLogger(__name__)
 
 _AI_PATHS = ("/api/ai", "/api/copilot", "/api/ara", "/api/sie")
+_ADMIN_PREFIX = "/api/admin"
+
+
+async def admin_gate(request: Request) -> Response | None:
+    """Deny-by-default for the whole /api/admin surface.
+
+    Individual admin routes check roles themselves, but some only required
+    a signed-in user, so any member could read admin telemetry and logs or
+    trigger admin actions. This gate requires, for every /api/admin path,
+    at least the lowest privilege any admin route grants (moderator or
+    platform admin); routes keep their own stricter checks on top.
+    Returns a response to send instead, or None to continue."""
+    from fastapi import HTTPException
+    from starlette.responses import JSONResponse
+    from auth_utils import get_current_user
+    from services.permissions import is_moderator
+    from zt.deps import zt_is_admin
+    try:
+        user = await get_current_user(request)
+    except HTTPException as e:
+        return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
+    if not (is_moderator(user) or zt_is_admin(user)):
+        return JSONResponse(status_code=403, content={"detail": "Administrator access required"})
+    return None
 _SKIP_PATHS = ("/api/health", "/api/", "/docs", "/redoc", "/openapi.json")
 
 
@@ -44,12 +68,17 @@ class ZeroTrustMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Any) -> Response:
         path = request.url.path
 
+        # Must run before the skip list below (which matches every /api/ path).
+        if request.method != "OPTIONS" and (path == _ADMIN_PREFIX or path.startswith(_ADMIN_PREFIX + "/")):
+            denied = await admin_gate(request)
+            if denied is not None:
+                return denied
+
         # Skip static / health paths
         if any(path.startswith(p) for p in _SKIP_PATHS):
             return await call_next(request)
 
         t0 = time.monotonic()
-
         # ── 1. Identity extraction ────────────────────────────────────────────
         identity = await self._extract_identity(request)
         request.state.zt_identity = identity

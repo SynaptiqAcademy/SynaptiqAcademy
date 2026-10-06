@@ -6,7 +6,7 @@ import api, { getErrorMessage } from "../lib/api";
 import { TID } from "../lib/testIds";
 import {
   AuthLayout, AuthCard, AuthHeader, AuthTitle, AuthInput, PasswordInput,
-  AuthButton, AuthDivider, SocialButtons, ErrorBanner, AuthFooter, AuthLink,
+  AuthButton, AuthDivider, SocialButtons, useOauthProviders, ErrorBanner, AuthFooter, AuthLink,
   AuthCheckbox, NAVY, T_MID, T_FAINT, BORDER,
 } from "../components/auth/AuthShared";
 
@@ -24,7 +24,7 @@ export default function Login() {
   const submittingRef = useRef(false);
   const navigate  = useNavigate();
   const location  = useLocation();
-
+  const providers = useOauthProviders();
   // MFA challenge state — set either after a password login on an MFA-enabled
   // account, or from ?mfa_token= on redirect back from the Google OAuth flow
   // (routers/google_auth.py issues the same pending token instead of cookies
@@ -220,8 +220,8 @@ export default function Login() {
           </div>
         </form>
 
-        <AuthDivider />
-        <SocialButtons onGoogle={handleGoogle} onOrcid={handleOrcid} />
+        {(providers.google || providers.orcid) && <AuthDivider />}
+        <SocialButtons onGoogle={handleGoogle} onOrcid={handleOrcid} providers={providers} />
 
         <AuthFooter>
           Don&rsquo;t have an account?{" "}

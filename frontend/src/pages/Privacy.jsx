@@ -100,16 +100,15 @@ const SECTIONS = [
   </>) },
   { id: "providers", title: "Who processes data for us", body: (<>
     <LegalTable caption="Service providers" head={["Provider", "What for", "Where"]} rows={[
-      ["Railway", "Application servers", "Per provider's data-processing terms"],
-      ["MongoDB Atlas", "Database", "Per provider's data-processing terms"],
+      ["Railway", "Application servers", "United States"],
+      ["MongoDB Atlas", "Database", "Region being confirmed; may be outside the EEA"],
       ["Vercel", "Website delivery", "Global network"],
       ["Resend", "Sending email", "United States"],
       ["Anthropic", "AI features", "United States"],
-      ["OpenAI", "AI fallback and search embeddings", "United States"],
+      ["OpenAI", "AI when Claude is unavailable, and knowledge-base search embeddings", "United States"],
       ["PostHog", "Analytics, only with your consent", "United States"],
       ["Stripe", "Payments, once open (independent controller)", "EU and United States"],
       ["ORCID", "Connecting your ORCID record (at your request)", "Independent organisation"],
-      ["Google Fonts", "Typefaces on our pages; receives your IP address when fonts load", "Global network"],
     ]} />
     <p>We also read public metadata from OpenAlex and Crossref; we don't send them your personal data.</p>
   </>) },
@@ -123,14 +122,25 @@ const SECTIONS = [
       ["AI conversations and results", "Until you delete them or your account"],
       ["Sign-in sessions and security tokens", "Expire automatically (sessions up to 14 days)"],
       ["Security event logs", "1 year"],
+      ["Records of administrative and account actions (for example, that an account was deleted)", "90 days"],
+      ["Log of emails we send you (address, subject, delivery status)", "90 days, or until you delete your account"],
+      ["Read notifications", "90 days"],
+      ["Cookie choices not linked to an account", "2 years"],
+      ["Cookie choices linked to your account", "Until you delete your account"],
       ["Email verification and password-reset links", "Expire automatically (24 hours and 30 minutes)"],
       ["Billing records", "As long as Romanian tax and accounting law requires"],
-      ["Audit log of administrative actions, cookie-consent records, messages sent to us", "No automatic deletion period is set yet; kept while needed for their purpose and deleted on request where the law allows"],
+      ["Messages sent to us through the contact form, and billing-related audit records", "No automatic deletion period is set yet; kept while needed for their purpose and deleted on request where the law allows"],
       ["Backups", "Overwritten on our database provider's backup cycle"],
     ]} />
   </>) },
   { id: "deletion", title: "Deleting your account", body: (<>
-    <p>You can delete your account in Settings → Privacy. This immediately signs you out everywhere and removes your name, email, profile details and ORCID link; the remaining account record is anonymised so shared content still works. Messages you sent, projects and co-authored manuscripts you shared stay with the people you shared them with. A record that the deletion happened is kept in our audit log.</p>
+    <p>You can delete your account in Settings → Privacy. We ask for your password, or, if you sign in with ORCID rather than a password, a sign-in within the last 10 minutes. You're signed out everywhere straight away. Then:</p>
+    <ul>
+      <li><strong>Deleted:</strong> your profile, AI conversations and knowledge-base documents, saved searches, goals and notes, requests and invitations, memberships, notifications and cookie choices; and projects, workspaces and manuscripts that only you can access, with their files.</li>
+      <li><strong>Kept for others:</strong> projects, workspaces and manuscripts you share pass to another member or co-author. Messages you sent, comments and contributions stay with the people you shared them with, shown as "Deleted user".</li>
+      <li><strong>Kept because the law or security requires it:</strong> billing records, as long as tax and accounting law requires; security logs and a record that the account was deleted (without your name or email) until their periods above end.</li>
+    </ul>
+    <p>Your account record remains only as an anonymous placeholder, so shared content still works. Deleted data disappears from backups as they are overwritten on our database provider's backup cycle.</p>
   </>) },
   { id: "rights", title: "Your rights", body: (<>
     <p>Under the GDPR you can ask to access your data, correct it, delete it, restrict or object to its use, and receive it in a portable format. Where we rely on consent, you can withdraw it at any time.</p>

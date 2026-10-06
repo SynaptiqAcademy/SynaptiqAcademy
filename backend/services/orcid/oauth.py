@@ -65,13 +65,23 @@ def encode_state(payload: dict) -> str:
     return base64.urlsafe_b64encode(data + b"." + sig).decode()
 
 
+STATE_MAX_AGE_SECS = 15 * 60   # an authorization round-trip, not a standing credential
+
+
 def decode_state(state: str) -> dict:
     raw = base64.urlsafe_b64decode(state.encode())
-    data, sig = raw.rsplit(b".", 1)
+    # The signature is a fixed 32-byte HMAC-SHA256 that may itself contain a
+    # "." byte, so split at its known length rather than at the last ".".
+    if len(raw) < 34 or raw[-33:-32] != b".":
+        raise ValueError("Malformed state")
+    data, sig = raw[:-33], raw[-32:]
     expected = hmac.new(ORCID_STATE_SECRET.encode(), data, hashlib.sha256).digest()
     if not hmac.compare_digest(sig, expected):
         raise ValueError("Invalid state signature")
-    return json.loads(data.decode())
+    payload = json.loads(data.decode())
+    if time.time() - int(payload.get("ts") or 0) > STATE_MAX_AGE_SECS:
+        raise ValueError("State expired")
+    return payload
 
 
 # ============================= OAUTH ========================================
@@ -103,11 +113,16 @@ def sanitize_return_to(return_to: Optional[str]) -> str:
 
 def authorization_url(mode: Literal["login", "signup", "link"],
                       requesting_user_id: Optional[str] = None,
-                      return_to: Optional[str] = None) -> str:
+                      return_to: Optional[str] = None,
+                      accepted_terms: bool = False) -> str:
     _require_configured()
+    from legal_versions import TERMS_VERSION
     state = encode_state({
         "mode": mode, "uid": requesting_user_id, "ts": int(time.time()),
         "return_to": sanitize_return_to(return_to) if mode == "link" else None,
+        # Signed proof that the person confirmed 18+ and accepted these Terms
+        # before leaving for ORCID; required to create a new account.
+        "terms": TERMS_VERSION if accepted_terms else None,
     })
     qs = urlencode({
         "client_id":    ORCID_CLIENT_ID,

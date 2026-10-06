@@ -1,6 +1,6 @@
 """Operational Cleanup Service — Phase 7 Commercial Readiness.
 
-Runs as a background task at startup and via cron. Cleans up expired or stale
+Runs at startup and then once a day. Cleans up expired or stale
 records to prevent unbounded collection growth in production:
 
   • Expired password-reset tokens (TTL: 30 min)
@@ -9,7 +9,9 @@ records to prevent unbounded collection growth in production:
   • Old billing event raw payloads (strip payload after 90 days; keep metadata)
   • Orphaned copilot sessions (in-DB references to expired sessions)
   • Stale API keys marked deleted (purge after 90-day tombstone window)
-  • Old anonymous consent records without a user_id (GDPR hygiene; keep 2 years)
+  • Everything with a period in retention_policy.py (consent records not
+    linked to an account, read notifications, email delivery log, the
+    automatic data-access audit trail, ...)
 
 All operations are logged. Errors are non-fatal — a failed cleanup does NOT
 crash the application or affect users.
@@ -80,23 +82,6 @@ async def cleanup_stale_billing_payloads() -> int:
     return res.modified_count
 
 
-async def cleanup_anonymous_consent_records() -> int:
-    """Delete anonymous consent records (no user_id) older than 2 years.
-
-    GDPR Article 5(1)(e) — personal data should not be kept longer than necessary.
-    Anonymous consent records are only needed for auditing the banner interaction,
-    not for individual user tracking.
-    """
-    db = get_db()
-    db = DBProxy(db, SecurityContext.system())
-    cutoff = _iso(_now() - timedelta(days=730))
-    res = await db.consent_records.delete_many({
-        "user_id": None,
-        "created_at": {"$lt": cutoff},
-    })
-    return res.deleted_count
-
-
 async def cleanup_deleted_api_keys() -> int:
     """Hard-delete API keys that were soft-deleted more than 90 days ago."""
     db = get_db()
@@ -121,31 +106,90 @@ async def cleanup_expired_announcements() -> int:
     return res.modified_count
 
 
-async def cleanup_old_notifications() -> int:
-    """Delete read notifications older than 90 days."""
+async def enforce_retention_schedule() -> int:
+    """Delete documents older than their period in retention_policy.py
+    (purge rules, plus any 'none' rule whose period was switched on by its
+    environment variable). Dates may be stored as ISO strings or datetimes,
+    so both forms are matched."""
+    from retention_policy import purge_rules
     db = get_db()
     db = DBProxy(db, SecurityContext.system())
-    cutoff = _iso(_now() - timedelta(days=90))
-    res = await db.notifications.delete_many({
-        "read": True,
-        "created_at": {"$lt": cutoff},
-    })
-    return res.deleted_count
+    total = 0
+    for rule in purge_rules():
+        cutoff = _now() - timedelta(days=rule.effective_days)
+        flt = {"$or": [{rule.date_field: {"$lt": _iso(cutoff)}},
+                       {rule.date_field: {"$lt": cutoff}}]}
+        if rule.query:
+            flt = {"$and": [rule.query, flt]}
+        try:
+            res = await getattr(db, rule.collection).delete_many(flt)
+            logger.info("cleanup.retention.%s deleted=%s", rule.key, res.deleted_count)
+            total += res.deleted_count
+        except Exception as exc:
+            logger.warning("cleanup.retention.%s failed: %s", rule.key, exc)
+    return total
 
 
-async def run_all() -> dict:
+async def minimise_deletion_audit_records() -> int:
+    """Remove the email address of deleted accounts from audit records.
+    Earlier versions stored it with the deletion event; a record that an
+    account was deleted needs only the account id."""
+    db = get_db()
+    db = DBProxy(db, SecurityContext.system())
+    n = 0
+    for coll, field in (("audit_log", "extra.original_email"), ("obs_audit", "extra.original_email"),
+                        ("obs_audit", "details.original_email")):
+        try:
+            res = await getattr(db, coll).update_many({field: {"$exists": True}}, {"$unset": {field: ""}})
+            n += res.modified_count
+        except Exception as exc:
+            logger.warning("cleanup.minimise_audit %s failed: %s", coll, exc)
+    return n
+
+
+_DAILY_STARTED = False
+_DAILY_INTERVAL_S = 24 * 3600
+
+
+def _ensure_daily_schedule() -> None:
+    """Re-run every cleanup job once a day for the life of the process, so
+    retention is enforced even when the service isn't restarted."""
+    global _DAILY_STARTED
+    if _DAILY_STARTED:
+        return
+    import asyncio
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return
+    _DAILY_STARTED = True
+
+    async def _loop():
+        while True:
+            await asyncio.sleep(_DAILY_INTERVAL_S)
+            try:
+                await run_all(schedule=False)
+            except Exception as exc:  # never let the loop die
+                logger.warning("cleanup.daily failed: %s", exc)
+
+    loop.create_task(_loop())
+
+
+async def run_all(schedule: bool = True) -> dict:
     """Run all cleanup jobs. Returns per-job counts. Non-fatal on any failure."""
     logger.info("cleanup.run_all starting")
     results = {
         "expired_password_resets": await _run_with_label("expired_password_resets", cleanup_expired_password_resets()),
         "expired_mfa_tokens":      await _run_with_label("expired_mfa_tokens", cleanup_expired_mfa_tokens()),
         "stale_billing_payloads":  await _run_with_label("stale_billing_payloads", cleanup_stale_billing_payloads()),
-        "anon_consent_records":    await _run_with_label("anon_consent_records", cleanup_anonymous_consent_records()),
         "deleted_api_keys":        await _run_with_label("deleted_api_keys", cleanup_deleted_api_keys()),
         "expired_announcements":   await _run_with_label("expired_announcements", cleanup_expired_announcements()),
-        "old_notifications":       await _run_with_label("old_notifications", cleanup_old_notifications()),
+        "retention_schedule":      await _run_with_label("retention_schedule", enforce_retention_schedule()),
+        "minimise_audit_records":  await _run_with_label("minimise_audit_records", minimise_deletion_audit_records()),
         "ran_at": _iso(_now()),
     }
     total = sum(v for v in results.values() if isinstance(v, int))
     logger.info("cleanup.run_all complete total_deleted_or_modified=%d", total)
+    if schedule:
+        _ensure_daily_schedule()
     return results

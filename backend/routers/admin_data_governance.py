@@ -332,7 +332,8 @@ async def export_my_data(user: dict = Depends(get_current_user)):
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
-    data = await _collect_user_data(db, user["id"])
+    from services.account_lifecycle import build_export
+    data = await build_export(db, user["id"])
     payload = json.dumps(data, indent=2, default=str).encode()
     filename = f"synaptiq-data-{user['id']}.json"
     return Response(
@@ -425,7 +426,6 @@ async def anonymize_user(uid: str, request: Request, admin: dict = Depends(requi
         "admin.gdpr.anonymize",
         actor_id=admin["id"], actor_email=admin.get("email"),
         target_id=uid, ip=request_meta(request)["ip"],
-        extra={"original_email": user.get("email")},
     )
     return {"ok": True, "anonymized": True, "new_email": anon_email}
 
@@ -657,7 +657,6 @@ async def purge_user(uid: str, request: Request, body: dict, admin: dict = Depen
     if zt_is_super_admin(user):
         raise HTTPException(status_code=400, detail="Cannot purge a super admin account")
 
-    original_email = user.get("email", "")
     await _purge_user_owned_data(db, uid)
     await db.users.delete_one({"_id": oid})
 
@@ -665,6 +664,5 @@ async def purge_user(uid: str, request: Request, body: dict, admin: dict = Depen
         "admin.gdpr.purge",
         actor_id=admin["id"], actor_email=admin.get("email"),
         target_id=uid, ip=request_meta(request)["ip"],
-        extra={"original_email": original_email},
     )
     return {"ok": True, "purged": True, "user_id": uid}

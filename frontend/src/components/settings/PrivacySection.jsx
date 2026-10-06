@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Cookie, ShieldCheck, Download, Trash2 } from "lucide-react";
+import { LEGAL } from "../../content/legal/meta";
 import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { SettingsGrid } from "./SettingsGrid";
@@ -93,10 +94,13 @@ export function PrivacySection() {
    anonymised and signed out everywhere; content shared with others is not
    removed by this action. */
 function YourData() {
-  const { logout } = useAuth() || {};
+  const { logout, user } = useAuth() || {};
   const [busy, setBusy] = useState("");
   const [msg, setMsg] = useState("");
   const [confirmText, setConfirmText] = useState("");
+  const [password, setPassword] = useState("");
+  const hasPassword = user?.has_password !== false;
+  const P = LEGAL.contact.privacy;
 
   const exportData = async () => {
     setBusy("export"); setMsg("");
@@ -109,19 +113,22 @@ function YourData() {
       document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
       setMsg("Your export has been downloaded.");
     } catch {
-      setMsg("The export couldn't be created. Please try again, or email privacy@synaptiq.academy.");
+      setMsg(`The export couldn't be created. Please try again, or email ${P}.`);
     } finally { setBusy(""); }
   };
 
+  const canDelete = confirmText === "DELETE" && (!hasPassword || password.length > 0);
+
   const deleteAccount = async () => {
-    if (confirmText !== "DELETE") return;
+    if (!canDelete) return;
     setBusy("delete"); setMsg("");
     try {
-      await api.delete("/users/me");
-      if (logout) await logout();
+      await api.delete("/users/me", { data: { confirm: "DELETE", password: hasPassword ? password : undefined } });
+      try { if (logout) await logout(); } catch { /* session already ended */ }
       window.location.href = "/";
-    } catch {
-      setMsg("Your account couldn't be deleted. Please try again, or email privacy@synaptiq.academy.");
+    } catch (e) {
+      const d = e?.response?.data?.detail;
+      setMsg((d && (d.message || (typeof d === "string" ? d : ""))) || `Your account couldn't be deleted. Please try again, or email ${P}.`);
       setBusy("");
     }
   };
@@ -130,9 +137,10 @@ function YourData() {
     <>
       <PreferenceCard icon={Download} title="Export my data" description="A copy of your Synaptiq data">
         <BodySmall style={{ margin: 0 }}>
-          Downloads a JSON file with your profile, your projects and workspaces, manuscripts you author, your
-          most recent messages and notifications, and the list of files you uploaded. For anything not included,
-          email privacy@synaptiq.academy.
+          Downloads a JSON file with your profile, Terms acceptance, connections, projects, workspaces, manuscripts,
+          publications, files you uploaded (details, not the files themselves), messages you sent, AI conversations,
+          requests and invitations, memberships, notifications, consent records and billing records. Passwords and
+          security tokens are never included. For anything else, email {P}.
         </BodySmall>
         <div style={{ marginTop: 6 }}>
           <Button variant="outline" size="sm" onClick={exportData} disabled={busy === "export"} data-testid="privacy-export-btn">
@@ -142,17 +150,34 @@ function YourData() {
       </PreferenceCard>
 
       <PreferenceCard icon={Trash2} title="Delete my account" description="Permanent">
-        <BodySmall style={{ margin: 0 }}>
-          Your name, email, profile details and ORCID link are removed and you are signed out everywhere. Content you
-          shared with others, such as messages, projects and co-authored manuscripts, stays with them. This can't be undone.
-        </BodySmall>
+        <BodySmall style={{ margin: 0 }}>Consider exporting your data first. When you delete your account:</BodySmall>
+        <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 13, lineHeight: 1.6, color: "#334155" }} data-testid="privacy-delete-consequences">
+          <li>You're signed out everywhere and can't sign in again.</li>
+          <li>Your profile, AI conversations, saved searches, notes, requests, invitations and memberships are deleted.</li>
+          <li>Projects, workspaces and manuscripts only you can access are deleted, with their files.</li>
+          <li>Things you share with others stay with them: shared projects and workspaces pass to another member, and your messages, comments and contributions remain, shown as "Deleted user".</li>
+          <li>Billing records are kept as accounting law requires, and security and audit records until their retention period ends. Unused AI Credits are lost.</li>
+        </ul>
+        <BodySmall style={{ margin: "6px 0 0" }}>This can't be undone.</BodySmall>
+        {hasPassword ? (
+          <label style={{ display: "block", marginTop: 8, fontSize: 13 }}>
+            Your password
+            <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)}
+              data-testid="privacy-delete-password"
+              style={{ display: "block", marginTop: 4, width: "100%", maxWidth: 220, padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: 4 }} />
+          </label>
+        ) : (
+          <BodySmall style={{ margin: "8px 0 0" }}>
+            You sign in without a password (for example with ORCID), so we'll check that you signed in within the last 10 minutes. If not, sign out and sign in again first.
+          </BodySmall>
+        )}
         <label style={{ display: "block", marginTop: 8, fontSize: 13 }}>
           Type DELETE to confirm
           <input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} aria-label="Type DELETE to confirm"
             style={{ display: "block", marginTop: 4, width: "100%", maxWidth: 220, padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: 4 }} />
         </label>
         <div style={{ marginTop: 6 }}>
-          <Button variant="outline" size="sm" onClick={deleteAccount} disabled={confirmText !== "DELETE" || busy === "delete"} data-testid="privacy-delete-btn">
+          <Button variant="outline" size="sm" onClick={deleteAccount} disabled={!canDelete || busy === "delete"} data-testid="privacy-delete-btn">
             {busy === "delete" ? "Deleting…" : "Delete my account"}
           </Button>
         </div>

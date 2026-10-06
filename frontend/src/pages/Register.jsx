@@ -7,7 +7,7 @@ import { TID } from "../lib/testIds";
 import { trackMarketingEvent as track } from "../lib/marketingAnalytics";
 import {
   AuthLayout, AuthCard, AuthHeader, AuthTitle, AuthInput, PasswordInput,
-  AuthButton, AuthDivider, SocialButtons, ErrorBanner,
+  AuthButton, AuthDivider, SocialButtons, useOauthProviders, ErrorBanner,
   AuthFooter, AuthLink, AuthCheckbox, PasswordStrength, TermsNote,
   NAVY, T_MID, T_FAINT, BORDER,
 } from "../components/auth/AuthShared";
@@ -27,7 +27,15 @@ export default function Register() {
   const [loading,     setLoading]     = useState(false);
   const submittingRef = useRef(false);
   const navigate = useNavigate();
+  const providers = useOauthProviders();
 
+  // Returned here by an OAuth callback that couldn't create an account.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const code = q.get("orcid_error") || q.get("google_error");
+    if (code === "terms_required") setErr("To create an account, first confirm you're 18 or older and accept the Terms of Service below, then continue.");
+    else if (code === "registration_closed") setErr("Sign-ups are closed at the moment, so a new account can't be created.");
+  }, []);
   if (user) {
     if (user.is_super_admin) return <Navigate to="/admin" replace />;
     if (!user.onboarded)    return <Navigate to="/onboarding" replace />;
@@ -70,9 +78,18 @@ export default function Register() {
     }
   }
 
+  // Every way of creating an account requires the same 18+ and Terms
+  // confirmation; the server refuses a new OAuth account without it.
+  function needsAgreement() {
+    if (agreed) return false;
+    setErr("Please confirm you are 18 or older and accept the Terms of Service to continue.");
+    return true;
+  }
+
   async function handleGoogle() {
+    if (needsAgreement()) return;
     try {
-      const { data } = await api.get("/google/authorize?mode=signup");
+      const { data } = await api.get("/google/authorize?mode=signup&accepted_terms=true");
       if (data.authorization_url) window.location.href = data.authorization_url;
     } catch (e) {
       setErr(getErrorMessage(e));
@@ -80,8 +97,9 @@ export default function Register() {
   }
 
   async function handleOrcid() {
+    if (needsAgreement()) return;
     try {
-      const { data } = await api.get("/orcid/authorize?mode=signup");
+      const { data } = await api.get("/orcid/authorize?mode=signup&accepted_terms=true");
       if (data.authorization_url) window.location.href = data.authorization_url;
     } catch (e) {
       setErr(getErrorMessage(e));
@@ -157,8 +175,8 @@ export default function Register() {
           </div>
         </form>
 
-        <AuthDivider />
-        <SocialButtons onGoogle={handleGoogle} onOrcid={handleOrcid} />
+        {(providers.google || providers.orcid) && <AuthDivider />}
+        <SocialButtons onGoogle={handleGoogle} onOrcid={handleOrcid} providers={providers} />
 
         <AuthFooter>
           Already have an account?{" "}

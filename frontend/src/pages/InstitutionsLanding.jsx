@@ -24,17 +24,6 @@ import "../components/institutions/institutions.css";
  * emailed). Every person and department below is illustrative.
  */
 
-const FONT_HREF = "https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap";
-
-function useDisplayFont() {
-  useEffect(() => {
-    if (document.querySelector(`link[href="${FONT_HREF}"]`)) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = FONT_HREF;
-    document.head.appendChild(link);
-  }, []);
-}
 
 function scrollTo(id, e) {
   e?.preventDefault?.();
@@ -165,7 +154,6 @@ function Inquiry() {
 }
 
 export default function InstitutionsLanding() {
-  useDisplayFont();
 
   useEffect(() => setPageSeo({
     title: "For Institutions — See how your research expertise connects",

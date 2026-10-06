@@ -1,6 +1,7 @@
 """Workspace Invitation — migrated to the component system."""
 from __future__ import annotations
 
+from html import escape
 from typing import Tuple
 
 from ..categories import EmailCategory
@@ -13,18 +14,22 @@ CATEGORY = EmailCategory.TRANSACTIONAL
 
 def workspace_invitation_email(*, recipient_name: str, workspace_name: str, role: str,
                                inviter_name: str, accept_url: str) -> Tuple[str, str, str]:
-    subject = f"{inviter_name} invited you to '{workspace_name}' on SYNAPTIQ"
+    # The workspace name can reveal a research topic, so it stays in the app:
+    # emails pass through our email provider and mailbox providers, and the
+    # subject is kept in our delivery log.
+    inviter = escape(inviter_name or "A Synaptiq member")
+    role_txt = escape(role or "member")
+    subject = "You've been invited to a workspace on Synaptiq"
     body = (
-        f"<p><strong>{inviter_name}</strong> has invited you to collaborate in the workspace "
-        f"<strong>{workspace_name}</strong> on SYNAPTIQ.</p>"
-        f"<p>You will join as <strong>{role}</strong>.</p>"
+        f"<p><strong>{inviter}</strong> has invited you to collaborate in a workspace on Synaptiq.</p>"
+        f"<p>You will join as <strong>{role_txt}</strong>. Open the invitation to see the workspace.</p>"
     )
     note = "If you do not recognize the inviter, you can safely ignore this message."
 
     html = render_email(
-        preheader=f"Join {workspace_name}",
+        preheader="You've been invited to a workspace",
         sections=[
-            component_hero("Workspace invitation", f"Join {workspace_name}"),
+            component_hero("Workspace invitation", "You've been invited to a workspace"),
             component_body_text(body),
             component_button_row(("Review invitation", accept_url)),
             component_link_fallback(accept_url),
@@ -32,9 +37,9 @@ def workspace_invitation_email(*, recipient_name: str, workspace_name: str, role
         ],
     )
     text = render_text_email(sections=[
-        text_heading("Workspace invitation", f"Join {workspace_name}"),
-        text_paragraph(f"{inviter_name} has invited you to collaborate in the workspace {workspace_name} on SYNAPTIQ. "
-                       f"You will join as {role}."),
+        text_heading("Workspace invitation", "You've been invited to a workspace"),
+        text_paragraph(f"{inviter_name or 'A Synaptiq member'} has invited you to collaborate in a workspace on Synaptiq. "
+                       f"You will join as {role or 'member'}. Open the invitation to see the workspace."),
         text_button("Review invitation", accept_url),
         note,
     ])

@@ -107,7 +107,7 @@ const RESOURCES = [
   { label: "Blog",           desc: "Product updates, research tips, and news", to: "/blog"               },
   { label: "Customer Stories", desc: "How researchers use Synaptiq",           to: "/resources/customer-stories"   },
   { label: "Privacy Policy", desc: "How we handle your data",                  to: "/privacy"                      },
-  { label: "Security Center", desc: "Security architecture and policies",      to: "/security"                     },
+  { label: "Security",        desc: "How we protect your account and data",    to: "/privacy#security"             },
   { label: "Contact",        desc: "All contact options in one place",          to: "/contact"                      },
 ];
 

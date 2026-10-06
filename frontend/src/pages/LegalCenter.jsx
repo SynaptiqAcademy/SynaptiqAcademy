@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import MarketingLayout from "../components/layout/MarketingLayout";
+import { LEGAL } from "../content/legal/meta";
 import {
   Shield, FileText, Cookie, Globe, Lock,
   ArrowRight, Clock, Calendar, ChevronRight,
@@ -63,9 +64,9 @@ const DOCS = [
     bg: "#EEF2F9",
     title: "Privacy Policy",
     desc: "How we collect, use, and protect your personal data — including ORCID integration, PostHog analytics, and AI context handling.",
-    updated: "29 Jun 2026",
+    updated: LEGAL.privacy.updated,
     readingTime: "8 min",
-    version: "v1.4",
+    version: LEGAL.privacy.version,
   },
   {
     to: "/terms",
@@ -74,9 +75,9 @@ const DOCS = [
     bg: "#EFF6FF",
     title: "Terms of Service",
     desc: "Platform rules, subscription terms, AI Credits, acceptable use, intellectual property, and account termination.",
-    updated: "29 Jun 2026",
+    updated: LEGAL.terms.updated,
     readingTime: "10 min",
-    version: "v1.4",
+    version: LEGAL.terms.version,
   },
   {
     to: "/cookies",
@@ -85,9 +86,9 @@ const DOCS = [
     bg: "#FEF3C7",
     title: "Cookie Policy",
     desc: "Every cookie and tracking technology on Synaptiq — including essential session cookies, PostHog analytics, and your consent choices.",
-    updated: "29 Jun 2026",
+    updated: LEGAL.cookies.updated,
     readingTime: "5 min",
-    version: "v1.2",
+    version: LEGAL.cookies.version,
   },
   {
     to: "/gdpr",
@@ -95,21 +96,10 @@ const DOCS = [
     color: "#1e40af",
     bg: "#EFF6FF",
     title: "GDPR Notice",
-    desc: "Rights of EU/EEA residents under Regulation (EU) 2016/679 — including access, erasure, portability, and supervisory authority contacts.",
-    updated: "29 Jun 2026",
-    readingTime: "6 min",
-    version: "v1.3",
-  },
-  {
-    to: "/security",
-    icon: Lock,
-    color: "#065f46",
-    bg: "#ECFDF5",
-    title: "Security Center",
-    desc: "Infrastructure, encryption, authentication, data isolation, AI privacy, and responsible disclosure — with no vague claims.",
-    updated: "29 Jun 2026",
-    readingTime: "7 min",
-    version: "v1.3",
+    desc: "Your rights under the GDPR and how to use them. Details of processing and retention are in the Privacy Policy.",
+    updated: "6 October 2026",
+    readingTime: "3 min",
+    version: "2026-10-06",
   },
 ];
 
@@ -117,8 +107,7 @@ const DOCS = [
 const RELATED = [
   { label: "AI Usage Policy", to: "/ai-policy", desc: "How AI features handle your data" },
   { label: "Contact us", to: "/contact", desc: "General enquiries and support" },
-  { label: "Data export", to: "/settings/profile", desc: "Settings → Privacy → Export my data" },
-  { label: "Cookie preferences", to: "/settings/profile", desc: "Settings → Privacy → Cookie preferences" },
+  { label: "Export or delete your data", to: "/settings?section=privacy", desc: "Settings → Privacy" },
 ];
 
 /* ────────────────────────────────────────────────────────────────────────────── */
@@ -273,11 +262,11 @@ export default function LegalCenter() {
             </p>
             <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
               <a
-                href="mailto:privacy@synaptiq.academy"
+                href={`mailto:${LEGAL.contact.privacy}`}
                 style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "11px 22px", borderRadius: 9, background: "#0F2847", color: "#fff", textDecoration: "none", fontSize: "0.875rem", fontWeight: 600 }}
               >
                 <Mail size={14} />
-                privacy@synaptiq.academy
+                {LEGAL.contact.privacy}
               </a>
               <Link
                 to="/contact"

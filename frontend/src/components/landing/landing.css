@@ -1,5 +1,5 @@
 /* Landing page — editorial research grammar.
-   Newsreader (display serif) is requested by Landing.jsx only on this page. */
+   Newsreader (display serif) is self-hosted via @fontsource-variable/newsreader (src/index.js). */
 
 .lp {
   --ink: #10141c;
@@ -12,7 +12,7 @@
   --navy: #0f2847;
   --mark: #9b3d23;           /* annotation colour — used sparingly */
   --mark-soft: rgba(155, 61, 35, 0.09);
-  --serif: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+  --serif: 'Newsreader Variable', 'Newsreader', 'Iowan Old Style', Georgia, serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   color: var(--ink);
   background: var(--paper);
