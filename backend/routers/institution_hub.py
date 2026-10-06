@@ -386,11 +386,11 @@ async def get_research_directory(
         raise HTTPException(status_code=503, detail="Institution Hub services not available")
 
     await _get_institution_or_404(iid)
-    await _require_institution_member(iid, user)
+    me = await _require_institution_member(iid, user)
+    # Members see colleagues' names and research areas; email only for admins.
+    can_see_email = me.get("role") in ("owner", "admin", "platform_admin")
     db = get_db()
-
     db = DBProxy(db, SecurityContext.from_user(user))
-
     top_researchers_task = get_top_researchers_in_institution(iid, db, limit=100)
 
     memberships_cursor = db.institution_memberships.find(
@@ -400,6 +400,11 @@ async def get_research_directory(
     memberships_raw = await memberships_cursor.to_list(length=1000)
 
     top_researchers, _ = await asyncio.gather(top_researchers_task, asyncio.sleep(0))
+    if not can_see_email:
+        for r in top_researchers or []:
+            if "@" in (r.get("full_name") or ""):
+                r["full_name"] = ""
+            r.pop("email", None)
 
     # Enrich members with basic user info
     members = []
@@ -408,14 +413,14 @@ async def get_research_directory(
         if uid and ObjectId.is_valid(uid):
             user_doc = await db.users.find_one(
                 {"_id": ObjectId(uid)},
-                {"name": 1, "email": 1, "avatar_url": 1, "research_areas": 1}
+                {"full_name": 1, "email": 1, "avatar_url": 1, "research_areas": 1}
             )
             members.append({
                 "user_id": uid,
                 "role": m.get("role"),
                 "joined_at": m.get("joined_at"),
-                "name": user_doc.get("name") if user_doc else None,
-                "email": user_doc.get("email") if user_doc else None,
+                "name": user_doc.get("full_name") if user_doc else None,
+                "email": (user_doc.get("email") if user_doc else None) if can_see_email else None,
                 "avatar_url": user_doc.get("avatar_url") if user_doc else None,
                 "research_areas": user_doc.get("research_areas", []) if user_doc else [],
             })

@@ -6,8 +6,10 @@ requests per IP per hour to prevent abuse.
 """
 from __future__ import annotations
 
+import html as _html
 import logging
 import time
+from datetime import datetime, timezone
 from collections import defaultdict
 from typing import Optional
 
@@ -45,6 +47,19 @@ class ContactRequest(BaseModel):
     email: EmailStr
     topic: str
     message: str
+    # Optional, used by the /for-institutions inquiry form.
+    organization: Optional[str] = None
+    role: Optional[str] = None
+
+    @field_validator("organization", "role")
+    @classmethod
+    def short_optional(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip()
+        if len(v) > 200:
+            raise ValueError("Too long (max 200 characters)")
+        return v or None
 
     @field_validator("name")
     @classmethod
@@ -95,22 +110,47 @@ TOPIC_LABELS = {
 
 @router.post("")
 async def submit_contact(payload: ContactRequest, request: Request):
-    ip = request.client.host if request.client else "unknown"
+    # Real client IP behind the proxy (same rule as the public preview), so
+    # one visitor can't exhaust everyone's allowance and spoofed headers don't help.
+    from routers.public_demo import _client_ip
+    ip = _client_ip(request) or "unknown"
     _check_rate(ip)
-
     topic_label = TOPIC_LABELS.get(payload.topic, payload.topic)
-    subject = f"[Contact Form] {topic_label} — {payload.name}"
+
+    # Keep every inquiry even if email delivery fails.
+    try:
+        from db import get_db
+        from repo.shim import DBProxy
+        from repo.security_context import SecurityContext
+        await DBProxy(get_db(), SecurityContext.system()).contact_inquiries.insert_one({
+            "name": payload.name, "email": str(payload.email), "topic": payload.topic,
+            "organization": payload.organization, "role": payload.role, "message": payload.message,
+            "created_at": datetime.now(timezone.utc).isoformat(), "status": "new",
+        })
+    except Exception as exc:
+        logger.error("Contact inquiry could not be stored: %s", type(exc).__name__)
+
+    # Everything a visitor typed is escaped before it goes into HTML.
+    e = lambda s: _html.escape(str(s or ""), quote=True)
+    name, email, message = e(payload.name), e(payload.email), e(payload.message)
+    extra = "".join(
+        f'<tr><td style="padding:8px 12px;background:#F8FAFC;font-weight:600;">{label}</td>'
+        f'<td style="padding:8px 12px;border-bottom:1px solid #E2E8F0;">{e(val)}</td></tr>'
+        for label, val in (("Organization", payload.organization), ("Role", payload.role)) if val
+    )
+    subject = f"[Contact Form] {topic_label} — {payload.name[:80]}"
     html = f"""\
 <!doctype html>
 <html><body style="font-family:sans-serif;color:#0F172A;max-width:600px;margin:32px auto;padding:0 16px;">
   <h2 style="font-family:Georgia,serif;color:#0F2847;">New contact form submission</h2>
   <table style="border-collapse:collapse;width:100%;font-size:14px;">
-    <tr><td style="padding:8px 12px;background:#F8FAFC;font-weight:600;width:30%;">Name</td><td style="padding:8px 12px;border-bottom:1px solid #E2E8F0;">{payload.name}</td></tr>
-    <tr><td style="padding:8px 12px;background:#F8FAFC;font-weight:600;">Email</td><td style="padding:8px 12px;border-bottom:1px solid #E2E8F0;"><a href="mailto:{payload.email}">{payload.email}</a></td></tr>
+    <tr><td style="padding:8px 12px;background:#F8FAFC;font-weight:600;width:30%;">Name</td><td style="padding:8px 12px;border-bottom:1px solid #E2E8F0;">{name}</td></tr>
+    <tr><td style="padding:8px 12px;background:#F8FAFC;font-weight:600;">Email</td><td style="padding:8px 12px;border-bottom:1px solid #E2E8F0;"><a href="mailto:{email}">{email}</a></td></tr>
     <tr><td style="padding:8px 12px;background:#F8FAFC;font-weight:600;">Topic</td><td style="padding:8px 12px;border-bottom:1px solid #E2E8F0;">{topic_label}</td></tr>
-    <tr><td style="padding:8px 12px;background:#F8FAFC;font-weight:600;vertical-align:top;">Message</td><td style="padding:8px 12px;white-space:pre-wrap;">{payload.message}</td></tr>
+    {extra}
+    <tr><td style="padding:8px 12px;background:#F8FAFC;font-weight:600;vertical-align:top;">Message</td><td style="padding:8px 12px;white-space:pre-wrap;">{message}</td></tr>
   </table>
-  <p style="margin-top:24px;font-size:12px;color:#64748B;">Submitted via synaptiq.academy contact form · Reply directly to {payload.email}</p>
+  <p style="margin-top:24px;font-size:12px;color:#64748B;">Submitted via synaptiq.academy contact form · Reply directly to {email}</p>
 </body></html>"""
 
     admin_email = _admin_email()

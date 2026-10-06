@@ -174,9 +174,15 @@ async def get_top_researchers_global(db, limit: int = 50) -> list:
         except Exception:
             pass
 
+    # Public endpoint: same eligibility as researcher discovery (no private,
+    # opted-out, demo or staff profiles) and never an email address.
+    from services.permissions import REAL_CUSTOMER_FILTER
+    from services.network.discovery_engine import _discovery_exclusions
+    opted_out = await _discovery_exclusions(db, None)
     users_coro = db.users.find(
-        {"_id": {"$in": user_oids}},
-        {"_id": 1, "full_name": 1, "email": 1},
+        {"_id": {"$in": [o for o in user_oids if str(o) not in opted_out]},
+         "profile_visibility": {"$ne": "private"}, "is_demo": {"$ne": True}, **REAL_CUSTOMER_FILTER},
+        {"_id": 1, "full_name": 1},
     ).to_list(limit)
 
     memberships_coro = db.institution_memberships.find(
@@ -211,14 +217,18 @@ async def get_top_researchers_global(db, limit: int = 50) -> list:
     inst_map: dict[str, str] = {_to_str(i["_id"]): i.get("name") or "" for i in institutions_raw}
 
     result = []
-    for rank, row in enumerate(impact_rows, start=1):
+    rank = 0
+    for row in impact_rows:
         uid = str(row.get("user_id") or "")
-        u = user_map.get(uid, {})
+        u = user_map.get(uid)
+        if not u or not u.get("full_name"):
+            continue   # ineligible or nameless profiles are left out, never shown by email
+        rank += 1
         inst_id = user_inst.get(uid, "")
         result.append({
             "rank": rank,
             "user_id": uid,
-            "full_name": u.get("full_name") or u.get("email") or "",
+            "full_name": u["full_name"],
             "institution_name": inst_map.get(inst_id, ""),
             "sis_total": int(row.get("sis_total") or 0),
             "h_index": float(row.get("h_index") or 0),

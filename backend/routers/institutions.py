@@ -246,11 +246,18 @@ async def delete_institution(iid: str, user: dict = Depends(get_current_user)):
 @router.get("/api/institutions/{iid}/members")
 async def list_members(iid: str, status: Optional[str] = None,
                         user: dict = Depends(get_current_user), limit: int = 200):
+    # Approved members only; non-admins see approved members without email
+    # or affiliation evidence. Pending/denied/revoked rows are admin-only.
+    from services.permissions import require_institution_member
+    me = await require_institution_member(iid, user)
+    is_admin = me.get("role") in ADMIN_ROLES or me.get("role") == "platform_admin"
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
-
     qf: dict = {"institution_id": iid}
-    if status: qf["status"] = status
+    if not is_admin:
+        qf["status"] = "approved"
+    elif status:
+        qf["status"] = status
     rows = await db.institution_memberships.find(qf).sort("joined_at", -1).limit(limit).to_list(limit)
     uids = [r["user_id"] for r in rows]
     udocs = await db.users.find(
@@ -265,6 +272,11 @@ async def list_members(iid: str, status: Optional[str] = None,
     for r in rows:
         r["id"] = str(r.pop("_id"))
         r["user"] = umap.get(r["user_id"])
+        if not is_admin:
+            for k in ("note", "evidence_kind", "evidence_url", "invite_message", "invited_by", "verified_email"):
+                r.pop(k, None)
+            if r["user"]:
+                r["user"] = {k: v for k, v in r["user"].items() if k != "email"}
         out.append(r)
     return out
 
@@ -295,12 +307,19 @@ async def claim_institution(iid: str, payload: ClaimIn,
     if existing and existing.get("status") == "approved":
         raise HTTPException(400, "Already a member")
     domain = _email_domain(user.get("email") or "")
-    auto = domain in (inst.get("email_domains") or [])
+    prior = (existing or {}).get("status")
+    # Accepting an admin's invitation: approve with the invited role.
+    invited = prior == "pending_invite"
+    # A revoked or denied member can ask again, but goes back to admin review —
+    # a matching email domain must not silently undo an admin's decision.
+    auto = invited or (domain in (inst.get("email_domains") or []) and prior not in ("revoked", "denied"))
     record = {
-        "institution_id": iid, "user_id": user["id"], "role": "researcher",
+        "institution_id": iid, "user_id": user["id"],
+        "role": (existing or {}).get("role", "researcher") if invited else "researcher",
         "status": "approved" if auto else "pending",
         "unit_ids": payload.unit_ids,
-        "seat_type": "personal", "verified_via": "email_domain" if auto else "admin_approval",
+        "seat_type": "institution_owned" if invited else "personal",
+        "verified_via": "admin_invite" if invited else ("email_domain" if auto else "admin_approval"),
         "note": payload.note, "evidence_kind": payload.evidence_kind,
         "evidence_url": payload.evidence_url, "joined_at": _now(),
     }
@@ -312,7 +331,7 @@ async def claim_institution(iid: str, payload: ClaimIn,
     if auto:
         await db.users.update_one({"_id": ObjectId(user["id"])},
                                     {"$set": {"institution_id": iid}})
-        await _audit(iid, user["id"], "member_self_joined_via_email_domain",
+        await _audit(iid, user["id"], "member_accepted_invite" if invited else "member_self_joined_via_email_domain",
                       target_kind="user", target_id=user["id"], metadata={"domain": domain})
     else:
         await _audit(iid, user["id"], "member_claim_pending",
@@ -523,9 +542,13 @@ async def assign_role(iid: str, uid: str, payload: RoleIn,
     await _require_admin(iid, user)
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
-
+    target = await db.institution_memberships.find_one({"institution_id": iid, "user_id": uid})
+    if not target:
+        raise HTTPException(404, "Not found")
+    if target.get("role") == "owner":
+        raise HTTPException(400, "The owner's role can't be changed")
     await db.institution_memberships.update_one(
-        {"institution_id": iid, "user_id": uid},
+        {"_id": target["_id"]},
         {"$set": {"role": payload.role, "updated_at": _now()}}
     )
     await _audit(iid, user["id"], "role_assigned", target_kind="user", target_id=uid,
@@ -606,8 +629,9 @@ async def invite_member(iid: str, payload: InviteIn, user: dict = Depends(get_cu
     """Admin-invite a user by email. If user exists → creates pending_invite membership.
     If user doesn't exist → stores pre-registration invite. Idempotent."""
     await _require_admin(iid, user)
-    if payload.role not in ROLES:
-        raise HTTPException(400, f"Invalid role. Must be one of {ROLES}")
+    invitable = [r for r in ROLES if r != "owner"]   # ownership is never granted by invitation
+    if payload.role not in invitable:
+        raise HTTPException(400, f"Invalid role. Must be one of {invitable}")
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
@@ -763,6 +787,8 @@ async def _enrich_unit(doc: dict) -> dict:
 @router.get("/api/institutions/{iid}/units")
 async def list_units(iid: str, parent_id: Optional[str] = None,
                       user: dict = Depends(get_current_user)):
+    from services.permissions import require_institution_member
+    await require_institution_member(iid, user)
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
@@ -799,6 +825,8 @@ async def get_unit(uid: str, user: dict = Depends(get_current_user)):
     except Exception: raise HTTPException(404, "Not found")
     d = await db.units.find_one({"_id": oid})
     if not d: raise HTTPException(404, "Not found")
+    from services.permissions import require_institution_member
+    await require_institution_member(d.get("institution_id") or "", user)
     enriched = await _enrich_unit(d)
     # parent breadcrumb
     breadcrumb = []

@@ -353,11 +353,17 @@ async def db_check_inst_admin(iid: str, user_id: str) -> Optional[dict]:
 async def list_dept_members(did: str, user: dict = Depends(get_current_user)):
     """List all faculty and staff in this department."""
     iid = await _get_dept_iid(did)
-    await assert_dept_membership(iid, user["id"])
+    me = await assert_dept_membership(iid, user["id"])
+    is_admin = zt_is_admin(user) or me.get("role") in ("owner", "admin")
     members = await get_dept_members_enriched(iid, did)
-    # Enrich role labels
+    # Enrich role labels; colleagues' email addresses are for institution admins only.
     for m in members:
         m["role_label"] = DEPT_ROLE_LABEL.get(m.get("role"), m.get("role", ""))
+        if not is_admin:
+            for k in ("note", "evidence_kind", "evidence_url", "invite_message", "invited_by"):
+                m.pop(k, None)
+            if m.get("user"):
+                m["user"].pop("email", None)
     return members
 
 
@@ -397,9 +403,20 @@ async def update_member_role(
     await assert_dept_admin(iid, did, user["id"])
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
-
+    # The target must be in this department, and institution owners/admins can
+    # only be re-roled by an institution admin — a department admin must not
+    # be able to demote the people who administer the institution.
+    target = await db.institution_memberships.find_one(
+        {"institution_id": iid, "user_id": uid, "status": "approved", "unit_ids": did})
+    if not target:
+        raise HTTPException(404, "Not a member of this department")
+    if target.get("role") in ("owner", "admin"):
+        actor = await db.institution_memberships.find_one(
+            {"institution_id": iid, "user_id": user["id"], "status": "approved"})
+        if target.get("role") == "owner" or not (zt_is_admin(user) or (actor or {}).get("role") in ("owner", "admin")):
+            raise HTTPException(403, "Only an institution admin can change this member's role")
     await db.institution_memberships.update_one(
-        {"institution_id": iid, "user_id": uid, "status": "approved"},
+        {"_id": target["_id"]},
         {"$set": {"role": payload.role, "updated_at": _now()}},
     )
     await _audit(iid, user["id"], "dept_role_assigned",
@@ -430,13 +447,22 @@ async def link_project(
     db  = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
-    # Validate project exists
+    # Validate project exists AND the linker can already see it AND it belongs
+    # to this institution (its owner is an approved member) — otherwise any
+    # department admin could surface another tenant's private project by id.
     try:
-        proj = await db.projects.find_one({"_id": ObjectId(payload.project_id)}, {"title": 1})
+        proj = await db.projects.find_one({"_id": ObjectId(payload.project_id)},
+                                          {"title": 1, "owner_id": 1, "members": 1, "creator_id": 1})
     except Exception:
         proj = None
     if not proj:
         raise HTTPException(404, "Project not found")
+    owner = proj.get("owner_id") or proj.get("creator_id")
+    if not zt_is_admin(user) and user["id"] != owner and user["id"] not in (proj.get("members") or []):
+        raise HTTPException(404, "Project not found")
+    if not owner or not await db.institution_memberships.find_one(
+            {"institution_id": iid, "user_id": owner, "status": "approved"}):
+        raise HTTPException(400, "Only projects owned by members of this institution can be linked")
     # Upsert link (prevent duplicates)
     await db.department_projects.update_one(
         {"department_id": did, "project_id": payload.project_id},

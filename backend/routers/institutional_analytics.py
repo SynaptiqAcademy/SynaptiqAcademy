@@ -39,21 +39,23 @@ router = APIRouter(prefix="/api/institutional/analytics", tags=["institutional-a
 
 
 async def _resolve_institution(user: dict) -> str:
-    institution_id = user.get("institution_id")
-    if not institution_id:
-        db = get_db()
-        db = DBProxy(db, SecurityContext.from_user(user))
-
-        mem = await db.institution_memberships.find_one(
-            {"user_id": user["id"], "status": "approved"}
+    # Approved membership is the only source of institution scope; the
+    # users.institution_id hint only picks among the caller's own approved
+    # memberships and is never trusted on its own.
+    db = get_db()
+    db = DBProxy(db, SecurityContext.from_user(user))
+    q = {"user_id": user["id"], "status": "approved"}
+    mem = None
+    if user.get("institution_id"):
+        mem = await db.institution_memberships.find_one({**q, "institution_id": user["institution_id"]})
+    if not mem:
+        mem = await db.institution_memberships.find_one(q)
+    if not mem:
+        raise HTTPException(
+            status_code=403,
+            detail="No institutional affiliation found. Join an institution to access analytics.",
         )
-        if not mem:
-            raise HTTPException(
-                status_code=403,
-                detail="No institutional affiliation found. Join an institution to access analytics.",
-            )
-        institution_id = mem["institution_id"]
-    return institution_id
+    return mem["institution_id"]
 
 
 async def _faculty_productivity(user_ids: list[str]) -> list[dict]:
