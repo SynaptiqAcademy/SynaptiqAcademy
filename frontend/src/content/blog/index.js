@@ -1,6 +1,6 @@
 /**
- * The Synaptiq Blog — single source for /resources/blog and
- * /resources/blog/:slug.
+ * The Synaptiq Blog — single source for /blog and
+ * /blog/:slug.
  *
  * Editorial rules (enforced by tests):
  * - A post is public only with `status: "published"` and complete metadata.

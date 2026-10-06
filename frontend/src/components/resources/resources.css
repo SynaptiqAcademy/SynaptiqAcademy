@@ -63,3 +63,9 @@
 .rx-a-related ul { list-style: none; margin: 0; padding: 0; }
 .rx-a-related li { padding: 10px 0; border-bottom: 1px solid var(--rule); }
 .rx-a-related a { font-family: var(--serif); font-size: 1.15rem; color: var(--ink); }
+
+.rx-scope { margin-top: 16px; font-size: 0.98rem; line-height: 1.65; color: var(--muted); max-width: 46rem; }
+.rx-notes { border-top: 1px solid var(--ink); margin-top: 24px; }
+.rx-note { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: 0 20px; padding: 20px 0; border-bottom: 1px solid var(--rule); }
+.rx-note .rx-num { color: var(--ink); font-size: 0.78rem; letter-spacing: 0.06em; }
+@media (max-width: 560px) { .rx-note { grid-template-columns: 1fr; } .rx-note .rx-num { padding-bottom: 4px; } }

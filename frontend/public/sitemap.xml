@@ -9,6 +9,8 @@
   <url><loc>https://www.synaptiq.academy/about</loc><priority>0.5</priority></url>
   <url><loc>https://www.synaptiq.academy/contact</loc><priority>0.6</priority></url>
   <url><loc>https://www.synaptiq.academy/resources</loc><priority>0.4</priority></url>
+  <url><loc>https://www.synaptiq.academy/whats-new</loc><priority>0.4</priority></url>
+  <url><loc>https://www.synaptiq.academy/blog</loc><priority>0.4</priority></url>
   <url><loc>https://www.synaptiq.academy/register</loc><priority>0.8</priority></url>
   <url><loc>https://www.synaptiq.academy/login</loc><priority>0.3</priority></url>
   <url><loc>https://www.synaptiq.academy/terms</loc><priority>0.2</priority></url>

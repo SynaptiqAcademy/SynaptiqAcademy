@@ -8,7 +8,7 @@ import "../../components/landing/landing.css";
 import "../../components/blog/blog.css";
 
 /**
- * /resources/blog — the Synaptiq Blog index. Everything listed comes from
+ * /blog — the Synaptiq Blog index. Everything listed comes from
  * content/blog (published posts only). Sections appear only when there is
  * content for them: the lead essay needs an editorial selection, subject
  * filters need more than one subject, search needs enough posts.
@@ -32,7 +32,7 @@ function Row({ p }) {
     <li className="bl-row">
       <div className="lp-mono bl-cat">{CATEGORIES[p.category]}</div>
       <h3 className="bl-title">
-        <Link to={`/resources/blog/${p.slug}`} onClick={() => track("blog_article_opened", { slug: p.slug, from: "index" })}>{p.title}</Link>
+        <Link to={`/blog/${p.slug}`} onClick={() => track("blog_article_opened", { slug: p.slug, from: "index" })}>{p.title}</Link>
       </h3>
       <p className="bl-deck">{p.deck}</p>
       <div className="lp-mono bl-meta">
@@ -51,7 +51,7 @@ export default function Blog() {
   useEffect(() => setPageSeo({
     title: "Blog — Notes on how research gets done | Synaptiq",
     description: "Essays on research questions, collaboration, publishing and the technology around research, from Synaptiq.",
-    path: "/resources/blog",
+    path: "/blog",
   }), []);
   useEffect(() => { track("blog_viewed", { posts: posts.length }); }, [posts.length]);
 
@@ -92,7 +92,7 @@ export default function Blog() {
                   <article className="bl-lead" aria-labelledby="bl-lead-title">
                     <div className="lp-mono bl-label">Editor's selection · {CATEGORIES[lead.category]}</div>
                     <h3 id="bl-lead-title" className="bl-lead-title">
-                      <Link to={`/resources/blog/${lead.slug}`} onClick={() => track("blog_article_opened", { slug: lead.slug, from: "lead" })}>{lead.title}</Link>
+                      <Link to={`/blog/${lead.slug}`} onClick={() => track("blog_article_opened", { slug: lead.slug, from: "lead" })}>{lead.title}</Link>
                     </h3>
                     <p className="bl-lead-deck">{lead.deck}</p>
                     <div className="lp-mono bl-meta">
@@ -142,7 +142,7 @@ export default function Blog() {
                 <dd>Need something practical? Guidance on doing the work.</dd>
               </div>
               <div>
-                <dt><Link to="/resources/whats-new" className="bl-else-link">What's New</Link></dt>
+                <dt><Link to="/whats-new" className="bl-else-link">What's New</Link></dt>
                 <dd>What has changed in Synaptiq itself.</dd>
               </div>
               <div>

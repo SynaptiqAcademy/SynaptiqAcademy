@@ -9,7 +9,7 @@ import "../../components/landing/landing.css";
 import "../../components/blog/blog.css";
 
 /**
- * /resources/blog/:slug — one published essay. Unknown, draft or archived
+ * /blog/:slug — one published essay. Unknown, draft or archived
  * slugs render a noindex not-found state. Structured data is emitted only
  * from real metadata (dates, byline, publisher).
  */
@@ -39,7 +39,7 @@ function useHead(post) {
           ? { "@type": "Organization", name: "Synaptiq" }
           : { "@type": "Person", name: post.author.name },
         publisher: { "@type": "Organization", name: "Synaptiq" },
-        mainEntityOfPage: `https://www.synaptiq.academy/resources/blog/${post.slug}`,
+        mainEntityOfPage: `https://www.synaptiq.academy/blog/${post.slug}`,
       });
       document.head.appendChild(s); added.push(s);
     }
@@ -56,7 +56,7 @@ export default function BlogArticle() {
   useEffect(() => {
     if (!post) return undefined;
     track("blog_article_opened", { slug: post.slug, from: "direct" });
-    return setPageSeo({ title: `${post.title} | Synaptiq Blog`, description: post.deck, path: `/resources/blog/${post.slug}` });
+    return setPageSeo({ title: `${post.title} | Synaptiq Blog`, description: post.deck, path: `/blog/${post.slug}` });
   }, [post]);
 
   if (!post) {
@@ -68,7 +68,7 @@ export default function BlogArticle() {
               <div className="lp-index"><b>—</b> Blog</div>
               <h1 className="lp-h1">This article isn't available.</h1>
               <p className="lp-hero-copy">It may have moved or not be published.</p>
-              <p style={{ marginTop: 24 }}><Link to="/resources/blog" className="lp-link">Back to the Blog →</Link></p>
+              <p style={{ marginTop: 24 }}><Link to="/blog" className="lp-link">Back to the Blog →</Link></p>
             </div>
           </section>
         </div>
@@ -144,7 +144,7 @@ export default function BlogArticle() {
                 <ul>
                   {relatedPosts.map((p) => (
                     <li key={p.slug}><span className="lp-mono">Blog</span>
-                      <Link to={`/resources/blog/${p.slug}`} onClick={() => track("blog_related_article_clicked", { from: post.slug, to: p.slug })}>{p.title}</Link></li>
+                      <Link to={`/blog/${p.slug}`} onClick={() => track("blog_related_article_clicked", { from: post.slug, to: p.slug })}>{p.title}</Link></li>
                   ))}
                   {relatedResources.map((r) => (
                     <li key={r.slug}><span className="lp-mono">Guide</span>
@@ -158,7 +158,7 @@ export default function BlogArticle() {
               </aside>
             )}
 
-            <p style={{ marginTop: 40 }}><Link to="/resources/blog" className="lp-link">Back to the Blog →</Link></p>
+            <p style={{ marginTop: 40 }}><Link to="/blog" className="lp-link">Back to the Blog →</Link></p>
           </div>
         </article>
       </div>

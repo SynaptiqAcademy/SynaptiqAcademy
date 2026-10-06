@@ -1,5 +1,5 @@
 /**
- * Product notes — the single source for /resources/whats-new.
+ * Product notes — the single source for /whats-new.
  *
  * Editorial rules (enforced by tests):
  * - A note describes a user-facing change that reached production. The date

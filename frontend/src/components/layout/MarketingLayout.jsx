@@ -1,7 +1,7 @@
 /* eslint-disable */
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ds";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { ChevronDown, Menu, X } from "lucide-react";
 
@@ -23,10 +23,17 @@ const NAV_ITEMS = [
   { href: "/about",            label: "About"         },
 ];
 
+// Resources is both a section and a destination: the Research Library is
+// /resources itself; What's New and the Blog sit beside it.
 const RESOURCES = [
-  { href: "/resources/whats-new",        label: "What's New"       },
-  { href: "/resources/blog",             label: "Blog"             },
+  { href: "/resources", label: "Research Library", desc: "Practical guidance for doing research well." },
+  { href: "/whats-new", label: "What's New",       desc: "Product changes and release notes." },
+  { href: "/blog",      label: "Blog",             desc: "Ideas about research and how it's changing." },
 ];
+const RESOURCE_PREFIXES = ["/resources", "/whats-new", "/blog"];
+const inResources = (path) => RESOURCE_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
+const isCurrent = (path, href) => path === href || (href !== "/resources" && path.startsWith(href + "/"))
+  || (href === "/resources" && path.startsWith("/resources/guides"));
 
 // ─── Shared link style helper ─────────────────────────────────────────────────
 
@@ -61,59 +68,108 @@ function NavLink({ href, label }) {
 function ResourcesDropdown() {
   const [open, setOpen] = useState(false);
   const timer = useRef(null);
+  const wrap = useRef(null);
+  const btn = useRef(null);
+  const { pathname } = useLocation();
+  const active = inResources(pathname);
 
-  const enter = useCallback(function() { clearTimeout(timer.current); setOpen(true); }, []);
-  const leave = useCallback(function() { timer.current = setTimeout(function() { setOpen(false); }, 120); }, []);
+  // Hover opens the menu. A click shortly after a hover-open (mouse users
+  // hover, then click) keeps it open; otherwise a click toggles it (keyboard,
+  // touch). Side effects live in handlers, not in state updaters.
+  const openRef = useRef(false);
+  const hoverOpenedAt = useRef(0);
+  useEffect(function() { openRef.current = open; }, [open]);
+  const enter = useCallback(function() {
+    clearTimeout(timer.current);
+    if (!openRef.current) hoverOpenedAt.current = Date.now();
+    openRef.current = true;
+    setOpen(true);
+  }, []);
+  const leave = useCallback(function() { timer.current = setTimeout(function() { openRef.current = false; setOpen(false); }, 120); }, []);
   useEffect(function() { return function() { clearTimeout(timer.current); }; }, []);
+  useEffect(function() { setOpen(false); }, [pathname]);
+  function toggle() {
+    if (Date.now() - hoverOpenedAt.current < 600) { hoverOpenedAt.current = 0; openRef.current = true; setOpen(true); return; }
+    hoverOpenedAt.current = 0;
+    const next = !openRef.current;
+    openRef.current = next;
+    setOpen(next);
+  }
+
+  // Close on outside click or when focus leaves the menu.
+  useEffect(function() {
+    if (!open) return undefined;
+    function onDoc(e) { if (wrap.current && !wrap.current.contains(e.target)) setOpen(false); }
+    document.addEventListener("mousedown", onDoc);
+    return function() { document.removeEventListener("mousedown", onDoc); };
+  }, [open]);
+
+  function onKeyDown(e) {
+    if (e.key === "Escape" && open) { e.preventDefault(); setOpen(false); btn.current && btn.current.focus(); }
+    if (e.key === "ArrowDown" && !open) { e.preventDefault(); setOpen(true); setTimeout(function() { var l = wrap.current && wrap.current.querySelector("a"); l && l.focus(); }, 0); }
+  }
+  function onBlur(e) { if (wrap.current && !wrap.current.contains(e.relatedTarget)) setOpen(false); }
 
   return (
-    <div style={{ position: "relative" }} onMouseEnter={enter} onMouseLeave={leave}>
+    <div ref={wrap} style={{ position: "relative" }} onMouseEnter={enter} onMouseLeave={leave} onKeyDown={onKeyDown} onBlur={onBlur}>
       <button
+        ref={btn}
+        type="button"
+        aria-expanded={open}
+        aria-controls="nav-resources-menu"
+        onClick={toggle}
         style={{
           display: "flex", alignItems: "center", gap: 4,
           fontSize: "0.875rem", fontWeight: 500, letterSpacing: "-0.005em",
-          color: open ? T_MAIN : T_GRAY,
+          color: open || active ? T_MAIN : T_GRAY,
           padding: "8px 12px", borderRadius: 6,
           border: "none", background: "transparent", cursor: "pointer",
           transition: "color 120ms", whiteSpace: "nowrap",
+          boxShadow: active ? "inset 0 -2px 0 " + NAVY : "none",
         }}
       >
         Resources
         <ChevronDown
-          size={11} strokeWidth={2.5}
+          size={11} strokeWidth={2.5} aria-hidden="true"
           style={{ transition: "transform 200ms, color 120ms", transform: open ? "rotate(180deg)" : "none", color: open ? T_GRAY : T_FAINT }}
         />
       </button>
 
       {open && (
         <div
+          id="nav-resources-menu"
           style={{ position: "absolute", top: "calc(100% + 6px)", left: "50%", transform: "translateX(-50%)", zIndex: 200, paddingTop: 4 }}
           onMouseEnter={enter}
           onMouseLeave={leave}
         >
-          <div style={{
+          <ul style={{
+            listStyle: "none", margin: 0,
             background: "#fff",
             border: `1px solid ${BORDER}`,
             borderRadius: 10,
             boxShadow: "0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
-            padding: "4px",
-            minWidth: 196,
+            padding: "6px",
+            width: 280,
             animation: "resFadeIn 120ms ease",
           }}>
             {RESOURCES.map(function(item) {
+              const current = isCurrent(pathname, item.href);
               return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  style={{ display: "block", padding: "9px 14px", fontSize: "0.84rem", fontWeight: 500, color: T_GRAY, textDecoration: "none", borderRadius: 7, transition: "color 100ms, background 100ms" }}
-                  onMouseEnter={function(e) { e.currentTarget.style.color = T_MAIN; e.currentTarget.style.background = "#f8fafc"; }}
-                  onMouseLeave={function(e) { e.currentTarget.style.color = T_GRAY; e.currentTarget.style.background = "transparent"; }}
-                >
-                  {item.label}
-                </Link>
+                <li key={item.href}>
+                  <Link
+                    to={item.href}
+                    aria-current={current ? "page" : undefined}
+                    style={{ display: "block", padding: "10px 14px", textDecoration: "none", borderRadius: 7, transition: "background 100ms", background: current ? "#f8fafc" : "transparent" }}
+                    onMouseEnter={function(e) { e.currentTarget.style.background = "#f8fafc"; }}
+                    onMouseLeave={function(e) { e.currentTarget.style.background = current ? "#f8fafc" : "transparent"; }}
+                  >
+                    <span style={{ display: "block", fontSize: "0.86rem", fontWeight: 600, color: T_MAIN }}>{item.label}</span>
+                    <span style={{ display: "block", fontSize: "0.78rem", color: T_GRAY, marginTop: 2, lineHeight: 1.4 }}>{item.desc}</span>
+                  </Link>
+                </li>
               );
             })}
-          </div>
+          </ul>
         </div>
       )}
     </div>
@@ -123,33 +179,38 @@ function ResourcesDropdown() {
 // ─── Mobile resources accordion ───────────────────────────────────────────────
 
 function MobileResources({ onClose }) {
-  const [open, setOpen] = useState(false);
+  const { pathname } = useLocation();
+  const [open, setOpen] = useState(inResources(pathname));
   return (
     <div>
       <button
+        type="button"
+        aria-expanded={open}
+        aria-controls="mobile-resources-menu"
         onClick={function() { setOpen(function(o) { return !o; }); }}
-        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", fontSize: "0.9rem", fontWeight: 500, color: T_GRAY, padding: "10px 0", background: "transparent", border: "none", cursor: "pointer" }}
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", fontSize: "0.9rem", fontWeight: 500, color: inResources(pathname) ? T_MAIN : T_GRAY, padding: "10px 0", background: "transparent", border: "none", cursor: "pointer" }}
       >
         Resources
-        <ChevronDown size={12} strokeWidth={2.5} style={{ transition: "transform 200ms", transform: open ? "rotate(180deg)" : "none", color: T_FAINT }} />
+        <ChevronDown size={12} strokeWidth={2.5} aria-hidden="true" style={{ transition: "transform 200ms", transform: open ? "rotate(180deg)" : "none", color: T_FAINT }} />
       </button>
       {open && (
-        <div style={{ paddingLeft: 12, paddingBottom: 4 }}>
+        <ul id="mobile-resources-menu" style={{ listStyle: "none", margin: 0, paddingLeft: 12, paddingBottom: 4 }}>
           {RESOURCES.map(function(item) {
+            const current = isCurrent(pathname, item.href);
             return (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={onClose}
-                style={{ display: "block", padding: "8px 6px", fontSize: "0.875rem", fontWeight: 500, color: T_FAINT, textDecoration: "none", transition: "color 100ms" }}
-                onMouseEnter={function(e) { e.currentTarget.style.color = T_MAIN; }}
-                onMouseLeave={function(e) { e.currentTarget.style.color = T_FAINT; }}
-              >
-                {item.label}
-              </Link>
+              <li key={item.href}>
+                <Link
+                  to={item.href}
+                  onClick={onClose}
+                  aria-current={current ? "page" : undefined}
+                  style={{ display: "block", padding: "8px 6px", fontSize: "0.875rem", fontWeight: current ? 600 : 500, color: current ? T_MAIN : T_GRAY, textDecoration: "none" }}
+                >
+                  {item.label}
+                </Link>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </div>
   );
@@ -359,8 +420,9 @@ export default function MarketingLayout({ children }) {
               <FL href="/documentation">Documentation</FL>
               <FL href="/help-center">Help Center</FL>
               <FL href="/developers">Developers</FL>
-              <FL href="/resources/whats-new">What's New</FL>
-              <FL href="/resources/blog">Blog</FL>
+              <FL href="/resources">Research Library</FL>
+              <FL href="/whats-new">What's New</FL>
+              <FL href="/blog">Blog</FL>
             </FCol>
 
             <FCol title="Company">

@@ -43,6 +43,20 @@ def test_unknown_guides_are_noindex_and_kinds_are_labelled():
         assert kind in INDEX
 
 
+def test_navigation_reaches_the_library():
+    layout = (ROOT / "components" / "layout" / "MarketingLayout.jsx").read_text()
+    app = (ROOT / "App.js").read_text()
+    assert '{ href: "/resources", label: "Research Library"' in layout
+    assert '{ href: "/whats-new", label: "What\'s New"' in layout and '{ href: "/blog",      label: "Blog"' in layout
+    assert 'aria-expanded={open}' in layout and 'e.key === "Escape"' in layout     # keyboard-operable menu
+    assert '<FL href="/resources">Research Library</FL>' in layout
+    for route in ('path="/resources"', 'path="/whats-new"', 'path="/blog"'):
+        assert route in app, route
+    sitemap = (ROOT.parent / "public" / "sitemap.xml").read_text()
+    for u in ("/resources</loc>", "/whats-new</loc>", "/blog</loc>"):
+        assert u in sitemap, u
+
+
 def test_search_tracks_no_query_text():
     for call in re.findall(r"track\(([^)]*)\)", INDEX + ARTICLE):
         assert not re.search(r"\bq\b|needle|value", call), call

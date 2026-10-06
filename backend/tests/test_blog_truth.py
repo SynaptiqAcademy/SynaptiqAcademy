@@ -41,7 +41,8 @@ def test_structured_data_only_from_real_metadata():
 
 def test_unknown_articles_noindex_and_routes_exist():
     assert 'm.content = "noindex"' in ARTICLE
-    assert 'path="/resources/blog/:slug"' in APP and 'path="/blog"' in APP
+    assert 'path="/blog/:slug"' in APP and 'path="/blog"' in APP
+    assert 'path="/resources/blog/:slug" element={<LegacyBlogArticleRedirect />}' in APP   # old URLs still resolve
 
 
 def test_analytics_carry_no_query_text():

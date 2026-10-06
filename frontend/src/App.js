@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -118,6 +118,11 @@ const WhatsNew          = lazy(() => import("@/pages/resources/WhatsNew"));
 const CustomerStories   = lazy(() => import("@/pages/resources/CustomerStories"));
 const ResourcesBlog     = lazy(() => import("@/pages/resources/Blog"));
 const BlogArticle       = lazy(() => import("@/pages/resources/BlogArticle"));
+// Old article URLs (/resources/blog/:slug) keep working: they redirect to /blog/:slug.
+function LegacyBlogArticleRedirect() {
+  const { slug } = useParams();
+  return <Navigate to={`/blog/${slug}`} replace />;
+}
 const LegalCenter = lazy(() => import("@/pages/LegalCenter"));
 const Terms = lazy(() => import("@/pages/Terms"));
 const Privacy = lazy(() => import("@/pages/Privacy"));
@@ -421,12 +426,13 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/resources" element={<Resources />} />
               <Route path="/resources/guides/:slug" element={<ResourceArticle />} />
-              <Route path="/resources/whats-new" element={<WhatsNew />} />
-              <Route path="/whats-new" element={<Navigate to="/resources/whats-new" replace />} />
+              <Route path="/whats-new" element={<WhatsNew />} />
+              <Route path="/resources/whats-new" element={<Navigate to="/whats-new" replace />} />
               <Route path="/resources/customer-stories" element={<CustomerStories />} />
-              <Route path="/resources/blog" element={<ResourcesBlog />} />
-              <Route path="/resources/blog/:slug" element={<BlogArticle />} />
-              <Route path="/blog" element={<Navigate to="/resources/blog" replace />} />
+              <Route path="/blog" element={<ResourcesBlog />} />
+              <Route path="/blog/:slug" element={<BlogArticle />} />
+              <Route path="/resources/blog/:slug" element={<LegacyBlogArticleRedirect />} />
+              <Route path="/resources/blog" element={<Navigate to="/blog" replace />} />
               <Route path="/legal" element={<LegalCenter />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />

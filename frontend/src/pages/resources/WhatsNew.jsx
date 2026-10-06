@@ -8,7 +8,7 @@ import "../../components/landing/landing.css";
 import "../../components/whats-new/whats-new.css";
 
 /**
- * /resources/whats-new — the product ledger. Every note comes from
+ * /whats-new — the product ledger. Every note comes from
  * content/whats-new (published notes only), dated by production release.
  * Each note has a stable anchor (#note-<slug>) for sharing and support.
  */
@@ -61,7 +61,7 @@ export default function WhatsNew() {
   useEffect(() => setPageSeo({
     title: "What's New — Synaptiq product notes",
     description: "A dated record of meaningful changes to Synaptiq: new capabilities, improvements and fixes that affect how the product works.",
-    path: "/resources/whats-new",
+    path: "/whats-new",
   }), []);
   useEffect(() => { track("whats_new_viewed", { notes: notes.length }); }, [notes.length]);
   useEffect(() => {
@@ -125,7 +125,7 @@ export default function WhatsNew() {
                 <dd>Need the method rather than the release note? Practical guidance on doing research.</dd>
               </div>
               <div>
-                <dt><Link to="/resources/blog" className="wn-else-link" onClick={() => track("whats_new_blog_clicked")}>Blog</Link></dt>
+                <dt><Link to="/blog" className="wn-else-link" onClick={() => track("whats_new_blog_clicked")}>Blog</Link></dt>
                 <dd>Longer reads and perspectives.</dd>
               </div>
             </dl>

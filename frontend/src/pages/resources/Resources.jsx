@@ -4,6 +4,8 @@ import MarketingLayout from "../../components/layout/MarketingLayout";
 import { setPageSeo } from "../../lib/seo";
 import { trackMarketingEvent as track } from "../../lib/marketingAnalytics";
 import { TASKS, TYPES, publishedResources, readingMinutes, formatDate } from "../../content/resources";
+import { publishedNotes, formatDay } from "../../content/whats-new";
+import { publishedPosts } from "../../content/blog";
 import "../../components/landing/landing.css";
 import "../../components/resources/resources.css";
 
@@ -38,7 +40,7 @@ function Entry({ r }) {
       <div className="rx-body">
         <div className="lp-mono rx-task">{TASKS[r.task]}</div>
         <h3 className="rx-title">
-          <Link to={`/resources/guides/${r.slug}`} onClick={() => track("resource_opened", { slug: r.slug, from: "index" })}>{r.title}</Link>
+          <Link to={`/resources/guides/${r.slug}`} onClick={() => track("resources_library_item_opened", { slug: r.slug, from: "index" })}>{r.title}</Link>
         </h3>
         <p className="rx-desc">{r.description}</p>
         <div className="lp-mono rx-meta">
@@ -62,6 +64,8 @@ export default function Resources() {
   }), []);
   useEffect(() => { track("resources_viewed", { guides: all.length }); }, [all.length]);
 
+  const latestNotes = useMemo(() => publishedNotes().slice(0, 2), []);
+  const blogCount = useMemo(() => publishedPosts().length, []);
   const tasksWithContent = Object.keys(TASKS).filter((k) => all.some((r) => r.task === k));
   const featured = all.filter((r) => r.featured).slice(0, 3);
   const needle = q.trim().toLowerCase();
@@ -94,6 +98,9 @@ export default function Resources() {
                 <p className="lp-lede">
                   We'd rather publish a few guides that are genuinely useful than many that aren't. Each one is
                   reviewed before it appears here, with real references wherever it makes a claim.
+                </p>
+                <p className="rx-scope">
+                  The library is organised by what you're trying to do: {Object.values(TASKS).map((t) => t.toLowerCase()).join(", ").replace(/, ([^,]*)$/, " and $1")}.
                 </p>
               </div>
             ) : (
@@ -135,10 +142,34 @@ export default function Resources() {
           </div>
         </section>
 
+        {/* ── What's New: the two latest product notes ───────────────── */}
+        {latestNotes.length > 0 && (
+          <section className="lp-section" aria-labelledby="rx-wn-title">
+            <div className="lp-wrap">
+              <div className="lp-index"><b>02</b> What's New</div>
+              <h2 id="rx-wn-title" className="lp-h2">Recent changes to Synaptiq.</h2>
+              <ol className="rx-list rx-notes">
+                {latestNotes.map((n) => (
+                  <li key={n.slug} className="rx-note">
+                    <time dateTime={n.released_at} className="lp-mono rx-num">{formatDay(n.released_at)}</time>
+                    <div>
+                      <h3 className="rx-title">
+                        <Link to={`/whats-new#note-${n.slug}`} onClick={() => track("resources_whats_new_clicked", { note: n.slug })}>{n.title}</Link>
+                      </h3>
+                      <p className="rx-desc">{n.summary}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <p style={{ marginTop: 18 }}><Link to="/whats-new" className="lp-link" onClick={() => track("resources_whats_new_clicked", { note: "all" })}>See What's New →</Link></p>
+            </div>
+          </section>
+        )}
+
         {/* ── Elsewhere: labelled by kind ────────────────────────────── */}
         <section className="lp-section" aria-labelledby="rx-else-title">
           <div className="lp-wrap">
-            <div className="lp-index"><b>02</b> Elsewhere</div>
+            <div className="lp-index"><b>{latestNotes.length > 0 ? "03" : "02"}</b> Elsewhere</div>
             <h2 id="rx-else-title" className="sr-only">Other kinds of Synaptiq writing</h2>
             <dl className="rx-else">
               <div>
@@ -147,12 +178,12 @@ export default function Resources() {
               </div>
               <div>
                 <dt><span className="lp-mono rx-kind">Editorial</span>
-                  <Link to="/resources/blog" className="rx-else-link" onClick={() => track("resources_blog_clicked")}>Blog</Link></dt>
-                <dd>Longer articles and perspectives.</dd>
+                  <Link to="/blog" className="rx-else-link" onClick={() => track("resources_blog_clicked")}>Blog</Link></dt>
+                <dd>{blogCount ? "Longer articles and perspectives." : "Essays on research and how it's changing. The first are being written."}</dd>
               </div>
               <div>
                 <dt><span className="lp-mono rx-kind">Product updates</span>
-                  <Link to="/resources/whats-new" className="rx-else-link" onClick={() => track("resources_whats_new_clicked")}>What's New</Link></dt>
+                  <Link to="/whats-new" className="rx-else-link" onClick={() => track("resources_whats_new_clicked")}>What's New</Link></dt>
                 <dd>Changes to Synaptiq itself.</dd>
               </div>
             </dl>
