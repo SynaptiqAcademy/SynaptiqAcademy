@@ -312,3 +312,18 @@ def test_other_public_pages_do_not_reintroduce_security_claims(page):
     for bad in ("security@", "48 hours", "TLS 1.3", "AES-256", "GDPR Compliant", "GDPR Compliance", "Data residency",
                 "contractually prohibited", "Immutable"):
         assert bad not in text, f"{page}: {bad}"
+
+
+
+# ── Release gate ─────────────────────────────────────────────────────────────
+
+def test_security_txt_is_a_genuine_404_until_a_verified_contact_exists():
+    mw = (FE / "middleware.js").read_text()
+    assert 'matcher: ["/.well-known/security.txt"]' in mw and "status: 404" in mw
+    assert not (FE / "public" / ".well-known" / "security.txt").exists()
+    assert "security@" not in mw
+
+
+def test_help_center_reply_times_are_aims_not_guarantees():
+    hc = (SRC / "pages" / "HelpCenter.jsx").read_text()
+    assert "These are aims, not guarantees" in hc and "When to expect a reply" not in hc

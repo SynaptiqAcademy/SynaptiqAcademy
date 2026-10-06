@@ -375,7 +375,7 @@ export default function HelpCenter() {
             <div>
               <div style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 8 }}>Response Times</div>
               <h2 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: "1.35rem", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", margin: "0 0 24px" }}>
-                When to expect a reply.
+                When we aim to reply.
               </h2>
               <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, overflow: "hidden" }}>
                 {RESPONSE_TIMES.map((r, i) => (
@@ -389,7 +389,7 @@ export default function HelpCenter() {
                 ))}
               </div>
               <p style={{ fontSize: "0.8rem", color: "#94a3b8", lineHeight: 1.65, marginTop: 14 }}>
-                Response times are for business days (Monday–Friday, UTC).
+                These are aims, not guarantees, and count business days (Monday–Friday, UTC).
               </p>
             </div>
           </div>

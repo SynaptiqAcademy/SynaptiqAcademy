@@ -379,7 +379,11 @@ async def get_user(user_id: str, viewer: dict = Depends(get_current_user)):
     # Visibility enforcement
     visibility = user.get("profile_visibility") or "public"
     if visibility == "private" and str(user["_id"]) != viewer["id"]:
-        raise HTTPException(status_code=404, detail="User not found")
+        # A member who chose Network visibility stays visible to people who
+        # share a group or community with them, and to no one else.
+        from services.discovery_preferences import network_visible_to
+        if str(user["_id"]) not in await network_visible_to(db, viewer["id"]):
+            raise HTTPException(status_code=404, detail="User not found")
 
     # Track profile view (async fire-and-forget, never blocks the response)
     if str(user["_id"]) != viewer["id"]:

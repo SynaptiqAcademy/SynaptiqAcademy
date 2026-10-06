@@ -131,11 +131,18 @@ async def search_people(db, filters: dict, page: int = 1, limit: int = 20, viewe
     above explains (§5: dead filters, zero real data pipeline).
     """
     from services.permissions import REAL_CUSTOMER_FILTER
+    from services.discovery_preferences import network_visible_to
     query: dict = {
-        "profile_visibility": {"$ne": "private"},
         "is_demo": {"$ne": True},
         **REAL_CUSTOMER_FILTER,
     }
+    # Public profiles, plus Network-visibility members who share a group or
+    # community with the viewer (and no one else).
+    network_ids = await network_visible_to(db, viewer_id)
+    visibility = [{"profile_visibility": {"$ne": "private"}}]
+    if network_ids:
+        visibility.append({"_id": {"$in": [_to_object_id(x) for x in network_ids]}})
+    query["$and"] = [{"$or": visibility}]
 
     # "q" is a member's search text; "q_terms" is a list of terms (research
     # need matching) where any one may match. Both are literal text.

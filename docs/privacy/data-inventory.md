@@ -35,7 +35,10 @@ Classification: **Public** (shown to anyone), **Members** (visible to signed-in 
 
   "Private" or discovery off becomes `private` (`services/discovery_preferences.py`). Previously the choice had no effect on those surfaces.
 - **A daily sync** applies existing saved choices (`cleanup_service`).
-- **The "Network" visibility option** is honoured by the network discovery engine only. The other surfaces treat it as visible to members. Product follow-up.
+- **The "Network" visibility option** ("visible to group/community members only") is enforced since the release gate.
+  - The user record carries `private`, so the anonymous directory, public page, `/discover` and member search exclude the member.
+  - Network discovery and the member profile show them only to people who share a group or community (`discovery_preferences.network_visible_to`).
+  - Before this fix, "Network" members appeared in the anonymous directory and had public pages.
 - **The public Passport (`/researcher/:slug`) is visible without signing in.**
   - Academic sections (publications, impact, teaching, reputation, timeline) are public by default.
   - **Projects, grants (including grant applications), collaborations and the email address are private unless the member turns them on** (`services/public_profiles/visibility.py`).
