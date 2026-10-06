@@ -84,21 +84,19 @@ const FAQ_ITEMS = [
   },
   {
     q: "How do I report a security vulnerability?",
-    a: "Email security@synaptiq.academy with a description of the vulnerability and reproduction steps. We acknowledge all reports within 48 hours. Please do not disclose publicly before we have had reasonable time to investigate and respond. We credit responsible disclosures.",
+    a: "Use the contact form and choose the Security topic, describing what you found and how to reproduce it. Please don't disclose it publicly before we've had a chance to investigate. The Security page explains what to include.",
   },
 ];
 
 const CONTACT_CHANNELS = [
   { email: "sales@synaptiq.academy",    label: "Sales",    desc: "Subscriptions, pricing, and institutional plans." },
   { email: "support@synaptiq.academy",  label: "Support",  desc: "Technical issues and account assistance."         },
-  { email: "security@synaptiq.academy", label: "Security", desc: "Vulnerability reports and security concerns."     },
   { email: "privacy@synaptiq.academy",  label: "Privacy",  desc: "GDPR and personal data requests."                },
 ];
 
 const RESPONSE_TIMES = [
   { team: "Sales",    time: "Within 1 working day"  },
   { team: "Support",  time: "Within 2 working days" },
-  { team: "Security", time: "Within 48 hours"       },
   { team: "General",  time: "Within 2 working days" },
 ];
 
@@ -391,7 +389,7 @@ export default function HelpCenter() {
                 ))}
               </div>
               <p style={{ fontSize: "0.8rem", color: "#94a3b8", lineHeight: 1.65, marginTop: 14 }}>
-                Response times are for business days (Monday–Friday, UTC). Security reports are acknowledged within 48 hours including weekends.
+                Response times are for business days (Monday–Friday, UTC).
               </p>
             </div>
           </div>

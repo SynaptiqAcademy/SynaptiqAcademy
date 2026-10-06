@@ -15,6 +15,9 @@ export const LEGAL = {
   // An explanatory guide, not a document anyone accepts, so it carries a
   // last-updated date only (no version tracked by the backend).
   dataProtection: { updated: "6 October 2026" },
+  // Security is a trust page, not a policy: the date its claims were last
+  // checked against the product (docs/privacy/public-security-claims.md).
+  security: { reviewed: "6 October 2026" },
 
   operator: null, // { name, address, registration, vat } once confirmed
 

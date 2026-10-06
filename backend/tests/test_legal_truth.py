@@ -126,12 +126,12 @@ def test_secondary_legal_pages_make_no_unverified_claims(pattern):
         assert not re.search(pattern, text), f"{name}: {pattern}"
 
 
-def test_security_center_with_unverified_claims_is_not_served():
+def test_security_page_replaces_the_redirect():
     app = (SRC / "App.js").read_text()
-    assert '<Route path="/security" element={<Navigate to="/privacy#security" replace />} />' in app
-    assert not (SRC / "pages" / "Security.jsx").exists()
-    assert "/security<" not in (FE / "public" / "sitemap.xml").read_text()
-
+    assert '<Route path="/security" element={<Security />} />' in app
+    assert 'Navigate to="/privacy#security"' not in app
+    assert (SRC / "pages" / "Security.jsx").exists()
+    assert "/security</loc>" in (FE / "public" / "sitemap.xml").read_text()
 
 def test_fonts_are_self_hosted():
     offenders = []
@@ -249,3 +249,66 @@ def test_consent_ui_has_no_legacy_styling_and_keeps_dialog_semantics():
         assert call in CONSENT_UI
     lib = (SRC / "lib" / "cookieConsent.js").read_text()
     assert lib.count('id: "') == 2 and 'id: "essential"' in lib and 'id: "analytics"' in lib
+
+
+
+# ── Security & Trust page (Phase 3) ──────────────────────────────────────────
+SEC = (SRC / "pages" / "Security.jsx").read_text()
+REGISTRY = (ROOT / "docs" / "privacy" / "public-security-claims.md").read_text()
+
+
+@pytest.mark.parametrize("pattern", [
+    r"SOC ?2 (certified|compliant|Type)", r"ISO ?27001 certified", r"HIPAA[- ]compliant", r"GDPR[- ]compliant",
+    r"AES", r"TLS 1\.", r"security@", r"\b\d+ hours\b", r"\bdaily\b", r"point-in-time", r"backups? (are|run|every)",
+    r"\bDPAs?\b", r"Standard Contractual", r"EU[- ](hosted|hosting|residency)", r"[Ee]nterprise[- ]grade", r"[Bb]ank[- ]level",
+    r"[Mm]ilitary", r"[Ii]ndustry[- ]leading", r"[Ss]tate[- ]of[- ]the[- ]art", r"24/7", r"real-time", r"[Zz]ero[- ]knowledge",
+    r"never (sees|leaves|retain)", r"OpenAI is optional", r"[Ff]ully secure", r"[Ww]orld[- ]class"
+])
+def test_security_page_makes_no_unverified_claims(pattern):
+    assert not re.search(pattern, SEC), pattern
+
+
+def test_security_page_states_what_it_does_not_claim():
+    for phrase in ("doesn't hold SOC 2 or ISO 27001 certification", "doesn't claim HIPAA compliance",
+                   "not presented as a certification", "No external penetration test has been published",
+                   "There is no bug bounty", "isn't designed for directly identifiable patient or research-participant data"):
+        assert phrase in SEC, phrase
+
+
+def test_security_ai_wording_matches_architecture():
+    assert "<strong>Anthropic</strong>" in SEC and "<strong>OpenAI</strong> answers if Anthropic is unavailable" in SEC
+    assert "search embeddings" in SEC and "United States" in SEC
+    cfg = (ROOT / "backend" / "services" / "smart_router" / "config.py").read_text()
+    assert '["anthropic", "openai"]' in cfg
+
+
+def test_security_reporting_route_is_real_and_no_mailbox_invented():
+    assert '/contact?topic=security' in SEC and "@synaptiq" not in SEC
+    contact = (ROOT / "backend" / "routers" / "contact.py").read_text()
+    assert '"security": "Security"' in contact and "contact_inquiries.insert_one" in contact
+    assert not (FE / "public" / ".well-known" / "security.txt").exists()   # no verified security contact yet
+
+
+def test_every_published_security_claim_is_in_the_registry():
+    for fact in ("one-way hashing", "administrator account", "approved", "no public page", "end-to-end encrypted",
+                 "deletes the stored file", "HTTPS", "Analytics stays off"):
+        assert fact.lower() in SEC.lower()
+    assert REGISTRY.count("| YES") >= 20 and "Not published" in REGISTRY
+
+
+def test_security_is_linked_from_legal_and_trust_but_not_a_fifth_legal_document():
+    assert 'id: "security"' not in META.split("LEGAL_DOCS")[1]          # not in the legal-doc nav
+    footer = (SRC / "components" / "layout" / "MarketingLayout.jsx").read_text()
+    assert '<FL href="/security">Security</FL>' in footer and '["Security", "/security"]' in footer
+    assert 'to="/security"' in PAGES["Privacy"] and 'id: "security", title: "Security"' in PAGES["Privacy"]
+    assert 'to="/security"' in (SRC / "pages" / "GDPR.jsx").read_text()
+    assert 'to: "/security"' in (SRC / "pages" / "LegalCenter.jsx").read_text()
+    assert SEC.count("<h1") == 1 and 'path: "/security"' in SEC and 'title: "Security | Synaptiq"' in SEC
+
+
+@pytest.mark.parametrize("page", ["HelpCenter", "Contact", "ApiPortal", "Status"])
+def test_other_public_pages_do_not_reintroduce_security_claims(page):
+    text = (SRC / "pages" / f"{page}.jsx").read_text()
+    for bad in ("security@", "48 hours", "TLS 1.3", "AES-256", "GDPR Compliant", "GDPR Compliance", "Data residency",
+                "contractually prohibited", "Immutable"):
+        assert bad not in text, f"{page}: {bad}"

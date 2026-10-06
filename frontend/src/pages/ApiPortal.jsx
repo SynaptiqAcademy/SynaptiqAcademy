@@ -58,10 +58,7 @@ const SDKS = [
 ];
 
 const SECURITY_ITEMS = [
-  { name: "TLS 1.3 Encryption",    desc: "All data in transit is encrypted end-to-end with TLS 1.3." },
-  { name: "Rate Limiting",          desc: "Per-key, per-IP and per-endpoint limits with clear 429 responses." },
-  { name: "Audit Logs",             desc: "Immutable, timestamped audit trail covering every API call." },
-  { name: "GDPR Compliance",        desc: "Data residency controls, right-to-erasure and portability endpoints." },
+  { name: "HTTPS only",            desc: "API requests are served over HTTPS; plain HTTP is redirected." },
   { name: "Permission Scopes",      desc: "Granular OAuth scopes to minimize each token's access surface." },
   { name: "API Versioning",         desc: "Stable versioned endpoints with a 12-month deprecation window." },
 ];

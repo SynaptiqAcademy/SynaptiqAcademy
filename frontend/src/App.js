@@ -127,6 +127,7 @@ const LegalCenter = lazy(() => import("@/pages/LegalCenter"));
 const Terms = lazy(() => import("@/pages/Terms"));
 const Privacy = lazy(() => import("@/pages/Privacy"));
 const GDPR = lazy(() => import("@/pages/GDPR"));
+const Security = lazy(() => import("@/pages/Security"));
 const Cookies = lazy(() => import("@/pages/Cookies"));
 const AiPolicy        = lazy(() => import("@/pages/AiPolicy"));
 const Documentation   = lazy(() => import("@/pages/Documentation"));
@@ -437,10 +438,9 @@ function App() {
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/gdpr" element={<GDPR />} />
               <Route path="/cookies" element={<Cookies />} />
-              {/* The former Security Center made claims that couldn't be verified;
-                  until a verified page exists, /security points to the Privacy
-                  Policy's security section. */}
-              <Route path="/security" element={<Navigate to="/privacy#security" replace />} />
+              {/* Security: every statement is backed by an entry in
+                  docs/privacy/public-security-claims.md. */}
+              <Route path="/security" element={<Security />} />
               <Route path="/ai-policy" element={<AiPolicy />} />
               <Route path="/documentation" element={<Documentation />} />
               <Route path="/help-center" element={<HelpCenter />} />

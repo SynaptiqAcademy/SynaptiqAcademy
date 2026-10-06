@@ -431,11 +431,12 @@ export default function MarketingLayout({ children }) {
               <FL href="/contact">Contact</FL>
             </FCol>
 
-            <FCol title="Legal">
+            <FCol title="Legal & Trust">
               <FL href="/privacy">Privacy Policy</FL>
               <FL href="/terms">Terms of Service</FL>
               <FL href="/cookies">Cookie Policy</FL>
               <FL href="/gdpr">Data Protection</FL>
+              <FL href="/security">Security</FL>
               <div>
                 <button type="button" onClick={openPreferences} className="hover:text-white transition-colors" data-testid="footer-cookie-settings"
                   style={{ fontSize: "0.82rem", color: "#a3adbb", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
@@ -445,15 +446,15 @@ export default function MarketingLayout({ children }) {
             </FCol>
           </div>
 
-          {/* No certification-style badges: none are held. Factual security and
-              privacy detail lives in the Privacy Policy (/privacy#security). */}
+          {/* No certification-style badges: none are held. Factual security
+              detail lives on /security, privacy detail in /privacy. */}
           <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }} />
 
           {/* Bottom bar */}
           <div className="ft-bottom" style={{ paddingTop: 28, paddingBottom: 40 }}>
             <div style={{ fontSize: "0.75rem", color: "#a3adbb" }}>© 2026 Synaptiq. All rights reserved.</div>
             <div className="ft-legal-links">
-              {[["Privacy Policy", "/privacy"], ["Terms", "/terms"], ["Cookies", "/cookies"], ["Data Protection", "/gdpr"], ["Status", "/status"]].map(function([label, href]) {
+              {[["Privacy Policy", "/privacy"], ["Terms", "/terms"], ["Cookies", "/cookies"], ["Data Protection", "/gdpr"], ["Security", "/security"], ["Status", "/status"]].map(function([label, href]) {
                 return (
                   <Link key={label} to={href} className="hover:text-white transition-colors" style={{ fontSize: "0.75rem", color: "#a3adbb", textDecoration: "none" }}>{label}</Link>
                 );

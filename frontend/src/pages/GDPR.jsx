@@ -56,7 +56,7 @@ const SECTIONS = [
   </>) },
   { id: "private", title: "How private work stays private", body: (<>
     <p>Private content is available only to signed-in members you have given access to. Synaptiq staff access it only where needed to run the service, keep it safe or meet a legal obligation, and administrative actions are logged.</p>
-    <p>The measures we use are described in the Privacy Policy's <Link to="/privacy#security">security section</Link>.</p>
+    <p>The measures we use are described in the Privacy Policy's <Link to="/privacy#security">security section</Link> and, in more detail, on the <Link to="/security">Security</Link> page.</p>
   </>) },
   { id: "ai", title: "AI and your research content", body: (<>
     <p>AI features run only when you use them. To produce an answer, the material you give that feature (your question, the text or manuscript sections you choose, or project details it works with) is sent to an AI provider.</p>

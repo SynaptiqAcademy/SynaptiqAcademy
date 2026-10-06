@@ -155,6 +155,7 @@ const SECTIONS = [
   </>) },
   { id: "security", title: "Security", body: (<>
     <p>We use technical and organisational measures appropriate to the risk, including encrypted connections, hashed passwords, short-lived sessions, access controls and security logging. No system is perfectly secure. If a personal data breach is likely to put your rights at risk, we will notify the supervisory authority and, where the GDPR requires, you.</p>
+    <p>The <Link to="/security">Security</Link> page explains these controls in more detail.</p>
   </>) },
   { id: "changes", title: "Changes to this policy", body: (<>
     <p>When we change this policy we update the date and version above. For material changes we will tell signed-in members in the product before the change takes effect.</p>

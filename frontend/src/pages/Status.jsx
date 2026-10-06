@@ -352,7 +352,7 @@ export default function Status() {
           ) : (
             <div style={{ textAlign: "center", padding: "52px 24px", border: `1px solid ${BORDER}`, borderRadius: 12 }}>
               <div style={{ fontWeight: 600, color: NAVY, marginBottom: 6 }}>No maintenance scheduled</div>
-              <div style={{ fontSize: "0.85rem", color: SLATE }}>We'll post notices here at least 48 hours in advance of any planned work.</div>
+              <div style={{ fontSize: "0.85rem", color: SLATE }}>Planned maintenance will be announced here.</div>
             </div>
           )}
         </div>

@@ -69,7 +69,7 @@ const FAQ = [
   },
   {
     q: "How do I report a security issue?",
-    a: "Email contact@synaptiq.academy with a description of the issue and the steps to reproduce it. Please don't disclose it publicly until we've had a chance to investigate and respond.",
+    a: "Use the form on this page and choose the Security topic. Describe what you found and how to reproduce it, and please don't disclose it publicly until we've had a chance to investigate. See the Security page for guidance.",
   },
 ];
 

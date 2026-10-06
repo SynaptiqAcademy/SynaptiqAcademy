@@ -105,6 +105,7 @@ const DOCS = [
 
 /* ─── Related links ─────────────────────────────────────────────────────────── */
 const RELATED = [
+  { label: "Security", to: "/security", desc: "How access to accounts and research is controlled" },
   { label: "AI Usage Policy", to: "/ai-policy", desc: "How AI features handle your data" },
   { label: "Contact us", to: "/contact", desc: "General enquiries and support" },
   { label: "Export or delete your data", to: "/settings?section=privacy", desc: "Settings → Privacy" },
