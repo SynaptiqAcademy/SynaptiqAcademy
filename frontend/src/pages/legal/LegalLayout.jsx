@@ -125,6 +125,14 @@ const LEGAL_CSS = `
   .legal-article .font-serif { font-family: Georgia, "Times New Roman", serif; }
   .legal-article .font-medium { font-weight: 500; }
   .legal-article .font-semibold { font-weight: 600; }
+
+  /* Narrow screens: one column; the contents sidebar would squeeze the text
+     off-screen. Section headings stay as anchors. */
+  @media (max-width: 900px) {
+    .lc-layout-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 0 !important; }
+    .lc-layout-grid .lc-toc-sidebar { display: none !important; }
+    .lc-layout-wrap { padding: 32px 16px 80px !important; }
+  }
   .legal-article .font-bold { font-weight: 700; }
 
   /* ── Links ───────────────────────────────────────────────────────────────── */
@@ -397,9 +405,9 @@ export function LegalLayout({ eyebrow = "Legal", title, subtitle, lastUpdated, r
 
       {/* ── Body ─────────────────────────────────────────────────────────────── */}
       <div style={{ background: "var(--lc-bg)", minHeight: "60vh" }}>
-        <div style={{ maxWidth: sections.length ? 1160 : 900, margin: "0 auto", padding: "56px 32px 120px" }}>
+        <div className="lc-layout-wrap" style={{ maxWidth: sections.length ? 1160 : 900, margin: "0 auto", padding: "56px 32px 120px" }}>
           {sections.length ? (
-            <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "0 64px", alignItems: "start" }}>
+            <div className="lc-layout-grid" style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "0 64px", alignItems: "start" }}>
 
               {/* ── Sticky TOC ── */}
               <aside
