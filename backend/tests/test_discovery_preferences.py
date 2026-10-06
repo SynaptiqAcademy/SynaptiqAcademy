@@ -110,3 +110,29 @@ def test_public_passport_respects_private_choice_and_lists_only_public_projects(
     assert out["projects"] == ["open"]
     assert out["untouched"]["grants"] == "private" and out["untouched"]["contact"] == "private"
     assert out["configured"]["grants"] == "public"   # a member's own choice is kept
+
+
+def test_email_made_public_only_by_explicit_opt_in():
+    from services.public_profiles.visibility import retract_unconsented_email
+
+    async def go():
+        client = motor.AsyncIOMotorClient(os.environ.get("LIFECYCLE_TEST_MONGO", "mongodb://localhost:27017"),
+                                          serverSelectionTimeoutMS=800)
+        try:
+            await client.admin.command("ping")
+        except Exception:
+            pytest.skip("local MongoDB not available")
+        db = client[f"synaptiq_contact_{uuid.uuid4().hex[:8]}"]
+        await db.public_profiles.insert_many([
+            {"user_id": "old", "visibility_settings": {"contact": "public"}},
+            {"user_id": "chosen", "visibility_settings": {"contact": "public"}, "contact_opt_in_at": "2026-10-07"},
+        ])
+        await retract_unconsented_email(db)
+        out = {d["user_id"]: d["visibility_settings"]["contact"] async for d in db.public_profiles.find({})}
+        await client.drop_database(db.name)
+        client.close()
+        return out
+    out = _LOOP.run_until_complete(go())
+    assert out == {"old": "private", "chosen": "public"}
+    src = open("routers/public_profiles.py", encoding="utf-8").read()
+    assert '"contact_opt_in_at"' in src

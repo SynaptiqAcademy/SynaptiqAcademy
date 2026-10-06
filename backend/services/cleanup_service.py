@@ -149,10 +149,11 @@ async def minimise_deletion_audit_records() -> int:
 
 async def _sync_discovery_preferences() -> int:
     from services.discovery_preferences import sync_all
-    from services.public_profiles.visibility import apply_defaults_to_untouched
+    from services.public_profiles.visibility import apply_defaults_to_untouched, retract_unconsented_email
     db = get_db()
     db = DBProxy(db, SecurityContext.system())
-    return await sync_all(db) + await apply_defaults_to_untouched(db)
+    return (await sync_all(db) + await apply_defaults_to_untouched(db)
+            + await retract_unconsented_email(db))
 
 
 _DAILY_STARTED = False

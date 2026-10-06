@@ -185,11 +185,16 @@ async def update_visibility(body: VisibilityBody, user: dict = Depends(get_curre
         if v not in allowed:
             raise HTTPException(status_code=400, detail=f"Invalid visibility value '{v}' for '{k}'")
     now = datetime.now(timezone.utc).isoformat()
-    await db.public_profiles.update_one(
-        {"user_id": user["id"]},
-        {"$set": {"visibility_settings": settings, "updated_at": now}},
-        upsert=True,
-    )
+    update = {"$set": {"visibility_settings": settings, "updated_at": now}}
+    # Record when a member explicitly makes their email public, so it is
+    # never mistaken for an old default (services/public_profiles/visibility.py).
+    if settings.get("contact") == "public":
+        prev = await db.public_profiles.find_one({"user_id": user["id"]}, {"visibility_settings": 1, "contact_opt_in_at": 1})
+        if not (prev or {}).get("contact_opt_in_at") or ((prev or {}).get("visibility_settings") or {}).get("contact") != "public":
+            update["$set"]["contact_opt_in_at"] = now
+    else:
+        update["$unset"] = {"contact_opt_in_at": ""}
+    await db.public_profiles.update_one({"user_id": user["id"]}, update, upsert=True)
     return settings
 
 @router.get("/me/followers")
