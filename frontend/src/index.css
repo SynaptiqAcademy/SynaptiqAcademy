@@ -22,7 +22,10 @@
   --sq-navy-700:   #0F2847;
   --sq-navy-800:   #0a1c34;
   --sq-navy-900:   #060f1f;
-
+  /* Canonical dark brand surface: the auth panel, the public-site footer and
+     primary actions. Aliases the scale, so there is one Synaptiq navy. */
+  --sq-brand-navy:      var(--sq-navy-700);
+  --sq-brand-navy-deep: var(--sq-navy-800);   /* hover / pressed */
   --sq-crimson-50:  #fdf2f5;
   --sq-crimson-100: #f8d7e4;
   --sq-crimson-200: #f1afc9;

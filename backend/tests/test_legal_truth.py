@@ -299,7 +299,8 @@ def test_every_published_security_claim_is_in_the_registry():
 def test_security_is_linked_from_legal_and_trust_but_not_a_fifth_legal_document():
     assert 'id: "security"' not in META.split("LEGAL_DOCS")[1]          # not in the legal-doc nav
     footer = (SRC / "components" / "layout" / "MarketingLayout.jsx").read_text()
-    assert '<FL href="/security">Security</FL>' in footer and '["Security", "/security"]' in footer
+    assert '<FL href="/security">Security</FL>' in footer and '<FL href="/status">Status</FL>' in footer
+    assert '["Security", "/security"]' not in footer          # no duplicated legal bar
     assert 'to="/security"' in PAGES["Privacy"] and 'id: "security", title: "Security"' in PAGES["Privacy"]
     assert 'to="/security"' in (SRC / "pages" / "GDPR.jsx").read_text()
     assert 'to: "/security"' in (SRC / "pages" / "LegalCenter.jsx").read_text()

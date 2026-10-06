@@ -9,7 +9,7 @@
   --rule: #dcd8cf;
   --rule-strong: #b9b4a8;
   --paper: #fbfaf7;
-  --navy: #0f2847;
+  --navy: var(--sq-brand-navy);   /* #0F2847, see index.css */
   --mark: #9b3d23;           /* annotation colour — used sparingly */
   --mark-soft: rgba(155, 61, 35, 0.09);
   --serif: 'Newsreader Variable', 'Newsreader', 'Iowan Old Style', Georgia, serif;

@@ -103,7 +103,7 @@
   transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
 }
 .au-btn-primary { color: #fff; background: var(--navy); border: 1px solid var(--navy); }
-.au-btn-primary:hover:not(:disabled) { background: #0a1c33; }
+.au-btn-primary:hover:not(:disabled) { background: var(--sq-brand-navy-deep); }
 .au-btn-secondary { color: var(--ink); background: #fff; border: 1px solid var(--rule-strong); }
 .au-btn-secondary:hover:not(:disabled) { border-color: var(--ink); }
 .au-btn:disabled { cursor: not-allowed; opacity: 0.62; }

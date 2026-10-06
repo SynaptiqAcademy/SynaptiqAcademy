@@ -90,3 +90,17 @@ def test_terminology_reference_exists():
     doc = (ROOT / "docs" / "product" / "public-language.md").read_text()
     for term in ("Academic Passport", "Research Need", "Manuscript Copilot", "Impact Dashboard", "Start Free"):
         assert term in doc
+
+
+def test_one_brand_navy_and_a_single_footer_navigation():
+    css = (SRC / "index.css").read_text()
+    assert "--sq-brand-navy:      var(--sq-navy-700);" in css and "--sq-navy-700:   #0F2847;" in css
+    assert "--navy: var(--sq-brand-navy);" in (SRC / "components" / "landing" / "landing.css").read_text()
+    assert 'background: "var(--sq-brand-navy)"' in LAYOUT and "#0a1220" not in LAYOUT
+    assert "ft-legal-links" not in LAYOUT
+    legal = LAYOUT[LAYOUT.index('<FCol title="Legal & Trust">'):LAYOUT.index("</FCol>", LAYOUT.index('<FCol title="Legal & Trust">'))]
+    for href in ("/privacy", "/terms", "/cookies", "/gdpr", "/security", "/status"):
+        assert f'href="{href}"' in legal, href
+    assert 'data-testid="footer-cookie-settings"' in legal and "onClick={openPreferences}" in legal
+    bottom = LAYOUT[LAYOUT.index("Bottom bar"):LAYOUT.index("</footer>")]
+    assert "© 2026 Synaptiq. All rights reserved." in bottom and "<Link" not in bottom

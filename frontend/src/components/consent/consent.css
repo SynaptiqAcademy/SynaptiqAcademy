@@ -9,7 +9,7 @@
   --cc-rule: #dcd8cf;
   --cc-rule-strong: #b9b4a8;
   --cc-paper: #fbfaf7;
-  --cc-navy: #0f2847;
+  --cc-navy: var(--sq-brand-navy);
   --cc-mark: #9b3d23;
   --cc-serif: 'Newsreader Variable', 'Newsreader', 'Iowan Old Style', Georgia, serif;
   --cc-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;

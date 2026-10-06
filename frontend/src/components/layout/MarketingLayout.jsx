@@ -6,7 +6,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { openPreferences } from "../../lib/cookieConsent";
 
-const NAVY   = "#0F2847";
+const NAVY   = "var(--sq-brand-navy)";   // #0F2847, index.css
 const T_GRAY = "#64748b";
 const T_MAIN = "#0a0f1a";
 const T_FAINT= "#94a3b8";
@@ -386,15 +386,11 @@ export default function MarketingLayout({ children }) {
       {/* ── Main ─────────────────────────────────────────────────────────────── */}
       <main className="flex-1">{children}</main>
       {/* ── Footer ───────────────────────────────────────────────────────────── */}
-      <footer style={{ background: "#0a1220", color: "#94a3b8" }}>
+      <footer style={{ background: "var(--sq-brand-navy)", color: "#a3adbb" }}>
         <style>{`
           .ft-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0 48px; }
           @media (max-width: 1023px) { .ft-nav { grid-template-columns: repeat(2, 1fr); gap: 40px; } }
           @media (max-width: 599px)  { .ft-nav { grid-template-columns: 1fr; gap: 32px; } }
-          .ft-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-          @media (max-width: 599px)  { .ft-bottom { flex-direction: column; align-items: flex-start; } }
-          .ft-legal-links { display: flex; align-items: center; flex-wrap: wrap; gap: 24px; }
-          @media (max-width: 599px)  { .ft-legal-links { gap: 16px; } }
         `}</style>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10" style={{ paddingTop: 72, paddingBottom: 0 }}>
 
@@ -435,9 +431,10 @@ export default function MarketingLayout({ children }) {
               <FL href="/cookies">Cookie Policy</FL>
               <FL href="/gdpr">Data Protection</FL>
               <FL href="/security">Security</FL>
+              <FL href="/status">Status</FL>
               <div>
                 <button type="button" onClick={openPreferences} className="hover:text-white transition-colors" data-testid="footer-cookie-settings"
-                  style={{ fontSize: "0.82rem", color: "#a3adbb", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
+                  style={{ display: "block", fontSize: "0.82rem", lineHeight: "inherit", color: "#a3adbb", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", fontFamily: "inherit" }}>
                   Cookie settings
                 </button>
               </div>
@@ -446,18 +443,11 @@ export default function MarketingLayout({ children }) {
 
           {/* No certification-style badges: none are held. Factual security
               detail lives on /security, privacy detail in /privacy. */}
-          <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }} />
+          <div style={{ borderBottom: "1px solid rgba(255,255,255,0.12)" }} />
 
-          {/* Bottom bar */}
-          <div className="ft-bottom" style={{ paddingTop: 28, paddingBottom: 40 }}>
+          {/* Bottom bar: ownership only; navigation lives in the columns above. */}
+          <div style={{ paddingTop: 28, paddingBottom: 40 }}>
             <div style={{ fontSize: "0.75rem", color: "#a3adbb" }}>© 2026 Synaptiq. All rights reserved.</div>
-            <div className="ft-legal-links">
-              {[["Privacy Policy", "/privacy"], ["Terms", "/terms"], ["Cookies", "/cookies"], ["Data Protection", "/gdpr"], ["Security", "/security"], ["Status", "/status"]].map(function([label, href]) {
-                return (
-                  <Link key={label} to={href} className="hover:text-white transition-colors" style={{ fontSize: "0.75rem", color: "#a3adbb", textDecoration: "none" }}>{label}</Link>
-                );
-              })}
-            </div>
           </div>
         </div>
       </footer>
