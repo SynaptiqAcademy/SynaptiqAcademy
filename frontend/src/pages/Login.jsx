@@ -5,9 +5,9 @@ import { useAuth } from "../contexts/AuthContext";
 import api, { getErrorMessage } from "../lib/api";
 import { TID } from "../lib/testIds";
 import {
-  AuthLayout, AuthCard, AuthHeader, AuthTitle, AuthInput, PasswordInput,
+  AuthLayout, AuthCard, AuthTitle, AuthInput, PasswordInput,
   AuthButton, AuthDivider, SocialButtons, useOauthProviders, ErrorBanner, AuthFooter, AuthLink,
-  AuthCheckbox, NAVY, T_MID, T_FAINT, BORDER,
+  AuthCheckbox,
 } from "../components/auth/AuthShared";
 
 export default function Login() {
@@ -21,6 +21,7 @@ export default function Login() {
   const [remember, setRemember] = useState(false);
   const [err,      setErr]      = useState("");
   const [loading,  setLoading]  = useState(false);
+  const [oauthBusy, setOauthBusy] = useState(""); // "orcid" | "google" while redirecting
   const submittingRef = useRef(false);
   const navigate  = useNavigate();
   const location  = useLocation();
@@ -99,19 +100,25 @@ export default function Login() {
   }
 
   async function handleGoogle() {
+    setOauthBusy("google");
     try {
       const { data } = await api.get("/google/authorize?mode=login");
       if (data.authorization_url) window.location.href = data.authorization_url;
+      else setOauthBusy("");
     } catch (e) {
+      setOauthBusy("");
       setErr(getErrorMessage(e));
     }
   }
 
   async function handleOrcid() {
+    setOauthBusy("orcid");
     try {
       const { data } = await api.get("/orcid/authorize?mode=login");
       if (data.authorization_url) window.location.href = data.authorization_url;
+      else setOauthBusy("");
     } catch (e) {
+      setOauthBusy("");
       setErr(getErrorMessage(e));
     }
   }
@@ -120,36 +127,36 @@ export default function Login() {
     return (
       <AuthLayout>
         <AuthCard>
-          <AuthHeader />
-
           <AuthTitle
-            title="Two-factor authentication"
-            subtitle="Enter the 6-digit code from your authenticator app."
+            kicker="Two-step verification"
+            title="Enter your code"
+            subtitle="Open your authenticator app and enter the 6-digit code for Synaptiq."
           />
 
-          <form onSubmit={onMfaSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <form onSubmit={onMfaSubmit} noValidate className="au-fields">
             <AuthInput
               label="Authentication code"
               type="text"
+              inputMode="numeric"
               value={mfaCode}
               onChange={function(e) { setMfaCode(e.target.value.replace(/[^0-9a-zA-Z]/g, "")); }}
               placeholder="123456"
               required
               autoComplete="one-time-code"
               testId="mfa-code-input"
+              invalid={!!err}
+              describedBy={err ? "mfa-error" : undefined}
             />
 
             <AuthCheckbox checked={trustDevice} onChange={function(e) { setTrustDevice(e.target.checked); }}>
-              <span>Trust this device for 30 days</span>
+              Trust this device for 30 days
             </AuthCheckbox>
 
-            <ErrorBanner error={err} testId="mfa-error" />
+            <ErrorBanner error={err} testId="mfa-error" id="mfa-error" />
 
-            <div style={{ marginTop: 4 }}>
-              <AuthButton loading={loading} testId="mfa-verify-submit">
-                Verify &amp; Sign In
-              </AuthButton>
-            </div>
+            <AuthButton loading={loading} testId="mfa-verify-submit" loadingLabel="Verifying…">
+              Verify and sign in
+            </AuthButton>
           </form>
 
           <AuthFooter>
@@ -168,14 +175,13 @@ export default function Login() {
   return (
     <AuthLayout>
       <AuthCard>
-        <AuthHeader />
-
         <AuthTitle
+          kicker="Sign in"
           title="Welcome back"
-          subtitle="Continue your research journey with Synaptiq."
+          subtitle="Continue your research with Synaptiq."
         />
 
-        <form onSubmit={onSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <form onSubmit={onSubmit} noValidate className="au-fields">
           <AuthInput
             label="Email"
             type="email"
@@ -185,6 +191,8 @@ export default function Login() {
             required
             autoComplete="email"
             testId={TID.loginEmail}
+            invalid={!!err}
+            describedBy={err ? "login-error" : undefined}
           />
 
           <PasswordInput
@@ -194,38 +202,32 @@ export default function Login() {
             required
             testId={TID.loginPassword}
             autoComplete="current-password"
+            invalid={!!err}
+            describedBy={err ? "login-error" : undefined}
           />
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px 16px", marginTop: -4 }}>
+          <div className="au-row">
             <AuthCheckbox checked={remember} onChange={function(e) { setRemember(e.target.checked); }}>
-              <span style={{ whiteSpace: "nowrap" }}>Remember me</span>
+              Remember me
             </AuthCheckbox>
-            <Link
-              to="/forgot-password"
-              data-testid={TID.loginForgotLink}
-              style={{ fontSize: "0.8rem", fontWeight: 500, color: T_FAINT, textDecoration: "none", transition: "color 120ms", flexShrink: 0 }}
-              onMouseEnter={function(e) { e.currentTarget.style.color = NAVY; }}
-              onMouseLeave={function(e) { e.currentTarget.style.color = T_FAINT; }}
-            >
+            <Link to="/forgot-password" data-testid={TID.loginForgotLink} className="au-quiet">
               Forgot password?
             </Link>
           </div>
 
-          <ErrorBanner error={err} testId={TID.loginError} />
+          <ErrorBanner error={err} testId={TID.loginError} id="login-error" />
 
-          <div style={{ marginTop: 4 }}>
-            <AuthButton loading={loading} testId={TID.loginSubmit}>
-              Sign In
-            </AuthButton>
-          </div>
+          <AuthButton loading={loading} testId={TID.loginSubmit} loadingLabel="Signing in…">
+            Sign In
+          </AuthButton>
         </form>
 
         {(providers.google || providers.orcid) && <AuthDivider />}
-        <SocialButtons onGoogle={handleGoogle} onOrcid={handleOrcid} providers={providers} />
+        <SocialButtons onGoogle={handleGoogle} onOrcid={handleOrcid} providers={providers} busy={oauthBusy} />
 
         <AuthFooter>
-          Don&rsquo;t have an account?{" "}
-          <AuthLink to="/register" testId={TID.authToggleLink}>Get Started</AuthLink>
+          New to Synaptiq?{" "}
+          <AuthLink to="/register" testId={TID.authToggleLink}>Start Free</AuthLink>
         </AuthFooter>
       </AuthCard>
     </AuthLayout>

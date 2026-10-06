@@ -6,15 +6,26 @@ import api, { getErrorMessage } from "../lib/api";
 import { TID } from "../lib/testIds";
 import { trackMarketingEvent as track } from "../lib/marketingAnalytics";
 import {
-  AuthLayout, AuthCard, AuthHeader, AuthTitle, AuthInput, PasswordInput,
+  AuthLayout, AuthCard, AuthTitle, AuthInput, PasswordInput,
   AuthButton, AuthDivider, SocialButtons, useOauthProviders, ErrorBanner,
-  AuthFooter, AuthLink, AuthCheckbox, PasswordStrength, TermsNote,
-  NAVY, T_MID, T_FAINT, BORDER,
+  AuthFooter, AuthLink, AuthCheckbox, PasswordStrength, Notice,
 } from "../components/auth/AuthShared";
+
+// Which field an existing validation message is about, so that field can be
+// marked invalid and linked to the message for screen readers.
+function fieldOf(err) {
+  if (!err) return null;
+  if (/full name/i.test(err)) return "name";
+  if (/email/i.test(err)) return "email";
+  if (/do not match/i.test(err)) return "confirm";
+  if (/^Password must/i.test(err)) return "password";
+  if (/18 or older/i.test(err)) return "agree";
+  return null;
+}
 
 export default function Register() {
   useEffect(() => {
-    document.title = "Get Started — Synaptiq";
+    document.title = "Start Free — Synaptiq";
     return () => { document.title = "Synaptiq"; };
   }, []);
   const { register, user } = useAuth();
@@ -25,9 +36,17 @@ export default function Register() {
   const [agreed,      setAgreed]      = useState(false);
   const [err,         setErr]         = useState("");
   const [loading,     setLoading]     = useState(false);
+  const [oauthBusy,   setOauthBusy]   = useState(""); // "orcid" | "google" while redirecting
+  const [signupsOpen, setSignupsOpen] = useState(null);
   const submittingRef = useRef(false);
   const navigate = useNavigate();
   const providers = useOauthProviders();
+
+  useEffect(() => {
+    api.get("/auth/registration-status")
+      .then((r) => setSignupsOpen(r.data?.open !== false))
+      .catch(() => setSignupsOpen(null));
+  }, []);
 
   // Returned here by an OAuth callback that couldn't create an account.
   useEffect(() => {
@@ -88,43 +107,62 @@ export default function Register() {
 
   async function handleGoogle() {
     if (needsAgreement()) return;
+    setOauthBusy("google");
     try {
       const { data } = await api.get("/google/authorize?mode=signup&accepted_terms=true");
       if (data.authorization_url) window.location.href = data.authorization_url;
+      else setOauthBusy("");
     } catch (e) {
+      setOauthBusy("");
       setErr(getErrorMessage(e));
     }
   }
 
   async function handleOrcid() {
     if (needsAgreement()) return;
+    setOauthBusy("orcid");
     try {
       const { data } = await api.get("/orcid/authorize?mode=signup&accepted_terms=true");
       if (data.authorization_url) window.location.href = data.authorization_url;
+      else setOauthBusy("");
     } catch (e) {
+      setOauthBusy("");
       setErr(getErrorMessage(e));
     }
   }
 
+  const bad = fieldOf(err);
+  const describe = (f) => (bad === f ? "register-error" : undefined);
+
   return (
     <AuthLayout>
       <AuthCard wide>
-        <AuthHeader />
-
         <AuthTitle
-          title="Create your Synaptiq account"
-          subtitle="Join researchers, universities and research teams from around the world."
+          kicker="Start Free"
+          title="Create your Academic Passport"
+          subtitle="Your research identity, free to start. Research areas and ORCID come next, after you sign up."
         />
 
-        <form onSubmit={onSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {signupsOpen === false && (
+          <div style={{ marginBottom: 22 }}>
+            <Notice>
+              New sign-ups are paused while billing is set up. If you already have an account,{" "}
+              <Link to="/login" className="au-link">sign in</Link>.
+            </Notice>
+          </div>
+        )}
+
+        <form onSubmit={onSubmit} noValidate className="au-fields">
           <AuthInput
-            label="Full Name"
+            label="Full name"
             value={fullName}
             onChange={function(e) { setFullName(e.target.value); }}
-            placeholder="Dr. Jane Doe"
+            placeholder="Dr Jane Doe"
             required
             autoComplete="name"
             testId={TID.registerName}
+            invalid={bad === "name"}
+            describedBy={describe("name")}
           />
 
           <AuthInput
@@ -136,10 +174,11 @@ export default function Register() {
             required
             autoComplete="email"
             testId={TID.registerEmail}
+            invalid={bad === "email"}
+            describedBy={describe("email")}
           />
 
-          {/* Password + strength */}
-          <div>
+          <div className="au-field">
             <PasswordInput
               label="Password"
               value={password}
@@ -147,39 +186,37 @@ export default function Register() {
               required
               testId={TID.registerPassword}
               autoComplete="new-password"
+              invalid={bad === "password"}
+              describedBy={["register-password-hint", describe("password")].filter(Boolean).join(" ")}
             />
+            <p className="au-hint" id="register-password-hint">At least 8 characters, with a letter and a number.</p>
             <PasswordStrength password={password} />
           </div>
 
           <PasswordInput
-            label="Confirm Password"
+            label="Confirm password"
             value={confirm}
             onChange={function(e) { setConfirm(e.target.value); }}
             required
             autoComplete="new-password"
+            invalid={bad === "confirm"}
+            describedBy={describe("confirm")}
           />
 
-          <AuthCheckbox checked={agreed} onChange={function(e) { setAgreed(e.target.checked); }}>
-            {/* One inline run, so the sentence wraps as text rather than as flex columns. */}
-            <span>
-              I'm 18 or older and agree to the{" "}
-              <Link to="/terms"   style={{ color: NAVY, fontWeight: 600, textDecoration: "none" }}>Terms of Service</Link>.
-              {" "}I've read the{" "}
-              <Link to="/privacy" style={{ color: NAVY, fontWeight: 600, textDecoration: "none" }}>Privacy Policy</Link>.
-            </span>
+          <AuthCheckbox className="au-consent" checked={agreed} onChange={function(e) { setAgreed(e.target.checked); }}>
+            I'm 18 or older and agree to the <Link to="/terms">Terms of Service</Link>.
+            {" "}I've read the <Link to="/privacy">Privacy Policy</Link>.
           </AuthCheckbox>
 
-          <ErrorBanner error={err} testId={TID.registerError} />
+          <ErrorBanner error={err} testId={TID.registerError} id="register-error" />
 
-          <div style={{ marginTop: 4 }}>
-            <AuthButton loading={loading} testId={TID.registerSubmit}>
-              Create Account
-            </AuthButton>
-          </div>
+          <AuthButton loading={loading} testId={TID.registerSubmit} loadingLabel="Creating your account…">
+            Create account
+          </AuthButton>
         </form>
 
         {(providers.google || providers.orcid) && <AuthDivider />}
-        <SocialButtons onGoogle={handleGoogle} onOrcid={handleOrcid} providers={providers} />
+        <SocialButtons onGoogle={handleGoogle} onOrcid={handleOrcid} providers={providers} busy={oauthBusy} />
 
         <AuthFooter>
           Already have an account?{" "}

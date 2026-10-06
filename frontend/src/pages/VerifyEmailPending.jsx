@@ -42,26 +42,26 @@ export default function VerifyEmailPending() {
       <AuthCard>
         <AuthHeader />
 
-        <div style={{ textAlign: "center" }}>
+        <div className="au-success">
           {/* Icon */}
-          <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
+          <div className="au-success-mark">
             <Mail size={28} strokeWidth={1.5} style={{ color: NAVY }} />
           </div>
 
-          <h2 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#0f172a", margin: "0 0 10px", letterSpacing: "-0.02em" }}>
+          <h1 className="au-title au-title-sm">
             Check your inbox
-          </h2>
-          <p style={{ fontSize: "0.875rem", color: T_MID, lineHeight: 1.75, marginBottom: 28 }}>
+          </h1>
+          <p className="au-sub au-gap">
             We sent a verification link to{" "}
             {email
-              ? <strong style={{ color: "#0f172a" }}>{email}</strong>
+              ? <strong>{email}</strong>
               : "your email address"}
             . Click the link to activate your account.
           </p>
 
           {/* Resend */}
           {resent ? (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, color: "#059669", fontSize: "0.875rem", marginBottom: 20 }}>
+            <div className="au-ok" role="status">
               <CheckCircle2 size={16} strokeWidth={1.5} />
               Verification email resent — check your inbox.
             </div>
@@ -69,16 +69,7 @@ export default function VerifyEmailPending() {
             <button
               onClick={resend}
               disabled={resending}
-              style={{
-                display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
-                width: "100%", height: 52,
-                background: resending ? "#94a3b8" : NAVY, color: "#fff",
-                border: "none", borderRadius: 10,
-                fontSize: "0.9rem", fontWeight: 600,
-                cursor: resending ? "not-allowed" : "pointer",
-                marginBottom: 12, transition: "opacity 150ms",
-                fontFamily: "inherit",
-              }}
+              className="au-btn au-btn-primary"
               onMouseEnter={function(e) { if (!resending) e.currentTarget.style.opacity = "0.88"; }}
               onMouseLeave={function(e) { e.currentTarget.style.opacity = "1"; }}
             >
@@ -88,16 +79,16 @@ export default function VerifyEmailPending() {
           )}
 
           {err && (
-            <p style={{ fontSize: "0.84rem", color: "#8A1538", marginBottom: 12 }}>{err}</p>
+            <div className="au-alert" role="alert" style={{ marginTop: 12 }}><span>{err}</span></div>
           )}
 
           {/* Sign out */}
-          <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${BORDER}` }}>
-            <p style={{ fontSize: "0.78rem", color: T_FAINT, margin: 0 }}>
+          <div className="au-switch">
+            <p style={{ margin: 0 }}>
               Wrong account?{" "}
               <button
                 onClick={logout}
-                style={{ color: NAVY, background: "none", border: "none", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600, padding: 0, transition: "opacity 150ms" }}
+                className="au-link" style={{ background: "none", border: "none", padding: 0, cursor: "pointer", font: "inherit" }}
                 onMouseEnter={function(e) { e.currentTarget.style.opacity = "0.7"; }}
                 onMouseLeave={function(e) { e.currentTarget.style.opacity = "1"; }}
               >

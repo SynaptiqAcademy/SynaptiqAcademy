@@ -49,7 +49,7 @@ export default function VerifyEmail() {
       <Link
         to={to}
         data-testid={testId}
-        style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", height: 52, background: NAVY, color: "#fff", textDecoration: "none", borderRadius: 10, fontSize: "0.9rem", fontWeight: 600, letterSpacing: "-0.01em" }}
+        className="au-btn au-btn-primary"
       >
         {children} <ArrowRight size={14} />
       </Link>
@@ -73,14 +73,14 @@ export default function VerifyEmail() {
 
           {/* ── Success ── */}
           {state === "success" && (
-            <div data-testid="verify-success" style={{ textAlign: "center" }}>
-              <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#ECFDF5", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
-                <CheckCircle2 size={28} strokeWidth={1.5} style={{ color: "#059669" }} />
+            <div data-testid="verify-success" className="au-success">
+              <div className="au-success-mark">
+                <CheckCircle2 size={28} strokeWidth={1.5} style={{ color: NAVY }} />
               </div>
-              <h2 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#0f172a", margin: "0 0 10px", letterSpacing: "-0.02em" }}>
+              <h1 className="au-title au-title-sm">
                 Email verified
-              </h2>
-              <p style={{ fontSize: "0.875rem", color: T_MID, lineHeight: 1.7, marginBottom: 28 }}>
+              </h1>
+              <p className="au-sub au-gap">
                 Your account is now active. Welcome to Synaptiq.
               </p>
               <PrimaryLink to="/login" testId="verify-go-login">Continue to Synaptiq</PrimaryLink>
@@ -89,14 +89,14 @@ export default function VerifyEmail() {
 
           {/* ── Already verified ── */}
           {state === "already" && (
-            <div data-testid="verify-already" style={{ textAlign: "center" }}>
-              <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#ECFDF5", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
-                <CheckCircle2 size={28} strokeWidth={1.5} style={{ color: "#059669" }} />
+            <div data-testid="verify-already" className="au-success">
+              <div className="au-success-mark">
+                <CheckCircle2 size={28} strokeWidth={1.5} style={{ color: NAVY }} />
               </div>
-              <h2 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#0f172a", margin: "0 0 10px", letterSpacing: "-0.02em" }}>
+              <h1 className="au-title au-title-sm">
                 Already verified
-              </h2>
-              <p style={{ fontSize: "0.875rem", color: T_MID, lineHeight: 1.7, marginBottom: 28 }}>
+              </h1>
+              <p className="au-sub au-gap">
                 This email has already been confirmed. You can sign in now.
               </p>
               <PrimaryLink to="/login">Go to Sign In</PrimaryLink>
@@ -105,14 +105,14 @@ export default function VerifyEmail() {
 
           {/* ── Error ── */}
           {state === "error" && (
-            <div data-testid="verify-error" style={{ textAlign: "center" }}>
-              <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#FFFBEB", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
-                <AlertTriangle size={28} strokeWidth={1.5} style={{ color: "#D97706" }} />
+            <div data-testid="verify-error" className="au-success">
+              <div className="au-success-mark">
+                <AlertTriangle size={28} strokeWidth={1.5} style={{ color: "#9B3D23" }} />
               </div>
-              <h2 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#0f172a", margin: "0 0 10px", letterSpacing: "-0.02em" }}>
+              <h1 className="au-title au-title-sm">
                 Verification failed
-              </h2>
-              <p style={{ fontSize: "0.875rem", color: T_MID, lineHeight: 1.7, marginBottom: 24 }}>
+              </h1>
+              <p className="au-sub au-gap">
                 {errorMsg}
               </p>
 
@@ -134,7 +134,7 @@ export default function VerifyEmail() {
                     type="submit"
                     disabled={resending || !resendEmail.trim()}
                     data-testid="verify-resend-btn"
-                    style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", height: 52, background: NAVY, color: "#fff", border: "none", borderRadius: 10, fontSize: "0.9rem", fontWeight: 600, cursor: resending ? "not-allowed" : "pointer", marginTop: 14 }}
+                    className="au-btn au-btn-primary"
                   >
                     {resending && <Loader2 size={14} strokeWidth={2} style={{ animation: "auth-spin 1s linear infinite" }} />}
                     {resending ? "Sending…" : "Send verification email"}
@@ -144,13 +144,13 @@ export default function VerifyEmail() {
                 <button
                   onClick={() => setShowResendForm(true)}
                   data-testid="verify-resend-btn"
-                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", height: 52, background: NAVY, color: "#fff", border: "none", borderRadius: 10, fontSize: "0.9rem", fontWeight: 600, cursor: "pointer", marginBottom: 12 }}
+                  className="au-btn au-btn-primary"
                 >
                   Resend verification email
                 </button>
               )}
 
-              <Link to="/login" style={{ fontSize: "0.84rem", color: NAVY, textDecoration: "none", fontWeight: 500 }}>
+              <Link to="/login" className="au-link">
                 Back to Sign In
               </Link>
             </div>

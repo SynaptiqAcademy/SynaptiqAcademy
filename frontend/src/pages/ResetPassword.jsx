@@ -51,17 +51,17 @@ export default function ResetPassword() {
       <AuthLayout>
         <AuthCard>
           <AuthHeader />
-          <div style={{ textAlign: "center" }}>
-            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#ECFDF5", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
-              <CheckCircle2 size={28} strokeWidth={1.5} style={{ color: "#059669" }} />
+          <div className="au-success">
+            <div className="au-success-mark">
+              <CheckCircle2 size={28} strokeWidth={1.5} style={{ color: NAVY }} />
             </div>
-            <h2 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#0f172a", margin: "0 0 10px", letterSpacing: "-0.02em" }}>
+            <h1 className="au-title au-title-sm">
               Password updated
-            </h2>
-            <p style={{ fontSize: "0.875rem", color: T_MID, lineHeight: 1.7, marginBottom: 28 }}>
+            </h1>
+            <p className="au-sub au-gap">
               Your password has been changed successfully. Redirecting you to sign in…
             </p>
-            <Link to="/login" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "100%", height: 52, background: NAVY, color: "#fff", textDecoration: "none", borderRadius: 10, fontSize: "0.9rem", fontWeight: 600 }}>
+            <Link to="/login" className="au-btn au-btn-primary">
               Go to Sign In
             </Link>
           </div>
@@ -81,7 +81,7 @@ export default function ResetPassword() {
           subtitle="Choose a strong password for your Synaptiq account."
         />
 
-        <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <form onSubmit={submit} className="au-fields">
           <div>
             <PasswordInput
               label="New Password"
@@ -105,7 +105,7 @@ export default function ResetPassword() {
 
           <ErrorBanner error={err} testId={TID.resetError} />
 
-          <div style={{ marginTop: 4 }}>
+          <div>
             <AuthButton loading={loading} testId={TID.resetSubmit}>
               Update Password
             </AuthButton>

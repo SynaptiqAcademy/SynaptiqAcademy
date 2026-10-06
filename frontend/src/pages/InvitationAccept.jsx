@@ -110,7 +110,7 @@ export default function InvitationAccept() {
                 <div style={{ fontSize: "0.62rem", fontWeight: 700, color: T_FAINT, letterSpacing: "0.08em", textTransform: "uppercase" }}>
                   {KIND_LABELS[inv.kind] || inv.kind?.replace(/_/g, " ") || "Invitation"}
                 </div>
-                <div style={{ fontFamily: "Georgia, serif", fontSize: "1.4rem", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+                <div className="au-title au-title-sm" style={{ marginTop: 2 }}>
                   You've been invited
                 </div>
               </div>
@@ -164,17 +164,17 @@ export default function InvitationAccept() {
 
         {/* Accepted */}
         {state === "done" && (
-          <div style={{ textAlign: "center" }}>
-            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#ECFDF5", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
-              <CheckCircle2 size={28} strokeWidth={1.5} style={{ color: "#059669" }} />
+          <div className="au-success">
+            <div className="au-success-mark">
+              <CheckCircle2 size={28} strokeWidth={1.5} style={{ color: NAVY }} />
             </div>
-            <h2 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#0f172a", margin: "0 0 10px", letterSpacing: "-0.02em" }}>
+            <h1 className="au-title au-title-sm">
               Invitation accepted
-            </h2>
-            <p style={{ fontSize: "0.875rem", color: T_MID, lineHeight: 1.7, marginBottom: 28 }}>
+            </h1>
+            <p className="au-sub au-gap">
               You've successfully joined. Head to the app to get started.
             </p>
-            <Link to="/discover" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "100%", height: 52, background: NAVY, color: "#fff", textDecoration: "none", borderRadius: 10, fontSize: "0.9rem", fontWeight: 600 }}>
+            <Link to="/discover" className="au-btn au-btn-primary">
               Continue to Synaptiq
             </Link>
           </div>
@@ -182,14 +182,14 @@ export default function InvitationAccept() {
 
         {/* Declined */}
         {state === "declined" && (
-          <div style={{ textAlign: "center" }}>
-            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#F8FAFC", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
+          <div className="au-success">
+            <div className="au-success-mark">
               <X size={28} strokeWidth={1.5} style={{ color: T_FAINT }} />
             </div>
-            <h2 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#0f172a", margin: "0 0 10px", letterSpacing: "-0.02em" }}>
+            <h1 className="au-title au-title-sm">
               Invitation declined
-            </h2>
-            <p style={{ fontSize: "0.875rem", color: T_MID, lineHeight: 1.7, marginBottom: 28 }}>
+            </h1>
+            <p className="au-sub au-gap">
               The invitation has been declined. You can always start a new collaboration from the platform.
             </p>
             <Link to="/login" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "100%", height: 52, background: "#fff", border: `1.5px solid ${BORDER}`, color: "#0f172a", textDecoration: "none", borderRadius: 10, fontSize: "0.9rem", fontWeight: 500 }}>
@@ -200,17 +200,17 @@ export default function InvitationAccept() {
 
         {/* Error */}
         {state === "error" && (
-          <div style={{ textAlign: "center" }}>
-            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#FFFBEB", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
-              <Mail size={28} strokeWidth={1.5} style={{ color: "#D97706" }} />
+          <div className="au-success">
+            <div className="au-success-mark">
+              <Mail size={28} strokeWidth={1.5} style={{ color: "#9B3D23" }} />
             </div>
-            <h2 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#0f172a", margin: "0 0 10px", letterSpacing: "-0.02em" }}>
+            <h1 className="au-title au-title-sm">
               Link unavailable
-            </h2>
-            <p style={{ fontSize: "0.875rem", color: T_MID, lineHeight: 1.7, marginBottom: 28 }}>
+            </h1>
+            <p className="au-sub au-gap">
               {err}
             </p>
-            <Link to="/login" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "100%", height: 52, background: NAVY, color: "#fff", textDecoration: "none", borderRadius: 10, fontSize: "0.9rem", fontWeight: 600 }}>
+            <Link to="/login" className="au-btn au-btn-primary">
               Go to Sign In
             </Link>
           </div>

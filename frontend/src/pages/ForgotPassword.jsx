@@ -58,7 +58,7 @@ export default function ForgotPassword() {
               subtitle="Enter your email and we'll send you a secure reset link."
             />
 
-            <form onSubmit={submit} noValidate style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <form onSubmit={submit} noValidate className="au-fields">
               <AuthInput
                 label="Email address"
                 type="email"
@@ -70,7 +70,7 @@ export default function ForgotPassword() {
                 testId={TID.forgotEmail}
               />
               <ErrorBanner error={err} testId={TID.forgotError} />
-              <div style={{ marginTop: 4 }}>
+              <div>
                 <AuthButton loading={loading} disabled={sent} testId={TID.forgotSubmit}>
                   Send Reset Link
                 </AuthButton>
@@ -79,15 +79,15 @@ export default function ForgotPassword() {
           </>
         ) : (
           // Success state
-          <div style={{ textAlign: "center" }} data-testid={TID.forgotSent}>
-            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
+          <div className="au-success" data-testid={TID.forgotSent}>
+            <div className="au-success-mark">
               <Mail size={28} strokeWidth={1.5} style={{ color: NAVY }} />
             </div>
-            <h2 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#0f172a", margin: "0 0 10px", letterSpacing: "-0.02em" }}>
+            <h1 className="au-title au-title-sm">
               Check your inbox
-            </h2>
-            <p style={{ fontSize: "0.875rem", color: T_MID, lineHeight: 1.7, marginBottom: 28 }}>
-              We've sent password reset instructions to <strong style={{ color: "#0f172a" }}>{email}</strong>. Check your spam folder if it doesn't arrive within a few minutes.
+            </h1>
+            <p className="au-sub au-gap">
+              We've sent password reset instructions to <strong>{email}</strong>. Check your spam folder if it doesn't arrive within a few minutes.
             </p>
 
             {debugLink && (
@@ -100,7 +100,7 @@ export default function ForgotPassword() {
 
             <Link
               to="/login"
-              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "100%", height: 52, background: NAVY, color: "#fff", textDecoration: "none", borderRadius: 10, fontSize: "0.9rem", fontWeight: 600, letterSpacing: "-0.01em" }}
+              className="au-btn au-btn-primary"
             >
               Back to Sign In
             </Link>

@@ -1,234 +1,167 @@
-/* eslint-disable */
 /**
- * Shared authentication UI primitives.
- * All auth pages import from here — one design language, zero duplication.
+ * Shared authentication UI — one layout and one set of form primitives for
+ * every auth screen (sign in, Start Free, forgot/reset password, email
+ * verification, invitations). Styling lives in auth.css and reuses the
+ * public site's tokens (landing.css, scoped by `.lp`).
+ *
+ * The exported names and props are unchanged from the previous version, so
+ * pages only change where they choose to; behaviour (validation, API calls,
+ * redirects, consent) stays in the pages.
  */
-import React, { useEffect, useState } from "react";
-import api from "../../lib/api";
+import React, { useEffect, useId, useState } from "react";
 import { Link } from "react-router-dom";
-import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle2, ChevronDown } from "lucide-react";
+import { Eye, EyeOff, Loader2, AlertCircle, ChevronDown } from "lucide-react";
+import api from "../../lib/api";
+import "../landing/landing.css";
+import "./auth.css";
 
-export const NAVY   = "#0F2847";
-export const BORDER = "#E4E8EF";
-export const BG     = "#FAFAFA";
-export const T_MAIN = "#0f172a";
-export const T_MID  = "#64748b";
-export const T_FAINT= "#94a3b8";
+// Palette, for pages that still style a few details inline.
+export const NAVY = "#0F2847";
+export const BORDER = "#DCD8CF";
+export const BG = "#FBFAF7";
+export const T_MAIN = "#10141C";
+export const T_MID = "#3A4250";
+export const T_FAINT = "#5F6673";
 
-// ─── Animation injection ──────────────────────────────────────────────────────
+/** Kept for compatibility; the stylesheet now carries all auth styles. */
+export function AuthStyles() { return null; }
 
-export function AuthStyles() {
+// ─── Layout ───────────────────────────────────────────────────────────────────
+
+/** A quiet research-network motif: fixed coordinates, no animation. */
+function Motif() {
+  const nodes = [[62, 8], [90, 20], [40, 34], [76, 46], [22, 60], [96, 64], [58, 74], [8, 90], [84, 92], [36, 96]];
+  const edges = [[0, 1], [0, 2], [1, 3], [2, 3], [2, 4], [3, 5], [3, 6], [4, 6], [4, 7], [6, 8], [5, 8], [7, 9], [6, 9]];
   return (
-    <style>{`
-      @keyframes auth-spin { to { transform: rotate(360deg); } }
-      @keyframes auth-in { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-      .auth-card { animation: auth-in 220ms cubic-bezier(.16,1,.3,1); }
-    `}</style>
+    <svg className="au-motif" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      {edges.map(([a, b], i) => (
+        <line key={i} x1={nodes[a][0]} y1={nodes[a][1]} x2={nodes[b][0]} y2={nodes[b][1]} stroke="rgba(255,255,255,0.16)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+      ))}
+      {nodes.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={i === 3 || i === 7 ? 1.1 : 0.7} fill={i === 3 || i === 7 ? "#c9a99c" : "rgba(255,255,255,0.42)"} />
+      ))}
+    </svg>
   );
 }
 
-// ─── Page wrapper ─────────────────────────────────────────────────────────────
+const SIGNALS = [
+  ["Academic Passport", "Your research identity, with your ORCID record."],
+  ["Research Need", "The expertise a question calls for, and who has it."],
+  ["Collaboration", "Invitations, projects and shared workspaces."],
+];
 
+// The form comes first in the document (keyboard and screen-reader order);
+// CSS places the editorial panel on the left on wide screens.
 export function AuthLayout({ children }) {
   return (
-    <div style={{ minHeight: "100vh", background: BG, display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 20px" }}>
-      <AuthStyles />
-      {children}
+    <div className="lp au">
+      <main className="au-main">
+        <div className="au-topbar">
+          <Link to="/" className="au-brand">SYNAPTIQ</Link>
+          <Link to="/help-center" className="au-quiet">Help</Link>
+        </div>
+        <div className="au-stage">{children}</div>
+        <nav className="au-main-foot" aria-label="Legal">
+          <Link to="/privacy">Privacy</Link> · <Link to="/terms">Terms</Link> · <Link to="/security">Security</Link>
+        </nav>
+      </main>
+
+      <aside className="au-panel" aria-label="About Synaptiq">
+        <Motif />
+        <Link to="/" className="au-brand">SYNAPTIQ</Link>
+        <div className="au-panel-body">
+          <div className="au-eyebrow">Research and academic collaboration</div>
+          <p className="au-statement">Research starts with a question.</p>
+          <p className="au-panel-copy">Synaptiq turns it into the expertise it needs, the people who have it, and the work you do together.</p>
+          <ul className="au-signals">
+            {SIGNALS.map(([k, v], i) => (
+              <li key={k}><span className="n">{String(i + 1).padStart(2, "0")}</span><span className="k">{k}</span><span className="v">{v}</span></li>
+            ))}
+          </ul>
+        </div>
+        <nav className="au-panel-foot" aria-label="Legal and help">
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
+          <Link to="/security">Security</Link>
+          <Link to="/help-center">Help Center</Link>
+        </nav>
+      </aside>
     </div>
   );
 }
 
-// ─── Card ─────────────────────────────────────────────────────────────────────
-
+/** The form column. `wide` gives room for longer forms. */
 export function AuthCard({ children, wide }) {
-  return (
-    <div
-      className="auth-card"
-      style={{
-        width: "100%",
-        maxWidth: wide ? 520 : 460,
-        background: "#fff",
-        borderRadius: 12,
-        border: `1px solid ${BORDER}`,
-        boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.06)",
-        padding: "48px 48px",
-        boxSizing: "border-box",
-      }}
-    >
-      {children}
-    </div>
-  );
+  return <div className={`au-form${wide ? " au-form-wide" : ""}`}>{children}</div>;
 }
 
-// ─── Logo + tagline ───────────────────────────────────────────────────────────
-
-export function AuthHeader({ tagline = "AI-Powered Academic Collaboration" }) {
-  return (
-    <div style={{ textAlign: "center", marginBottom: 36 }}>
-      <Link to="/" style={{ textDecoration: "none", display: "inline-block" }}>
-        <div style={{ fontSize: "1.05rem", fontWeight: 800, color: NAVY, letterSpacing: "-0.04em", lineHeight: 1 }}>
-          SYNAPTIQ
-        </div>
-        <div style={{ fontSize: "0.62rem", fontWeight: 500, color: T_FAINT, marginTop: 5, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-          {tagline}
-        </div>
-      </Link>
-    </div>
-  );
+/** The brand now lives in the layout; a custom tagline becomes a kicker. */
+export function AuthHeader({ tagline }) {
+  if (!tagline || tagline === "AI-Powered Academic Collaboration") return null;
+  return <div className="au-kicker" style={{ marginBottom: 10 }}>{tagline}</div>;
 }
 
-// ─── Page title + subtitle ────────────────────────────────────────────────────
-
-export function AuthTitle({ title, subtitle }) {
+export function AuthTitle({ title, subtitle, kicker }) {
   return (
-    <div style={{ marginBottom: 28 }}>
-      <h1 style={{ fontFamily: "Georgia, serif", fontSize: "1.55rem", fontWeight: 700, color: T_MAIN, margin: "0 0 8px", letterSpacing: "-0.025em", lineHeight: 1.2 }}>
-        {title}
-      </h1>
-      {subtitle && (
-        <p style={{ fontSize: "0.875rem", color: T_MID, margin: 0, lineHeight: 1.65 }}>
-          {subtitle}
-        </p>
-      )}
-    </div>
+    <header className="au-head">
+      {kicker && <div className="au-kicker">{kicker}</div>}
+      <h1 className="au-title">{title}</h1>
+      {subtitle && <p className="au-sub">{subtitle}</p>}
+    </header>
   );
 }
-
-// ─── Back link ────────────────────────────────────────────────────────────────
 
 export function BackLink({ to, label }) {
-  return (
-    <Link
-      to={to}
-      style={{
-        display: "inline-flex", alignItems: "center", gap: 6,
-        fontSize: "0.78rem", fontWeight: 500, color: T_FAINT,
-        textDecoration: "none", marginBottom: 24,
-        transition: "color 120ms",
-      }}
-      onMouseEnter={function(e) { e.currentTarget.style.color = T_MID; }}
-      onMouseLeave={function(e) { e.currentTarget.style.color = T_FAINT; }}
-    >
-      ← {label}
-    </Link>
-  );
+  return <Link to={to} className="au-back"><span aria-hidden="true">←</span> {label}</Link>;
 }
 
-// ─── Floating-label input ─────────────────────────────────────────────────────
+// ─── Fields ───────────────────────────────────────────────────────────────────
 
-export function AuthInput({ label, type = "text", value, onChange, placeholder, required, autoComplete, testId, rightAddon, name }) {
-  const [focused, setFocused] = useState(false);
-  const active = focused || Boolean(value);
-
+export function AuthInput({ label, type = "text", value, onChange, placeholder, required, autoComplete, testId, rightAddon, name, invalid, describedBy, id: idProp, inputMode }) {
+  const autoId = useId();
+  const id = idProp || `au-${autoId}`;
   return (
-    <div style={{ position: "relative", height: 52 }}>
-      <label
-        style={{
-          position: "absolute", left: 16, zIndex: 1, pointerEvents: "none", lineHeight: 1,
-          top: active ? 8 : "50%",
-          transform: active ? "none" : "translateY(-50%)",
-          fontSize: active ? "0.6rem" : "0.875rem",
-          fontWeight: active ? 700 : 400,
-          color: active ? (focused ? NAVY : T_FAINT) : T_FAINT,
-          letterSpacing: active ? "0.07em" : 0,
-          textTransform: active ? "uppercase" : "none",
-          transition: "top 140ms, transform 140ms, font-size 140ms, color 140ms, letter-spacing 140ms",
-        }}
-      >
-        {label}
-      </label>
-      <input
-        type={type}
-        required={required}
-        value={value}
-        onChange={onChange}
-        name={name}
-        autoComplete={autoComplete}
-        data-testid={testId}
-        placeholder={active && focused ? placeholder : ""}
-        onFocus={function() { setFocused(true); }}
-        onBlur={function() { setFocused(false); }}
-        style={{
-          position: "absolute", inset: 0, width: "100%", height: "100%",
-          paddingTop: active ? 22 : 0,
-          paddingBottom: active ? 8 : 0,
-          paddingLeft: 16,
-          paddingRight: rightAddon ? 50 : 16,
-          borderRadius: 10,
-          border: `1.5px solid ${focused ? NAVY : BORDER}`,
-          fontSize: "0.9rem", color: T_MAIN,
-          background: "#fff", outline: "none",
-          boxSizing: "border-box",
-          boxShadow: focused ? "0 0 0 3px rgba(15,40,71,0.08)" : "none",
-          transition: "border-color 150ms, box-shadow 150ms",
-          fontFamily: "inherit",
-        }}
-      />
-      {rightAddon && (
-        <div style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", zIndex: 2 }}>
-          {rightAddon}
-        </div>
-      )}
+    <div className="au-field">
+      <label className="au-label" htmlFor={id}>{label}</label>
+      <div className="au-control">
+        <input
+          id={id}
+          className={`au-input${rightAddon ? " au-input-addon" : ""}`}
+          type={type}
+          required={required}
+          aria-required={required || undefined}
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
+          value={value}
+          onChange={onChange}
+          name={name}
+          autoComplete={autoComplete}
+          inputMode={inputMode}
+          data-testid={testId}
+          placeholder={placeholder}
+        />
+        {rightAddon && typeof rightAddon === "function" ? rightAddon(id) : rightAddon}
+      </div>
     </div>
   );
 }
-
-// ─── Floating-label select ────────────────────────────────────────────────────
 
 export function AuthSelect({ label, value, onChange, required, children, testId }) {
-  const [focused, setFocused] = useState(false);
-  const active = Boolean(value);
-
+  const id = `au-${useId()}`;
   return (
-    <div style={{ position: "relative", height: 52 }}>
-      <label
-        style={{
-          position: "absolute", left: 16, zIndex: 1, pointerEvents: "none", lineHeight: 1,
-          top: active ? 8 : "50%",
-          transform: active ? "none" : "translateY(-50%)",
-          fontSize: active ? "0.6rem" : "0.875rem",
-          fontWeight: active ? 700 : 400,
-          color: active ? (focused ? NAVY : T_FAINT) : T_FAINT,
-          letterSpacing: active ? "0.07em" : 0,
-          textTransform: active ? "uppercase" : "none",
-          transition: "top 140ms, transform 140ms, font-size 140ms, color 140ms",
-        }}
-      >
-        {label}
-      </label>
-      <select
-        value={value}
-        onChange={onChange}
-        required={required}
-        data-testid={testId}
-        onFocus={function() { setFocused(true); }}
-        onBlur={function() { setFocused(false); }}
-        style={{
-          position: "absolute", inset: 0, width: "100%", height: "100%",
-          padding: active ? "22px 36px 8px 16px" : "0 36px 0 16px",
-          borderRadius: 10,
-          border: `1.5px solid ${focused ? NAVY : BORDER}`,
-          fontSize: "0.9rem", color: value ? T_MAIN : "transparent",
-          background: "#fff", outline: "none", cursor: "pointer",
-          boxSizing: "border-box", appearance: "none",
-          boxShadow: focused ? "0 0 0 3px rgba(15,40,71,0.08)" : "none",
-          transition: "border-color 150ms, box-shadow 150ms",
-          fontFamily: "inherit",
-        }}
-      >
-        {children}
-      </select>
-      <ChevronDown
-        size={14} strokeWidth={2}
-        style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", color: T_FAINT, pointerEvents: "none", zIndex: 2 }}
-      />
+    <div className="au-field">
+      <label className="au-label" htmlFor={id}>{label}</label>
+      <div className="au-control">
+        <select id={id} className="au-select" value={value} onChange={onChange} required={required} data-testid={testId}>
+          {children}
+        </select>
+        <ChevronDown size={15} strokeWidth={1.8} className="au-select-chevron" aria-hidden="true" />
+      </div>
     </div>
   );
 }
 
-// ─── Password input ───────────────────────────────────────────────────────────
-
-export function PasswordInput({ label = "Password", value, onChange, required, testId, name, autoComplete }) {
+export function PasswordInput({ label = "Password", value, onChange, required, testId, name, autoComplete, invalid, describedBy }) {
   const [show, setShow] = useState(false);
   return (
     <AuthInput
@@ -239,25 +172,24 @@ export function PasswordInput({ label = "Password", value, onChange, required, t
       required={required}
       testId={testId}
       name={name}
+      invalid={invalid}
+      describedBy={describedBy}
       autoComplete={autoComplete || "current-password"}
-      rightAddon={
+      rightAddon={(inputId) => (
         <button
           type="button"
-          tabIndex={-1}
-          onClick={function() { setShow(function(s) { return !s; }); }}
-          style={{ background: "none", border: "none", cursor: "pointer", color: T_FAINT, padding: 0, display: "flex", alignItems: "center", transition: "color 120ms" }}
-          aria-label={show ? "Hide password" : "Show password"}
-          onMouseEnter={function(e) { e.currentTarget.style.color = T_MID; }}
-          onMouseLeave={function(e) { e.currentTarget.style.color = T_FAINT; }}
+          className="au-reveal"
+          onClick={() => setShow((s) => !s)}
+          aria-label={show ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+          aria-pressed={show}
+          aria-controls={inputId}
         >
-          {show ? <EyeOff size={15} strokeWidth={1.5} /> : <Eye size={15} strokeWidth={1.5} />}
+          {show ? <EyeOff size={17} strokeWidth={1.6} aria-hidden="true" /> : <Eye size={17} strokeWidth={1.6} aria-hidden="true" />}
         </button>
-      }
+      )}
     />
   );
 }
-
-// ─── Password strength ────────────────────────────────────────────────────────
 
 export function PasswordStrength({ password }) {
   if (!password) return null;
@@ -268,74 +200,41 @@ export function PasswordStrength({ password }) {
   if (/\d/.test(password)) s++;
   if (/[^A-Za-z0-9]/.test(password)) s++;
   const level = Math.min(4, s);
-  const colors = ["#E4E8EF", "#EF4444", "#F59E0B", "#3B82F6", "#10B981"];
   const labels = ["", "Weak", "Fair", "Good", "Strong"];
-  const col = colors[level];
   return (
-    <div style={{ marginTop: 6 }}>
-      <div style={{ display: "flex", gap: 4 }}>
-        {[1,2,3,4].map(function(i) {
-          return <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i <= level ? col : "#E4E8EF", transition: "background 200ms" }} />;
-        })}
+    <div className="au-strength" data-level={level}>
+      <div className="au-strength-bar" aria-hidden="true">
+        {[1, 2, 3, 4].map((i) => <span key={i} className={i <= level ? "on" : ""} />)}
       </div>
-      {level > 0 && (
-        <div style={{ fontSize: "0.7rem", color: col, fontWeight: 600, marginTop: 4, transition: "color 200ms" }}>
-          {labels[level]}
-        </div>
-      )}
+      <span className="au-strength-label" aria-live="polite">{level > 0 ? labels[level] : ""}<span className="au-sr"> password</span></span>
     </div>
   );
 }
 
-// ─── Primary / secondary button ───────────────────────────────────────────────
+// ─── Actions ──────────────────────────────────────────────────────────────────
 
-export function AuthButton({ children, loading, disabled, type = "submit", onClick, variant = "primary", testId }) {
-  const primary = variant === "primary";
+export function AuthButton({ children, loading, disabled, type = "submit", onClick, variant = "primary", testId, loadingLabel = "Please wait…" }) {
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={loading || disabled}
+      aria-busy={loading || undefined}
       data-testid={testId}
-      style={{
-        width: "100%", height: 52,
-        background: primary ? (loading || disabled ? "#94a3b8" : NAVY) : "#fff",
-        color: primary ? "#fff" : T_MAIN,
-        border: primary ? "none" : `1.5px solid ${BORDER}`,
-        borderRadius: 10,
-        fontSize: "0.9rem", fontWeight: 600, letterSpacing: "-0.01em",
-        cursor: loading || disabled ? "not-allowed" : "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-        transition: "opacity 150ms, background 150ms, border-color 150ms",
-        fontFamily: "inherit",
-      }}
-      onMouseEnter={function(e) { if (!loading && !disabled) { e.currentTarget.style.opacity = "0.88"; } }}
-      onMouseLeave={function(e) { e.currentTarget.style.opacity = "1"; }}
+      className={`au-btn ${variant === "primary" ? "au-btn-primary" : "au-btn-secondary"}`}
     >
-      {loading
-        ? <><Loader2 size={16} strokeWidth={2} style={{ animation: "auth-spin 1s linear infinite" }} /> Processing…</>
-        : children}
+      {loading ? <><Loader2 size={17} strokeWidth={2} className="au-spin" aria-hidden="true" /> {loadingLabel}</> : children}
     </button>
   );
 }
 
-// ─── Divider ──────────────────────────────────────────────────────────────────
-
-export function AuthDivider({ text = "OR CONTINUE WITH" }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "22px 0" }}>
-      <div style={{ flex: 1, height: 1, background: BORDER }} />
-      <span style={{ fontSize: "0.6rem", fontWeight: 700, color: T_FAINT, letterSpacing: "0.1em", whiteSpace: "nowrap" }}>{text}</span>
-      <div style={{ flex: 1, height: 1, background: BORDER }} />
-    </div>
-  );
+export function AuthDivider({ text = "or" }) {
+  return <div className="au-divider" role="separator" aria-label={text}>{text}</div>;
 }
-
-// ─── Social icons ─────────────────────────────────────────────────────────────
 
 export function GoogleIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true" focusable="false">
       <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4"/>
       <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853"/>
       <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/>
@@ -346,167 +245,106 @@ export function GoogleIcon() {
 
 export function MicrosoftIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 18 18" fill="none">
-      <rect x="0"   y="0"   width="8.5" height="8.5" fill="#F25022"/>
-      <rect x="9.5" y="0"   width="8.5" height="8.5" fill="#7FBA00"/>
-      <rect x="0"   y="9.5" width="8.5" height="8.5" fill="#00A4EF"/>
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true" focusable="false">
+      <rect x="0" y="0" width="8.5" height="8.5" fill="#F25022"/>
+      <rect x="9.5" y="0" width="8.5" height="8.5" fill="#7FBA00"/>
+      <rect x="0" y="9.5" width="8.5" height="8.5" fill="#00A4EF"/>
       <rect x="9.5" y="9.5" width="8.5" height="8.5" fill="#FFB900"/>
     </svg>
   );
 }
 
+/** The ORCID iD mark (green circle, white "iD"). */
 export function OrcidIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 32 32" fill="none">
-      <circle cx="16" cy="16" r="16" fill="#A6CE39"/>
-      <rect x="9" y="7" width="3" height="18" rx="1" fill="white"/>
-      <circle cx="10.5" cy="5.5" r="2" fill="white"/>
-      <path d="M14 7h5.5C23.6 7 27 11 27 16s-3.4 9-7.5 9H14V7z" fill="white"/>
-      <path d="M17 10.5h2c2.2 0 4 2.4 4 5.5s-1.8 5.5-4 5.5h-2V10.5z" fill="#A6CE39"/>
+    <svg width="20" height="20" viewBox="0 0 256 256" aria-hidden="true" focusable="false">
+      <path fill="#A6CE39" d="M256 128c0 70.7-57.3 128-128 128S0 198.7 0 128 57.3 0 128 0s128 57.3 128 128z"/>
+      <path fill="#FFF" d="M86.3 186.2H70.9V79.1h15.4v107.1zM108.9 79.1h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7 0-21.5-13.7-39.7-43.7-39.7h-23.7v79.4zM88.7 56.8c0 5.5-4.5 10.1-10.1 10.1s-10.1-4.6-10.1-10.1c0-5.6 4.5-10.1 10.1-10.1s10.1 4.6 10.1 10.1z"/>
     </svg>
   );
 }
 
-// ─── Social button row ────────────────────────────────────────────────────────
-
-function SocialBtn({ icon, label, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        width: "100%", height: 48,
-        display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-        border: `1.5px solid ${BORDER}`, background: "#fff", color: T_MAIN,
-        borderRadius: 10, fontSize: "0.875rem", fontWeight: 500,
-        cursor: "pointer", transition: "border-color 150ms, background 150ms",
-        fontFamily: "inherit", letterSpacing: "-0.005em",
-      }}
-      onMouseEnter={function(e) { e.currentTarget.style.borderColor = "#94a3b8"; e.currentTarget.style.background = BG; }}
-      onMouseLeave={function(e) { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.background = "#fff"; }}
-    >
-      {icon}
-      {label}
-    </button>
-  );
-}
-
-/**
- * Sign-in providers that are actually configured on the server. A provider
- * whose credentials aren't set is not shown, so no button leads to an error
- * or a "coming soon" dead end.
- */
+/** Sign-in providers that are actually configured on the server. A provider
+ *  whose credentials aren't set is not shown, so no button leads to an error. */
 export function useOauthProviders() {
   const [providers, setProviders] = useState({ google: false, orcid: false });
-  useEffect(function() {
+  useEffect(() => {
     let alive = true;
-    Promise.all(["google", "orcid"].map(function(p) {
-      return api.get("/" + p + "/config").then(function(r) { return !!(r.data && r.data.configured); }).catch(function() { return false; });
-    })).then(function(res) { if (alive) setProviders({ google: res[0], orcid: res[1] }); });
-    return function() { alive = false; };
+    Promise.all(["google", "orcid"].map((p) =>
+      api.get("/" + p + "/config").then((r) => !!(r.data && r.data.configured)).catch(() => false)
+    )).then((res) => { if (alive) setProviders({ google: res[0], orcid: res[1] }); });
+    return () => { alive = false; };
   }, []);
   return providers;
 }
 
-export function SocialButtons({ onGoogle, onOrcid, providers }) {
+export function SocialButtons({ onGoogle, onOrcid, providers, busy }) {
   if (!providers || (!providers.google && !providers.orcid)) return null;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {providers.google && <SocialBtn icon={<GoogleIcon />} label="Continue with Google" onClick={onGoogle} />}
-      {providers.orcid && <SocialBtn icon={<OrcidIcon />} label="Continue with ORCID" onClick={onOrcid} />}
+    <div className="au-social">
+      {providers.orcid && (
+        <button type="button" className="au-btn au-btn-secondary au-orcid" onClick={onOrcid} disabled={busy === "orcid"} aria-busy={busy === "orcid" || undefined}>
+          {busy === "orcid" ? <Loader2 size={17} strokeWidth={2} className="au-spin" aria-hidden="true" /> : <OrcidIcon />}
+          {busy === "orcid" ? "Opening ORCID…" : "Continue with ORCID"}
+        </button>
+      )}
+      {providers.google && (
+        <button type="button" className="au-btn au-btn-secondary au-orcid" onClick={onGoogle} disabled={busy === "google"}>
+          <GoogleIcon /> Continue with Google
+        </button>
+      )}
     </div>
   );
 }
 
-// ─── Error banner ─────────────────────────────────────────────────────────────
+// ─── Feedback ─────────────────────────────────────────────────────────────────
 
-export function ErrorBanner({ error, testId }) {
+export function ErrorBanner({ error, testId, id }) {
   if (!error) return null;
   return (
-    <div
-      data-testid={testId}
-      style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", background: "#FFF1F2", border: "1px solid #FED7D7", borderRadius: 10, fontSize: "0.84rem", color: "#8A1538", lineHeight: 1.55 }}
-    >
-      <AlertCircle size={14} strokeWidth={1.5} style={{ flexShrink: 0, marginTop: 1, color: "#EF4444" }} />
-      {error}
+    <div className="au-alert" role="alert" data-testid={testId} id={id}>
+      <AlertCircle size={16} strokeWidth={1.8} aria-hidden="true" />
+      <span>{error}</span>
     </div>
   );
 }
 
-// ─── Success state ────────────────────────────────────────────────────────────
+export function Notice({ children }) {
+  return <div className="au-notice" role="status">{children}</div>;
+}
 
-export function SuccessState({ icon, color = "#059669", bg = "#ECFDF5", title, subtitle, children }) {
+export function SuccessState({ icon, title, subtitle, children }) {
   return (
-    <div style={{ textAlign: "center" }}>
-      <div style={{ width: 64, height: 64, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
-        {React.cloneElement(icon, { size: 28, strokeWidth: 1.5, style: { color } })}
-      </div>
-      <h2 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: T_MAIN, margin: "0 0 10px", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
-        {title}
-      </h2>
-      <p style={{ fontSize: "0.875rem", color: T_MID, margin: "0 0 28px", lineHeight: 1.7 }}>
-        {subtitle}
-      </p>
+    <div className="au-success">
+      <div className="au-success-mark">{React.cloneElement(icon, { size: 22, strokeWidth: 1.6, style: { color: NAVY }, "aria-hidden": true })}</div>
+      <h2>{title}</h2>
+      <p>{subtitle}</p>
       {children}
     </div>
   );
 }
-
-// ─── Footer note ──────────────────────────────────────────────────────────────
 
 export function AuthFooter({ children }) {
-  return (
-    <p style={{ fontSize: "0.84rem", color: T_MID, marginTop: 24, textAlign: "center", lineHeight: 1.6 }}>
-      {children}
-    </p>
-  );
+  return <p className="au-switch">{children}</p>;
 }
 
 export function AuthLink({ to, children, testId, onClick }) {
-  return (
-    <Link
-      to={to}
-      data-testid={testId}
-      onClick={onClick}
-      style={{ color: NAVY, fontWeight: 600, textDecoration: "none", transition: "opacity 150ms" }}
-      onMouseEnter={function(e) { e.currentTarget.style.opacity = "0.7"; }}
-      onMouseLeave={function(e) { e.currentTarget.style.opacity = "1"; }}
-    >
-      {children}
-    </Link>
-  );
+  return <Link to={to} data-testid={testId} onClick={onClick} className="au-link">{children}</Link>;
 }
-
-// ─── Terms note ───────────────────────────────────────────────────────────────
 
 export function TermsNote() {
   return (
-    <p style={{ fontSize: "0.75rem", color: T_FAINT, textAlign: "center", lineHeight: 1.65, margin: 0 }}>
-      By continuing you agree to our{" "}
-      <Link to="/terms" style={{ color: T_MID, textDecoration: "underline" }}>Terms of Service</Link>
-      {" "}and{" "}
-      <Link to="/privacy" style={{ color: T_MID, textDecoration: "underline" }}>Privacy Policy</Link>.
+    <p className="au-fine">
+      By continuing you agree to our <Link to="/terms">Terms of Service</Link> and <Link to="/privacy">Privacy Policy</Link>.
     </p>
   );
 }
 
-// ─── Checkbox ────────────────────────────────────────────────────────────────
-
-export function AuthCheckbox({ checked, onChange, children }) {
+export function AuthCheckbox({ checked, onChange, children, testId, className = "" }) {
   return (
-    <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer", fontSize: "0.84rem", color: T_MID, lineHeight: 1.5 }}>
-      <div style={{ position: "relative", flexShrink: 0, marginTop: 1 }}>
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={onChange}
-          style={{ position: "absolute", opacity: 0, width: 18, height: 18, margin: 0, cursor: "pointer" }}
-        />
-        <div style={{ width: 18, height: 18, borderRadius: 5, border: `1.5px solid ${checked ? NAVY : BORDER}`, background: checked ? NAVY : "#fff", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 150ms" }}>
-          {checked && <CheckCircle2 size={12} strokeWidth={2.5} style={{ color: "#fff" }} />}
-        </div>
-      </div>
-      {children}
+    <label className={`au-check ${className}`}>
+      <input type="checkbox" checked={checked} onChange={onChange} data-testid={testId} />
+      <span>{children}</span>
     </label>
   );
 }
