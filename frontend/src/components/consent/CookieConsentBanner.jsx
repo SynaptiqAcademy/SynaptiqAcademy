@@ -1,22 +1,24 @@
 /**
- * CookieConsentBanner — GDPR-compliant cookie consent UI.
+ * CookieConsentBanner — the cookie banner and the cookie preferences dialog.
  *
- * - Shows on first visit (or until consent expires — see lib/cookieConsent
- *   — or is reset from Settings → Privacy).
- * - Banner actions: Accept All / Reject Non-Essential / Manage Preferences.
- * - Manage Preferences opens a real modal (focus-trapped, ESC to close,
- *   animated) with per-category toggles and Save / Accept All / Reject All
- *   Optional / Cancel.
- * - All decisions go through lib/cookieConsent.js, which persists to
- *   localStorage + best-effort backend, and notifies the rest of the app
- *   (e.g. public/analytics-init.js) via the `synaptiq:consent-changed`
- *   window event so optional scripts only ever run after explicit consent.
- * - Settings → Privacy can reopen this modal at any time by dispatching
- *   `synaptiq:open-cookie-preferences` (see lib/cookieConsent.openPreferences).
+ * - The banner shows on first visit (or once the choice expires — see
+ *   lib/cookieConsent — or is reset from Settings → Privacy) with two equal
+ *   choices, Reject analytics / Allow analytics, and a way into preferences.
+ * - The preferences dialog (focus-trapped, Escape closes) lists the two real
+ *   categories as rows: Strictly necessary (always on) and Analytics (a
+ *   switch). Reject optional / Save preferences / Allow analytics are styled
+ *   identically, so no choice is visually favoured. Closing without saving
+ *   changes nothing.
+ * - Every decision goes through lib/cookieConsent.js, which stores it,
+ *   versions it and notifies public/analytics-init.js through the
+ *   `synaptiq:consent-changed` event, so analytics only ever runs after an
+ *   explicit choice.
+ * - The footer's "Cookie settings", the Cookie Policy's "Manage cookie
+ *   settings" and Settings → Privacy all open this same dialog through
+ *   `synaptiq:open-cookie-preferences` (lib/cookieConsent.openPreferences).
  */
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { X } from "lucide-react";
 import {
   readConsent,
   saveConsent,
@@ -26,6 +28,7 @@ import {
   CATEGORY_META,
   OPEN_PREFERENCES_EVENT,
 } from "@/lib/cookieConsent";
+import "./consent.css";
 
 // Kept for any external code that imported the old export name.
 export { readConsent as getConsent } from "@/lib/cookieConsent";
@@ -47,7 +50,8 @@ export default function CookieConsentBanner() {
     setShow(!readConsent());
   }, []);
 
-  // Settings → Privacy → "Manage Cookie Preferences" reopens this modal.
+  // Footer "Cookie settings", /cookies "Manage cookie settings" and
+  // Settings → Privacy reopen the dialog.
   useEffect(() => {
     const handler = () => {
       const existing = readConsent();
@@ -59,10 +63,8 @@ export default function CookieConsentBanner() {
     return () => window.removeEventListener(OPEN_PREFERENCES_EVENT, handler);
   }, []);
 
-  // Mount transition: render off-screen/transparent first, then animate in.
-  // Uses setTimeout rather than requestAnimationFrame — rAF is suspended for
-  // backgrounded/hidden tabs (e.g. a page opened but not yet focused), which
-  // would otherwise leave the banner stuck invisible.
+  // Mount transition. setTimeout rather than requestAnimationFrame: rAF is
+  // suspended in hidden tabs and would leave the banner stuck invisible.
   useEffect(() => {
     if (!show) { setMounted(false); return; }
     const id = setTimeout(() => setMounted(true), 10);
@@ -75,8 +77,8 @@ export default function CookieConsentBanner() {
   }, []);
 
   const cancelPrefs = useCallback(() => {
-    // Reopened from Settings with an existing decision → Cancel should just
-    // close. First-run flow (no decision yet) → fall back to the banner.
+    // Reopened with an existing decision → just close. First visit (no
+    // decision yet) → back to the banner. Never changes the stored choice.
     if (readConsent()) closeAll();
     else setShowPrefs(false);
   }, [closeAll]);
@@ -96,7 +98,7 @@ export default function CookieConsentBanner() {
     closeAll();
   }, [prefs, closeAll]);
 
-  // Focus trap + ESC while the preferences modal is open.
+  // Focus trap + Escape while the preferences dialog is open.
   useEffect(() => {
     if (!showPrefs) return undefined;
     lastFocusedRef.current = document.activeElement;
@@ -108,9 +110,6 @@ export default function CookieConsentBanner() {
           )
         : [];
 
-    // setTimeout, not requestAnimationFrame — rAF is suspended in
-    // hidden/backgrounded tabs and would leave focus never moving into the
-    // modal at all in that case.
     const focusTimer = setTimeout(() => getFocusable()[0]?.focus(), 10);
 
     const onKeyDown = (e) => {
@@ -144,154 +143,159 @@ export default function CookieConsentBanner() {
 
   if (!show) return null;
 
+  if (!showPrefs) {
+    return (
+      <div
+        className={`cc cc-banner${mounted ? " cc-in" : ""}`}
+        data-testid="cookie-consent-banner"
+        role="region"
+        aria-live="polite"
+        aria-labelledby="cc-banner-title"
+      >
+        <div className="cc-banner-inner">
+          <div className="cc-banner-text">
+            <div className="cc-label">Privacy control <span aria-hidden="true">/</span> Cookies</div>
+            <h2 id="cc-banner-title" className="cc-title">Cookies on Synaptiq</h2>
+            <p className="cc-body">
+              We use strictly necessary cookies to keep you signed in and secure. With your permission,
+              we also use analytics to see which pages and features are used. Read our{" "}
+              <Link to="/cookies">Cookie Policy</Link> and <Link to="/privacy">Privacy Policy</Link>.
+            </p>
+          </div>
+          <div className="cc-actions cc-banner-actions">
+            <button
+              type="button"
+              className="cc-btn"
+              data-testid="consent-reject-btn"
+              onClick={() => doRejectOptional("banner")}
+            >Reject analytics</button>
+            <button
+              type="button"
+              className="cc-btn"
+              data-testid="consent-accept-btn"
+              onClick={() => doAcceptAll("banner")}
+            >Allow analytics</button>
+            <button
+              type="button"
+              ref={manageBtnRef}
+              className="cc-link"
+              data-testid="consent-manage-btn"
+              onClick={() => setShowPrefs(true)}
+            >Preferences</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-      {showPrefs && (
-        <div
-          className="fixed inset-0 bg-slate-900/40 z-[9000] transition-opacity duration-200"
-          style={{ opacity: mounted ? 1 : 0 }}
-          onClick={cancelPrefs}
-          data-testid="consent-backdrop"
-          aria-hidden="true"
-        />
-      )}
       <div
-        ref={showPrefs ? panelRef : undefined}
-        className="fixed bottom-0 inset-x-0 z-[9001] bg-white border-t border-slate-200 shadow-2xl transition-all duration-200 ease-out"
-        style={{ transform: mounted ? "translateY(0)" : "translateY(16px)", opacity: mounted ? 1 : 0 }}
+        className={`cc-backdrop${mounted ? " cc-in" : ""}`}
+        onClick={cancelPrefs}
+        data-testid="consent-backdrop"
+        aria-hidden="true"
+      />
+      <div
+        ref={panelRef}
+        className={`cc cc-dialog${mounted ? " cc-in" : ""}`}
         data-testid="cookie-consent-banner"
-        role={showPrefs ? "dialog" : "region"}
-        aria-modal={showPrefs ? "true" : undefined}
-        aria-live={showPrefs ? undefined : "polite"}
-        aria-label={showPrefs ? "Cookie preferences" : "Cookie consent"}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cookie-prefs-title"
+        aria-describedby="cookie-prefs-desc"
       >
-        <div className="max-w-5xl mx-auto px-6 py-5 max-h-[85vh] overflow-y-auto">
-          {!showPrefs ? (
-            <div className="flex flex-col md:flex-row md:items-center gap-4">
-              <div className="flex-1 min-w-0">
-                <div className="overline text-[#0F2847]">Privacy &amp; cookies</div>
-                <h3 className="font-serif text-lg text-slate-900 mt-1">Cookies on Synaptiq</h3>
-                <p className="text-sm text-slate-600 mt-1 leading-relaxed">
-                  We use strictly necessary cookies to keep you signed in and secure. With your permission,
-                  we also use analytics to see which pages and features are used. Read our{" "}
-                  <Link to="/cookies" className="underline decoration-dotted hover:text-[#0F2847]">Cookie Policy</Link>{" "}
-                  and{" "}
-                  <Link to="/privacy" className="underline decoration-dotted hover:text-[#0F2847]">Privacy Policy</Link>.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                <button
-                  ref={manageBtnRef}
-                  onClick={() => setShowPrefs(true)}
-                  className="px-4 py-2 text-sm text-slate-700 border border-slate-300 hover:bg-slate-50 rounded-md transition-colors"
-                  data-testid="consent-manage-btn"
-                >Choose</button>
-                <button
-                  onClick={() => doRejectOptional("banner")}
-                  className="px-4 py-2 text-sm font-medium text-[#0F2847] border border-[#0F2847] hover:bg-slate-50 rounded-md transition-colors"
-                  data-testid="consent-reject-btn"
-                >Reject analytics</button>
-                <button
-                  onClick={() => doAcceptAll("banner")}
-                  className="px-4 py-2 text-sm font-medium text-[#0F2847] border border-[#0F2847] hover:bg-slate-50 rounded-md transition-colors"
-                  data-testid="consent-accept-btn"
-                >Allow analytics</button>
-              </div>
-            </div>
-          ) : (
-            <div className="max-w-xl">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="overline text-[#0F2847]">Cookie preferences</div>
-                  <h3 id="cookie-prefs-title" className="font-serif text-2xl text-slate-900 mt-1">Manage your cookies</h3>
-                  <p className="text-sm text-slate-600 mt-1">Choose which categories of cookies Synaptiq may use on your device.</p>
-                </div>
-                <button
-                  onClick={cancelPrefs}
-                  aria-label="Close cookie preferences"
-                  className="shrink-0 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
-                  data-testid="consent-prefs-close-x"
-                ><X size={14} /></button>
-              </div>
-
-              <div className="mt-5 space-y-3">
-                {CATEGORY_META.map((cat) => (
-                  <ConsentRow
-                    key={cat.id}
-                    label={cat.label}
-                    desc={cat.description}
-                    explanation={cat.explanation}
-                    checked={cat.locked ? true : !!prefs[cat.id]}
-                    onChange={(v) => setPrefs((p) => ({ ...p, [cat.id]: v }))}
-                    locked={cat.locked}
-                    testId={`consent-row-${cat.id}`}
-                  />
-                ))}
-              </div>
-
-              <div className="mt-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                <button
-                  onClick={cancelPrefs}
-                  className="px-4 py-2 text-sm text-slate-700 hover:text-slate-900 rounded-md transition-colors"
-                  data-testid="consent-prefs-cancel"
-                >Cancel</button>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <button
-                    onClick={() => doRejectOptional("preferences_modal")}
-                    className="px-4 py-2 text-sm text-slate-700 border border-slate-300 hover:bg-slate-50 rounded-md transition-colors"
-                    data-testid="consent-prefs-reject-all"
-                  >Reject All Optional</button>
-                  <button
-                    onClick={() => doAcceptAll("preferences_modal")}
-                    className="px-4 py-2 text-sm text-slate-700 border border-slate-300 hover:bg-slate-50 rounded-md transition-colors"
-                    data-testid="consent-prefs-accept-all"
-                  >Accept All</button>
-                  <button
-                    onClick={doSavePrefs}
-                    className="px-4 py-2 text-sm bg-[#0F2847] text-white hover:bg-slate-800 rounded-md transition-colors"
-                    data-testid="consent-prefs-save"
-                  >Save Preferences</button>
-                </div>
-              </div>
-            </div>
-          )}
+        <div className="cc-dialog-head">
+          <div>
+            <div className="cc-label">Privacy control <span aria-hidden="true">/</span> Cookie preferences</div>
+            <h2 id="cookie-prefs-title" className="cc-title cc-title-lg">Manage your cookies</h2>
+            <p id="cookie-prefs-desc" className="cc-body">Choose whether Synaptiq may use optional analytics on this device.</p>
+          </div>
+          <button
+            type="button"
+            className="cc-close"
+            onClick={cancelPrefs}
+            aria-label="Close cookie preferences without saving"
+            data-testid="consent-prefs-close-x"
+          >Close</button>
         </div>
+
+        <ol className="cc-rows">
+          {CATEGORY_META.map((cat, i) => (
+            <ConsentRow
+              key={cat.id}
+              n={i + 1}
+              id={cat.id}
+              label={cat.label}
+              desc={cat.description}
+              explanation={cat.explanation}
+              checked={cat.locked ? true : !!prefs[cat.id]}
+              onChange={(v) => setPrefs((p) => ({ ...p, [cat.id]: v }))}
+              locked={cat.locked}
+              testId={`consent-row-${cat.id}`}
+            />
+          ))}
+        </ol>
+
+        <div className="cc-actions cc-dialog-actions">
+          <button
+            type="button"
+            className="cc-btn"
+            data-testid="consent-prefs-reject-all"
+            onClick={() => doRejectOptional("preferences_modal")}
+          >Reject optional</button>
+          <button
+            type="button"
+            className="cc-btn"
+            data-testid="consent-prefs-save"
+            onClick={doSavePrefs}
+          >Save preferences</button>
+          <button
+            type="button"
+            className="cc-btn"
+            data-testid="consent-prefs-accept-all"
+            onClick={() => doAcceptAll("preferences_modal")}
+          >Allow analytics</button>
+        </div>
+        <p className="cc-foot">
+          <Link to="/cookies" onClick={cancelPrefs}>Cookie Policy</Link>
+          <span aria-hidden="true"> · </span>
+          You can change this at any time from “Cookie settings” in the footer.
+        </p>
       </div>
     </>
   );
 }
 
-function ConsentRow({ label, desc, explanation, checked, onChange, locked, testId }) {
+function ConsentRow({ n, id, label, desc, explanation, checked, onChange, locked, testId }) {
+  const labelId = `cc-row-${id}-label`;
+  const descId = `cc-row-${id}-desc`;
   return (
-    <div className="border border-slate-200 hover:bg-slate-50/60 rounded-md" data-testid={testId}>
-      <label className="flex items-start gap-3 p-3 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={!!checked}
-          onChange={(e) => !locked && onChange?.(e.target.checked)}
-          disabled={locked}
-          aria-label={label}
-          className="mt-1 accent-[#0F2847]"
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <div className="text-sm text-slate-900 font-medium">{label}</div>
-              {locked && <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">always on</span>}
-            </div>
-            <span
-              className={`text-[10px] font-mono uppercase tracking-widest shrink-0 ${checked ? "text-emerald-600" : "text-slate-400"}`}
-              data-testid={`${testId}-status`}
-            >
-              {checked ? "Enabled" : "Disabled"}
-            </span>
-          </div>
-          <div className="text-xs text-slate-600 mt-0.5 leading-relaxed">{desc}</div>
-          {explanation && (
-            <div className="text-[11px] text-slate-500 mt-1 leading-relaxed italic">{explanation}</div>
-          )}
+    <li className="cc-row" data-testid={testId}>
+      <div className="cc-row-head">
+        <div className="cc-row-name" id={labelId}>
+          <span className="cc-row-n" aria-hidden="true">{String(n).padStart(2, "0")} /</span> {label}
         </div>
-      </label>
-    </div>
+        {locked ? (
+          <span className="cc-state cc-state-locked" data-testid={`${testId}-status`}>Always on</span>
+        ) : (
+          <button
+            type="button"
+            role="switch"
+            aria-checked={!!checked}
+            aria-labelledby={labelId}
+            aria-describedby={descId}
+            className="cc-switch"
+            onClick={() => onChange?.(!checked)}
+            data-testid={`${testId}-switch`}
+          >
+            <span className="cc-switch-track" aria-hidden="true"><span className="cc-switch-thumb" /></span>
+            <span className="cc-state" data-testid={`${testId}-status`}>{checked ? "On" : "Off"}</span>
+          </button>
+        )}
+      </div>
+      <p className="cc-row-desc" id={descId}>{desc}</p>
+      {explanation && <p className="cc-row-more">{explanation}</p>}
+    </li>
   );
 }

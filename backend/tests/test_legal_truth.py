@@ -224,3 +224,28 @@ def test_four_documents_and_trust_pages_make_no_unverified_claims(pattern):
 def test_public_passport_copy_matches_privacy_by_default():
     panel = (SRC / "components" / "passport" / "PublicPortfolioPanel.jsx").read_text()
     assert "never see your email" not in panel and "stay private unless you turn them on" in panel
+
+
+# ── Cookie banner and preferences dialog: one design, neutral choices ────────
+CONSENT_UI = (SRC / "components" / "consent" / "CookieConsentBanner.jsx").read_text()
+
+
+def test_consent_choices_are_visually_identical_in_banner_and_dialog():
+    def cls(testid):
+        return re.search(r'className="([^"]+)"\s*data-testid="%s"' % testid, CONSENT_UI).group(1)
+    assert cls("consent-reject-btn") == cls("consent-accept-btn")
+    assert cls("consent-prefs-reject-all") == cls("consent-prefs-accept-all") == cls("consent-prefs-save")
+
+
+def test_consent_ui_has_no_legacy_styling_and_keeps_dialog_semantics():
+    for legacy in ("rounded-md", "shadow-2xl", "emerald", "bg-slate", "border-slate", 'type="checkbox"'):
+        assert legacy not in CONSENT_UI, legacy
+    assert 'import "./consent.css"' in CONSENT_UI
+    for attr in ('role="dialog"', 'aria-modal="true"', 'aria-labelledby="cookie-prefs-title"',
+                 'aria-describedby="cookie-prefs-desc"', 'role="switch"', "aria-checked", '"Escape"'):
+        assert attr in CONSENT_UI, attr
+    # Consent logic is untouched: the UI only calls the existing functions.
+    for call in ("rejectOptionalConsent(source)", "acceptAllConsent(source)", 'saveConsent(prefs, "custom", "preferences_modal")'):
+        assert call in CONSENT_UI
+    lib = (SRC / "lib" / "cookieConsent.js").read_text()
+    assert lib.count('id: "') == 2 and 'id: "essential"' in lib and 'id: "analytics"' in lib
