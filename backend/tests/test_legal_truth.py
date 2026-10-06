@@ -306,7 +306,7 @@ def test_security_is_linked_from_legal_and_trust_but_not_a_fifth_legal_document(
     assert SEC.count("<h1") == 1 and 'path: "/security"' in SEC and 'title: "Security | Synaptiq"' in SEC
 
 
-@pytest.mark.parametrize("page", ["HelpCenter", "Contact", "ApiPortal", "Status"])
+@pytest.mark.parametrize("page", ["HelpCenter", "Contact", "Status"])
 def test_other_public_pages_do_not_reintroduce_security_claims(page):
     text = (SRC / "pages" / f"{page}.jsx").read_text()
     for bad in ("security@", "48 hours", "TLS 1.3", "AES-256", "GDPR Compliant", "GDPR Compliance", "Data residency",
@@ -324,6 +324,6 @@ def test_security_txt_is_a_genuine_404_until_a_verified_contact_exists():
     assert "security@" not in mw
 
 
-def test_help_center_reply_times_are_aims_not_guarantees():
+def test_help_center_makes_no_reply_time_promises():
     hc = (SRC / "pages" / "HelpCenter.jsx").read_text()
-    assert "These are aims, not guarantees" in hc and "When to expect a reply" not in hc
+    assert "working day" not in hc and "When to expect a reply" not in hc

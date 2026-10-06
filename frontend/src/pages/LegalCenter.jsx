@@ -3,6 +3,7 @@ import React, { useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import MarketingLayout from "../components/layout/MarketingLayout";
 import { LEGAL } from "../content/legal/meta";
+import { setPageSeo } from "../lib/seo";
 import {
   Shield, FileText, Cookie, Globe,
   ArrowRight, Clock, Calendar, ChevronRight,
@@ -113,6 +114,7 @@ const RELATED = [
 
 /* ────────────────────────────────────────────────────────────────────────────── */
 export default function LegalCenter() {
+  useEffect(() => setPageSeo({ title: "Legal & Trust | Synaptiq", description: "Synaptiq's Privacy Policy, Terms of Service, Cookie Policy, Data Protection and Security pages in one place.", path: "/legal" }), []);
   const heroRef = useReveal();
   const gridRef = useReveal();
   const relRef  = useReveal();

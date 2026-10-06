@@ -226,3 +226,42 @@
 .lp-proof-arrow { font-family: var(--serif); font-size: 1.4rem; color: var(--mark); padding-top: 52px; }
 @media (max-width: 959px) { .lp-proof-arrow { padding: 0; transform: rotate(90deg); width: max-content; } }
 .lp-proof .lp-frag { max-width: none; }
+
+/* ── Editorial body copy ────────────────────────────────────────────────────
+   Long explanatory paragraphs (leads, prose, notes that run several lines)
+   are justified with hyphenation, at a reading measure. Headings, labels,
+   buttons, captions, card text and short fragments are not: they stay left.
+   On narrow screens justification opens visible gaps between words, so it
+   falls back to left alignment below 700px. Add `lp-prose` to any new
+   long-form paragraph rather than declaring text-align locally. */
+.lp .lp-prose,
+.lp .lp-lede,
+.lp .ab-prose > p,
+.lp .sc-section > p,
+.lp .aw-integrity,
+.lp .in-aside,
+.lp .rx-scope,
+.lp .wn-summary {
+  text-align: justify;
+  text-justify: inter-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  hyphenate-limit-chars: 7 3 3;
+  overflow-wrap: break-word;
+}
+.lp .lp-prose { max-width: 68ch; }
+.lp .aw-integrity, .lp .in-aside { max-width: 64ch; }
+@media (max-width: 700px) {
+  .lp .lp-prose,
+  .lp .lp-lede,
+  .lp .ab-prose > p,
+  .lp .sc-section > p,
+  .lp .aw-integrity,
+  .lp .in-aside,
+  .lp .rx-scope,
+  .lp .wn-summary {
+    text-align: left;
+    -webkit-hyphens: manual;
+    hyphens: manual;
+  }
+}

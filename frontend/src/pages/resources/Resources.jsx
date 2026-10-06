@@ -89,7 +89,7 @@ export default function Resources() {
                   reviewed before it appears here, with real references wherever it makes a claim.
                 </p>
                 <p className="rx-scope">
-                  The library is organised by what you're trying to do: {Object.values(TASKS).map((t) => t.toLowerCase()).join(", ").replace(/, ([^,]*)$/, " and $1")}.
+                  The library is organised by what you're trying to do: {Object.values(TASKS).map((t) => t.charAt(0).toLowerCase() + t.slice(1).replace(/\bai\b/g, "AI")).join(", ").replace(/, ([^,]*)$/, " and $1")}.
                 </p>
               </div>
             ) : (

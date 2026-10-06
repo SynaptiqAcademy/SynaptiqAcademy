@@ -115,7 +115,6 @@ const About             = lazy(() => import("@/pages/About"));
 const Resources         = lazy(() => import("@/pages/resources/Resources"));
 const ResourceArticle   = lazy(() => import("@/pages/resources/ResourceArticle"));
 const WhatsNew          = lazy(() => import("@/pages/resources/WhatsNew"));
-const CustomerStories   = lazy(() => import("@/pages/resources/CustomerStories"));
 const ResourcesBlog     = lazy(() => import("@/pages/resources/Blog"));
 const BlogArticle       = lazy(() => import("@/pages/resources/BlogArticle"));
 // Old article URLs (/resources/blog/:slug) keep working: they redirect to /blog/:slug.
@@ -130,9 +129,7 @@ const GDPR = lazy(() => import("@/pages/GDPR"));
 const Security = lazy(() => import("@/pages/Security"));
 const Cookies = lazy(() => import("@/pages/Cookies"));
 const AiPolicy        = lazy(() => import("@/pages/AiPolicy"));
-const Documentation   = lazy(() => import("@/pages/Documentation"));
 const HelpCenter      = lazy(() => import("@/pages/HelpCenter"));
-const ApiPortal       = lazy(() => import("@/pages/ApiPortal"));
 const Status          = lazy(() => import("@/pages/Status"));
 
 // Teaching Hub — Production
@@ -428,7 +425,7 @@ function App() {
               <Route path="/resources/guides/:slug" element={<ResourceArticle />} />
               <Route path="/whats-new" element={<WhatsNew />} />
               <Route path="/resources/whats-new" element={<Navigate to="/whats-new" replace />} />
-              <Route path="/resources/customer-stories" element={<CustomerStories />} />
+              <Route path="/resources/customer-stories" element={<Navigate to="/resources" replace />} />
               <Route path="/blog" element={<ResourcesBlog />} />
               <Route path="/blog/:slug" element={<BlogArticle />} />
               <Route path="/resources/blog/:slug" element={<LegacyBlogArticleRedirect />} />
@@ -442,9 +439,11 @@ function App() {
                   docs/privacy/public-security-claims.md. */}
               <Route path="/security" element={<Security />} />
               <Route path="/ai-policy" element={<AiPolicy />} />
-              <Route path="/documentation" element={<Documentation />} />
+              {/* Documentation and Developers listed articles and a public API that
+                  don't exist; help lives in the Help Center, API enquiries go to Contact. */}
+              <Route path="/documentation" element={<Navigate to="/help-center" replace />} />
               <Route path="/help-center" element={<HelpCenter />} />
-              <Route path="/developers" element={<ApiPortal />} />
+              <Route path="/developers" element={<Navigate to="/contact?topic=partnership" replace />} />
               <Route path="/status" element={<Status />} />
               <Route path="/onboarding" element={<ProtectedRoute requireOnboarded={false}><Onboarding /></ProtectedRoute>} />
               <Route path="/profile-setup" element={<ProtectedRoute requireOnboarded={true}><ProfileSetup /></ProtectedRoute>} />

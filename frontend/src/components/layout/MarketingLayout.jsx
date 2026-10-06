@@ -269,7 +269,7 @@ export default function MarketingLayout({ children }) {
             })}
           </nav>
 
-          {/* Right: Sign In + Get Started + mobile toggle */}
+          {/* Right: Sign In + Start Free + mobile toggle */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
             {/* Desktop */}
             <div className="hidden lg:flex items-center" style={{ gap: 8 }}>
@@ -301,7 +301,7 @@ export default function MarketingLayout({ children }) {
                   >
                     Sign In
                   </Link>
-                  {/* Get Started */}
+                  {/* Start Free */}
                   <Link
                     to="/register"
                     data-testid="marketing-join-link"
@@ -314,7 +314,7 @@ export default function MarketingLayout({ children }) {
                     onMouseEnter={function(e) { e.currentTarget.style.opacity = "0.85"; }}
                     onMouseLeave={function(e) { e.currentTarget.style.opacity = "1"; }}
                   >
-                    Get Started
+                    Start Free
                   </Link>
                 </>
               )}
@@ -372,10 +372,10 @@ export default function MarketingLayout({ children }) {
                 </>
               ) : (
                 <>
-                  <Link to="/login" onClick={closeMobile} style={{ fontSize: "0.88rem", fontWeight: 500, color: T_MAIN, textDecoration: "none" }}>Sign in</Link>
+                  <Link to="/login" onClick={closeMobile} style={{ fontSize: "0.88rem", fontWeight: 500, color: T_MAIN, textDecoration: "none" }}>Sign In</Link>
                   <Link to="/register" onClick={closeMobile}
                     style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.88rem", fontWeight: 600, color: "#fff", background: NAVY, padding: "12px 0", borderRadius: 10, textDecoration: "none" }}>
-                    Get Started
+                    Start Free
                   </Link>
                 </>
               )}
@@ -418,9 +418,7 @@ export default function MarketingLayout({ children }) {
 
             <FCol title="Resources">
               <FL href="/pricing">Pricing</FL>
-              <FL href="/documentation">Documentation</FL>
               <FL href="/help-center">Help Center</FL>
-              <FL href="/developers">Developers</FL>
               <FL href="/resources">Research Library</FL>
               <FL href="/whats-new">What's New</FL>
               <FL href="/blog">Blog</FL>

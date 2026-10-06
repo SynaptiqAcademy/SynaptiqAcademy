@@ -29,6 +29,10 @@ export default function Passport() {
             What you work on, how you work and what you're open to. It's how
             people find you, and it's free.
           </p>
+          <p className="lp-lede">
+            Students, researchers and lecturers have one, and so do practitioners:
+            a clinician, a policy analyst or an engineer whose experience a study needs.
+          </p>
         </div>
 
         <div>

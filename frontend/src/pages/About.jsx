@@ -71,16 +71,16 @@ export default function About() {
           <div className="lp-wrap ab-prose">
             <div className="lp-index"><b>01</b> What we noticed</div>
             <h2 id="ab-problem" className="lp-h2">The tools are fine. The context gets lost between them.</h2>
-            <p>
+            <p className="lp-prose">
               A researcher's identity sits in one system and their publications in another. Possible collaborators are
               found through email, conferences or word of mouth. The project lives in shared folders, the AI in a separate
               window, the submission somewhere else again.
             </p>
-            <p>
+            <p className="lp-prose">
               Each of these can work well on its own. What doesn't survive the move between them is the reasoning: why
               this question, what it needs, who was approached and why, what was agreed.
             </p>
-            <p>
+            <p className="lp-prose">
               And a question rarely needs only information. It may need a statistician, someone who knows the clinical
               setting, someone who has modelled this kind of system before. Titles and departments seldom tell you who
               that is.
@@ -106,12 +106,12 @@ export default function About() {
               </ol>
             </figure>
             <div className="ab-prose ab-now">
-              <p>
+              <p className="lp-prose">
                 Today a question can become a structured Research Need. Synaptiq can suggest people for it, showing what in
                 their profile makes them relevant. You invite each person yourself; those who accept can start a project and
                 workspace together, and manuscripts stay linked to the project they came from.
               </p>
-              <p>
+              <p className="lp-prose">
                 The aim is that the next step never has to begin from zero.
               </p>
             </div>
@@ -142,13 +142,13 @@ export default function About() {
           <div className="lp-wrap ab-prose">
             <div className="lp-index"><b>04</b> What we're building toward</div>
             <h2 id="ab-direction" className="lp-h2">From the question to the record, without starting over.</h2>
-            <p>
+            <p className="lp-prose">
               Not all of this exists yet. The direction is a place where a question keeps its context from the first
               draft to the published work, where suggestions improve as profiles describe people more fully, including
               expertise that sits outside universities, and where what a project produces becomes part of a credible
               research record.
             </p>
-            <p>
+            <p className="lp-prose">
               Research also happens inside organisations, and a department chart rarely shows how expertise connects
               across it. Making that visible, with people's consent, is part of the same idea.
             </p>
@@ -160,12 +160,12 @@ export default function About() {
           <div className="lp-wrap ab-prose">
             <div className="lp-index"><b>05</b> Built for researchers, not around them</div>
             <h2 id="ab-control" className="lp-h2">The researcher stays in charge of the decisions.</h2>
-            <p>
+            <p className="lp-prose">
               You choose what your Academic Passport shows and whether you appear in discovery. You decide who to
               contact and which invitations to accept. Nothing an AI produces becomes part of your work unless you put
               it there.
             </p>
-            <p>
+            <p className="lp-prose">
               Verification confirms specific things, such as an institutional affiliation. It never vouches for a person
               as a whole. And a research identity is not tied to one job: when someone leaves an institution, its access
               ends and their Passport stays with them.

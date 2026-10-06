@@ -1,4 +1,5 @@
 import React from "react";
+import { setPageSeo } from "../lib/seo";
 import { Link } from "react-router-dom";
 import { LegalLayout, Section } from "./legal/LegalLayout";
 import { ACCENT } from "@/lib/tokens";
@@ -67,6 +68,7 @@ const AI_FEATURES = [
 ];
 
 export default function AiPolicy() {
+  React.useEffect(() => setPageSeo({ title: "AI Usage Policy | Synaptiq", description: "How AI features on Synaptiq work, which providers process requests, and the limits of AI output.", path: "/ai-policy" }), []);
   return (
     <LegalLayout
       eyebrow="Legal"
