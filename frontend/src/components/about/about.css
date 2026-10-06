@@ -1,0 +1,32 @@
+/* /about — the most human Synaptiq page: prose first, one figure. */
+
+.ab .lp-h1 { max-width: 20ch; font-size: clamp(2.3rem, 5vw, 3.9rem); }
+.ab-hero { padding-bottom: 96px; }
+.ab-prose > * { max-width: 760px; }
+.ab-prose > p { margin-top: 18px; font-family: var(--serif); font-size: 1.25rem; line-height: 1.65; color: var(--ink); }
+.ab-prose > .lp-h2 + p { margin-top: 26px; }
+
+/* The gaps: stages as a ruled sequence, the question between each pair in the margin */
+.ab-gaps { margin-top: 40px; border-top: 1px solid var(--ink); padding-top: 14px; max-width: 900px; }
+.ab-gaps ol { list-style: none; margin: 0; padding: 0; }
+.ab-stage { display: grid; grid-template-columns: 3rem minmax(0, 14rem) minmax(0, 1fr); gap: 0 24px; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--rule); position: relative; }
+.ab-n { font-size: 0.78rem; color: var(--muted); }
+.ab-stage-name { font-family: var(--serif); font-size: 1.5rem; color: var(--ink); }
+.ab-gap { font-size: 1rem; color: var(--mark); font-style: italic; padding-left: 16px; border-left: 1px solid var(--mark); }
+@media (max-width: 640px) {
+  .ab-stage { grid-template-columns: 2.5rem minmax(0, 1fr); }
+  .ab-gap { grid-column: 2; margin-top: 6px; }
+}
+.ab-now { margin-top: 32px; }
+
+/* Principles */
+.ab-principles { list-style: none; margin: 36px 0 0; padding: 0; border-top: 1px solid var(--ink); max-width: 900px; }
+.ab-principles li { display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: 0 24px; padding: 22px 0; border-bottom: 1px solid var(--rule); }
+.lp .ab-principles h3 { font-family: var(--serif); font-weight: 400; font-size: 1.5rem; line-height: 1.25; color: var(--ink); }
+.ab-principles p { margin-top: 8px; font-size: 1.02rem; line-height: 1.65; color: var(--ink-2); max-width: 60ch; }
+
+/* Closing links */
+.ab-more { list-style: none; margin: 40px 0 0; padding: 0; border-top: 1px solid var(--rule); }
+.ab-more li { display: flex; flex-wrap: wrap; gap: 4px 18px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.ab-more a { font-family: var(--serif); font-size: 1.15rem; color: var(--ink); min-width: 10rem; }
+.ab-more span { font-size: 0.94rem; color: var(--muted); }
