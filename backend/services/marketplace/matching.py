@@ -34,6 +34,7 @@ from services.permissions import REAL_CUSTOMER_FILTER
 from services.credits_service import consume_credits, refund_credits
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.safe_search import contains as safe_contains
 
 logger = logging.getLogger("synaptiq.marketplace.matching")
 
@@ -140,17 +141,17 @@ async def deterministic_rank(
     q_filter: dict = {"is_demo": {"$ne": True}, **REAL_CUSTOMER_FILTER}
     if exclude_self: q_filter["_id"] = {"$ne": ObjectId(requester_id)}
     if country: q_filter["country"] = country
-    if institution: q_filter["institution"] = {"$regex": institution, "$options": "i"}
+    if institution: q_filter["institution"] = safe_contains(institution)
     if availability: q_filter["availability"] = availability
     or_clauses: list = []
     if q:
         or_clauses.extend([
-            {"full_name": {"$regex": q, "$options": "i"}},
-            {"research_areas": {"$regex": q, "$options": "i"}},
-            {"research_keywords": {"$regex": q, "$options": "i"}},
-            {"research_interests": {"$regex": q, "$options": "i"}},
-            {"skills": {"$regex": q, "$options": "i"}},
-            {"biography": {"$regex": q, "$options": "i"}},
+            {"full_name": safe_contains(q)},
+            {"research_areas": safe_contains(q)},
+            {"research_keywords": safe_contains(q)},
+            {"research_interests": safe_contains(q)},
+            {"skills": safe_contains(q)},
+            {"biography": safe_contains(q)},
         ])
     if areas: or_clauses.append({"research_areas": {"$in": areas}})
     if skills: or_clauses.append({"skills": {"$in": skills}})

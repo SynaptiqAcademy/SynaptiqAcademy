@@ -23,6 +23,7 @@ from services.encryption_service import encrypt_field
 from routers.auth import _issue_tokens_and_cookies, _record_successful_login
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.safe_search import contains as safe_contains
 
 logger = logging.getLogger("synaptiq.orcid.router")
 router = APIRouter(prefix="/api/orcid", tags=["orcid"])
@@ -279,9 +280,9 @@ async def list_publications(
         qf["doi"] = None
     if q:
         qf["$or"] = [
-            {"title": {"$regex": q, "$options": "i"}},
-            {"journal": {"$regex": q, "$options": "i"}},
-            {"concepts": {"$regex": q, "$options": "i"}},
+            {"title": safe_contains(q)},
+            {"journal": safe_contains(q)},
+            {"concepts": safe_contains(q)},
         ]
     total = await db.publications.count_documents(qf)
     docs = await db.publications.find(qf).sort([("year", -1), ("title", 1)]).skip(skip).limit(limit).to_list(limit)

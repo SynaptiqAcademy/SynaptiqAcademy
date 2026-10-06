@@ -8,6 +8,7 @@ from services.recommendation.profiles import get_or_refresh_profile
 from services.permissions import REAL_CUSTOMER_FILTER
 from services.collab_intelligence.researcher_profiler import build_researcher_profile
 from services.collab_intelligence.matching_engine import rank_matches
+from services.safe_search import contains as safe_contains
 
 
 async def match_researchers(
@@ -87,13 +88,13 @@ async def match_researchers(
     }
 
     if country_filter:
-        query["country"] = {"$regex": country_filter, "$options": "i"}
+        query["country"] = safe_contains(country_filter)
 
     if area_filter:
-        query["research_areas"] = {"$regex": area_filter, "$options": "i"}
+        query["research_areas"] = safe_contains(area_filter)
 
     if role_filter:
-        query["academic_role"] = {"$regex": role_filter, "$options": "i"}
+        query["academic_role"] = safe_contains(role_filter)
 
     projection = {
         "_id": 1,

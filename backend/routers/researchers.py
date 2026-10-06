@@ -13,6 +13,7 @@ from db import get_db
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 from services.permissions import REAL_CUSTOMER_FILTER
+from services.safe_search import contains as safe_contains
 
 log = logging.getLogger("synaptiq.researchers")
 router = APIRouter(prefix="/api/researchers", tags=["researchers"])
@@ -233,7 +234,7 @@ async def discover_sections(user: dict = Depends(get_current_user)):
     # ── Section 3: Institutional matches ─────────────────────────────────────
     institutional = []
     if user_inst:
-        inst_filter = {**base_filter, "institution": {"$regex": user.get("institution",""), "$options": "i"}}
+        inst_filter = {**base_filter, "institution": safe_contains(user.get("institution",""))}
         institutional = await db.users.find(inst_filter).limit(6).to_list(6)
 
     # ── Section 4: International matches (different country, strong area overlap) ──

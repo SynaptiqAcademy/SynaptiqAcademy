@@ -1,6 +1,7 @@
 """Academic communities — discussions, resources, announcements, moderation."""
 from datetime import datetime, timezone
 from bson import ObjectId
+from services.safe_search import contains as safe_contains
 
 
 def _now():
@@ -49,8 +50,8 @@ async def list_communities(db, filters: dict, user_id: str, page: int = 1, limit
     query = {}
     if q := filters.get("q"):
         query["$or"] = [
-            {"name": {"$regex": q, "$options": "i"}},
-            {"description": {"$regex": q, "$options": "i"}},
+            {"name": safe_contains(q)},
+            {"description": safe_contains(q)},
         ]
     if t := filters.get("topic"):
         query["topic"] = t

@@ -39,6 +39,7 @@ from services.admin_audit import log_event, request_meta
 from services.permissions import require_super_admin, REAL_CUSTOMER_FILTER
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.safe_search import contains as safe_contains
 
 router = APIRouter(prefix="/api/admin/x", tags=["admin-expansion"])
 _GATE = [Depends(require_super_admin)]
@@ -99,7 +100,7 @@ async def list_feature_flags_center():
         name = f.get("name", "")
         # Adoption: users who've used this feature (from credit_transactions or audit_log)
         adoption_pipe = [
-            {"$match": {"action": {"$regex": name, "$options": "i"}, "created_at": {"$gte": _ago(30)}}},
+            {"$match": {"action": safe_contains(name), "created_at": {"$gte": _ago(30)}}},
             {"$group": {"_id": "$actor_id"}},
             {"$count": "n"},
         ]
@@ -108,7 +109,7 @@ async def list_feature_flags_center():
 
         # Error count from error_logs
         error_count = await db.error_logs.count_documents({
-            "message": {"$regex": name, "$options": "i"},
+            "message": safe_contains(name),
             "created_at": {"$gte": _ago(30)},
         })
 
@@ -204,13 +205,13 @@ async def feature_flag_stats(name: str):
         day_start = f"{day}T00:00:00+00:00"
         day_end   = f"{day}T23:59:59+00:00"
         count = await db.audit_log.count_documents({
-            "action": {"$regex": name, "$options": "i"},
+            "action": safe_contains(name),
             "created_at": {"$gte": day_start, "$lte": day_end},
         })
         trend.append({"date": day, "events": count})
 
     errors = await db.error_logs.count_documents({
-        "message": {"$regex": name, "$options": "i"},
+        "message": safe_contains(name),
         "created_at": {"$gte": _ago(30)},
     })
 
@@ -711,8 +712,8 @@ async def list_institutions_admin(page: int = 1, limit: int = 30, search: str = 
     filt: dict = {}
     if search:
         filt["$or"] = [
-            {"name": {"$regex": search, "$options": "i"}},
-            {"country": {"$regex": search, "$options": "i"}},
+            {"name": safe_contains(search)},
+            {"country": safe_contains(search)},
         ]
     skip  = (max(page, 1) - 1) * limit
     total = await db.institutions.count_documents(filt)
@@ -1517,7 +1518,7 @@ async def platform_command_map():
             except Exception:
                 pass
         errors = await db.error_logs.count_documents({
-            "category": {"$regex": name, "$options": "i"},
+            "category": safe_contains(name),
             "created_at": {"$gte": _ago(hours=24)},
             "resolved": {"$ne": True},
         })

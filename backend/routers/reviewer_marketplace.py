@@ -10,6 +10,7 @@ from auth_utils import get_current_user
 from db import get_db
 from repo.shim import make_db_proxy
 from zt.deps import zt_check, zt_is_admin, zt_is_super_admin
+from services.safe_search import contains as safe_contains
 
 logger = logging.getLogger("synaptiq")
 router = APIRouter(prefix="/api/reviewer-marketplace", tags=["reviewer-marketplace"])
@@ -182,7 +183,7 @@ async def list_review_requests(
     query: dict = {"visibility": visibility}
     if status: query["status"] = status
     if review_type: query["review_type"] = review_type
-    if research_area: query["research_area"] = {"$regex": research_area, "$options": "i"}
+    if research_area: query["research_area"] = safe_contains(research_area)
     total = await db.review_requests.count_documents(query)
     skip = (page - 1) * limit
     items = []

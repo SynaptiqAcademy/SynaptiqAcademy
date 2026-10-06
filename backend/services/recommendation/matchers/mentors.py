@@ -6,6 +6,7 @@ from services.recommendation.profiles import get_or_refresh_profile
 from services.recommendation.scoring import normalize_set, jaccard, clamp
 from services.recommendation.explainer import explain_mentor
 from services.permissions import REAL_CUSTOMER_FILTER
+from services.safe_search import contains as safe_contains
 
 def _normalize_role(role: str) -> str:
     """Normalize role: lowercase, replace spaces/hyphens with underscores."""
@@ -118,7 +119,7 @@ async def match_mentors(
     # Use regex to match any senior-level title
     senior_role_pattern = r"professor|senior|principal investigator|emeritus|reader"
     query: dict[str, Any] = {
-        "academic_role": {"$regex": senior_role_pattern, "$options": "i"},
+        "academic_role": {"$regex": senior_role_pattern, "$options": "i"},   # fixed internal pattern
         "is_suspended": {"$ne": True},
         "profile_visibility": {"$ne": "private"},
         "is_demo": {"$ne": True},
@@ -126,7 +127,7 @@ async def match_mentors(
     }
 
     if area_filter:
-        query["research_areas"] = {"$regex": area_filter, "$options": "i"}
+        query["research_areas"] = safe_contains(area_filter)
 
     projection = {
         "_id": 1,

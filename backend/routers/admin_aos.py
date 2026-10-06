@@ -39,6 +39,7 @@ from services.admin_audit import log_event, request_meta
 from services.permissions import require_super_admin, REAL_CUSTOMER_FILTER
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.safe_search import contains as safe_contains
 
 router = APIRouter(prefix="/api/admin/aos", tags=["admin-aos"])
 _GATE = [Depends(require_super_admin)]
@@ -101,7 +102,7 @@ async def aos_dashboard(
     if country:
         user_filt["country"] = country
     if academic_role:
-        user_filt["academic_role"] = {"$regex": academic_role, "$options": "i"}
+        user_filt["academic_role"] = safe_contains(academic_role)
 
     (
         total_users, free_users, researcher_users, pro_researcher_users, institution_users,

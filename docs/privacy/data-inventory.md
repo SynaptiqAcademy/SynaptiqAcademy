@@ -46,3 +46,10 @@ Classification: **Public** (shown to anyone), **Members** (visible to signed-in 
 - **The researcher directory** (`/api/profiles/directory`) is unauthenticated. It shows name, photo, institution, department, country, career stage and research interests, and excludes members who chose Private or turned discovery off.
 - **Deleted accounts** are set to private and marked `deleted`. Their access tokens stop working at once (`auth_utils.get_current_user`).
 - **Search engines:** `robots.txt` disallows everything except marketing and legal pages. Researcher pages aren't offered to search engines.
+- **Legacy visibility migration** `public_visibility_v2` (`services/public_profiles/visibility_migration.py`).
+  - It is one-time and versioned, and leaves both a `migrations` record and a per-document record of the previous values.
+  - It sets contact, grants, projects and collaborations to private wherever "public" has no per-section evidence of an explicit choice.
+  - From this release on, `PUT /api/profiles/me/visibility` records `visibility_explicit.<section>`, but only for sections whose value actually changed.
+  - Nothing earlier records per-section decisions, and `contact_opt_in_at` is not trusted.
+- **Search:** every user-supplied search value reaches MongoDB only through `services/safe_search.py`, which normalises it, caps it at 100 characters and makes it a literal, escaped, case-insensitive substring match. `routers/workspaces.py:918` (an owner in-progress file) still needs it.
+

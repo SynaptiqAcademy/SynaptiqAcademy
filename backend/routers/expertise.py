@@ -27,6 +27,7 @@ from db import get_db
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 from zt.deps import zt_check, zt_is_admin, zt_is_super_admin
+from services.safe_search import contains as safe_contains
 
 router = APIRouter(prefix="/api/expertise", tags=["expertise"])
 
@@ -151,10 +152,10 @@ async def list_requests(
     if skill:  qf["required_skills"] = skill
     if q:
         qf["$or"] = [
-            {"title": {"$regex": q, "$options": "i"}},
-            {"description": {"$regex": q, "$options": "i"}},
-            {"required_skills": {"$regex": q, "$options": "i"}},
-            {"research_areas": {"$regex": q, "$options": "i"}},
+            {"title": safe_contains(q)},
+            {"description": safe_contains(q)},
+            {"required_skills": safe_contains(q)},
+            {"research_areas": safe_contains(q)},
         ]
     total = await db.expertise_requests.count_documents(qf)
     docs = await db.expertise_requests.find(qf).sort("created_at", -1) \

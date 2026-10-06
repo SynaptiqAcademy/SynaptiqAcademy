@@ -10,6 +10,7 @@ from db import get_db
 from models import CollaborationCreate, ApplicationCreate, ApplicationDecision
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.safe_search import contains as safe_contains
 
 logger = logging.getLogger("synaptiq.collaborations")
 
@@ -67,8 +68,8 @@ async def list_collaborations(
         query["status"] = status
     if q:
         query["$or"] = [
-            {"title": {"$regex": q, "$options": "i"}},
-            {"description": {"$regex": q, "$options": "i"}},
+            {"title": safe_contains(q)},
+            {"description": safe_contains(q)},
         ]
     if collab_type:
         query["collab_type"] = collab_type

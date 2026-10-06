@@ -148,12 +148,21 @@ async def minimise_deletion_audit_records() -> int:
 
 
 async def _sync_discovery_preferences() -> int:
+    """Mirror each member's own Network Settings choice onto the user record.
+    It applies the member's latest choice; it never resets one."""
     from services.discovery_preferences import sync_all
-    from services.public_profiles.visibility import apply_defaults_to_untouched, retract_unconsented_email
     db = get_db()
     db = DBProxy(db, SecurityContext.system())
-    return (await sync_all(db) + await apply_defaults_to_untouched(db)
-            + await retract_unconsented_email(db))
+    return await sync_all(db)
+
+
+async def _visibility_migration_step() -> int:
+    """One-time, versioned public-Passport migration (startup only)."""
+    from services.public_profiles.visibility_migration import run_at_startup
+    db = get_db()
+    db = DBProxy(db, SecurityContext.system())
+    result = await run_at_startup(db)
+    return int(result.get("profiles_changed") or 0)
 
 
 _DAILY_STARTED = False
@@ -196,6 +205,8 @@ async def run_all(schedule: bool = True) -> dict:
         "retention_schedule":      await _run_with_label("retention_schedule", enforce_retention_schedule()),
         "minimise_audit_records":  await _run_with_label("minimise_audit_records", minimise_deletion_audit_records()),
         "discovery_preferences":   await _run_with_label("discovery_preferences", _sync_discovery_preferences()),
+        **({"visibility_migration": await _run_with_label("visibility_migration", _visibility_migration_step())}
+           if schedule else {}),
         "ran_at": _iso(_now()),
     }
     total = sum(v for v in results.values() if isinstance(v, int))

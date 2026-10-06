@@ -5,6 +5,7 @@ from typing import Any
 from services.recommendation.profiles import get_or_refresh_profile
 from services.recommendation.scoring import normalize_set, jaccard, clamp
 from services.recommendation.explainer import explain_journal
+from services.safe_search import exact as safe_exact
 
 # Quartile score map
 _QUARTILE_SCORES: dict[str, float] = {
@@ -69,7 +70,7 @@ async def match_journals(
         query["open_access"] = True
 
     if quartile_filter:
-        query["quartile"] = {"$regex": f"^{quartile_filter}$", "$options": "i"}
+        query["quartile"] = safe_exact(quartile_filter)
 
     # Filter journals to those with matching subjects (broad pre-filter)
     if combined_areas:

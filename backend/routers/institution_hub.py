@@ -53,6 +53,7 @@ from services.permissions import (
     require_institution_member as _require_institution_member,
     require_institution_admin as _require_institution_admin_canonical,
 )
+from services.safe_search import contains as safe_contains
 
 log = logging.getLogger("synaptiq.institution_hub")
 
@@ -183,8 +184,8 @@ async def list_institutions(
     query: dict = {}
     if search:
         query["$or"] = [
-            {"name": {"$regex": search, "$options": "i"}},
-            {"description": {"$regex": search, "$options": "i"}},
+            {"name": safe_contains(search)},
+            {"description": safe_contains(search)},
         ]
     if country:
         query["country"] = country

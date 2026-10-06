@@ -68,6 +68,7 @@ from services.institutions.department_service import (
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 from zt.deps import zt_check, zt_is_admin, zt_is_super_admin
+from services.safe_search import contains as safe_contains
 
 router = APIRouter(tags=["departments"])
 
@@ -158,8 +159,8 @@ async def list_departments(
 
     qf: dict = {"institution_id": iid, "type": "department"}
     if q:
-        qf["$or"] = [{"name": {"$regex": q, "$options": "i"}},
-                     {"research_areas": {"$regex": q, "$options": "i"}}]
+        qf["$or"] = [{"name": safe_contains(q)},
+                     {"research_areas": safe_contains(q)}]
     docs = await db.units.find(qf).sort("name", 1).to_list(200)
     out = []
     for d in docs:

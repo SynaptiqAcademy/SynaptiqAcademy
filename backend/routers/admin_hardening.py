@@ -39,6 +39,7 @@ from services.security_event_service import (
 from services.token_service import revoke_all_user_tokens
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.safe_search import contains as safe_contains
 
 router = APIRouter(prefix="/api/admin/hardening", tags=["admin-hardening"])
 _GATE = [Depends(require_super_admin)]
@@ -445,7 +446,7 @@ async def admin_audit_log(
     db = DBProxy(db, SecurityContext.system())
 
     flt: dict = {}
-    if action: flt["action"] = {"$regex": action, "$options": "i"}
+    if action: flt["action"] = safe_contains(action)
     if actor:  flt["actor_email"] = actor
 
     docs = await db.audit_log.find(flt, {"expires_at": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)

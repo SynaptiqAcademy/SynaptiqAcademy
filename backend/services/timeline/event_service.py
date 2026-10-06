@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from bson import ObjectId
 import logging
+from services.safe_search import contains as safe_contains
 
 log = logging.getLogger(__name__)
 
@@ -189,8 +190,8 @@ async def get_events(
             filt["occurred_at"]["$lte"] = end_date
     if search:
         filt["$or"] = [
-            {"title": {"$regex": search, "$options": "i"}},
-            {"description": {"$regex": search, "$options": "i"}},
+            {"title": safe_contains(search)},
+            {"description": safe_contains(search)},
             {"tags": {"$in": [search.lower()]}},
         ]
     cursor = db.timeline_events.find(filt).sort("occurred_at", -1).skip(skip).limit(limit)

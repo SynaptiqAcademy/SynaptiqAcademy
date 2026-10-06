@@ -48,6 +48,20 @@ export function PublicPortfolioPanel({ onSlugChanged }) {
     }
   };
 
+  // What each switch puts on the public page (visible without signing in).
+  const SECTION_LABELS = {
+    publications: "Publications",
+    impact: "Impact and citations",
+    teaching: "Teaching",
+    reputation: "Reputation",
+    timeline: "Academic timeline",
+    projects: "Projects marked public",
+    grants: "Grants and grant applications",
+    collaborations: "Collaborations",
+    contact: "Email address",
+  };
+  const SECTION_ORDER = Object.keys(SECTION_LABELS);
+
   const toggleVisibility = async (key, value) => {
     const next = { ...visibility, [key]: value ? "public" : "private" };
     setVisibility(next);
@@ -110,14 +124,18 @@ export function PublicPortfolioPanel({ onSlugChanged }) {
 
       {visibility && (
         <div style={{ borderTop: `1px solid ${BRD}`, paddingTop: 16 }}>
-          <div style={{ ...TYPE.label, marginBottom: 10 }}>Section Visibility</div>
+          <div style={{ ...TYPE.label, marginBottom: 4 }}>What your public research profile shows</div>
+          <p style={{ fontSize: 12, color: TEXT_MUTED, margin: "0 0 10px", lineHeight: 1.55 }}>
+            Anyone with the link can see the sections you turn on, without signing in.
+          </p>
           <div className="grid sm:grid-cols-2" style={{ gap: 8 }}>
-            {Object.keys(visibility).map((key) => (
+            {SECTION_ORDER.filter((key) => key in visibility).map((key) => (
               <Switch
                 key={key}
                 checked={visibility[key] === "public"}
                 onChange={(v) => toggleVisibility(key, v)}
-                label={key.charAt(0).toUpperCase() + key.slice(1)}
+                label={SECTION_LABELS[key]}
+                hint={visibility[key] === "public" ? "Visible on your public research profile" : "Not on your public research profile"}
                 size="sm"
               />
             ))}

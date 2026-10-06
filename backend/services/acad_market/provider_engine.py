@@ -2,6 +2,7 @@
 import asyncio
 from datetime import datetime, timezone
 from bson import ObjectId
+from services.safe_search import contains as safe_contains
 
 
 def _now():
@@ -106,17 +107,17 @@ async def search_providers(db, filters: dict, page: int = 1, limit: int = 20) ->
     query = {"active": True}
     if q := filters.get("q"):
         query["$or"] = [
-            {"display_name": {"$regex": q, "$options": "i"}},
-            {"headline": {"$regex": q, "$options": "i"}},
-            {"bio": {"$regex": q, "$options": "i"}},
-            {"expertise_tags": {"$regex": q, "$options": "i"}},
+            {"display_name": safe_contains(q)},
+            {"headline": safe_contains(q)},
+            {"bio": safe_contains(q)},
+            {"expertise_tags": safe_contains(q)},
         ]
     if cat := filters.get("category"):
         query["categories"] = cat
     if lang := filters.get("language"):
         query["languages"] = lang
     if country := filters.get("country"):
-        query["country"] = {"$regex": country, "$options": "i"}
+        query["country"] = safe_contains(country)
     if avail := filters.get("availability"):
         query["availability"] = avail
     if min_rating := filters.get("min_rating"):

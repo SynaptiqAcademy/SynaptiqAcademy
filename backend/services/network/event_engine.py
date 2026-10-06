@@ -1,6 +1,7 @@
 """Academic events — seminars, conferences, workshops, webinars, journal clubs."""
 from datetime import datetime, timezone
 from bson import ObjectId
+from services.safe_search import contains as safe_contains
 
 
 def _now():
@@ -50,8 +51,8 @@ async def list_events(db, filters: dict, page: int = 1, limit: int = 20) -> dict
     query = {"status": "upcoming"}
     if q := filters.get("q"):
         query["$or"] = [
-            {"title": {"$regex": q, "$options": "i"}},
-            {"description": {"$regex": q, "$options": "i"}},
+            {"title": safe_contains(q)},
+            {"description": safe_contains(q)},
         ]
     if t := filters.get("type"):
         query["type"] = t

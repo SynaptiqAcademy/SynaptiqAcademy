@@ -19,6 +19,7 @@ from auth_utils import get_current_user
 from db import get_db
 from repo.shim import make_db_proxy
 from zt.deps import zt_check, zt_is_admin, zt_is_super_admin
+from services.safe_search import contains as safe_contains
 
 log = logging.getLogger("synaptiq.trust")
 router = APIRouter(prefix="/api/trust", tags=["trust-center"])
@@ -719,8 +720,8 @@ async def admin_list_users_trust(
     query: dict = {}
     if search:
         query["$or"] = [
-            {"email": {"$regex": search, "$options": "i"}},
-            {"full_name": {"$regex": search, "$options": "i"}},
+            {"email": safe_contains(search)},
+            {"full_name": safe_contains(search)},
         ]
     users = await db.users.find(query).skip(skip).limit(limit).to_list(length=limit)
     result = []

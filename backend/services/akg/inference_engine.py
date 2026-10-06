@@ -7,6 +7,7 @@ import asyncio
 from .graph_adapter import get_adapter
 from .semantic_search import _tokenise
 from lkg.unified import get_unified_graph
+from services.safe_search import contains as safe_contains
 
 
 def _jaccard(a: set, b: set) -> float:
@@ -56,7 +57,7 @@ async def infer_collaborator_suggestions(entity_id: str, db, limit: int = 10) ->
     if area:
         area_candidates = await get_unified_graph().find_nodes(db, {
             "entity_type": {"$in": ["researcher", "educator"]},
-            "properties.research_area": {"$regex": area[:30], "$options": "i"},
+            "properties.research_area": safe_contains(area[:30]),
             "entity_id": {"$nin": list(known_ids)},
         }, limit=50)
         for c in area_candidates:
@@ -98,8 +99,8 @@ async def infer_related_entities(entity_id: str, entity_type: str, db,
         return []
 
     sample_kws = list(kws)[:5]
-    or_conditions = [{"label": {"$regex": kw, "$options": "i"}} for kw in sample_kws]
-    or_conditions += [{"properties.keywords": {"$regex": kw, "$options": "i"}} for kw in sample_kws[:3]]
+    or_conditions = [{"label": safe_contains(kw)} for kw in sample_kws]
+    or_conditions += [{"properties.keywords": safe_contains(kw)} for kw in sample_kws[:3]]
 
     candidates = await get_unified_graph().find_nodes(db, {
         "entity_type": entity_type,

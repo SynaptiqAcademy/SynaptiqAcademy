@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from bson import ObjectId
+from services.safe_search import contains as safe_contains
 
 
 def _to_str(oid) -> str:
@@ -46,7 +47,7 @@ async def get_institution_publications(
     pub_filter: dict = {"owner_id": {"$in": member_ids}}
     ms_filter: dict = {"user_id": {"$in": member_ids}}
     if search:
-        regex = {"$regex": search, "$options": "i"}
+        regex = safe_contains(search)
         pub_filter["$or"] = [{"title": regex}, {"abstract": regex}]
         ms_filter["$or"] = [{"title": regex}, {"abstract": regex}]
 

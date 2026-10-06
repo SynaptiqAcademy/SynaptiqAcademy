@@ -37,11 +37,6 @@ _MAX_QUERY_TERMS = 20
 _DEFAULT_POOL_SIZE = 50
 
 
-def _regex_or(terms: list[str]) -> str:
-    escaped = [re.escape(t) for t in terms[:_MAX_QUERY_TERMS] if t]
-    return "|".join(escaped)
-
-
 def _field_values(person: dict, field: str) -> list[str]:
     v = person.get(field)
     if v is None:
@@ -136,7 +131,7 @@ async def find_relevant_people(
     terms = need.all_terms()
     filters: dict = {}
     if terms:
-        filters["q"] = _regex_or(terms)
+        filters["q_terms"] = list(terms)
     if country:
         filters["country"] = country
     if language:

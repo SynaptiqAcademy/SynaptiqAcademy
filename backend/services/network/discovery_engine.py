@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from bson.errors import InvalidId
+from services.safe_search import contains as safe_contains, contains_any as safe_contains_any
 
 
 def _now():
@@ -136,24 +137,21 @@ async def search_people(db, filters: dict, page: int = 1, limit: int = 20, viewe
         **REAL_CUSTOMER_FILTER,
     }
 
-    if q := filters.get("q"):
-        terms = q.strip()
-        query["$or"] = [
-            {"full_name": {"$regex": terms, "$options": "i"}},
-            {"research_areas": {"$regex": terms, "$options": "i"}},
-            {"research_interests": {"$regex": terms, "$options": "i"}},
-            {"research_keywords": {"$regex": terms, "$options": "i"}},
-            {"methods": {"$regex": terms, "$options": "i"}},
-            {"software_skills": {"$regex": terms, "$options": "i"}},
-            {"professional_role": {"$regex": terms, "$options": "i"}},
-            {"professional_expertise": {"$regex": terms, "$options": "i"}},
-            {"institution": {"$regex": terms, "$options": "i"}},
-            {"department": {"$regex": terms, "$options": "i"}},
-        ]
+    # "q" is a member's search text; "q_terms" is a list of terms (research
+    # need matching) where any one may match. Both are literal text.
+    rx = None
+    if q_terms := filters.get("q_terms"):
+        rx = safe_contains_any(q_terms)
+    elif q := filters.get("q"):
+        rx = safe_contains(q)
+    if rx and rx["$regex"]:
+        query["$or"] = [{f: rx} for f in (
+            "full_name", "research_areas", "research_interests", "research_keywords", "methods",
+            "software_skills", "professional_role", "professional_expertise", "institution", "department")]
 
     for field in ("institution", "country", "department", "professional_role"):
         if v := filters.get(field):
-            query[field] = {"$regex": v, "$options": "i"}
+            query[field] = safe_contains(v)
 
     # Array-field filters — exact element match via $in, not regex (these
     # are chip-selected values from a controlled or free-tag list, not
@@ -165,9 +163,9 @@ async def search_people(db, filters: dict, page: int = 1, limit: int = 20, viewe
 
     if disc := filters.get("discipline"):
         query["$or"] = query.get("$or", []) + [
-            {"research_areas": {"$regex": disc, "$options": "i"}},
-            {"research_interests": {"$regex": disc, "$options": "i"}},
-            {"research_keywords": {"$regex": disc, "$options": "i"}},
+            {"research_areas": safe_contains(disc)},
+            {"research_interests": safe_contains(disc)},
+            {"research_keywords": safe_contains(disc)},
         ]
 
     for field in ("available_for_reviewing", "available_for_supervision", "available_for_consulting"):
@@ -227,13 +225,13 @@ async def search_institutions(db, filters: dict, page: int = 1, limit: int = 20)
 
     if q := filters.get("q"):
         query["$or"] = [
-            {"name": {"$regex": q, "$options": "i"}},
-            {"research_focus": {"$regex": q, "$options": "i"}},
+            {"name": safe_contains(q)},
+            {"research_focus": safe_contains(q)},
         ]
 
     for field in ("country", "type"):
         if v := filters.get(field):
-            query[field] = {"$regex": v, "$options": "i"}
+            query[field] = safe_contains(v)
 
     skip = (page - 1) * limit
     cursor = db["institutions"].find(query, _INST_FIELDS).skip(skip).limit(limit)
@@ -255,14 +253,14 @@ async def search_projects(db, filters: dict, page: int = 1, limit: int = 20) -> 
 
     if q := filters.get("q"):
         query["$or"] = [
-            {"title": {"$regex": q, "$options": "i"}},
-            {"description": {"$regex": q, "$options": "i"}},
-            {"keywords": {"$regex": q, "$options": "i"}},
+            {"title": safe_contains(q)},
+            {"description": safe_contains(q)},
+            {"keywords": safe_contains(q)},
         ]
 
     for field in ("discipline", "methodology"):
         if v := filters.get(field):
-            query[field] = {"$regex": v, "$options": "i"}
+            query[field] = safe_contains(v)
 
     skip = (page - 1) * limit
     cursor = db["projects"].find(query).skip(skip).limit(limit)
@@ -283,15 +281,15 @@ async def search_grant_teams(db, filters: dict, page: int = 1, limit: int = 20) 
     query = {"status": "recruiting", "collection": "grant_applications"}
     if q := filters.get("q"):
         query["$or"] = [
-            {"title": {"$regex": q, "$options": "i"}},
-            {"description": {"$regex": q, "$options": "i"}},
+            {"title": safe_contains(q)},
+            {"description": safe_contains(q)},
         ]
     skip = (page - 1) * limit
     cursor = db["grant_applications"].find(
         {"status": "recruiting", **({
             "$or": [
-                {"title": {"$regex": filters["q"], "$options": "i"}},
-                {"description": {"$regex": filters["q"], "$options": "i"}},
+                {"title": safe_contains(filters["q"])},
+                {"description": safe_contains(filters["q"])},
             ]
         } if filters.get("q") else {})}
     ).skip(skip).limit(limit)

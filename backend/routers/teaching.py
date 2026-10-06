@@ -37,6 +37,7 @@ from services.credits_service import consume_credits, refund_credits
 from services.notifications_service import dispatch, NotificationEvent, register_default_providers
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.safe_search import contains as safe_contains
 
 log = logging.getLogger("synaptiq.teaching")
 router = APIRouter(prefix="/api/teaching", tags=["teaching"])
@@ -452,7 +453,7 @@ async def list_lessons(
     if status:
         query["status"] = status
     if subject:
-        query["subject"] = {"$regex": subject, "$options": "i"}
+        query["subject"] = safe_contains(subject)
     docs = await db.teaching_lessons.find(query, {"outline": 0}).sort("created_at", -1).to_list(100)
     return [_ser(d) for d in docs]
 
@@ -629,7 +630,7 @@ async def list_assessments(
     if assessment_type:
         query["assessment_type"] = assessment_type
     if subject:
-        query["subject"] = {"$regex": subject, "$options": "i"}
+        query["subject"] = safe_contains(subject)
     docs = await db.teaching_assessments.find(query, {"questions": 0}).sort("created_at", -1).to_list(100)
     return [_ser(d) for d in docs]
 

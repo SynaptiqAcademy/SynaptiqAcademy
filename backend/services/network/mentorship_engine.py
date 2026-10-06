@@ -1,6 +1,7 @@
 """Mentorship platform — mentor profiles, requests, matching, tracking."""
 from datetime import datetime, timezone
 from bson import ObjectId
+from services.safe_search import contains as safe_contains
 
 
 def _now():
@@ -66,8 +67,8 @@ async def list_mentors(db, filters: dict, user_id: str, page: int = 1, limit: in
 
     if q := filters.get("q"):
         query["$or"] = [
-            {"bio": {"$regex": q, "$options": "i"}},
-            {"expertise_areas": {"$regex": q, "$options": "i"}},
+            {"bio": safe_contains(q)},
+            {"expertise_areas": safe_contains(q)},
         ]
     if ea := filters.get("expertise_area"):
         query["expertise_areas"] = ea

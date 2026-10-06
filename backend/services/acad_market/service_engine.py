@@ -1,6 +1,7 @@
 """Service listings — CRUD, packages, FAQs, AI quality estimate."""
 from datetime import datetime, timezone
 from bson import ObjectId
+from services.safe_search import contains as safe_contains
 
 
 def _now():
@@ -63,9 +64,9 @@ async def list_services(db, filters: dict, page: int = 1, limit: int = 20) -> di
     query = {"status": "active"}
     if q := filters.get("q"):
         query["$or"] = [
-            {"title": {"$regex": q, "$options": "i"}},
-            {"description": {"$regex": q, "$options": "i"}},
-            {"tags": {"$regex": q, "$options": "i"}},
+            {"title": safe_contains(q)},
+            {"description": safe_contains(q)},
+            {"tags": safe_contains(q)},
         ]
     if cat := filters.get("category"):
         query["category"] = cat

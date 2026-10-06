@@ -7,6 +7,7 @@ from __future__ import annotations
 import math
 import re
 from lkg.unified import get_unified_graph
+from services.safe_search import contains as safe_contains
 
 
 def _tokenise(text: str) -> list[str]:
@@ -67,9 +68,9 @@ async def semantic_search(query: str, db,
 
     # Pre-filter: at least one query token appears in the entity text fields
     if len(query_tokens) <= 5:
-        regex_parts = [{"label": {"$regex": t, "$options": "i"}} for t in query_tokens[:3]]
-        prop_parts  = [{"properties.keywords": {"$regex": t, "$options": "i"}} for t in query_tokens[:3]]
-        prop_parts2 = [{"properties.description": {"$regex": t, "$options": "i"}} for t in query_tokens[:3]]
+        regex_parts = [{"label": safe_contains(t)} for t in query_tokens[:3]]
+        prop_parts  = [{"properties.keywords": safe_contains(t)} for t in query_tokens[:3]]
+        prop_parts2 = [{"properties.description": safe_contains(t)} for t in query_tokens[:3]]
         akg_filter["$or"] = regex_parts + prop_parts + prop_parts2
 
     candidates = await get_unified_graph().find_nodes(db, akg_filter, limit=500)

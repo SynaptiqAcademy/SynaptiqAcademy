@@ -6,6 +6,7 @@ from typing import Any
 from services.recommendation.profiles import get_or_refresh_profile
 from services.recommendation.scoring import normalize_set, jaccard, clamp
 from services.recommendation.explainer import explain_conference
+from services.safe_search import contains as safe_contains
 
 _RANK_SCORES: dict[str, float] = {
     "a*": 30.0,
@@ -95,7 +96,7 @@ async def match_conferences(
         ]
 
     if area_filter:
-        query["research_areas"] = {"$regex": area_filter, "$options": "i"}
+        query["research_areas"] = safe_contains(area_filter)
 
     projection = {
         "_id": 1,

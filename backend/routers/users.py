@@ -11,6 +11,7 @@ from models import ProfileUpdate, OnboardingComplete
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 from services.permissions import REAL_CUSTOMER_FILTER
+from services.safe_search import contains as safe_contains
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -210,8 +211,8 @@ async def user_publications(
         qf["type"] = type
     if q:
         qf["$or"] = [
-            {"title": {"$regex": q, "$options": "i"}},
-            {"journal": {"$regex": q, "$options": "i"}},
+            {"title": safe_contains(q)},
+            {"journal": safe_contains(q)},
         ]
     total = await db.publications.count_documents(qf)
     docs = await db.publications.find(qf).sort([("year", -1), ("title", 1)]).skip(skip).limit(limit).to_list(limit)
@@ -279,32 +280,32 @@ async def list_users(
     # ── Full-text search ──────────────────────────────────────────────────────
     if q:
         query["$or"] = [
-            {"full_name":         {"$regex": q, "$options": "i"}},
-            {"institution":       {"$regex": q, "$options": "i"}},
-            {"department":        {"$regex": q, "$options": "i"}},
-            {"research_areas":    {"$regex": q, "$options": "i"}},
-            {"research_keywords": {"$regex": q, "$options": "i"}},
-            {"skills":            {"$regex": q, "$options": "i"}},
-            {"methods":           {"$regex": q, "$options": "i"}},
-            {"software_skills":   {"$regex": q, "$options": "i"}},
-            {"biography":         {"$regex": q, "$options": "i"}},
-            {"orcid.orcid_id":    {"$regex": q, "$options": "i"}},
-            {"openalex_author_id":{"$regex": q, "$options": "i"}},
+            {"full_name":         safe_contains(q)},
+            {"institution":       safe_contains(q)},
+            {"department":        safe_contains(q)},
+            {"research_areas":    safe_contains(q)},
+            {"research_keywords": safe_contains(q)},
+            {"skills":            safe_contains(q)},
+            {"methods":           safe_contains(q)},
+            {"software_skills":   safe_contains(q)},
+            {"biography":         safe_contains(q)},
+            {"orcid.orcid_id":    safe_contains(q)},
+            {"openalex_author_id":safe_contains(q)},
         ]
 
     # ── Specific field filters ────────────────────────────────────────────────
     if research_area:
         query["research_areas"] = {"$in": [research_area]}
     if keyword:
-        query["research_keywords"] = {"$regex": keyword, "$options": "i"}
+        query["research_keywords"] = safe_contains(keyword)
     if method:
-        query["methods"] = {"$regex": method, "$options": "i"}
+        query["methods"] = safe_contains(method)
     if software_skill:
-        query["software_skills"] = {"$regex": software_skill, "$options": "i"}
+        query["software_skills"] = safe_contains(software_skill)
     if department:
-        query["department"] = {"$regex": department, "$options": "i"}
+        query["department"] = safe_contains(department)
     if institution:
-        query["institution"] = {"$regex": institution, "$options": "i"}
+        query["institution"] = safe_contains(institution)
     if country:
         query["country"] = country
     if availability:
@@ -318,9 +319,9 @@ async def list_users(
     if professional_expertise:
         query["professional_expertise"] = professional_expertise
     if orcid_id:
-        query["orcid.orcid_id"] = {"$regex": orcid_id, "$options": "i"}
+        query["orcid.orcid_id"] = safe_contains(orcid_id)
     if openalex_id:
-        query["openalex_author_id"] = {"$regex": openalex_id, "$options": "i"}
+        query["openalex_author_id"] = safe_contains(openalex_id)
 
     # ── Boolean availability ──────────────────────────────────────────────────
     if available_for_collaboration is True:

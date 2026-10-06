@@ -1,6 +1,7 @@
 """Open collaboration marketplace — post and apply for collaboration opportunities."""
 from datetime import datetime, timezone
 from bson import ObjectId
+from services.safe_search import contains as safe_contains
 
 
 def _now():
@@ -53,14 +54,14 @@ async def list_collaborations(db, filters: dict, page: int = 1, limit: int = 20)
     query = {"status": "open"}
     if q := filters.get("q"):
         query["$or"] = [
-            {"title": {"$regex": q, "$options": "i"}},
-            {"description": {"$regex": q, "$options": "i"}},
-            {"discipline": {"$regex": q, "$options": "i"}},
+            {"title": safe_contains(q)},
+            {"description": safe_contains(q)},
+            {"discipline": safe_contains(q)},
         ]
     if t := filters.get("type"):
         query["type"] = t
     if disc := filters.get("discipline"):
-        query["discipline"] = {"$regex": disc, "$options": "i"}
+        query["discipline"] = safe_contains(disc)
     if remote := filters.get("remote"):
         query["remote"] = remote == "true"
 

@@ -30,6 +30,7 @@ from db import get_db
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 from zt.deps import zt_check, zt_is_admin, zt_is_super_admin
+from services.safe_search import contains as safe_contains
 
 router = APIRouter(prefix="/api/grants", tags=["grants"])
 
@@ -127,7 +128,7 @@ async def list_grants(
     if funding_type:
         query["funding_type"] = funding_type
     if sponsor:
-        query["sponsor"] = {"$regex": sponsor, "$options": "i"}
+        query["sponsor"] = safe_contains(sponsor)
     if open_only:
         query["deadline"] = {"$gt": date.today().isoformat()}
     if min_amount is not None:
@@ -142,7 +143,7 @@ async def list_grants(
     # Career stage filter — keyword-based
     if career_stage and career_stage in _CAREER_KEYWORDS:
         kws = list(_CAREER_KEYWORDS[career_stage])
-        query["$or"] = [{"title": {"$regex": kw, "$options": "i"}} for kw in kws]
+        query["$or"] = [{"title": safe_contains(kw)} for kw in kws]
 
     if sort == "relevance" and q:
         cursor = db.grants.find(query, {"score": {"$meta": "textScore"}}).sort([("score", {"$meta": "textScore"})])

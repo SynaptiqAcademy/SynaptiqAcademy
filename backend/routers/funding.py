@@ -6,6 +6,7 @@ from auth_utils import get_current_user
 from db import get_db
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.safe_search import contains as safe_contains
 
 router = APIRouter(prefix="/api/funding", tags=["funding"])
 
@@ -33,14 +34,14 @@ async def list_funding(
     query = {"is_seed": {"$ne": True}}
     if q:
         query["$or"] = [
-            {"title": {"$regex": q, "$options": "i"}},
-            {"agency": {"$regex": q, "$options": "i"}},
-            {"description": {"$regex": q, "$options": "i"}},
+            {"title": safe_contains(q)},
+            {"agency": safe_contains(q)},
+            {"description": safe_contains(q)},
         ]
     if research_area:
         query["research_areas"] = research_area
     if agency:
-        query["agency"] = {"$regex": agency, "$options": "i"}
+        query["agency"] = safe_contains(agency)
     docs = await db.grants.find(query).sort("deadline", 1).limit(limit).to_list(limit)
     return [_ser(d) for d in docs]
 

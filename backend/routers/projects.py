@@ -11,6 +11,7 @@ from services.permissions import assert_quota
 from services.dependency_graph import detect_cycle
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.safe_search import contains as safe_contains
 
 def _emit_rep(user_id, event_type, entity_id, description=None):
     async def _task():
@@ -550,9 +551,9 @@ async def get_team_analysis(project_id: str, user: dict = Depends(get_current_us
             continue
 
         # Build a regex-based search across skill fields
-        regex_patterns = [{"research_areas": {"$regex": kw, "$options": "i"}} for kw in keywords[:3]]
-        skill_patterns = [{"skills": {"$regex": kw, "$options": "i"}} for kw in keywords[:3]]
-        kw_patterns = [{"research_keywords": {"$regex": kw, "$options": "i"}} for kw in keywords[:3]]
+        regex_patterns = [{"research_areas": safe_contains(kw)} for kw in keywords[:3]]
+        skill_patterns = [{"skills": safe_contains(kw)} for kw in keywords[:3]]
+        kw_patterns = [{"research_keywords": safe_contains(kw)} for kw in keywords[:3]]
 
         candidates = await db.users.find(
             {

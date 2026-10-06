@@ -8,6 +8,7 @@ from db import get_db
 from models import RepositoryItemCreate
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.safe_search import contains as safe_contains
 
 router = APIRouter(prefix="/api/repository", tags=["repository"])
 
@@ -42,9 +43,9 @@ async def list_items(
         extra["type"] = item_type
     if q:
         extra["$or"] = [
-            {"title": {"$regex": q, "$options": "i"}},
-            {"description": {"$regex": q, "$options": "i"}},
-            {"tags": {"$regex": q, "$options": "i"}},
+            {"title": safe_contains(q)},
+            {"description": safe_contains(q)},
+            {"tags": safe_contains(q)},
         ]
     if project_id:
         extra["project_id"] = project_id

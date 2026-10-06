@@ -12,6 +12,7 @@ from auth_utils import get_current_user
 from db import get_db
 from zt.deps import zt_check, zt_is_admin, zt_is_super_admin
 from repo.shim import make_db_proxy
+from services.safe_search import contains as safe_contains
 
 logger = logging.getLogger("synaptiq")
 router = APIRouter(prefix="/api/profiles", tags=["public-profiles"])
@@ -185,15 +186,17 @@ async def update_visibility(body: VisibilityBody, user: dict = Depends(get_curre
         if v not in allowed:
             raise HTTPException(status_code=400, detail=f"Invalid visibility value '{v}' for '{k}'")
     now = datetime.now(timezone.utc).isoformat()
+    # The panel saves every section together, so record an explicit choice
+    # only for the sections whose value actually changed in this request.
+    # This is the evidence services/public_profiles/visibility_migration.py
+    # relies on to never override a member's own decision.
+    from services.public_profiles.visibility import section_visibility
+    prev = await db.public_profiles.find_one({"user_id": user["id"]}, {"visibility_settings": 1}) or {}
+    prev_vs = prev.get("visibility_settings") or {}
     update = {"$set": {"visibility_settings": settings, "updated_at": now}}
-    # Record when a member explicitly makes their email public, so it is
-    # never mistaken for an old default (services/public_profiles/visibility.py).
-    if settings.get("contact") == "public":
-        prev = await db.public_profiles.find_one({"user_id": user["id"]}, {"visibility_settings": 1, "contact_opt_in_at": 1})
-        if not (prev or {}).get("contact_opt_in_at") or ((prev or {}).get("visibility_settings") or {}).get("contact") != "public":
-            update["$set"]["contact_opt_in_at"] = now
-    else:
-        update["$unset"] = {"contact_opt_in_at": ""}
+    for k, v in settings.items():
+        if v != section_visibility(prev_vs, k):
+            update["$set"][f"visibility_explicit.{k}"] = now
     await db.public_profiles.update_one({"user_id": user["id"]}, update, upsert=True)
     return settings
 
@@ -272,11 +275,11 @@ async def researcher_directory(
     if opted_out:
         query["_id"] = {"$nin": [_to_object_id(x) for x in opted_out]}
     if search:
-        query["full_name"] = {"$regex": search, "$options": "i"}
+        query["full_name"] = safe_contains(search)
     if research_area:
-        query["research_interests"] = {"$elemMatch": {"$regex": research_area, "$options": "i"}}
+        query["research_interests"] = {"$elemMatch": safe_contains(research_area)}
     if institution:
-        query["institution"] = {"$regex": institution, "$options": "i"}
+        query["institution"] = safe_contains(institution)
     if country:
         query["country"] = country
     if career_stage:

@@ -10,6 +10,7 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import Any
+from services.safe_search import contains as safe_contains
 
 logger = logging.getLogger("synaptiq.academic.graph")
 
@@ -113,7 +114,7 @@ class AcademicKnowledgeGraph:
             # Text index may not exist — fallback to regex
             try:
                 docs = await self._db[_ENTITIES_COLL].find(
-                    {"type": "topic", "name": {"$regex": keyword, "$options": "i"}}
+                    {"type": "topic", "name": safe_contains(keyword)}
                 ).limit(limit).to_list(length=limit)
                 return [d.get("name", "") for d in docs]
             except Exception:
@@ -133,7 +134,7 @@ class AcademicKnowledgeGraph:
         """Return journal names relevant to a topic."""
         try:
             docs = await self._db[_ENTITIES_COLL].find(
-                {"type": "journal", "topics": {"$elemMatch": {"$regex": topic, "$options": "i"}}}
+                {"type": "journal", "topics": {"$elemMatch": safe_contains(topic)}}
             ).limit(limit).to_list(length=limit)
             return [d.get("name", "") for d in docs]
         except Exception:

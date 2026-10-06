@@ -24,33 +24,3 @@ OPT_IN_SECTIONS = ("projects", "grants", "collaborations", "contact")
 
 def section_visibility(settings: dict | None, section: str) -> str:
     return (settings or {}).get(section) or DEFAULT_VISIBILITY.get(section, "private")
-
-
-async def retract_unconsented_email(db) -> int:
-    """Until 6 October 2026 the Passport panel told members that visitors
-    "never see your email, regardless of these settings", while "contact"
-    defaulted to public and the email was in fact shown. No one could have
-    chosen that knowingly, so "contact" goes back to private unless the
-    member turned it on after the panel told the truth (contact_opt_in_at)."""
-    res = await db.public_profiles.update_many(
-        {"visibility_settings.contact": "public", "contact_opt_in_at": {"$exists": False}},
-        {"$set": {"visibility_settings.contact": "private"}},
-    )
-    return res.modified_count
-
-
-async def apply_defaults_to_untouched(db) -> int:
-    """Public pages created before these defaults made every section public.
-    Where the member never changed the settings (updated_at == created_at),
-    apply the opt-in defaults. Pages a member has configured are left alone."""
-    n = 0
-    async for d in db.public_profiles.find({}, {"visibility_settings": 1, "created_at": 1, "updated_at": 1}):
-        if d.get("updated_at") and d.get("created_at") and d["updated_at"] != d["created_at"]:
-            continue
-        vs = dict(d.get("visibility_settings") or {})
-        changed = {k: "private" for k in OPT_IN_SECTIONS if vs.get(k, "public") != "private"}
-        if changed:
-            vs.update(changed)
-            await db.public_profiles.update_one({"_id": d["_id"]}, {"$set": {"visibility_settings": vs}})
-            n += 1
-    return n

@@ -18,6 +18,7 @@ from services.realtime import manager
 from services.storage_service import put_object, get_object, build_path
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.safe_search import contains as safe_contains
 
 logger = logging.getLogger("synaptiq.messaging")
 
@@ -456,7 +457,7 @@ async def list_messages(conv_id: str, limit: int = 100, before: Optional[str] = 
     if before:
         query["created_at"] = {"$lt": before}
     if q:
-        query["content"] = {"$regex": q, "$options": "i"}
+        query["content"] = safe_contains(q)
     docs = await db.messages.find(query).sort("created_at", -1).limit(limit).to_list(limit)
     docs.reverse()
     # Batch-load reactions to avoid N+1 (one query for all messages in the page)
