@@ -483,7 +483,7 @@ function LessonPlanDetailSidebar({ lesson, totalDuration }) {
           <Clock size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Outline Coverage</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
           {totalDuration} <span style={{ fontSize: 15, fontWeight: 400, color: "#94A3B8" }}>/ {lesson.duration_minutes} min</span>
         </div>
         <p style={{ fontSize: 12, color: phaseCount === 0 ? "#94A3B8" : (onTarget ? "#64748B" : "#B45309"), margin: "4px 0 0", lineHeight: 1.5 }}>

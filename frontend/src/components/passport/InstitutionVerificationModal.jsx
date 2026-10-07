@@ -9,6 +9,7 @@ import { FormSelect } from "@/components/ds/FormSelect";
 import { FormField } from "@/components/ds/Form";
 import { NAVY, EMERALD, BRD, TEXT_SECONDARY, TEXT_MUTED, TEXT_PRIMARY, WARM } from "@/lib/tokens";
 import api from "@/lib/api";
+import { safeErrorMessage } from "@/lib/api";
 
 const EVIDENCE_KINDS = [
   { value: "staff_page", label: "Official staff / profile page" },
@@ -101,7 +102,7 @@ export function InstitutionVerificationModal({ open, onClose, profile, onSubmitt
       setEmailSentTo(data.sent_to_domain);
       toast.success("Verification email sent — check your inbox");
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Could not verify that email");
+      toast.error(safeErrorMessage(e, "Could not verify that email"));
     } finally {
       setSubmitting(false);
     }
@@ -129,7 +130,7 @@ export function InstitutionVerificationModal({ open, onClose, profile, onSubmitt
       setEvidenceSubmitted(true);
       onSubmitted?.();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Could not submit for review");
+      toast.error(safeErrorMessage(e, "Could not submit for review"));
     } finally {
       setSubmitting(false);
     }

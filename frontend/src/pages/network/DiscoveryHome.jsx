@@ -10,13 +10,13 @@ import { ResearchLayout } from "@/layouts";
 import { Card, Button, Input, StatCard, StatGrid } from "@/components/ds";
 
 const TILES = [
-  { label: "Researchers", desc: "Find collaborators by expertise, method, career stage", url: "/network/people", icon: Users, color: ACCENT },
-  { label: "Institutions", desc: "Discover universities, labs, research centres", url: "/network/institutions", icon: Building2, color: "#0ea5e9" },
-  { label: "Research Groups", desc: "Join or create research groups and labs", url: "/network/groups", icon: Layers, color: "#8b5cf6" },
-  { label: "Open Collaborations", desc: "Post and apply for collaboration opportunities", url: "/network/collaborations", icon: Handshake, color: EMERALD },
-  { label: "Communities", desc: "Topic-based academic communities", url: "/network/communities", icon: MessageSquare, color: "#f97316" },
-  { label: "Mentorship", desc: "Connect with mentors or become one", url: "/network/mentorship", icon: UserCheck, color: "#ec4899" },
-  { label: "Events", desc: "Seminars, conferences, workshops, webinars", url: "/network/conferences", icon: Calendar, color: "#06b6d4" },
+  { label: "Researchers", desc: "Find collaborators by expertise, method, career stage", url: "/network/people", icon: Users, color: "#0F2847" },
+  { label: "Institutions", desc: "Discover universities, labs, research centres", url: "/network/institutions", icon: Building2, color: "#0F2847" },
+  { label: "Research Groups", desc: "Join or create research groups and labs", url: "/network/groups", icon: Layers, color: "#0F2847" },
+  { label: "Open Collaborations", desc: "Post and apply for collaboration opportunities", url: "/network/collaborations", icon: Handshake, color: "#0F2847" },
+  { label: "Communities", desc: "Topic-based academic communities", url: "/network/communities", icon: MessageSquare, color: "#0F2847" },
+  { label: "Mentorship", desc: "Connect with mentors or become one", url: "/network/mentorship", icon: UserCheck, color: "#0F2847" },
+  { label: "Events", desc: "Seminars, conferences, workshops, webinars", url: "/network/conferences", icon: Calendar, color: "#0F2847" },
   { label: "AI Recommendations", desc: "Personalised discovery powered by AI", url: "/network/recommendations", icon: Brain, color: NAVY },
 ];
 

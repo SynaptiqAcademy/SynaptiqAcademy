@@ -1,5 +1,5 @@
 import React from "react";
-import { NAVY, BRD, NAVY_04, TEXT_MUTED, TEXT_STRONG, TEXT_DISABLED, SURF2, RADIUS_MD } from "@/lib/tokens";
+import { NAVY, BRD, WHITE, TEXT_MUTED, TEXT_PRIMARY, TEXT_TERTIARY } from "@/lib/tokens";
 
 /**
  * EmptyState — unified empty / zero-data state.
@@ -40,105 +40,58 @@ export function EmptyState({
 }) {
   if (size === "inline") {
     return (
-      <p className={className} style={{ fontSize: "0.75rem", color: TEXT_MUTED, fontStyle: "italic", margin: 0 }}>
+      <p className={className} style={{ fontSize: "0.8rem", color: TEXT_MUTED, margin: 0 }}>
         {title}
       </p>
     );
   }
 
-  const padding = { sm: "32px 24px", md: "52px 32px", lg: "80px 48px" }[size] || "52px 32px";
-  const iconSize = { sm: 20, md: 28, lg: 36 }[size] || 28;
-  const titleSize = { sm: "0.82rem", md: "0.9rem", lg: "1rem" }[size] || "0.9rem";
-
-  const iconColor = dark ? "rgba(255,255,255,0.2)" : TEXT_MUTED;
-  const titleColor = dark ? "rgba(255,255,255,0.3)" : TEXT_STRONG;
-  const descColor = dark ? "rgba(255,255,255,0.25)" : TEXT_MUTED;
-
-  const inner = (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        textAlign: "center",
-        padding,
-        gap: 0,
-      }}
-    >
-      {icon && (
-        dark ? (
-          React.cloneElement(icon, {
-            size: iconSize,
-            style: { color: iconColor, marginBottom: 10, ...(icon.props.style || {}) },
-          })
-        ) : (
-          <div
-            style={{
-              width: iconSize + 16,
-              height: iconSize + 16,
-              borderRadius: RADIUS_MD,
-              background: NAVY_04,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 16,
-            }}
-          >
-            {React.cloneElement(icon, {
-              size: iconSize,
-              style: { color: iconColor, ...(icon.props.style || {}) },
-            })}
-          </div>
-        )
-      )}
-      <div
-        style={{
-          fontSize: titleSize,
-          fontWeight: dark ? 400 : 600,
-          color: titleColor,
-          margin: 0,
-          letterSpacing: "-0.01em",
-        }}
-      >
-        {title}
-      </div>
-      {description && (
-        <p
-          style={{
-            fontSize: "0.78rem",
-            color: descColor,
-            marginTop: 6,
-            lineHeight: 1.55,
-            maxWidth: 340,
-          }}
-        >
-          {description}
-        </p>
-      )}
-      {action && <div style={{ marginTop: 20 }}>{action}</div>}
-    </div>
-  );
+  // Compact and left-aligned: what is empty, why it matters, what to do
+  // next. A light hairline panel, never a large dashed placeholder box.
+  const padding = { sm: "14px 16px", md: "18px 20px", lg: "24px 24px" }[size] || "18px 20px";
+  const iconSize = { sm: 14, md: 16, lg: 18 }[size] || 16;
+  const titleSize = { sm: "0.84rem", md: "0.9rem", lg: "0.95rem" }[size] || "0.9rem";
 
   if (dark) {
-    return <div className={className}>{inner}</div>;
-  }
-
-  if (dashed) {
     return (
-      <div
-        className={className}
-        style={{
-          border: `1px dashed ${TEXT_DISABLED}`,
-          borderRadius: RADIUS_MD,
-          background: SURF2,
-        }}
-      >
-        {inner}
+      <div className={className} style={{ padding, textAlign: "center" }}>
+        {icon && React.cloneElement(icon, { size: iconSize + 4, style: { color: "rgba(255,255,255,0.3)", marginBottom: 8, ...(icon.props.style || {}) } })}
+        <div style={{ fontSize: titleSize, color: "rgba(255,255,255,0.45)" }}>{title}</div>
+        {description && <p style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.35)", marginTop: 4 }}>{description}</p>}
+        {action && <div style={{ marginTop: 12 }}>{action}</div>}
       </div>
     );
   }
 
-  return <div className={className}>{inner}</div>;
+  return (
+    <div
+      className={className}
+      style={{
+        padding: dashed ? padding : "4px 0",
+        background: dashed ? WHITE : "transparent",
+        border: dashed ? `1px solid ${BRD}` : "none",
+        borderRadius: 6,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {icon && React.cloneElement(icon, {
+          size: iconSize,
+          strokeWidth: 1.75,
+          "aria-hidden": true,
+          style: { color: NAVY, flexShrink: 0, ...(icon.props.style || {}) },
+        })}
+        <div style={{ fontSize: titleSize, fontWeight: 600, color: TEXT_PRIMARY, letterSpacing: "-0.005em" }}>
+          {title}
+        </div>
+      </div>
+      {description && (
+        <p style={{ fontSize: "0.8125rem", color: TEXT_TERTIARY, margin: "4px 0 0", lineHeight: 1.55, maxWidth: "34rem" }}>
+          {description}
+        </p>
+      )}
+      {action && <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8 }}>{action}</div>}
+    </div>
+  );
 }
 
 export default EmptyState;

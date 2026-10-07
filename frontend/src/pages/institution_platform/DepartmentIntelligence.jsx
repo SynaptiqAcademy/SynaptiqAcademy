@@ -7,7 +7,7 @@ import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
-const GRADE_COLOR = { A: EMERALD, B: "#0ea5e9", C: "#f59e0b", D: "#f97316", F: ACCENT };
+const GRADE_COLOR = { A: EMERALD, B: "#2f5486", C: "#f59e0b", D: "#f97316", F: ACCENT };
 
 function DeptCard({ dept, onClick }) {
   const score = dept.health_score || 0;
@@ -154,7 +154,7 @@ function DepartmentIntelligenceSidebar({ depts }) {
           <Award size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Performing Department</div>
         </div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{top.department}</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{top.department}</div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
           Health score {top.health_score} (Grade {top.health_grade}) · {top.faculty_count} faculty
         </p>

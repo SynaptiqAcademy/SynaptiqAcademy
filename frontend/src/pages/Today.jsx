@@ -41,12 +41,12 @@ const BORDER = "#E4E8EF";
 // ─── Working mode config ──────────────────────────────────────────────────────
 
 const MODE_CONFIG = {
-  writing:  { label: "Writing Mode",         color: "#1D4ED8", bg: "#EFF6FF", icon: FileText },
-  grant:    { label: "Grant Mode",            color: "#B45309", bg: "#FFFBEB", icon: BadgeDollarSign },
-  teaching: { label: "Teaching Mode",         color: "#047857", bg: "#F0FDF4", icon: GraduationCap },
-  admin:    { label: "Administration Mode",   color: "#7C3AED", bg: "#F5F3FF", icon: LayoutGrid },
-  review:   { label: "Review Mode",           color: "#DC2626", bg: "#FEF2F2", icon: Microscope },
-  research: { label: "Research Mode",         color: "#0F2847", bg: "#F8FAFC", icon: FlaskConical },
+  writing:  { label: "Writing Mode",         color: "#0F2847", bg: "#eef2f8", icon: FileText },
+  grant:    { label: "Grant Mode",            color: "#0F2847", bg: "#eef2f8", icon: BadgeDollarSign },
+  teaching: { label: "Teaching Mode",         color: "#0F2847", bg: "#eef2f8", icon: GraduationCap },
+  admin:    { label: "Administration Mode",   color: "#0F2847", bg: "#eef2f8", icon: LayoutGrid },
+  review:   { label: "Review Mode",           color: "#0F2847", bg: "#eef2f8", icon: Microscope },
+  research: { label: "Research Mode",         color: "#0F2847", bg: "#eef2f8", icon: FlaskConical },
 };
 
 // ─── Mode-specific spotlight tools ───────────────────────────────────────────
@@ -229,68 +229,30 @@ export default function Today() {
 
 // ─── Today Header ─────────────────────────────────────────────────────────────
 
-function TodayHeader({ firstName, user, modeConfig, dashboardMode }) {
+function TodayHeader({ firstName, user, modeConfig }) {
   const ModeIcon = modeConfig.icon;
-
-  const subLabel =
-    dashboardMode === "teaching" ? "Education Operating System" :
-    dashboardMode === "hybrid"   ? "Research & Education OS" :
-    "Research Operating System";
-
+  // The shared product page header (eyebrow, serif title, one line). Credits
+  // and plan live in the app shell and are not repeated here.
   return (
-    <div style={{ background: NAVY, margin: "-24px -24px 28px", padding: "36px 28px 24px" }}>
-      <div className="flex items-end justify-between gap-4 flex-wrap">
-        {/* Greeting */}
-        <div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.38)", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 600, marginBottom: 8 }}>
-            {formatDate()}
-          </div>
-          <h1 style={{ fontSize: 25, fontWeight: 700, color: "white", margin: "0 0 5px", letterSpacing: "-0.03em", lineHeight: 1.15 }}>
-            {getGreeting()}, {firstName}.
-          </h1>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.42)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <span>{subLabel}</span>
-            {user?.institution && (
-              <>
-                <span style={{ color: "rgba(255,255,255,0.18)" }}>·</span>
-                <span>{user.institution}</span>
-              </>
-            )}
-          </div>
+    <header className="pl-head" style={{ marginBottom: 24 }}>
+      <div className="pl-hero-row">
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <p className="pl-eyebrow">{formatDate()}</p>
+          <h1 className="pl-hero-title">{getGreeting()}, {firstName}.</h1>
+          {user?.institution && <p className="pl-sub">{user.institution}</p>}
         </div>
-
-        {/* Status strip */}
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Mode badge */}
-          <div
-            className="flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5"
-            style={{ background: modeConfig.color + "22", color: modeConfig.color, border: `1px solid ${modeConfig.color}44` }}
-          >
-            <ModeIcon size={10} strokeWidth={2} />
+        <div className="pl-hero-actions">
+          <span className="inline-flex items-center gap-1.5 text-[12px] font-medium px-2.5 py-1 rounded-sm" style={{ color: "var(--sq-text-secondary)", background: "var(--sq-surface-2)", border: "1px solid var(--sq-border)" }}>
+            <ModeIcon size={11} strokeWidth={1.75} aria-hidden="true" />
             {modeConfig.label}
-          </div>
-
-          {/* Credits */}
-          {user?.credits_remaining != null && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.12)", padding: "5px 12px" }}>
-              <Zap size={11} strokeWidth={1.5} style={{ color: "#FCD34D" }} />
-              <span style={{ fontFamily: "monospace", fontWeight: 600 }}>{user.credits_remaining}</span>
-              <span style={{ color: "rgba(255,255,255,0.3)" }}>credits</span>
-            </div>
-          )}
-
-          {/* AI CTA */}
-          <Link
-            to="/ai"
-            style={{ display: "inline-flex", alignItems: "center", gap: 7, background: ACCENT, color: "white", padding: "8px 14px", fontSize: 12, fontWeight: 600, textDecoration: "none" }}
-          >
-            <BrainCircuit size={12} strokeWidth={1.5} />
-            Synaptiq AI
-            <ArrowRight size={11} strokeWidth={2} />
+          </span>
+          <Link to="/ai" className="inline-flex items-center gap-2 h-9 px-4 text-[13px] font-semibold rounded-btn border border-hairline-strong bg-white text-[color:var(--sq-text-primary)] hover:border-[color:var(--sq-text-primary)] no-underline">
+            <BrainCircuit size={13} strokeWidth={1.6} aria-hidden="true" />
+            AI Research Assistant
           </Link>
         </div>
       </div>
-    </div>
+    </header>
   );
 }
 
@@ -480,7 +442,7 @@ function AIEntryCard() {
             to="/ai"
             className="flex items-center justify-between p-2 text-[12px] font-semibold text-white no-underline transition-all duration-150"
             style={{ background: ACCENT }}
-            onMouseEnter={(e) => e.currentTarget.style.background = "#a01a42"}
+            onMouseEnter={(e) => e.currentTarget.style.background = "#0a1c34"}
             onMouseLeave={(e) => e.currentTarget.style.background = ACCENT}
           >
             Open Synaptiq AI

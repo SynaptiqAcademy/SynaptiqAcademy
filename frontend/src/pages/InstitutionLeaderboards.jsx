@@ -26,8 +26,8 @@ function pct(val, max) {
 
 function iisColor(score) {
   if (score >= 7500) return "#D97706";
-  if (score >= 5000) return "#7C3AED";
-  if (score >= 2500) return "#0891B2";
+  if (score >= 5000) return "#0F2847";
+  if (score >= 2500) return "#0F2847";
   return "#94A3B8";
 }
 
@@ -300,7 +300,7 @@ export default function InstitutionLeaderboards() {
                               score={score}
                               scoreSub="SIS"
                               max={maxSis}
-                              color="#7C3AED"
+                              color="#0F2847"
                               extra={
                                 r.h_index != null ? (
                                   <span className="text-[10px] text-slate-400">h-index {r.h_index}</span>
@@ -321,7 +321,7 @@ export default function InstitutionLeaderboards() {
                             nameKey="name"
                             scoreKey="sis_score"
                             max={maxSis}
-                            colorFn={() => "#7C3AED"}
+                            colorFn={() => "#0F2847"}
                           />
                         </div>
                       )}

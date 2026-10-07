@@ -15,6 +15,7 @@ import { Button } from "@/components/ds/Button";
 import { Input } from "@/components/ds/Input";
 import { Textarea } from "@/components/ds/Textarea";
 import { FormSelect } from "@/components/ds/FormSelect";
+import { safeErrorMessage } from "../lib/api";
 
 const BORDER = "#E4E8EF";
 
@@ -72,7 +73,7 @@ export default function CreateTeam() {
       const id = data._id || data.id;
       navigate(`/teams/${id}`);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed to create team");
+      toast.error(safeErrorMessage(err, "Failed to create team"));
     } finally {
       setBusy(false);
     }

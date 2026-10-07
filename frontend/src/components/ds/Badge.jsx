@@ -21,7 +21,7 @@ const VARIANTS = {
   danger:   "bg-danger-bg        text-danger-text  border-danger-border",
   neutral:  "bg-slate-100        text-slate-600  border-slate-200",
   info:     "bg-info-bg          text-info-text    border-info-border",
-  purple:   "bg-violet-bg        text-violet-text  border-violet-200",
+  purple:   "bg-violet-bg        text-violet-text  border-navy-200",
   outline:  "bg-transparent      text-slate-600  border-slate-300",
 };
 
@@ -31,7 +31,7 @@ const DOT = {
   warning: "bg-amber-600",
   danger:  "bg-crimson-600",
   neutral: "bg-slate-400",
-  info:    "bg-blue-500",
+  info:    "bg-navy-500",
   purple:  "bg-violet",
   outline: "bg-slate-400",
 };

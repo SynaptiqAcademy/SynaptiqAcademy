@@ -87,9 +87,9 @@ export function getProgressToNextLevel(score) {
 export const RESEARCH_LEVELS = [
   { level: 1, label: "Research Explorer",      short: "Explorer",      min: 0,    max: 99,      tone: "border-slate-200 bg-slate-50 text-slate-600" },
   { level: 2, label: "Emerging Researcher",    short: "Emerging",      min: 100,  max: 249,     tone: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-  { level: 3, label: "Active Researcher",      short: "Active",        min: 250,  max: 499,     tone: "border-blue-200 bg-blue-50 text-blue-700" },
-  { level: 4, label: "Established Researcher", short: "Established",   min: 500,  max: 999,     tone: "border-indigo-200 bg-indigo-50 text-indigo-700" },
-  { level: 5, label: "Advanced Researcher",    short: "Advanced",      min: 1000, max: 1999,    tone: "border-violet-200 bg-violet-50 text-violet-700" },
+  { level: 3, label: "Active Researcher",      short: "Active",        min: 250,  max: 499,     tone: "border-navy-200 bg-navy-50 text-navy-700" },
+  { level: 4, label: "Established Researcher", short: "Established",   min: 500,  max: 999,     tone: "border-navy-200 bg-navy-50 text-navy-700" },
+  { level: 5, label: "Advanced Researcher",    short: "Advanced",      min: 1000, max: 1999,    tone: "border-navy-200 bg-navy-50 text-navy-700" },
   { level: 6, label: "Research Leader",        short: "Leader",        min: 2000, max: 4999,    tone: "border-amber-300 bg-amber-50 text-amber-800" },
   { level: 7, label: "Distinguished Scholar",  short: "Distinguished", min: 5000, max: 9999999, tone: "border-yellow-400 bg-yellow-50 text-yellow-900" },
 ];

@@ -4,6 +4,7 @@ import { Award, BarChart2 } from "lucide-react";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Card, Button, Input, ErrorState, Spinner } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 export default function AdminReviewerHub() {
   const [stats, setStats] = useState(null);
@@ -15,7 +16,7 @@ export default function AdminReviewerHub() {
   useEffect(() => {
     api.get("/reviewer-marketplace/admin/stats")
       .then((r) => setStats(r.data))
-      .catch((e) => setErr(e?.response?.data?.detail || "Failed to load"))
+      .catch((e) => setErr(safeErrorMessage(e, "Failed to load")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -27,7 +28,7 @@ export default function AdminReviewerHub() {
       setCertifyMsg("Certification granted successfully.");
       setCertifyId("");
     } catch (err) {
-      setCertifyMsg(err?.response?.data?.detail || "Certification failed.");
+      setCertifyMsg(safeErrorMessage(err, "Certification failed."));
     }
   };
 

@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Input, Button, Badge, EmptyState, Alert, Pagination, SkeletonTable, Card } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 const LIMIT = 50;
 
@@ -47,7 +48,7 @@ export default function AdminAudit() {
       setItems(r.data.items || []);
       setTotal(r.data.total || 0);
     } catch (e) {
-      setError(e.response?.data?.detail || "Failed to load audit log");
+      setError(safeErrorMessage(e, "Failed to load audit log"));
     } finally {
       setLoading(false);
     }
@@ -182,7 +183,7 @@ function AuditSidebar({ items, fmt }) {
           <Clock size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Latest Event</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 14, color: "#0f172a" }}>{latest.action || "—"}</div>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 14, color: "#0f172a" }}>{latest.action || "—"}</div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0" }}>
           {latest.actor_email || latest.actor_id || "—"} · {fmt(latest.created_at)}
         </p>

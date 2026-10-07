@@ -4,6 +4,7 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import api from "../lib/api";
+import { safeErrorMessage } from "../lib/api";
 
 function useFetch(url, { skip = false, deps = [] } = {}) {
   const [data, setData]       = useState(null);
@@ -16,7 +17,7 @@ function useFetch(url, { skip = false, deps = [] } = {}) {
     setError(null);
     api.get(url)
       .then((r) => setData(r.data))
-      .catch((e) => setError(e?.response?.data?.detail || "Request failed"))
+      .catch((e) => setError(safeErrorMessage(e, "Request failed")))
       .finally(() => setLoading(false));
   }, [url, skip]);
 

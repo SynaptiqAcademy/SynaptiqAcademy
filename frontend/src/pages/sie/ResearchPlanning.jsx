@@ -42,10 +42,10 @@ function StageRow({ stage, onAdvance }) {
         <span style={{ fontSize: 11, fontWeight: 700, color, textTransform: "uppercase" }}>{stage.status.replace("_", " ")}</span>
         <div style={{ display: "flex", gap: 4 }}>
           {stage.status !== "completed" && (
-            <Button onClick={() => onAdvance(stage.key, 100)} size="sm" style={{ background: EMERALD }}>Complete</Button>
+            <Button onClick={() => onAdvance(stage.key, 100)} size="sm" >Complete</Button>
           )}
           {stage.status === "pending" && (
-            <Button onClick={() => onAdvance(stage.key, 50)} size="sm" style={{ background: ACCENT }}>Start</Button>
+            <Button onClick={() => onAdvance(stage.key, 50)} size="sm" >Start</Button>
           )}
         </div>
       </div>
@@ -135,7 +135,7 @@ function GenerateModal({ onClose, onCreate }) {
             {i === form.research_questions.length - 1 && (
               <Button
                 onClick={() => setForm(f => ({ ...f, research_questions: [...f.research_questions, ""] }))}
-                style={{ background: ACCENT, fontSize: 18 }}
+                style={{ fontSize: 18 }}
               >+</Button>
             )}
           </div>
@@ -195,7 +195,7 @@ export default function ResearchPlanning() {
                 icon={<BookMarked />}
                 title="No roadmaps yet"
                 description="Generate your first 18-stage research roadmap."
-                action={<Button onClick={() => setShowNew(true)} style={{ background: "#8b5cf6" }}>Generate First Roadmap</Button>}
+                action={<Button onClick={() => setShowNew(true)} >Generate First Roadmap</Button>}
               />
             ) : roadmaps.map(rm => <RoadmapCard key={rm.id} roadmap={rm} onSelect={loadDetail} />)}
           </div>

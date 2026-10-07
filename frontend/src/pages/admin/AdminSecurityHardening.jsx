@@ -13,6 +13,7 @@ import {
   NavTabs, DataTable, StatCard, StatGrid, ProgressBar,
 } from "@/components/ds";
 import { confirmDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "@/lib/api";
 
 // ── data hook ─────────────────────────────────────────────────────────────────
 function useApi(path) {
@@ -22,7 +23,7 @@ function useApi(path) {
   const fetch = useCallback(async () => {
     setLoading(true); setError(null);
     try { const r = await api.get(path); setData(r.data); }
-    catch (e) { setError(e?.response?.data?.detail || "Failed"); }
+    catch (e) { setError(safeErrorMessage(e, "Failed")); }
     finally { setLoading(false); }
   }, [path]);
   return { data, loading, error, fetch };
@@ -174,7 +175,7 @@ function IPAllowlistTab() {
       await api.post("/admin/hardening/ip-allowlist", { ip: ip.trim(), label: label.trim() });
       setIp(""); setLabel(""); fetch();
     } catch (e) {
-      setAddErr(e?.response?.data?.detail || "Failed to add");
+      setAddErr(safeErrorMessage(e, "Failed to add"));
     } finally { setSaving(false); }
   };
 
@@ -274,7 +275,7 @@ function BreakGlassTab() {
       setToken(r.data);
       fetchHistory();
     } catch (e) {
-      setGenError(e?.response?.data?.detail || "Failed");
+      setGenError(safeErrorMessage(e, "Failed"));
     } finally { setGenLoading(false); }
   };
 
@@ -363,7 +364,7 @@ function SecurityEventsTab() {
   const stats = data?.stats || {};
   const events = data?.events || [];
 
-  const SEV_ACCENT = { critical: CRIMSON, high: "#f97316", medium: AMBER, low: "#3B82F6" };
+  const SEV_ACCENT = { critical: CRIMSON, high: "#f97316", medium: AMBER, low: "#2f5486" };
 
   return (
     <div className="space-y-4">

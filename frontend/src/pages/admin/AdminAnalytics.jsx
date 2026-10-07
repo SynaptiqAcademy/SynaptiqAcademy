@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ds/EmptyState";
 import { Card, DataTable, H2, Badge } from "@/components/ds";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
+import { safeErrorMessage } from "@/lib/api";
 
 const PLAN_COLORS = { free: "#94a3b8", researcher: "#3b82f6", pro_researcher: "#6366f1", institution: "#a855f7" };
 
@@ -27,7 +28,7 @@ export default function AdminAnalytics() {
   useEffect(() => {
     api.get("/admin/analytics")
       .then((r) => setData(r.data))
-      .catch((e) => setError(e.response?.data?.detail || "Failed to load analytics"))
+      .catch((e) => setError(safeErrorMessage(e, "Failed to load analytics")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -200,7 +201,7 @@ function AnalyticsSidebar({ referrals, sessions30d, topFeature }) {
           <Repeat size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Sessions (30d)</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 24, color: "#0f172a" }}>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 24, color: "#0f172a" }}>
           {(sessions30d ?? 0).toLocaleString()}
         </div>
       </Card>
@@ -211,7 +212,7 @@ function AnalyticsSidebar({ referrals, sessions30d, topFeature }) {
             <TrendingUp size={13} style={{ color: NAVY }} />
             <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Most-Used Feature</div>
           </div>
-          <div style={{ fontFamily: "Georgia, serif", fontSize: 16, color: "#0f172a", textTransform: "capitalize" }}>
+          <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 16, color: "#0f172a", textTransform: "capitalize" }}>
             {String(topFeature.action).replace(/_/g, " ")}
           </div>
           <p style={{ fontSize: 12, color: "#64748B", margin: "6px 0 0" }}>
@@ -225,7 +226,7 @@ function AnalyticsSidebar({ referrals, sessions30d, topFeature }) {
           <Gift size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Referrals</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 20, color: "#0f172a" }}>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 20, color: "#0f172a" }}>
           {(referrals.total ?? 0).toLocaleString()}
         </div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "6px 0 0" }}>

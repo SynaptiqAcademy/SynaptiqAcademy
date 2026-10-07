@@ -23,6 +23,7 @@ import {
   Trash2, PenLine, UserCheck, Clock,
 } from "lucide-react";
 import { confirmDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "../lib/api";
 
 const BORDER = "#E4E8EF";
 
@@ -31,12 +32,12 @@ function typeInfo(typeValue) {
 }
 
 const ROLE_LABELS = {
-  owner:       { label: "Owner",            color: "#D97706" },
-  admin:       { label: "Admin",            color: "#7C3AED" },
-  lead:        { label: "Lead",             color: "#0891B2" },
-  senior:      { label: "Senior Member",    color: "#059669" },
-  member:      { label: "Member",           color: "#64748B" },
-  collaborator:{ label: "Collaborator",     color: "#94A3B8" },
+  owner:       { label: "Owner",            color: "#0F2847" },
+  admin:       { label: "Admin",            color: "#0F2847" },
+  lead:        { label: "Lead",             color: "#0F2847" },
+  senior:      { label: "Senior Member",    color: "#0F2847" },
+  member:      { label: "Member",           color: "#0F2847" },
+  collaborator:{ label: "Collaborator",     color: "#0F2847" },
 };
 
 function roleBadge(role) {
@@ -96,7 +97,7 @@ export default function TeamHome() {
       const mems = Array.isArray(mRes.data) ? mRes.data : (mRes.data?.members || []);
       setMembers(mems);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed to join");
+      toast.error(safeErrorMessage(err, "Failed to join"));
     } finally {
       setBusy(false);
     }
@@ -110,7 +111,7 @@ export default function TeamHome() {
       toast.success("Left team");
       navigate("/teams");
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed to leave");
+      toast.error(safeErrorMessage(err, "Failed to leave"));
     } finally {
       setBusy(false);
     }

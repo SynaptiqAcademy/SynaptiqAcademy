@@ -605,7 +605,7 @@ function SideNav({ filter, setFilter, unreadCount, priorityCount, pinnedCount, a
         style={{ width: 228, flexShrink: 0, background: RAIL_BG, borderRight: `1px solid ${HAIR}`, padding: "20px 12px" }}
       >
         <div className="px-2 mb-5">
-          <h1 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: "1.15rem", fontWeight: 700, color: INK, letterSpacing: "-0.02em", margin: "0 0 3px" }}>
+          <h1 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: "1.15rem", fontWeight: 700, color: INK, letterSpacing: "-0.02em", margin: "0 0 3px" }}>
             Inbox
           </h1>
           <p style={{ fontSize: "0.68rem", color: TEXT_MUTED, margin: 0, lineHeight: 1.4 }}>
@@ -851,7 +851,7 @@ function FeedCard({ n, selectedId, onSelect, onRead, onDelete, pinned, onToggleP
         display: "flex", alignItems: "flex-start", gap: 13,
         padding: "14px 24px", margin: "0 12px", borderRadius: RADIUS_LG,
         cursor: "pointer", position: "relative",
-        background: active ? "rgba(138,21,56,0.045)" : hov ? RAIL_BG : "transparent",
+        background: active ? "rgba(15,40,71,0.05)" : hov ? RAIL_BG : "transparent",
         transition: "background 120ms ease",
       }}
     >

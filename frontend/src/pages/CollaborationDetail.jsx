@@ -16,6 +16,7 @@ import { Button } from "@/components/ds/Button";
 import { Textarea } from "@/components/ds/Textarea";
 import { Users } from "lucide-react";
 import { ResearchLayout } from "@/layouts";
+import { safeErrorMessage } from "../lib/api";
 
 export default function CollaborationDetail() {
   const { id } = useParams();
@@ -49,7 +50,7 @@ export default function CollaborationDetail() {
       setMessage("");
       load();
     } catch (e) {
-      toast.error(e.response?.data?.detail || "Failed to apply");
+      toast.error(safeErrorMessage(e, "Failed to apply"));
     } finally {
       setApplying(false);
     }

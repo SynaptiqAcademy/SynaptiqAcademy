@@ -68,7 +68,7 @@ const ImpactHero = ({ kpi, onExport }) => (
     <div style={{ marginTop: 16, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
       <div>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 6 }}>Research Intelligence</div>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: "#0F172A", margin: "0 0 6px", letterSpacing: "-0.02em", fontFamily: "Georgia, serif" }}>Research Impact</h1>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: "#0F172A", margin: "0 0 6px", letterSpacing: "-0.02em", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>Research Impact</h1>
         <p style={{ fontSize: 13, color: "#64748B", margin: 0, maxWidth: 520, lineHeight: 1.6 }}>
           Publication output, citation growth, collaboration network, and research score in one view.
           {kpi?.last_synced && <span style={{ color: "#94A3B8", marginLeft: 6 }}>Last synced: {new Date(kpi.last_synced).toLocaleDateString()}</span>}
@@ -330,7 +330,7 @@ function CitationGrowthSection() {
                 <XAxis dataKey="month" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} width={35} />
                 <Tooltip content={<ChartTooltip />} />
-                <Bar dataKey="new_citations" name="New Citations" fill="#0891b2" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="new_citations" name="New Citations" fill="#0F2847" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Card>
@@ -824,7 +824,7 @@ export default function ResearchImpact() {
                   key={key}
                   label={`${c.label} (${Math.round((c.weight || 0) * 100)}% weight · ${c.contribution} pts)`}
                   value={c.score}
-                  color={key === "citation" ? "#0891b2" : key === "publication" ? "#0F2847" : key === "collaboration" ? "#7c3aed" : key === "project" ? "#059669" : "#d97706"}
+                  color={key === "citation" ? "#0F2847" : key === "publication" ? "#0F2847" : key === "collaboration" ? "#0F2847" : key === "project" ? "#059669" : "#d97706"}
                   formula={scorecardOpen ? c.formula : undefined}
                   reasoning={scorecardOpen ? c.reasoning : undefined}
                 />
@@ -843,7 +843,7 @@ export default function ResearchImpact() {
             {insights.map((ins, i) => {
               const Icon = INSIGHT_ICONS[ins.icon] || Sparkles;
               const pColor = ins.priority === "high" ? "#0F2847" :
-                             ins.priority === "medium" ? "#0891b2" : "#cbd5e1";
+                             ins.priority === "medium" ? "#0F2847" : "#cbd5e1";
               return (
                 <Card key={i} padding="md" accent={pColor} className="flex gap-3">
                   <Icon size={16} strokeWidth={1.5} className="text-slate-400 shrink-0 mt-0.5" />

@@ -3,16 +3,16 @@ import { X, ExternalLink, Clock, GitBranch, Layers } from "lucide-react";
 import { getNodeEdges, getNodeTimeline } from "../../services/lkgEngine";
 
 const TYPE_COLOR = {
-  researcher: "#3B82F6",
+  researcher: "#2f5486",
   publication: "#10B981",
-  institution: "#8B5CF6",
+  institution: "#2f5486",
   topic: "#F59E0B",
   journal: "#EF4444",
   project: "#14B8A6",
-  manuscript: "#6366F1",
+  manuscript: "#2f5486",
   funding_program: "#F97316",
-  dataset: "#06B6D4",
-  conference: "#EC4899",
+  dataset: "#2f5486",
+  conference: "#2f5486",
   lesson: "#84CC16",
   default: "#6B7280",
 };
@@ -112,7 +112,7 @@ export default function NodePanel({ node, onClose, onNavigate }) {
           <p className="text-[11px] text-slate-500">
             <span className="font-medium text-slate-600">ORCID: </span>
             <a href={`https://orcid.org/${meta.orcid}`} target="_blank" rel="noreferrer"
-              className="text-blue-600 hover:underline inline-flex items-center gap-0.5">
+              className="text-navy-700 hover:underline inline-flex items-center gap-0.5">
               {meta.orcid} <ExternalLink size={9} />
             </a>
           </p>
@@ -121,7 +121,7 @@ export default function NodePanel({ node, onClose, onNavigate }) {
           <p className="text-[11px] text-slate-500">
             <span className="font-medium text-slate-600">DOI: </span>
             <a href={`https://doi.org/${meta.doi}`} target="_blank" rel="noreferrer"
-              className="text-blue-600 hover:underline inline-flex items-center gap-0.5">
+              className="text-navy-700 hover:underline inline-flex items-center gap-0.5">
               {meta.doi} <ExternalLink size={9} />
             </a>
           </p>
@@ -153,7 +153,7 @@ export default function NodePanel({ node, onClose, onNavigate }) {
             onClick={() => { setTab(t.id); if (t.id === "timeline") loadTimeline(); }}
             className={`flex-1 flex items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${
               tab === t.id
-                ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
+                ? "text-navy-700 border-b-2 border-navy-700 bg-navy-wash"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
@@ -182,10 +182,10 @@ export default function NodePanel({ node, onClose, onNavigate }) {
                 <button
                   key={i}
                   onClick={() => onNavigate?.(other)}
-                  className="w-full text-left p-2 rounded-md border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-colors"
+                  className="w-full text-left p-2 rounded-md border border-slate-100 hover:border-navy-200 hover:bg-navy-wash transition-colors"
                 >
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">{e.type}</span>
+                    <span className="text-[10px] font-bold text-navy-700 uppercase tracking-widest">{e.type}</span>
                     <span className="text-[10px] text-slate-400">{dir}</span>
                   </div>
                   <p className="text-[11px] text-slate-600 truncate">{other}</p>
@@ -224,10 +224,10 @@ export default function NodePanel({ node, onClose, onNavigate }) {
           <div className="p-3 space-y-2">
             <button
               onClick={() => onNavigate?.(node.node_id)}
-              className="w-full text-left p-3 rounded-md bg-blue-50 hover:bg-blue-100 transition-colors"
+              className="w-full text-left p-3 rounded-md bg-navy-50 hover:bg-navy-100 transition-colors"
             >
-              <p className="text-[11px] font-semibold text-blue-700">Expand in graph</p>
-              <p className="text-[10px] text-blue-500">Load 2-degree subgraph around this node</p>
+              <p className="text-[11px] font-semibold text-navy-700">Expand in graph</p>
+              <p className="text-[10px] text-navy-500">Load 2-degree subgraph around this node</p>
             </button>
             <div className="text-[10px] text-slate-400 p-2">
               Node ID: <span className="font-mono break-all">{node.node_id}</span>

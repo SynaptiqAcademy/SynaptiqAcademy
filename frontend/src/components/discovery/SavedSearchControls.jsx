@@ -20,6 +20,7 @@ import {
 import { Link } from "react-router-dom";
 import { confirmDialog } from "@/lib/confirm";
 import { NAVY } from "@/lib/tokens";
+import { safeErrorMessage } from "../../lib/api";
 
 const FREQ_LABEL = { off: "No digest", daily: "Daily digest", weekly: "Weekly digest" };
 
@@ -51,7 +52,7 @@ export default function SavedSearchControls({ kind, query, filters }) {
       setShowSave(false); setName(""); setFreq("off");
       loadCount();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed");
+      toast.error(safeErrorMessage(e, "Failed"));
     } finally { setBusy(false); }
   };
 

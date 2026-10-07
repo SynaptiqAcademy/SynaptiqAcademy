@@ -7,6 +7,7 @@ import { Input } from "@/components/ds/Input";
 import { Switch } from "@/components/ds/Form";
 import { TYPE, BRD, WARM, TEXT_MUTED, EMERALD, NAVY } from "@/lib/tokens";
 import api from "@/lib/api";
+import { safeErrorMessage } from "@/lib/api";
 
 /**
  * PublicPortfolioPanel — surfaces the previously-unused Public Profile
@@ -42,7 +43,7 @@ export function PublicPortfolioPanel({ onSlugChanged }) {
       // (P1 Phase 7C4.3 §16/§19: no stale state, no manual page refresh).
       onSlugChanged?.();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Could not claim that URL");
+      toast.error(safeErrorMessage(e, "Could not claim that URL"));
     } finally {
       setSaving(false);
     }

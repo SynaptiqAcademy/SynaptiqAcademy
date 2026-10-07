@@ -52,7 +52,7 @@ export default function TeachingCommunities() {
             />
           ) : groups.map((g, i) => (
             <Card key={i} padding="md" style={{ display: "flex", gap: 12 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: `${EMERALD}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 8, background: `${EMERALD}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <BookOpen size={20} color={EMERALD} />
               </div>
               <div style={{ flex: 1 }}>

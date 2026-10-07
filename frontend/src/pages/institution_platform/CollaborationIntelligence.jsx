@@ -74,7 +74,7 @@ export default function CollaborationIntelligence() {
                     by threshold, so it can't express an arbitrary fixed color; left
                     hand-rolled. */}
                 <div style={{ height: 5, background: `${NAVY}12`, borderRadius: 99 }}>
-                  <div style={{ height: "100%", borderRadius: 99, background: "#06b6d4", width: `${pct}%` }} />
+                  <div style={{ height: "100%", borderRadius: 99, background: "#2f5486", width: `${pct}%` }} />
                 </div>
               </div>
             );
@@ -125,7 +125,7 @@ function CollaborationIntelligenceSidebar({ collab }) {
             <Network size={13} style={{ color: NAVY }} />
             <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Most Common Type</div>
           </div>
-          <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+          <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
             {topType[1]}
           </div>
           <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5, textTransform: "capitalize" }}>

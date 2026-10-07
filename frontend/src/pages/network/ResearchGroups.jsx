@@ -6,9 +6,9 @@ import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Input, Textarea, FormSelect, FormRow, Modal, NavTabs, EmptyState, LoadingOverlay } from "@/components/ds";
 
 const TYPE_COLOR = {
-  research_group: ACCENT, research_lab: "#8b5cf6", center_of_excellence: "#f97316",
-  teaching_community: EMERALD, reading_group: "#06b6d4", working_group: NAVY,
-  grant_team: "#ec4899", task_force: "#dc2626",
+  research_group: ACCENT, research_lab: "#2f5486", center_of_excellence: "#f97316",
+  teaching_community: EMERALD, reading_group: "#2f5486", working_group: NAVY,
+  grant_team: "#2f5486", task_force: "#dc2626",
 };
 const TYPE_LABEL = {
   research_group: "Research Group", research_lab: "Research Lab",

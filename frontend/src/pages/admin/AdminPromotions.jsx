@@ -7,6 +7,7 @@ import {
   Card, Button, Badge, FormSelect, Input, Modal,
   StatCard, StatGrid, DataTable, EmptyState, ProgressBar,
 } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 function useAOS(path, params = {}) {
   const [data, setData] = useState(null);
@@ -38,7 +39,7 @@ function CreateCampaignModal({ onClose, onCreated }) {
       setMsg("Campaign created");
       onCreated();
     } catch (e) {
-      setMsg(e?.response?.data?.detail || "Error");
+      setMsg(safeErrorMessage(e, "Error"));
     } finally {
       setLoading(false);
     }

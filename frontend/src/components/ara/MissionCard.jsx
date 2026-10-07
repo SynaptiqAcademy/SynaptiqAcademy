@@ -6,9 +6,9 @@ import {
 
 const STATUS_META = {
   draft:          { icon: Clock,        color: "text-slate-400", bg: "bg-slate-50",  label: "Draft" },
-  planning:       { icon: Loader,       color: "text-blue-500",  bg: "bg-blue-50",   label: "Planning…" },
+  planning:       { icon: Loader,       color: "text-navy-500",  bg: "bg-navy-50",   label: "Planning…" },
   plan_review:    { icon: AlertCircle,  color: "text-amber-500", bg: "bg-amber-50",  label: "Awaiting Your Review" },
-  running:        { icon: PlayCircle,   color: "text-indigo-500",bg: "bg-indigo-50", label: "Running" },
+  running:        { icon: PlayCircle,   color: "text-navy-500",bg: "bg-navy-50", label: "Running" },
   awaiting_human: { icon: AlertCircle,  color: "text-orange-500",bg: "bg-orange-50", label: "Needs Your Approval" },
   paused:         { icon: Pause,        color: "text-slate-500", bg: "bg-slate-50",  label: "Paused" },
   completed:      { icon: CheckCircle,  color: "text-green-500", bg: "bg-green-50",  label: "Completed" },
@@ -33,7 +33,7 @@ function ProgressBar({ total, done }) {
       </div>
       <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
         <div
-          className="h-full bg-indigo-500 rounded-full transition-all"
+          className="h-full bg-navy-500 rounded-full transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>

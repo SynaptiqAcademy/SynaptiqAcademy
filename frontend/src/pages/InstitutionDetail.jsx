@@ -22,6 +22,7 @@ import {
   EmptyState, Modal, Input, FormSelect, Textarea,
 } from "@/components/ds";
 import { confirmDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "../lib/api";
 
 const TAB_LIST = ["overview", "researchers", "units", "publications", "funding", "reputation", "collaboration", "govern"];
 const TAB_LABEL = {
@@ -66,7 +67,7 @@ export default function InstitutionDetail() {
       const { data } = await api.post(`/institutions/${inst.id}/claim`, { note: null });
       toast.success(data.status === "approved" ? "Joined!" : "Request submitted — pending admin approval");
       load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   const subtitle = [(inst.type || "").replace("_", " "), inst.country].filter(Boolean).join(" · ");
@@ -333,7 +334,7 @@ function CreateUnitModal({ institutionId, onClose, onCreated, parentId = null })
       });
       toast.success("Unit created");
       onCreated?.(); onClose?.();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
     finally { setBusy(false); }
   };
   return (
@@ -518,7 +519,7 @@ function GovernTab({ id, inst, onChanged }) {
     try {
       await api.post(`/institutions/${id}/members/${uid}/seat`, { seat_type });
       toast.success("Seat updated"); load(); onChanged?.();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
   const revoke = async (uid) => {
     if (!(await confirmDialog({ title: "Revoke this member?", danger: true }))) return;
@@ -692,7 +693,7 @@ function CollaborationTab({ id, inst, isAdmin }) {
       setForm({ title: "", description: "", kind: "research_initiative", deadline: "" });
       setFormOpen(false);
       load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
     setPosting(false);
   };
 
@@ -706,12 +707,12 @@ function CollaborationTab({ id, inst, isAdmin }) {
   };
 
   const KIND_COLORS = {
-    research_initiative: "#7C3AED",
-    strategic_project:   "#2563EB",
+    research_initiative: "#0F2847",
+    strategic_project:   "#0F2847",
     faculty_recruitment: "#B45309",
     student_project:     "#059669",
     grant_team:          "#EA580C",
-    teaching_collab:     "#0284C7",
+    teaching_collab:     "#0F2847",
   };
 
   return (

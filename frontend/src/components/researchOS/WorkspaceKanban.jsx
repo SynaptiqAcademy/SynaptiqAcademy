@@ -20,9 +20,9 @@ import CommentThread from "@/components/comments/CommentThread";
 
 const COLUMNS = [
   { key: "backlog", label: "Backlog", accent: TEXT_MUTED },
-  { key: "planned", label: "Planned", accent: "#0284C7" },
+  { key: "planned", label: "Planned", accent: "#0F2847" },
   { key: "in_progress", label: "In progress", accent: AMBER },
-  { key: "review", label: "Review", accent: "#7C3AED" },
+  { key: "review", label: "Review", accent: "#0F2847" },
   { key: "completed", label: "Completed", accent: EMERALD },
 ];
 

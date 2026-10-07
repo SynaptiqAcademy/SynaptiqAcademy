@@ -20,9 +20,9 @@ const BORDER  = "#E4E8EF";
 const RESEARCH_LEVELS = [
   { level: 1, label: "Research Explorer",      min: 0,    max: 99,      color: "#64748B", bg: "#F8FAFC", border: "#CBD5E1" },
   { level: 2, label: "Emerging Researcher",    min: 100,  max: 249,     color: "#059669", bg: "#ECFDF5", border: "#6EE7B7" },
-  { level: 3, label: "Active Researcher",      min: 250,  max: 499,     color: "#1D4ED8", bg: "#EFF6FF", border: "#93C5FD" },
-  { level: 4, label: "Established Researcher", min: 500,  max: 999,     color: "#4338CA", bg: "#EEF2FF", border: "#A5B4FC" },
-  { level: 5, label: "Advanced Researcher",    min: 1000, max: 1999,    color: "#7C3AED", bg: "#F5F3FF", border: "#C4B5FD" },
+  { level: 3, label: "Active Researcher",      min: 250,  max: 499,     color: "#0F2847", bg: "#eef2f8", border: "#d4dde9" },
+  { level: 4, label: "Established Researcher", min: 500,  max: 999,     color: "#0F2847", bg: "#eef2f8", border: "#d4dde9" },
+  { level: 5, label: "Advanced Researcher",    min: 1000, max: 1999,    color: "#0F2847", bg: "#eef2f8", border: "#d4dde9" },
   { level: 6, label: "Research Leader",        min: 2000, max: 4999,    color: "#B45309", bg: "#FFFBEB", border: "#FCD34D" },
   { level: 7, label: "Distinguished Scholar",  min: 5000, max: 9999999, color: "#92400E", bg: "#FEF3C7", border: "#F59E0B" },
 ];
@@ -40,28 +40,28 @@ const CATEGORIES = [
 
 // ── Badge rarity styles ────────────────────────────────────────────────────────
 const RARITY = {
-  common:    { bg: "#F8FAFC", border: "#CBD5E1", color: "#64748B", label: "Common" },
-  rare:      { bg: "#EFF6FF", border: "#93C5FD", color: "#1D4ED8", label: "Rare" },
-  epic:      { bg: "#F5F3FF", border: "#C4B5FD", color: "#7C3AED", label: "Epic" },
-  legendary: { bg: "#FEF3C7", border: "#F59E0B", color: "#92400E", label: "Legendary" },
+  common:    { bg: "#eef2f8", border: "#d4dde9", color: "#0F2847", label: "Common" },
+  rare:      { bg: "#eef2f8", border: "#d4dde9", color: "#0F2847", label: "Rare" },
+  epic:      { bg: "#eef2f8", border: "#d4dde9", color: "#0F2847", label: "Epic" },
+  legendary: { bg: "#eef2f8", border: "#d4dde9", color: "#0F2847", label: "Legendary" },
 };
 
 // ── Score sub-categories ───────────────────────────────────────────────────────
 const SCORE_CATEGORIES = [
   { key: "publication_score",   label: "Research Activity",  color: NAVY,    Icon: BarChart2 },
-  { key: "collaboration_score", label: "Collaboration",      color: "#1D4ED8", Icon: Users },
+  { key: "collaboration_score", label: "Collaboration",      color: "#0F2847", Icon: Users },
   { key: "reviewer_score",      label: "Peer Review",        color: EMERALD,  Icon: ClipboardCheck },
-  { key: "teaching_score",      label: "Teaching",           color: "#7C3AED", Icon: BookOpen },
+  { key: "teaching_score",      label: "Teaching",           color: "#0F2847", Icon: BookOpen },
   { key: "profile_score",       label: "Profile Quality",    color: "#B45309", Icon: Shield },
 ];
 
 // ── Event category styles ──────────────────────────────────────────────────────
 const EVENT_CATEGORY_COLOR = {
-  research:      { bg: "#EFF6FF", color: "#1D4ED8" },
+  research:      { bg: "#eef2f8", color: "#0F2847" },
   collaboration: { bg: "#ECFDF5", color: "#059669" },
-  reviewer:      { bg: "#F5F3FF", color: "#7C3AED" },
+  reviewer:      { bg: "#eef2f8", color: "#0F2847" },
   teaching:      { bg: "#FFFBEB", color: "#B45309" },
-  profile:       { bg: "#F0F9FF", color: "#0369A1" },
+  profile:       { bg: "#eef2f8", color: "#0F2847" },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -236,7 +236,7 @@ export default function Leaderboards() {
           {/* Category header */}
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
             <div>
-              <h2 style={{ fontFamily: "Georgia, serif", fontSize: 22, color: NAVY, fontWeight: 400 }}>
+              <h2 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, color: NAVY, fontWeight: 400 }}>
                 {activeCat.label}
               </h2>
               <p style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>{activeCat.desc}</p>
@@ -550,7 +550,7 @@ function ResearcherCard({ item, compared, onCompare }) {
           <AvatarCircle item={item} size={44} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 4 }}>
-              <h3 style={{ fontFamily: "Georgia, serif", fontSize: 14, color: "#0F172A", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <h3 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 14, color: "#0F172A", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {item.full_name || "Researcher"}
               </h3>
               <RankDisplay rank={item.rank} />
@@ -700,7 +700,7 @@ function AggregateList({ items, loading, catKey }) {
             }
 
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: "Georgia, serif", fontSize: 15, color: NAVY, fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 15, color: NAVY, fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {name || "—"}
               </div>
               {country && (
@@ -725,7 +725,7 @@ function BadgesSection({ badges }) {
     <div style={{ marginTop: 48, background: WARM, borderTop: `1px solid ${BORDER}`, padding: "32px 0 36px" }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 20 }}>
         <Award size={14} strokeWidth={1.5} style={{ color: NAVY }} />
-        <h2 style={{ fontFamily: "Georgia, serif", fontSize: 22, color: NAVY, fontWeight: 400 }}>My Achievements</h2>
+        <h2 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, color: NAVY, fontWeight: 400 }}>My Achievements</h2>
         <span style={{ fontSize: 11, color: "#94A3B8" }}>{badges.length} earned</span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
@@ -768,7 +768,7 @@ function TransparencySection() {
     {
       Icon: Users,
       title: "Collaboration",
-      color: "#1D4ED8",
+      color: "#0F2847",
       items: [
         "Creating research collaborations (+5 pts)",
         "Accepting collaboration invitations (+10 pts)",
@@ -786,7 +786,7 @@ function TransparencySection() {
     {
       Icon: GraduationCap,
       title: "Mentoring & Teaching",
-      color: "#7C3AED",
+      color: "#0F2847",
       items: [
         "Completing mentor sessions (+15 pts)",
         "Publishing teaching lessons (+10 pts)",
@@ -868,7 +868,7 @@ function EmptyLeaderboardState({ cat }) {
   return (
     <div style={{ textAlign: "center", padding: "60px 24px", border: `1px dashed ${BORDER}` }}>
       <cat.Icon size={44} strokeWidth={1} style={{ color: "#E2E8F0", margin: "0 auto 20px", display: "block" }} />
-      <h3 style={{ fontFamily: "Georgia, serif", fontSize: 22, color: "#1E293B", marginBottom: 8, fontWeight: 400 }}>
+      <h3 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, color: "#1E293B", marginBottom: 8, fontWeight: 400 }}>
         No {cat.label} yet
       </h3>
       <p style={{ fontSize: 13, color: "#64748B", maxWidth: 440, margin: "0 auto 24px", lineHeight: 1.65 }}>
@@ -928,7 +928,7 @@ function ComparePanel({ researchers, onRemove, onClose }) {
               <th style={{ width: 80, padding: "3px 10px 3px 0", textAlign: "left", fontSize: 9, color: "rgba(255,255,255,0.28)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "1px solid rgba(255,255,255,0.07)" }} />
               {researchers.map((r) => (
                 <th key={r.user_id} style={{ padding: "3px 14px", textAlign: "left", borderBottom: "1px solid rgba(255,255,255,0.07)", minWidth: 160 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "white", fontFamily: "Georgia, serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{r.full_name}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "white", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{r.full_name}</div>
                   <Button variant="link" onClick={() => onRemove(r.user_id)} style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", marginTop: 2 }}>
                     <X size={7} strokeWidth={1.5} /> Remove
                   </Button>

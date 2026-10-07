@@ -14,6 +14,7 @@ import { Modal } from "@/components/ds/Modal";
 import { Button } from "@/components/ds/Button";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { Textarea } from "@/components/ds/Textarea";
+import { safeErrorMessage } from "@/lib/api";
 
 const PURPOSE_OPTIONS = [
   { value: "co_author_paper", label: "Co-author a paper" },
@@ -83,7 +84,7 @@ export default function InviteToCollaborateModal({ open, onClose, person, need }
       });
       setSent(true);
     } catch (e) {
-      setError(e?.response?.data?.detail || "Could not send this request. Please try again.");
+      setError(safeErrorMessage(e, "Could not send this request. Please try again."));
     } finally {
       setSending(false);
     }

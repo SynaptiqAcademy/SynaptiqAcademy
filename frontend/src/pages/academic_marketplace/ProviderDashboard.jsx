@@ -9,8 +9,8 @@ import { fetchApi } from "@/lib/api";
 const API = "/api/acad-market";
 
 const STATUS_COLORS = {
-  pending: "#F59E0B", accepted: ACCENT, in_progress: "#0891B2",
-  under_review: "#7C3AED", completed: EMERALD, cancelled: "#94A3B8",
+  pending: "#F59E0B", accepted: ACCENT, in_progress: "#0F2847",
+  under_review: "#0F2847", completed: EMERALD, cancelled: "#94A3B8",
   revision_requested: "#D97706",
 };
 
@@ -30,7 +30,7 @@ export default function ProviderDashboard() {
     <EmptyState
       icon={<Briefcase />}
       title="No provider profile yet"
-      action={<Button as={Link} to="/academic-marketplace/provider/setup" variant="link" style={{ color: "#8A1538" }}>Set up your provider profile →</Button>}
+      action={<Button as={Link} to="/academic-marketplace/provider/setup" variant="link" style={{ color: "#0F2847" }}>Set up your provider profile →</Button>}
     />
   );
 

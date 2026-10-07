@@ -138,8 +138,8 @@ function ScoreRing({ score }) {
 
 function DesignBadge({ type }) {
   const map = {
-    qualitative:   { color: "#7c3aed", label: "Qualitative" },
-    quantitative:  { color: "#2563eb", label: "Quantitative" },
+    qualitative:   { color: "#0F2847", label: "Qualitative" },
+    quantitative:  { color: "#0F2847", label: "Quantitative" },
     mixed_methods: { color: "#0F2847", label: "Mixed Methods" },
   };
   const cfg = map[type?.toLowerCase()] || { color: "#64748b", label: type || "Unknown" };
@@ -515,7 +515,7 @@ function ResultView({ data, onReset }) {
 
         {/* objectives assessment */}
         <Card padding="xl">
-          <SectionHeader icon={ClipboardList} label="Research Objectives Assessment" color="#2563eb" />
+          <SectionHeader icon={ClipboardList} label="Research Objectives Assessment" color="#0F2847" />
           <div className="grid grid-cols-3 gap-4 mb-5">
             <ScoreBar label="Clarity" score={objAssess.clarity_score || 0} />
             <ScoreBar label="Measurability" score={objAssess.measurability_score || 0} />
@@ -536,7 +536,7 @@ function ResultView({ data, onReset }) {
 
         {/* research framework */}
         <Card padding="xl">
-          <SectionHeader icon={Layers} label="Research Framework" color="#7c3aed" />
+          <SectionHeader icon={Layers} label="Research Framework" color="#0F2847" />
           <div className="space-y-4">
             <LabelValue label="Conceptual Model" value={framework.conceptual_model} />
             <LabelValue label="Theoretical Structure" value={framework.theoretical_structure} />
@@ -602,7 +602,7 @@ function ResultView({ data, onReset }) {
                 columns={[["variable","Variable"],["operationalisation","Operationalisation"],["measurement_level","Measurement Level"]]} />
             </div>
             <div>
-              <div className="text-xs overline text-[#2563eb] mb-2">Dependent Variables</div>
+              <div className="text-xs overline text-[#0F2847] mb-2">Dependent Variables</div>
               <VariableTable items={variables.dependent_variables}
                 columns={[["variable","Variable"],["operationalisation","Operationalisation"],["measurement_level","Measurement Level"]]} />
             </div>
@@ -636,7 +636,7 @@ function ResultView({ data, onReset }) {
 
         {/* sampling */}
         <Card padding="xl">
-          <SectionHeader icon={Users} label="Sampling Strategy" color="#7c3aed" />
+          <SectionHeader icon={Users} label="Sampling Strategy" color="#0F2847" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <LabelValue label="Target Population" value={sampling.target_population} />
@@ -665,7 +665,7 @@ function ResultView({ data, onReset }) {
 
         {/* data collection */}
         <Card padding="xl">
-          <SectionHeader icon={ClipboardList} label="Data Collection Strategy" color="#2563eb" />
+          <SectionHeader icon={ClipboardList} label="Data Collection Strategy" color="#0F2847" />
           <div className="space-y-4">
             <LabelValue label="Primary Method" value={dataCol.primary_method} />
             <LabelValue label="Justification" value={dataCol.primary_method_justification} />
@@ -736,7 +736,7 @@ function ResultView({ data, onReset }) {
           <div className="space-y-6">
             <ValiditySection threats={validity.internal_validity} label="Internal Validity" color="#dc2626" />
             <ValiditySection threats={validity.external_validity} label="External Validity" color="#d97706" />
-            <ValiditySection threats={validity.construct_validity} label="Construct Validity" color="#7c3aed" />
+            <ValiditySection threats={validity.construct_validity} label="Construct Validity" color="#0F2847" />
           </div>
         </Card>
 

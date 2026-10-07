@@ -4,6 +4,7 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import api from "../lib/api";
+import { safeErrorMessage } from "../lib/api";
 
 // ─────────────────────────── generic fetcher ──────────────────────────────────
 
@@ -18,7 +19,7 @@ function useFetch(url, { skip = false, deps = [] } = {}) {
     setError(null);
     api.get(url)
       .then((r) => setData(r.data))
-      .catch((e) => setError(e?.response?.data?.detail || "Request failed"))
+      .catch((e) => setError(safeErrorMessage(e, "Request failed")))
       .finally(() => setLoading(false));
   }, [url, skip]);
 
@@ -57,7 +58,7 @@ export function useSaveGoals() {
       const { data } = await api.put("/research-impact/goals", goals);
       return data;
     } catch (e) {
-      const msg = e?.response?.data?.detail || "Failed to save goals";
+      const msg = safeErrorMessage(e, "Failed to save goals");
       setError(msg);
       throw new Error(msg);
     } finally {

@@ -19,6 +19,7 @@ import { confirmDialog } from "@/lib/confirm";
 import {
   CheckCircle2, RefreshCw, Loader2, Link as LinkIcon, Unplug, Sparkles, AlertCircle, Clock,
 } from "lucide-react";
+import { safeErrorMessage } from "../../lib/api";
 
 function StatTile({ label, testId, children, sub }) {
   return (
@@ -61,7 +62,7 @@ export default function OrcidSettings() {
   const connect = async () => {
     try {
       await connectOrcid("/academic-passport#research_integrations");
-    } catch (e) { toast.error(e?.response?.data?.detail || "ORCID is not configured"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "ORCID is not configured")); }
   };
 
   const disconnect = async () => {
@@ -79,7 +80,7 @@ export default function OrcidSettings() {
       const { data } = await api.post("/orcid/sync");
       toast.success(`Sync ok: +${data.publications_imported} new, ~${data.publications_updated} updated`);
       load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Sync failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Sync failed")); }
     finally { setBusy(false); }
   };
 
@@ -178,7 +179,7 @@ export default function OrcidSettings() {
               <Button data-testid="orcid-enrich-btn" onClick={enrich} loading={enriching} variant="ghost" size="sm">
                 {!enriching && <Sparkles size={12} />} Enrich via OpenAlex
               </Button>
-              <Button data-testid="orcid-disconnect-btn" onClick={disconnect} variant="ghost" size="sm" className="ml-auto !text-[#8A1538] !border-[rgba(138,21,56,0.25)] hover:!bg-[rgba(138,21,56,0.06)]">
+              <Button data-testid="orcid-disconnect-btn" onClick={disconnect} variant="ghost" size="sm" className="ml-auto !text-crimson-600 !border-crimson-200">
                 <Unplug size={12} /> Disconnect
               </Button>
             </>

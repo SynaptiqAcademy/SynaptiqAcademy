@@ -1,0 +1,71 @@
+/* Home — research command centre. Same tokens as every product page
+   (index.css --sq-*), same header classes as PageLayout (.pl-eyebrow,
+   .pl-hero-title). */
+
+.hm-top { padding: 8px 0 24px; border-bottom: 1px solid var(--sq-border); }
+.hm-head { margin-bottom: 20px; }
+
+/* Ask the AI — a normal form control, not a glowing console */
+.hm-ai { max-width: 46rem; }
+.hm-ai-row { display: flex; gap: 8px; }
+.hm-ai-input {
+  flex: 1; min-width: 0; height: 46px; padding: 0 14px; font: inherit; font-size: 0.95rem;
+  color: var(--sq-text-primary); background: #fff; border: 1px solid var(--sq-border-strong); border-radius: 4px;
+}
+.hm-ai-input::placeholder { color: #8a909a; }
+.hm-ai-input:focus { outline: none; border-color: var(--sq-brand-navy); box-shadow: 0 0 0 3px rgba(15, 40, 71, 0.12); }
+.hm-ai-btn {
+  height: 46px; padding: 0 20px; border-radius: 4px; border: 1px solid var(--sq-brand-navy);
+  background: var(--sq-brand-navy); color: #fff; font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+}
+.hm-ai-btn:hover { background: var(--sq-brand-navy-deep); }
+.hm-ai-btn:focus-visible, .hm-ai-sugg button:focus-visible, .hm-ai-sugg a:focus-visible, .hm-action:focus-visible, .hm-link:focus-visible {
+  outline: 2px solid var(--sq-brand-navy); outline-offset: 2px;
+}
+.hm-ai-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; margin-top: 10px; }
+.hm-ai-cost { font-size: 0.78rem; color: var(--sq-text-tertiary); }
+.hm-ai-sugg { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.hm-ai-sugg button, .hm-ai-sugg a {
+  display: inline-flex; align-items: center; gap: 5px; background: none; border: none; padding: 2px 0; cursor: pointer;
+  font: inherit; font-size: 0.8rem; color: var(--sq-brand-navy); text-decoration: underline;
+  text-decoration-color: rgba(15, 40, 71, 0.25); text-underline-offset: 3px;
+}
+.hm-ai-sugg button:hover, .hm-ai-sugg a:hover { text-decoration-color: currentColor; }
+.hm-ai--locked { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; font-size: 0.9rem; color: var(--sq-text-secondary); }
+.hm-ai--locked p { margin: 0; max-width: 40rem; line-height: 1.55; }
+.hm-ai--locked strong { color: var(--sq-text-primary); font-weight: 600; }
+
+/* Body: the work, then what needs attention */
+.hm-body { padding-top: 24px; display: flex; flex-direction: column; gap: 32px; }
+.hm-grid { display: grid; gap: 32px; align-items: start; }
+@media (min-width: 1100px) { .hm-grid { grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; } }
+.hm-main, .hm-aside { display: flex; flex-direction: column; gap: 32px; min-width: 0; }
+
+.hm-block-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.hm .hm-h2 { margin: 0; font-size: 0.95rem; font-weight: 600; color: var(--sq-text-primary); letter-spacing: -0.01em; }
+.hm-link {
+  display: inline-flex; align-items: center; gap: 5px; background: none; border: none; padding: 0; cursor: pointer;
+  font: inherit; font-size: 0.8rem; font-weight: 600; color: var(--sq-brand-navy); text-decoration: none;
+}
+.hm-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Quick actions: a short list, one colour */
+.hm-actions { display: flex; flex-direction: column; border-top: 1px solid var(--sq-border); }
+.hm-action {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 2px; background: none; border: none;
+  border-bottom: 1px solid var(--sq-border); cursor: pointer; text-align: left;
+  font: inherit; font-size: 0.875rem; color: var(--sq-text-primary);
+}
+.hm-action svg { color: var(--sq-brand-navy); flex-shrink: 0; }
+.hm-action:hover { color: var(--sq-brand-navy); background: rgba(15, 40, 71, 0.03); }
+
+@media (max-width: 640px) {
+  .hm-ai-row { flex-direction: column; }
+  .hm-ai-btn { width: 100%; }
+}
+
+/* Section headings on Home use the app's section style (the page title is
+   the only serif heading). */
+.hm .hm-h2 { font-family: inherit; }
+.hm-stat { color: inherit; text-decoration: none; }
+.hm-stat:hover { color: var(--sq-brand-navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }

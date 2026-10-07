@@ -56,8 +56,8 @@ function relativeTime(iso) {
 
 function iisColor(score) {
   if (score >= 7500) return "#D97706";
-  if (score >= 5000) return "#7C3AED";
-  if (score >= 2500) return "#0891B2";
+  if (score >= 5000) return "#0F2847";
+  if (score >= 2500) return "#0F2847";
   return "#94A3B8";
 }
 
@@ -121,8 +121,8 @@ function ProgressBar({ label, value = 0, max = 1000, color = "#0F2847" }) {
 // ── Type badge ────────────────────────────────────────────────────────────────
 
 const TYPE_COLOR = {
-  university: "#1D4ED8",
-  research_center: "#7C3AED",
+  university: "#0F2847",
+  research_center: "#0F2847",
   laboratory: "#047857",
   hospital: "#BE123C",
 };
@@ -154,7 +154,7 @@ function grantStatusColor(status) {
 
 // ── VBar chart ────────────────────────────────────────────────────────────────
 
-function VBarChart({ items = [], valueKey = "count", labelKey = "year", color = "#0891B2", height = 100 }) {
+function VBarChart({ items = [], valueKey = "count", labelKey = "year", color = "#0F2847", height = 100 }) {
   const max = Math.max(...items.map((i) => i[valueKey] || 0), 1);
   return (
     <div className="flex items-end gap-1" style={{ height }}>
@@ -178,13 +178,13 @@ function VBarChart({ items = [], valueKey = "count", labelKey = "year", color = 
 // ── Timeline event ────────────────────────────────────────────────────────────
 
 const EVENT_CONFIG = {
-  member_joined: { icon: Users, color: "#059669", label: "Member Joined" },
-  publication_added: { icon: BookOpen, color: "#0891B2", label: "Publication Added" },
-  grant_applied: { icon: DollarSign, color: "#D97706", label: "Grant Applied" },
-  grant_funded: { icon: CheckCircle2, color: "#059669", label: "Grant Funded" },
-  verification_upgraded: { icon: ShieldCheck, color: "#7C3AED", label: "Verification Upgraded" },
+  member_joined: { icon: Users, color: "#0F2847", label: "Member Joined" },
+  publication_added: { icon: BookOpen, color: "#0F2847", label: "Publication Added" },
+  grant_applied: { icon: DollarSign, color: "#0F2847", label: "Grant Applied" },
+  grant_funded: { icon: CheckCircle2, color: "#0F2847", label: "Grant Funded" },
+  verification_upgraded: { icon: ShieldCheck, color: "#0F2847", label: "Verification Upgraded" },
   unit_created: { icon: Building2, color: "#0F2847", label: "Unit Created" },
-  default: { icon: Activity, color: "#64748B", label: "Activity" },
+  default: { icon: Activity, color: "#0F2847", label: "Activity" },
 };
 
 function TimelineEvent({ event }) {
@@ -225,8 +225,8 @@ const TABS = [
 ];
 
 const COMPONENT_COLORS = [
-  "#0F2847", "#0891B2", "#7C3AED", "#059669",
-  "#D97706", "#DC2626", "#DB2777", "#64748B",
+  "#0F2847", "#0F2847", "#0F2847", "#059669",
+  "#D97706", "#DC2626", "#0F2847", "#64748B",
 ];
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -474,7 +474,7 @@ export default function InstitutionProfile() {
         {trends.length > 0 && (
           <Card padding="lg">
             <h3 className="text-sm font-semibold text-slate-900 mb-4">Citation Trends</h3>
-            <VBarChart items={trends} valueKey="count" labelKey="year" color="#0891B2" height={100} />
+            <VBarChart items={trends} valueKey="count" labelKey="year" color="#0F2847" height={100} />
           </Card>
         )}
 
@@ -585,7 +585,7 @@ export default function InstitutionProfile() {
                     </div>
                     <div className="ml-7 h-1.5 bg-slate-100 overflow-hidden">
                       <div
-                        className="h-full transition-all duration-700 bg-[#7C3AED]"
+                        className="h-full transition-all duration-700 bg-[#0F2847]"
                         style={{ width: `${p}%` }}
                       />
                     </div>

@@ -29,7 +29,7 @@ const EMRL  = "#059669";
 const TYPES = [
   { key: "Document",   label: "Document",   icon: FileText,   color: NAVY,      bg: "rgba(15,40,71,0.07)"  },
   { key: "Dataset",    label: "Dataset",    icon: Database,   color: "#059669", bg: "rgba(5,150,105,0.07)" },
-  { key: "Template",   label: "Template",   icon: FileCheck2, color: "#7C3AED", bg: "rgba(124,58,237,0.07)"},
+  { key: "Template",   label: "Template",   icon: FileCheck2, color: "#0F2847", bg: "rgba(124,58,237,0.07)"},
   { key: "Literature", label: "Literature", icon: BookOpen,   color: "#B45309", bg: "rgba(180,83,9,0.07)"  },
 ];
 
@@ -217,7 +217,7 @@ function TypeStats({ items }) {
               <Icon size={14} strokeWidth={1.5} style={{ color }} />
             </div>
             <div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "#0F172A", fontFamily: "Georgia, serif", lineHeight: 1 }}>{count}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: "#0F172A", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", lineHeight: 1 }}>{count}</div>
               <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#94A3B8", marginTop: 2 }}>{label}</div>
             </div>
           </Card>

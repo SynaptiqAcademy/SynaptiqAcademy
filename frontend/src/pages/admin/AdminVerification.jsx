@@ -8,6 +8,7 @@ import {
   Card, Button, Badge, DataTable, ProgressBar,
   EmptyState, ErrorState, Spinner,
 } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 const LEVEL_LABELS = ["Unverified","Email","Identity","ORCID","Institution","Researcher","Expert","Trusted","Distinguished"];
 
@@ -35,7 +36,7 @@ export default function AdminVerification() {
         setQueue(q.data || []);
         setFraud(f.data);
       })
-      .catch((e) => { if (mounted) setErr(e?.response?.data?.detail || "Failed to load"); })
+      .catch((e) => { if (mounted) setErr(safeErrorMessage(e, "Failed to load")); })
       .finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
   }, []);
@@ -45,7 +46,7 @@ export default function AdminVerification() {
       await api.post(`/verification/admin/request/${rid}/decide`, { decision, notes: "" });
       setQueue((q) => q.filter((r) => (r._id ?? r.id) !== rid));
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed");
+      toast.error(safeErrorMessage(e, "Failed"));
     }
   };
 
@@ -69,7 +70,7 @@ export default function AdminVerification() {
             <div className="font-medium text-slate-700">{v.institution_name || v.institution_id}</div>
             {v.department && <div>{v.department}{v.role ? ` · ${v.role}` : ""}</div>}
             {v.evidence_url && (
-              <a href={v.evidence_url} target="_blank" rel="noreferrer" className="text-blue-600 underline block truncate">
+              <a href={v.evidence_url} target="_blank" rel="noreferrer" className="text-navy-700 underline block truncate">
                 {v.evidence_kind || "evidence"}: {v.evidence_url}
               </a>
             )}

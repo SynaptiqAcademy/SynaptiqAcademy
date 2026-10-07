@@ -71,7 +71,7 @@ export default function ServiceDetail() {
           <Button as={Link} to={`/academic-marketplace/order/${id}?pkg=${service.packages?.[selectedPkg]?.tier || "basic"}`} size="lg" className="w-full mb-3">
             Place Order
           </Button>
-          <Button as={Link} to={`/academic-marketplace/providers/${service.provider_user_id}`} variant="link" className="w-full justify-center" style={{ color: "#8A1538" }}>
+          <Button as={Link} to={`/academic-marketplace/providers/${service.provider_user_id}`} variant="link" className="w-full justify-center" style={{ color: "#0F2847" }}>
             View Provider Profile
           </Button>
 

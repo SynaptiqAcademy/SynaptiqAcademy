@@ -24,7 +24,7 @@ export function ProfileLayout({
     <div style={{
       margin: "4px 24px 20px",
       padding: "26px 28px 22px",
-      borderRadius: 16,
+      borderRadius: 8,
       background: `linear-gradient(135deg, ${NAVY} 0%, ${NAVY2} 100%)`,
       color: WHITE,
     }}>
@@ -44,7 +44,7 @@ export function ProfileLayout({
                 background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.16)",
                 padding: "3px 8px", borderRadius: 100,
               }}>
-                <CheckCircle2 size={11} style={{ color: "#38BDF8" }} /> Verified
+                <CheckCircle2 size={11} style={{ color: "#2f5486" }} /> Verified
               </span>
             )}
           </div>

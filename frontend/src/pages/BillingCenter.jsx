@@ -58,15 +58,15 @@ function CreditsRing({ total, used }) {
   return (
     <div style={{ position: "relative", width: dim, height: dim, margin: "0 auto" }}>
       <svg width={dim} height={dim} viewBox={`0 0 ${dim} ${dim}`} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={dim / 2} cy={dim / 2} r={r} fill="none" stroke="#EDE9FE" strokeWidth={stroke} />
+        <circle cx={dim / 2} cy={dim / 2} r={r} fill="none" stroke="#eef2f8" strokeWidth={stroke} />
         <circle
-          cx={dim / 2} cy={dim / 2} r={r} fill="none" stroke="#7C3AED" strokeWidth={stroke}
+          cx={dim / 2} cy={dim / 2} r={r} fill="none" stroke="#0F2847" strokeWidth={stroke}
           strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset}
           style={{ transition: "stroke-dashoffset 800ms ease-out" }}
         />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a", lineHeight: 1 }}>{total.toLocaleString()}</span>
+        <span style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a", lineHeight: 1 }}>{total.toLocaleString()}</span>
         <span style={{ fontSize: 10.5, color: TEXT_MUTED, marginTop: 2 }}>Total</span>
       </div>
     </div>
@@ -166,11 +166,11 @@ export default function BillingCenter() {
               </Link>
             </div>
 
-            <div style={{ margin: "16px 24px 24px", borderRadius: 14, padding: 24, background: `linear-gradient(135deg, ${NAVY} 0%, ${NAVY2} 100%)`, color: WHITE }}>
+            <div style={{ margin: "16px 24px 24px", borderRadius: 8, padding: 24, background: `linear-gradient(135deg, ${NAVY} 0%, ${NAVY2} 100%)`, color: WHITE }}>
               <div className="flex flex-col sm:flex-row" style={{ alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
                 <div className="flex-wrap" style={{ display: "flex", alignItems: "flex-start", gap: 14, minWidth: 0 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(124,58,237,0.35)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Crown size={20} color="#C4B5FD" />
+                  <div style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(124,58,237,0.35)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Crown size={20} color="#d4dde9" />
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <div className="flex-wrap" style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -185,7 +185,7 @@ export default function BillingCenter() {
                   </div>
                 </div>
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div style={{ fontFamily: "Georgia, serif", fontSize: 24, fontWeight: 700 }}>
+                  <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 24, fontWeight: 700 }}>
                     {plan.code === "free" ? "€0" : plan.price_eur_monthly ? `€${plan.price_eur_monthly}` : "Custom"}
                     {plan.price_eur_monthly > 0 && <span style={{ fontSize: 12, fontWeight: 400, color: "rgba(255,255,255,0.55)" }}>/month</span>}
                   </div>
@@ -248,11 +248,11 @@ export default function BillingCenter() {
               />
               <div style={{ marginTop: 16, display: "flex", gap: 24 }}>
                 <div>
-                  <div style={{ fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700 }}>{(credits.pack_balance ?? 0).toLocaleString()}</div>
+                  <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 20, fontWeight: 700 }}>{(credits.pack_balance ?? 0).toLocaleString()}</div>
                   <div style={{ ...TYPE.meta, marginTop: 2 }}>Purchased credits (never expire)</div>
                 </div>
                 <div>
-                  <div style={{ fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700, color: EMERALD }}>{totalBalance.toLocaleString()}</div>
+                  <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 20, fontWeight: 700, color: EMERALD }}>{totalBalance.toLocaleString()}</div>
                   <div style={{ ...TYPE.meta, marginTop: 2 }}>Total Available</div>
                 </div>
               </div>
@@ -352,13 +352,13 @@ export default function BillingCenter() {
             <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12 }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 6, color: TEXT_SECONDARY }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#7C3AED" }} /> Used
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0F2847" }} /> Used
                 </span>
                 <span style={{ fontWeight: 600 }}>{monthlyUsed.toLocaleString()}</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12 }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 6, color: TEXT_SECONDARY }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#EDE9FE" }} /> Remaining
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#eef2f8" }} /> Remaining
                 </span>
                 <span style={{ fontWeight: 600 }}>{totalBalance.toLocaleString()}</span>
               </div>

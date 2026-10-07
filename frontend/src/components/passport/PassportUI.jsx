@@ -45,7 +45,7 @@ export function StatusCard({ icon: Icon, title, status = "pending", meta, action
     <div
       onClick={onToggle}
       style={{
-        background: "#fff", border: `1px solid ${BRD}`, borderRadius: 12, padding: 16,
+        background: "#fff", border: `1px solid ${BRD}`, borderRadius: 8, padding: 16,
         cursor: clickable ? "pointer" : "default", transition: "box-shadow 150ms ease, border-color 150ms ease",
       }}
       onMouseEnter={(e) => { e.currentTarget.style.boxShadow = SHADOW_CARD_HOVER; e.currentTarget.style.borderColor = "rgba(15,23,42,0.14)"; }}
@@ -94,7 +94,7 @@ export function SectionShell({ title, subtitle, action, children }) {
 export function MiniStat({ label, value, color }) {
   return (
     <div>
-      <div style={{ fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700, color: color || TEXT_PRIMARY, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 20, fontWeight: 700, color: color || TEXT_PRIMARY, lineHeight: 1 }}>{value}</div>
       <div style={{ ...TYPE.meta, marginTop: 4 }}>{label}</div>
     </div>
   );

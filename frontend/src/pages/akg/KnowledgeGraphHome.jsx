@@ -54,11 +54,11 @@ export default function KnowledgeGraphHome() {
       <h2 style={{ fontSize: 16, fontWeight: 700, color: NAVY, marginBottom: 16 }}>Explore the Graph</h2>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 32 }}>
         <QuickLink to="/akg/explorer"         icon={Network}      label="Graph Explorer"        description="Interactive visualization of entities and relationships"  color={ACCENT} />
-        <QuickLink to="/akg/search"           icon={Search}       label="Semantic Search"       description="TF-IDF powered search across all graph entities"          color="#7c3aed" />
+        <QuickLink to="/akg/search"           icon={Search}       label="Semantic Search"       description="TF-IDF powered search across all graph entities"          color="#0F2847" />
         <QuickLink to="/akg/trends"           icon={TrendingUp}   label="Trend Discovery"       description="Emerging topics, hot research areas, growth signals"       color="#059669" />
         <QuickLink to="/akg/analytics"        icon={BarChart2}    label="Graph Analytics"       description="Centrality, influence, community detection"               color="#d97706" />
         <QuickLink to="/akg/recommendations"  icon={Lightbulb}    label="Recommendations"       description="Graph-powered personalized academic recommendations"       color="#dc2626" />
-        <QuickLink to="/akg/sync"             icon={RefreshCw}    label="Sync Center"           description="Monitor and control knowledge graph synchronization"       color="#0891b2" />
+        <QuickLink to="/akg/sync"             icon={RefreshCw}    label="Sync Center"           description="Monitor and control knowledge graph synchronization"       color="#0F2847" />
       </div>
 
       {overview?.entities_by_type && (

@@ -82,7 +82,9 @@ export default function AIExecutiveAssistant() {
   const [tab, setTab] = useState("chat");
   const bottomRef = useRef(null);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  // Follow the conversation only once it has started, and only within view —
+  // never scroll the page past its header on first load.
+  useEffect(() => { if (messages.length > 1) bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, [messages]);
 
   const loadHistory = useCallback(async () => {
     try {
@@ -154,7 +156,7 @@ export default function AIExecutiveAssistant() {
           {/* Messages — custom scrollable transcript panel, no ds/ equivalent for a
               tinted chat-history well; left hand-rolled. */}
           <div style={{
-            background: WARM, borderRadius: 12, padding: 20, minHeight: 300, maxHeight: 500,
+            background: WARM, borderRadius: 8, padding: 20, minHeight: 300, maxHeight: 500,
             overflowY: "auto", marginBottom: 16,
           }}>
             {messages.map((m, i) => <MessageBubble key={i} msg={m} />)}

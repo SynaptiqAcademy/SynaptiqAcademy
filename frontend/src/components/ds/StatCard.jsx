@@ -1,9 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import {
-  NAVY, BRD, BRDH, WARM, WHITE, SURF2, EMERALD, CRIMSON,
-  TEXT_MUTED, TEXT_TERTIARY, FONT_SERIF, RADIUS_MD, RADIUS_FULL,
-  SHADOW_CARD, SHADOW_CARD_HOVER, SUCCESS_BG, DANGER_BG,
+  NAVY, BRD, BRDH, WHITE, SURF2, EMERALD, CRIMSON,
+  TEXT_PRIMARY, TEXT_MUTED, TEXT_TERTIARY, FONT_SERIF, RADIUS_FULL,
+  SUCCESS_BG, DANGER_BG,
 } from "@/lib/tokens";
 
 /**
@@ -51,15 +51,15 @@ export function StatCard({
       style={{
         textDecoration: "none",
         background: WHITE,
-        border: `1px solid ${highlight ? NAVY : hovered && isInteractive ? BRDH : BRD}`,
-        borderRadius: RADIUS_MD,
-        padding: "18px 20px",
+        border: `1px solid ${hovered && isInteractive ? BRDH : BRD}`,
+        borderTop: highlight ? `2px solid ${NAVY}` : undefined,
+        borderRadius: 6,
+        padding: "14px 16px",
         display: "flex",
         flexDirection: "column",
-        gap: 6,
+        gap: 4,
         cursor: isInteractive ? "pointer" : "default",
-        transition: "border-color 150ms, box-shadow 150ms",
-        boxShadow: hovered && isInteractive ? SHADOW_CARD_HOVER : SHADOW_CARD,
+        transition: "border-color 150ms",
       }}
     >
       {/* Top row: label + icon */}
@@ -67,45 +67,32 @@ export function StatCard({
         {label && (
           <p
             style={{
-              fontSize: "0.62rem",
-              fontWeight: 700,
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: TEXT_MUTED,
+              fontSize: "0.75rem",
+              fontWeight: 500,
+              color: TEXT_TERTIARY,
               margin: 0,
             }}
           >
             {label}
           </p>
         )}
-        {icon && (
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: RADIUS_MD,
-              background: highlight ? NAVY : WARM,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {React.cloneElement(icon, {
-              size: 13,
-              style: { color: highlight ? WHITE : TEXT_TERTIARY, ...(icon.props.style || {}) },
-            })}
-          </div>
-        )}
+        {icon && React.cloneElement(icon, {
+          size: 14,
+          strokeWidth: 1.6,
+          "aria-hidden": true,
+          style: { color: TEXT_MUTED, ...(icon.props.style || {}) },
+        })}
       </div>
 
       {/* Value */}
       <p
         style={{
           fontFamily: FONT_SERIF,
-          fontSize: "clamp(1.4rem, 3vw, 1.8rem)",
-          fontWeight: 700,
-          color: NAVY,
-          letterSpacing: "-0.03em",
+          fontSize: "1.6rem",
+          fontWeight: 400,
+          color: TEXT_PRIMARY,
+          letterSpacing: "-0.01em",
+          fontVariantNumeric: "tabular-nums",
           lineHeight: 1,
           margin: 0,
         }}
@@ -144,7 +131,18 @@ export function StatCard({
  * StatGrid — responsive grid of StatCards.
  * cols: number of columns at large screen (default: 4)
  */
+const isEmptyValue = (v) => {
+  if (v === null || v === undefined) return true;
+  const t = String(typeof v === "object" ? "x" : v).trim();
+  return t === "" || t === "0" || t === "—" || t === "-" || t === "0%" || t === "0.0" || t === "$0.00";
+};
+
 export function StatGrid({ children, cols = 4, className = "" }) {
+  // A grid of zeros earns no space: when every metric is empty the grid is
+  // left out, and appears as soon as there is something to report.
+  const items = React.Children.toArray(children).filter(Boolean);
+  const valued = items.filter((c) => c && c.props && "value" in c.props);
+  if (valued.length > 0 && valued.length === items.length && valued.every((c) => isEmptyValue(c.props.value))) return null;
   return (
     <div
       className={className}

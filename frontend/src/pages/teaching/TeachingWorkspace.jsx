@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ds/Textarea";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { ResearchLayout } from "@/layouts";
 import { NAVY } from "@/lib/tokens";
+import { safeErrorMessage } from "../../lib/api";
 
 const SUBJECTS = ["Mathematics","Economics","Management","Computer Science","Medicine","Engineering","Psychology","Education","Sciences","Humanities","Law","Business","History","Literature","Physics","Chemistry","Biology","Other"];
 const LEVELS   = ["secondary","undergraduate","graduate","professional","adult","other"];
@@ -53,7 +54,7 @@ export default function TeachingWorkspace() {
       toast.success("Joined workspace");
       load();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed to accept invitation");
+      toast.error(safeErrorMessage(e, "Failed to accept invitation"));
     }
   };
 
@@ -285,7 +286,7 @@ function TeachingWorkspaceSidebar({ workspaces }) {
           <Users size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Average Team Size</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
           {avgMembers}
         </div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>

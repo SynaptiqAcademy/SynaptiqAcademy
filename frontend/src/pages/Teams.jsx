@@ -22,20 +22,21 @@ import { Tag } from "@/components/ds/Tag";
 import { Button } from "@/components/ds/Button";
 import { SearchBar, FilterChip } from "@/components/ds/SearchBar";
 import { NavTabs } from "@/components/ds/NavTabs";
+import { safeErrorMessage } from "../lib/api";
 
 const BORDER = "#E4E8EF";
 
 export const TEAM_TYPES = [
   { value: "",                   label: "All Types",          icon: Layers,        color: "#64748B" },
-  { value: "research_paper",     label: "Research Paper",     icon: FileText,      color: "#7C3AED" },
-  { value: "conference_paper",   label: "Conference Paper",   icon: BookOpen,      color: "#0891B2" },
+  { value: "research_paper",     label: "Research Paper",     icon: FileText,      color: "#0F2847" },
+  { value: "conference_paper",   label: "Conference Paper",   icon: BookOpen,      color: "#0F2847" },
   { value: "grant",              label: "Grant Team",         icon: Award,         color: "#D97706" },
   { value: "book",               label: "Book",               icon: BookMarked,    color: "#059669" },
   { value: "monograph",          label: "Monograph",          icon: BookMarked,    color: "#065F46" },
-  { value: "teaching",           label: "Teaching",           icon: GraduationCap, color: "#8B5CF6" },
-  { value: "course_development", label: "Course Development", icon: PenTool,       color: "#2563EB" },
+  { value: "teaching",           label: "Teaching",           icon: GraduationCap, color: "#2f5486" },
+  { value: "course_development", label: "Course Development", icon: PenTool,       color: "#0F2847" },
   { value: "innovation",         label: "Innovation",         icon: Lightbulb,     color: "#F59E0B" },
-  { value: "interdisciplinary",  label: "Interdisciplinary",  icon: FlaskConical,  color: "#06B6D4" },
+  { value: "interdisciplinary",  label: "Interdisciplinary",  icon: FlaskConical,  color: "#2f5486" },
   { value: "institution",        label: "Institution",        icon: Building2,     color: "#374151" },
   { value: "review_team",        label: "Review Team",        icon: CheckSquare,   color: "#DC2626" },
   { value: "editorial_team",     label: "Editorial Team",     icon: Shield,        color: "#EA580C" },
@@ -204,7 +205,7 @@ export default function Teams() {
       await loadMyGroups();
       await loadGroups();
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed to join");
+      toast.error(safeErrorMessage(err, "Failed to join"));
     } finally {
       setBusy(false);
     }
@@ -218,7 +219,7 @@ export default function Teams() {
       await loadMyGroups();
       await loadGroups();
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed to leave");
+      toast.error(safeErrorMessage(err, "Failed to leave"));
     } finally {
       setBusy(false);
     }

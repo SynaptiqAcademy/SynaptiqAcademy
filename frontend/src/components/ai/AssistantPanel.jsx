@@ -22,6 +22,7 @@ import {
   BookOpen, Lightbulb, Beaker, HelpCircle, Pencil, BadgeCheck,
   CalendarDays, Coins, MessageSquareReply,
 } from "lucide-react";
+import { safeErrorMessage } from "../../lib/api";
 
 const ASSISTANT_COST = 2;
 
@@ -101,7 +102,7 @@ export default function AssistantPanel({ open, onClose, entityKind, entityId, en
       setShowHistory(false);
       return data.id;
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed to start session");
+      toast.error(safeErrorMessage(e, "Failed to start session"));
       return null;
     } finally { setCreating(false); }
   }, [entityKind, entityId]);
@@ -133,7 +134,7 @@ export default function AssistantPanel({ open, onClose, entityKind, entityId, en
     } catch (e) {
       // Roll back optimistic message on hard error
       const status = e?.response?.status;
-      const detail = e?.response?.data?.detail || "Failed";
+      const detail = safeErrorMessage(e, "Failed");
       toast.error(detail);
       if (status === 402) {
         // user out of credits — keep their message but show no reply

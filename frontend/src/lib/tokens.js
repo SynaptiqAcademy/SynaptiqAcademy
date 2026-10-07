@@ -22,41 +22,41 @@ import { duration as _D, ease as _E } from "./motion";
 
 // ── Core palette ─────────────────────────────────────────────────────────────
 export const NAVY         = "#0F2847";   // Primary identity — actions, headings
-export const NAVY_LIGHT   = "#1a3a5c";   // Navy hover state
+export const NAVY_LIGHT   = "#0a1c34";   // Navy hover state (= --sq-brand-navy-deep, as on the public site)
 export const NAVY2        = "#0a1c34";   // Deeper navy — sidebar, focus (= --sq-navy-800)
-export const ACCENT       = "#8A1538";   // Secondary — important badges, CTAs
-export const ACCENT_DIM   = "#6d102c";   // Accent hover state
+export const ACCENT       = "#0F2847";   // One brand colour: the former burgundy accent is the navy
+export const ACCENT_DIM   = "#0a1c34";   // Accent hover state
 export const EMERALD      = "#059669";   // Positive, success, verified
 export const AMBER        = "#D97706";   // Warning, caution, near-limit
-export const CRIMSON      = "#DC2626";   // Error, destructive — never decorative
+export const CRIMSON      = "#B42318";   // Error, destructive — never decorative (= --sq-crimson-600)
 
 // ── Secondary accents (charts, AI surfaces, non-brand semantic color) ────────
 // Named so pages stop inventing their own one-off purple/teal per file.
-export const VIOLET       = "#8B5CF6";   // AI-surface accent — Copilot, Agents, AI panels (= Chart.jsx's pre-existing palette entry)
-export const VIOLET_BG    = "#F5F3FF";
-export const VIOLET_TEXT  = "#6D28D9";
+export const VIOLET       = "#2f5486";   // AI surfaces: a navy tint — AI is part of the product, not a second brand colour
+export const VIOLET_BG    = "#eef2f8";
+export const VIOLET_TEXT  = "#0F2847";
 export const TEAL         = "#14B8A6";   // Secondary data-viz accent, distinct from EMERALD=success (= Chart.jsx's pre-existing palette entry)
 export const TEAL_BG      = "#F0FDFA";
 export const TEAL_TEXT    = "#0F766E";
 
 // ── Surfaces ─────────────────────────────────────────────────────────────────
-export const WARM         = "#F4F6FA";   // Main app page background
+export const WARM         = "#FBFAF7";   // Main app page background (= public --paper)
 export const ADMIN_BG     = "#F1F5F9";   // Admin page background
 export const WHITE        = "#FFFFFF";   // Card, modal, header surfaces
-export const SURF2        = "#F8FAFC";   // Secondary surface, table row hover
+export const SURF2        = "#F6F5F1";   // Secondary surface, table row hover
 
 // ── Borders ──────────────────────────────────────────────────────────────────
-export const BRD          = "rgba(15,23,42,0.08)";  // Default border
-export const BRDH         = "rgba(15,23,42,0.14)";  // Hover border
-export const BRDX         = "#E4E8EF";              // Structural dividers
+export const BRD          = "rgba(16,20,28,0.10)";  // Default border
+export const BRDH         = "rgba(16,20,28,0.18)";  // Hover border
+export const BRDX         = "#E6E2DA";              // Structural dividers (= public header rule)
 export const BRD_SOFT     = "rgba(15,23,42,0.06)";  // Internal card/list/table-row dividers, lighter than BRD
 
 // ── Text hierarchy ────────────────────────────────────────────────────────────
-export const TEXT_PRIMARY   = "#0f172a";   // Headings, values, critical text
+export const TEXT_PRIMARY   = "#10141c";   // Headings, values, critical text
 export const TEXT_STRONG    = "#374151";   // Hover/active state on secondary text (between primary and secondary)
-export const TEXT_SECONDARY = "#475569";   // Supporting text, labels
-export const TEXT_TERTIARY  = "#64748b";   // Nav items, body copy, secondary labels (slate-500)
-export const TEXT_MUTED     = "#63707f";   // Timestamps, placeholders, captions
+export const TEXT_SECONDARY = "#3a4250";   // Supporting text, labels
+export const TEXT_TERTIARY  = "#5f6673";   // Nav items, body copy, secondary labels (slate-500)
+export const TEXT_MUTED     = "#5f6673";   // Timestamps, placeholders, captions
 export const TEXT_DISABLED  = "#cbd5e1";   // Disabled state text
 
 // ── Shadows ──────────────────────────────────────────────────────────────────
@@ -77,7 +77,7 @@ export const HERO_STYLE = {
 };
 
 // ── Radii ─────────────────────────────────────────────────────────────────────
-export const RADIUS_BASE = "6px";   // Cards, inputs, buttons, tags
+export const RADIUS_BASE = "4px";   // Inputs, buttons, tags (= public .lp-btn)
 export const RADIUS_PILL = "100px"; // Badges, pills, counts
 
 // ── Spacing rhythm (8px grid) ────────────────────────────────────────────────
@@ -109,9 +109,9 @@ export const NAVY_20  = "rgba(15,40,71,0.20)";
 export const NAVY_40  = "rgba(15,40,71,0.40)";
 
 // ── Accent tints ──────────────────────────────────────────────────────────────
-export const ACCENT_05  = "rgba(138,21,56,0.05)";
-export const ACCENT_10  = "rgba(138,21,56,0.10)";
-export const ACCENT_20  = "rgba(138,21,56,0.20)";
+export const ACCENT_05  = "rgba(15,40,71,0.05)";
+export const ACCENT_10  = "rgba(15,40,71,0.10)";
+export const ACCENT_20  = "rgba(15,40,71,0.20)";
 
 // ── Semantic state colors ─────────────────────────────────────────────────────
 // Mirrors index.css's --sq-success-*/--sq-warning-*/--sq-danger-*/--sq-info-*
@@ -125,16 +125,17 @@ export const WARNING_BG     = "#FFFBEB";
 export const WARNING_TEXT   = "#92400E";
 export const WARNING_BORDER = "#FDE68A";
 export const DANGER_BG      = "#FEF2F2";
-export const DANGER_TEXT    = "#991B1B";
+export const DANGER_TEXT    = "#912018";
 export const DANGER_BORDER  = "#FECACA";
-export const INFO           = "#3B82F6";
-export const INFO_BG        = "#EFF6FF";
-export const INFO_TEXT      = "#1D4ED8";
-export const INFO_BORDER    = "#BFDBFE";
+export const INFO           = "#2f5486";  // info is the navy family, not a competing blue
+export const INFO_BG        = "#eef2f8";
+export const INFO_TEXT      = "#0F2847";
+export const INFO_BORDER    = "#d4dde9";
 
 // ── Named chart palette ───────────────────────────────────────────────────────
 // Import this instead of hardcoding a per-file color list for charts/legends.
-export const CHART_PALETTE = [NAVY, EMERALD, AMBER, INFO, CRIMSON, VIOLET, TEAL];
+// Data colours are functional, so the chart palette keeps distinct hues.
+export const CHART_PALETTE = [NAVY, EMERALD, AMBER, "#3B82F6", "#DC2626", "#8B5CF6", TEAL];
 
 // ── Extended shadow scale ────────────────────────────────────────────────────
 // 5-step elevation scale, values identical to index.css's --sq-shadow-xs…xl.
@@ -149,20 +150,21 @@ export const SHADOW_FOCUS = "0 0 0 3px rgba(15,40,71,0.15)";
 // Values identical to index.css's --sq-radius-xs…2xl.
 export const RADIUS_XS   = "2px";
 export const RADIUS_SM   = "4px";
-export const RADIUS_MD   = "6px";   // = RADIUS_BASE
-export const RADIUS_LG   = "8px";
-export const RADIUS_XL   = "10px";
-export const RADIUS_2XL  = "14px";
-export const RADIUS_3XL  = "20px";  // hero/marketing-scale only — no CSS var equivalent
+export const RADIUS_MD   = "4px";   // = RADIUS_BASE
+export const RADIUS_LG   = "6px";
+export const RADIUS_XL   = "8px";
+export const RADIUS_2XL  = "8px";
+export const RADIUS_3XL  = "12px";  // hero/marketing-scale only — no CSS var equivalent
 export const RADIUS_FULL = "9999px";
 
 // ── Font families ─────────────────────────────────────────────────────────────
 // FONT_SANS is the app-wide brand face (matches index.css's global h1–h6 rule
 // and body font — Notion/Linear/Stripe-style clean grotesk, not serif).
-// FONT_SERIF is reserved for marketing/editorial surfaces only (index.css's
-// `.marketing-page` scope) — never use it in product UI/dashboard chrome.
+// FONT_SERIF is the editorial serif shared with the public site (Newsreader):
+// page titles and selected editorial headings only — never controls, tables
+// or dense metadata.
 export const FONT_SANS  = "'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif";
-export const FONT_SERIF = "'Merriweather', Georgia, 'Times New Roman', serif";
+export const FONT_SERIF = "'Newsreader Variable', 'Newsreader', Georgia, 'Times New Roman', serif";
 export const FONT_MONO  = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
 
 // ── Typography scale ──────────────────────────────────────────────────────────
@@ -175,17 +177,17 @@ export const TYPE = {
     fontWeight:    700,
     lineHeight:    1.08,
     letterSpacing: "-0.045em",
-    color:         "#0f172a",
+    color:         "#10141c",
   },
 
   // ── Page headings ────────────────────────────────────────────────────────
   h1: {
-    fontFamily:    FONT_SANS,
-    fontSize:      "clamp(1.5rem, 3vw, 2rem)",
-    fontWeight:    700,
-    lineHeight:    1.15,
-    letterSpacing: "-0.035em",
-    color:         "#0f172a",
+    fontFamily:    FONT_SERIF,
+    fontSize:      "clamp(1.6rem, 2.6vw, 2.1rem)",
+    fontWeight:    400,
+    lineHeight:    1.12,
+    letterSpacing: "-0.015em",
+    color:         "#10141c",
   },
   h2: {
     fontFamily:    FONT_SANS,
@@ -193,21 +195,21 @@ export const TYPE = {
     fontWeight:    700,
     lineHeight:    1.2,
     letterSpacing: "-0.025em",
-    color:         "#0f172a",
+    color:         "#10141c",
   },
   h3: {
     fontSize:      "1.125rem",
     fontWeight:    600,
     lineHeight:    1.3,
     letterSpacing: "-0.015em",
-    color:         "#0f172a",
+    color:         "#10141c",
   },
   h4: {
     fontSize:      "0.9375rem",
     fontWeight:    600,
     lineHeight:    1.4,
     letterSpacing: "-0.01em",
-    color:         "#0f172a",
+    color:         "#10141c",
   },
 
   // ── Section label (uppercase overline) ──────────────────────────────────
@@ -217,7 +219,7 @@ export const TYPE = {
     lineHeight:    1.3,
     letterSpacing: "0.08em",
     textTransform: "uppercase",
-    color:         "#63707f",
+    color:         "#5f6673",
   },
 
   // ── Body copy ────────────────────────────────────────────────────────────
@@ -225,19 +227,19 @@ export const TYPE = {
     fontSize:   "1rem",
     fontWeight: 400,
     lineHeight: 1.65,
-    color:      "#475569",
+    color:      "#3a4250",
   },
   body: {
     fontSize:   "0.875rem",
     fontWeight: 400,
     lineHeight: 1.6,
-    color:      "#475569",
+    color:      "#3a4250",
   },
   bodySm: {
     fontSize:   "0.8125rem",
     fontWeight: 400,
     lineHeight: 1.55,
-    color:      "#475569",
+    color:      "#3a4250",
   },
 
   // ── Utility text ─────────────────────────────────────────────────────────
@@ -245,7 +247,7 @@ export const TYPE = {
     fontSize:   "0.75rem",
     fontWeight: 400,
     lineHeight: 1.5,
-    color:      "#63707f",
+    color:      "#5f6673",
   },
   label: {
     fontSize:      "0.6875rem",
@@ -253,34 +255,34 @@ export const TYPE = {
     lineHeight:    1.3,
     letterSpacing: "0.06em",
     textTransform: "uppercase",
-    color:         "#63707f",
+    color:         "#5f6673",
   },
   meta: {
     fontSize:      "0.625rem",
     fontWeight:    500,
     lineHeight:    1.3,
     letterSpacing: "0.04em",
-    color:         "#63707f",
+    color:         "#5f6673",
   },
 
   // ── Numeric display ──────────────────────────────────────────────────────
   number: {
     fontFamily:         FONT_SERIF,
     fontSize:           "1.5rem",
-    fontWeight:         700,
+    fontWeight:         500,
     lineHeight:         1.1,
     letterSpacing:      "-0.03em",
     fontVariantNumeric: "tabular-nums",
-    color:              "#0f172a",
+    color:              "#10141c",
   },
   numberLg: {
     fontFamily:         FONT_SERIF,
     fontSize:           "2.5rem",
-    fontWeight:         700,
+    fontWeight:         500,
     lineHeight:         1,
     letterSpacing:      "-0.04em",
     fontVariantNumeric: "tabular-nums",
-    color:              "#0f172a",
+    color:              "#10141c",
   },
   numberSm: {
     fontVariantNumeric: "tabular-nums",
@@ -288,7 +290,7 @@ export const TYPE = {
     fontWeight:         700,
     lineHeight:         1.2,
     letterSpacing:      "-0.02em",
-    color:              "#0f172a",
+    color:              "#10141c",
   },
 };
 

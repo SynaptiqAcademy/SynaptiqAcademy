@@ -8,10 +8,10 @@ import { fetchApi } from "@/lib/api";
 
 
 const TYPE_COLOR = {
-  writing: ACCENT, literature_review: "#8b5cf6", data_collection: "#0ea5e9",
+  writing: ACCENT, literature_review: "#2f5486", data_collection: "#2f5486",
   submission: EMERALD, revision: "#f97316", conference: "#f59e0b",
-  grant_application: "#ec4899", collaboration: "#14b8a6", analysis: NAVY,
-  admin: "#94a3b8", teaching: "#a78bfa", other: "#cbd5e1",
+  grant_application: "#2f5486", collaboration: "#14b8a6", analysis: NAVY,
+  admin: "#94a3b8", teaching: "#2f5486", other: "#cbd5e1",
 };
 
 function DayCard({ day }) {

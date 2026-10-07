@@ -9,6 +9,7 @@ import api from "@/lib/api";
 import { NAVY, WARM, BRD } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { NavTabs, Card, Badge, Button, Alert, DataTable, StatCard, StatGrid } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 // ── tiny shared fetch hook ────────────────────────────────────────────────────
 function useAdminFetch(path, deps = []) {
@@ -23,7 +24,7 @@ function useAdminFetch(path, deps = []) {
       const r = await api.get(path);
       setData(r.data);
     } catch (e) {
-      setError(e?.response?.data?.detail || "Request failed");
+      setError(safeErrorMessage(e, "Request failed"));
     } finally {
       setLoading(false);
     }
@@ -133,7 +134,7 @@ function RoleHierarchy() {
                 gradient fill encoding hierarchy level has no equivalent in
                 ProgressBar's single-color fill API. */}
             <div
-              className="h-2 rounded-full bg-gradient-to-r from-red-400 to-blue-400"
+              className="h-2 rounded-full bg-gradient-to-r from-red-400 to-navy-400"
               style={{ width: `${row.level}%`, opacity: 0.6 + row.level / 300 }}
             />
           </div>
@@ -253,7 +254,7 @@ function LockdownPanel() {
       const r = await api.post("/admin/account-security/lockdown?dry_run=true");
       setDryResult(r.data);
     } catch (e) {
-      setDryResult({ error: e?.response?.data?.detail || "Failed" });
+      setDryResult({ error: safeErrorMessage(e, "Failed") });
     } finally {
       setLoading(false);
     }
@@ -266,7 +267,7 @@ function LockdownPanel() {
       setApplyResult(r.data);
       setConfirm(false);
     } catch (e) {
-      setApplyResult({ error: e?.response?.data?.detail || "Failed" });
+      setApplyResult({ error: safeErrorMessage(e, "Failed") });
     } finally {
       setLoading(false);
     }

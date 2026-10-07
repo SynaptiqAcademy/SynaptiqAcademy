@@ -42,9 +42,9 @@ function LevelPill({ score }) {
 const LEVEL_COLORS = [
   "bg-slate-400",
   "bg-emerald-500",
-  "bg-blue-500",
-  "bg-indigo-500",
-  "bg-violet-500",
+  "bg-navy-500",
+  "bg-navy-500",
+  "bg-navy-500",
   "bg-amber-500",
   "bg-yellow-500",
 ];

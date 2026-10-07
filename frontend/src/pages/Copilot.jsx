@@ -107,7 +107,7 @@ function RunningAgents({ statuses, plan }) {
   if (!running.length || !plan) return null;
   return (
     <div className="flex items-center gap-2 mb-3">
-      <div className="w-1.5 h-1.5 bg-blue-500 animate-pulse rounded-full" />
+      <div className="w-1.5 h-1.5 bg-navy-500 animate-pulse rounded-full" />
       <span className="text-[11px] text-slate-500">
         {running.join(", ")} agent{running.length !== 1 ? "s" : ""} working…
       </span>

@@ -12,6 +12,7 @@ import {
   DataTable, ContextPanel, Drawer, SmartActionsBar,
   SearchBar, FilterChip, SkeletonCard, ErrorState, EmptyState, Badge,
 } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 const LIMIT = 20;
 const RECENT_FILTERS_KEY = "sq_admin_recent_user_filters";
@@ -94,7 +95,7 @@ export default function AdminUsers() {
       setUsers(r.data.items || []);
       setTotal(r.data.total || 0);
     } catch (e) {
-      setError(e.response?.data?.detail || "Failed to load users");
+      setError(safeErrorMessage(e, "Failed to load users"));
     } finally {
       setLoading(false);
     }

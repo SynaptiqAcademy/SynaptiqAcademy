@@ -146,12 +146,12 @@ function NoDataPrompt({ onSync, onImport, syncing }) {
 // ─────────────────────────── alert row ───────────────────────────────────────
 
 const ALERT_META = {
-  new_citation:  { label: "New Citation",    color: "#2563eb" },
+  new_citation:  { label: "New Citation",    color: "#0F2847" },
   milestone:     { label: "Milestone",       color: "#16a34a" },
-  highly_cited:  { label: "Highly Cited",    color: "#7c3aed" },
+  highly_cited:  { label: "Highly Cited",    color: "#0F2847" },
   velocity:      { label: "High Velocity",   color: "#d97706" },
   rapid_growth:  { label: "Rapid Growth",    color: "#dc2626" },
-  emerging_topic:{ label: "Emerging",        color: "#0891b2" },
+  emerging_topic:{ label: "Emerging",        color: "#0F2847" },
   top_performer: { label: "Top Performer",   color: "#16a34a" },
   high_velocity: { label: "High Velocity",   color: "#d97706" },
 };
@@ -184,8 +184,8 @@ function AlertRow({ alert, onRead }) {
 
 const TREND_META = {
   rising:   { label: "Rising",    color: "#16a34a" },
-  growing:  { label: "Growing",   color: "#2563eb" },
-  emerging: { label: "Emerging",  color: "#0891b2" },
+  growing:  { label: "Growing",   color: "#0F2847" },
+  emerging: { label: "Emerging",  color: "#0F2847" },
   stable:   { label: "Stable",    color: "#64748b" },
   declining:{ label: "Declining", color: "#dc2626" },
 };
@@ -556,8 +556,8 @@ export default function Citations() {
                   {(classified.emerging || []).length > 0 && (
                     <Card padding="lg">
                       <div className="flex items-center gap-2 mb-4">
-                        <Zap size={13} strokeWidth={1.5} className="text-[#0891b2]" />
-                        <div className="overline text-[#0891b2]">Emerging Topics</div>
+                        <Zap size={13} strokeWidth={1.5} className="text-[#0F2847]" />
+                        <div className="overline text-[#0F2847]">Emerging Topics</div>
                       </div>
                       <div className="space-y-3">
                         {(classified.emerging || []).map((a) => (
@@ -566,7 +566,7 @@ export default function Citations() {
                               <div className="text-sm text-slate-800 truncate">{a.area}</div>
                               <div className="text-xs text-slate-500 mt-0.5">{a.publication_count} pub{a.publication_count !== 1 ? "s" : ""}</div>
                             </div>
-                            <Badge color="#0891b2" size="sm" className="font-mono">Emerging</Badge>
+                            <Badge color="#0F2847" size="sm" className="font-mono">Emerging</Badge>
                           </div>
                         ))}
                       </div>
@@ -698,8 +698,8 @@ export default function Citations() {
 
               <Card padding="lg">
                 <div className="flex items-center gap-2 mb-4">
-                  <Target size={13} strokeWidth={1.5} className="text-[#7c3aed]" />
-                  <div className="overline text-[#7c3aed]">Influential Topics</div>
+                  <Target size={13} strokeWidth={1.5} className="text-[#0F2847]" />
+                  <div className="overline text-[#0F2847]">Influential Topics</div>
                 </div>
                 {(insights.influential_topics || []).length > 0 ? (
                   <div className="space-y-3">
@@ -712,7 +712,7 @@ export default function Citations() {
                         <div className="h-1.5 bg-slate-100 relative">
                           <div className="absolute inset-y-0 left-0" style={{
                             width: `${Math.min(100, (c / ((insights.influential_topics[0]?.citations) || 1)) * 100)}%`,
-                            background: "#7c3aed", opacity: 0.7,
+                            background: "#0F2847", opacity: 0.7,
                           }} />
                         </div>
                       </div>

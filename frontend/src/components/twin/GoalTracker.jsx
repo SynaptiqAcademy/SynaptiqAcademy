@@ -3,19 +3,19 @@ import { Plus, Trash2, CheckCircle, Clock, PauseCircle, XCircle } from "lucide-r
 import { createGoal, updateGoal, deleteGoal } from "../../services/twinEngine";
 
 const STATUS_ICON = {
-  active:    { icon: Clock,        color: "#3B82F6" },
+  active:    { icon: Clock,        color: "#2f5486" },
   completed: { icon: CheckCircle,  color: "#10B981" },
   paused:    { icon: PauseCircle,  color: "#F59E0B" },
   abandoned: { icon: XCircle,      color: "#6B7280" },
 };
 
 const CATEGORY_COLORS = {
-  publication:   "#6366F1",
+  publication:   "#2f5486",
   grant:         "#F97316",
   collaboration: "#14B8A6",
-  career:        "#8B5CF6",
-  teaching:      "#EC4899",
-  citation:      "#3B82F6",
+  career:        "#2f5486",
+  teaching:      "#2f5486",
+  citation:      "#2f5486",
   network:       "#10B981",
   other:         "#6B7280",
 };
@@ -100,19 +100,19 @@ function AddGoalForm({ onAdd, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border border-blue-200 rounded-lg p-4 bg-blue-50/30 space-y-3">
+    <form onSubmit={handleSubmit} className="border border-navy-200 rounded-lg p-4 bg-navy-wash space-y-3">
       <input
         value={form.title}
         onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
         placeholder="Goal title (e.g., Publish 2 WoS papers)"
-        className="w-full px-3 py-2 text-[12px] border border-slate-200 rounded-md focus:outline-none focus:border-blue-400"
+        className="w-full px-3 py-2 text-[12px] border border-slate-200 rounded-md focus:outline-none focus:border-navy-400"
         required
       />
       <div className="flex gap-2">
         <select
           value={form.category}
           onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-          className="flex-1 px-2 py-1.5 text-[11px] border border-slate-200 rounded-md focus:outline-none focus:border-blue-400 bg-white"
+          className="flex-1 px-2 py-1.5 text-[11px] border border-slate-200 rounded-md focus:outline-none focus:border-navy-400 bg-white"
         >
           {["publication", "grant", "collaboration", "career", "teaching", "citation", "network", "other"].map(c => (
             <option key={c} value={c}>{c}</option>
@@ -123,24 +123,24 @@ function AddGoalForm({ onAdd, onCancel }) {
           min="1"
           value={form.target_value}
           onChange={e => setForm(f => ({ ...f, target_value: parseInt(e.target.value) || 1 }))}
-          className="w-20 px-2 py-1.5 text-[11px] border border-slate-200 rounded-md focus:outline-none focus:border-blue-400"
+          className="w-20 px-2 py-1.5 text-[11px] border border-slate-200 rounded-md focus:outline-none focus:border-navy-400"
           placeholder="Target"
         />
         <input
           value={form.unit}
           onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
           placeholder="unit"
-          className="w-20 px-2 py-1.5 text-[11px] border border-slate-200 rounded-md focus:outline-none focus:border-blue-400"
+          className="w-20 px-2 py-1.5 text-[11px] border border-slate-200 rounded-md focus:outline-none focus:border-navy-400"
         />
       </div>
       <input
         type="date"
         value={form.deadline}
         onChange={e => setForm(f => ({ ...f, deadline: e.target.value }))}
-        className="w-full px-2 py-1.5 text-[11px] border border-slate-200 rounded-md focus:outline-none focus:border-blue-400"
+        className="w-full px-2 py-1.5 text-[11px] border border-slate-200 rounded-md focus:outline-none focus:border-navy-400"
       />
       <div className="flex gap-2">
-        <button type="submit" className="px-3 py-1.5 bg-blue-600 text-white text-[11px] font-medium rounded-md hover:bg-blue-700">
+        <button type="submit" className="px-3 py-1.5 bg-navy-700 text-white text-[11px] font-medium rounded-md hover:bg-navy-700">
           Add Goal
         </button>
         <button type="button" onClick={onCancel} className="px-3 py-1.5 text-slate-500 text-[11px] hover:text-slate-700">
@@ -191,7 +191,7 @@ export default function GoalTracker({ goals, loading, onRefresh }) {
       <div className="flex items-center justify-between">
         <div className="flex gap-3">
           {[
-            { label: "Active", count: active.length, color: "text-blue-600" },
+            { label: "Active", count: active.length, color: "text-navy-700" },
             { label: "Completed", count: done.length, color: "text-emerald-600" },
           ].map(s => (
             <div key={s.label}>
@@ -202,7 +202,7 @@ export default function GoalTracker({ goals, loading, onRefresh }) {
         </div>
         <button
           onClick={() => setAdding(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-[11px] font-medium rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-navy-700 text-white text-[11px] font-medium rounded-lg hover:bg-navy-700 transition-colors"
         >
           <Plus size={12} /> Add Goal
         </button>

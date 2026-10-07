@@ -19,6 +19,7 @@ import { Button } from "@/components/ds/Button";
 import { FormSelect } from "@/components/ds/FormSelect";
 import { Textarea } from "@/components/ds/Textarea";
 import { Avatar } from "@/components/ds/Avatar";
+import { safeErrorMessage } from "../lib/api";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const EMRL  = "#059669";
@@ -32,7 +33,7 @@ const VERDICT_CONFIG = {
 };
 const STATUS_CONFIG = {
   pending:   { label: "Invitation Pending", color: "#B45309", bg: "#FFFBEB", border: "#FCD34D", icon: Clock },
-  accepted:  { label: "In Progress",        color: "#4338CA", bg: "#EEF2FF", border: "#A5B4FC", icon: ClipboardCheck },
+  accepted:  { label: "In Progress",        color: "#0F2847", bg: "#eef2f8", border: "#d4dde9", icon: ClipboardCheck },
   completed: { label: "Completed",          color: EMRL,      bg: "#ECFDF5", border: "#6EE7B7", icon: CheckCircle2 },
   declined:  { label: "Declined",           color: "#64748B", bg: "#F8FAFC", border: "#CBD5E1", icon: XCircle },
 };
@@ -96,7 +97,7 @@ function VerdictForm({ rr, onSubmitted }) {
       await api.post(`/review-requests/${rr.id}/verdict`, { verdict, comment });
       toast.success(`Verdict submitted: ${verdict.replace(/_/g, " ")}`);
       onSubmitted?.();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
     finally { setBusy(false); }
   };
 
@@ -146,7 +147,7 @@ function ReviewCard({ rr, onLoad }) {
       await api.post(`/review-requests/${rr.id}/respond`, { decision });
       toast.success(decision === "accept" ? "Review accepted" : "Review declined");
       onLoad();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   return (
@@ -367,7 +368,7 @@ function ReviewsSidebar({ buckets, loaded }) {
           <CheckCircle2 size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Completed</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
           {!loaded ? "—" : completed.length}
         </div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>

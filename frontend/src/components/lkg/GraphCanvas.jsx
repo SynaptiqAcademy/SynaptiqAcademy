@@ -7,16 +7,16 @@ import React, { useRef, useEffect, useCallback, useState } from "react";
 import { getSubgraph, getMySubgraph } from "../../services/lkgEngine";
 
 const NODE_COLORS = {
-  researcher:       "#3B82F6",
+  researcher:       "#2f5486",
   publication:      "#10B981",
-  institution:      "#8B5CF6",
+  institution:      "#2f5486",
   topic:            "#F59E0B",
   journal:          "#EF4444",
   project:          "#14B8A6",
-  manuscript:       "#6366F1",
+  manuscript:       "#2f5486",
   funding_program:  "#F97316",
-  dataset:          "#06B6D4",
-  conference:       "#EC4899",
+  dataset:          "#2f5486",
+  conference:       "#2f5486",
   lesson:           "#84CC16",
   default:          "#6B7280",
 };

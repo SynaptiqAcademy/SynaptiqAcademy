@@ -142,7 +142,7 @@ function BenchmarkCenterSidebar({ bench, deptBench, aboveSector, total }) {
           <Award size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Overall Grade</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
           {bench?.overall_grade ?? "—"}
         </div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
@@ -156,7 +156,7 @@ function BenchmarkCenterSidebar({ bench, deptBench, aboveSector, total }) {
             <Building2 size={13} style={{ color: NAVY }} />
             <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Department</div>
           </div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{topDept.department}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{topDept.department}</div>
           <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
             Health score {topDept.health_score} · rank #{topDept.institution_rank}
           </p>

@@ -7,6 +7,7 @@ import { NAVY } from "@/lib/tokens";
 import { SkeletonCard } from "@/components/ds/LoadingState";
 import { Button } from "@/components/ds/Button";
 import { ResearchLayout } from "@/layouts";
+import { safeErrorMessage } from "../lib/api";
 
 function dateRow(label, value) {
   if (!value) return null;
@@ -38,7 +39,7 @@ export default function ConferenceDetail() {
       const res = await api.post("/conference-teams", { conference_id: id, title: c?.name });
       navigate(`/conference-teams/${res.data.id}`);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Could not form a team.");
+      toast.error(safeErrorMessage(err, "Could not form a team."));
     } finally {
       setFormingTeam(false);
     }
@@ -73,7 +74,7 @@ export default function ConferenceDetail() {
             </div>
           )}
           {c.rank && (
-            <div className="overline border border-purple-200 bg-purple-50 text-purple-700 px-2 py-0.5">CORE {c.rank}</div>
+            <div className="overline border border-navy-200 bg-navy-50 text-navy-700 px-2 py-0.5">CORE {c.rank}</div>
           )}
           <div className={`overline border px-2 py-0.5 ${STATE_TONE[state]}`}>
             {state === "closing_soon" ? "Closing soon" : state}

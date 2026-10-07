@@ -26,14 +26,14 @@ const QUICK_COMMANDS = [
 ];
 
 const NAV_ITEMS = [
-  { to: "/sie/goals",        label: "Goals",         icon: Target,        color: ACCENT },
-  { to: "/sie/planning",     label: "Roadmaps",      icon: BookMarked,    color: "#8b5cf6" },
-  { to: "/sie/missions",     label: "Missions",      icon: CheckSquare,   color: EMERALD },
-  { to: "/sie/career",       label: "Career",        icon: GraduationCap, color: "#f59e0b" },
-  { to: "/sie/daily",        label: "Today",         icon: Calendar,      color: "#0ea5e9" },
-  { to: "/sie/grants",       label: "Grants",        icon: Trophy,        color: "#ec4899" },
-  { to: "/sie/recommendations", label: "AI Recs",   icon: Sparkles,      color: ACCENT },
-  { to: "/sie/progress",     label: "Progress",      icon: TrendingUp,    color: EMERALD },
+  { to: "/sie/goals",        label: "Goals",         icon: Target,        color: "#0F2847" },
+  { to: "/sie/planning",     label: "Roadmaps",      icon: BookMarked,    color: "#0F2847" },
+  { to: "/sie/missions",     label: "Missions",      icon: CheckSquare,   color: "#0F2847" },
+  { to: "/sie/career",       label: "Career",        icon: GraduationCap, color: "#0F2847" },
+  { to: "/sie/daily",        label: "Today",         icon: Calendar,      color: "#0F2847" },
+  { to: "/sie/grants",       label: "Grants",        icon: Trophy,        color: "#0F2847" },
+  { to: "/sie/recommendations", label: "AI Recs",   icon: Sparkles,      color: "#0F2847" },
+  { to: "/sie/progress",     label: "Progress",      icon: TrendingUp,    color: "#0F2847" },
 ];
 
 function InsightBadge({ insight }) {
@@ -128,7 +128,7 @@ export default function ResearchCommandCenter() {
             <Button
               onClick={() => navigate("/sie/daily")}
               className="w-full"
-              style={{ background: `linear-gradient(135deg, ${EMERALD}, #059669)` }}
+              
             >
               <Calendar size={16} /> View Today's Agenda
             </Button>

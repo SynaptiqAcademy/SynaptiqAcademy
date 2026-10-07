@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { confirmDialog } from "@/lib/confirm";
 import { CreditCostNumber } from "@/components/billing/CreditCost";
+import { safeErrorMessage } from "../lib/api";
 
 const TABS = [
   { key: "overview",      label: "Overview"      },
@@ -59,10 +60,10 @@ const TABS = [
 const DOC_STAGES = [
   { key: "idea",              label: "Idea",              color: "#94A3B8" },
   { key: "outline",           label: "Outline",           color: "#64748B" },
-  { key: "draft",             label: "Draft",             color: "#0891B2" },
-  { key: "in_progress",       label: "In Progress",       color: "#2563EB" },
-  { key: "internal_review",   label: "Internal Review",   color: "#7C3AED" },
-  { key: "coauthor_review",   label: "Co-author Review",  color: "#8B5CF6" },
+  { key: "draft",             label: "Draft",             color: "#0F2847" },
+  { key: "in_progress",       label: "In Progress",       color: "#0F2847" },
+  { key: "internal_review",   label: "Internal Review",   color: "#0F2847" },
+  { key: "coauthor_review",   label: "Co-author Review",  color: "#2f5486" },
   { key: "revision",          label: "Revision",          color: "#D97706" },
   { key: "ready_submission",  label: "Ready to Submit",   color: "#F59E0B" },
   { key: "submitted",         label: "Submitted",         color: "#EA580C" },
@@ -149,7 +150,7 @@ function InviteModal({ wsId, onClose, onInvited, existingIds }) {
       onInvited?.();
       onClose();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed");
+      toast.error(safeErrorMessage(e, "Failed"));
     } finally { setBusy(null); }
   };
 
@@ -315,7 +316,7 @@ export default function WorkspaceDetail() {
     try {
       await api.patch(`/workspaces/${id}/members/${uid}/role`, { role });
       toast.success("Role updated"); load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   const removeMember = async (uid) => {
@@ -323,7 +324,7 @@ export default function WorkspaceDetail() {
     try {
       await api.delete(`/workspaces/${id}/members/${uid}`);
       toast.success("Member removed"); load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   const leaveWorkspace = async () => {
@@ -332,7 +333,7 @@ export default function WorkspaceDetail() {
       await api.post(`/workspaces/${id}/leave`);
       toast.success("You left the workspace");
       navigate("/workspaces");
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   const transferOwnership = async () => {
@@ -341,7 +342,7 @@ export default function WorkspaceDetail() {
     try {
       await api.post(`/workspaces/${id}/transfer`, { new_owner_id: transferTarget });
       toast.success("Ownership transferred"); setShowTransfer(false); load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   if (!ws) return (
@@ -825,9 +826,9 @@ export default function WorkspaceDetail() {
                         height={140}
                         series={[
                           { label: "Backlog", data: analytics.tasks.cumulative_flow.map((d) => d.backlog), color: "#63707f" },
-                          { label: "Planned", data: analytics.tasks.cumulative_flow.map((d) => d.planned), color: "#0284C7" },
+                          { label: "Planned", data: analytics.tasks.cumulative_flow.map((d) => d.planned), color: "#0F2847" },
                           { label: "In progress", data: analytics.tasks.cumulative_flow.map((d) => d.in_progress), color: "#D97706" },
-                          { label: "Review", data: analytics.tasks.cumulative_flow.map((d) => d.review), color: "#7C3AED" },
+                          { label: "Review", data: analytics.tasks.cumulative_flow.map((d) => d.review), color: "#0F2847" },
                           { label: "Completed", data: analytics.tasks.cumulative_flow.map((d) => d.completed), color: "#059669" },
                         ]}
                       />
@@ -1245,8 +1246,8 @@ export default function WorkspaceDetail() {
                   const kindColors = {
                     announcement: { bg: "#FFFBEB", border: "#FDE68A", label: "Announcement" },
                     decision:     { bg: "#F0FDF4", border: "#A7F3D0", label: "Decision" },
-                    meeting:      { bg: "#EFF6FF", border: "#BFDBFE", label: "Meeting Note" },
-                    review:       { bg: "#FAF5FF", border: "#DDD6FE", label: "Review" },
+                    meeting:      { bg: "#eef2f8", border: "#d4dde9", label: "Meeting Note" },
+                    review:       { bg: "#eef2f8", border: "#d4dde9", label: "Review" },
                     note:         { bg: "white",   border: "#E2E8F0", label: "Note" },
                   };
                   const style = kindColors[d.kind] || kindColors.note;

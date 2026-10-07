@@ -6,11 +6,11 @@ import { ResearchLayout } from "@/layouts";
 import { Card, Button } from "@/components/ds";
 
 const STEPS = [
-  { title: "Find Grant Partners", desc: "Use Open Collaborations to post or discover grant partner opportunities.", url: "/network/collaborations", color: ACCENT },
-  { title: "Discover Institutions", desc: "Find partner institutions with aligned research focus for consortium applications.", url: "/network/institutions", color: "#0ea5e9" },
-  { title: "Browse Research Groups", desc: "Existing groups may already be forming grant teams — join or propose a team.", url: "/network/groups", color: "#8b5cf6" },
-  { title: "Build Grant Strategy", desc: "Use the SIE Grant Planner and Grant Hub to structure the proposal.", url: "/sie/grants", color: EMERALD },
-  { title: "Track Your Team", desc: "Use the Grant Collaboration Hub to manage consortium members and deliverables.", url: "/grant-hub", color: "#f97316" },
+  { title: "Find Grant Partners", desc: "Use Open Collaborations to post or discover grant partner opportunities.", url: "/network/collaborations", color: "#0F2847" },
+  { title: "Discover Institutions", desc: "Find partner institutions with aligned research focus for consortium applications.", url: "/network/institutions", color: "#0F2847" },
+  { title: "Browse Research Groups", desc: "Existing groups may already be forming grant teams — join or propose a team.", url: "/network/groups", color: "#0F2847" },
+  { title: "Build Grant Strategy", desc: "Use the SIE Grant Planner and Grant Hub to structure the proposal.", url: "/sie/grants", color: "#0F2847" },
+  { title: "Track Your Team", desc: "Use the Grant Collaboration Hub to manage consortium members and deliverables.", url: "/grant-hub", color: "#0F2847" },
 ];
 
 export default function GrantTeams() {
@@ -34,7 +34,7 @@ export default function GrantTeams() {
               <Button
                 size="sm"
                 onClick={() => navigate(step.url)}
-                style={{ background: step.color, flexShrink: 0 }}
+                style={{ flexShrink: 0 }}
               >
                 Open <ArrowRight size={11} />
               </Button>

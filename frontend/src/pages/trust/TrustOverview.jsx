@@ -40,7 +40,7 @@ export default function TrustOverview() {
   }, []);
 
   const trustScore = data?.trust_score || 0;
-  const ringColor = trustScore >= 80 ? EMERALD : trustScore >= 60 ? "#0369A1" : trustScore >= 40 ? "#D97706" : ACCENT;
+  const ringColor = trustScore >= 80 ? EMERALD : trustScore >= 60 ? "#0F2847" : trustScore >= 40 ? "#D97706" : ACCENT;
 
   return (
     <ResearchLayout

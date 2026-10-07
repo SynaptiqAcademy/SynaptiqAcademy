@@ -32,8 +32,8 @@ function pct(val, max) {
 
 function iisColor(score) {
   if (score >= 7500) return "#D97706";
-  if (score >= 5000) return "#7C3AED";
-  if (score >= 2500) return "#0891B2";
+  if (score >= 5000) return "#0F2847";
+  if (score >= 2500) return "#0F2847";
   return "#94A3B8";
 }
 
@@ -47,8 +47,8 @@ function iisLabel(score) {
 // ── Type badge ────────────────────────────────────────────────────────────────
 
 const TYPE_COLOR = {
-  university: "#1D4ED8",
-  research_center: "#7C3AED",
+  university: "#0F2847",
+  research_center: "#0F2847",
   laboratory: "#047857",
   hospital: "#BE123C",
   government: "#B45309",
@@ -383,7 +383,7 @@ export default function InstitutionHub() {
                           score={r.sis_score || r.impact_score}
                           scoreLabel="SIS"
                           max={10000}
-                          color="#7C3AED"
+                          color="#0F2847"
                         />
                       ))}
                     </div>

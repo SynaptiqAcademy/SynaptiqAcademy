@@ -8,7 +8,7 @@ export default function AdminProtectedRoute({ children }) {
 
   if (user === null) {
     return (
-      <div className="min-h-screen bg-[#0B1C35] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a1c34] flex items-center justify-center">
         <div className="text-slate-400 text-sm tracking-widest uppercase">Loading…</div>
       </div>
     );

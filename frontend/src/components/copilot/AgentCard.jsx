@@ -14,27 +14,27 @@ import {
 import { NAVY } from "@/lib/tokens";
 
 const AGENT_META = {
-  literature:    { label: "Literature",    icon: Search,        color: "#1D4ED8", bg: "#EFF6FF" },
-  gap:           { label: "Research Gap",  icon: BarChart2,     color: "#7C3AED", bg: "#F5F3FF" },
-  study_design:  { label: "Study Design",  icon: BookOpen,      color: "#0F2847", bg: "#F0F4FF" },
-  statistics:    { label: "Statistics",    icon: BarChart2,     color: "#047857", bg: "#F0FDF4" },
-  writing:       { label: "Writing",       icon: FileText,      color: "#B45309", bg: "#FFFBEB" },
-  journal:       { label: "Journal",       icon: BookMarked,    color: "#DB2777", bg: "#FDF2F8" },
-  reviewer:      { label: "Peer Review",   icon: CheckCircle,   color: "#0891B2", bg: "#ECFEFF" },
-  ethics:        { label: "Ethics",        icon: Shield,        color: "#DC2626", bg: "#FEF2F2" },
-  citation:      { label: "Citations",     icon: BookOpen,      color: "#6D28D9", bg: "#F5F3FF" },
-  funding:       { label: "Funding",       icon: BadgeDollarSign, color: "#D97706", bg: "#FFFBEB" },
-  collaboration: { label: "Collaboration", icon: Users,         color: "#059669", bg: "#F0FDF4" },
-  teaching:      { label: "Teaching",      icon: GraduationCap, color: "#0284C7", bg: "#EFF6FF" },
-  institution:   { label: "Institution",   icon: Building2,     color: "#7C3AED", bg: "#F5F3FF" },
-  career:        { label: "Career",        icon: Briefcase,     color: "#475569", bg: "#F8FAFC" },
+  literature:    { label: "Literature",    icon: Search,        color: "#0F2847", bg: "#eef2f8" },
+  gap:           { label: "Research Gap",  icon: BarChart2,     color: "#0F2847", bg: "#eef2f8" },
+  study_design:  { label: "Study Design",  icon: BookOpen,      color: "#0F2847", bg: "#eef2f8" },
+  statistics:    { label: "Statistics",    icon: BarChart2,     color: "#0F2847", bg: "#eef2f8" },
+  writing:       { label: "Writing",       icon: FileText,      color: "#0F2847", bg: "#eef2f8" },
+  journal:       { label: "Journal",       icon: BookMarked,    color: "#0F2847", bg: "#eef2f8" },
+  reviewer:      { label: "Peer Review",   icon: CheckCircle,   color: "#0F2847", bg: "#eef2f8" },
+  ethics:        { label: "Ethics",        icon: Shield,        color: "#0F2847", bg: "#eef2f8" },
+  citation:      { label: "Citations",     icon: BookOpen,      color: "#0F2847", bg: "#eef2f8" },
+  funding:       { label: "Funding",       icon: BadgeDollarSign, color: "#0F2847", bg: "#eef2f8" },
+  collaboration: { label: "Collaboration", icon: Users,         color: "#0F2847", bg: "#eef2f8" },
+  teaching:      { label: "Teaching",      icon: GraduationCap, color: "#0F2847", bg: "#eef2f8" },
+  institution:   { label: "Institution",   icon: Building2,     color: "#0F2847", bg: "#eef2f8" },
+  career:        { label: "Career",        icon: Briefcase,     color: "#0F2847", bg: "#eef2f8" },
 };
 
 const CONF_STYLE = {
-  high:           { label: "Strong evidence",    color: "#047857" },
-  medium:         { label: "Partial evidence",   color: "#B45309" },
-  low:            { label: "Limited evidence",   color: "#6B7280" },
-  not_applicable: { label: "Insufficient data",  color: "#9CA3AF" },
+  high:           { label: "Strong evidence",    color: "#0F2847" },
+  medium:         { label: "Partial evidence",   color: "#0F2847" },
+  low:            { label: "Limited evidence",   color: "#0F2847" },
+  not_applicable: { label: "Insufficient data",  color: "#0F2847" },
 };
 
 const STATUS_ICON = {
@@ -42,7 +42,7 @@ const STATUS_ICON = {
   partial:          <AlertTriangle size={11} className="text-amber-500" />,
   insufficient_data: <Info size={11} className="text-slate-400" />,
   error:            <AlertTriangle size={11} className="text-red-500" />,
-  running:          <Clock size={11} className="text-blue-400 animate-pulse" />,
+  running:          <Clock size={11} className="text-navy-400 animate-pulse" />,
 };
 
 export default function AgentCard({ output, compact = false }) {
@@ -103,7 +103,7 @@ export default function AgentCard({ output, compact = false }) {
       {isRunning && (
         <div className="px-4 pb-3">
           <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-300 animate-pulse rounded-full w-2/3" />
+            <div className="h-full bg-navy-300 animate-pulse rounded-full w-2/3" />
           </div>
         </div>
       )}

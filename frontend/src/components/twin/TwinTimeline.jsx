@@ -2,11 +2,11 @@ import React from "react";
 import { FileText, FolderOpen, Users, BookOpen, Trophy, Calendar } from "lucide-react";
 
 const CATEGORY_CONFIG = {
-  publishing:    { icon: FileText, color: "#6366F1", bg: "#EEF2FF", label: "Publishing" },
-  research:      { icon: FolderOpen, color: "#3B82F6", bg: "#EFF6FF", label: "Research" },
+  publishing:    { icon: FileText, color: "#2f5486", bg: "#eef2f8", label: "Publishing" },
+  research:      { icon: FolderOpen, color: "#2f5486", bg: "#eef2f8", label: "Research" },
   collaboration: { icon: Users, color: "#14B8A6", bg: "#F0FDFA", label: "Collaboration" },
   funding:       { icon: Trophy, color: "#F97316", bg: "#FFF7ED", label: "Funding" },
-  teaching:      { icon: BookOpen, color: "#EC4899", bg: "#FDF2F8", label: "Teaching" },
+  teaching:      { icon: BookOpen, color: "#2f5486", bg: "#eef2f8", label: "Teaching" },
   default:       { icon: Calendar, color: "#6B7280", bg: "#F9FAFB", label: "Other" },
 };
 

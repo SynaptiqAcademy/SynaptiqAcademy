@@ -12,6 +12,7 @@ import { NAVY } from "@/lib/tokens";
 import { USER_TYPE_OPTIONS, PRIMARY_DOMAIN_OPTIONS } from "@/lib/userTypes";
 import { LANGUAGE_OPTIONS } from "@/lib/languages";
 import api from "@/lib/api";
+import { safeErrorMessage } from "@/lib/api";
 
 // Examples only, not a closed enum — professional_role is free text so the
 // platform works across disciplines never listed here (P1 Phase 8B §6).
@@ -113,7 +114,7 @@ export function EditIdentityModal({ open, onClose, profile, onSaved }) {
       onSaved?.();
       onClose();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed to save");
+      toast.error(safeErrorMessage(e, "Failed to save"));
     } finally {
       setSaving(false);
     }

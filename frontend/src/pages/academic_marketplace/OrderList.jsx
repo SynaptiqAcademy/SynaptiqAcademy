@@ -9,8 +9,8 @@ import { fetchApi } from "@/lib/api";
 const API = "/api/acad-market";
 
 const STATUS_COLORS = {
-  pending: "#F59E0B", accepted: ACCENT, in_progress: "#0891B2",
-  under_review: "#7C3AED", completed: EMERALD, cancelled: "#94A3B8",
+  pending: "#F59E0B", accepted: ACCENT, in_progress: "#0F2847",
+  under_review: "#0F2847", completed: EMERALD, cancelled: "#94A3B8",
   declined: "#DC2626", revision_requested: "#D97706", disputed: "#DC2626",
 };
 

@@ -97,7 +97,7 @@ export default function GraphAnalytics() {
                     <ProgressBar value={n.influence_score} max={maxInfluence} showValue={false} />
                   </div>
                   <span style={{ fontSize: 12, color: TEXT_SECONDARY }}>{n.entity_type?.replace(/_/g, " ")}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#7c3aed", minWidth: 30, textAlign: "right" }}>{n.influence_score}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#0F2847", minWidth: 30, textAlign: "right" }}>{n.influence_score}</span>
                 </div>
               ))}
             </div>
@@ -146,7 +146,7 @@ function GraphAnalyticsSidebar({ centrality, influence, communities }) {
         </div>
         {topNode ? (
           <>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: 17, color: NAVY }}>{topNode.label}</div>
+            <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 17, color: NAVY }}>{topNode.label}</div>
             <div style={{ fontSize: 12, color: "#64748B" }}>
               Degree {topNode.degree} (in {topNode.in_degree} / out {topNode.out_degree})
             </div>
@@ -163,7 +163,7 @@ function GraphAnalyticsSidebar({ centrality, influence, communities }) {
         </div>
         {topInfluencer ? (
           <>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: 17, color: NAVY }}>{topInfluencer.label}</div>
+            <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 17, color: NAVY }}>{topInfluencer.label}</div>
             <div style={{ fontSize: 12, color: "#64748B" }}>
               {topInfluencer.entity_type?.replace(/_/g, " ")} · score {topInfluencer.influence_score}
             </div>
@@ -179,7 +179,7 @@ function GraphAnalyticsSidebar({ centrality, influence, communities }) {
             <Layers size={13} style={{ color: NAVY }} />
             <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Largest Community</div>
           </div>
-          <div style={{ fontFamily: "Georgia, serif", fontSize: 26, color: NAVY }}>{largestCommunity.size}</div>
+          <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 26, color: NAVY }}>{largestCommunity.size}</div>
           <div style={{ fontSize: 12, color: "#64748B" }}>members detected via label propagation</div>
         </Card>
       )}

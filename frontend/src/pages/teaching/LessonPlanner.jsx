@@ -14,6 +14,7 @@ import { FormSelect } from "@/components/ds/FormSelect";
 import { ResearchLayout } from "@/layouts";
 import { NAVY } from "@/lib/tokens";
 import { CreditCostNumber } from "@/components/billing/CreditCost";
+import { safeErrorMessage } from "../../lib/api";
 
 const SUBJECTS = ["Mathematics","Economics","Management","Computer Science","Medicine","Engineering","Psychology","Education","Sciences","Humanities","Law","Business","History","Literature","Physics","Chemistry","Biology","Sociology","Political Science","Philosophy"];
 const LEVELS   = ["secondary","undergraduate","graduate","professional","adult","other"];
@@ -86,7 +87,7 @@ export default function LessonPlanner() {
       toast.success("Lesson plan generated");
       navigate(`/teaching/lessons/${data.id}`);
     } catch (err) {
-      const msg = err?.response?.data?.detail || "Generation failed";
+      const msg = safeErrorMessage(err, "Generation failed");
       toast.error(msg);
     } finally {
       setGenerating(false);
@@ -346,7 +347,7 @@ function LessonPlannerSidebar({ lessons }) {
           <Clock size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Average Duration</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
           {avgDuration} <span style={{ fontSize: 13, fontWeight: 400, color: "#64748B" }}>min</span>
         </div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>

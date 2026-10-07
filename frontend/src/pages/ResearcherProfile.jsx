@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Card, Tag, TagGroup, Badge, StatCard, StatGrid, NavTabs, ProgressBar as DsProgressBar } from "@/components/ds";
 import { toast } from "sonner";
+import { safeErrorMessage } from "../lib/api";
 
 export default function ResearcherProfile() {
   const { slug } = useParams();
@@ -42,7 +43,7 @@ export default function ResearcherProfile() {
           } catch {}
         }
       } catch (e) {
-        setError(e.response?.data?.detail || "Profile not found");
+        setError(safeErrorMessage(e, "Profile not found"));
       } finally {
         setLoading(false);
       }
@@ -67,7 +68,7 @@ export default function ResearcherProfile() {
       else if (tab === "timeline") data = (await api.get(`/profiles/researcher/${slug}/timeline`)).data;
       setTabData(prev => ({ ...prev, [tab]: data }));
     } catch (e) {
-      setTabData(prev => ({ ...prev, [tab]: { _error: e.response?.data?.detail || "Failed to load" } }));
+      setTabData(prev => ({ ...prev, [tab]: { _error: safeErrorMessage(e, "Failed to load") } }));
     } finally {
       setTabLoading(prev => ({ ...prev, [tab]: false }));
     }
@@ -111,7 +112,7 @@ export default function ResearcherProfile() {
         setConnectSent(true);
         toast.info("You already have a pending request to this researcher.");
       } else {
-        toast.error(e.response?.data?.detail || "Could not send connection request.");
+        toast.error(safeErrorMessage(e, "Could not send connection request."));
       }
     } finally {
       setConnectLoading(false);
@@ -450,10 +451,10 @@ export default function ResearcherProfile() {
       const events = Array.isArray(data) ? data : [];
       const iconMap = { publication: BookOpen, project: Briefcase, grant: Award, badge: Star };
       const colorMap = {
-        publication: "bg-blue-100 text-blue-600",
+        publication: "bg-navy-100 text-navy-700",
         project: "bg-emerald-100 text-emerald-600",
         grant: "bg-amber-100 text-amber-700",
-        badge: "bg-purple-100 text-purple-600"
+        badge: "bg-navy-100 text-navy-700"
       };
       return (
         <div className="max-w-lg">

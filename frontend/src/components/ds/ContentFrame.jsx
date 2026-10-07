@@ -35,11 +35,11 @@ export function ContentFrame({ variant = "app", children }) {
 
   return (
     <div
+      className="sq-frame"
       style={{
         maxWidth: CONTAINER_MAX,
         margin: "0 auto",
         width: "100%",
-        padding: "24px",
         display: "flex",
         flexDirection: "column",
         flex: 1,
@@ -47,7 +47,7 @@ export function ContentFrame({ variant = "app", children }) {
       }}
     >
       {trail && (
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 14 }}>
           <Breadcrumb items={trail} />
         </div>
       )}

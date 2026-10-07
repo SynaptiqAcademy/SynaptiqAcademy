@@ -132,7 +132,7 @@ export default function LegalCenter() {
               display: "inline-flex", alignItems: "center", gap: 7,
               fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase",
               color: "#64748b", marginBottom: 20,
-              padding: "5px 12px", borderRadius: 20,
+              padding: "5px 12px", borderRadius: 8,
               background: "#f8fafb", border: "1px solid #e4e8ef",
             }}>
               <Shield size={10} strokeWidth={2} />
@@ -140,7 +140,7 @@ export default function LegalCenter() {
             </div>
 
             <h1 style={{
-              fontFamily: "Georgia, 'Times New Roman', serif",
+              fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif",
               fontSize: "clamp(2.2rem, 4.5vw, 3.2rem)",
               fontWeight: 700,
               color: "#0c1a2e",
@@ -174,7 +174,7 @@ export default function LegalCenter() {
                   className={`lc-doc-card lc-hub-fade d${i + 1}`}
                 >
                   {/* Icon */}
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: doc.bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 8, background: doc.bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>
                     <doc.icon size={22} strokeWidth={1.4} style={{ color: doc.color }} />
                   </div>
 
@@ -213,7 +213,7 @@ export default function LegalCenter() {
       <section style={{ background: "#fff", padding: "72px 0" }}>
         <div style={{ maxWidth: 780, margin: "0 auto", padding: "0 32px" }}>
           <div ref={relRef} className="lc-hub-fade">
-            <h2 style={{ fontFamily: "Georgia, serif", fontSize: "1.4rem", fontWeight: 700, color: "#0f172a", marginBottom: 24, letterSpacing: "-0.015em" }}>
+            <h2 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: "1.4rem", fontWeight: 700, color: "#0f172a", marginBottom: 24, letterSpacing: "-0.015em" }}>
               Related
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -241,10 +241,10 @@ export default function LegalCenter() {
       <section style={{ background: "#f8fafb", borderTop: "1px solid #e4e8ef", padding: "72px 0" }}>
         <div style={{ maxWidth: 600, margin: "0 auto", padding: "0 32px", textAlign: "center" }}>
           <div ref={ctaRef} className="lc-hub-fade">
-            <div style={{ width: 52, height: 52, borderRadius: 14, background: "#EEF2F9", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+            <div style={{ width: 52, height: 52, borderRadius: 8, background: "#EEF2F9", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
               <Mail size={22} strokeWidth={1.4} style={{ color: "#0F2847" }} />
             </div>
-            <h2 style={{ fontFamily: "Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#0f172a", margin: "0 0 12px", letterSpacing: "-0.015em" }}>
+            <h2 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: "1.5rem", fontWeight: 700, color: "#0f172a", margin: "0 0 12px", letterSpacing: "-0.015em" }}>
               Questions about our policies?
             </h2>
             <p style={{ fontSize: "0.95rem", color: "#64748b", lineHeight: 1.7, marginBottom: 28 }}>

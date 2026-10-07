@@ -9,8 +9,8 @@ import { fetchApi } from "@/lib/api";
 const API = "/api/acad-market";
 
 const STATUS_COLORS = {
-  pending: "#F59E0B", accepted: ACCENT, in_progress: "#0891B2",
-  under_review: "#7C3AED", completed: EMERALD, cancelled: "#DC2626",
+  pending: "#F59E0B", accepted: ACCENT, in_progress: "#0F2847",
+  under_review: "#0F2847", completed: EMERALD, cancelled: "#DC2626",
   declined: "#DC2626", revision_requested: "#D97706", disputed: "#DC2626",
 };
 
@@ -142,7 +142,7 @@ export default function OrderDetail() {
                       onClick={() => transition("completed", "Deliverable approved by buyer")}
                       disabled={actionLoading}
                       className="flex-1"
-                      style={{ background: EMERALD }}
+                      
                     >
                       Approve & Complete
                     </Button>
@@ -152,7 +152,7 @@ export default function OrderDetail() {
                       onClick={() => { if (revNote) transition("revision_requested", revNote); }}
                       disabled={actionLoading || !revNote}
                       className="flex-1"
-                      style={{ background: "#D97706" }}
+                      
                     >
                       Request Revision
                     </Button>

@@ -6,9 +6,9 @@ import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Input, Textarea, FormSelect, FormRow, Checkbox, Modal, NavTabs, EmptyState, LoadingOverlay } from "@/components/ds";
 
 const TYPE_COLOR = {
-  seminar: ACCENT, conference: "#f97316", webinar: "#8b5cf6", workshop: EMERALD,
-  journal_club: "#06b6d4", training: NAVY, grant_info_session: "#ec4899",
-  networking: "#0ea5e9", teaching_event: "#7c3aed", symposium: "#dc2626",
+  seminar: ACCENT, conference: "#f97316", webinar: "#2f5486", workshop: EMERALD,
+  journal_club: "#2f5486", training: NAVY, grant_info_session: "#2f5486",
+  networking: "#2f5486", teaching_event: "#0F2847", symposium: "#dc2626",
 };
 const TYPES = Object.keys(TYPE_COLOR);
 
@@ -33,7 +33,7 @@ function EventCard({ event, onRegister, onUnregister, isRegistered }) {
         </div>
         <div style={{ flexShrink: 0 }}>
           {isRegistered ? (
-            <Button variant="outline" size="sm" onClick={() => onUnregister(event.id)} style={{ color: EMERALD, borderColor: EMERALD, background: `${EMERALD}10` }}>
+            <Button variant="outline" size="sm" onClick={() => onUnregister(event.id)} style={{ color: EMERALD, borderColor: EMERALD }}>
               <CheckCircle size={12} />Registered
             </Button>
           ) : (

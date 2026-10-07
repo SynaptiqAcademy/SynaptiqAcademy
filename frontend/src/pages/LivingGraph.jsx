@@ -61,11 +61,11 @@ function SearchBar({ onResult }) {
             <button
               key={i}
               onMouseDown={() => { onResult?.(r); setOpen(false); setQuery(""); }}
-              className="w-full text-left px-3 py-2 hover:bg-blue-50 border-b border-slate-50 last:border-0 transition-colors"
+              className="w-full text-left px-3 py-2 hover:bg-navy-50 border-b border-slate-50 last:border-0 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <Badge
-                  color={{ researcher: "#3B82F6", publication: "#10B981", topic: "#F59E0B", institution: "#8B5CF6" }[r.type] || "#6B7280"}
+                  color={{ researcher: "#2f5486", publication: "#10B981", topic: "#F59E0B", institution: "#2f5486" }[r.type] || "#6B7280"}
                   size="sm"
                 >
                   {r.type?.replace(/_/g, " ")}

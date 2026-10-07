@@ -10,7 +10,7 @@ const API = "/api/trust";
 
 const LEVEL_COLORS = {
   Excellent:    EMERALD,
-  Good:         "#0369A1",
+  Good:         "#0F2847",
   Fair:         "#D97706",
   "Under Review": ACCENT,
 };
@@ -18,7 +18,7 @@ const LEVEL_COLORS = {
 const SEVERITY_CONFIG = {
   high:   { color: ACCENT,   icon: XCircle },
   medium: { color: "#D97706",icon: AlertTriangle },
-  low:    { color: "#0369A1",icon: ShieldAlert },
+  low:    { color: "#0F2847",icon: ShieldAlert },
 };
 
 export default function IntegrityReport() {

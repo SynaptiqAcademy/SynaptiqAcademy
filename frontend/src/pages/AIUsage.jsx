@@ -24,7 +24,7 @@ import { AI_NAV_ITEMS } from "@/lib/navItems";
 
 const KIND_META = {
   journal_matching:    { label: "Journal Match",     icon: BookOpen,    tone: "text-[#0F2847]", endpoint: "/journals" },
-  conference_matching: { label: "Conference Match",  icon: CalendarDays, tone: "text-purple-700", endpoint: "/conferences" },
+  conference_matching: { label: "Conference Match",  icon: CalendarDays, tone: "text-navy-700", endpoint: "/conferences" },
   grant_matching:      { label: "Grant Match",       icon: Coins,       tone: "text-emerald-700", endpoint: "/grants" },
   reviewer_matching:   { label: "Reviewer Match",    icon: UserCheck,   tone: "text-amber-700", endpoint: "/reviews" },
   assistant_message:   { label: "Copilot Messages",  icon: MessageSquare, tone: "text-slate-700", endpoint: null },
@@ -233,7 +233,7 @@ export default function AIUsage() {
                 getValue={(x) => x.n}
                 getLink={(x) => `/conferences/${x._id}`}
                 icon={CalendarDays}
-                accent="#9333EA"
+                accent="#0F2847"
               />
               <PopularList
                 title="Most popular grants"

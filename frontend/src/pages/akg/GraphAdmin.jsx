@@ -138,7 +138,7 @@ function GraphAdminSidebar({ stats, audit }) {
         </div>
         {topType ? (
           <>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: 26, color: NAVY }}>{topType[1].toLocaleString()}</div>
+            <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 26, color: NAVY }}>{topType[1].toLocaleString()}</div>
             <div style={{ fontSize: 12, color: "#64748B" }}>{topType[0].replace(/_/g, " ")} entities</div>
           </>
         ) : (

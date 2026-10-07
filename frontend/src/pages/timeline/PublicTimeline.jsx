@@ -8,15 +8,15 @@ import { fetchApi } from "@/lib/api";
 const API = "/api/timeline";
 
 const CATEGORY_META = {
-  research:      { label: "Research",      icon: BookOpen,    color: "#0369A1" },
-  teaching:      { label: "Teaching",      icon: GraduationCap, color: "#7C3AED" },
-  grant:         { label: "Grants",        icon: DollarSign,  color: "#059669" },
+  research:      { label: "Research",      icon: BookOpen,    color: "#0F2847" },
+  teaching:      { label: "Teaching",      icon: GraduationCap, color: "#0F2847" },
+  grant:         { label: "Grants",        icon: DollarSign,  color: "#0F2847" },
   collaboration: { label: "Collaboration", icon: Users,       color: "#0F2847" },
-  review:        { label: "Review",        icon: FileCheck,   color: "#D97706" },
-  verification:  { label: "Verification",  icon: ShieldCheck, color: "#059669" },
-  recognition:   { label: "Recognition",   icon: Award,       color: "#D97706" },
-  community:     { label: "Community",     icon: Eye,         color: "#0369A1" },
-  ai:            { label: "AI",            icon: Sparkles,    color: "#7C3AED" },
+  review:        { label: "Review",        icon: FileCheck,   color: "#0F2847" },
+  verification:  { label: "Verification",  icon: ShieldCheck, color: "#0F2847" },
+  recognition:   { label: "Recognition",   icon: Award,       color: "#0F2847" },
+  community:     { label: "Community",     icon: Eye,         color: "#0F2847" },
+  ai:            { label: "AI",            icon: Sparkles,    color: "#0F2847" },
 };
 
 export default function PublicTimeline() {
@@ -81,7 +81,7 @@ export default function PublicTimeline() {
 
         {/* Events */}
         {events.length === 0 ? (
-          <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12,
+          <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 8,
             padding: 60, textAlign: "center" }}>
             <Activity size={32} color={BRD} style={{ display: "block", margin: "0 auto 12px" }} />
             <p style={{ color: TEXT_SECONDARY, fontSize: 14 }}>No public events to display.</p>

@@ -11,10 +11,10 @@ const API = "/api/acad-market";
 // ── Right rail — the provider's own live stats, already fetched from /me ──────
 function ProviderSetupSidebar({ existing }) {
   const verLabel = (lvl) => {
-    if (lvl >= 5) return { label: "Elite", color: "#7C3AED" };
+    if (lvl >= 5) return { label: "Elite", color: "#0F2847" };
     if (lvl >= 4) return { label: "Expert Verified", color: EMERALD };
     if (lvl >= 3) return { label: "Institution Verified", color: ACCENT };
-    if (lvl >= 2) return { label: "ID Verified", color: "#0891B2" };
+    if (lvl >= 2) return { label: "ID Verified", color: "#0F2847" };
     return { label: "Unverified", color: "#94A3B8" };
   };
   const ver = verLabel(existing.verification_level);

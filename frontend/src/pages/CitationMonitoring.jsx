@@ -161,7 +161,7 @@ function AlertCard({ pub, type }) {
   }[type] || type;
 
   const badgeColor = {
-    recently_enriched: "#2563eb",
+    recently_enriched: "#0F2847",
     high_impact:       "#16a34a",
     high_velocity:     "#d97706",
     uncited_enriched:  "#64748b",
@@ -490,8 +490,8 @@ export default function CitationMonitoring() {
                 {alerts.recently_enriched?.length > 0 && (
                   <Card padding="lg" className="space-y-3">
                     <div className="flex items-center gap-2 mb-3">
-                      <RefreshCw size={13} strokeWidth={1.5} className="text-[#2563eb]" />
-                      <div className="overline text-[#2563eb]">Recently Synced</div>
+                      <RefreshCw size={13} strokeWidth={1.5} className="text-[#0F2847]" />
+                      <div className="overline text-[#0F2847]">Recently Synced</div>
                     </div>
                     {alerts.recently_enriched.map((pub) => (
                       <AlertCard key={pub.id} pub={pub} type="recently_enriched" />

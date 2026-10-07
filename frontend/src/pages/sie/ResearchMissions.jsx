@@ -81,7 +81,7 @@ function MissionCard({ mission, onComplete, onUpdate }) {
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <span style={{ fontSize: 12, color: TEXT_SECONDARY }}>Progress ({progress}%)</span>
             <input type="range" min={0} max={100} value={progress} onChange={e => setProgress(Number(e.target.value))} style={{ flex: 1 }} />
-            <Button onClick={save} size="sm" style={{ background: ACCENT }}>Save</Button>
+            <Button onClick={save} size="sm">Save</Button>
             <Button size="icon" variant="ghost" onClick={() => setEditing(false)} aria-label="Cancel"><X size={13} color={TEXT_SECONDARY} /></Button>
           </div>
         </div>
@@ -113,7 +113,7 @@ function NewMissionModal({ onClose, onCreate }) {
       onClose={onClose}
       title="New Mission"
       footer={
-        <Button onClick={submit} loading={saving} disabled={saving || !form.title.trim()} className="w-full" style={{ background: EMERALD }}>
+        <Button onClick={submit} loading={saving} disabled={saving || !form.title.trim()} className="w-full">
           {saving ? "Creating…" : "Create Mission"}
         </Button>
       }
@@ -221,7 +221,7 @@ export default function ResearchMissions() {
           icon={<CheckSquare />}
           title="No missions in this view"
           description="Create a mission or generate missions from a goal."
-          action={<Button onClick={() => setShowNew(true)} style={{ background: EMERALD }}>Create Mission</Button>}
+          action={<Button onClick={() => setShowNew(true)} >Create Mission</Button>}
         />
       ) : (
         displayed.map(m => (

@@ -21,6 +21,7 @@ import { StatCard, StatGrid } from "@/components/ds/StatCard";
 import { ProgressBar } from "@/components/ds/Progress";
 import { ResearchLayout } from "@/layouts";
 import { confirmDialog, promptDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "../lib/api";
 
 // ── constants ──────────────────────────────────────────────────────────────────
 
@@ -40,10 +41,10 @@ const STATUSES = [
 // Hex equivalents for the ds Badge's `color` prop
 const STATUS_HEX = {
   draft:                "#64748B",
-  in_preparation:       "#0369A1",
+  in_preparation:       "#0F2847",
   internal_review:      "#B45309",
-  ready_for_submission: "#6D28D9",
-  submitted:            "#1D4ED8",
+  ready_for_submission: "#0F2847",
+  submitted:            "#0F2847",
   eligible:             "#0F766E",
   under_evaluation:     "#92400E",
   funded:               "#065F46",
@@ -72,7 +73,7 @@ const DELIVERABLE_STATUS_HEX = {
   pending:     "#64748B",
   in_progress: "#B45309",
   completed:   "#059669",
-  submitted:   "#1D4ED8",
+  submitted:   "#0F2847",
   delayed:     "#BE123C",
 };
 
@@ -263,7 +264,7 @@ export default function GrantApplicationDetail() {
       setApp(data);
       toast.success(`Status: ${STATUSES.find((s) => s.value === status)?.label || status}`);
       load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   const addBudgetItem = async () => {
@@ -274,7 +275,7 @@ export default function GrantApplicationDetail() {
       const { data } = await api.get(`/grant-applications/${id}/budget`);
       setBudget(data);
       toast.success("Budget item added");
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   const deleteBudgetItem = async (bid) => {
@@ -297,7 +298,7 @@ export default function GrantApplicationDetail() {
       setAddingMember(false);
       toast.success("Team member invited");
       load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   const removeTeamMember = async (uid) => {
@@ -317,7 +318,7 @@ export default function GrantApplicationDetail() {
       const { data } = await api.get(`/grant-applications/${id}/deliverables`);
       setDeliverables(data || []);
       toast.success("Deliverable added");
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   const markDeliverable = async (did, status) => {
@@ -344,7 +345,7 @@ export default function GrantApplicationDetail() {
       const { data } = await api.get(`/grant-applications/${id}/versions`);
       setVersions(data || []);
       load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   const restoreVersion = async (v) => {
@@ -353,7 +354,7 @@ export default function GrantApplicationDetail() {
       await api.post(`/grant-applications/${id}/versions/${v}/restore`);
       toast.success(`Restored to v${v}`);
       load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   const deleteApplication = async () => {
@@ -362,7 +363,7 @@ export default function GrantApplicationDetail() {
       await api.delete(`/grant-applications/${id}`);
       toast.success("Application deleted");
       navigate("/grant-applications");
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   if (!app) return <ResearchLayout title="Grant Application"><SkeletonCard rows={5} /></ResearchLayout>;

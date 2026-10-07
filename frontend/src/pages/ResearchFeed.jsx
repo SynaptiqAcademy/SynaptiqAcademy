@@ -35,17 +35,17 @@ const FEED_TYPES = [
 ];
 
 const TYPE_META = {
-  publication:   { color: "#7C3AED", icon: BookOpen,       label: "Published",         verb: "published" },
-  team:          { color: "#0891B2", icon: Users,           label: "New Team",          verb: "created a team" },
-  collaboration: { color: "#059669", icon: Handshake,       label: "Collaboration",     verb: "opened a collaboration" },
-  grant:         { color: "#D97706", icon: Award,           label: "Grant",             verb: "received a grant" },
-  conference:    { color: "#2563EB", icon: CalendarDays,    label: "Conference",        verb: "accepted at a conference" },
-  teaching:      { color: "#8B5CF6", icon: GraduationCap,  label: "Teaching",          verb: "updated teaching" },
-  milestone:     { color: "#F59E0B", icon: Star,            label: "Milestone",         verb: "reached a milestone" },
-  institution:   { color: "#374151", icon: Building2,       label: "Institution",       verb: "announced" },
-  profile_update:{ color: "#64748B", icon: Activity,        label: "Profile Update",    verb: "updated their profile" },
-  connection:    { color: "#06B6D4", icon: MessageSquare,   label: "Connection",        verb: "connected with" },
-  default:       { color: "#94A3B8", icon: Activity,        label: "Activity",          verb: "posted" },
+  publication:   { color: "#0F2847", icon: BookOpen,       label: "Published",         verb: "published" },
+  team:          { color: "#0F2847", icon: Users,           label: "New Team",          verb: "created a team" },
+  collaboration: { color: "#0F2847", icon: Handshake,       label: "Collaboration",     verb: "opened a collaboration" },
+  grant:         { color: "#0F2847", icon: Award,           label: "Grant",             verb: "received a grant" },
+  conference:    { color: "#0F2847", icon: CalendarDays,    label: "Conference",        verb: "accepted at a conference" },
+  teaching:      { color: "#0F2847", icon: GraduationCap,  label: "Teaching",          verb: "updated teaching" },
+  milestone:     { color: "#0F2847", icon: Star,            label: "Milestone",         verb: "reached a milestone" },
+  institution:   { color: "#0F2847", icon: Building2,       label: "Institution",       verb: "announced" },
+  profile_update:{ color: "#0F2847", icon: Activity,        label: "Profile Update",    verb: "updated their profile" },
+  connection:    { color: "#0F2847", icon: MessageSquare,   label: "Connection",        verb: "connected with" },
+  default:       { color: "#0F2847", icon: Activity,        label: "Activity",          verb: "posted" },
 };
 
 function getMeta(type) {

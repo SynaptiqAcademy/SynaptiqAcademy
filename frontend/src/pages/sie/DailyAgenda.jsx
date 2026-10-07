@@ -18,7 +18,7 @@ const CATEGORY_ICON = {
 const CATEGORY_COLOR = {
   mission: ACCENT,
   deadline: "#dc2626",
-  recommendation: "#8b5cf6",
+  recommendation: "#2f5486",
   goal: "#f59e0b",
 };
 

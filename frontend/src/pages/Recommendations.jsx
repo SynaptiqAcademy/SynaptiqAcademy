@@ -23,6 +23,7 @@ import { EmptyState as DsEmptyState } from "@/components/ds/EmptyState";
 import { ErrorState } from "@/components/ds/ErrorState";
 import { EvidencePanel } from "@/components/ds/AIComponents";
 import { Avatar as DsAvatar } from "@/components/ds/Avatar";
+import { safeErrorMessage } from "@/lib/api";
 
 
 
@@ -820,7 +821,7 @@ export default function Recommendations() {
       const items = raw[tab.dataKey] || raw.data || raw || [];
       setDataByTab((prev) => ({ ...prev, [tid]: Array.isArray(items) ? items : [] }));
     } catch (err) {
-      const msg = err?.response?.data?.detail || "Failed to load recommendations.";
+      const msg = safeErrorMessage(err, "Failed to load recommendations.");
       setErrorByTab((prev) => ({ ...prev, [tid]: typeof msg === "string" ? msg : "Failed to load." }));
     } finally {
       setLoadingByTab((prev) => ({ ...prev, [tid]: false }));

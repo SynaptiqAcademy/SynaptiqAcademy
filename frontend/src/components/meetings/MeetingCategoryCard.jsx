@@ -20,7 +20,7 @@ export function MeetingCategoryCard({ category, onQuickCreate }) {
       <div style={{ fontSize: 13, fontWeight: 600, color: TEXT_PRIMARY, letterSpacing: "-0.01em" }}>
         {category.meeting_type}
       </div>
-      <div style={{ fontFamily: "Georgia, serif", fontSize: 26, fontWeight: 700, color: NAVY }}>
+      <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 26, fontWeight: 700, color: NAVY }}>
         {category.scheduled_count}
         <span style={{ fontSize: 11, fontWeight: 400, color: TEXT_MUTED, marginLeft: 6 }}>scheduled</span>
       </div>

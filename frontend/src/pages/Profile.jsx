@@ -39,6 +39,7 @@ import {
   USER_TYPE_OPTIONS, PRIMARY_DOMAIN_OPTIONS,
 } from "../lib/userTypes";
 import { confirmDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "../lib/api";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const BORDER = "#E4E8EF";
@@ -104,7 +105,8 @@ function extractOrcidId(orcid) {
   return null;
 }
 
-const AREA_PALETTE = ["#0891B2","#7C3AED","#059669","#D97706","#EA580C","#8A1538","#374151","#0F2847"];
+// Research areas are labels, not categories with meaning: tonal steps of the brand navy.
+const AREA_PALETTE = ["#0F2847","#1c3e6d","#2f5486","#0a1c34","#52739e","#0F2847","#1c3e6d","#2f5486"];
 
 const PUB_TYPE_LABELS = {
   "journal-article": "Journal Article",
@@ -179,7 +181,7 @@ export default function Profile() {
       setReputation(data.reputation);
       toast.success("OpenAlex citations synced.");
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "OpenAlex sync failed.");
+      toast.error(safeErrorMessage(e, "OpenAlex sync failed."));
     } finally {
       setSyncing(false);
     }
@@ -191,7 +193,7 @@ export default function Profile() {
       toast.success("Connection request sent");
       refreshMe();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed to connect");
+      toast.error(safeErrorMessage(e, "Failed to connect"));
     }
   };
 
@@ -657,7 +659,7 @@ function ProfileNav({ profile, pubs }) {
           key={href}
           href={href}
           style={{ display: "block", padding: "10px 14px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)", textDecoration: "none", whiteSpace: "nowrap", borderBottom: "2px solid transparent", letterSpacing: "0.02em", textTransform: "uppercase", transition: "color 0.12s" }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = "#FFFFFF"; e.currentTarget.style.borderBottomColor = "#38BDF8"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "#FFFFFF"; e.currentTarget.style.borderBottomColor = "#2f5486"; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; e.currentTarget.style.borderBottomColor = "transparent"; }}
         >
           {label}
@@ -839,7 +841,7 @@ function PublicationsSection({ pubs, loading, isMe, query, onQuery, onRefresh })
       toast.success(`ORCID synced — ${imported} publications imported`);
       onRefresh();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "ORCID sync failed");
+      toast.error(safeErrorMessage(e, "ORCID sync failed"));
     } finally {
       setImportingOrcid(false);
     }
@@ -852,7 +854,7 @@ function PublicationsSection({ pubs, loading, isMe, query, onQuery, onRefresh })
   );
 
   return (
-    <Section id="publications" title="Publications" icon={BookOpen} color="#0891B2" actions={sectionActions}>
+    <Section id="publications" title="Publications" icon={BookOpen} color="#0F2847" actions={sectionActions}>
       {/* Search */}
       <Input
         type="search"
@@ -909,13 +911,13 @@ function PublicationCard({ pub }) {
         border: `1px solid ${hov ? "#CBD5E1" : BORDER}`,
         background: hov ? WARM : "white",
         cursor: "pointer", transition: "all 0.12s",
-        borderLeft: `3px solid ${isRecent ? "#0891B2" : BORDER}`,
+        borderLeft: `3px solid ${isRecent ? "#0F2847" : BORDER}`,
       }}
     >
       {/* Year badge */}
       <div style={{ flexShrink: 0, minWidth: 48, textAlign: "center" }}>
         {pub.year && (
-          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "monospace", color: isRecent ? "#0891B2" : "#94A3B8" }}>
+          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "monospace", color: isRecent ? "#0F2847" : "#94A3B8" }}>
             {pub.year}
           </div>
         )}
@@ -935,7 +937,7 @@ function PublicationCard({ pub }) {
           {pub.journal && (
             <span style={{ fontSize: 11, color: "#475569", fontStyle: "italic" }}>{pub.journal}</span>
           )}
-          <span style={{ fontSize: 10, padding: "1px 6px", background: "#EFF6FF", color: NAVY, border: `1px solid ${BORDER}`, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
+          <span style={{ fontSize: 10, padding: "1px 6px", background: "#eef2f8", color: NAVY, border: `1px solid ${BORDER}`, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
             {typeLabel}
           </span>
           {pub.open_access && (
@@ -975,7 +977,7 @@ function PublicationCard({ pub }) {
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}
-            style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, color: "#0891B2", textDecoration: "none", fontWeight: 600 }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, color: "#0F2847", textDecoration: "none", fontWeight: 600 }}
           >
             DOI <ExternalLink size={9} strokeWidth={1.5} />
           </a>
@@ -992,7 +994,7 @@ function CVSection({ educations, employments, isMe }) {
   if (!hasData && !isMe) return null;
 
   return (
-    <Section id="experience" title="Education & Employment" icon={Briefcase} color="#7C3AED">
+    <Section id="experience" title="Education & Employment" icon={Briefcase} color="#0F2847">
       {!hasData ? (
         <EmptyState
           icon={<GraduationCap />}
@@ -1038,7 +1040,7 @@ function TimelineList({ records, type }) {
             <div key={i} style={{ display: "flex", gap: 18, paddingLeft: 0, paddingBottom: 20 }}>
               {/* Dot */}
               <div style={{ flexShrink: 0, width: 20, paddingTop: 2 }}>
-                <div style={{ width: 8, height: 8, background: isCurrent ? "#7C3AED" : BORDER, border: `2px solid ${isCurrent ? "#7C3AED" : "#CBD5E1"}`, marginLeft: 6, marginTop: 4 }} />
+                <div style={{ width: 8, height: 8, background: isCurrent ? "#0F2847" : BORDER, border: `2px solid ${isCurrent ? "#0F2847" : "#CBD5E1"}`, marginLeft: 6, marginTop: 4 }} />
               </div>
               {/* Content */}
               <div style={{ flex: 1, paddingBottom: 8, borderBottom: i < records.length - 1 ? `1px solid ${BORDER}` : "none" }}>
@@ -1051,7 +1053,7 @@ function TimelineList({ records, type }) {
                 )}
                 <div style={{ display: "flex", gap: 10, marginTop: 4, alignItems: "center" }}>
                   {yearRange && (
-                    <span style={{ fontSize: 10, fontFamily: "monospace", color: isCurrent ? "#7C3AED" : "#94A3B8", fontWeight: isCurrent ? 600 : 400 }}>
+                    <span style={{ fontSize: 10, fontFamily: "monospace", color: isCurrent ? "#0F2847" : "#94A3B8", fontWeight: isCurrent ? 600 : 400 }}>
                       {yearRange}
                     </span>
                   )}
@@ -1145,12 +1147,12 @@ function SkillsSection({ profile }) {
   };
 
   return (
-    <Section id="skills" title="Skills & Expertise" icon={BarChart2} color="#7C3AED">
-      <SkillGroup label="Research Methods"      items={allMethods} chipColor="#0891B2" chipBg="#EFF9FF"  chipBorder="#BAE6FD" />
+    <Section id="skills" title="Skills & Expertise" icon={BarChart2} color="#0F2847">
+      <SkillGroup label="Research Methods"      items={allMethods} chipColor="#0F2847" chipBg="#EFF9FF"  chipBorder="#d4dde9" />
       <SkillGroup label="Software & Tools"      items={software}   chipColor="#D97706" chipBg="#FFFBEB"  chipBorder="#FDE68A" />
       <SkillGroup label="Academic Skills"       items={allSkills}  chipColor="#059669" chipBg="#F0FDF4"  chipBorder="#A7F3D0" />
-      <SkillGroup label="Professional Expertise" items={expertise} chipColor="#7C3AED" chipBg="#FAF5FF"  chipBorder="#DDD6FE" />
-      <SkillGroup label="Teaching Areas"        items={teaching}   chipColor={NAVY}    chipBg="#EFF6FF"  chipBorder={BORDER}  />
+      <SkillGroup label="Professional Expertise" items={expertise} chipColor="#0F2847" chipBg="#eef2f8"  chipBorder="#d4dde9" />
+      <SkillGroup label="Teaching Areas"        items={teaching}   chipColor={NAVY}    chipBg="#eef2f8"  chipBorder={BORDER}  />
     </Section>
   );
 }
@@ -1159,12 +1161,12 @@ function SkillsSection({ profile }) {
 function IdentifiersSection({ profile, orcidId }) {
   const ids = [
     { label: "ORCID",          value: orcidId,               href: orcidId ? `https://orcid.org/${orcidId}` : null,                                   color: "#059669" },
-    { label: "Google Scholar", value: profile.google_scholar, href: profile.google_scholar ? `https://scholar.google.com/citations?user=${profile.google_scholar}` : null, color: "#0891B2" },
-    { label: "ResearchGate",   value: profile.researchgate,  href: profile.researchgate ? `https://www.researchgate.net/profile/${profile.researchgate}` : null,           color: "#0891B2" },
+    { label: "Google Scholar", value: profile.google_scholar, href: profile.google_scholar ? `https://scholar.google.com/citations?user=${profile.google_scholar}` : null, color: "#0F2847" },
+    { label: "ResearchGate",   value: profile.researchgate,  href: profile.researchgate ? `https://www.researchgate.net/profile/${profile.researchgate}` : null,           color: "#0F2847" },
     { label: "Scopus",         value: profile.scopus_id,     href: profile.scopus_id ? `https://www.scopus.com/authid/detail.uri?authorId=${profile.scopus_id}` : null,   color: "#D97706" },
     { label: "OpenAlex",       value: profile.openalex_author_id ? profile.openalex_author_id.split("/").pop() : null,
-      href: profile.openalex_author_id ? (profile.openalex_profile_url || `https://openalex.org/authors/${profile.openalex_author_id.split("/").pop()}`) : null,         color: "#7C3AED" },
-    { label: "LinkedIn",       value: profile.linkedin,      href: profile.linkedin ? `https://www.linkedin.com/in/${profile.linkedin}` : null,                            color: "#0891B2" },
+      href: profile.openalex_author_id ? (profile.openalex_profile_url || `https://openalex.org/authors/${profile.openalex_author_id.split("/").pop()}`) : null,         color: "#0F2847" },
+    { label: "LinkedIn",       value: profile.linkedin,      href: profile.linkedin ? `https://www.linkedin.com/in/${profile.linkedin}` : null,                            color: "#0F2847" },
     { label: "Website",        value: profile.website,       href: profile.website,                                                                                        color: NAVY },
   ].filter((id) => id.value);
 
@@ -1210,17 +1212,17 @@ function AchievementsSection({ profile, pubs }) {
 
   const badges = [
     orcidAuthenticated && { icon: Shield, label: "ORCID Connected", desc: "Verified researcher identity", color: "#059669", bg: "#F0FDF4" },
-    profile.biography?.trim() && { icon: PenLine, label: "Researcher Profile", desc: "Biography added", color: "#0891B2", bg: "#F0F9FF" },
-    pubCount > 0 && { icon: BookOpen, label: "Publications Imported", desc: `${pubCount} publication${pubCount !== 1 ? "s" : ""} on record`, color: NAVY, bg: "#EFF6FF" },
-    (profile.research_areas || []).length > 0 && { icon: FlaskConical, label: "Research Areas Defined", desc: `${profile.research_areas.length} area${profile.research_areas.length !== 1 ? "s" : ""}`, color: "#7C3AED", bg: "#FAF5FF" },
+    profile.biography?.trim() && { icon: PenLine, label: "Researcher Profile", desc: "Biography added", color: "#0F2847", bg: "#eef2f8" },
+    pubCount > 0 && { icon: BookOpen, label: "Publications Imported", desc: `${pubCount} publication${pubCount !== 1 ? "s" : ""} on record`, color: NAVY, bg: "#eef2f8" },
+    (profile.research_areas || []).length > 0 && { icon: FlaskConical, label: "Research Areas Defined", desc: `${profile.research_areas.length} area${profile.research_areas.length !== 1 ? "s" : ""}`, color: "#0F2847", bg: "#eef2f8" },
     (profile.research_keywords || []).length > 0 && { icon: Tag, label: "Keywords Set", desc: `${profile.research_keywords.length} keywords`, color: "#D97706", bg: "#FFFBEB" },
     profile.available_for_collaboration && { icon: Users2, label: "Open to Collaboration", desc: "Accepting collaborators", color: "#059669", bg: "#F0FDF4" },
-    profile.available_for_reviewing && { icon: CheckCircle2, label: "Open Reviewer", desc: "Available for peer review", color: "#0891B2", bg: "#F0F9FF" },
+    profile.available_for_reviewing && { icon: CheckCircle2, label: "Open Reviewer", desc: "Available for peer review", color: "#0F2847", bg: "#eef2f8" },
     (profile.teaching_areas || []).length > 0 && { icon: GraduationCap, label: "Teaching Profile", desc: `${profile.teaching_areas.length} teaching area${profile.teaching_areas.length !== 1 ? "s" : ""}`, color: "#D97706", bg: "#FFFBEB" },
-    (profile.methods || []).length >= 3 && { icon: Microscope, label: "Methods Expert", desc: `${profile.methods.length} methods listed`, color: "#7C3AED", bg: "#FAF5FF" },
-    (profile.connections_count ?? 0) > 0 && { icon: Users, label: "Network Builder", desc: `${profile.connections_count} connection${profile.connections_count !== 1 ? "s" : ""}`, color: NAVY, bg: "#EFF6FF" },
+    (profile.methods || []).length >= 3 && { icon: Microscope, label: "Methods Expert", desc: `${profile.methods.length} methods listed`, color: "#0F2847", bg: "#eef2f8" },
+    (profile.connections_count ?? 0) > 0 && { icon: Users, label: "Network Builder", desc: `${profile.connections_count} connection${profile.connections_count !== 1 ? "s" : ""}`, color: NAVY, bg: "#eef2f8" },
     (profile.google_scholar || profile.researchgate || profile.scopus_id) && { icon: Link2, label: "Academic IDs Linked", desc: "External profiles connected", color: "#059669", bg: "#F0FDF4" },
-    (profile.software_skills || []).length > 0 && { icon: Code2, label: "Software Skills", desc: `${profile.software_skills.length} tool${profile.software_skills.length !== 1 ? "s" : ""}`, color: "#0891B2", bg: "#F0F9FF" },
+    (profile.software_skills || []).length > 0 && { icon: Code2, label: "Software Skills", desc: `${profile.software_skills.length} tool${profile.software_skills.length !== 1 ? "s" : ""}`, color: "#0F2847", bg: "#eef2f8" },
   ].filter(Boolean);
 
   if (badges.length === 0) return null;
@@ -1436,7 +1438,7 @@ function EditProfile({ profile, onClose }) {
       setDirty(false);
       onClose();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed to save");
+      toast.error(safeErrorMessage(e, "Failed to save"));
     } finally {
       setSaving(false);
     }

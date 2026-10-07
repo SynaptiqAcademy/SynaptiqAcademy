@@ -14,6 +14,7 @@ import { ResearchLayout } from "@/layouts";
 import {
   Layers, Users, Award, ChevronRight, UserPlus,
 } from "lucide-react";
+import { safeErrorMessage } from "../lib/api";
 
 const TYPE_LABEL = {
   faculty: "Faculty", department: "Department", research_center: "Research center",
@@ -192,7 +193,7 @@ function ManageMembersBody({ unit, allMembers, currentIds, onClose, onChanged })
       if (toRemove.length) await api.post(`/units/${unit.id}/members`, { user_ids: toRemove, action: "remove" });
       toast.success("Members updated");
       onChanged?.(); onClose?.();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
     finally { setBusy(false); }
   };
   return (

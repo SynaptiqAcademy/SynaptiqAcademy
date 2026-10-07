@@ -1,0 +1,38 @@
+/* Research & Experts — one discovery journey, two clearly labelled paths. */
+.rx-hint { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0 0 16px; padding: 10px 12px;
+  font-size: 0.8125rem; line-height: 1.5; color: var(--sq-text-secondary); background: var(--sq-navy-50); border-radius: 4px; }
+.rx-hint-link { color: var(--sq-brand-navy); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.rx-hint-x { margin-left: auto; display: inline-flex; padding: 4px; background: none; border: none; cursor: pointer; color: var(--sq-text-tertiary); }
+.rx-hint-x:hover { color: var(--sq-text-primary); }
+
+/* Path selector: a segmented control, the same shape as tabs elsewhere */
+.rx-modes { display: flex; gap: 24px; border-bottom: 1px solid var(--sq-border); margin: 4px 0 20px; }
+.rx-modes button { position: relative; padding: 10px 0; background: none; border: none; cursor: pointer;
+  font: inherit; font-size: 0.9rem; font-weight: 500; color: var(--sq-text-tertiary); }
+.rx-modes button[aria-selected="true"] { color: var(--sq-text-primary); font-weight: 600; }
+.rx-modes button[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--sq-brand-navy); }
+.rx-modes button:focus-visible { outline: 2px solid var(--sq-brand-navy); outline-offset: 2px; }
+
+/* Research Need panel */
+.rn-panel { max-width: 52rem; }
+.rn-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--sq-text-primary); margin-bottom: 6px; }
+.rn-textarea { width: 100%; font: inherit; font-size: 0.9rem; line-height: 1.55; padding: 10px 12px; resize: vertical;
+  border: 1px solid var(--sq-border-strong); border-radius: 4px; background: #fff; color: var(--sq-text-primary); }
+.rn-textarea:focus { outline: none; border-color: var(--sq-brand-navy); box-shadow: 0 0 0 3px rgba(15, 40, 71, 0.12); }
+.rn-help { margin: 8px 0 0; font-size: 0.78rem; line-height: 1.55; color: var(--sq-text-tertiary); max-width: 40rem; }
+
+/* Member search */
+.rx-search { display: flex; gap: 8px; flex-wrap: wrap; }
+.rx-search > .sq-form-group { flex: 1 1 18rem; margin: 0; }
+.rx-free { margin: 6px 0 0; font-size: 0.75rem; color: var(--sq-text-tertiary); }
+.rx-filters { margin-top: 12px; padding: 16px; background: #fff; border: 1px solid var(--sq-border); border-radius: 6px; }
+.rx-filter-grid { display: grid; gap: 10px 14px; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+.rx-filter-grid .sq-form-group { margin: 0; }
+.rx-filter-flags { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; font-size: 0.8125rem; }
+.rx-active { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; }
+.rx-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; font: inherit; font-size: 0.75rem; color: var(--sq-brand-navy);
+  background: var(--sq-navy-50); border: 1px solid var(--sq-navy-100); border-radius: 4px; cursor: pointer; }
+.rx-chip:hover { border-color: var(--sq-brand-navy); }
+.rx-clear { background: none; border: none; padding: 4px; font: inherit; font-size: 0.75rem; color: var(--sq-text-tertiary); text-decoration: underline; cursor: pointer; }
+.rx-count { margin: 16px 0 10px; font-size: 0.78rem; color: var(--sq-text-tertiary); }
+.rx-results { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }

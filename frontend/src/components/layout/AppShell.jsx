@@ -73,7 +73,7 @@ export default function AppShell({ children }) {
   }, [paletteOpen]);
 
   return (
-    <div className="min-h-screen flex" style={{ background: "#FAFAFA" }}>
+    <div className="min-h-screen flex" style={{ background: "var(--sq-bg)" }}>
       {/* Keyboard-only skip link — invisible until focused via Tab */}
       <a href="#main-content" className="sq-skip-link">Skip to content</a>
 

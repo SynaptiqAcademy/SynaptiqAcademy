@@ -7,11 +7,11 @@ import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Button, Callout, H4 } from "@/components/ds";
 
 const STEPS = [
-  { title: "Discover Grant Opportunities", desc: "Use Grant Hub to find open calls aligned with your research profile.", url: "/grant-hub", color: "#ec4899" },
-  { title: "Build Your Consortium", desc: "Use Grant Collaboration Hub to find and onboard partner institutions.", url: "/grant-hub", color: "#8b5cf6" },
-  { title: "Write the Proposal", desc: "Structure your narrative, work plan, budget, and deliverables.", url: "/grant-hub", color: ACCENT },
-  { title: "Check Research Alignment", desc: "Use Research Gap Finder to validate the proposal's novelty.", url: "/research-gap-finder", color: "#0ea5e9" },
-  { title: "Review & Submit", desc: "Apply Synaptiq AI tools to review the proposal before submission.", url: "/grant-hub", color: EMERALD },
+  { title: "Discover Grant Opportunities", desc: "Use Grant Hub to find open calls aligned with your research profile.", url: "/grant-hub", color: "#0F2847" },
+  { title: "Build Your Consortium", desc: "Use Grant Collaboration Hub to find and onboard partner institutions.", url: "/grant-hub", color: "#0F2847" },
+  { title: "Write the Proposal", desc: "Structure your narrative, work plan, budget, and deliverables.", url: "/grant-hub", color: "#0F2847" },
+  { title: "Check Research Alignment", desc: "Use Research Gap Finder to validate the proposal's novelty.", url: "/research-gap-finder", color: "#0F2847" },
+  { title: "Review & Submit", desc: "Apply Synaptiq AI tools to review the proposal before submission.", url: "/grant-hub", color: "#0F2847" },
 ];
 
 const TIPS = [
@@ -45,7 +45,7 @@ export default function GrantPlanner() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{step.title}</div>
                 <div style={{ fontSize: 12, color: TEXT_SECONDARY }}>{step.desc}</div>
               </div>
-              <Button onClick={() => navigate(step.url)} size="sm" style={{ background: step.color, flexShrink: 0 }}>
+              <Button onClick={() => navigate(step.url)} size="sm" style={{ flexShrink: 0 }}>
                 Open <ArrowRight size={11} />
               </Button>
             </div>

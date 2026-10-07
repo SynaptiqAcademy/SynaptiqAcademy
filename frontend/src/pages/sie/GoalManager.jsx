@@ -104,7 +104,7 @@ function GoalCard({ goal, onUpdate, onDelete }) {
               track/thumb rendering a range control needs */}
           <div style={{ display: "flex", gap: 8 }}>
             <input type="range" min={0} max={100} value={progress} onChange={e => setProgress(Number(e.target.value))} style={{ flex: 1 }} />
-            <Button onClick={saveProgress} loading={saving} disabled={saving} size="sm" style={{ background: ACCENT }}>
+            <Button onClick={saveProgress} loading={saving} disabled={saving} size="sm">
               {saving ? "Saving…" : "Save"}
             </Button>
           </div>

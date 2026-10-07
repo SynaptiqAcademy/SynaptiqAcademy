@@ -86,7 +86,7 @@ export default function ResearchProgress() {
           <MiniBar label="Goal Completion Rate" value={s.goal_completion_rate_pct ?? 0} color={ACCENT} />
           <MiniBar label="Mission Completion Rate" value={s.mission_completion_rate_pct ?? 0} color={EMERALD} />
           <MiniBar label="Grant Success Rate" value={s.grant_success_rate_pct ?? 0} color="#f59e0b" />
-          <MiniBar label="Integrity Score" value={s.integrity_score ?? 0} color="#8b5cf6" />
+          <MiniBar label="Integrity Score" value={s.integrity_score ?? 0} color="#2f5486" />
 
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${BRD}` }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>

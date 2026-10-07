@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { NAVY, CRIMSON } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Card, Button, Input, Textarea, Badge, DataTable, SkeletonTable } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 function Section({ title, children }) {
   return (
@@ -56,7 +57,7 @@ export default function AdminSecurity() {
       setBlockReason("");
       await loadData();
     } catch (e) {
-      toast.error(e.response?.data?.detail || "Failed to block IP");
+      toast.error(safeErrorMessage(e, "Failed to block IP"));
     } finally {
       setActionLoading(false);
     }
@@ -69,7 +70,7 @@ export default function AdminSecurity() {
       toast.success(`IP ${ip} unblocked`);
       await loadData();
     } catch (e) {
-      toast.error(e.response?.data?.detail || "Failed to unblock IP");
+      toast.error(safeErrorMessage(e, "Failed to unblock IP"));
     } finally {
       setActionLoading(false);
     }
@@ -83,7 +84,7 @@ export default function AdminSecurity() {
       setShowForceConfirm(false);
       setForceLogoutReason("");
     } catch (e) {
-      toast.error(e.response?.data?.detail || "Failed to force logout");
+      toast.error(safeErrorMessage(e, "Failed to force logout"));
     } finally {
       setActionLoading(false);
     }

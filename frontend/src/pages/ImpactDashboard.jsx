@@ -26,6 +26,7 @@ import { BarChart as DsBarChart } from "@/components/ds/Chart";
 import { NavTabs } from "@/components/ds/NavTabs";
 import { DataTable } from "@/components/ds/DataTable";
 import { Callout } from "@/components/ds/Alert";
+import { safeErrorMessage } from "@/lib/api";
 
 // ── Research Intelligence Nav ─────────────────────────────────────────────────
 
@@ -85,8 +86,8 @@ function pct(val, max) {
 
 function sisColor(score) {
   if (score >= 7500) return "#D97706"; // gold
-  if (score >= 5000) return "#7C3AED"; // purple
-  if (score >= 2500) return "#0891B2"; // blue
+  if (score >= 5000) return "#0F2847"; // purple
+  if (score >= 2500) return "#0F2847"; // blue
   return "#94A3B8";                    // grey
 }
 
@@ -100,8 +101,8 @@ function sisLabel(score) {
 // ── Component color palette for 8 SIS components ─────────────────────────────
 
 const COMPONENT_COLORS = [
-  "#0F2847", "#0891B2", "#7C3AED", "#059669",
-  "#D97706", "#DC2626", "#DB2777", "#64748B",
+  "#0F2847", "#0F2847", "#0F2847", "#059669",
+  "#D97706", "#DC2626", "#0F2847", "#64748B",
 ];
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
@@ -262,7 +263,7 @@ function HBarChart({ items = [], valueKey = "value", labelKey = "label", color =
 
 // ── Vertical Bar Chart (div-based) ────────────────────────────────────────────
 
-function VBarChart({ items = [], valueKey = "value", labelKey = "label", color = "#0891B2", height = 120 }) {
+function VBarChart({ items = [], valueKey = "value", labelKey = "label", color = "#0F2847", height = 120 }) {
   return (
     <DsBarChart
       data={items.map((i) => ({ label: i[labelKey], value: i[valueKey] || 0 }))}
@@ -324,15 +325,15 @@ function SisComponentCard({ name, score, max_score, details = [], color, idx }) 
 // ── Timeline Event ────────────────────────────────────────────────────────────
 
 const EVENT_CONFIG = {
-  manuscript_published:  { icon: BookOpen,      color: "#059669", label: "Manuscript Published" },
-  manuscript_submitted:  { icon: FileText,       color: "#0891B2", label: "Manuscript Submitted" },
-  collaboration_started: { icon: Users,          color: "#7C3AED", label: "Collaboration Started" },
-  badge_earned:          { icon: Award,          color: "#D97706", label: "Badge Earned" },
-  grant_applied:         { icon: DollarSign,     color: "#DC2626", label: "Grant Applied" },
-  grant_funded:          { icon: CheckCircle2,   color: "#059669", label: "Grant Funded" },
-  course_published:      { icon: GraduationCap,  color: "#0891B2", label: "Course Published" },
-  project_created:       { icon: Target,         color: "#7C3AED", label: "Project Created" },
-  default:               { icon: Activity,       color: "#64748B", label: "Activity" },
+  manuscript_published:  { icon: BookOpen,      color: "#0F2847", label: "Manuscript Published" },
+  manuscript_submitted:  { icon: FileText,       color: "#0F2847", label: "Manuscript Submitted" },
+  collaboration_started: { icon: Users,          color: "#0F2847", label: "Collaboration Started" },
+  badge_earned:          { icon: Award,          color: "#0F2847", label: "Badge Earned" },
+  grant_applied:         { icon: DollarSign,     color: "#0F2847", label: "Grant Applied" },
+  grant_funded:          { icon: CheckCircle2,   color: "#0F2847", label: "Grant Funded" },
+  course_published:      { icon: GraduationCap,  color: "#0F2847", label: "Course Published" },
+  project_created:       { icon: Target,         color: "#0F2847", label: "Project Created" },
+  default:               { icon: Activity,       color: "#0F2847", label: "Activity" },
 };
 
 function TimelineEvent({ event }) {
@@ -460,7 +461,7 @@ export default function ImpactDashboard() {
       const res = await api.get("/impact/me", { params: forceRefresh ? { force_refresh: true } : {} });
       setMainData(res.data);
     } catch (e) {
-      setMainError(e?.response?.data?.detail || "Failed to load impact data.");
+      setMainError(safeErrorMessage(e, "Failed to load impact data."));
     } finally {
       setMainLoading(false);
     }
@@ -495,7 +496,7 @@ export default function ImpactDashboard() {
       fetched.current.delete(tabId); // allow retry
       setTabError((prev) => ({
         ...prev,
-        [tabId]: e?.response?.data?.detail || "Failed to load.",
+        [tabId]: safeErrorMessage(e, "Failed to load."),
       }));
     } finally {
       setTabLoading((prev) => ({ ...prev, [tabId]: false }));
@@ -900,7 +901,7 @@ export default function ImpactDashboard() {
                   <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-4">
                     Citations Over Time (Last 12 Months)
                   </div>
-                  <VBarChart items={citationMonthly} height={160} color="#0891B2" />
+                  <VBarChart items={citationMonthly} height={160} color="#0F2847" />
                 </Card>
 
                 {/* Key metrics */}
@@ -1149,8 +1150,8 @@ export default function ImpactDashboard() {
               <Card padding="lg">
                 <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-4">Teaching Contribution</div>
                 <div className="space-y-3">
-                  <ProgressBar label="Lessons Published" value={teaching.lessons_published || 0} max={50} color="#7C3AED" />
-                  <ProgressBar label="Courses" value={teaching.courses || 0} max={10} color="#0891B2" />
+                  <ProgressBar label="Lessons Published" value={teaching.lessons_published || 0} max={50} color="#0F2847" />
+                  <ProgressBar label="Courses" value={teaching.courses || 0} max={10} color="#0F2847" />
                   <ProgressBar label="Teaching Score" value={teaching.contribution_score || 0} max={1000} color="#059669" />
                 </div>
               </Card>
@@ -1226,7 +1227,7 @@ export default function ImpactDashboard() {
                           <div className="h-2.5 bg-slate-100 w-full overflow-hidden">
                             <div
                               className="h-full transition-all duration-700"
-                              style={{ width: `${percentile}%`, backgroundColor: percentile >= 75 ? "#059669" : percentile >= 50 ? "#0891B2" : percentile >= 25 ? "#D97706" : "#DC2626" }}
+                              style={{ width: `${percentile}%`, backgroundColor: percentile >= 75 ? "#059669" : percentile >= 50 ? "#0F2847" : percentile >= 25 ? "#D97706" : "#DC2626" }}
                             />
                           </div>
                           <div className="text-[10px] text-slate-400 mt-1">{percentile}th percentile</div>

@@ -21,15 +21,15 @@ import { dismissRec, acceptRec } from "../../services/proactiveEngine";
 // ── Per-category styling ──────────────────────────────────────────────────────
 
 const CAT_STYLE = {
-  writing:       { color: "#1D4ED8", bg: "#EFF6FF", label: "Writing" },
-  publishing:    { color: "#7C3AED", bg: "#F5F3FF", label: "Publishing" },
-  research:      { color: "#0F2847", bg: "#F0F4FF", label: "Research" },
-  collaboration: { color: "#047857", bg: "#F0FDF4", label: "Collaboration" },
-  funding:       { color: "#B45309", bg: "#FFFBEB", label: "Funding" },
-  teaching:      { color: "#0891B2", bg: "#ECFEFF", label: "Teaching" },
-  institution:   { color: "#6D28D9", bg: "#F5F3FF", label: "Institution" },
-  career:        { color: "#DC2626", bg: "#FEF2F2", label: "Career" },
-  productivity:  { color: "#475569", bg: "#F8FAFC", label: "Productivity" },
+  writing:       { color: "#0F2847", bg: "#eef2f8", label: "Writing" },
+  publishing:    { color: "#0F2847", bg: "#eef2f8", label: "Publishing" },
+  research:      { color: "#0F2847", bg: "#eef2f8", label: "Research" },
+  collaboration: { color: "#0F2847", bg: "#eef2f8", label: "Collaboration" },
+  funding:       { color: "#0F2847", bg: "#eef2f8", label: "Funding" },
+  teaching:      { color: "#0F2847", bg: "#eef2f8", label: "Teaching" },
+  institution:   { color: "#0F2847", bg: "#eef2f8", label: "Institution" },
+  career:        { color: "#0F2847", bg: "#eef2f8", label: "Career" },
+  productivity:  { color: "#0F2847", bg: "#eef2f8", label: "Productivity" },
 };
 
 const CAT_ICON = {
@@ -86,7 +86,7 @@ export default function RecommendationCard({
     return (
       <div
         className="flex items-start gap-3 p-3 border border-slate-100 bg-white relative group"
-        style={{ borderLeft: `3px solid ${catStyle.color}` }}
+        style={{ borderLeft: `2px solid ${catStyle.color}` }}
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-1">
@@ -124,7 +124,7 @@ export default function RecommendationCard({
   return (
     <div
       className="border border-slate-200 bg-white relative group"
-      style={{ borderLeft: `3px solid ${catStyle.color}` }}
+      style={{ borderLeft: `2px solid ${catStyle.color}` }}
     >
       {/* Header */}
       <div className="flex items-start gap-3 p-4 pb-3">

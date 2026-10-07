@@ -54,7 +54,7 @@ function barW(val, max) {
 function percentileColor(p) {
   if (p == null) return "text-slate-500";
   if (p > 75) return "text-emerald-600";
-  if (p > 50) return "text-blue-600";
+  if (p > 50) return "text-navy-700";
   if (p > 25) return "text-amber-600";
   return "text-red-600";
 }
@@ -62,7 +62,7 @@ function percentileColor(p) {
 function percentileBg(p) {
   if (p == null) return "bg-slate-100";
   if (p > 75) return "bg-emerald-100 border-emerald-200";
-  if (p > 50) return "bg-blue-100 border-blue-200";
+  if (p > 50) return "bg-navy-100 border-navy-200";
   if (p > 25) return "bg-amber-100 border-amber-200";
   return "bg-red-100 border-red-200";
 }
@@ -195,15 +195,15 @@ function ExecutiveTab({ kpis, tabData }) {
         <SectionHeading title="Core Metrics" subtitle="Institution-wide research performance indicators" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <KpiCard label="Total Members" value={kpis?.total_members} icon={Users} />
-          <KpiCard label="Active Researchers" value={kpis?.active_researchers} icon={Activity} accent="#0891B2" />
-          <KpiCard label="Total Publications" value={kpis?.total_publications} icon={FileText} accent="#7C3AED" />
+          <KpiCard label="Active Researchers" value={kpis?.active_researchers} icon={Activity} accent="#0F2847" />
+          <KpiCard label="Total Publications" value={kpis?.total_publications} icon={FileText} accent="#0F2847" />
           <KpiCard label="Total Citations" value={kpis?.total_citations} icon={BookOpen} accent="#D97706" />
         </div>
       </div>
 
       {/* KPI Row 2 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard label="H-Index Composite" value={kpis?.h_index_composite} icon={Award} accent="#8A1538" />
+        <KpiCard label="H-Index Composite" value={kpis?.h_index_composite} icon={Award} accent="#0F2847" />
         <KpiCard label="Total Projects" value={kpis?.total_projects} icon={FolderOpen} accent="#059669" />
         <KpiCard
           label="Grant Success Rate"
@@ -242,7 +242,7 @@ function ExecutiveTab({ kpis, tabData }) {
                     <span className="text-slate-600 font-medium">Collaboration Score</span>
                     <span className="text-slate-800 font-semibold">{Number(collabScore).toFixed(1)}</span>
                   </div>
-                  <HBar value={collabScore} max={dimMax} color="#0891B2" height="h-2.5" />
+                  <HBar value={collabScore} max={dimMax} color="#0F2847" height="h-2.5" />
                 </div>
               )}
               {grantSuccessDim != null && (
@@ -256,7 +256,7 @@ function ExecutiveTab({ kpis, tabData }) {
                   <HBar
                     value={Number(grantSuccessDim) <= 1 ? Number(grantSuccessDim) * 100 : Number(grantSuccessDim)}
                     max={100}
-                    color="#8A1538"
+                    color="#0F2847"
                     height="h-2.5"
                   />
                 </div>
@@ -291,13 +291,13 @@ function ExecutiveTab({ kpis, tabData }) {
                 <span className="text-slate-600 font-medium">Average Researcher Reputation</span>
                 <span className="font-semibold text-slate-800">{Number(kpis.avg_reputation).toFixed(1)} / 100</span>
               </div>
-              <HBar value={kpis.avg_reputation} max={100} color="#7C3AED" />
+              <HBar value={kpis.avg_reputation} max={100} color="#0F2847" />
             </div>
           )}
           {kpis?.top_h_index != null && (
             <div className="flex items-center justify-between py-2 border-t border-slate-100">
               <span className="text-sm text-slate-600 font-medium">Top H-Index</span>
-              <span className="text-2xl font-bold" style={{ color: "#8A1538" }}>{fmtNum(kpis.top_h_index)}</span>
+              <span className="text-2xl font-bold" style={{ color: "#0F2847" }}>{fmtNum(kpis.top_h_index)}</span>
             </div>
           )}
         </div>
@@ -406,7 +406,7 @@ function PerformanceTab({ tabData }) {
                 label={fmt(area.area ?? area.name ?? area._id)}
                 value={area.count}
                 max={maxArea}
-                color="#7C3AED"
+                color="#0F2847"
               />
             ))}
           </div>
@@ -450,7 +450,7 @@ function ResearchersTab({ tabData }) {
                     <div className="flex items-start justify-between gap-2">
                       <p className="font-semibold text-slate-800 truncate">{fmt(r.full_name)}</p>
                       {r.h_index != null && (
-                        <span className="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#8A153818", color: "#8A1538" }}>
+                        <span className="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: "rgba(15,40,71,0.08)", color: "#0F2847" }}>
                           h={r.h_index}
                         </span>
                       )}
@@ -618,11 +618,11 @@ function GrantsTab({ tabData }) {
           label="Success Rate"
           value={gperf?.success_rate != null ? (Number(gperf.success_rate) <= 1 ? (Number(gperf.success_rate) * 100).toFixed(1) : Number(gperf.success_rate).toFixed(1)) : null}
           icon={Target}
-          accent="#8A1538"
+          accent="#0F2847"
           suffix="%"
         />
         <KpiCard label="Total Funding" value={gperf?.total_funding_secured} icon={DollarSign} accent="#D97706" />
-        <KpiCard label="Avg Grant Size" value={gperf?.avg_grant_size} icon={BarChart3} accent="#7C3AED" />
+        <KpiCard label="Avg Grant Size" value={gperf?.avg_grant_size} icon={BarChart3} accent="#0F2847" />
       </div>
 
       {/* Funding by Year */}
@@ -695,9 +695,9 @@ function CollaborationsTab({ tabData }) {
   const intlPct = total > 0 ? Math.round((intlCount / total) * 100) : 0;
 
   const statusColors = {
-    open: "#0891B2",
+    open: "#0F2847",
     active: "#059669",
-    completed: "#7C3AED",
+    completed: "#0F2847",
     closed: "#94A3B8",
     pending: "#D97706",
   };
@@ -707,8 +707,8 @@ function CollaborationsTab({ tabData }) {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <KpiCard label="Total Collaborations" value={data?.total} icon={Users} />
-        <KpiCard label="Internal" value={data?.internal_count} icon={Building2} accent="#0891B2" />
-        <KpiCard label="International" value={data?.international_count} icon={Globe} accent="#7C3AED" />
+        <KpiCard label="Internal" value={data?.internal_count} icon={Building2} accent="#0F2847" />
+        <KpiCard label="International" value={data?.international_count} icon={Globe} accent="#0F2847" />
         <KpiCard label="Unique Partners" value={data?.unique_partners} icon={Star} accent="#D97706" />
       </div>
 
@@ -735,7 +735,7 @@ function CollaborationsTab({ tabData }) {
         {total > 0 && (
           <div className="bg-white border border-slate-200 rounded-md p-6 flex flex-col items-center justify-center">
             <SectionHeading title="International Reach" subtitle="Share of cross-border collaborations" />
-            <Ring value={intlPct} max={100} color="#7C3AED" size={120} />
+            <Ring value={intlPct} max={100} color="#0F2847" size={120} />
             <p className="text-sm text-slate-600 mt-3 text-center">
               <span className="font-semibold text-slate-800">{fmtNum(intlCount)}</span> of {fmtNum(total)} collaborations are international
             </p>

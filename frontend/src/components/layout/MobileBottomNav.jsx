@@ -141,7 +141,7 @@ export default function MobileBottomNav({ onOpenDrawer }) {
         icon={Inbox}
         exact
         badge={notifCount}
-        badgeColor="#8A1538"
+        badgeColor="#0F2847"
       />
       <BottomTab
         to="/messages"

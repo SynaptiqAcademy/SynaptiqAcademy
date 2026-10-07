@@ -18,6 +18,7 @@ import {
 import PreviewDrawer from "./PreviewDrawer";
 import { NAVY } from "@/lib/tokens";
 import { confirmDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "../../lib/api";
 
 const TYPE_ICON = {
   pdf: FileText, docx: FileText, doc: FileText,
@@ -65,7 +66,7 @@ export default function FilePanel({ entityKind, entityId }) {
       await api.post("/files/upload", fd, { headers: { "Content-Type": "multipart/form-data" } });
       toast.success(replacesId ? "New version uploaded" : "File uploaded");
       load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Upload failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Upload failed")); }
     finally { setUploading(false); if (inputRef.current) inputRef.current.value = ""; }
   };
 

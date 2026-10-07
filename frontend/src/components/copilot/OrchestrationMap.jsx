@@ -52,7 +52,7 @@ const AGENT_LABEL = {
 
 const STATUS_COLOR = {
   waiting:          { bg: "#F8FAFC", border: "#E4E8EF", text: "#94A3B8" },
-  running:          { bg: "#EFF6FF", border: "#3B82F6", text: "#1D4ED8" },
+  running:          { bg: "#eef2f8", border: "#2f5486", text: "#0F2847" },
   success:          { bg: "#F0FDF4", border: "#10B981", text: "#047857" },
   partial:          { bg: "#FFFBEB", border: "#F59E0B", text: "#B45309" },
   insufficient_data:{ bg: "#F9FAFB", border: "#CBD5E1", text: "#6B7280" },
@@ -78,8 +78,8 @@ function AgentNode({ name, status = "waiting" }) {
         {label}
       </span>
       {status === "running" && (
-        <div className="w-8 h-0.5 bg-blue-100 rounded overflow-hidden">
-          <div className="h-full bg-blue-400 animate-pulse rounded w-1/2" />
+        <div className="w-8 h-0.5 bg-navy-100 rounded overflow-hidden">
+          <div className="h-full bg-navy-400 animate-pulse rounded w-1/2" />
         </div>
       )}
     </div>

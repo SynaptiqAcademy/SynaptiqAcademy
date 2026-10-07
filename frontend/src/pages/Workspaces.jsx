@@ -24,6 +24,7 @@ import { Card } from "../components/ds/Card";
 import { Badge } from "../components/ds/Badge";
 import { Tag } from "../components/ds/Tag";
 import { Alert } from "../components/ds/Alert";
+import { safeErrorMessage } from "../lib/api";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const BORDER = "#E4E8EF";
@@ -38,25 +39,25 @@ const WS_TYPES = [
 ];
 
 const TYPE_CONFIG = {
-  "Manuscript":                  { icon: FileText,    color: "#0891B2", bg: "#F0F9FF" },
+  "Manuscript":                  { icon: FileText,    color: "#0F2847", bg: "#eef2f8" },
   "Grant Proposal":              { icon: DollarSign,  color: "#D97706", bg: "#FFFBEB" },
   "Research Group":              { icon: Users2,      color: "#059669", bg: "#F0FDF4" },
   "Doctoral Thesis":             { icon: GraduationCap, color: ACCENT, bg: "#FFF1F2" },
-  "Conference Paper":            { icon: Presentation, color: "#7C3AED", bg: "#FAF5FF" },
-  "Systematic Review":           { icon: BookOpen,    color: "#7C3AED", bg: "#FAF5FF" },
+  "Conference Paper":            { icon: Presentation, color: "#0F2847", bg: "#eef2f8" },
+  "Systematic Review":           { icon: BookOpen,    color: "#0F2847", bg: "#eef2f8" },
   "Institutional Research Team": { icon: Building2,   color: "#64748B", bg: "#F8FAFC" },
-  "Consulting Project":          { icon: Target,      color: "#0891B2", bg: "#F0F9FF" },
+  "Consulting Project":          { icon: Target,      color: "#0F2847", bg: "#eef2f8" },
   "Custom Workspace":            { icon: Layers,      color: "#94A3B8", bg: "#F8FAFC" },
   "Book":                        { icon: BookMarked,  color: "#059669", bg: "#F0FDF4" },
   "Monograph":                   { icon: BookOpen,    color: "#065F46", bg: "#ECFDF5" },
-  "Dissertation":                { icon: GraduationCap, color: "#8B5CF6", bg: "#FAF5FF" },
-  "Thesis":                      { icon: GraduationCap, color: "#6D28D9", bg: "#F5F3FF" },
-  "Teaching Project":            { icon: GraduationCap, color: "#0891B2", bg: "#F0F9FF" },
-  "Course Development":          { icon: BookOpen,    color: "#2563EB", bg: "#EFF6FF" },
+  "Dissertation":                { icon: GraduationCap, color: "#2f5486", bg: "#eef2f8" },
+  "Thesis":                      { icon: GraduationCap, color: "#0F2847", bg: "#eef2f8" },
+  "Teaching Project":            { icon: GraduationCap, color: "#0F2847", bg: "#eef2f8" },
+  "Course Development":          { icon: BookOpen,    color: "#0F2847", bg: "#eef2f8" },
   "Innovation Project":          { icon: Zap,         color: "#F59E0B", bg: "#FFFBEB" },
 };
 
-const DEFAULT_TYPE_CFG = { icon: Microscope, color: NAVY, bg: "#EFF6FF" };
+const DEFAULT_TYPE_CFG = { icon: Microscope, color: NAVY, bg: "#eef2f8" };
 
 function typeConfig(t) { return TYPE_CONFIG[t] || DEFAULT_TYPE_CFG; }
 
@@ -129,7 +130,7 @@ export default function Workspaces() {
       setVisibility("private"); setInstitution(""); setShowNew(false);
       toast.success("Workspace created.");
       loadWorkspaces();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed to create workspace."); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed to create workspace.")); }
     finally { setCreating(false); }
   };
 

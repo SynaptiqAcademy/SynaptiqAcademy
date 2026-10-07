@@ -131,7 +131,7 @@ export default function MobileTopBar({ onOpenDrawer, onOpenSearch }) {
           <Bell size={15} strokeWidth={1.5} />
           {notifCount > 0 && (
             <span
-              className="absolute top-1.5 right-1.5 min-w-[14px] h-3.5 bg-[#8A1538] text-white text-[9px] font-mono flex items-center justify-center px-0.5 leading-none rounded-badge"
+              className="absolute top-1.5 right-1.5 min-w-[14px] h-3.5 bg-[#0F2847] text-white text-[9px] font-mono flex items-center justify-center px-0.5 leading-none rounded-badge"
               aria-hidden="true"
             >
               {notifCount > 9 ? "9+" : notifCount}

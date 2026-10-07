@@ -23,10 +23,10 @@ const EMRL  = "#059669";
 // ─── Status system ────────────────────────────────────────────────────────────
 const STATUS = {
   draft:                 { label: "Draft",             color: "#64748B", bg: "#F8FAFC", border: "#CBD5E1" },
-  in_preparation:        { label: "In Preparation",    color: "#0369A1", bg: "#EFF6FF", border: "#BAE6FD" },
+  in_preparation:        { label: "In Preparation",    color: "#0F2847", bg: "#eef2f8", border: "#d4dde9" },
   internal_review:       { label: "Internal Review",   color: "#B45309", bg: "#FFFBEB", border: "#FCD34D" },
-  ready_for_submission:  { label: "Ready to Submit",   color: "#0891B2", bg: "#ECFEFF", border: "#67E8F9" },
-  submitted:             { label: "Submitted",         color: "#4338CA", bg: "#EEF2FF", border: "#A5B4FC" },
+  ready_for_submission:  { label: "Ready to Submit",   color: "#0F2847", bg: "#eef2f8", border: "#67E8F9" },
+  submitted:             { label: "Submitted",         color: "#0F2847", bg: "#eef2f8", border: "#d4dde9" },
   eligible:              { label: "Eligible",          color: "#0F766E", bg: "#F0FDFA", border: "#99F6E4" },
   under_evaluation:      { label: "Under Evaluation",  color: "#B45309", bg: "#FFFBEB", border: "#FCD34D" },
   funded:                { label: "Funded",            color: EMRL,      bg: "#ECFDF5", border: "#6EE7B7" },
@@ -151,11 +151,11 @@ function GrantApplicationsSidebar({ apps }) {
         </div>
         <div style={{ display: "flex", gap: 20 }}>
           <div>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{piCount}</div>
+            <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{piCount}</div>
             <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>As PI</div>
           </div>
           <div>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{teamCount}</div>
+            <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{teamCount}</div>
             <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>As Team Member</div>
           </div>
         </div>
@@ -177,7 +177,7 @@ function ApplicationCard({ app }) {
           </div>
           <h3 style={{
             fontSize: 16, fontWeight: 600, color: "#0F172A",
-            margin: 0, lineHeight: 1.4, fontFamily: "Georgia, serif",
+            margin: 0, lineHeight: 1.4, fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif",
           }}>
             {app.grant?.title || app.grant_title || "Untitled Grant"}
           </h3>
@@ -200,7 +200,7 @@ function ApplicationCard({ app }) {
               </span>
             )}
             {!app.is_pi && (
-              <DsBadge color="#7C3AED">Team Member</DsBadge>
+              <DsBadge color="#0F2847">Team Member</DsBadge>
             )}
             {app.updated_at && (
               <span style={{ fontSize: 10, fontFamily: "monospace", color: "#CBD5E1" }}>

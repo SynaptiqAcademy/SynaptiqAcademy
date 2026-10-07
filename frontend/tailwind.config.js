@@ -12,6 +12,8 @@ module.exports = {
         serif: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
         merriweather: ['Merriweather', 'Georgia', 'serif'],
+        // Editorial serif shared with the public site (landing.css --serif): page titles only.
+        display: ['Newsreader Variable', 'Newsreader', 'Iowan Old Style', 'Georgia', 'serif'],
       },
       borderRadius: {
         // Full scale wired to the shared token registry (index.css) so

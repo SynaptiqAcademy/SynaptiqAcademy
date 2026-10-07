@@ -13,13 +13,13 @@ const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` 
 const CATEGORY_COLORS = {
   research_ideas: ACCENT,
   collaborations: "#14b8a6",
-  grants: "#ec4899",
-  journals: "#8b5cf6",
+  grants: "#2f5486",
+  journals: "#2f5486",
   conferences: "#f59e0b",
   career_actions: "#f97316",
   ai_tools: NAVY,
   publication_improvements: EMERALD,
-  training: "#0ea5e9",
+  training: "#2f5486",
   datasets: "#64748b",
 };
 
@@ -139,7 +139,7 @@ export default function Recommendations() {
           title="No recommendations in this category"
           description="Click Refresh to generate new ones."
           action={
-            <Button onClick={refresh} style={{ background: "#8b5cf6" }}>
+            <Button onClick={refresh}>
               Generate Recommendations
             </Button>
           }

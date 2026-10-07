@@ -29,7 +29,7 @@ const STATUS_COLOR = {
   verified:   EMERALD,
   draft:      AMBER,
   pending:    AMBER,
-  review:     "#3B82F6",
+  review:     "#2f5486",
   paused:     TEXT_MUTED,
   closed:     TEXT_MUTED,
   archived:   TEXT_MUTED,

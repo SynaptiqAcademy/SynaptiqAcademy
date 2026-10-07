@@ -7,12 +7,12 @@ import { Card, Badge, Tag, Button, EmptyState, LoadingOverlay } from "@/componen
 
 const TYPE_META = {
   person:        { label: "Researcher",  icon: FileText,      color: ACCENT },
-  institution:   { label: "Institution", icon: Building2,     color: "#0ea5e9" },
-  group:         { label: "Group",       icon: Layers,        color: "#8b5cf6" },
-  community:     { label: "Community",   icon: MessageSquare, color: "#f97316" },
-  collaboration: { label: "Collaboration", icon: Handshake,   color: "#059669" },
-  event:         { label: "Event",       icon: Calendar,      color: "#06b6d4" },
-  grant:         { label: "Grant",       icon: FileText,      color: "#ec4899" },
+  institution:   { label: "Institution", icon: Building2,     color: "#0F2847" },
+  group:         { label: "Group",       icon: Layers,        color: "#0F2847" },
+  community:     { label: "Community",   icon: MessageSquare, color: "#0F2847" },
+  collaboration: { label: "Collaboration", icon: Handshake,   color: "#0F2847" },
+  event:         { label: "Event",       icon: Calendar,      color: "#0F2847" },
+  grant:         { label: "Grant",       icon: FileText,      color: "#0F2847" },
   project:       { label: "Project",     icon: Layers,        color: NAVY },
 };
 
@@ -118,7 +118,7 @@ function SavedOpportunitiesSidebar({ saved }) {
           <Bookmark size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Saved Items</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{saved.total}</div>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{saved.total}</div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
           Across all saved categories.
         </p>

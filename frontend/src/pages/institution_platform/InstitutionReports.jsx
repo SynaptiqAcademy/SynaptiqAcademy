@@ -114,7 +114,7 @@ export default function InstitutionReports() {
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {[
             { fmt: "csv", label: "CSV Export", color: EMERALD, desc: "Structured data for Excel" },
-            { fmt: "json", label: "JSON Export", color: "#8b5cf6", desc: "Machine-readable full report" },
+            { fmt: "json", label: "JSON Export", color: "#2f5486", desc: "Machine-readable full report" },
           ].map(({ fmt, label, color, desc }) => (
             <button key={fmt} onClick={() => download(fmt)} disabled={downloading} style={{
               background: WHITE, border: `2px solid ${color}`, borderRadius: 10, padding: "12px 20px",

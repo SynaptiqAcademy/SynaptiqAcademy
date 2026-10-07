@@ -1,8 +1,7 @@
 /* eslint-disable */
 import React from "react";
-import { FolderOpen, Users, BookOpen, TrendingUp, Zap, MessageSquare } from "lucide-react";
-import { StatGrid, StatCard } from "@/components/ds/StatCard";
-import { useUnread } from "@/contexts/UnreadContext";
+import { FolderOpen, Users, BookOpen, TrendingUp } from "lucide-react";
+import { Link } from "react-router-dom";
 
 /**
  * KpiCards — the dashboard's at-a-glance metric row.
@@ -14,9 +13,6 @@ import { useUnread } from "@/contexts/UnreadContext";
  * a fabricated placeholder number.
  */
 export default function KpiCards({ kpi, feed, manuscripts, workspaces, billing }) {
-  const { total: unreadMessages } = useUnread();
-  const credits = billing?.credits;
-  const creditBalance = credits?.monthly_balance ?? credits?.balance ?? null;
 
   const cards = [
     {
@@ -48,38 +44,22 @@ export default function KpiCards({ kpi, feed, manuscripts, workspaces, billing }
       to: "/research-impact",
       highlight: true,
     },
-    {
-      key: "credits",
-      label: "AI credits",
-      value: creditBalance != null ? creditBalance.toLocaleString() : null,
-      icon: <Zap size={16} strokeWidth={1.75} />,
-      to: "/ai-credits",
-    },
-    {
-      key: "messages",
-      label: "Unread messages",
-      value: unreadMessages > 0 ? unreadMessages : (unreadMessages === 0 ? 0 : null),
-      icon: <MessageSquare size={16} strokeWidth={1.75} />,
-      to: "/messages",
-    },
-  ].filter(c => c.value != null);
+  // A metric earns space only when it says something: zero or missing values
+  // are left out. Credits and unread messages live in the app shell.
+  ].filter(c => c.value != null && c.value !== 0 && c.value !== "0");
 
   if (cards.length === 0) return null;
 
   return (
-    <section aria-label="Overview Metrics">
-      <StatGrid cols={cards.length >= 4 ? 4 : cards.length}>
-        {cards.map(c => (
-          <StatCard
-            key={c.key}
-            label={c.label}
-            value={c.value}
-            icon={c.icon}
-            to={c.to}
-            highlight={c.highlight}
-          />
+    <section aria-label="Overview">
+      <dl className="pl-stats" style={{ marginTop: 0 }}>
+        {cards.map((c) => (
+          <div key={c.key}>
+            <dd><Link to={c.to} className="hm-stat">{c.value}</Link></dd>
+            <dt>{c.label}</dt>
+          </div>
         ))}
-      </StatGrid>
+      </dl>
     </section>
   );
 }

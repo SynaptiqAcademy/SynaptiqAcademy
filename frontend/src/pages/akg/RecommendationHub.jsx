@@ -10,13 +10,13 @@ import { fetchApi } from "@/lib/api";
 const API = (p) => `/api/akg${p}`;
 
 const CATEGORY_META = {
-  people:        { label: "People",          icon: Users,       color: "#3b82f6" },
-  institutions:  { label: "Institutions",    icon: Building2,   color: "#d97706" },
-  topics:        { label: "Research Topics", icon: Tag,         color: "#059669" },
-  methods:       { label: "Methods",         icon: Cpu,         color: "#7c3aed" },
-  software:      { label: "Software",        icon: Cpu,         color: "#0891b2" },
-  communities:   { label: "Communities",     icon: Users,       color: "#ec4899" },
-  marketplace:   { label: "Marketplace",     icon: ShoppingBag, color: "#8b5cf6" },
+  people:        { label: "People",          icon: Users,       color: "#0F2847" },
+  institutions:  { label: "Institutions",    icon: Building2,   color: "#0F2847" },
+  topics:        { label: "Research Topics", icon: Tag,         color: "#0F2847" },
+  methods:       { label: "Methods",         icon: Cpu,         color: "#0F2847" },
+  software:      { label: "Software",        icon: Cpu,         color: "#0F2847" },
+  communities:   { label: "Communities",     icon: Users,       color: "#0F2847" },
+  marketplace:   { label: "Marketplace",     icon: ShoppingBag, color: "#0F2847" },
 };
 
 const RecCard = ({ item, color, onView }) => (

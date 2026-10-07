@@ -53,12 +53,12 @@ function SectionHeader({ label, icon: Icon, action }) {
 }
 
 const ALERT_META = {
-  new_citation:  { label: "New Citation",   color: "#2563eb" },
+  new_citation:  { label: "New Citation",   color: "#0F2847" },
   milestone:     { label: "Milestone",      color: "#16a34a" },
-  highly_cited:  { label: "Highly Cited",   color: "#7c3aed" },
+  highly_cited:  { label: "Highly Cited",   color: "#0F2847" },
   velocity:      { label: "High Velocity",  color: "#d97706" },
   rapid_growth:  { label: "Rapid Growth",   color: "#dc2626" },
-  emerging_topic:{ label: "Emerging",       color: "#0891b2" },
+  emerging_topic:{ label: "Emerging",       color: "#0F2847" },
   top_performer: { label: "Top Performer",  color: "#16a34a" },
   high_velocity: { label: "High Velocity",  color: "#d97706" },
 };
@@ -125,7 +125,7 @@ function ImpactBreakdown({ impact }) {
 function VelocityGauge({ velocity, growthRate, recentDelta }) {
   const level =
     velocity >= 20   ? { label: "High Velocity",   color: "#16a34a", pct: 90 } :
-    velocity >= 10   ? { label: "Active",           color: "#2563eb", pct: 65 } :
+    velocity >= 10   ? { label: "Active",           color: "#0F2847", pct: 65 } :
     velocity >= 3    ? { label: "Moderate",         color: "#d97706", pct: 40 } :
     velocity >= 0.5  ? { label: "Low Activity",     color: "#64748b", pct: 20 } :
                        { label: "No Recent Growth", color: "#cbd5e1", pct: 5  };

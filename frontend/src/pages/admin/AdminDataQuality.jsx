@@ -6,6 +6,7 @@ import { EMERALD, AMBER, CRIMSON, INFO } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Button, Card, Badge, MiniBar, Alert } from "@/components/ds";
 import { confirmDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "@/lib/api";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -58,7 +59,7 @@ export default function AdminDataQuality() {
       const r = await api.post(`/admin/x/data-quality/remediate?action=${action}&dry_run=${dryRun}`);
       setRemedResp(r.data.result);
       setTimeout(() => { setRemedResp(""); if (!dryRun) refetchAll(); }, 4000);
-    } catch (e) { setRemedResp(e?.response?.data?.detail || "Error"); }
+    } catch (e) { setRemedResp(safeErrorMessage(e, "Error")); }
     finally { setRemediating(false); }
   };
 

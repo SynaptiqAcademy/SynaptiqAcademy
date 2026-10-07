@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Drawer, Modal, Button, Input, FormSelect, Badge, StatCard, Alert, Card } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -38,7 +39,7 @@ function DetailPanel({ instId, onClose }) {
               <Badge variant={d.status === "active" ? "success" : "danger"}>{d.status || "active"}</Badge>
             </div>
             <div><span className="text-slate-500">Website:</span>
-              <a href={d.website} target="_blank" rel="noreferrer" className="text-blue-600 ml-1 hover:underline">
+              <a href={d.website} target="_blank" rel="noreferrer" className="text-navy-700 ml-1 hover:underline">
                 {d.website ? "Link" : "—"}
               </a>
             </div>
@@ -72,7 +73,7 @@ function PatchModal({ inst, onClose, onSaved }) {
     try {
       await api.patch(`/admin/x/institutions-center/${inst.id}`, form);
       onSaved();
-    } catch (e) { setMsg(e?.response?.data?.detail || "Error"); }
+    } catch (e) { setMsg(safeErrorMessage(e, "Error")); }
     finally { setSaving(false); }
   };
 
@@ -128,7 +129,7 @@ export default function AdminInstitutionCenter() {
       title="Institution Management Center"
       subtitle="Academic institution governance — users, publications, grants, departments"
       actions={
-        <button onClick={refetch} aria-label="Refresh institutions" className="p-1.5 bg-[#0F2847] border border-[#1a3050] text-slate-400 hover:text-white">
+        <button onClick={refetch} aria-label="Refresh institutions" className="p-1.5 bg-[#0F2847] border border-[#1c3e6d] text-slate-400 hover:text-white">
           <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
         </button>
       }
@@ -142,9 +143,9 @@ export default function AdminInstitutionCenter() {
           <input value={searchInput} onChange={e => setSearchInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && doSearch()}
             placeholder="Search by name or country..."
-            className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#0F2847] border border-[#1a3050] text-slate-300 placeholder-slate-600" />
+            className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#0F2847] border border-[#1c3e6d] text-slate-300 placeholder-slate-600" />
         </div>
-        <button onClick={doSearch} className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5">Search</button>
+        <button onClick={doSearch} className="text-xs bg-navy-700 hover:bg-navy-800 text-white px-3 py-1.5">Search</button>
         {search && <button onClick={() => { setSearch(""); setSearchInput(""); setPage(1); }} aria-label="Clear search" className="text-xs text-slate-400 hover:text-white px-2">
           <X size={13} />
         </button>}
@@ -152,9 +153,9 @@ export default function AdminInstitutionCenter() {
       </div>
 
       {/* Table */}
-      <div className="bg-[#0F2847] border border-[#1a3050] overflow-x-auto">
+      <div className="bg-[#0F2847] border border-[#1c3e6d] overflow-x-auto">
         <table className="w-full text-xs text-slate-300">
-          <thead className="text-slate-500 border-b border-[#1a3050]">
+          <thead className="text-slate-500 border-b border-[#1c3e6d]">
             <tr>
               <th className="text-left px-3 py-2 font-medium">Institution</th>
               <th className="text-left px-3 py-2 font-medium">Country</th>
@@ -170,10 +171,10 @@ export default function AdminInstitutionCenter() {
           <tbody>
             {loading && <tr><td colSpan={9} className="px-3 py-8 text-center text-slate-500">Loading...</td></tr>}
             {!loading && items.map(inst => (
-              <tr key={inst.id} className="border-t border-[#1a3050] hover:bg-[#1a3050]/30">
+              <tr key={inst.id} className="border-t border-[#1c3e6d] hover:bg-[#1c3e6d]/30">
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-2">
-                    <Building2 size={12} className="text-blue-400 flex-shrink-0" />
+                    <Building2 size={12} className="text-navy-400 flex-shrink-0" />
                     <span className="text-white max-w-[200px] truncate">{inst.name}</span>
                   </div>
                 </td>
@@ -192,10 +193,10 @@ export default function AdminInstitutionCenter() {
                 </td>
                 <td className="px-3 py-2">
                   <div className="flex gap-1">
-                    <button onClick={() => setSelected(inst.id)} aria-label={`View ${inst.name} details`} className="text-slate-400 hover:text-blue-400">
+                    <button onClick={() => setSelected(inst.id)} aria-label={`View ${inst.name} details`} className="text-slate-400 hover:text-navy-400">
                       <ChevronRight size={13} />
                     </button>
-                    <button onClick={() => setEditInst(inst)} className="text-slate-400 hover:text-white text-[10px] px-1 border border-[#1a3050] hover:border-slate-500">
+                    <button onClick={() => setEditInst(inst)} className="text-slate-400 hover:text-white text-[10px] px-1 border border-[#1c3e6d] hover:border-slate-500">
                       Edit
                     </button>
                   </div>
@@ -213,10 +214,10 @@ export default function AdminInstitutionCenter() {
       {total > 30 && (
         <div className="flex items-center gap-2">
           <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-            className="text-xs px-2 py-1 bg-[#0F2847] border border-[#1a3050] text-slate-400 hover:text-white disabled:opacity-50">← Prev</button>
+            className="text-xs px-2 py-1 bg-[#0F2847] border border-[#1c3e6d] text-slate-400 hover:text-white disabled:opacity-50">← Prev</button>
           <span className="text-xs text-slate-500">Page {page} of {Math.ceil(total / 30)}</span>
           <button onClick={() => setPage(p => p + 1)} disabled={page * 30 >= total}
-            className="text-xs px-2 py-1 bg-[#0F2847] border border-[#1a3050] text-slate-400 hover:text-white disabled:opacity-50">Next →</button>
+            className="text-xs px-2 py-1 bg-[#0F2847] border border-[#1c3e6d] text-slate-400 hover:text-white disabled:opacity-50">Next →</button>
         </div>
       )}
 
@@ -238,7 +239,7 @@ function InstitutionCenterSidebar({ items, total }) {
           <Building2 size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Directory</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 24, color: "#0f172a" }}>{total}</div>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 24, color: "#0f172a" }}>{total}</div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0" }}>
           {activeCount} of {items.length} on this page are active
         </p>

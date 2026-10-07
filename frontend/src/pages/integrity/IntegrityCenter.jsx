@@ -13,7 +13,7 @@ const token = () => localStorage.getItem("token");
 const authH = () => ({ Authorization: `Bearer ${token()}` });
 
 const GRADE_COLOR = {
-  "A+": "#059669", A: "#059669", B: "#0ea5e9", C: "#f59e0b", D: "#f97316", F: "#dc2626",
+  "A+": "#059669", A: "#059669", B: "#2f5486", C: "#f59e0b", D: "#f97316", F: "#dc2626",
 };
 
 const LEVEL_COLOR = {
@@ -98,7 +98,7 @@ function FactorBar({ label, value, weight }) {
 function Section({ title, icon: Icon, children }) {
   return (
     <div style={{
-      background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12,
+      background: WHITE, border: `1px solid ${BRD}`, borderRadius: 8,
       padding: 20, marginBottom: 16,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
@@ -220,8 +220,8 @@ export default function IntegrityCenter() {
       )}
 
       {isAnalyzing && (
-        <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 8,
-          padding: "12px 16px", color: "#1e40af", marginBottom: 16, fontSize: 14,
+        <div style={{ background: "#eef2f8", border: "1px solid #d4dde9", borderRadius: 8,
+          padding: "12px 16px", color: "#0F2847", marginBottom: 16, fontSize: 14,
           display: "flex", alignItems: "center", gap: 8 }}>
           <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
           Analysis in progress — verifying identity, publications, citations, and grants with external providers…
@@ -230,7 +230,7 @@ export default function IntegrityCenter() {
 
       {!report && !isAnalyzing && (
         <div style={{
-          background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 40,
+          background: WHITE, border: `1px solid ${BRD}`, borderRadius: 8, padding: 40,
           textAlign: "center",
         }}>
           <Shield size={40} color={`${NAVY}40`} style={{ marginBottom: 12 }} />
@@ -304,7 +304,7 @@ export default function IntegrityCenter() {
 
           {report.risk_flags?.length === 0 && (
             <div style={{
-              background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 12,
+              background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8,
               padding: "16px 20px", display: "flex", alignItems: "center", gap: 10, marginBottom: 16,
               color: "#166534",
             }}>

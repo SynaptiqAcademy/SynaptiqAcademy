@@ -173,7 +173,7 @@ export default function AiPolicy() {
               body: "AI-generated content may not meet the methodological standards, citation styles, or academic register required by specific journals, conferences, or institutions. You are responsible for adapting AI-assisted content to the requirements of your target venue.",
             },
           ].map((item) => (
-            <div key={item.title} style={{ padding: "14px 16px", borderLeft: "3px solid #8A1538", background: "#fef9f9", borderRadius: "0 6px 6px 0" }}>
+            <div key={item.title} style={{ padding: "14px 16px", borderLeft: "3px solid #0F2847", background: "#eef2f8", borderRadius: "0 6px 6px 0" }}>
               <div style={{ fontWeight: 600, fontSize: "0.88rem", color: "#0f172a", marginBottom: 4 }}>{item.title}</div>
               <p style={{ fontSize: "0.83rem", color: "#475569", lineHeight: 1.6, margin: 0 }}>{item.body}</p>
             </div>

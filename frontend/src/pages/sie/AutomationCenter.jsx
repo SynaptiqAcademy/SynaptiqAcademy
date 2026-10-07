@@ -14,7 +14,7 @@ const AUTOMATION_TYPES = [
   "monitor_journal","monitor_grant","monitor_citation","monitor_collaborator",
   "deadline_reminder","weekly_report","goal_check","recommendation_refresh",
 ];
-const TYPE_COLOR = { deadline_reminder: "#f97316", goal_check: ACCENT, weekly_report: "#8b5cf6", recommendation_refresh: EMERALD, monitor_journal: "#0ea5e9", monitor_grant: "#ec4899", monitor_citation: "#f59e0b", monitor_collaborator: "#14b8a6" };
+const TYPE_COLOR = { deadline_reminder: "#f97316", goal_check: ACCENT, weekly_report: "#2f5486", recommendation_refresh: EMERALD, monitor_journal: "#2f5486", monitor_grant: "#2f5486", monitor_citation: "#f59e0b", monitor_collaborator: "#14b8a6" };
 
 function describeRunResult(run) {
   const r = run?.result || {};
@@ -100,7 +100,7 @@ function NewAutoModal({ onClose, onCreate }) {
       title="New Automation"
       size="sm"
       footer={
-        <Button onClick={submit} loading={saving} disabled={saving} className="w-full" style={{ background: ACCENT }}>
+        <Button onClick={submit} loading={saving} disabled={saving} className="w-full">
           {saving ? "Creating…" : "Create Automation"}
         </Button>
       }
@@ -200,7 +200,7 @@ export default function AutomationCenter() {
           title="No automations yet"
           description="Automate deadline reminders, weekly reports, and monitoring tasks."
           action={
-            <Button onClick={() => setShowNew(true)} style={{ background: ACCENT }}>
+            <Button onClick={() => setShowNew(true)} >
               <Plus size={13} /> New Automation
             </Button>
           }

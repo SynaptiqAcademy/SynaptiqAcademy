@@ -115,7 +115,7 @@ export default function TrendDiscovery() {
 
         <Card padding="lg">
           <h2 style={{ fontSize: 16, fontWeight: 700, color: NAVY, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-            <Users size={18} color="#7c3aed" /> Collaboration Trends
+            <Users size={18} color="#0F2847" /> Collaboration Trends
           </h2>
           {collabTrend.length === 0 ? (
             <EmptyState title="No collaboration data yet." />

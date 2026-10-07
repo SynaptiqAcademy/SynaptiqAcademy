@@ -7,15 +7,15 @@ import { fetchApi } from "@/lib/api";
 const API = "/api/timeline";
 
 const CATEGORY_COLORS = {
-  research:      "#0369A1",
-  teaching:      "#7C3AED",
+  research:      "#0F2847",
+  teaching:      "#0F2847",
   grant:         "#059669",
   collaboration: "#0F2847",
   review:        "#D97706",
   verification:  "#059669",
   recognition:   "#D97706",
-  community:     "#0369A1",
-  ai:            "#7C3AED",
+  community:     "#0F2847",
+  ai:            "#0F2847",
 };
 
 function MonthBar({ month, maxTotal }) {
@@ -132,7 +132,7 @@ export default function TimelineAnalytics() {
       sidebar={(insights.length > 0 || milestones.length > 0) ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {insights.length > 0 && (
-            <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20 }}>
+            <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 8, padding: 20 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
                 <Lightbulb size={14} color="#D97706" /> Timeline Insights
               </div>
@@ -152,7 +152,7 @@ export default function TimelineAnalytics() {
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: NAVY }}>{ins.title}</div>
                       <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginTop: 3 }}>{ins.body}</div>
-                      <div style={{ fontSize: 11, color: "#0369A1", marginTop: 5, fontWeight: 500 }}>→ {ins.action}</div>
+                      <div style={{ fontSize: 11, color: "#0F2847", marginTop: 5, fontWeight: 500 }}>→ {ins.action}</div>
                     </div>
                   </div>
                 ))}
@@ -161,7 +161,7 @@ export default function TimelineAnalytics() {
           )}
 
           {milestones.length > 0 && (
-            <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20 }}>
+            <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 8, padding: 20 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
                 <Trophy size={14} color="#D97706" /> Career Milestones
               </div>
@@ -198,7 +198,7 @@ export default function TimelineAnalytics() {
 
         <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
           {/* Monthly bar chart */}
-          <div style={{ flex: "1 1 420px", background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20 }}>
+          <div style={{ flex: "1 1 420px", background: WHITE, border: `1px solid ${BRD}`, borderRadius: 8, padding: 20 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
               <CalendarDays size={14} /> Monthly Activity
             </div>
@@ -211,7 +211,7 @@ export default function TimelineAnalytics() {
 
           <div style={{ flex: "1 1 300px", display: "flex", flexDirection: "column", gap: 16 }}>
             {/* Category breakdown */}
-            <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20 }}>
+            <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 8, padding: 20 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
                 <Activity size={14} /> By Category
               </div>
@@ -228,7 +228,7 @@ export default function TimelineAnalytics() {
 
             {/* Top event types */}
             {analytics?.top_event_types?.length > 0 && (
-              <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20 }}>
+              <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 8, padding: 20 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, marginBottom: 12 }}>Top Event Types</div>
                 {analytics.top_event_types.slice(0, 6).map((t, i) => (
                   <div key={t.type} style={{

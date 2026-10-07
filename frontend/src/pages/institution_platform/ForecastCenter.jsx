@@ -129,8 +129,8 @@ export default function ForecastCenter() {
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           <ForecastPanel title="Publication Forecast" data={pubF} valueKey="total" color={EMERALD} />
-          <ForecastPanel title="Grant Approvals Forecast" data={grantF} valueKey="approved" color="#8b5cf6" />
-          <ForecastPanel title="Faculty Growth Forecast" data={facF} valueKey="faculty" color="#0ea5e9" />
+          <ForecastPanel title="Grant Approvals Forecast" data={grantF} valueKey="approved" color="#2f5486" />
+          <ForecastPanel title="Faculty Growth Forecast" data={facF} valueKey="faculty" color="#2f5486" />
           <ForecastPanel title="Citation Growth Forecast" data={citF} valueKey="citations" color="#f59e0b" />
         </div>
       )}
@@ -151,8 +151,8 @@ function forecastValue(item, valueKey) {
 function ForecastCenterSidebar({ pubF, grantF, facF, citF }) {
   const rows = [
     { label: "Publications",     data: pubF,   key: "total",     color: EMERALD },
-    { label: "Grant Approvals",  data: grantF, key: "approved",  color: "#8b5cf6" },
-    { label: "Faculty",          data: facF,   key: "faculty",   color: "#0ea5e9" },
+    { label: "Grant Approvals",  data: grantF, key: "approved",  color: "#2f5486" },
+    { label: "Faculty",          data: facF,   key: "faculty",   color: "#2f5486" },
     { label: "Citations",        data: citF,   key: "citations", color: "#f59e0b" },
   ].filter(r => r.data?.forecasts?.length > 0);
 

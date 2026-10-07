@@ -29,6 +29,7 @@ import {
   useDeptFunding, useDeptMutations,
 } from "../hooks/useDepartments";
 import { confirmDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "@/lib/api";
 
 // ─────────────────────────── shared primitives ────────────────────────────────
 
@@ -154,7 +155,7 @@ function ManageMembersModal({ did, iid, allInstMembers, currentMemberIds, onClos
       toast.success("Faculty updated");
       onChanged?.(); onClose?.();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed to update members");
+      toast.error(safeErrorMessage(e, "Failed to update members"));
     }
   };
 
@@ -219,7 +220,7 @@ function FacultyTab({ did, iid, isAdmin }) {
       toast.success("Role updated");
       refetch();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed");
+      toast.error(safeErrorMessage(e, "Failed"));
     }
   }, [did, updateRole, refetch]);
 
@@ -315,7 +316,7 @@ function ProjectsTab({ did, isAdmin }) {
       setLinkInput(""); setShowLink(false);
       refetch();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed to link project");
+      toast.error(safeErrorMessage(e, "Failed to link project"));
     }
   }, [did, linkInput, linkProject, refetch]);
 
@@ -326,7 +327,7 @@ function ProjectsTab({ did, isAdmin }) {
       toast.success("Project unlinked");
       refetch();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed");
+      toast.error(safeErrorMessage(e, "Failed"));
     }
   }, [did, unlinkProject, refetch]);
 
@@ -681,7 +682,7 @@ function EditDepartmentModal({ dept, onClose, onUpdated }) {
       onUpdated?.(updated);
       onClose?.();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed");
+      toast.error(safeErrorMessage(e, "Failed"));
     }
   };
 

@@ -29,8 +29,8 @@ export function FormSelect({
     "transition-colors duration-150",
     "focus:outline-none focus:ring-2 focus:ring-[rgba(15,40,71,0.15)] focus:border-[rgba(15,40,71,0.6)]",
     error
-      ? "border-[#8A1538]/60"
-      : "border-slate-200 hover:border-slate-300",
+      ? "border-crimson-600 focus:ring-[rgba(180,35,24,0.15)]"
+      : "border-hairline-strong hover:border-[rgba(16,20,28,0.32)]",
     "disabled:opacity-50 disabled:bg-slate-50 disabled:cursor-not-allowed",
     heightClass,
     className,

@@ -31,7 +31,7 @@ const SEVERITY_ICON_COLOR = {
   critical: "text-red-600",
   high:     "text-orange-600",
   medium:   "text-amber-600",
-  low:      "text-blue-600",
+  low:      "text-navy-700",
 };
 
 const SEVERITY_ICONS = {
@@ -76,7 +76,7 @@ function ErrorRow({ err, onUpdate }) {
         onClick={() => setExpanded((v) => !v)}
       >
         <td className="px-3 py-2">
-          <Icon size={12} className={SEVERITY_ICON_COLOR[err.severity] || "text-blue-600"} />
+          <Icon size={12} className={SEVERITY_ICON_COLOR[err.severity] || "text-navy-700"} />
         </td>
         <td className="px-3 py-2"><SeverityBadge severity={err.severity} /></td>
         <td className="px-3 py-2 text-slate-400 text-[10px]">{err.category}</td>

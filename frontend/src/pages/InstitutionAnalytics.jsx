@@ -18,6 +18,7 @@ import {
   Card as DsCard, StatCard, EmptyState, SkeletonLine, DataTable, NavTabs,
   Dropdown, DropdownItem, Button,
 } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 const TABS = [
   { id: "executive",       label: "Executive" },
@@ -146,7 +147,7 @@ function ExecutiveTab() {
   useEffect(() => {
     api.get("/institutional/analytics/executive")
       .then((r) => setData(r.data))
-      .catch((e) => setError(e.response?.data?.detail || "Failed to load"))
+      .catch((e) => setError(safeErrorMessage(e, "Failed to load")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -310,7 +311,7 @@ function ResearchTab() {
   useEffect(() => {
     api.get("/institutional/analytics/research")
       .then((r) => setData(r.data))
-      .catch((e) => setError(e.response?.data?.detail || "Failed to load"))
+      .catch((e) => setError(safeErrorMessage(e, "Failed to load")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -438,7 +439,7 @@ function FundingTab() {
   useEffect(() => {
     api.get("/institutional/analytics/funding")
       .then((r) => setData(r.data))
-      .catch((e) => setError(e.response?.data?.detail || "Failed to load"))
+      .catch((e) => setError(safeErrorMessage(e, "Failed to load")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -535,7 +536,7 @@ function CollaborationTab() {
   useEffect(() => {
     api.get("/institutional/analytics/collaboration")
       .then((r) => setData(r.data))
-      .catch((e) => setError(e.response?.data?.detail || "Failed to load"))
+      .catch((e) => setError(safeErrorMessage(e, "Failed to load")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -671,9 +672,9 @@ function CollaborationTab() {
 // ─── Research Office Tab ──────────────────────────────────────────────────────
 
 const APP_STATUS_COLORS = {
-  draft: "#94a3b8", in_preparation: "#6366f1", internal_review: "#8b5cf6",
-  ready_for_submission: "#f59e0b", submitted: "#3b82f6", eligible: "#06b6d4",
-  under_evaluation: "#0ea5e9", funded: "#16a34a", rejected: "#dc2626",
+  draft: "#94a3b8", in_preparation: "#2f5486", internal_review: "#2f5486",
+  ready_for_submission: "#f59e0b", submitted: "#2f5486", eligible: "#2f5486",
+  under_evaluation: "#2f5486", funded: "#16a34a", rejected: "#dc2626",
   closed: "#9ca3af", withdrawn: "#d1d5db",
 };
 
@@ -685,7 +686,7 @@ function ResearchOfficeTab() {
   useEffect(() => {
     api.get("/institutional/analytics/research-office")
       .then((r) => setData(r.data))
-      .catch((e) => setError(e.response?.data?.detail || "Failed to load"))
+      .catch((e) => setError(safeErrorMessage(e, "Failed to load")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -821,7 +822,7 @@ function DoctoralTab() {
   useEffect(() => {
     api.get("/institutional/analytics/doctoral")
       .then((r) => setData(r.data))
-      .catch((e) => setError(e.response?.data?.detail || "Failed to load"))
+      .catch((e) => setError(safeErrorMessage(e, "Failed to load")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -894,7 +895,7 @@ function DoctoralTab() {
               </div>
               <div className="flex justify-center gap-8">
                 {[
-                  { label: "Active", n: manuscripts_active, color: "#3b82f6" },
+                  { label: "Active", n: manuscripts_active, color: "#2f5486" },
                   { label: "Completed", n: manuscripts_completed, color: "#16a34a" },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-2">

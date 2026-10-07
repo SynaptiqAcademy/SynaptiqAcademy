@@ -16,7 +16,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   House, Inbox, MessageSquare, CalendarDays,
-  Search, Plus, Sparkles, ChevronDown,
+  Search, Plus, ChevronDown,
   FileText, FolderOpen, BookMarked, BadgeDollarSign, Archive,
   BrainCircuit, LayoutGrid, Bot,
   Settings, CreditCard, LogOut,
@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUnread } from "@/contexts/UnreadContext";
-import api from "@/lib/api";
 import { loadPrefs } from "@/hooks/usePreferences";
 import {
   NAVY, BRD, NAVY_06, NAVY_08, NAVY_04,
@@ -50,16 +49,17 @@ export default TopNav;
 
 const BAR_H      = HEADER_H;
 const ITEM_PAD   = "6px 11px";
-const ITEM_R     = 7;
+const ITEM_R     = 4;
 const ITEM_SZ    = 13;
 const ICON_SZ    = 14;
 const BADGE_H    = 15;
 const BADGE_PAD  = "0 5px";
 
+// Unread counts are information, not status: one navy for all of them.
 const BADGE_COLOR = {
-  notif:    "#8A1538",
+  notif:    NAVY,
   messages: NAVY,
-  meetings: "#047857",
+  meetings: NAVY,
 };
 
 const PRIMARY_NAV = [
@@ -211,8 +211,8 @@ function TopNavDropdown({ children, style }) {
         top: "calc(100% + 6px)",
         right: 0,
         background: "white",
-        border: "1px solid rgba(15,23,42,0.10)",
-        borderRadius: 10,
+        border: "1px solid rgba(16,20,28,0.12)",
+        borderRadius: 6,
         boxShadow: "0 8px 24px rgba(15,23,42,0.12), 0 2px 6px rgba(15,23,42,0.06)",
         zIndex: 300,
         overflow: "hidden",
@@ -278,8 +278,8 @@ function CreateMenuItem({ item, onSelect }) {
       <span style={{
         width: 26,
         height: 26,
-        borderRadius: 6,
-        background: "rgba(15,23,42,0.05)",
+        borderRadius: 4,
+        background: "rgba(15,40,71,0.06)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -386,7 +386,7 @@ function AvatarMenuItem({ item, onSelect, danger }) {
   const [hov, setHov] = useState(false);
   const Icon = item.icon;
   const clr = danger
-    ? (hov ? "#991B1B" : "#DC2626")
+    ? (hov ? "#912018" : "#B42318")
     : (hov ? NAVY : TEXT_SECONDARY);
 
   return (
@@ -401,7 +401,7 @@ function AvatarMenuItem({ item, onSelect, danger }) {
         width: "100%",
         padding: "7px 14px",
         border: "none",
-        background: hov ? (danger ? "rgba(220,38,38,0.05)" : "rgba(15,23,42,0.04)") : "transparent",
+        background: hov ? (danger ? "rgba(180,35,24,0.05)" : "rgba(15,23,42,0.04)") : "transparent",
         cursor: "pointer",
         textAlign: "left",
         transition: "background 0.1s",
@@ -433,17 +433,17 @@ function SearchTrigger({ onOpen }) {
         display: "flex",
         alignItems: "center",
         gap: 8,
-        border: `1px solid ${hov ? "rgba(15,23,42,0.18)" : "rgba(15,23,42,0.10)"}`,
-        background: hov ? "white" : "#F8FAFC",
-        borderRadius: 7,
+        border: `1px solid ${hov ? "rgba(16,20,28,0.28)" : "rgba(16,20,28,0.14)"}`,
+        background: "white",
+        borderRadius: 4,
         padding: "0 10px",
-        height: 32,
-        maxWidth: 340,
+        height: 34,
+        maxWidth: 420,
         width: "100%",
         color: TEXT_MUTED,
         cursor: "pointer",
         transition: "border-color 0.12s, background 0.12s, box-shadow 0.12s",
-        boxShadow: hov ? "0 1px 4px rgba(15,23,42,0.06)" : "none",
+        boxShadow: "none",
         flexShrink: 1,
         minWidth: 120,
       }}
@@ -463,7 +463,7 @@ function SearchTrigger({ onOpen }) {
       <kbd style={{
         fontSize: 10,
         fontFamily: "monospace",
-        border: "1px solid #E2E8F0",
+        border: "1px solid #E6E2DA",
         color: TEXT_MUTED,
         padding: "1px 5px",
         borderRadius: 4,
@@ -483,7 +483,6 @@ function AppTopNavBody({ onOpenPalette }) {
   const { pathname }           = useLocation();
   const navigate               = useNavigate();
 
-  const [credits,       setCredits]       = useState(null);
   const [notifCount,    setNotifCount]    = useState(0);
   const [createOpen,    setCreateOpen]    = useState(false);
   const [avatarOpen,    setAvatarOpen]    = useState(false);
@@ -495,16 +494,6 @@ function AppTopNavBody({ onOpenPalette }) {
 
   useClickOutside(createRef, createOpen ? () => setCreateOpen(false) : null);
   useClickOutside(avatarRef, avatarOpen ? () => setAvatarOpen(false) : null);
-
-  useEffect(() => {
-    // Free has no AI credits — the chip is only shown when credits are usable.
-    const load = () => api.get("/credits/balance")
-      .then((r) => setCredits(r.data.credits_usable === false ? null : r.data.balance))
-      .catch(() => {});
-    load();
-    window.addEventListener("synaptiq:credits-changed", load);
-    return () => window.removeEventListener("synaptiq:credits-changed", load);
-  }, []);
 
   useEffect(() => {
     const handler = () => setNotifCount((n) => n + 1);
@@ -596,18 +585,6 @@ function AppTopNavBody({ onOpenPalette }) {
 
       <SearchTrigger onOpen={onOpenPalette} />
 
-      {credits !== null && (
-        <Link
-          to="/ai-credits"
-          title="AI Credits remaining (this month + purchased)"
-          className="flex items-center gap-1.5 text-[11.5px] font-mono text-slate-500 hover:text-[#0F2847] transition-colors px-1.5 py-1 hover:bg-slate-50 shrink-0"
-          style={{ borderRadius: 4 }}
-        >
-          <Sparkles size={11} strokeWidth={1.5} className="text-[#0F2847]" />
-          {credits.toLocaleString()} cr
-        </Link>
-      )}
-
       <VDivider />
 
       <div ref={createRef} style={{ position: "relative", flexShrink: 0 }}>
@@ -622,11 +599,11 @@ function AppTopNavBody({ onOpenPalette }) {
             display: "inline-flex",
             alignItems: "center",
             gap: 5,
-            height: 30,
+            height: 32,
             padding: "0 10px 0 9px",
-            borderRadius: 6,
-            border: `1px solid ${createOpen || createHov ? "rgba(15,23,42,0.25)" : "rgba(15,23,42,0.15)"}`,
-            background: createOpen ? NAVY : createHov ? "rgba(15,23,42,0.05)" : "white",
+            borderRadius: 4,
+            border: `1px solid ${createOpen || createHov ? "#10141c" : "rgba(16,20,28,0.18)"}`,
+            background: createOpen ? NAVY : "white",
             cursor: "pointer",
             transition: "all 0.12s",
           }}
@@ -634,12 +611,12 @@ function AppTopNavBody({ onOpenPalette }) {
           <Plus
             size={12}
             strokeWidth={2.5}
-            style={{ color: createOpen ? "white" : NAVY, flexShrink: 0 }}
+            style={{ color: createOpen ? "white" : "#10141c", flexShrink: 0 }}
           />
           <span style={{
             fontSize: 12.5,
             fontWeight: 600,
-            color: createOpen ? "white" : NAVY,
+            color: createOpen ? "white" : "#10141c",
             letterSpacing: "-0.01em",
           }}>
             Create

@@ -22,6 +22,7 @@ import { List, ListItem } from "@/components/ds/List";
 import { ResearchLayout } from "@/layouts";
 import { confirmDialog } from "@/lib/confirm";
 import { CreditCostNumber } from "@/components/billing/CreditCost";
+import { safeErrorMessage } from "../../lib/api";
 
 // ─── Role display helpers ─────────────────────────────────────────────────────
 
@@ -186,7 +187,7 @@ function InvitePanel({ workspaceId, onInvited }) {
       toast.success("Invitation sent");
       onInvited();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed to send invitation");
+      toast.error(safeErrorMessage(e, "Failed to send invitation"));
     } finally {
       setInviting(null);
     }
@@ -201,7 +202,7 @@ function InvitePanel({ workspaceId, onInvited }) {
       setEmail("");
       onInvited();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed to send invitation");
+      toast.error(safeErrorMessage(e, "Failed to send invitation"));
     } finally {
       setInviting(null);
     }
@@ -400,7 +401,7 @@ export default function TeachingWorkspaceDetail() {
       const { data } = await api.post(`/teaching/workspaces/${workspaceId}/chat`, { content });
       setMessages((prev) => [...prev, { role: "assistant", content: data.content, id: Date.now() + 1 }]);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed to send");
+      toast.error(safeErrorMessage(err, "Failed to send"));
       setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
       setInput(content);
     } finally {
@@ -415,7 +416,7 @@ export default function TeachingWorkspaceDetail() {
       setMembers((prev) => prev.map((m) => m.id === memberId ? { ...m, role: newRole } : m));
       toast.success("Role updated");
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed to change role");
+      toast.error(safeErrorMessage(e, "Failed to change role"));
     }
   };
 
@@ -435,7 +436,7 @@ export default function TeachingWorkspaceDetail() {
       setMembers((prev) => prev.filter((m) => m.id !== memberId));
       toast.success("Member removed");
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed");
+      toast.error(safeErrorMessage(e, "Failed"));
     }
   };
 

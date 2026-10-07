@@ -36,7 +36,7 @@ const FILTER_DEFS = [
 
 const Q_STYLE = {
   Q1: { bg: "#ECFDF5", border: "#34D399", text: "#065F46" },
-  Q2: { bg: "#EFF6FF", border: "#60A5FA", text: "#1E3A8A" },
+  Q2: { bg: "#eef2f8", border: "#2f5486", text: "#0F2847" },
   Q3: { bg: "#FFFBEB", border: "#FCD34D", text: "#92400E" },
   Q4: { bg: "#F8FAFC", border: "#94A3B8", text: "#475569" },
 };
@@ -44,14 +44,14 @@ const Q_STYLE = {
 const SRC_LABEL = { openalex: "OpenAlex", doaj: "DOAJ", crossref: "Crossref", seed: "Curated" };
 
 const CATEGORY_COLORS = [
-  { bg: "#EFF6FF", text: "#1E3A8A" },
+  { bg: "#eef2f8", text: "#0F2847" },
   { bg: "#F0FDF4", text: "#14532D" },
   { bg: "#FFF7ED", text: "#7C2D12" },
   { bg: "#FDF4FF", text: "#581C87" },
   { bg: "#ECFDF5", text: "#064E3B" },
   { bg: "#FFFBEB", text: "#78350F" },
   { bg: "#FFF1F2", text: "#881337" },
-  { bg: "#F0F9FF", text: "#0C4A6E" },
+  { bg: "#eef2f8", text: "#0C4A6E" },
   { bg: "#F7F8FA", text: "#374151" },
   { bg: "#FEF9C3", text: "#713F12" },
 ];

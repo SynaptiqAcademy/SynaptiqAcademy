@@ -317,7 +317,7 @@ export default function Onboarding() {
             </>
           )}
 
-          {err && <div data-testid={TID.onbError} className="text-sm text-[#8A1538] border-l-2 border-[#8A1538] pl-3 py-1">{err}</div>}
+          {err && <div role="alert" data-testid={TID.onbError} className="text-sm text-crimson-600 border-l-2 border-crimson-600 pl-3 py-1">{err}</div>}
         </div>
 
         <div className="px-10 py-5 border-t border-slate-200 flex items-center justify-between">
@@ -344,7 +344,7 @@ export default function Onboarding() {
 function Field({ label, value, onChange, placeholder, type = "text", required, testid, className }) {
   return (
     <div className={className}>
-      <label className="overline block mb-2">{label}{required && <span className="text-[#8A1538] ml-1">*</span>}</label>
+      <label className="overline block mb-2">{label}{required && <span className="text-[#0F2847] ml-1">*</span>}</label>
       <input data-testid={testid} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} required={required} className="w-full px-3 py-2 border border-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0F2847]" />
     </div>
   );
@@ -353,7 +353,7 @@ function Field({ label, value, onChange, placeholder, type = "text", required, t
 function SelectField({ label, value, onChange, options, required, testid }) {
   return (
     <div>
-      <label className="overline block mb-2">{label}{required && <span className="text-[#8A1538] ml-1">*</span>}</label>
+      <label className="overline block mb-2">{label}{required && <span className="text-[#0F2847] ml-1">*</span>}</label>
       <select data-testid={testid} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="w-full px-3 py-2 border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-[#0F2847]">
         <option value="">Select…</option>
         {options.map((o) => <option key={o.value ?? o} value={o.value ?? o}>{o.label ?? o}</option>)}
@@ -365,7 +365,7 @@ function SelectField({ label, value, onChange, options, required, testid }) {
 function ChipBlock({ label, options, selected, onToggle, testidPrefix, required }) {
   return (
     <div>
-      <label className="overline block mb-3">{label}{required && <span className="text-[#8A1538] ml-1">*</span>}</label>
+      <label className="overline block mb-3">{label}{required && <span className="text-[#0F2847] ml-1">*</span>}</label>
       <div className="flex flex-wrap gap-2">
         {options.map((o) => (
           <button

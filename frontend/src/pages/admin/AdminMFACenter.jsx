@@ -9,6 +9,7 @@ import api from "@/lib/api";
 import { NAVY, WARM, BRD, EMERALD, AMBER, CRIMSON } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Card, Button, Input, Alert, Spinner } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 function usePost(path) {
@@ -22,7 +23,7 @@ function usePost(path) {
       setData(r.data);
       return r.data;
     } catch (e) {
-      const msg = e?.response?.data?.detail || "Request failed";
+      const msg = safeErrorMessage(e, "Request failed");
       setError(msg); throw new Error(msg);
     } finally {
       setLoading(false);
@@ -38,7 +39,7 @@ function useFetch(path) {
   const fetch = useCallback(async () => {
     setLoading(true); setError(null);
     try { const r = await api.get(path); setData(r.data); }
-    catch (e) { setError(e?.response?.data?.detail || "Request failed"); }
+    catch (e) { setError(safeErrorMessage(e, "Request failed")); }
     finally { setLoading(false); }
   }, [path]);
   return { data, loading, error, fetch };
@@ -92,7 +93,7 @@ function MFAEnrollment({ onComplete }) {
       setEnroll(r.data);
       setStep("scan");
     } catch (e) {
-      setError(e?.response?.data?.detail || "Enrollment failed");
+      setError(safeErrorMessage(e, "Enrollment failed"));
     } finally { setLoading(false); }
   };
 
@@ -104,7 +105,7 @@ function MFAEnrollment({ onComplete }) {
       setRecoveryCodes(r.data.recovery_codes);
       setStep("recovery");
     } catch (e) {
-      setError(e?.response?.data?.detail || "Verification failed");
+      setError(safeErrorMessage(e, "Verification failed"));
     } finally { setLoading(false); }
   };
 
@@ -116,7 +117,7 @@ function MFAEnrollment({ onComplete }) {
 
   if (step === "start") return (
     <div className="text-center py-6">
-      <Smartphone className="w-12 h-12 text-indigo-500 mx-auto mb-3" />
+      <Smartphone className="w-12 h-12 text-navy-500 mx-auto mb-3" />
       <h3 className="font-bold text-slate-800 mb-2">Set Up Authenticator App</h3>
       <p className="text-sm text-slate-500 mb-5 max-w-sm mx-auto">
         Use Google Authenticator, Microsoft Authenticator, or Authy to generate time-based codes.
@@ -230,7 +231,7 @@ function DisableMFA({ onComplete }) {
       await api.post("/admin/mfa/disable", { code });
       onComplete();
     } catch (e) {
-      setError(e?.response?.data?.detail || "Failed to disable MFA");
+      setError(safeErrorMessage(e, "Failed to disable MFA"));
     } finally { setLoading(false); }
   };
 
@@ -284,7 +285,7 @@ function RegenerateRecoveryCodes({ onComplete }) {
       const r = await api.post("/admin/mfa/recovery-codes/regenerate", { code });
       setNew(r.data.recovery_codes);
     } catch (e) {
-      setError(e?.response?.data?.detail || "Failed");
+      setError(safeErrorMessage(e, "Failed"));
     } finally { setLoading(false); }
   };
 

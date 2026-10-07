@@ -13,6 +13,7 @@ import {
   Landmark, Briefcase,
 } from "lucide-react";
 import { ResearchLayout } from "@/layouts";
+import { safeErrorMessage } from "../lib/api";
 
 const TYPES = [
   { v: "university",         label: "University",          Icon: GraduationCap },
@@ -139,7 +140,7 @@ function CreateModal({ onClose, onCreated }) {
       toast.success("Institution registered");
       onCreated?.();
       onClose?.();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
     finally { setBusy(false); }
   };
   return (

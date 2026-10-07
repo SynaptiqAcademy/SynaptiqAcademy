@@ -9,6 +9,7 @@ import api from "../lib/api";
 import {
   AuthLayout, AuthCard, AuthHeader, AuthButton, AuthInput, NAVY, T_MID, T_FAINT, BORDER,
 } from "../components/auth/AuthShared";
+import { safeErrorMessage } from "../lib/api";
 
 export default function VerifyEmail() {
   const [params]   = useSearchParams();
@@ -28,7 +29,7 @@ export default function VerifyEmail() {
         setState(data.already_verified ? "already" : "success");
       } catch (e) {
         setState("error");
-        setErrorMsg(e?.response?.data?.detail || "Verification failed.");
+        setErrorMsg(safeErrorMessage(e, "Verification failed."));
       }
     })();
   }, [token]);

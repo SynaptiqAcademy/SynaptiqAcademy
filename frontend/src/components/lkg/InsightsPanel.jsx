@@ -4,7 +4,7 @@ import { getMyInsights, getPlatformInsights, discoverTopics } from "../../servic
 
 function InsightCard({ insight }) {
   return (
-    <div className="p-3 rounded-lg border border-slate-100 hover:border-blue-100 hover:bg-blue-50/20 transition-colors">
+    <div className="p-3 rounded-lg border border-slate-100 hover:border-navy-100 hover:bg-navy-wash transition-colors">
       <p className="text-[12px] text-slate-700 leading-snug">{insight.text}</p>
       <p className="text-[10px] text-slate-400 mt-1">{insight.source || "Synaptiq LKG"}</p>
     </div>
@@ -63,7 +63,7 @@ export default function InsightsPanel() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
         <div className="flex items-center gap-2">
-          <Brain size={14} className="text-blue-600" />
+          <Brain size={14} className="text-navy-700" />
           <span className="text-[12px] font-bold text-slate-700 uppercase tracking-widest">Graph Insights</span>
         </div>
         <button onClick={load} disabled={loading} aria-label="Refresh insights"
@@ -80,7 +80,7 @@ export default function InsightsPanel() {
             onClick={() => setTab(t.id)}
             className={`flex-1 py-2 text-[11px] font-medium transition-colors ${
               tab === t.id
-                ? "text-blue-600 border-b-2 border-blue-600"
+                ? "text-navy-700 border-b-2 border-navy-700"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >

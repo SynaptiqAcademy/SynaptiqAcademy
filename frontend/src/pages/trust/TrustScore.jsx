@@ -11,9 +11,9 @@ const API = "/api/trust";
 const LEVEL_COLORS = {
   Unverified:   ACCENT,
   Basic:        "#D97706",
-  Established:  "#0369A1",
+  Established:  "#0F2847",
   Trusted:      EMERALD,
-  Distinguished:"#7C3AED",
+  Distinguished:"#0F2847",
 };
 
 // Kept hand-rolled: this is a composite accordion-header row (label + inline
@@ -25,7 +25,7 @@ const LEVEL_COLORS = {
 function FactorRow({ id, factor }) {
   const [open, setOpen] = useState(false);
   const contribution = (factor.score * factor.weight) / 100;
-  const color = factor.score >= 80 ? EMERALD : factor.score >= 50 ? "#0369A1" : factor.score >= 20 ? "#D97706" : ACCENT;
+  const color = factor.score >= 80 ? EMERALD : factor.score >= 50 ? "#0F2847" : factor.score >= 20 ? "#D97706" : ACCENT;
 
   return (
     <div style={{ borderBottom: `1px solid ${BRD}` }}>
@@ -61,7 +61,7 @@ function FactorRow({ id, factor }) {
             <div key={i} style={{ fontSize: 12, color: TEXT_SECONDARY, marginBottom: 2 }}>• {r}</div>
           ))}
           {factor.recommendation && (
-            <div style={{ fontSize: 12, color: "#0369A1", marginTop: 6,
+            <div style={{ fontSize: 12, color: "#0F2847", marginTop: 6,
               background: "#0369A114", borderRadius: 6, padding: "6px 10px" }}>
               💡 {factor.recommendation}
             </div>

@@ -353,7 +353,7 @@ export function LegalLayout({ eyebrow = "Legal", title, subtitle, lastUpdated, r
 
           {/* Title */}
           <h1 style={{
-            fontFamily: "Georgia, 'Times New Roman', serif",
+            fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif",
             fontSize: "clamp(2rem, 4vw, 3rem)",
             fontWeight: 700,
             color: "var(--lc-text)",
@@ -492,7 +492,7 @@ export function Section({ id, title, children }) {
     >
       <h2
         style={{
-          fontFamily: "Georgia, 'Times New Roman', serif",
+          fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif",
           fontSize: "1.35rem",
           fontWeight: 700,
           color: "var(--lc-text)",

@@ -13,7 +13,7 @@ import { fetchApi } from "@/lib/api";
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
 
-const GRADE_COLOR = { "A+": EMERALD, A: EMERALD, B: "#0ea5e9", C: "#f59e0b", D: "#f97316", F: ACCENT };
+const GRADE_COLOR = { "A+": EMERALD, A: EMERALD, B: "#2f5486", C: "#f59e0b", D: "#f97316", F: ACCENT };
 const LEVEL_BG = { critical: "#fee2e2", high: "#fff7ed", medium: "#fefce8", low: "#f8f5f0" };
 const LEVEL_COLOR = { critical: "#dc2626", high: "#f97316", medium: "#f59e0b", low: "#64748b" };
 
@@ -77,7 +77,7 @@ export default function ExecutiveDashboard() {
       const r = await fetchApi(`${API}/api/iip/executive/overview`, { headers: authH() });
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
-        throw new Error(d.detail || `HTTP ${r.status}`);
+        throw new Error((typeof d.detail === "string" ? d.detail : d.detail?.message) || `HTTP ${r.status}`);
       }
       setData(await r.json());
     } catch (e) {
@@ -98,8 +98,8 @@ export default function ExecutiveDashboard() {
   if (err) return (
     <div style={{ maxWidth: 700, margin: "60px auto", padding: 32 }}>
       <ErrorState
-        message="Unable to Load Dashboard"
-        detail={`${err} — This platform requires an institution administrator account with an institution set in your profile.`}
+        message="This dashboard isn't available to your account"
+        detail="Institution Intelligence is for institution administrators with an institution set on their profile. Nothing in your account has changed."
         onRetry={load}
       />
     </div>
@@ -212,13 +212,13 @@ export default function ExecutiveDashboard() {
       <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8 }}>
         {[
           { label: "Faculty", path: "/institution-platform/faculty", icon: Users, color: NAVY },
-          { label: "Departments", path: "/institution-platform/departments", icon: Building2, color: "#6366f1" },
-          { label: "Grants", path: "/institution-platform/grants", icon: BadgeDollarSign, color: EMERALD },
-          { label: "Collaborations", path: "/institution-platform/collaborations", icon: Network, color: "#06b6d4" },
-          { label: "Forecasts", path: "/institution-platform/forecasts", icon: TrendingUp, color: "#8b5cf6" },
-          { label: "Benchmarks", path: "/institution-platform/benchmarks", icon: Activity, color: "#f59e0b" },
-          { label: "AI Assistant", path: "/institution-platform/assistant", icon: Zap, color: ACCENT },
-          { label: "Reports", path: "/institution-platform/reports", icon: BookOpen, color: "#475569" },
+          { label: "Departments", path: "/institution-platform/departments", icon: Building2, color: "#0F2847" },
+          { label: "Grants", path: "/institution-platform/grants", icon: BadgeDollarSign, color: "#0F2847" },
+          { label: "Collaborations", path: "/institution-platform/collaborations", icon: Network, color: "#0F2847" },
+          { label: "Forecasts", path: "/institution-platform/forecasts", icon: TrendingUp, color: "#0F2847" },
+          { label: "Benchmarks", path: "/institution-platform/benchmarks", icon: Activity, color: "#0F2847" },
+          { label: "AI Assistant", path: "/institution-platform/assistant", icon: Zap, color: "#0F2847" },
+          { label: "Reports", path: "/institution-platform/reports", icon: BookOpen, color: "#0F2847" },
         ].map(({ label, path, icon: Icon, color }) => (
           <Card key={path} onClick={() => navigate(path)} padding="sm">
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

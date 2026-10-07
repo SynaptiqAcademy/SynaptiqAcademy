@@ -69,7 +69,7 @@ export default function NetworkAnalytics() {
 
       {/* Network Score */}
       {overview && (
-        <div style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #3730a3 100%)`, borderRadius: 16, padding: "28px 32px", color: WHITE, marginBottom: 24, display: "flex", alignItems: "center", gap: 32 }}>
+        <div style={{ background: NAVY, borderRadius: 8, padding: "28px 32px", color: WHITE, marginBottom: 24, display: "flex", alignItems: "center", gap: 32 }}>
           <ScoreRing score={overview.network_score || 0} color={ACCENT} />
           <div>
             <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Your Network Score</div>
@@ -123,11 +123,11 @@ export default function NetworkAnalytics() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
             {[
               { label: "Total Researchers", value: platform.total_researchers?.toLocaleString(), color: ACCENT },
-              { label: "Research Groups", value: platform.total_groups, color: "#8b5cf6" },
+              { label: "Research Groups", value: platform.total_groups, color: "#2f5486" },
               { label: "Communities", value: platform.total_communities, color: "#f97316" },
               { label: "Open Collaborations", value: platform.open_collaborations, color: EMERALD },
-              { label: "Upcoming Events", value: platform.upcoming_events, color: "#06b6d4" },
-              { label: "Active Mentors", value: platform.active_mentors, color: "#ec4899" },
+              { label: "Upcoming Events", value: platform.upcoming_events, color: "#2f5486" },
+              { label: "Active Mentors", value: platform.active_mentors, color: "#2f5486" },
             ].map(({ label, value, color }) => (
               <div key={label} style={{ textAlign: "center", padding: "12px 8px", background: WARM, borderRadius: 10 }}>
                 <div style={{ fontSize: 22, fontWeight: 800, color }}>{value || 0}</div>
@@ -167,7 +167,7 @@ function NetworkAnalyticsSidebar({ groupAnalytics }) {
           <Users size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Group Reach</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
           {groupAnalytics.total_members_in_groups || 0}
         </div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>

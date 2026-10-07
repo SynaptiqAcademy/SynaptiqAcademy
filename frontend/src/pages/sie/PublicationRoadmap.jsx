@@ -7,12 +7,12 @@ import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, Button, H4, Body } from "@/components/ds";
 
 const STEPS = [
-  { icon: "1", title: "Research Gap Finder", desc: "Identify an unexplored angle in your field.", url: "/research-gap-finder", color: "#8b5cf6" },
-  { icon: "2", title: "Literature Review", desc: "Map the state of knowledge in your area.", url: "/literature-review", color: "#0ea5e9" },
-  { icon: "3", title: "Research Roadmap", desc: "Generate a full 18-stage research plan.", url: "/sie/planning", color: ACCENT },
-  { icon: "4", title: "Manuscript Review", desc: "AI feedback on your draft before submission.", url: "/manuscript-review", color: "#f59e0b" },
-  { icon: "5", title: "Statistical Review", desc: "Verify your statistical methodology.", url: "/statistical-review", color: "#14b8a6" },
-  { icon: "6", title: "Journal Matching", desc: "Match your paper to the best target journal.", url: "/journals", color: "#ec4899" },
+  { icon: "1", title: "Research Gap Finder", desc: "Identify an unexplored angle in your field.", url: "/research-gap-finder", color: "#0F2847" },
+  { icon: "2", title: "Literature Review", desc: "Map the state of knowledge in your area.", url: "/literature-review", color: "#0F2847" },
+  { icon: "3", title: "Research Roadmap", desc: "Generate a full 18-stage research plan.", url: "/sie/planning", color: "#0F2847" },
+  { icon: "4", title: "Manuscript Review", desc: "AI feedback on your draft before submission.", url: "/manuscript-review", color: "#0F2847" },
+  { icon: "5", title: "Statistical Review", desc: "Verify your statistical methodology.", url: "/statistical-review", color: "#0F2847" },
+  { icon: "6", title: "Journal Matching", desc: "Match your paper to the best target journal.", url: "/journals", color: "#0F2847" },
 ];
 
 export default function PublicationRoadmap() {
@@ -46,7 +46,7 @@ export default function PublicationRoadmap() {
                 <Button
                   onClick={() => navigate(step.url)}
                   size="sm"
-                  style={{ background: step.color, flexShrink: 0 }}
+                  style={{ flexShrink: 0 }}
                 >
                   Open <ArrowRight size={11} />
                 </Button>

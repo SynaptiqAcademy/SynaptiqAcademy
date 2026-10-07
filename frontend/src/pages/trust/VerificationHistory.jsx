@@ -24,8 +24,8 @@ const EVENT_COLORS = {
   request_submitted:   "#D97706",
   request_approved:    EMERALD,
   request_rejected:    ACCENT,
-  badge_awarded:       "#7C3AED",
-  admin_override:      "#0369A1",
+  badge_awarded:       "#0F2847",
+  admin_override:      "#0F2847",
   fraud_flag:          ACCENT,
 };
 
@@ -101,7 +101,7 @@ export default function VerificationHistory() {
                       </Badge>
                     )}
                     {e.data?.badge && (
-                      <Badge color="#7C3AED">
+                      <Badge color="#0F2847">
                         {e.data.badge.replace(/_/g, " ")}
                       </Badge>
                     )}
@@ -155,7 +155,7 @@ function VerificationHistorySidebar({ eventCounts, badgesAwarded }) {
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {uniqueBadges.map(b => (
-              <Badge key={b} color="#7C3AED">{b.replace(/_/g, " ")}</Badge>
+              <Badge key={b} color="#0F2847">{b.replace(/_/g, " ")}</Badge>
             ))}
           </div>
         </Card>

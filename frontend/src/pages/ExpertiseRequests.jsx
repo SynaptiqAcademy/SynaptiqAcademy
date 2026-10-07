@@ -22,6 +22,7 @@ import { NavTabs } from "@/components/ds/NavTabs";
 import { Modal } from "@/components/ds/Modal";
 import { EmptyState } from "@/components/ds/EmptyState";
 import { Plus, Briefcase, Building2 } from "lucide-react";
+import { safeErrorMessage } from "../lib/api";
 
 const KIND_LABEL = {
   co_author: "Co-author",
@@ -37,10 +38,10 @@ const KIND_LABEL = {
 const KIND_TONE = {
   co_author:      "border-[#0F2847]/30 bg-[#0F2847]/5 text-[#0F2847]",
   statistician:   "border-emerald-300 bg-emerald-50 text-emerald-800",
-  methodology:    "border-purple-300 bg-purple-50 text-purple-800",
+  methodology:    "border-navy-300 bg-navy-50 text-navy-800",
   reviewer:       "border-amber-300 bg-amber-50 text-amber-800",
-  ai_specialist:  "border-fuchsia-300 bg-fuchsia-50 text-fuchsia-800",
-  data_scientist: "border-cyan-300 bg-cyan-50 text-cyan-800",
+  ai_specialist:  "border-navy-300 bg-navy-50 text-navy-800",
+  data_scientist: "border-navy-300 bg-navy-50 text-navy-800",
   editor:         "border-rose-300 bg-rose-50 text-rose-800",
   sme:            "border-slate-300 bg-slate-50 text-slate-800",
 };
@@ -224,7 +225,7 @@ function CreateModal({ onClose, onCreated }) {
       toast.success("Request posted");
       onCreated?.();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed to create");
+      toast.error(safeErrorMessage(e, "Failed to create"));
     } finally { setBusy(false); }
   };
 

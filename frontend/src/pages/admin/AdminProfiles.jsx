@@ -4,6 +4,7 @@ import { ExternalLink, Building2, Tags } from "lucide-react";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { SearchBar, DataTable, LoadingOverlay, ErrorState, Card } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 export default function AdminProfiles() {
   const [profiles, setProfiles] = useState([]);
@@ -14,7 +15,7 @@ export default function AdminProfiles() {
   useEffect(() => {
     api.get("/profiles/directory?limit=50")
       .then((r) => setProfiles(r.data?.items || []))
-      .catch((e) => setErr(e?.response?.data?.detail || "Failed to load profiles"))
+      .catch((e) => setErr(safeErrorMessage(e, "Failed to load profiles")))
       .finally(() => setLoading(false));
   }, []);
 

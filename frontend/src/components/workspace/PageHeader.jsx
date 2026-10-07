@@ -102,7 +102,7 @@ export function PageHeader({
           <div style={{ minWidth: 0 }}>
             <h1
               style={{
-                fontFamily: "Georgia, 'Times New Roman', serif",
+                fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif",
                 fontSize: "clamp(1.15rem, 2vw, 1.4rem)",
                 fontWeight: 700,
                 color: NAVY,

@@ -17,20 +17,21 @@ import {
   Button, Card, StatCard, StatGrid, MiniBar, DataTable, Badge,
   EmptyState, ErrorState, Skeleton, SkeletonCard,
 } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const AGENT_COLORS_ADMIN = {
-  research:      { bar: "#7C3AED", label: "Research" },
-  publication:   { bar: "#3B82F6", label: "Publication" },
-  journal:       { bar: "#0891B2", label: "Journal" },
+  research:      { bar: "#0F2847", label: "Research" },
+  publication:   { bar: "#2f5486", label: "Publication" },
+  journal:       { bar: "#0F2847", label: "Journal" },
   grant:         { bar: "#059669", label: "Grant" },
   collaboration: { bar: "#EA580C", label: "Collaboration" },
   teaching:      { bar: "#D97706", label: "Teaching" },
-  analytics:     { bar: "#06B6D4", label: "Analytics" },
+  analytics:     { bar: "#2f5486", label: "Analytics" },
   profile:       { bar: "#E11D48", label: "Profile" },
   general:       { bar: "#64748B", label: "General" },
-  auto:          { bar: "#8B5CF6", label: "Auto" },
+  auto:          { bar: "#2f5486", label: "Auto" },
 };
 
 const ACTION_VARIANT = {
@@ -42,8 +43,8 @@ const ACTION_VARIANT = {
 };
 
 const MEMORY_TYPE_COLORS = {
-  preference: "#3B82F6",
-  goal:       "#7C3AED",
+  preference: "#2f5486",
+  goal:       "#0F2847",
   fact:       "#059669",
   context:    "#D97706",
 };
@@ -90,7 +91,7 @@ function useAdminAI(path) {
       const res = await api.get(`/admin/ai/${path}`);
       setData(res.data);
     } catch (e) {
-      setError(e?.response?.data?.detail || "Failed to load.");
+      setError(safeErrorMessage(e, "Failed to load."));
     } finally {
       setLoading(false);
     }

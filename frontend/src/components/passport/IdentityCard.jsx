@@ -136,7 +136,7 @@ export function IdentityCard({ profile }) {
         )}
 
         <div className="grid sm:grid-cols-2" style={{ gap: 20 }}>
-          <ExpertiseGroup label="Research Focus" items={profile.research_areas} color="#0891B2" fieldKey="research_areas" />
+          <ExpertiseGroup label="Research Focus" items={profile.research_areas} color="#0F2847" fieldKey="research_areas" />
           <ExpertiseGroup label="Specialisations" items={profile.research_keywords} color={NAVY} fieldKey="research_keywords" />
         </div>
 
@@ -145,13 +145,13 @@ export function IdentityCard({ profile }) {
         )}
 
         <div className="grid sm:grid-cols-2" style={{ gap: 20, borderTop: `1px solid ${BRD}`, paddingTop: 18 }}>
-          <ExpertiseGroup label="Methods" items={allMethods} color="#0891B2" />
+          <ExpertiseGroup label="Methods" items={allMethods} color="#0F2847" />
           <ExpertiseGroup label="Tools" items={profile.software_skills} color="#D97706" fieldKey="software_skills" />
         </div>
 
         <div className="grid sm:grid-cols-2" style={{ gap: 20 }}>
           <ExpertiseGroup label="Skills" items={allSkills} color={EMERALD} />
-          <ExpertiseGroup label="Teaching" items={profile.teaching_areas} color="#7C3AED" />
+          <ExpertiseGroup label="Teaching" items={profile.teaching_areas} color="#0F2847" />
         </div>
 
         {(profile.professional_expertise || []).length > 0 && (

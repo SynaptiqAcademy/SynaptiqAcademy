@@ -40,7 +40,7 @@ function urgencyLabel(dl) {
   if (d === 0)     return { text: "Due today",  color: ACCENT,   bg: "#FFF1F2", urgent: true,  closed: false };
   if (d <= 7)      return { text: `${d}d left`, color: ACCENT,   bg: "#FFF1F2", urgent: true,  closed: false };
   if (d <= 30)     return { text: `${d}d left`, color: "#B45309",bg: "#FFFBEB", urgent: false, closed: false };
-  if (d <= 90)     return { text: `${d}d left`, color: "#0369A1",bg: "#F0F9FF", urgent: false, closed: false };
+  if (d <= 90)     return { text: `${d}d left`, color: "#0F2847",bg: "#eef2f8", urgent: false, closed: false };
   return {
     text: new Date(dl).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
     color: "#64748B", bg: "#F8FAFC", urgent: false, closed: false,
@@ -48,10 +48,10 @@ function urgencyLabel(dl) {
 }
 
 const TYPE_STYLE = {
-  "Research Grant":          { bg: "#EFF6FF", border: "#93C5FD", text: "#1D4ED8" },
-  "Fellowship":              { bg: "#F5F3FF", border: "#C4B5FD", text: "#6D28D9" },
-  "Doctoral Funding":        { bg: "#F5F3FF", border: "#C4B5FD", text: "#6D28D9" },
-  "Postdoctoral Fellowship": { bg: "#F5F3FF", border: "#C4B5FD", text: "#6D28D9" },
+  "Research Grant":          { bg: "#eef2f8", border: "#d4dde9", text: "#0F2847" },
+  "Fellowship":              { bg: "#eef2f8", border: "#d4dde9", text: "#0F2847" },
+  "Doctoral Funding":        { bg: "#eef2f8", border: "#d4dde9", text: "#0F2847" },
+  "Postdoctoral Fellowship": { bg: "#eef2f8", border: "#d4dde9", text: "#0F2847" },
   "Innovation Grant":        { bg: "#ECFDF5", border: "#6EE7B7", text: "#065F46" },
   "Travel Grant":            { bg: "#FFFBEB", border: "#FCD34D", text: "#92400E" },
   "Conference Grant":        { bg: "#FFFBEB", border: "#FCD34D", text: "#92400E" },
@@ -66,7 +66,7 @@ function typeStyle(t) {
 
 function scoreColor(s) {
   if (s >= 80) return EMERALD;
-  if (s >= 60) return "#3B82F6";
+  if (s >= 60) return "#2f5486";
   if (s >= 40) return "#F59E0B";
   return "#94A3B8";
 }
@@ -485,7 +485,7 @@ function GrantsSidebar({ grantQuota, upcoming, compareList }) {
             </p>
           ) : (
             <>
-              <div style={{ fontFamily: "Georgia, serif", fontSize: 24, fontWeight: 700, color: "#0f172a" }}>
+              <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 24, fontWeight: 700, color: "#0f172a" }}>
                 {grantQuota.used} / {grantQuota.limit}
               </div>
               <p style={{ fontSize: 11, color: "#94A3B8", margin: "2px 0 0" }}>Grant searches used this month</p>
@@ -674,7 +674,7 @@ function MatchCard({ g, isSaved, onSave, isCompared, onCompare }) {
         </div>
       )}
       {/* Title */}
-      <div style={{ fontFamily: "Georgia, serif", fontSize: 13, color: "#0F172A", lineHeight: 1.4, marginBottom: 6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+      <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 13, color: "#0F172A", lineHeight: 1.4, marginBottom: 6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
         {g.title}
       </div>
       {/* Sponsor */}
@@ -933,7 +933,7 @@ function GrantCard({ g, isSaved, onSave, isCompared, onCompare }) {
         {/* Title */}
         <h3
           style={{
-            fontFamily: "Georgia, serif",
+            fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif",
             fontSize: 14,
             color: "#0F172A",
             lineHeight: 1.4,
@@ -1173,7 +1173,7 @@ function TimelineCard({ g, isSaved, onSave, isCompared, onCompare }) {
             </span>
           )}
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 14, color: "#0F172A", lineHeight: 1.35, marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.title}</div>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 14, color: "#0F172A", lineHeight: 1.35, marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.title}</div>
         <div style={{ fontSize: 11, color: "#64748B" }}>{g.sponsor}{g.country ? ` · ${g.country}` : ""}</div>
       </div>
 

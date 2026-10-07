@@ -21,7 +21,7 @@ const DIMENSIONS = [
 // ── Legacy 5-sub-score view (kept for backward compat) ───────────────────────
 const SUB = [
   { key: "collaboration", label: "Collaboration", icon: Users,     tone: "text-[#0F2847]" },
-  { key: "publication",   label: "Publication",   icon: BookOpen,  tone: "text-purple-700" },
+  { key: "publication",   label: "Publication",   icon: BookOpen,  tone: "text-navy-700" },
   { key: "reviewer",      label: "Reviewer",      icon: UserCheck, tone: "text-amber-700" },
   { key: "funding",       label: "Funding",       icon: Coins,     tone: "text-emerald-700" },
   { key: "activity",      label: "Activity",      icon: Activity,  tone: "text-slate-700" },

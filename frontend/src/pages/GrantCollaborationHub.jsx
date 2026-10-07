@@ -45,8 +45,8 @@ function StatusBadge({ status }) {
 function Chip({ label, color = "slate" }) {
   const map = {
     slate:  undefined,
-    indigo: "#4F46E5",
-    purple: "#9333EA",
+    indigo: "#0F2847",
+    purple: "#0F2847",
   };
   return <Tag size="sm" color={map[color]}>{label}</Tag>;
 }
@@ -292,11 +292,11 @@ function GrantCollaborationHubSidebar({ myInvitations, myLead, myParticipating, 
         </div>
         <div style={{ display: "flex", gap: 20 }}>
           <div>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{myLead.length}</div>
+            <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{myLead.length}</div>
             <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Leading</div>
           </div>
           <div>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{myParticipating.length}</div>
+            <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{myParticipating.length}</div>
             <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Participating</div>
           </div>
         </div>
@@ -311,7 +311,7 @@ function GrantCollaborationHubSidebar({ myInvitations, myLead, myParticipating, 
             <BarChart2 size={13} style={{ color: NAVY }} />
             <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Acceptance Rate</div>
           </div>
-          <div style={{ fontFamily: "Georgia, serif", fontSize: 24, fontWeight: 700, color: "#0f172a" }}>
+          <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 24, fontWeight: 700, color: "#0f172a" }}>
             {Math.round(((analytics.invitations_accepted || 0) / analytics.invitations_sent) * 100)}%
           </div>
           <p style={{ fontSize: 11, color: "#94A3B8", margin: "2px 0 0" }}>
@@ -617,7 +617,7 @@ export default function GrantCollaborationHub() {
                 {/* Participating */}
                 <div>
                   <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2 mb-3">
-                    <span className="w-2 h-2 rounded-full bg-blue-500" /> Participating ({myParticipating.length})
+                    <span className="w-2 h-2 rounded-full bg-navy-500" /> Participating ({myParticipating.length})
                   </h2>
                   {myParticipating.length === 0 ? (
                     <EmptyState

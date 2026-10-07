@@ -7,7 +7,7 @@ import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
-const GRADE_COLOR = { "A+": EMERALD, A: EMERALD, B: "#0ea5e9", C: "#f59e0b", D: "#f97316", F: ACCENT };
+const GRADE_COLOR = { "A+": EMERALD, A: EMERALD, B: "#2f5486", C: "#f59e0b", D: "#f97316", F: ACCENT };
 
 // Grade-colored ring with a custom "Grade X" subtext has no equivalent in
 // ProgressRing (which only supports colorByValue's fixed 80/50/30 thresholds

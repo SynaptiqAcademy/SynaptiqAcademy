@@ -173,7 +173,7 @@ export default function StrategicPlanning() {
           arranged in a 2-col grid; distinct shape from StatCard's vertical
           label-then-big-value layout, so left hand-rolled. */}
       {bench && (
-        <Section icon={BarChart2} title="Benchmark Context" color="#8b5cf6">
+        <Section icon={BarChart2} title="Benchmark Context" color="#0F2847">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             {(bench.benchmarks || []).slice(0, 8).map((b, i) => {
               const isBelow = b.vs_national < 0;

@@ -21,8 +21,7 @@ function RecRow({ type, icon: Icon, iconBg, iconColor, title, desc, to, avatarUr
         display: "flex", alignItems: "center", gap: 14,
         padding: "16px 0",
         borderBottom: last ? "none" : `1px solid ${BRDX}`,
-        borderLeft: `2px solid ${iconColor || NAVY}`,
-        paddingLeft: 14,
+        paddingLeft: 2,
       }}
     >
       <Link
@@ -35,12 +34,12 @@ function RecRow({ type, icon: Icon, iconBg, iconColor, title, desc, to, avatarUr
         ) : (
           <div
             style={{
-              width: 36, height: 36, borderRadius: 9, flexShrink: 0,
-              background: iconBg || NAVY_06,
+              width: 36, height: 36, borderRadius: 4, flexShrink: 0,
+              background: NAVY_06,
               display: "flex", alignItems: "center", justifyContent: "center",
             }}
           >
-            <Icon size={15} strokeWidth={1.75} style={{ color: iconColor || NAVY }} />
+            <Icon size={15} strokeWidth={1.75} style={{ color: NAVY }} />
           </div>
         )}
 
@@ -143,15 +142,8 @@ export default function Recommendations({ feed }) {
   return (
     <section aria-label="AI Insights">
       <div className="flex items-baseline justify-between mb-1">
-        <h2
-          className="flex items-center gap-2"
-          style={{
-            fontFamily: "Georgia, 'Times New Roman', serif",
-            fontSize: "1.35rem", fontWeight: 700, letterSpacing: "-0.02em",
-            color: TEXT_PRIMARY, margin: 0,
-          }}
-        >
-          <Sparkles size={16} strokeWidth={1.75} style={{ color: NAVY }} aria-hidden="true" />
+        <h2 className="hm-h2 flex items-center gap-2">
+          <Sparkles size={14} strokeWidth={1.75} style={{ color: NAVY }} aria-hidden="true" />
           AI Insights
         </h2>
         <Link

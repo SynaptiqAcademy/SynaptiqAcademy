@@ -5,6 +5,7 @@ import { UploadCloud, CheckCircle2, AlertTriangle } from "lucide-react";
 import { BRD, TEXT_MUTED, NAVY, EMERALD } from "@/lib/tokens";
 import { importIcs } from "@/hooks/useMeetings";
 import { toast } from "sonner";
+import { safeErrorMessage } from "@/lib/api";
 
 /**
  * ImportIcsModal — upload a .ics calendar export and create Meeting records.
@@ -31,7 +32,7 @@ export function ImportIcsModal({ open, onClose, onImported }) {
         onImported?.();
       }
     } catch (e) {
-      setResult({ imported: 0, errors: [e?.response?.data?.detail || "Import failed. Please check the file and try again."] });
+      setResult({ imported: 0, errors: [safeErrorMessage(e, "Import failed. Please check the file and try again.")] });
     } finally {
       setSubmitting(false);
     }

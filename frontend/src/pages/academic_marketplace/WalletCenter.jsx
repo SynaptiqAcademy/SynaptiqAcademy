@@ -100,7 +100,7 @@ function WalletCenterSidebar({ txns, txColors }) {
               {latest.type?.replace(/_/g, " ")}
             </div>
             {latest.amount > 0 && (
-              <div style={{ fontSize: 20, fontWeight: 700, color: txColors[latest.type] || "#475569", fontFamily: "Georgia, serif", marginTop: 4 }}>
+              <div style={{ fontSize: 20, fontWeight: 700, color: txColors[latest.type] || "#475569", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", marginTop: 4 }}>
                 ${latest.amount?.toFixed(2)}
               </div>
             )}

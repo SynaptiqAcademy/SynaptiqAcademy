@@ -34,13 +34,13 @@ import { confirmDialog } from "@/lib/confirm";
 // Hex equivalents (ds Badge's `color` prop) of the status→color mapping below
 const STATUS_HEX = {
   open:      "#059669",
-  active:    "#2563EB",
+  active:    "#0F2847",
   full:      "#D97706",
   closed:    "#64748B",
   draft:     "#64748B",
   review:    "#D97706",
   approved:  "#059669",
-  filled:    "#2563EB",
+  filled:    "#0F2847",
   completed: "#059669",
   pending:   "#D97706",
   accepted:  "#059669",
@@ -58,10 +58,10 @@ function StatusBadge({ status }) {
 function Chip({ label, color = "slate" }) {
   const map = {
     slate:  undefined,
-    indigo: "#4F46E5",
-    purple: "#9333EA",
+    indigo: "#0F2847",
+    purple: "#0F2847",
     amber:  "#D97706",
-    blue:   "#2563EB",
+    blue:   "#0F2847",
     emerald:"#059669",
   };
   return <Tag size="sm" color={map[color]}>{label}</Tag>;
@@ -192,7 +192,7 @@ function OverviewTab({ data, collab }) {
               <ul className="space-y-1">
                 {improvements.slice(0, 3).map((action, i) => (
                   <li key={i} className="flex items-start gap-1.5 text-xs text-slate-600">
-                    <span className="text-[#8A1538] mt-0.5 shrink-0">•</span> {action}
+                    <span className="text-[#0F2847] mt-0.5 shrink-0">•</span> {action}
                   </li>
                 ))}
               </ul>
@@ -722,7 +722,7 @@ function GapAnalysisTab({ data, collabId, onRefresh }) {
   ];
 
   const chipColorMap = { amber: "amber", blue: "blue", purple: "purple", orange: "amber", red: "amber" };
-  const headerBg = { amber: "bg-amber-50 border-amber-200 text-amber-800", blue: "bg-blue-50 border-blue-200 text-blue-800", purple: "bg-purple-50 border-purple-200 text-purple-800", orange: "bg-orange-50 border-orange-200 text-orange-800", red: "bg-red-50 border-red-200 text-red-800" };
+  const headerBg = { amber: "bg-amber-50 border-amber-200 text-amber-800", blue: "bg-navy-50 border-navy-200 text-navy-800", purple: "bg-navy-50 border-navy-200 text-navy-800", orange: "bg-orange-50 border-orange-200 text-orange-800", red: "bg-red-50 border-red-200 text-red-800" };
 
   const hasAnyGap = sections.some(s => (gaps[s.key] || []).length > 0);
 
@@ -767,7 +767,7 @@ function GapAnalysisTab({ data, collabId, onRefresh }) {
 
           {gaps.ai_recommendations && (
             <div className="bg-[#0F2847] rounded-lg p-5">
-              <p className="text-xs font-semibold text-blue-300 uppercase tracking-wide mb-2">AI Recommendations</p>
+              <p className="text-xs font-semibold text-navy-300 uppercase tracking-wide mb-2">AI Recommendations</p>
               <pre className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed font-sans">{gaps.ai_recommendations}</pre>
             </div>
           )}
@@ -777,7 +777,7 @@ function GapAnalysisTab({ data, collabId, onRefresh }) {
               <ul className="space-y-2">
                 {gaps.recommendations.map((rec, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                    <span className="text-[#8A1538] font-bold shrink-0">{i + 1}.</span> {rec}
+                    <span className="text-[#0F2847] font-bold shrink-0">{i + 1}.</span> {rec}
                   </li>
                 ))}
               </ul>
@@ -822,7 +822,7 @@ function ReadinessTab({ data }) {
                 <ul className="space-y-1">
                   {actions.slice(0, 3).map((a, i) => (
                     <li key={i} className="text-xs text-slate-600 flex items-start gap-1.5">
-                      <span className="text-[#8A1538] shrink-0">•</span> {a}
+                      <span className="text-[#0F2847] shrink-0">•</span> {a}
                     </li>
                   ))}
                 </ul>

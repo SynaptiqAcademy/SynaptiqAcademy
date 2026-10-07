@@ -71,7 +71,7 @@ export function PassportCollaborationProfile({ profile, onEdit }) {
         )}
         <div className="grid sm:grid-cols-3" style={{ gap: 20 }}>
           <ChipRow label="Open To" items={openTo} color={EMERALD} bg="#F0FDF4" />
-          <ChipRow label="Can Contribute" items={canContribute} color={NAVY} bg="#EFF6FF" />
+          <ChipRow label="Can Contribute" items={canContribute} color={NAVY} bg="#eef2f8" />
           <ChipRow label="Looking For" items={lookingFor} color="#92400E" bg="#FFFBEB" />
         </div>
       </Section>

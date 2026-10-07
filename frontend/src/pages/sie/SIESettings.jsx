@@ -7,10 +7,10 @@ import { SIE_NAV_ITEMS } from "@/lib/navItems";
 import { Card, H4, BodySmall } from "@/components/ds";
 
 const SETTINGS_SECTIONS = [
-  { title: "AI Memory", desc: "Configure research interests, preferred journals, methodologies, and career goals.", url: "/sie/memory", icon: Brain, color: ACCENT },
-  { title: "Automation Center", desc: "Manage automated monitoring, weekly reports, and deadline reminders.", url: "/sie/automations", icon: Zap, color: "#f97316" },
-  { title: "Research Goals", desc: "Define and manage long-term academic goals.", url: "/sie/goals", icon: Target, color: "#8b5cf6" },
-  { title: "Career Profile", desc: "Set your current position, target position, and promotion timeline.", url: "/sie/career", icon: Settings, color: EMERALD },
+  { title: "AI Memory", desc: "Configure research interests, preferred journals, methodologies, and career goals.", url: "/sie/memory", icon: Brain, color: "#0F2847" },
+  { title: "Automation Center", desc: "Manage automated monitoring, weekly reports, and deadline reminders.", url: "/sie/automations", icon: Zap, color: "#0F2847" },
+  { title: "Research Goals", desc: "Define and manage long-term academic goals.", url: "/sie/goals", icon: Target, color: "#0F2847" },
+  { title: "Career Profile", desc: "Set your current position, target position, and promotion timeline.", url: "/sie/career", icon: Settings, color: "#0F2847" },
 ];
 
 export default function SIESettings() {
@@ -25,7 +25,7 @@ export default function SIESettings() {
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {SETTINGS_SECTIONS.map(({ title, desc, url, icon: Icon, color }) => (
           <Card key={url} onClick={() => navigate(url)} padding="md" style={{ display: "flex", gap: 14, alignItems: "center", textAlign: "left" }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: `${color}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 8, background: `${color}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <Icon size={20} color={color} />
             </div>
             <div style={{ flex: 1 }}>

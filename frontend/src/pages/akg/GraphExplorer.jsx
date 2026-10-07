@@ -10,9 +10,9 @@ import { fetchApi } from "@/lib/api";
 const API = (p) => `/api/akg${p}`;
 
 const TYPE_COLORS = {
-  researcher: "#3b82f6", educator: "#7c3aed", student: "#06b6d4",
+  researcher: "#2f5486", educator: "#0F2847", student: "#2f5486",
   institution: "#d97706", topic: "#059669", research_area: "#10b981",
-  grant: "#f59e0b", community: "#ec4899", marketplace_service: "#8b5cf6",
+  grant: "#f59e0b", community: "#2f5486", marketplace_service: "#2f5486",
   funding_agency: "#ef4444", country: "#6b7280", default: ACCENT,
 };
 

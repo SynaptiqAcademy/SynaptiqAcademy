@@ -26,40 +26,43 @@
      primary actions. Aliases the scale, so there is one Synaptiq navy. */
   --sq-brand-navy:      var(--sq-navy-700);
   --sq-brand-navy-deep: var(--sq-navy-800);   /* hover / pressed */
-  --sq-crimson-50:  #fdf2f5;
-  --sq-crimson-100: #f8d7e4;
-  --sq-crimson-200: #f1afc9;
-  --sq-crimson-300: #e082aa;
-  --sq-crimson-400: #c85585;
-  --sq-crimson-500: #aa2d63;
-  --sq-crimson-600: #8A1538;
-  --sq-crimson-700: #6d102d;
+  /* Danger (destructive actions, errors). Formerly a burgundy brand accent;
+     the brand has one colour, the navy above. */
+  --sq-crimson-50:  #fef3f2;
+  --sq-crimson-100: #fee4e2;
+  --sq-crimson-200: #fecdca;
+  --sq-crimson-300: #fda29b;
+  --sq-crimson-400: #f97066;
+  --sq-crimson-500: #d92d20;
+  --sq-crimson-600: #b42318;
+  --sq-crimson-700: #912018;
 
   /* ─── Secondary accents (charts, AI surfaces) ─────────── */
   /* Mirrors lib/tokens.js's VIOLET/TEAL exactly — named so pages stop
      inventing their own one-off purple/teal per file. */
-  --sq-violet:      #8B5CF6;
-  --sq-violet-bg:   #F5F3FF;
-  --sq-violet-text: #6D28D9;
+  /* AI surfaces read as part of the product: a navy tint, not a second brand colour. */
+  --sq-violet:      #2f5486;
+  --sq-violet-bg:   #eef2f8;
+  --sq-violet-text: #0F2847;
   --sq-teal:        #14B8A6;
   --sq-teal-bg:     #F0FDFA;
   --sq-teal-text:   #0F766E;
 
   /* ─── Semantic surface ────────────────────────────────── */
-  --sq-bg:          #FDFDFB;
+  --sq-bg:          #FBFAF7;   /* = public site --paper */
   --sq-surface:     #FFFFFF;
-  --sq-surface-2:   #F8FAFC;
-  --sq-border:      rgba(15, 23, 42, 0.08);
-  --sq-border-strong: rgba(15, 23, 42, 0.14);
+  --sq-surface-2:   #F6F5F1;
+  --sq-border:      rgba(16, 20, 28, 0.10);
+  --sq-border-strong: rgba(16, 20, 28, 0.18);
   --sq-border-soft:   rgba(15, 23, 42, 0.06);  /* internal card/list dividers, lighter than the outer border */
 
   /* ─── Text hierarchy ──────────────────────────────────── */
   /* Mirrors lib/tokens.js's TEXT_* exactly. */
-  --sq-text-primary:   #0f172a;
+  --sq-text-primary:   #10141c;   /* = public --ink */
   --sq-text-strong:    #374151;
-  --sq-text-secondary: #475569;
-  --sq-text-tertiary:  #64748b;
-  --sq-text-muted:     #63707f;
+  --sq-text-secondary: #3a4250;   /* = public --ink-2 */
+  --sq-text-tertiary:  #5f6673;   /* = public --muted */
+  --sq-text-muted:     #5f6673;
   --sq-text-disabled:  #cbd5e1;
 
   /* ─── Semantic state colors ───────────────────────────── */
@@ -75,9 +78,9 @@
   --sq-danger-bg:     #FEF2F2;
   --sq-danger-text:   #991B1B;
   --sq-danger-border: #FECACA;
-  --sq-info-bg:       #EFF6FF;
-  --sq-info-text:     #1D4ED8;
-  --sq-info-border:   #BFDBFE;
+  --sq-info-bg:       #eef2f8;
+  --sq-info-text:     #0F2847;
+  --sq-info-border:   #d4dde9;
 
   /* ─── Navy "wash" (pre-blended tints) ─────────────────── */
   /* NOTE: Tailwind's `/[alpha]` opacity-modifier syntax does NOT work on
@@ -89,22 +92,22 @@
   /* ─── Border radius ───────────────────────────────────── */
   /* Decision: 6px base. Warm enough to feel premium, structured enough
      to convey academic professionalism. Used by Linear, GitHub, Stripe. */
-  --radius:           0.375rem;   /* 6px — drives tailwind rounded-lg */
+  --radius:           0.25rem;    /* 4px — drives tailwind rounded-lg */
   --sq-radius-none:   0px;
   --sq-radius-xs:     2px;
   --sq-radius-sm:     4px;
-  --sq-radius-md:     6px;        /* = --radius */
-  --sq-radius-lg:     8px;
-  --sq-radius-xl:     10px;
-  --sq-radius-2xl:    14px;
-  --sq-radius-3xl:    20px;       /* hero/marketing-scale only */
+  --sq-radius-md:     4px;        /* = --radius */
+  --sq-radius-lg:     6px;
+  --sq-radius-xl:     8px;
+  --sq-radius-2xl:    8px;
+  --sq-radius-3xl:    12px;       /* hero/marketing-scale only */
   --sq-radius-full:   9999px;
   /* Component-specific radii */
   --sq-radius-card:   6px;
-  --sq-radius-btn:    6px;
-  --sq-radius-input:  6px;
+  --sq-radius-btn:    4px;        /* = public .lp-btn / Sign In */
+  --sq-radius-input:  4px;
   --sq-radius-badge:  4px;
-  --sq-radius-modal:  10px;
+  --sq-radius-modal:  8px;
 
   /* ─── Elevation / Shadow ──────────────────────────────── */
   /* Decision: subtle multi-layer shadows over flat borders alone.
@@ -184,24 +187,24 @@
   --sq-z-tooltip:  80;
 
   /* ─── shadcn token overrides ──────────────────────────── */
-  --background:         60 6% 99%;
-  --foreground:         222 47% 11%;
+  --background:         45 29% 98%;
+  --foreground:         220 27% 9%;
   --card:               0 0% 100%;
   --card-foreground:    222 47% 11%;
   --popover:            0 0% 100%;
   --popover-foreground: 222 47% 11%;
   --primary:            213 65% 17%;
   --primary-foreground: 0 0% 100%;
-  --secondary:          210 14% 96%;
+  --secondary:          40 14% 95%;
   --secondary-foreground: 222 47% 11%;
-  --muted:              210 14% 96%;
-  --muted-foreground:   215 14% 40%;
+  --muted:              40 14% 95%;
+  --muted-foreground:   220 9% 41%;
   --accent:             213 65% 17%;
   --accent-foreground:  0 0% 100%;
-  --destructive:        343 65% 32%;
+  --destructive:        4 76% 40%;
   --destructive-foreground: 0 0% 100%;
-  --border:             215 14% 89%;
-  --input:              215 14% 89%;
+  --border:             40 12% 87%;
+  --input:              40 10% 78%;
   --ring:               213 65% 17%;
 }
 
@@ -243,6 +246,17 @@
   font-weight: 400;
   letter-spacing: -0.015em;
 }
+
+/* App typography: page titles are serif (PageLayout .pl-hero-title); section
+   and subsection headings are sans, so dense product UI stays legible. */
+.sq-h2 { margin: 0 0 12px; font-size: 1rem; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; color: var(--sq-text-primary); }
+.sq-h3 { margin: 0 0 8px; font-size: 0.875rem; font-weight: 600; line-height: 1.35; color: var(--sq-text-primary); }
+
+/* App content frame: the page grid inside the authenticated shell. Slightly
+   tighter than the public site (a workspace, not a landing page). */
+.sq-frame { padding: 20px 24px 24px; }   /* pages use -24px bleed margins */
+@media (min-width: 640px)  { .sq-frame { padding: 24px 24px 28px; } }
+@media (min-width: 1280px) { .sq-frame { padding: 28px 40px 32px; } }
 
 /* Public site container: header, page content (.lp-wrap) and footer share
    one width and one left edge. */
@@ -675,3 +689,32 @@ html[data-high-contrast="true"] {
 }
 .sq-wiki-editor .ProseMirror pre code { background: none; padding: 0; color: inherit; }
 .sq-wiki-editor .ProseMirror hr { border: none; border-top: 1px solid #e2e8f0; margin: 1.5em 0; }
+
+/* Small screens: fixed multi-column grids collapse to two columns and tab
+   rows scroll inside themselves, so no page scrolls sideways. */
+@media (max-width: 639px) {
+  main .grid-cols-3, main .grid-cols-4, main .grid-cols-5, main .grid-cols-6, main .grid-cols-7 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  main [style*="grid-template-columns: repeat(3,"], main [style*="grid-template-columns: repeat(4,"],
+  main [style*="grid-template-columns: repeat(5,"], main [style*="grid-template-columns: repeat(6,"],
+  main [style*="grid-template-columns: repeat(7,"], main [style*="gridTemplateColumns"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  /* Content + fixed side column (e.g. "1fr 340px") stacks into one column. */
+  main [style*="grid-template-columns"][style*="px"]:not([style*="minmax"]):not([style*="repeat("]) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  main [role="tablist"] { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  main [role="tablist"]::-webkit-scrollbar { display: none; }
+  main select { max-width: 100%; }
+  /* Rows of buttons, chips and tabs wrap instead of widening the page. */
+  main :is(.flex, [style*="display: flex"], [style*="display:flex"]):not(.flex-col):not([style*="flex-direction: column"]):not([style*="flexDirection"]):not([class*="msg-"]):not([role="tablist"]):not(.pl-body-row):not(.pl-hero-row) {
+    flex-wrap: wrap;
+  }
+  main :is(.flex-shrink-0, .shrink-0) { flex-shrink: 1; }
+  /* A flexible column never squeezes below a readable width beside a fixed
+     sidebar: it wraps onto its own line and takes the full width. */
+  main :is([style*="flex: 1"], .flex-1) { min-width: min(100%, 16rem) !important; }
+  main aside[style*="width"] { width: 100% !important; position: static !important; max-height: none !important; padding-right: 0 !important; }
+}

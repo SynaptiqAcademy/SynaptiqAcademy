@@ -34,6 +34,7 @@ import { TeachingTab } from "@/components/passport/tabs/TeachingTab";
 import { ReputationTab } from "@/components/passport/tabs/ReputationTab";
 import { PortfolioTab } from "@/components/passport/tabs/PortfolioTab";
 import { AnalyticsTab } from "@/components/passport/tabs/AnalyticsTab";
+import { safeErrorMessage } from "@/lib/api";
 
 // Backward-compat: old anchor-based deep links (e.g. from other pages'
 // "View all X" cards, or bookmarked #hashes) still land on the right tab.
@@ -227,7 +228,7 @@ export default function AcademicPassport() {
       toast.success(`ORCID synced — ${imported} publication${imported === 1 ? "" : "s"} imported`);
       await refreshAfterOrcidChange();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "ORCID sync failed");
+      toast.error(safeErrorMessage(e, "ORCID sync failed"));
     } finally {
       setOrcidSyncing(false);
       orcidActionInFlight.current = false;

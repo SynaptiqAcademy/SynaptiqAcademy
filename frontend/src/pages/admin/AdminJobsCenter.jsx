@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { EMERALD, AMBER, CRIMSON, INFO, BRD } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Button, Card, StatCard, StatGrid, Badge, FormSelect, Pagination } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -65,7 +66,7 @@ function JobRow({ job, onRefresh }) {
               </button>
             )}
             {job.status === "failed" && (
-              <button onClick={() => act("retry")} disabled={busy} title="Retry" className="p-1 text-slate-400 hover:text-blue-600 disabled:opacity-40">
+              <button onClick={() => act("retry")} disabled={busy} title="Retry" className="p-1 text-slate-400 hover:text-navy-700 disabled:opacity-40">
                 <RotateCcw size={12} />
               </button>
             )}
@@ -130,7 +131,7 @@ export default function AdminJobsCenter() {
       const r = await api.post("/admin/x/jobs/trigger", { kind: triggerKind });
       setTriggerMsg(`Enqueued: ${r.data.job_id}`);
       setTimeout(() => { setTriggerMsg(""); refetchAll(); }, 2000);
-    } catch (e) { setTriggerMsg(e?.response?.data?.detail || "Error"); }
+    } catch (e) { setTriggerMsg(safeErrorMessage(e, "Error")); }
     finally { setTriggering(false); }
   };
 

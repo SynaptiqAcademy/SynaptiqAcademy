@@ -122,7 +122,7 @@ function ScoreRing({ score }) {
 function VerdictBadge({ verdict }) {
   const map = {
     strong:       { color: "#16a34a" },
-    adequate:     { color: "#2563eb" },
+    adequate:     { color: "#0F2847" },
     weak:         { color: "#d97706" },
     insufficient: { color: "#dc2626" },
   };
@@ -567,7 +567,7 @@ function ResultView({ data, onReset }) {
 
         {/* analysis appropriateness */}
         <Card padding="xl" className="space-y-4">
-          <SectionHeader icon={CheckCircle2} label="Analysis Appropriateness" color="#2563eb" />
+          <SectionHeader icon={CheckCircle2} label="Analysis Appropriateness" color="#0F2847" />
           <div className="flex flex-wrap gap-2">
             {appropriateness.method_used && (
               <Badge color="#0F2847" size="sm" className="font-mono">
@@ -604,7 +604,7 @@ function ResultView({ data, onReset }) {
 
         {/* assumption review */}
         <Card padding="xl">
-          <SectionHeader icon={ClipboardList} label="Assumption Review" color="#7c3aed" />
+          <SectionHeader icon={ClipboardList} label="Assumption Review" color="#0F2847" />
           {assumptions.overall_assumption_verdict && (
             <div className="mb-4">
               <VerdictBadge verdict={assumptions.overall_assumption_verdict?.replace(/_/g, " ")} />
@@ -729,10 +729,10 @@ function ResultView({ data, onReset }) {
         <Card padding="xl">
           <SectionHeader icon={Shield} label="Threats to Validity" color="#dc2626" />
           <div className="space-y-6">
-            <ValiditySection threats={validity.statistical_conclusion_validity} label="Statistical Conclusion Validity" color="#7c3aed" />
+            <ValiditySection threats={validity.statistical_conclusion_validity} label="Statistical Conclusion Validity" color="#0F2847" />
             <ValiditySection threats={validity.internal_validity} label="Internal Validity" color="#dc2626" />
             <ValiditySection threats={validity.external_validity} label="External Validity" color="#d97706" />
-            <ValiditySection threats={validity.construct_validity} label="Construct Validity" color="#2563eb" />
+            <ValiditySection threats={validity.construct_validity} label="Construct Validity" color="#0F2847" />
           </div>
         </Card>
 
@@ -788,7 +788,7 @@ function ResultView({ data, onReset }) {
         {/* recommended additional analyses */}
         {additionalAnalyses.length > 0 && (
           <Card padding="xl">
-            <SectionHeader icon={TrendingUp} label="Recommended Additional Analyses" color="#2563eb" />
+            <SectionHeader icon={TrendingUp} label="Recommended Additional Analyses" color="#0F2847" />
             <div className="space-y-3">
               {additionalAnalyses.map((a, i) => (
                 <Card key={i} padding="md" variant="ghost" className="!bg-slate-50 border border-slate-100 space-y-2">
@@ -810,7 +810,7 @@ function ResultView({ data, onReset }) {
 
         {/* reviewer perspective */}
         <Card padding="xl">
-          <SectionHeader icon={MessageSquare} label="Reviewer Perspective" color="#7c3aed" />
+          <SectionHeader icon={MessageSquare} label="Reviewer Perspective" color="#0F2847" />
           {reviewer.editorial_assessment && (
             <Card padding="md" variant="ghost" className="!bg-slate-50 border border-slate-100 mb-4">
               <div className="text-xs overline text-slate-500 mb-1">Editorial Assessment</div>

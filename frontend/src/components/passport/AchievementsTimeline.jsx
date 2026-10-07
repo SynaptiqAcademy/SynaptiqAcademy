@@ -25,17 +25,17 @@ export function computeProfileMilestones(profile, pubCount) {
   const orcidId = getAuthenticatedOrcidId(profile.orcid);
   return [
     orcidId && { icon: Shield, label: "ORCID Connected", color: "#059669", bg: "#F0FDF4" },
-    profile.biography?.trim() && { icon: PenLine, label: "Researcher Profile", color: "#0891B2", bg: "#F0F9FF" },
-    pubCount > 0 && { icon: BookOpen, label: "Publications Imported", color: "#0F2847", bg: "#EFF6FF" },
-    (profile.research_areas || []).length > 0 && { icon: FlaskConical, label: "Research Areas Defined", color: "#7C3AED", bg: "#FAF5FF" },
+    profile.biography?.trim() && { icon: PenLine, label: "Researcher Profile", color: "#0F2847", bg: "#eef2f8" },
+    pubCount > 0 && { icon: BookOpen, label: "Publications Imported", color: "#0F2847", bg: "#eef2f8" },
+    (profile.research_areas || []).length > 0 && { icon: FlaskConical, label: "Research Areas Defined", color: "#0F2847", bg: "#eef2f8" },
     (profile.research_keywords || []).length > 0 && { icon: Tag, label: "Keywords Set", color: "#D97706", bg: "#FFFBEB" },
     profile.available_for_collaboration && { icon: Users2, label: "Open to Collaboration", color: "#059669", bg: "#F0FDF4" },
-    profile.available_for_reviewing && { icon: CheckCircle2, label: "Open Reviewer", color: "#0891B2", bg: "#F0F9FF" },
+    profile.available_for_reviewing && { icon: CheckCircle2, label: "Open Reviewer", color: "#0F2847", bg: "#eef2f8" },
     (profile.teaching_areas || []).length > 0 && { icon: GraduationCap, label: "Teaching Profile", color: "#D97706", bg: "#FFFBEB" },
-    (profile.methods || []).length >= 3 && { icon: Microscope, label: "Methods Expert", color: "#7C3AED", bg: "#FAF5FF" },
-    (profile.connections_count ?? 0) > 0 && { icon: Users, label: "Network Builder", color: "#0F2847", bg: "#EFF6FF" },
+    (profile.methods || []).length >= 3 && { icon: Microscope, label: "Methods Expert", color: "#0F2847", bg: "#eef2f8" },
+    (profile.connections_count ?? 0) > 0 && { icon: Users, label: "Network Builder", color: "#0F2847", bg: "#eef2f8" },
     (profile.google_scholar || profile.researchgate || profile.scopus_id) && { icon: Link2, label: "Academic IDs Linked", color: "#059669", bg: "#F0FDF4" },
-    (profile.software_skills || []).length > 0 && { icon: Code2, label: "Software Skills", color: "#0891B2", bg: "#F0F9FF" },
+    (profile.software_skills || []).length > 0 && { icon: Code2, label: "Software Skills", color: "#0F2847", bg: "#eef2f8" },
   ].filter(Boolean);
 }
 
@@ -60,7 +60,7 @@ function AchievementTile({ icon: Icon, label, color, bg, description, earned = t
       title={description}
       style={{
         padding: 14, background: earned ? bg : "#F8FAFC", border: `1px solid ${earned ? color + "25" : BRD}`,
-        borderRadius: 12, display: "flex", flexDirection: "column", gap: 10,
+        borderRadius: 8, display: "flex", flexDirection: "column", gap: 10,
         opacity: earned ? 1 : 0.65, transition: "box-shadow 150ms ease, transform 120ms ease",
       }}
       onMouseEnter={(e) => { if (earned) { e.currentTarget.style.boxShadow = SHADOW_CARD_HOVER; e.currentTarget.style.transform = "translateY(-1px)"; } }}

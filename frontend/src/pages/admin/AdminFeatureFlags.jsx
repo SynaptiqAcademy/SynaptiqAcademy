@@ -6,6 +6,7 @@ import { EMERALD, AMBER, CRIMSON } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Modal, Button, Input, FormSelect, Checkbox, Alert, StatCard, StatGrid } from "@/components/ds";
 import { confirmDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "@/lib/api";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -37,7 +38,7 @@ function CreateFlagModal({ onClose, onCreated }) {
     try {
       await api.post("/admin/x/feature-flags", form);
       onCreated();
-    } catch (e) { setMsg(e?.response?.data?.detail || "Error"); }
+    } catch (e) { setMsg(safeErrorMessage(e, "Error")); }
     finally { setSaving(false); }
   };
 
@@ -139,7 +140,7 @@ function FlagRow({ flag, onToggle, onDelete }) {
         <td className="px-3 py-2">
           <div className="flex items-center gap-2">
             <div className="h-1.5 w-20 bg-slate-200 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-500" style={{ width: `${flag.rollout_pct || 100}%` }} />
+              <div className="h-full bg-navy-500" style={{ width: `${flag.rollout_pct || 100}%` }} />
             </div>
             <span className="text-xs text-slate-500">{flag.rollout_pct ?? 100}%</span>
           </div>

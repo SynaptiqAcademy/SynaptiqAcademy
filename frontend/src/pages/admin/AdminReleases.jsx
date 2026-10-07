@@ -7,6 +7,7 @@ import {
   Card, Button, Badge, Input, Textarea, FormSelect, Modal,
   StatCard, StatGrid, Pagination,
 } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -60,7 +61,7 @@ function ReleaseRow({ release, onRefresh }) {
           <Badge variant={STATUS_BADGE[release.status] || "neutral"} size="sm">{release.status}</Badge>
         </td>
         <td className="px-3 py-2 text-xs text-emerald-600">{(release.features || []).length}</td>
-        <td className="px-3 py-2 text-xs text-blue-600">{(release.bugs_fixed || []).length}</td>
+        <td className="px-3 py-2 text-xs text-navy-700">{(release.bugs_fixed || []).length}</td>
         <td className="px-3 py-2 text-xs">
           {(release.breaking_changes || []).length > 0 ? (
             <span className="text-red-600">{release.breaking_changes.length} breaking</span>
@@ -75,7 +76,7 @@ function ReleaseRow({ release, onRefresh }) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
               {[
                 { label: "Features", items: release.features, color: "text-emerald-600" },
-                { label: "Bugs Fixed", items: release.bugs_fixed, color: "text-blue-600" },
+                { label: "Bugs Fixed", items: release.bugs_fixed, color: "text-navy-700" },
                 { label: "Breaking Changes", items: release.breaking_changes, color: "text-red-600" },
               ].map(({ label, items, color }) => (
                 <div key={label}>
@@ -120,7 +121,7 @@ function CreateReleaseModal({ onClose, onCreated }) {
         breaking_changes: form.breaking_changes.split("\n").filter(Boolean),
       });
       onCreated();
-    } catch (e) { setMsg(e?.response?.data?.detail || "Error"); }
+    } catch (e) { setMsg(safeErrorMessage(e, "Error")); }
     finally { setSaving(false); }
   };
 

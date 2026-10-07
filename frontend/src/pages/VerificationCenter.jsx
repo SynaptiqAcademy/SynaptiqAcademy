@@ -15,6 +15,7 @@ import {
   Card, Button, NavTabs, EmptyState, Badge, Input, FormSelect, Textarea,
   Alert, Callout, List, ListItem, SkeletonCard as DsSkeletonCard,
 } from "@/components/ds";
+import { safeErrorMessage } from "../lib/api";
 
 // ── Research Intelligence Nav ─────────────────────────────────────────────────
 
@@ -62,11 +63,11 @@ const LEVEL_NAMES = {
 
 const LEVEL_ACCENT = {
   0: "#94A3B8",
-  1: "#3B82F6",
-  2: "#3B82F6",
-  3: "#6366F1",
-  4: "#8B5CF6",
-  5: "#7C3AED",
+  1: "#2f5486",
+  2: "#2f5486",
+  3: "#2f5486",
+  4: "#2f5486",
+  5: "#0F2847",
   6: "#D97706",
   7: "#059669",
   8: "#B45309",
@@ -173,7 +174,7 @@ function historyIconBg(type) {
   const t = type.toLowerCase();
   if (t.includes("level_up") || t.includes("upgrade")) return "bg-emerald-100 text-emerald-600";
   if (t.includes("level_down") || t.includes("downgrade")) return "bg-red-100 text-red-500";
-  if (t.includes("badge")) return "bg-blue-100 text-blue-600";
+  if (t.includes("badge")) return "bg-navy-100 text-navy-700";
   if (t.includes("evidence")) return "bg-amber-100 text-amber-600";
   return "bg-slate-100 text-slate-500";
 }
@@ -284,7 +285,7 @@ export default function VerificationCenter() {
       const profileRes = await api.get("/verification/me");
       setProfile(profileRes.data);
     } catch (err) {
-      const msg = err?.response?.data?.detail || "Failed to submit ORCID.";
+      const msg = safeErrorMessage(err, "Failed to submit ORCID.");
       setOrcidForm((f) => ({ ...f, submitting: false, msg }));
     }
   };
@@ -300,7 +301,7 @@ export default function VerificationCenter() {
       setEvidenceForm((f) => ({ ...f, submitting: false, msg: "Evidence submitted. Pending review.", description: "" }));
       loadEvidence();
     } catch (err) {
-      const msg = err?.response?.data?.detail || "Failed to submit evidence.";
+      const msg = safeErrorMessage(err, "Failed to submit evidence.");
       setEvidenceForm((f) => ({ ...f, submitting: false, msg }));
     }
   };

@@ -9,8 +9,8 @@ import { fetchApi } from "@/lib/api";
 const API = (p) => `/api/akg${p}`;
 
 const QUERY_TYPES = [
-  { id: "collaborators", label: "Collaborator Suggestions", icon: Users, description: "FOAF + keyword overlap to suggest researchers you should collaborate with", color: "#3b82f6" },
-  { id: "related",       label: "Related Entities",         icon: GitBranch, description: "Find entities most semantically similar to a given entity", color: "#7c3aed" },
+  { id: "collaborators", label: "Collaborator Suggestions", icon: Users, description: "FOAF + keyword overlap to suggest researchers you should collaborate with", color: "#2f5486" },
+  { id: "related",       label: "Related Entities",         icon: GitBranch, description: "Find entities most semantically similar to a given entity", color: "#0F2847" },
   { id: "gaps",          label: "Expertise Gaps",           icon: Zap, description: "Identify knowledge areas your network has but you lack", color: "#d97706" },
   { id: "partners",      label: "Grant Partners",           icon: Brain, description: "Find researchers who complement your grant application profile", color: "#059669" },
   { id: "path",          label: "Shortest Path",            icon: ChevronRight, description: "Find the shortest path between two entities in the graph", color: "#dc2626" },

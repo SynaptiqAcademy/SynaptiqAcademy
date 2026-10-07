@@ -7,6 +7,7 @@ import {
   Card, Badge, Tag, Button, Input, Textarea, FormSelect, FormRow, Modal,
   NavTabs, EmptyState, LoadingOverlay, InlineError,
 } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 const EXPERTISE_AREAS = [
   "publication_coaching", "grant_writing", "career_planning", "peer_review",
@@ -68,7 +69,7 @@ function RequestModal({ mentor, onClose, onSuccess }) {
       const r = await api.post("/network/mentors/request", form);
       if (r.data.error) { setError(r.data.error); setSaving(false); return; }
       onSuccess(); onClose();
-    } catch (e) { setError(e.response?.data?.detail || "Failed to send request"); setSaving(false); }
+    } catch (e) { setError(safeErrorMessage(e, "Failed to send request")); setSaving(false); }
   };
 
   return (

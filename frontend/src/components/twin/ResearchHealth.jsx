@@ -61,7 +61,7 @@ function IndicatorCard({ indicator, onExplain }) {
             </p>
             <button
               onClick={e => { e.stopPropagation(); onExplain(indicator.id); }}
-              className="flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-800 flex-shrink-0"
+              className="flex items-center gap-1 text-[10px] text-navy-700 hover:text-navy-800 flex-shrink-0"
             >
               <Info size={10} /> Explain
             </button>
@@ -128,7 +128,7 @@ export default function ResearchHealth({ health, loading }) {
               <p><span className="font-medium">Confidence: </span>{explanation.confidence}</p>
             </div>
             <p className="text-[10px] text-slate-400 mt-2 italic">{explanation.policy_note}</p>
-            <button onClick={() => setExplanation(null)} className="mt-3 text-[11px] text-blue-600 hover:underline">Close</button>
+            <button onClick={() => setExplanation(null)} className="mt-3 text-[11px] text-navy-700 hover:underline">Close</button>
           </div>
         </div>
       )}

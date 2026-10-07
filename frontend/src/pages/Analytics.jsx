@@ -199,7 +199,7 @@ function CareerTimeline() {
             <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} width={28} />
             <Tooltip content={<ChartTooltip />} />
             <Area dataKey="publications" name="Publications" stroke="#0F2847" fill="url(#pubFill)" strokeWidth={2} dot={false} />
-            <Area dataKey="grants_awarded" name="Grants awarded" stroke="#0891b2" fill="none" strokeWidth={1.5} dot={false} />
+            <Area dataKey="grants_awarded" name="Grants awarded" stroke="#0F2847" fill="none" strokeWidth={1.5} dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </Card>
@@ -228,7 +228,7 @@ function CareerTimeline() {
 
 const GRANT_STATUS_COLORS = {
   awarded:        "#16a34a",
-  submitted:      "#0891b2",
+  submitted:      "#0F2847",
   in_preparation: "#64748b",
   rejected:       "#dc2626",
   closed:         "#94a3b8",
@@ -330,7 +330,7 @@ function GrantAnalytics() {
 const STAGE_COLORS = {
   accepted:           "#16a34a",
   published:          "#0d9488",
-  under_review:       "#0891b2",
+  under_review:       "#0F2847",
   revision_requested: "#d97706",
   submitted:          "#64748b",
   rejected:           "#dc2626",
@@ -554,12 +554,12 @@ function CollaborationNetwork() {
 // ─────────────────────────── citation widgets ─────────────────────────────────
 
 const ALERT_COLORS = {
-  new_citation:   "#2563eb",
+  new_citation:   "#0F2847",
   milestone:      "#16a34a",
-  highly_cited:   "#7c3aed",
+  highly_cited:   "#0F2847",
   velocity:       "#d97706",
   rapid_growth:   "#dc2626",
-  emerging_topic: "#0891b2",
+  emerging_topic: "#0F2847",
   top_performer:  "#16a34a",
   high_velocity:  "#d97706",
 };

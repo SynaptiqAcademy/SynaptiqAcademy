@@ -9,6 +9,7 @@ import {
   NavTabs, Card, Input, Textarea, FormSelect, Button, Badge, Alert,
   EmptyState, SkeletonLine, DataTable, List, ListItem,
 } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 const TABS = ["Compose", "Templates", "System Emails", "Campaigns"];
 const SEGMENTS = [
@@ -121,7 +122,7 @@ export default function AdminEmailCenter() {
       toast.success(`Email sent to ${selectedUser.email}`);
       setSelectedUser(null); setUserSearch(""); setSubject(""); setBodyHtml("");
     } catch (e) {
-      toast.error(e.response?.data?.detail || "Send failed");
+      toast.error(safeErrorMessage(e, "Send failed"));
     } finally {
       setSending(false);
     }
@@ -137,7 +138,7 @@ export default function AdminEmailCenter() {
       setBulkResult(r.data);
       toast.success(`Campaign sent: ${r.data.sent_count} emails`);
     } catch (e) {
-      toast.error(e.response?.data?.detail || "Bulk send failed");
+      toast.error(safeErrorMessage(e, "Bulk send failed"));
     } finally {
       setBulkSending(false);
     }
@@ -152,7 +153,7 @@ export default function AdminEmailCenter() {
       setShowNewTemplate(false); setNewTplName(""); setNewTplSubject(""); setNewTplBody("");
       await loadTemplates();
     } catch (e) {
-      toast.error(e.response?.data?.detail || "Failed to create template");
+      toast.error(safeErrorMessage(e, "Failed to create template"));
     } finally {
       setTplSaving(false);
     }
@@ -166,7 +167,7 @@ export default function AdminEmailCenter() {
       setEditingTpl(null);
       await loadTemplates();
     } catch (e) {
-      toast.error(e.response?.data?.detail || "Failed to update template");
+      toast.error(safeErrorMessage(e, "Failed to update template"));
     } finally {
       setTplSaving(false);
     }
@@ -179,7 +180,7 @@ export default function AdminEmailCenter() {
       toast.success("Template deleted");
       await loadTemplates();
     } catch (e) {
-      toast.error(e.response?.data?.detail || "Failed to delete template");
+      toast.error(safeErrorMessage(e, "Failed to delete template"));
     }
   };
 

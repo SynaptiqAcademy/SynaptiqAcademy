@@ -4,6 +4,7 @@ import api from "@/lib/api";
 import { GitBranch, Users, TrendingUp, Activity } from "lucide-react";
 import { AdministrationLayout } from "@/layouts";
 import { StatCard, StatGrid, Card, DataTable, Badge, LoadingOverlay, ErrorState } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 export default function AdminGrantHub() {
   const [stats, setStats] = useState(null);
@@ -22,7 +23,7 @@ export default function AdminGrantHub() {
         setStats(s.data);
         setCollabs(c.data || []);
       })
-      .catch((e) => { if (mounted) setErr(e?.response?.data?.detail || "Failed to load"); })
+      .catch((e) => { if (mounted) setErr(safeErrorMessage(e, "Failed to load")); })
       .finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
   }, []);
@@ -103,7 +104,7 @@ function GrantHubSidebar({ collabs }) {
             <GitBranch size={13} style={{ color: "#0F2847" }} />
             <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Latest Collaboration</div>
           </div>
-          <div style={{ fontFamily: "Georgia, serif", fontSize: 14, color: "#0f172a" }}>{latest.title || "Untitled"}</div>
+          <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 14, color: "#0f172a" }}>{latest.title || "Untitled"}</div>
           <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0" }}>
             {latest.partner_count ?? latest.partners?.length ?? 0} partner{(latest.partner_count ?? latest.partners?.length ?? 0) !== 1 ? "s" : ""}
             {latest.created_at ? ` · ${new Date(latest.created_at).toLocaleDateString()}` : ""}

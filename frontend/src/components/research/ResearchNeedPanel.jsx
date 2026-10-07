@@ -17,9 +17,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/api";
 import { NAVY, TEXT_SECONDARY, TEXT_MUTED, BRD } from "@/lib/tokens";
-import { Card, Button, Input, Checkbox, EmptyState, LoadingOverlay } from "@/components/ds";
+import { Button, Input, Checkbox, EmptyState, LoadingOverlay } from "@/components/ds";
 import { ExpertResultCard } from "@/pages/ResearchExperts";
 import InviteToCollaborateModal from "./InviteToCollaborateModal";
+import { safeErrorMessage } from "@/lib/api";
 
 const PLACEHOLDER =
   "e.g. How can AI improve quality management in public hospitals while protecting patient outcomes and supporting healthcare staff?";
@@ -119,7 +120,7 @@ export default function ResearchNeedPanel() {
       const r = await api.post("/team-builder/blueprints", { need, use_ai: useAi });
       navigate(`/team-builder/${r.data.blueprint.id}`);
     } catch (e) {
-      setError(e?.response?.data?.detail || "Could not start the team builder. Please try again.");
+      setError(safeErrorMessage(e, "Could not start the team builder. Please try again."));
     } finally {
       setBuildingTeam(false);
     }
@@ -139,7 +140,7 @@ export default function ResearchNeedPanel() {
       setNeed(r.data.need);
       setSource(r.data.source);
     } catch (e) {
-      setError(e?.response?.data?.detail || "Could not interpret this research question. Please try again.");
+      setError(safeErrorMessage(e, "Could not interpret this research question. Please try again."));
     } finally {
       setInterpreting(false);
     }
@@ -162,7 +163,7 @@ export default function ResearchNeedPanel() {
       });
       setMatchResult(r.data);
     } catch (e) {
-      setError(e?.response?.data?.detail || "Could not find relevant collaborators. Please try again.");
+      setError(safeErrorMessage(e, "Could not find relevant collaborators. Please try again."));
     } finally {
       setMatching(false);
     }
@@ -175,40 +176,42 @@ export default function ResearchNeedPanel() {
     : 0;
 
   return (
-    <Card padding="lg" style={{ marginBottom: 24, border: `1px solid ${NAVY}20` }}>
-      <div style={{ fontSize: 16, fontWeight: 700, color: NAVY, marginBottom: 2 }}>Describe what you're researching</div>
-      <p style={{ fontSize: 12.5, color: TEXT_SECONDARY, marginTop: 0, marginBottom: 12, lineHeight: 1.6 }}>
-        Describe a research question, project idea, or problem. Synaptiq will identify the expertise you may need and help you find relevant collaborators.
-      </p>
-
+    <section aria-label="Describe a research need" className="rn-panel">
+      <label htmlFor="rn-query" className="rn-label">Your research question, project or problem</label>
       <textarea
+        id="rn-query"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={PLACEHOLDER}
-        rows={4}
-        style={{ width: "100%", fontSize: 13.5, padding: 10, border: `1px solid ${BRD}`, fontFamily: "inherit", resize: "vertical", marginBottom: 10 }}
+        rows={3}
+        className="rn-textarea"
+        aria-describedby="rn-modes"
       />
 
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 10 }}>
         <Button
           type="button"
           variant="primary"
           disabled={!query.trim() || interpreting}
           onClick={() => runInterpret(true)}
         >
-          {interpreting ? "Interpreting…" : `Find expertise${cost ? ` · uses AI (${cost} credits)` : ""}`}
+          {interpreting ? "Interpreting…" : `Find expertise with AI${cost ? ` · ${cost} credits` : ""}`}
         </Button>
         <Button
           type="button"
-          variant="ghost"
+          variant="secondary"
           disabled={!query.trim() || interpreting}
           onClick={() => runInterpret(false)}
         >
-          Skip AI — basic term matching (free)
+          Basic term matching · free
         </Button>
       </div>
+      <p id="rn-modes" className="rn-help">
+        AI reads the question for the expertise it needs{cost ? ` (${cost} AI credits)` : " (uses AI credits)"}; basic matching
+        uses a fixed research vocabulary at no cost. Either way, you review the result before anyone is searched.
+      </p>
 
-      {error && <div style={{ marginTop: 10, fontSize: 12.5, color: "#B91C1C" }}>{error}</div>}
+      {error && <div role="alert" style={{ marginTop: 10, fontSize: 12.5, color: "var(--sq-crimson-600)" }}>{error}</div>}
 
       {interpreting && <div style={{ marginTop: 16 }}><LoadingOverlay text="Interpreting your research question…" /></div>}
 
@@ -246,9 +249,6 @@ export default function ResearchNeedPanel() {
               {buildingTeam ? "Preparing…" : "Build interdisciplinary team"}
             </Button>
           </div>
-          <p style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 6, marginBottom: 0 }}>
-            See which expertise your research may require and explore Synaptiq members who could contribute.
-          </p>
         </div>
       )}
 
@@ -273,7 +273,7 @@ export default function ResearchNeedPanel() {
           )}
 
           {matchResult.missing_expertise?.length > 0 && (
-            <div style={{ marginTop: 8, padding: 14, background: "#FFFBEB", border: "1px solid #FDE68A" }}>
+            <div style={{ marginTop: 8, padding: 14, background: "var(--sq-warning-bg)", border: "1px solid var(--sq-warning-border)", borderRadius: 6 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#92400E", marginBottom: 4 }}>Expertise still missing</div>
               <p style={{ fontSize: 12, color: "#92400E", margin: 0, lineHeight: 1.6 }}>
                 No discoverable Synaptiq member currently provides enough profile evidence for: {matchResult.missing_expertise.join(", ")}.
@@ -289,6 +289,6 @@ export default function ResearchNeedPanel() {
         person={inviteTarget}
         need={need}
       />
-    </Card>
+    </section>
   );
 }

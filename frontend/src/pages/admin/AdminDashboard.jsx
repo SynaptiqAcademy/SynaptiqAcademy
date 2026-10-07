@@ -7,6 +7,7 @@ import { SkeletonPage } from "@/components/ds/LoadingState";
 import { ErrorState } from "@/components/ds/ErrorState";
 import { Card, H2, List, ListItem, StatusDot, DataTable } from "@/components/ds";
 import { AdministrationLayout } from "@/layouts";
+import { safeErrorMessage } from "@/lib/api";
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
@@ -16,7 +17,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     api.get("/admin/dashboard")
       .then((r) => setData(r.data))
-      .catch((e) => setError(e.response?.data?.detail || "Failed to load dashboard"))
+      .catch((e) => setError(safeErrorMessage(e, "Failed to load dashboard")))
       .finally(() => setLoading(false));
   }, []);
 
@@ -27,7 +28,7 @@ export default function AdminDashboard() {
   if (error) {
     return (
       <div className="p-8">
-        <ErrorState message={error} type="server" onRetry={() => api.get("/admin/dashboard").then((r) => setData(r.data)).catch((e) => setError(e.response?.data?.detail || "Failed to load dashboard"))} />
+        <ErrorState message={error} type="server" onRetry={() => api.get("/admin/dashboard").then((r) => setData(r.data)).catch((e) => setError(safeErrorMessage(e, "Failed to load dashboard")))} />
       </div>
     );
   }
@@ -192,7 +193,7 @@ function DashboardSidebar({ users, financial }) {
           <DollarSign size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Annual Revenue</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 24, color: "#0f172a" }}>€{financial.arr_eur.toFixed(2)}</div>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 24, color: "#0f172a" }}>€{financial.arr_eur.toFixed(2)}</div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0" }}>Recurring revenue, annualized</p>
       </Card>
     </div>

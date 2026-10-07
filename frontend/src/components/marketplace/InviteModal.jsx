@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { X, Loader2, UserPlus } from "lucide-react";
 import { userTypeLabel } from "../../lib/userTypes";
 import { NAVY } from "@/lib/tokens";
+import { safeErrorMessage } from "../../lib/api";
 
 const KINDS = [
   { value: "collaboration",              label: "Research Collaboration" },
@@ -56,7 +57,7 @@ export default function InviteModal({ target, onClose, defaultKind = "collaborat
       toast.success(`Invitation sent to ${u.full_name}`);
       onClose?.();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed");
+      toast.error(safeErrorMessage(e, "Failed"));
     } finally { setBusy(false); }
   };
 
@@ -128,7 +129,7 @@ export default function InviteModal({ target, onClose, defaultKind = "collaborat
             </div>
           </div>
           <div>
-            <div className="overline mb-2">Personal message <span className="text-[#8A1538]">*</span></div>
+            <div className="overline mb-2">Personal message <span className="text-[#0F2847]">*</span></div>
             <textarea
               data-testid="invite-message"
               rows={4}

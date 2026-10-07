@@ -10,6 +10,7 @@ import api from "../lib/api";
 import {
   AuthLayout, AuthCard, AuthHeader, AuthButton, NAVY, T_MID, T_FAINT, BORDER,
 } from "../components/auth/AuthShared";
+import { safeErrorMessage } from "../lib/api";
 
 const KIND_LABELS = {
   collaboration:               "Research Collaboration",
@@ -51,7 +52,7 @@ export default function InvitationAccept() {
         setState("ready");
       } catch (e) {
         setState("error");
-        setErr(e?.response?.data?.detail || "This invitation link is invalid or has expired.");
+        setErr(safeErrorMessage(e, "This invitation link is invalid or has expired."));
       }
     })();
   }, [token]);
@@ -64,7 +65,7 @@ export default function InvitationAccept() {
       await api.post(`/marketplace/invitations/accept?token=${token}`);
       setState("done");
     } catch (e) {
-      setErr(e?.response?.data?.detail || "Failed to accept invitation.");
+      setErr(safeErrorMessage(e, "Failed to accept invitation."));
       setState("error");
     } finally {
       actionRef.current = false;
@@ -103,7 +104,7 @@ export default function InvitationAccept() {
           <div>
             {/* Kind badge */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "#eef2f8", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <IconComponent size={18} strokeWidth={1.5} style={{ color: NAVY }} />
               </div>
               <div>

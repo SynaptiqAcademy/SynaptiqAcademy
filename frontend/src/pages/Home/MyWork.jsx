@@ -34,19 +34,16 @@ function fmtRelative(dateStr) {
 
 function statusColor(s = "") {
   const l = s.toLowerCase();
-  if (l.includes("review") || l.includes("submit")) return "#3B82F6";
-  if (l.includes("draft") || l.includes("pending")) return AMBER;
+  if (l.includes("review") || l.includes("submit")) return NAVY;
+  if (l.includes("pending")) return AMBER;
   if (l.includes("active") || l.includes("complete")) return EMERALD;
   return TEXT_MUTED;
 }
 
-// Deterministic cover gradient — same item always gets the same treatment.
-// Two stops per pair; the first three use exact design-token colors, the
-// remaining accent stops (#3B2352, #7C2D12, #1E3A8A) are deliberate cover
-// variety with no equivalent in the core palette — not a DS violation, just
-// decorative range, same as an avatar-color set.
-const COVERS_MANUSCRIPT = [`${NAVY},${NAVY_LIGHT}`, `${NAVY},#3B2352`, `${NAVY},${NAVY2}`];
-const COVERS_WORKSPACE   = [`${SUCCESS_TEXT},${NAVY}`, `#7C2D12,${NAVY}`, `#1E3A8A,${NAVY}`];
+// Deterministic cover — tonal steps of the one brand navy, so a grid of
+// covers reads as one product rather than a set of unrelated colours.
+const COVERS_MANUSCRIPT = [`${NAVY},${NAVY2}`, `#1c3e6d,${NAVY}`, `${NAVY2},#060f1f`];
+const COVERS_WORKSPACE   = [`#2f5486,${NAVY}`, `${NAVY},${NAVY2}`, `#1c3e6d,${NAVY2}`];
 
 function coverFor(item, i) {
   const set = item.type === "Manuscript" ? COVERS_MANUSCRIPT : COVERS_WORKSPACE;
@@ -159,7 +156,7 @@ function TabBtn({ label, count, active, onClick }) {
       onClick={onClick}
       style={{
         display: "inline-flex", alignItems: "center", gap: 5,
-        padding: "6px 13px", borderRadius: 99,
+        padding: "6px 12px", borderRadius: 4,
         fontSize: "0.8rem", fontWeight: active ? 600 : 500,
         color: active ? WHITE : TEXT_MUTED,
         background: active ? NAVY : "transparent",
@@ -234,16 +231,7 @@ export default function MyWork({ manuscripts, workspaces }) {
     <section aria-label="My Work">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
-        <h2
-          style={{
-            fontFamily: "Georgia, 'Times New Roman', serif",
-            fontSize: "1.35rem",
-            fontWeight: 700,
-            letterSpacing: "-0.02em",
-            color: TEXT_PRIMARY,
-            margin: 0,
-          }}
-        >
+        <h2 className="hm-h2">
           Continue where you left off
         </h2>
         <div className="flex gap-1 flex-wrap">

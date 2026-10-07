@@ -79,7 +79,7 @@ function TicketRow({ ticket, onRefresh }) {
                 <div className="text-[10px] text-slate-500 mb-1">Description</div>
                 <div className="text-xs text-slate-600 whitespace-pre-wrap">{ticket.description}</div>
               </div>
-              {ticket.email && <div className="text-xs text-slate-500">Contact: <span className="text-blue-600">{ticket.email}</span></div>}
+              {ticket.email && <div className="text-xs text-slate-500">Contact: <span className="text-navy-700">{ticket.email}</span></div>}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="text-[10px] text-slate-500 block mb-1">Assign to</label>

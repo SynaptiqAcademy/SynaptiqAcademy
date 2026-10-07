@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import api from "../../lib/api";
 import { X, Loader2, Download, ExternalLink } from "lucide-react";
 import { NAVY } from "@/lib/tokens";
+import { safeErrorMessage } from "../../lib/api";
 
 const REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -46,7 +47,7 @@ export default function PreviewDrawer({ file, onClose }) {
           setError("Preview is not supported for this file type. Download to view.");
         }
       } catch (e) {
-        setError(e?.response?.data?.detail || "Preview failed");
+        setError(safeErrorMessage(e, "Preview failed"));
       }
     })();
     return () => { if (blobUrl) URL.revokeObjectURL(blobUrl); };

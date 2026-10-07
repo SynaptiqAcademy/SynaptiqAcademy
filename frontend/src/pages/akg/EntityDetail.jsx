@@ -9,9 +9,9 @@ import { fetchApi } from "@/lib/api";
 const API = (p) => `/api/akg${p}`;
 
 const TYPE_COLORS = {
-  researcher: "#3b82f6", educator: "#7c3aed", institution: "#d97706",
-  topic: "#059669", grant: "#f59e0b", community: "#ec4899",
-  marketplace_service: "#8b5cf6", default: ACCENT,
+  researcher: "#2f5486", educator: "#0F2847", institution: "#d97706",
+  topic: "#059669", grant: "#f59e0b", community: "#2f5486",
+  marketplace_service: "#2f5486", default: ACCENT,
 };
 
 const RelCard = ({ r, onExplore }) => {
@@ -77,7 +77,7 @@ export default function EntityDetail() {
       <div style={{ maxWidth: 1100 }}>
       <Card padding="xl" className="mb-5">
         <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 12, background: color + "20", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 52, height: 52, borderRadius: 8, background: color + "20", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Network size={24} color={color} />
           </div>
           <div style={{ flex: 1 }}>
@@ -182,11 +182,11 @@ function EntityDetailSidebar({ rels, suggestions, nav }) {
         {rels.length > 0 ? (
           <div style={{ display: "flex", gap: 20 }}>
             <div>
-              <div style={{ fontFamily: "Georgia, serif", fontSize: 22, color: NAVY }}>{inCount}</div>
+              <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, color: NAVY }}>{inCount}</div>
               <div style={{ fontSize: 11, color: TEXT_SECONDARY }}>Incoming</div>
             </div>
             <div>
-              <div style={{ fontFamily: "Georgia, serif", fontSize: 22, color: NAVY }}>{outCount}</div>
+              <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, color: NAVY }}>{outCount}</div>
               <div style={{ fontSize: 11, color: TEXT_SECONDARY }}>Outgoing</div>
             </div>
           </div>

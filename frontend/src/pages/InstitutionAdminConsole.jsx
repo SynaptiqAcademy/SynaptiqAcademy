@@ -42,8 +42,8 @@ function pct(val, max) {
 
 function iisColor(score) {
   if (score >= 7500) return "#D97706";
-  if (score >= 5000) return "#7C3AED";
-  if (score >= 2500) return "#0891B2";
+  if (score >= 5000) return "#0F2847";
+  if (score >= 2500) return "#0F2847";
   return "#94A3B8";
 }
 
@@ -107,8 +107,8 @@ const NAV_ITEMS = [
 ];
 
 const COMPONENT_COLORS = [
-  "#0F2847", "#0891B2", "#7C3AED", "#059669",
-  "#D97706", "#DC2626", "#DB2777", "#64748B",
+  "#0F2847", "#0F2847", "#0F2847", "#059669",
+  "#D97706", "#DC2626", "#0F2847", "#64748B",
 ];
 
 // ── Main component ────────────────────────────────────────────────────────────

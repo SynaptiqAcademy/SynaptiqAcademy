@@ -33,7 +33,7 @@ function KpiTile({ label, value, sub, trend, points }) {
           </span>
         )}
       </div>
-      <div style={{ fontFamily: "Georgia, serif", fontSize: 30, fontWeight: 700, color: TEXT_PRIMARY, marginTop: 6 }}>{value}</div>
+      <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 30, fontWeight: 700, color: TEXT_PRIMARY, marginTop: 6 }}>{value}</div>
       {sub && <div style={{ fontSize: 11.5, color: TEXT_MUTED, marginTop: 2 }}>{sub}</div>}
       <Sparkline points={points} />
     </Card>

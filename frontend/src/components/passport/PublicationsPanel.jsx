@@ -11,6 +11,7 @@ import { NAVY, BRD, WARM, TEXT_MUTED, TEXT_SECONDARY, TEXT_PRIMARY } from "@/lib
 import { ProvenanceTag } from "@/components/passport/ProvenanceTag";
 import { isOrcidAuthenticated } from "@/lib/orcid";
 import api from "@/lib/api";
+import { safeErrorMessage } from "@/lib/api";
 
 // Provenance a publication record can actually carry, per
 // services/research_record/*.py's real "source" values — never inferred
@@ -45,12 +46,12 @@ function PublicationRow({ pub }) {
       onClick={() => setExpanded((v) => !v)}
       style={{
         display: "flex", gap: 14, padding: "14px 16px", cursor: "pointer",
-        border: `1px solid ${BRD}`, borderLeft: `3px solid ${isRecent ? "#0891B2" : BRD}`,
+        border: `1px solid ${BRD}`, borderLeft: `3px solid ${isRecent ? "#0F2847" : BRD}`,
       }}
     >
       <div style={{ flexShrink: 0, minWidth: 46, textAlign: "center" }}>
         {pub.year && (
-          <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "monospace", color: isRecent ? "#0891B2" : TEXT_MUTED }}>{pub.year}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "monospace", color: isRecent ? "#0F2847" : TEXT_MUTED }}>{pub.year}</div>
         )}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -62,7 +63,7 @@ function PublicationRow({ pub }) {
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
           {pub.journal && <span style={{ fontSize: 11, color: TEXT_SECONDARY, fontStyle: "italic" }}>{pub.journal}</span>}
-          <span style={{ fontSize: 10, padding: "1px 6px", background: "#EFF6FF", color: NAVY, fontWeight: 600 }}>{typeLabel}</span>
+          <span style={{ fontSize: 10, padding: "1px 6px", background: "#eef2f8", color: NAVY, fontWeight: 600 }}>{typeLabel}</span>
         </div>
         {provenance && (
           <div style={{ marginTop: 4 }}>
@@ -76,7 +77,7 @@ function PublicationRow({ pub }) {
       <div style={{ flexShrink: 0, textAlign: "right", display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
         {pub.citations > 0 && <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "monospace" }}>{pub.citations}<span style={{ fontSize: 10, fontWeight: 400, color: TEXT_MUTED, marginLeft: 3 }}>cites</span></div>}
         {pub.doi && (
-          <a href={`https://doi.org/${pub.doi}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, color: "#0891B2", fontWeight: 600, textDecoration: "none" }}>
+          <a href={`https://doi.org/${pub.doi}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, color: "#0F2847", fontWeight: 600, textDecoration: "none" }}>
             DOI <ExternalLink size={9} />
           </a>
         )}
@@ -111,7 +112,7 @@ export function PublicationsPanel({ pubs, loading, query, onQuery, onRefresh, on
       onRefresh();
       onSynced?.();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "ORCID sync failed");
+      toast.error(safeErrorMessage(e, "ORCID sync failed"));
     } finally {
       setSyncing(false);
     }

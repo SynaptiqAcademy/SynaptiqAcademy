@@ -48,21 +48,21 @@ function resolveRoute(result) {
 
 // ─── Type → display config ────────────────────────────────────────────────────
 const TYPE_CONFIG = {
-  researcher:   { label: "Researchers",    icon: User,        color: "#7C3AED", plural: "Researchers"    },
-  user:         { label: "Researchers",    icon: User,        color: "#7C3AED", plural: "Researchers"    },
-  publication:  { label: "Publications",   icon: FileText,    color: "#0891B2", plural: "Publications"   },
-  project:      { label: "Projects",       icon: FolderOpen,  color: "#059669", plural: "Projects"       },
-  institution:  { label: "Institutions",   icon: Building2,   color: "#374151", plural: "Institutions"   },
-  group:        { label: "Teams",          icon: Users,       color: "#D97706", plural: "Teams"          },
-  team:         { label: "Teams",          icon: Users,       color: "#D97706", plural: "Teams"          },
-  workspace:    { label: "Workspaces",     icon: FolderOpen,  color: "#2563EB", plural: "Workspaces"     },
-  grant:        { label: "Grants",         icon: Coins,       color: "#059669", plural: "Grants"         },
-  journal:      { label: "Journals",       icon: BookOpen,    color: "#9333EA", plural: "Journals"       },
-  conference:   { label: "Conferences",    icon: Globe,       color: "#EA580C", plural: "Conferences"    },
-  manuscript:   { label: "Manuscripts",    icon: FileText,    color: "#0891B2", plural: "Manuscripts"    },
-  lesson:       { label: "Lessons",        icon: GraduationCap, color: "#0891B2", plural: "Lessons"     },
-  assessment:   { label: "Assessments",    icon: Target,      color: "#8B5CF6", plural: "Assessments"   },
-  topic:        { label: "Research Topics",icon: BrainCircuit,color: "#64748B", plural: "Topics"        },
+  researcher:   { label: "Researchers",    icon: User,        color: "#0F2847", plural: "Researchers"    },
+  user:         { label: "Researchers",    icon: User,        color: "#0F2847", plural: "Researchers"    },
+  publication:  { label: "Publications",   icon: FileText,    color: "#0F2847", plural: "Publications"   },
+  project:      { label: "Projects",       icon: FolderOpen,  color: "#0F2847", plural: "Projects"       },
+  institution:  { label: "Institutions",   icon: Building2,   color: "#0F2847", plural: "Institutions"   },
+  group:        { label: "Teams",          icon: Users,       color: "#0F2847", plural: "Teams"          },
+  team:         { label: "Teams",          icon: Users,       color: "#0F2847", plural: "Teams"          },
+  workspace:    { label: "Workspaces",     icon: FolderOpen,  color: "#0F2847", plural: "Workspaces"     },
+  grant:        { label: "Grants",         icon: Coins,       color: "#0F2847", plural: "Grants"         },
+  journal:      { label: "Journals",       icon: BookOpen,    color: "#0F2847", plural: "Journals"       },
+  conference:   { label: "Conferences",    icon: Globe,       color: "#0F2847", plural: "Conferences"    },
+  manuscript:   { label: "Manuscripts",    icon: FileText,    color: "#0F2847", plural: "Manuscripts"    },
+  lesson:       { label: "Lessons",        icon: GraduationCap, color: "#0F2847", plural: "Lessons"     },
+  assessment:   { label: "Assessments",    icon: Target,      color: "#0F2847", plural: "Assessments"   },
+  topic:        { label: "Research Topics",icon: BrainCircuit,color: "#0F2847", plural: "Topics"        },
 };
 
 const SECTION_ORDER = [

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Card, Button, StatCard, StatGrid, SkeletonCard } from "@/components/ds";
+import { safeErrorMessage } from "../../lib/api";
 
 function SectionTitle({ children }) {
   return <div className="overline mb-4">{children}</div>;
@@ -66,7 +67,7 @@ export default function AdminTeachingAnalytics() {
       const { data: d } = await api.get("/teaching-analytics/admin/overview");
       setData(d);
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed to load teaching analytics");
+      toast.error(safeErrorMessage(e, "Failed to load teaching analytics"));
     } finally {
       setLoading(false);
     }

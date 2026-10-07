@@ -7,7 +7,7 @@ import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Input, FormSelect, EmptyState, LoadingOverlay, Pagination } from "@/components/ds";
 
 const CAREER_STAGES = ["student", "postdoc", "early_career", "mid_career", "senior", "professor"];
-const STAGE_COLOR = { student: "#06b6d4", postdoc: "#8b5cf6", early_career: ACCENT, mid_career: EMERALD, senior: "#f97316", professor: NAVY };
+const STAGE_COLOR = { student: "#2f5486", postdoc: "#2f5486", early_career: ACCENT, mid_career: EMERALD, senior: "#f97316", professor: NAVY };
 
 function PersonCard({ person }) {
   const stage = person.career_stage || "researcher";
@@ -192,7 +192,7 @@ function PeopleDiscoverySidebar({ results, total }) {
           <Users size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Researchers Found</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{total}</div>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{total}</div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
           Matching your current search and filters.
         </p>

@@ -13,10 +13,10 @@ const TYPE_COLOR = {
   "PhD Supervision": ACCENT,
   "Project Meeting": EMERALD,
   "Grant Meeting": AMBER,
-  "Peer Review Meeting": "#3B82F6",
-  "Institution Meeting": "#7C3AED",
-  "Conference Preparation": "#DB2777",
-  "Journal Submission Meeting": "#0891B2",
+  "Peer Review Meeting": "#2f5486",
+  "Institution Meeting": "#0F2847",
+  "Conference Preparation": "#0F2847",
+  "Journal Submission Meeting": "#0F2847",
 };
 
 /**

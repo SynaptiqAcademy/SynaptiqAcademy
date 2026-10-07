@@ -4,6 +4,7 @@ import api from "@/lib/api";
 import { NAVY, EMERALD, AMBER, CRIMSON } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Card, Button, Badge, EmptyState, Spinner } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 function useAOS(path) {
   const [data, setData] = useState(null);
@@ -57,7 +58,7 @@ const SEVERITY_ACCENT = {
   critical: CRIMSON,
   high:     "#f97316",
   medium:   AMBER,
-  low:      "#3B82F6",
+  low:      "#2f5486",
 };
 
 export default function AdminPlatformAuditor() {
@@ -73,7 +74,7 @@ export default function AdminPlatformAuditor() {
       setRunMsg("Audit complete");
       refetch();
     } catch (e) {
-      setRunMsg(e?.response?.data?.detail || "Audit failed");
+      setRunMsg(safeErrorMessage(e, "Audit failed"));
     } finally {
       setRunning(false);
     }

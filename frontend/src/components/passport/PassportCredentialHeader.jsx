@@ -68,7 +68,7 @@ export function PassportCredentialHeader({ profile, passport, verification, comp
 
   return (
     <div style={{
-      borderRadius: 16, padding: "28px 28px 24px", width: "100%", boxSizing: "border-box",
+      borderRadius: 8, padding: "28px 28px 24px", width: "100%", boxSizing: "border-box",
       background: `linear-gradient(135deg, ${NAVY} 0%, ${NAVY2} 100%)`, color: WHITE,
     }}>
       <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
@@ -78,7 +78,7 @@ export function PassportCredentialHeader({ profile, passport, verification, comp
 
         <div style={{ flex: "1 1 320px", minWidth: 0 }}>
           <h1 style={{
-            fontFamily: "Georgia, 'Times New Roman', serif", fontSize: "clamp(1.35rem, 2.4vw, 1.65rem)",
+            fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: "clamp(1.35rem, 2.4vw, 1.65rem)",
             fontWeight: 700, letterSpacing: "-0.02em", margin: 0, color: WHITE, lineHeight: 1.2,
           }}>
             {profile?.full_name || "—"}

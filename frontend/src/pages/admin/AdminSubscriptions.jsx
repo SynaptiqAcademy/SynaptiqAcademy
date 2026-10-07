@@ -6,6 +6,7 @@ import { AdministrationLayout } from "@/layouts";
 import {
   Card, Button, Input, FormSelect, Badge, NavTabs, StatCard, StatGrid, DataTable,
 } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 function useAOS(path, params = {}) {
   const [data, setData] = useState(null);
@@ -52,7 +53,7 @@ function SubscriptionAction({ uid, onDone }) {
       setMsg("Done");
       onDone();
     } catch (e) {
-      setMsg(e?.response?.data?.detail || "Error");
+      setMsg(safeErrorMessage(e, "Error"));
     } finally {
       setLoading(false);
     }

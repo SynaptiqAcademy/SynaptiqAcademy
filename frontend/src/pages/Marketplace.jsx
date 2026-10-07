@@ -19,6 +19,7 @@ import {
   Users, BookOpen, BarChart3, Mail, Award, ArrowRight,
 } from "lucide-react";
 import { Spinner, EmptyState, Button, Input, FormSelect, Card } from "@/components/ds";
+import { safeErrorMessage } from "../lib/api";
 
 const ROLES = [
   { value: "co_author",       label: "Co-authors",        Icon: Users },
@@ -72,7 +73,7 @@ export default function Marketplace() {
       });
       setResults(data.results || []);
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Search failed");
+      toast.error(safeErrorMessage(e, "Search failed"));
     } finally { setLoading(false); }
   };
 
@@ -106,7 +107,7 @@ export default function Marketplace() {
       toast.success(`AI reranked top ${data.rankings?.length || 0} (−${data.credits_consumed} credits)`);
       refreshMe?.();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Rerank failed");
+      toast.error(safeErrorMessage(e, "Rerank failed"));
     } finally { setReranking(false); }
   };
 
@@ -339,7 +340,7 @@ function SidebarReputation() {
       setRep(data.reputation);
       toast.success(`Synced OpenAlex: ${data.openalex?.works_count} works, ${data.openalex?.citations} citations`);
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "OpenAlex sync failed");
+      toast.error(safeErrorMessage(e, "OpenAlex sync failed"));
     } finally { setSyncing(false); }
   };
   if (!rep) return <SectionLoading title="Your reputation" />;

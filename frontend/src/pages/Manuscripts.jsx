@@ -20,6 +20,7 @@ import { Badge } from "@/components/ds/Badge";
 import { Input } from "@/components/ds/Input";
 import { Textarea } from "@/components/ds/Textarea";
 import { FormSelect } from "@/components/ds/FormSelect";
+import { safeErrorMessage } from "../lib/api";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const EMRL  = "#059669";
@@ -27,13 +28,13 @@ const EMRL  = "#059669";
 // ─── Status system ────────────────────────────────────────────────────────────
 const STATUS = {
   draft:                 { label: "Draft",           color: "#64748B", bg: "#F8FAFC", border: "#CBD5E1", icon: FileText   },
-  internal_review:       { label: "Internal Review", color: "#0369A1", bg: "#EFF6FF", border: "#BAE6FD", icon: AlertCircle },
-  ready_for_submission:  { label: "Ready to Submit", color: "#0891B2", bg: "#ECFEFF", border: "#67E8F9", icon: Send       },
-  submitted:             { label: "Submitted",       color: "#4338CA", bg: "#EEF2FF", border: "#A5B4FC", icon: Send       },
+  internal_review:       { label: "Internal Review", color: "#0F2847", bg: "#eef2f8", border: "#d4dde9", icon: AlertCircle },
+  ready_for_submission:  { label: "Ready to Submit", color: "#0F2847", bg: "#eef2f8", border: "#67E8F9", icon: Send       },
+  submitted:             { label: "Submitted",       color: "#0F2847", bg: "#eef2f8", border: "#d4dde9", icon: Send       },
   under_review:          { label: "Under Review",    color: "#B45309", bg: "#FFFBEB", border: "#FCD34D", icon: AlertCircle },
   major_revision:        { label: "Major Revision",  color: "#C2410C", bg: "#FFF7ED", border: "#FDBA74", icon: RotateCcw  },
   minor_revision:        { label: "Minor Revision",  color: "#B45309", bg: "#FFFBEB", border: "#FCD34D", icon: RotateCcw  },
-  revision_requested:    { label: "Revising",        color: "#7C3AED", bg: "#F5F3FF", border: "#C4B5FD", icon: RotateCcw  },
+  revision_requested:    { label: "Revising",        color: "#0F2847", bg: "#eef2f8", border: "#d4dde9", icon: RotateCcw  },
   accepted:              { label: "Accepted",        color: EMRL,      bg: "#ECFDF5", border: "#6EE7B7", icon: CheckCircle2 },
   published:             { label: "Published",       color: "#065F46", bg: "#D1FAE5", border: "#34D399", icon: CheckCircle2 },
   rejected:              { label: "Rejected",        color: "#DC2626", bg: "#FEF2F2", border: "#FCA5A5", icon: XCircle    },
@@ -204,7 +205,7 @@ function NewManuscriptForm({ projects, workspaces, onCreated, onCancel }) {
       await api.post("/manuscripts", form);
       toast.success("Manuscript created");
       onCreated();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed to create"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed to create")); }
     finally { setBusy(false); }
   };
 
@@ -487,11 +488,11 @@ function ManuscriptsSidebar({ drafts, projects, workspaces }) {
         </div>
         <div style={{ display: "flex", gap: 20 }}>
           <div>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{projects.length}</div>
+            <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{projects.length}</div>
             <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Projects</div>
           </div>
           <div>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{workspaces.length}</div>
+            <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{workspaces.length}</div>
             <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Workspaces</div>
           </div>
         </div>

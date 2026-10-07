@@ -24,13 +24,13 @@ const PIE_COLORS = ["#3b82f6","#8b5cf6","#10b981","#f59e0b","#ef4444","#6366f1",
 const PRIORITY_ACCENT = {
   high:   CRIMSON,
   medium: AMBER,
-  low:    "#3B82F6",
+  low:    "#2f5486",
 };
 
 const PRIORITY_TEXT = {
   high:   "text-red-700",
   medium: "text-amber-700",
-  low:    "text-blue-700",
+  low:    "text-navy-700",
 };
 
 export default function AdminStorageGovernance() {

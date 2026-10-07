@@ -33,13 +33,19 @@ const TABS = [
 export default function ProjectDetail() {
   const { id } = useParams();
   const [project, setProject] = useState(null);
+  const [loadError, setLoadError] = useState(null);
   const [tab, setTab] = useState("foundation");
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
   const load = useCallback(async () => {
-    const { data } = await api.get(`/projects/${id}`);
-    setProject(data);
+    setLoadError(null);
+    try {
+      const { data } = await api.get(`/projects/${id}`);
+      setProject(data);
+    } catch (e) {
+      setLoadError(e?.response?.status === 404 || e?.response?.status === 403 ? "missing" : "failed");
+    }
   }, [id]);
   useEffect(() => { load(); }, [load]);
 
@@ -72,6 +78,21 @@ export default function ProjectDetail() {
     }
   };
 
+  if (loadError) {
+    return (
+      <ResearchLayout title="Research project">
+        <EmptyState
+          icon={<FileText />}
+          title={loadError === "missing" ? "This project isn't available." : "This project couldn't be loaded."}
+          description={loadError === "missing" ? "It may have been removed, or it belongs to a team you're not part of." : "Nothing has changed. Please try again in a moment."}
+          action={<>
+            {loadError === "failed" && <Button size="sm" onClick={load}>Try again</Button>}
+            <Button size="sm" variant="secondary" onClick={() => navigate("/projects")}>All projects</Button>
+          </>}
+        />
+      </ResearchLayout>
+    );
+  }
   if (!project) return <div className="p-6"><SkeletonCard rows={4} /></div>;
 
   return (
@@ -417,8 +438,8 @@ function Team({ members, projectId }) {
 
   const ROLE_COLORS = {
     "Principal Investigator": "border-[#0F2847] text-[#0F2847]",
-    "Co-Investigator":        "border-blue-600 text-blue-700",
-    "Methodology Lead":       "border-purple-600 text-purple-700",
+    "Co-Investigator":        "border-navy-700 text-navy-700",
+    "Methodology Lead":       "border-navy-700 text-navy-700",
     "Data Analysis Lead":     "border-green-700 text-green-700",
     "Literature Review Lead": "border-amber-700 text-amber-700",
     "Grant Writing Lead":     "border-rose-700 text-rose-700",

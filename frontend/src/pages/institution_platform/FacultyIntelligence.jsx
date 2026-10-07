@@ -173,7 +173,7 @@ function FacultyIntelligenceSidebar({ top, atRisk, promo }) {
         </div>
         {top.length > 0 ? (
           <>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{top[0].name || "—"}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{top[0].name || "—"}</div>
             <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
               {top[0].department} · {top[0].publications_recent ?? 0} recent publications
             </p>
@@ -188,7 +188,7 @@ function FacultyIntelligenceSidebar({ top, atRisk, promo }) {
           <TrendingUp size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Promotion Ready</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
           {promo.length}
         </div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
@@ -201,7 +201,7 @@ function FacultyIntelligenceSidebar({ top, atRisk, promo }) {
           <AlertTriangle size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>At Risk</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
           {atRisk.length}
         </div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>

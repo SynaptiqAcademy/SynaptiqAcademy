@@ -96,8 +96,8 @@ function ProgressBar({ value }) {
 const RARITY_COLORS = {
   common:    "border-slate-200 bg-slate-50 text-slate-600",
   uncommon:  "border-emerald-200 bg-emerald-50 text-emerald-700",
-  rare:      "border-blue-200 bg-blue-50 text-blue-700",
-  epic:      "border-purple-200 bg-purple-50 text-purple-700",
+  rare:      "border-navy-200 bg-navy-50 text-navy-700",
+  epic:      "border-navy-200 bg-navy-50 text-navy-700",
   legendary: "border-amber-300 bg-amber-50 text-amber-800",
 };
 

@@ -11,6 +11,7 @@ import {
   Card, Button, Badge, ErrorState, Skeleton,
   DataTable, Pagination, ProgressBar,
 } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -55,9 +56,9 @@ function ErrorCard({ message, onRetry }) {
 // only their containers are migrated to Card.
 
 const TYPE_COLORS = {
-  researchers: "bg-blue-500",
-  projects:    "bg-indigo-500",
-  journals:    "bg-violet-500",
+  researchers: "bg-navy-500",
+  projects:    "bg-navy-500",
+  journals:    "bg-navy-500",
   conferences: "bg-amber-500",
   grants:      "bg-emerald-500",
   mentors:     "bg-teal-500",
@@ -66,7 +67,7 @@ const TYPE_COLORS = {
 
 const ACTION_COLORS = {
   accepted:   "bg-emerald-500",
-  bookmarked: "bg-blue-400",
+  bookmarked: "bg-navy-400",
   dismissed:  "bg-red-400",
   clicked:    "bg-slate-400",
 };
@@ -210,8 +211,8 @@ function TopAreasChart({ data, loading }) {
       {data.slice(0, 10).map((d, i) => {
         const pct = Math.round(((d.count || 0) / maxCount) * 100);
         const colors = [
-          "bg-blue-500", "bg-indigo-500", "bg-violet-500", "bg-emerald-500",
-          "bg-teal-500", "bg-amber-500", "bg-rose-500", "bg-cyan-500", "bg-slate-500", "bg-purple-500",
+          "bg-navy-500", "bg-navy-500", "bg-navy-500", "bg-emerald-500",
+          "bg-teal-500", "bg-amber-500", "bg-rose-500", "bg-navy-500", "bg-slate-500", "bg-navy-500",
         ];
         return (
           <div key={d.area || d.name || i} className="flex items-center gap-3">
@@ -295,7 +296,7 @@ export default function AdminRecommendationCenter() {
       const res = await api.get("/admin/recommendations/stats");
       setStats(res.data);
     } catch (err) {
-      setStatsError(err?.response?.data?.detail || "Failed to load stats.");
+      setStatsError(safeErrorMessage(err, "Failed to load stats."));
     } finally {
       setStatsLoading(false);
     }
@@ -311,7 +312,7 @@ export default function AdminRecommendationCenter() {
       const arr = d.by_type || d.interactions_by_type || [];
       setByType(Array.isArray(arr) ? arr : []);
     } catch (err) {
-      setByTypeError(err?.response?.data?.detail || "Failed to load type breakdown.");
+      setByTypeError(safeErrorMessage(err, "Failed to load type breakdown."));
     } finally {
       setByTypeLoading(false);
     }
@@ -324,7 +325,7 @@ export default function AdminRecommendationCenter() {
       const res = await api.get("/admin/recommendations/profile-coverage");
       setCoverage(res.data);
     } catch (err) {
-      setCoverageError(err?.response?.data?.detail || "Failed to load coverage data.");
+      setCoverageError(safeErrorMessage(err, "Failed to load coverage data."));
     } finally {
       setCoverageLoading(false);
     }
@@ -338,7 +339,7 @@ export default function AdminRecommendationCenter() {
       const arr = res.data?.areas || res.data?.top_areas || res.data || [];
       setTopAreas(Array.isArray(arr) ? arr : []);
     } catch (err) {
-      setTopAreasError(err?.response?.data?.detail || "Failed to load top areas.");
+      setTopAreasError(safeErrorMessage(err, "Failed to load top areas."));
     } finally {
       setTopAreasLoading(false);
     }
@@ -356,7 +357,7 @@ export default function AdminRecommendationCenter() {
       setInteractions(Array.isArray(arr) ? arr : []);
       setIntTotal(d.total || arr.length || 0);
     } catch (err) {
-      setIntError(err?.response?.data?.detail || "Failed to load interactions.");
+      setIntError(safeErrorMessage(err, "Failed to load interactions."));
     } finally {
       setIntLoading(false);
     }
@@ -369,7 +370,7 @@ export default function AdminRecommendationCenter() {
       const res = await api.get("/admin/recommendations/quality-metrics");
       setQuality(res.data);
     } catch (err) {
-      setQualityError(err?.response?.data?.detail || "Failed to load quality metrics.");
+      setQualityError(safeErrorMessage(err, "Failed to load quality metrics."));
     } finally {
       setQualityLoading(false);
     }
@@ -423,7 +424,7 @@ export default function AdminRecommendationCenter() {
         setRefreshingAll(false);
       }, 3000);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed to trigger profile refresh.");
+      toast.error(safeErrorMessage(err, "Failed to trigger profile refresh."));
       setRefreshingAll(false);
     }
   };
@@ -643,7 +644,7 @@ export default function AdminRecommendationCenter() {
                 </div>
                 <div>
                   <div className="text-xs text-slate-500 mb-1">Fresh Profiles</div>
-                  <div className="text-2xl font-bold font-mono text-blue-700">
+                  <div className="text-2xl font-bold font-mono text-navy-700">
                     {coverage?.fresh_profiles != null ? coverage.fresh_profiles.toLocaleString() : "—"}
                   </div>
                 </div>

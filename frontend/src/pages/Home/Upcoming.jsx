@@ -64,8 +64,8 @@ function DeadlineRow({ item, last }) {
 export default function Upcoming({ deadlines = [] }) {
   return (
     <section aria-label="Upcoming Deadlines">
-      <div className="flex items-baseline justify-between mb-4">
-        <h2 style={{ ...TYPE.label, margin: 0, fontSize: "0.72rem" }}>What's next</h2>
+      <div className="hm-block-head">
+        <h2 className="hm-h2">Deadlines</h2>
         <Link
           to="/today"
           style={{ ...TYPE.caption, color: TEXT_MUTED, textDecoration: "none", transition: transition.colorFast }}

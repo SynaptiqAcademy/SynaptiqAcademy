@@ -18,9 +18,10 @@ import {
   UserCheck, Plus, Lightbulb,
   ClipboardCheck,
 } from "lucide-react";
+import { safeErrorMessage } from "../lib/api";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const BORDER  = "#E4E8EF";
+const BORDER  = "var(--sq-border)";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function cap(s) {
@@ -56,8 +57,8 @@ const LEVEL_LABEL = {
 };
 const LEVEL_STYLE = {
   1: { color: "#64748B", bg: "#F8FAFC" },
-  2: { color: "#0369A1", bg: "#F0F9FF" },
-  3: { color: "#0F2847", bg: "#EFF6FF" },
+  2: { color: "#0F2847", bg: "#eef2f8" },
+  3: { color: "#0F2847", bg: "#eef2f8" },
   4: { color: "#065F46", bg: "#ECFDF5" },
   5: { color: "#92400E", bg: "#FFFBEB" },
 };
@@ -187,36 +188,33 @@ export default function ReviewerMarketplace() {
   return (
     <ResearchLayout
       title="Reviewer Marketplace"
-      subtitle="Expert peer review matching for academic research"
+      subtitle="Find a reviewer, offer to review, and manage review requests."
+      // Real counts only; a row of zeros is hidden by PageLayout.
       stats={[
-        { label: "Reviewers",     value: total > 0 ? `${total}+` : "—" },
-        { label: "Available now", value: availableCount > 0 ? `${availableCount}` : "—" },
-        { label: "Countries",     value: "Global" },
-        { label: "Reviews",       value: "Conflict-aware" },
+        { label: "Reviewers",     value: total > 0 ? total.toLocaleString() : null },
+        { label: "Available now", value: availableCount > 0 ? availableCount : null },
       ]}
-      sidebar={<ReviewerMarketplaceSidebar myProfile={myProfile} compareList={compareList} />}
       actions={
         <>
-          <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} variant="hero" size="sm">
-            <Search size={13} strokeWidth={2} /> Find Reviewer
-          </Button>
           {myProfile?.reviewer_status === "active" ? (
             <Badge size="sm" variant="success">
-              <CheckCircle size={12} strokeWidth={2} /> You are a reviewer
+              <CheckCircle size={12} strokeWidth={2} /> You're a reviewer
             </Badge>
           ) : (
             <Button
-              variant="hero"
-              size="sm"
+              variant="secondary"
               onClick={() => {
                 api.get("/reviewer-marketplace/profile/me")
                   .then((r) => { setMyProfile(r.data); toast.success("Your reviewer profile is active."); })
                   .catch(() => toast.error("Could not activate reviewer profile."));
               }}
             >
-              <UserCheck size={13} strokeWidth={1.5} /> Become a Reviewer
+              <UserCheck size={13} strokeWidth={1.5} /> Become a reviewer
             </Button>
           )}
+          <Button variant="primary" onClick={() => setShowCreate(true)}>
+            <Plus size={13} strokeWidth={2} /> Post review request
+          </Button>
         </>
       }
     >
@@ -240,8 +238,22 @@ export default function ReviewerMarketplace() {
       {openRequests.length > 0 && (
         <OpenRequestsStrip requests={openRequests} onPost={() => setShowCreate(true)} />
       )}
+      {/* ── Your reviewer status: one line, not a permanent panel ────────── */}
+      {myProfile && myProfile.reviewer_status !== "active" && (
+        <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--sq-text-secondary)" }}>
+          You're not listed as a reviewer yet. Becoming one lets you appear in reviewer matches and receive review requests.
+        </p>
+      )}
+      {myProfile?.reviewer_status === "active" && (myProfile.reviews_completed > 0 || myProfile.reviewer_score > 0) && (
+        <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--sq-text-secondary)" }}>
+          Your reviewer profile: {LEVEL_LABEL[myProfile.reviewer_level] || "Active reviewer"}
+          {myProfile.reviews_completed > 0 && <> · {myProfile.reviews_completed} review{myProfile.reviews_completed === 1 ? "" : "s"} completed</>}
+          {myProfile.reviewer_score > 0 && <> · score {Math.round(myProfile.reviewer_score)}</>}
+        </p>
+      )}
       {/* ── Reviewer Explorer ─────────────────────────────────────────────── */}
-      <div ref={explorerRef} style={{ marginTop: 36 }}>
+      <div ref={explorerRef} style={{ marginTop: 8 }}>
+        <h2 className="sq-h2">Find a reviewer</h2>
         {/* Search + filter toggle + post request */}
         <div style={{ display: "flex", gap: 10, marginBottom: 14, alignItems: "center" }}>
           <div style={{ flex: 1 }}>
@@ -254,14 +266,12 @@ export default function ReviewerMarketplace() {
             />
           </div>
           <Button
-            variant={showFilters ? "primary" : "outline"}
+            variant="secondary"
+            aria-expanded={showFilters}
             onClick={() => setShowFilters((v) => !v)}
             className="shrink-0"
           >
             Filters{Object.values(filters).some(Boolean) ? ` (${Object.values(filters).filter(Boolean).length})` : ""}
-          </Button>
-          <Button onClick={() => setShowCreate(true)} className="shrink-0">
-            <Plus size={13} strokeWidth={2} /> Post Request
           </Button>
         </div>
 
@@ -273,8 +283,9 @@ export default function ReviewerMarketplace() {
 
         {/* Count */}
         {!loading && !gated && (
-          <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 14, fontFamily: "monospace" }}>
-            {total.toLocaleString()} reviewers in marketplace
+          <div style={{ fontSize: 12, color: "var(--sq-text-tertiary)", marginBottom: 14 }}>
+            {total.toLocaleString()} reviewer{total === 1 ? "" : "s"}
+            {compareList.length === 1 && <> · {compareList[0].full_name} selected — select one more to compare</>}
           </div>
         )}
 
@@ -282,7 +293,7 @@ export default function ReviewerMarketplace() {
         {gated ? (
           <GatedState />
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(256px, 1fr))", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))", gap: 14 }}>
             {loading
               ? Array.from({ length: 8 }).map((_, i) => <ReviewerSkeleton key={i} />)
               : items.map((r) => (
@@ -308,7 +319,7 @@ export default function ReviewerMarketplace() {
         )}
 
         {/* Integrity note — compact footnote, not its own section */}
-        <p style={{ marginTop: 24, fontSize: 11, color: "#94A3B8", lineHeight: 1.6, maxWidth: 640 }}>
+        <p style={{ marginTop: 24, fontSize: 12, color: "var(--sq-text-tertiary)", lineHeight: 1.6, maxWidth: 640 }}>
           <Shield size={11} strokeWidth={1.5} style={{ display: "inline", marginRight: 4, verticalAlign: -1 }} />
           Review invitations include conflict-of-interest checks. Synaptiq does not endorse or guarantee
           journal acceptance; reviews are conducted with confidentiality as agreed between parties.
@@ -333,67 +344,6 @@ export default function ReviewerMarketplace() {
         />
       )}
     </ResearchLayout>
-  );
-}
-
-// ── Right rail — real reviewer-profile state + live compare selection ─────────
-function ReviewerMarketplaceSidebar({ myProfile, compareList }) {
-  const isActive = myProfile?.reviewer_status === "active";
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <Card padding="lg">
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-          <UserCheck size={13} style={{ color: NAVY }} />
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Your Reviewer Profile</div>
-        </div>
-        {isActive ? (
-          <>
-            <Badge size="sm" variant="success" style={{ marginBottom: 10 }}>
-              <CheckCircle size={11} strokeWidth={2} /> {LEVEL_LABEL[myProfile?.reviewer_level] || "Active reviewer"}
-            </Badge>
-            <div style={{ display: "flex", gap: 20 }}>
-              {myProfile?.reviewer_score > 0 && (
-                <div>
-                  <div style={{ fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700, color: "#0f172a" }}>{Math.round(myProfile.reviewer_score)}</div>
-                  <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Score</div>
-                </div>
-              )}
-              {myProfile?.reviews_completed > 0 && (
-                <div>
-                  <div style={{ fontFamily: "Georgia, serif", fontSize: 20, fontWeight: 700, color: "#0f172a" }}>{myProfile.reviews_completed}</div>
-                  <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Reviews</div>
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          <p style={{ fontSize: 12, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-            You're not listed as a reviewer yet. Activate your profile to appear in reviewer matches and receive review requests.
-          </p>
-        )}
-      </Card>
-
-      <Card padding="lg">
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-          <BarChart2 size={13} style={{ color: NAVY }} />
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Comparing</div>
-        </div>
-        {compareList.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {compareList.map((r) => (
-              <div key={r.user_id} style={{ fontSize: 12, color: "#374151" }}>{r.full_name}</div>
-            ))}
-            {compareList.length < 2 && (
-              <p style={{ fontSize: 11, color: "#94A3B8", margin: "6px 0 0" }}>Add one more to compare.</p>
-            )}
-          </div>
-        ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
-            Select up to 3 reviewers below to compare them side by side.
-          </p>
-        )}
-      </Card>
-    </div>
   );
 }
 
@@ -443,16 +393,7 @@ function AiRecsPanel({ recs, loading, compareList, toggleCompare }) {
 
 // ── Open Requests strip ───────────────────────────────────────────────────────
 function OpenRequestsStrip({ requests, onPost }) {
-  const TYPE_COLOR = {
-    manuscript:   NAVY,
-    conference:   "#1D4ED8",
-    grant:        EMERALD,
-    thesis:       "#7C3AED",
-    dissertation: "#9333EA",
-    methodology:  "#0369A1",
-    statistical:  "#92400E",
-    custom:       "#64748B",
-  };
+  const TYPE_COLOR = {}; // review types are labels, not status: one neutral colour
 
   return (
     <div style={{ marginTop: 20, padding: "14px 0 16px", borderBottom: `1px solid ${BORDER}` }}>
@@ -474,7 +415,7 @@ function OpenRequestsStrip({ requests, onPost }) {
             padding="sm"
             style={{ display: "flex", flexDirection: "column", gap: 5, minWidth: 180, maxWidth: 220, flexShrink: 0 }}
           >
-            <span style={{ fontSize: 9, fontWeight: 700, color: TYPE_COLOR[req.review_type] || "#64748B", textTransform: "uppercase", letterSpacing: "0.07em" }}>
+            <span style={{ fontSize: 9, fontWeight: 700, color: "var(--sq-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.07em" }}>
               {cap(req.review_type)}
             </span>
             <div style={{ fontSize: 12, fontWeight: 600, color: NAVY, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
@@ -529,7 +470,7 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 4 }}>
-              <h3 style={{ fontFamily: "Georgia, serif", fontSize: 14, color: "#0F172A", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <h3 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 14, color: "#0F172A", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {r.full_name || "Reviewer"}
               </h3>
               {r.verified_reviewer && (
@@ -616,7 +557,7 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
 
       {/* Footer */}
       <div
-        style={{ borderTop: `1px solid ${BORDER}`, padding: "7px 16px", display: "flex", gap: 10, background: "#FAFBFC", alignItems: "center" }}
+        style={{ borderTop: `1px solid ${BORDER}`, padding: "8px 16px", display: "flex", flexWrap: "wrap", gap: "6px 12px", background: "var(--sq-surface-2)", alignItems: "center" }}
         onClick={(e) => e.stopPropagation()}
       >
         <Button as={Link} to={profileUrl(r)} onClick={(e) => e.stopPropagation()} variant="link" size="sm" style={{ color: NAVY }}>
@@ -677,7 +618,7 @@ function ReviewerCardCompact({ r, isCompared, onCompare, loading: cardLoading })
           <div style={{ position: "absolute", bottom: 0, right: 0, width: 9, height: 9, borderRadius: "50%", background: avail.dot, border: "1.5px solid white" }} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "Georgia, serif" }}>{r?.full_name}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{r?.full_name}</div>
           <div style={{ fontSize: 10, color: "#64748B", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r?.institution || r?.country || ""}</div>
         </div>
         {r?.verified_reviewer && (
@@ -922,7 +863,7 @@ function ComparePanel({ reviewers, onRemove, onClose }) {
               <th style={{ width: 90, padding: "4px 12px 4px 0", textAlign: "left", fontSize: 9, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", borderBottom: "1px solid rgba(255,255,255,0.08)" }} />
               {reviewers.map((r) => (
                 <th key={r.user_id} style={{ padding: "4px 14px", textAlign: "left", borderBottom: "1px solid rgba(255,255,255,0.08)", minWidth: 160 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: "white", fontFamily: "Georgia, serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{r.full_name}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "white", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{r.full_name}</div>
                   <Button variant="link" size="sm" onClick={() => onRemove(r.user_id)} style={{ color: "rgba(255,255,255,0.3)", marginTop: 2, fontSize: 9 }}>
                     <X size={7} strokeWidth={1.5} /> Remove
                   </Button>
@@ -985,7 +926,7 @@ function CreateRequestModal({ onClose, onCreated }) {
       const { data } = await api.post("/reviewer-marketplace/requests", payload);
       onCreated(data);
     } catch (err) {
-      setError(err?.response?.data?.detail || "Failed to create request. Please try again.");
+      setError(safeErrorMessage(err, "Failed to create request. Please try again."));
       setSubmitting(false);
     }
   };

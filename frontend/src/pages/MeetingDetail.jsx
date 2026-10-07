@@ -25,6 +25,7 @@ import {
   useMeetingDetail, updateMeeting, deleteMeeting, addMeetingNote,
   addActionItem, updateActionItem, runMeetingAI,
 } from "@/hooks/useMeetings";
+import { safeErrorMessage } from "@/lib/api";
 
 const TABS = [
   { id: "overview", label: "Overview" },
@@ -319,7 +320,7 @@ function AITab({ meeting, onGenerated }) {
       setResult(res);
       if (kind === "summary") onGenerated?.();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "AI request failed");
+      toast.error(safeErrorMessage(e, "AI request failed"));
     } finally {
       setRunning(null);
     }

@@ -20,12 +20,13 @@ import {
   RefreshCw, Loader2, ExternalLink, BarChart2, BookOpen,
   ChevronRight, AlertCircle, CheckCircle2, Database,
 } from "lucide-react";
+import { safeErrorMessage } from "../../lib/api";
 
 function MetricCell({ label, value, sub }) {
   return (
     <div style={{ background: WARM, border: `1px solid ${BRD}`, borderRadius: 10, padding: "12px 14px" }}>
       <div style={{ ...TYPE.label, marginBottom: 6 }}>{label}</div>
-      <div style={{ ...TYPE.h3, fontFamily: "Georgia, serif" }}>{value ?? "—"}</div>
+      <div style={{ ...TYPE.h3, fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{value ?? "—"}</div>
       {sub && <div style={{ ...TYPE.meta, marginTop: 4 }}>{sub}</div>}
     </div>
   );
@@ -62,7 +63,7 @@ export default function OpenAlexSettings() {
       toast.success(`OpenAlex synced — h-index: ${data.openalex?.h_index ?? 0}, ${data.openalex?.citations?.toLocaleString() ?? 0} citations`);
       load();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "OpenAlex author sync failed");
+      toast.error(safeErrorMessage(e, "OpenAlex author sync failed"));
     } finally { setSyncingAuthor(false); }
   };
 
@@ -73,7 +74,7 @@ export default function OpenAlexSettings() {
       toast.success(`Citation sync: ${data.synced} publications updated, +${data.new_citations} new citations`);
       load();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Citation sync failed");
+      toast.error(safeErrorMessage(e, "Citation sync failed"));
     } finally { setSyncingCitations(false); }
   };
 

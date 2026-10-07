@@ -89,10 +89,10 @@ export default function ProviderBrowse() {
   useEffect(() => { fetchProviders(); }, [fetchProviders]);
 
   const verLabel = (lvl) => {
-    if (lvl >= 5) return { label: "Elite", color: "#7C3AED" };
+    if (lvl >= 5) return { label: "Elite", color: "#0F2847" };
     if (lvl >= 4) return { label: "Expert", color: EMERALD };
     if (lvl >= 3) return { label: "Institution", color: ACCENT };
-    if (lvl >= 2) return { label: "ID Verified", color: "#0891B2" };
+    if (lvl >= 2) return { label: "ID Verified", color: "#0F2847" };
     return null;
   };
 

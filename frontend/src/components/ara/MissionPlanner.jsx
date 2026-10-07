@@ -10,7 +10,7 @@ import CreditCost from "@/components/billing/CreditCost";
 const STEP_TYPE_META = {
   safe:     { icon: CheckCircle, color: "text-green-500",  label: "Auto" },
   approval: { icon: ShieldAlert, color: "text-orange-500", label: "Needs Approval" },
-  info:     { icon: Info,        color: "text-blue-400",   label: "Info" },
+  info:     { icon: Info,        color: "text-navy-400",   label: "Info" },
 };
 
 function StepRow({ step, index }) {
@@ -106,7 +106,7 @@ export default function MissionPlanner({ mission, steps, onApproved, onCancelled
         <button
           onClick={handleApprove}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-navy-700 text-white text-sm rounded hover:bg-navy-700 disabled:opacity-50"
         >
           <Play size={14} />
           {loading ? "Starting…" : "Approve & Start"}

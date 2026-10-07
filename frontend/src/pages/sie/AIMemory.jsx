@@ -35,7 +35,7 @@ function TagEditor({ label, items, onChange }) {
           onClick={() => { if (input.trim()) { onChange([...items, input.trim()]); setInput(""); } }}
           size="sm"
           aria-label={`Add ${label.toLowerCase()}`}
-          style={{ background: ACCENT }}
+          
         >
           <Plus size={13} />
         </Button>

@@ -9,6 +9,7 @@ import {
   Input, Textarea, FormSelect, EmptyState, Spinner,
 } from "@/components/ds";
 import { confirmDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "@/lib/api";
 
 function useAOS(path) {
   const [data, setData] = useState(null);
@@ -45,7 +46,7 @@ export default function AdminCommunications() {
       refBanners();
       refStats();
     } catch (e) {
-      setMsg(e?.response?.data?.detail || "Error");
+      setMsg(safeErrorMessage(e, "Error"));
     } finally {
       setCreating(false);
     }

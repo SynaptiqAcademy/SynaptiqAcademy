@@ -16,12 +16,13 @@ import { Button } from "@/components/ds/Button";
 import { EmptyState } from "@/components/ds/EmptyState";
 import { SkeletonCard } from "@/components/ds/LoadingState";
 import CommentThread from "@/components/comments/CommentThread";
+import { safeErrorMessage } from "../../lib/api";
 
 // Same status palette as WorkspaceKanban.jsx, kept in sync deliberately —
 // tasks are the same underlying entity, just viewed differently.
 const STATUS_COLOR = {
-  backlog: TEXT_MUTED, planned: "#0284C7", in_progress: AMBER,
-  review: "#7C3AED", completed: EMERALD,
+  backlog: TEXT_MUTED, planned: "#0F2847", in_progress: AMBER,
+  review: "#0F2847", completed: EMERALD,
 };
 const PRIORITY_COLOR = { high: CRIMSON, medium: AMBER, low: TEXT_MUTED };
 
@@ -254,7 +255,7 @@ export default function WorkspaceGantt({ wsId, canEdit }) {
     } catch (e) {
       // roll back
       if (prevTask) setData((d) => ({ ...d, tasks: d.tasks.map((t) => (t.id === taskId ? prevTask : t)) }));
-      toast.error(e?.response?.data?.detail || "Failed to update task");
+      toast.error(safeErrorMessage(e, "Failed to update task"));
     }
   };
 
@@ -601,7 +602,7 @@ function TaskEditModal({ task, projects, allTasks, defaultProjectId, canEdit, on
       }
       onSaved();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed to save task");
+      toast.error(safeErrorMessage(e, "Failed to save task"));
     } finally {
       setSaving(false);
     }

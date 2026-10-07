@@ -7,10 +7,10 @@ import { rankActions } from "../../hooks/useUserMemory";
 // Per-category accent color (background tint for the icon tile)
 const CAT_COLOR = {
   Research: "#0F2847",
-  AI:       "#7C3AED",
+  AI:       "#0F2847",
   Teaching: "#047857",
   Funding:  "#B45309",
-  Planning: "#1D4ED8",
+  Planning: "#0F2847",
 };
 
 // Stable category order

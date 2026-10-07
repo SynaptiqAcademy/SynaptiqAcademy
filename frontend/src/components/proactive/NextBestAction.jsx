@@ -15,13 +15,13 @@ import { getNextAction, dismissRec, acceptRec } from "../../services/proactiveEn
 import { NAVY } from "@/lib/tokens";
 
 const CAT_COLOR = {
-  writing:       "#1D4ED8",
-  publishing:    "#7C3AED",
+  writing:       "#0F2847",
+  publishing:    "#0F2847",
   research:      "#0F2847",
   collaboration: "#047857",
   funding:       "#B45309",
-  teaching:      "#0891B2",
-  institution:   "#6D28D9",
+  teaching:      "#0F2847",
+  institution:   "#0F2847",
   career:        "#DC2626",
   productivity:  "#475569",
 };

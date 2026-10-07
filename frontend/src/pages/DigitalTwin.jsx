@@ -143,7 +143,7 @@ function OverviewTab({ twin, profile, ws, recs }) {
           <div className="space-y-2">
             {ws.observations.slice(0, 4).map((o, i) => (
               <div key={i} className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />
+                <div className="w-1.5 h-1.5 rounded-full bg-navy-400 mt-1.5 flex-shrink-0" />
                 <p className="text-[12px] text-slate-600">{o.pattern}</p>
               </div>
             ))}
@@ -398,7 +398,7 @@ function SettingsTab({ twin, onRefresh }) {
             label="Share with institution"
             hint="Allow institution administrators to view your Twin data (disabled by default)"
           />
-          {msg && <p className="text-[11px] text-blue-600">{msg}</p>}
+          {msg && <p className="text-[11px] text-navy-700">{msg}</p>}
         </div>
       </Section>
 
@@ -550,7 +550,7 @@ export default function DigitalTwin() {
       subtitle="Your evolving academic intelligence layer — derived from verified platform activity only"
       actions={
         <div className="flex items-center gap-3">
-          {syncMsg && <p className="text-[11px] text-blue-600">{syncMsg}</p>}
+          {syncMsg && <p className="text-[11px] text-navy-700">{syncMsg}</p>}
           <Button onClick={handleSync} disabled={syncing} variant="hero" size="sm">
             <RefreshCw size={12} className={syncing ? "animate-spin" : ""} />
             {syncing ? "Syncing…" : "Sync Twin"}

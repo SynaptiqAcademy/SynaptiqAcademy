@@ -48,7 +48,7 @@ function MarketplaceHomeSidebar({ trending, featured }) {
               <span className="text-sm font-bold text-crimson-600">{(topFeatured.display_name || "?")[0]}</span>
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{topFeatured.display_name}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{topFeatured.display_name}</div>
               <div style={{ fontSize: 11, color: "#64748B", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{topFeatured.headline}</div>
             </div>
           </div>
@@ -90,9 +90,9 @@ export default function MarketplaceHome() {
   const categories = [
     { key: "statistical_analysis", label: "Statistical Analysis", color: ACCENT },
     { key: "systematic_review", label: "Systematic Review", color: EMERALD },
-    { key: "scientific_writing", label: "Scientific Writing", color: "#7C3AED" },
-    { key: "grant_writing", label: "Grant Writing", color: "#DB2777" },
-    { key: "programming", label: "Research Software", color: "#0891B2" },
+    { key: "scientific_writing", label: "Scientific Writing", color: "#0F2847" },
+    { key: "grant_writing", label: "Grant Writing", color: "#0F2847" },
+    { key: "programming", label: "Research Software", color: "#0F2847" },
     { key: "peer_review", label: "Peer Review", color: "#D97706" },
     { key: "data_visualization", label: "Data Visualization", color: "#059669" },
     { key: "research_consulting", label: "Research Consulting", color: NAVY },

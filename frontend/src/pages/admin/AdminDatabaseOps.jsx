@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { EMERALD, AMBER, CRIMSON, INFO, VIOLET } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Button, Card, StatCard, StatGrid, DataTable, Alert } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 function useAOS(path) {
   const [data, setData] = useState(null);
@@ -52,7 +53,7 @@ function DangerZone() {
     setError("");
     api.post("/admin/platform-reset/execute", { confirm: "RESET" })
       .then((r) => { setResult(r.data); setConfirmText(""); loadPreview(); })
-      .catch((e) => setError(e?.response?.data?.detail || "Reset failed."))
+      .catch((e) => setError(safeErrorMessage(e, "Reset failed.")))
       .finally(() => setExecuting(false));
   };
 

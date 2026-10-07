@@ -160,29 +160,26 @@ export default function Collaborations() {
   return (
     <ResearchLayout
       title="Collaborations"
-      subtitle="Build your research network. Collaborate globally. Publish together."
+      subtitle="Discover open projects, manage your own and respond to invitations."
       stats={[
         { label: "Active",   value: hubLoading ? "—" : activeCount },
         { label: "Pending",  value: hubLoading ? "—" : pendingCount },
         { label: "Accepted", value: hubLoading ? "—" : (acceptedCount ?? "—") },
         { label: "Projects", value: hubLoading ? "—" : (totalProjects ?? "—") },
       ]}
-      sidebar={<CollaborationsSidebar mine={mine} hubLoading={hubLoading} />}
+      // The pending/completed rail earns its space only when it has something in it.
+      sidebar={(mine.pending?.length || mine.completed?.length) ? <CollaborationsSidebar mine={mine} hubLoading={hubLoading} /> : undefined}
       actions={
         <>
-          <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} variant="hero" size="sm">
-            <Search size={13} strokeWidth={2} /> Find Collaborations
-          </Button>
-          <Button as={Link} to="/collaboration-intelligence" variant="hero" size="sm">
-            <BrainCircuit size={12} strokeWidth={1.5} /> Find Researchers
+          <Button as={Link} to="/researchers" variant="secondary">
+            <Search size={13} strokeWidth={2} /> Find researchers
           </Button>
           <Button
             data-testid={TID.collabCreateBtn}
             onClick={() => navigate("/collaborations/new")}
-            variant="hero"
-            size="sm"
+            variant="primary"
           >
-            <Plus size={13} strokeWidth={2} /> Post Collaboration
+            <Plus size={13} strokeWidth={2} /> Post collaboration
           </Button>
         </>
       }
@@ -229,7 +226,7 @@ export default function Collaborations() {
       {/* ── My Active Collaborations (if any) ───────────────────────────────── */}
       {!hubLoading && activeCount > 0 && (
         <section style={{ marginBottom: 32 }}>
-          <div className="overline mb-4">My Active Collaborations</div>
+          <h2 className="sq-h2">Your active collaborations</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {mine.active.slice(0, 3).map((c) => (
               <ActiveCollabCard key={c.id} c={c} />
@@ -240,9 +237,7 @@ export default function Collaborations() {
 
       {/* ── Open Collaborations explorer ────────────────────────────────────── */}
       <div ref={explorerRef} style={{ marginTop: 32 }}>
-        <h2 style={{ fontFamily: "Georgia, serif", fontSize: 24, color: NAVY, fontWeight: 400, marginBottom: 14 }}>
-          Open Collaborations
-        </h2>
+        <h2 className="sq-h2">Open collaborations</h2>
 
         {/* Search + filter toggle */}
         <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
@@ -266,7 +261,8 @@ export default function Collaborations() {
             />
           </div>
           <Button
-            variant={showFilters ? "primary" : "outline"}
+            variant="secondary"
+            aria-expanded={showFilters}
             onClick={() => setShowFilters((v) => !v)}
           >
             Filters{hasFilters ? ` (${[type, area].filter(Boolean).length})` : ""}
@@ -274,7 +270,7 @@ export default function Collaborations() {
         </div>
 
         {showFilters && (
-          <div style={{ marginBottom: 16, background: "white", border: "1px solid #E4E8EF", padding: "16px 14px" }}>
+          <div style={{ marginBottom: 16, background: "white", border: "1px solid var(--sq-border)", borderRadius: 6, padding: 16 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.1em" }}>Filters</span>
               {hasFilters && (
@@ -302,7 +298,7 @@ export default function Collaborations() {
 
         {/* Count */}
         {!loading && (
-          <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 12, fontFamily: "monospace" }}>
+          <div style={{ fontSize: 12, color: "var(--sq-text-tertiary)", marginBottom: 12 }}>
             {items.length} open collaboration{items.length !== 1 ? "s" : ""}
           </div>
         )}
@@ -377,7 +373,7 @@ function CollaborationsSidebar({ mine, hubLoading }) {
 
       <Card padding="lg">
         <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>Completed</div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
           {hubLoading ? "—" : completed.length}
         </div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>

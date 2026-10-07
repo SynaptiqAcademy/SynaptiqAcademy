@@ -15,15 +15,16 @@ import {
 } from "@/components/ds";
 import { useAdminRealtime } from "@/contexts/AdminRealtimeContext";
 import { confirmDialog, promptDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "@/lib/api";
 
 const TABS = ["Overview", "Timeline", "Actions"];
 
 function PlanBadge({ plan }) {
   const styles = {
     free: "bg-slate-100 text-slate-700",
-    researcher: "bg-blue-50 text-blue-700",
-    pro_researcher: "bg-indigo-50 text-indigo-700",
-    institution: "bg-purple-50 text-purple-700",
+    researcher: "bg-navy-50 text-navy-700",
+    pro_researcher: "bg-navy-50 text-navy-700",
+    institution: "bg-navy-50 text-navy-700",
   };
   return <span className={`inline-block px-2 py-0.5 text-xs font-medium ${styles[plan] || styles.free}`}>{plan?.replace("_", " ") || "free"}</span>;
 }
@@ -117,7 +118,7 @@ export default function AdminUserDetail() {
       setNewPlan(r.data.plan_code || "free");
       setNewRole(r.data.role || "user");
     } catch (e) {
-      setError(e.response?.data?.detail || "User not found");
+      setError(safeErrorMessage(e, "User not found"));
     } finally {
       setLoading(false);
     }
@@ -133,7 +134,7 @@ export default function AdminUserDetail() {
       ]);
       setTimelineData({ ...timelineRes.data, ...historyRes.data });
     } catch (e) {
-      setTimelineError(e.response?.data?.detail || "Timeline requires super-admin access");
+      setTimelineError(safeErrorMessage(e, "Timeline requires super-admin access"));
     } finally {
       setTimelineLoading(false);
     }
@@ -173,7 +174,7 @@ export default function AdminUserDetail() {
       setReason("");
       await loadUser();
     } catch (e) {
-      toast.error(e.response?.data?.detail || "Action failed");
+      toast.error(safeErrorMessage(e, "Action failed"));
     } finally {
       setActLoading(false);
     }
@@ -190,7 +191,7 @@ export default function AdminUserDetail() {
       toast.success(`Gifted ${giftMonths} month${giftMonths !== 1 ? "s" : ""} of ${giftPlan.replace("_", " ")}`);
       await loadUser();
     } catch (e) {
-      toast.error(e.response?.data?.detail || "Gift failed");
+      toast.error(safeErrorMessage(e, "Gift failed"));
     } finally {
       setActLoading(false);
     }
@@ -523,7 +524,7 @@ export default function AdminUserDetail() {
                         toast.success("User deleted");
                         navigate("/admin/users");
                       } catch (e) {
-                        toast.error(e.response?.data?.detail || "Delete failed");
+                        toast.error(safeErrorMessage(e, "Delete failed"));
                       } finally { setActLoading(false); }
                     }}
                     disabled={actLoading}

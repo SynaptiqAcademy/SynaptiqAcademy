@@ -19,7 +19,7 @@ function ProviderProfileSidebar({ summary, p, userId }) {
             <Star size={13} style={{ color: NAVY }} />
             <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Rating Breakdown</div>
           </div>
-          <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{summary.overall}</div>
+          <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{summary.overall}</div>
           <div style={{ display: "flex", gap: 2, margin: "4px 0 10px" }}>
             {[1, 2, 3, 4, 5].map((s) => <Star key={s} size={13} style={{ color: "#F59E0B" }} fill={s <= Math.round(summary.overall) ? "#F59E0B" : "none"} />)}
           </div>
@@ -92,10 +92,10 @@ export default function ProviderProfile() {
   const p = portfolio.provider;
 
   const verLabel = (lvl) => {
-    if (lvl >= 5) return { label: "Elite", color: "#7C3AED" };
+    if (lvl >= 5) return { label: "Elite", color: "#0F2847" };
     if (lvl >= 4) return { label: "Expert Verified", color: EMERALD };
     if (lvl >= 3) return { label: "Institution Verified", color: ACCENT };
-    if (lvl >= 2) return { label: "ID Verified", color: "#0891B2" };
+    if (lvl >= 2) return { label: "ID Verified", color: "#0F2847" };
     return null;
   };
   const ver = verLabel(p?.verification_level);

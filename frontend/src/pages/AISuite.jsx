@@ -68,8 +68,8 @@ const CATEGORIES = [
     label: "Research Preparation",
     description: "Understand the landscape before you write.",
     icon: FlaskConical,
-    color: "#7C3AED",
-    bg: "#FAF5FF",
+    color: "#0F2847",
+    bg: "#eef2f8",
     tools: [
       {
         to: "/literature-review",
@@ -102,8 +102,8 @@ const CATEGORIES = [
     label: "Writing & Enhancement",
     description: "Improve academic writing quality and clarity.",
     icon: PenLine,
-    color: "#2563EB",
-    bg: "#EFF6FF",
+    color: "#0F2847",
+    bg: "#eef2f8",
     tools: [
       {
         to: "/ai",
@@ -136,8 +136,8 @@ const CATEGORIES = [
     label: "Review & Validation",
     description: "Validate methodology and prepare for peer review.",
     icon: Microscope,
-    color: "#0891B2",
-    bg: "#F0F9FF",
+    color: "#0F2847",
+    bg: "#eef2f8",
     tools: [
       {
         to: "/manuscript-review",
@@ -255,38 +255,6 @@ function ToolCard({ tool }) {
   );
 }
 
-// ─── Credit balance widget ────────────────────────────────────────────────────
-function CreditWidget({ balance, loading }) {
-  return (
-    <Card padding="lg" style={{ background: "#0F2847", borderColor: "#0F2847", color: "#fff" }}>
-      <div className="flex items-center justify-between gap-6">
-        <div>
-          <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400">AI Credits</div>
-          <div className="font-serif text-4xl mt-1 flex items-center">
-            {loading ? <Spinner size={24} color="#ffffff" /> : (balance ?? 0).toLocaleString()}
-          </div>
-          <div className="text-xs text-slate-400 mt-1">available for AI tools</div>
-        </div>
-        <div className="flex flex-col gap-2 items-end">
-          <Link
-            to="/ai-credits"
-            className="text-xs border border-white/30 text-white px-3 py-1.5 hover:bg-white/10 inline-flex items-center gap-1"
-          >
-            <Coins size={11} strokeWidth={1.5} />
-            Manage credits
-          </Link>
-          <Link
-            to="/settings/billing"
-            className="text-xs text-slate-400 hover:text-white px-3 py-1.5 inline-flex items-center gap-1"
-          >
-            Purchase credits <ChevronRight size={10} strokeWidth={1.5} />
-          </Link>
-        </div>
-      </div>
-    </Card>
-  );
-}
-
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function AISuite() {
   const { user } = useAuth();
@@ -318,7 +286,7 @@ export default function AISuite() {
       navItems={AI_NAV_ITEMS}
       title="Research AI Suite"
       subtitle="AI tools designed to enhance existing research work — not replace it."
-      sidebar={!loading ? (
+      sidebar={!loading && (recentActivity.length > 0 || topKind) ? (
         <AISuiteSidebar balance={balance} recentActivity={recentActivity} topKind={topKind} />
       ) : undefined}
     >
@@ -326,7 +294,6 @@ export default function AISuite() {
 
         {/* ── Credit widget ────────────────────────────────────────────── */}
         <div className="max-w-sm">
-          <CreditWidget balance={balance} loading={loading} />
           {totalUsed30d > 0 && (
             <StatCard
               className="mt-3"
@@ -370,17 +337,6 @@ export default function AISuite() {
 function AISuiteSidebar({ balance, recentActivity, topKind }) {
   return (
     <div className="flex flex-col gap-4">
-      <Card padding="lg">
-        <div className="flex items-center gap-1.5 mb-2">
-          <Coins size={13} strokeWidth={1.5} className="text-[#0F2847]" />
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Available Credits</div>
-        </div>
-        <div className="font-serif text-3xl text-slate-900">{(balance ?? 0).toLocaleString()}</div>
-        <Link to="/ai-credits" className="text-xs text-[#0F2847] border-b border-[#0F2847] inline-block mt-2 hover:opacity-70">
-          Manage credits
-        </Link>
-      </Card>
-
       {recentActivity.length > 0 && (
         <Card padding="lg">
           <div className="flex items-center gap-1.5 mb-3">

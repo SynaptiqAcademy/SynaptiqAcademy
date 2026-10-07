@@ -82,10 +82,8 @@ function FeedRow({ item, last }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <p
           style={{
-            fontFamily: "Georgia, 'Times New Roman', serif",
-            fontSize: "1.05rem",
-            fontWeight: 600,
-            letterSpacing: "-0.01em",
+            fontSize: "0.9rem",
+            fontWeight: 500,
             color: TEXT_PRIMARY,
             margin: 0,
             lineHeight: 1.4,
@@ -124,16 +122,7 @@ export default function Activity({ feed, manuscripts }) {
   return (
     <section aria-label="Research Activity">
       <div className="flex items-baseline justify-between mb-1">
-        <h2
-          style={{
-            fontFamily: "Georgia, 'Times New Roman', serif",
-            fontSize: "1.35rem",
-            fontWeight: 700,
-            letterSpacing: "-0.02em",
-            color: TEXT_PRIMARY,
-            margin: 0,
-          }}
-        >
+        <h2 className="hm-h2">
           What's happening in your field
         </h2>
         <Link

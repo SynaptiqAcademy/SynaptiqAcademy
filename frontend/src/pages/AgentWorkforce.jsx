@@ -178,7 +178,7 @@ function MissionDetail({ missionId, onBack, onUpdated }) {
   const pendingApprovals = steps.filter(s => s.status === "awaiting_approval");
 
   const STATUS_DOT_COLOR = {
-    pending: "#CBD5E1", running: "#6366F1",
+    pending: "#CBD5E1", running: "#2f5486",
     completed: "#22C55E", failed: "#EF4444", skipped: "#CBD5E1",
     awaiting_approval: "#F97316", approved: "#4ADE80", rejected: "#F87171",
   };
@@ -307,7 +307,7 @@ function MissionDetail({ missionId, onBack, onUpdated }) {
               <span className="text-slate-300 shrink-0 font-mono">
                 {log.created_at ? new Date(log.created_at).toLocaleTimeString() : ""}
               </span>
-              <span className="text-indigo-500 shrink-0">[{log.agent}]</span>
+              <span className="text-navy-500 shrink-0">[{log.agent}]</span>
               <span className="text-slate-600">{log.detail}</span>
             </div>
           ))}
@@ -501,7 +501,7 @@ export default function AgentWorkforce() {
                   <Card key={a._id} padding="md">
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-sm font-medium text-slate-700">
-                        Mission: <span className="text-indigo-600">{a.mission_id?.slice(-8)}</span>
+                        Mission: <span className="text-navy-700">{a.mission_id?.slice(-8)}</span>
                       </p>
                       <span className="text-xs text-slate-300">
                         {a.created_at ? new Date(a.created_at).toLocaleString() : ""}

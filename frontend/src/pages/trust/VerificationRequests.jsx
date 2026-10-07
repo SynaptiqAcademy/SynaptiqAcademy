@@ -14,7 +14,7 @@ const STATUS_COLORS = {
   approved:         EMERALD,
   rejected:         ACCENT,
   auto_approved:    EMERALD,
-  more_info_needed: "#0369A1",
+  more_info_needed: "#0F2847",
 };
 
 export default function VerificationRequests() {

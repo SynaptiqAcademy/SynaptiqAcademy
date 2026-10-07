@@ -22,6 +22,7 @@ import {
   Sparkles, X, BookOpen, CalendarDays, Coins, UserPlus, ExternalLink,
   ShieldAlert, Loader2, Plus,
 } from "lucide-react";
+import { safeErrorMessage } from "../../lib/api";
 
 const KIND_META = {
   journal:    { label: "AI Journal Match",    endpoint: "/matching/journal",    op: "JOURNAL_FIT", icon: BookOpen },
@@ -51,7 +52,7 @@ function JournalCard({ r, manuscriptId }) {
     try {
       await api.post("/publication-hub/submissions", { manuscript_id: manuscriptId, venue_kind: "journal", venue_id: j.id, stage: "selected" });
       toast.success("Added to Publication Hub");
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
   return (
     <div className="border border-slate-200 bg-white p-4">
@@ -85,7 +86,7 @@ function ConferenceCard({ r, manuscriptId }) {
     try {
       await api.post("/publication-hub/submissions", { manuscript_id: manuscriptId, venue_kind: "conference", venue_id: c.id, stage: "selected" });
       toast.success("Added to Publication Hub");
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
   return (
     <div className="border border-slate-200 bg-white p-4">
@@ -94,7 +95,7 @@ function ConferenceCard({ r, manuscriptId }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap mb-1">
             {c.acronym && <span className="overline border border-[#0F2847]/20 bg-[#0F2847]/5 text-[#0F2847] px-1.5 py-0.5">{c.acronym}</span>}
-            {c.rank && <span className="overline border border-purple-200 bg-purple-50 text-purple-700 px-1.5 py-0.5">CORE {c.rank}</span>}
+            {c.rank && <span className="overline border border-navy-200 bg-navy-50 text-navy-700 px-1.5 py-0.5">CORE {c.rank}</span>}
             {c.submission_deadline && <span className="text-[10px] font-mono text-amber-700">Due {c.submission_deadline}</span>}
           </div>
           <Link to={`/conferences/${c.id}`} className="font-serif text-lg text-slate-900 hover:text-[#0F2847]">{c.name}</Link>
@@ -153,7 +154,7 @@ function ReviewerCard({ r, manuscriptId }) {
     try {
       await api.post(`/manuscripts/${manuscriptId}/review-requests`, { reviewer_id: u.id, note: "Suggested by AI match" });
       toast.success("Review requested");
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
   return (
     <div className="border border-slate-200 bg-white p-4">
@@ -198,7 +199,7 @@ export default function AIMatchModal({ open, onClose, kind, manuscriptId, projec
       : { manuscript_id: manuscriptId, top_n: 6 };
     api.post(meta.endpoint, body)
       .then(({ data }) => setData(data))
-      .catch((e) => setError(e?.response?.data?.detail || "Match failed"))
+      .catch((e) => setError(safeErrorMessage(e, "Match failed")))
       .finally(() => setLoading(false));
   }, [open, kind, manuscriptId, projectId, query, meta?.endpoint]);
 

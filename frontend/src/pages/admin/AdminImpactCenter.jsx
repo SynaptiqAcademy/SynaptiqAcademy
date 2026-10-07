@@ -10,6 +10,7 @@ import {
   Button, Card, StatCard, MiniBar, BarChart, DataTable, NavTabs,
   ErrorState, EmptyState, Skeleton, SkeletonCard,
 } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -24,7 +25,7 @@ const SIS_BUCKETS = [
 ];
 
 const BUCKET_COLORS = [
-  "#94A3B8", "#64748B", "#0891B2", NAVY,
+  "#94A3B8", "#64748B", "#0F2847", NAVY,
   VIOLET, "#D97706", "#D97706",
 ];
 
@@ -65,7 +66,7 @@ function useAdminImpact(path) {
       const res = await api.get(`/admin/impact/${path}`);
       setData(res.data);
     } catch (e) {
-      setError(e?.response?.data?.detail || "Failed to load.");
+      setError(safeErrorMessage(e, "Failed to load."));
     } finally {
       setLoading(false);
     }
@@ -137,7 +138,7 @@ export default function AdminImpactCenter() {
         setRefreshMsg(null);
       }, 3000);
     } catch (e) {
-      setRefreshMsg(e?.response?.data?.detail || "Failed to trigger refresh.");
+      setRefreshMsg(safeErrorMessage(e, "Failed to trigger refresh."));
     } finally {
       setRefreshingAll(false);
     }

@@ -11,6 +11,7 @@ import { Input } from "@/components/ds/Input";
 import { Avatar } from "@/components/ds/Avatar";
 import { Badge } from "@/components/ds/Badge";
 import { SkeletonCard } from "@/components/ds/LoadingState";
+import { safeErrorMessage } from "../lib/api";
 
 export default function ConferenceTeam() {
   const { teamId } = useParams();
@@ -26,7 +27,7 @@ export default function ConferenceTeam() {
       const { data } = await api.get(`/conference-teams/${teamId}`);
       setTeam(data);
     } catch (err) {
-      setError(err?.response?.data?.detail || "Team not found.");
+      setError(safeErrorMessage(err, "Team not found."));
     }
   }, [teamId]);
 
@@ -45,7 +46,7 @@ export default function ConferenceTeam() {
       toast.success("Invitation sent.");
       setInviteEmail("");
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Could not send invitation.");
+      toast.error(safeErrorMessage(err, "Could not send invitation."));
     } finally {
       setInviting(false);
     }
@@ -57,7 +58,7 @@ export default function ConferenceTeam() {
       toast.success("Removed.");
       load();
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Could not remove member.");
+      toast.error(safeErrorMessage(err, "Could not remove member."));
     }
   };
 

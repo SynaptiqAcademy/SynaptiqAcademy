@@ -20,8 +20,11 @@ import {
   MessageSquare, History, GitBranch, RotateCcw, ChevronUp, ChevronDown,
   CheckCircle2, Circle, Star, Save, Send, ListChecks, FileCheck2,
   ClipboardCheck, UserPlus, Search, Sparkles,
+  FileText as FileTextIcon,
 } from "lucide-react";
+import { EmptyState } from "@/components/ds/EmptyState";
 import { confirmDialog, promptDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "../lib/api";
 
 const STATUSES = [
   { value: "draft",                label: "Drafting"             },
@@ -106,7 +109,7 @@ function VersionTimeline({ mid, currentVersion, onRestored }) {
       await api.post(`/manuscripts/${mid}/versions/${v}/restore`);
       toast.success(`Restored to v${v}`);
       onRestored?.(); load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   if (versions.length === 0) return (
@@ -167,7 +170,7 @@ function CommentsPanel({ mid, section }) {
     try {
       await api.post(`/manuscripts/${mid}/comments`, { section, body });
       setBody(""); load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
     finally { setBusy(false); }
   };
   const resolve = async (cid) => {
@@ -359,7 +362,7 @@ function ReviewsPanel({ m, currentUserId, authors, refresh }) {
       toast.success("Review requested");
       setQ(""); setResults([]); setNote(""); setSection(""); setShowAssign(false);
       load(); refresh?.();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
     finally { setBusy(null); }
   };
 
@@ -499,11 +502,19 @@ export default function ManuscriptDetail() {
   const [journalMatches, setJournalMatches] = useState(null);
   const lastSavedLen = useRef(0);
 
+  const [loadError, setLoadError] = useState(null);
   const load = useCallback(async () => {
-    const [a, b] = await Promise.all([
-      api.get(`/manuscripts/${id}`),
-      api.get(`/manuscripts/${id}/dashboard`).catch(() => ({ data: null })),
-    ]);
+    setLoadError(null);
+    let a, b;
+    try {
+      [a, b] = await Promise.all([
+        api.get(`/manuscripts/${id}`),
+        api.get(`/manuscripts/${id}/dashboard`).catch(() => ({ data: null })),
+      ]);
+    } catch (e) {
+      setLoadError(e?.response?.status === 404 || e?.response?.status === 403 ? "missing" : "failed");
+      return;
+    }
     setM(a.data); setDash(b.data);
     const sec = (a.data.sections || {})[sectionKey] || "";
     setDraft(sec); lastSavedLen.current = sec.length;
@@ -544,7 +555,7 @@ export default function ManuscriptDetail() {
       await api.post(`/manuscripts/${id}/versions`, { summary });
       toast.success("Version snapshot created");
       load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   const changeStatus = async (status) => {
@@ -576,6 +587,21 @@ export default function ManuscriptDetail() {
     if (k === "journals") loadJournalMatches();
   };
 
+  if (loadError) {
+    return (
+      <ResearchLayout title="Manuscript">
+        <EmptyState
+          icon={<FileTextIcon />}
+          title={loadError === "missing" ? "This manuscript isn't available." : "This manuscript couldn't be loaded."}
+          description={loadError === "missing" ? "It may have been removed, or you're not one of its authors." : "Your work is safe. Please try again in a moment."}
+          action={<>
+            {loadError === "failed" && <Button size="sm" onClick={load}>Try again</Button>}
+            <Button size="sm" variant="secondary" as={Link} to="/manuscripts">All manuscripts</Button>
+          </>}
+        />
+      </ResearchLayout>
+    );
+  }
   if (!m) return <ResearchLayout title="Manuscript"><ManuscriptSkeleton /></ResearchLayout>;
 
   const filledSections = SECTIONS.filter((s) => (m.sections || {})[s.key]?.trim()).length;

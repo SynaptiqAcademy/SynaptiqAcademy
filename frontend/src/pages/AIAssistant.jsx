@@ -2,7 +2,7 @@ import React, { useState, useEffect, useReducer, useRef, useMemo } from "react";
 import { Button, EmptyState, Badge, Card, FormSelect, Textarea as DsTextarea } from "@/components/ds";
 import { Dialog } from "@/components/ds/Modal";
 import { getDailyWelcomeMessage, getGreeting } from "@/lib/welcomeEngine";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ResearchLayout } from "@/layouts";
 import { AI_NAV_ITEMS } from "@/lib/navItems";
 import api from "@/lib/api";
@@ -27,10 +27,10 @@ const BORDER = "#E4E8EF";
 
 // ─── Callout configs ──────────────────────────────────────────────────────────
 const CALLOUT_CONFIGS = {
-  info:           { Icon:Info,          label:"Information",      bg:"#EFF6FF", border:"#3B82F6", color:"#1D4ED8" },
+  info:           { Icon:Info,          label:"Information",      bg:"#eef2f8", border:"#2f5486", color:"#0F2847" },
   warning:        { Icon:AlertTriangle, label:"Warning",          bg:"#FFFBEB", border:"#F59E0B", color:"#92400E" },
   recommendation: { Icon:CheckCircle,   label:"Recommendation",   bg:"#F0FDF4", border:"#22C55E", color:"#166534" },
-  insight:        { Icon:Sparkles,      label:"Research Insight", bg:"#FAF5FF", border:"#A855F7", color:"#7E22CE" },
+  insight:        { Icon:Sparkles,      label:"Research Insight", bg:"#eef2f8", border:"#2f5486", color:"#0F2847" },
   critical:       { Icon:AlertCircle,   label:"Critical Issue",   bg:"#FFF1F2", border:"#F43F5E", color:"#BE123C" },
   best_practice:  { Icon:Star,          label:"Best Practice",    bg:"#FEFCE8", border:"#EAB308", color:"#854D0E" },
 };
@@ -45,22 +45,22 @@ const LOAD_STAGES = [
 
 // ─── Agent config ─────────────────────────────────────────────────────────────
 const AGENT_COLORS = {
-  research:      { bg:"bg-violet-100", text:"text-violet-700", dot:"bg-violet-500" },
-  publication:   { bg:"bg-blue-100",   text:"text-blue-700",   dot:"bg-blue-500"   },
-  journal:       { bg:"bg-sky-100",    text:"text-sky-700",    dot:"bg-sky-500"    },
+  research:      { bg:"bg-navy-100", text:"text-navy-700", dot:"bg-navy-500" },
+  publication:   { bg:"bg-navy-100",   text:"text-navy-700",   dot:"bg-navy-500"   },
+  journal:       { bg:"bg-navy-100",    text:"text-navy-700",    dot:"bg-navy-500"    },
   grant:         { bg:"bg-emerald-100",text:"text-emerald-700",dot:"bg-emerald-500"},
   collaboration: { bg:"bg-orange-100", text:"text-orange-700", dot:"bg-orange-500" },
   teaching:      { bg:"bg-amber-100",  text:"text-amber-700",  dot:"bg-amber-500"  },
-  analytics:     { bg:"bg-cyan-100",   text:"text-cyan-700",   dot:"bg-cyan-500"   },
+  analytics:     { bg:"bg-navy-100",   text:"text-navy-700",   dot:"bg-navy-500"   },
   profile:       { bg:"bg-rose-100",   text:"text-rose-700",   dot:"bg-rose-500"   },
   general:       { bg:"bg-slate-100",  text:"text-slate-700",  dot:"bg-slate-400"  },
-  auto:          { bg:"bg-slate-100",  text:"text-slate-700",  dot:"bg-violet-500" },
+  auto:          { bg:"bg-slate-100",  text:"text-slate-700",  dot:"bg-navy-500" },
 };
 
 const SIDEBAR_DOT = {
-  research:"#a78bfa", publication:"#60a5fa", journal:"#38bdf8",
+  research:"#2f5486", publication:"#2f5486", journal:"#2f5486",
   grant:"#34d399", collaboration:"#fb923c", teaching:"#fbbf24",
-  analytics:"#22d3ee", profile:"#fb7185", general:"#94a3b8", auto:"#a78bfa",
+  analytics:"#2f5486", profile:"#fb7185", general:"#94a3b8", auto:"#2f5486",
 };
 
 const AGENTS = [
@@ -412,7 +412,7 @@ function CollapsibleSection({ heading, children, defaultOpen }) {
         onMouseEnter={function(e){e.currentTarget.style.background=WARM;}}
         onMouseLeave={function(e){e.currentTarget.style.background=open?WARM:"#fff";}}
       >
-        <span style={{fontFamily:"Georgia,serif",fontSize:"0.94rem",fontWeight:700,color:NAVY,lineHeight:1.3}}>{heading}</span>
+        <span style={{fontFamily:"'Newsreader Variable', Newsreader, Georgia, serif",fontSize:"0.94rem",fontWeight:700,color:NAVY,lineHeight:1.3}}>{heading}</span>
         <span style={{flexShrink:0,color:"#94a3b8",marginLeft:12}}>{open ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}</span>
       </button>
       {open && <div style={{padding:"18px 20px 14px"}}>{children}</div>}
@@ -595,7 +595,7 @@ function MarkdownRenderer({ text }) {
     if (line.startsWith("# ")) {
       flushList(); flushOrdered();
       var h1text = line.slice(2);
-      elements.push(<h1 key={"h1-"+i} style={{fontFamily:"Georgia,serif",fontSize:"1.22rem",fontWeight:700,color:NAVY,margin:"22px 0 10px",lineHeight:1.3,letterSpacing:"-0.01em"}}>{renderInline(h1text)}</h1>);
+      elements.push(<h1 key={"h1-"+i} style={{fontFamily:"'Newsreader Variable', Newsreader, Georgia, serif",fontSize:"1.22rem",fontWeight:700,color:NAVY,margin:"22px 0 10px",lineHeight:1.3,letterSpacing:"-0.01em"}}>{renderInline(h1text)}</h1>);
       i++; continue;
     }
     if (line.startsWith("## ")) {
@@ -603,7 +603,7 @@ function MarkdownRenderer({ text }) {
       var h2text = line.slice(3);
       elements.push(
         <div key={"h2-"+i} style={{margin:"20px 0 8px"}}>
-          <h2 style={{fontFamily:"Georgia,serif",fontSize:"1.04rem",fontWeight:700,color:"#0f172a",margin:0,lineHeight:1.4}}>{renderInline(h2text)}</h2>
+          <h2 style={{fontFamily:"'Newsreader Variable', Newsreader, Georgia, serif",fontSize:"1.04rem",fontWeight:700,color:"#0f172a",margin:0,lineHeight:1.4}}>{renderInline(h2text)}</h2>
           <div style={{height:1,background:BORDER,marginTop:5}}/>
         </div>
       );
@@ -802,7 +802,7 @@ function ConvItem({ conv, active, onSelect, onPin, onArchive, onDelete }) {
       {hover && (
         <div style={{display:"flex",gap:2,flexShrink:0}} onClick={function(e){e.stopPropagation();}}>
           <Button size="icon" variant="ghost" onClick={function(){onPin(conv.id,!conv.pinned);}} title={conv.pinned?"Unpin":"Pin"}
-            style={{padding:4,width:"auto",height:"auto",color:conv.pinned?"#a78bfa":"rgba(255,255,255,0.4)"}}><Pin size={10}/></Button>
+            style={{padding:4,width:"auto",height:"auto",color:conv.pinned?"#ffffff":"rgba(255,255,255,0.4)"}}><Pin size={10}/></Button>
           <Button size="icon" variant="ghost" onClick={function(){onDelete(conv.id);}} title="Delete"
             style={{padding:4,width:"auto",height:"auto",color:"rgba(255,255,255,0.35)"}}><Trash2 size={10}/></Button>
         </div>
@@ -923,7 +923,7 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
         </div>
 
         {/* ── Greeting ──────────────────────────────────────────────────────── */}
-        <h1 style={{fontFamily:"Georgia,serif",fontSize:"clamp(1.8rem,4vw,2.5rem)",fontWeight:700,color:NAVY,lineHeight:1.15,marginBottom:10,letterSpacing:"-0.025em"}}>
+        <h1 style={{fontFamily:"'Newsreader Variable', Newsreader, Georgia, serif",fontSize:"clamp(1.8rem,4vw,2.5rem)",fontWeight:700,color:NAVY,lineHeight:1.15,marginBottom:10,letterSpacing:"-0.025em"}}>
           {getGreeting(firstName)}.
         </h1>
         <p style={{fontSize:"1rem",color:"#475569",marginBottom:briefItems.length?28:36,lineHeight:1.65,maxWidth:560,fontStyle:"italic"}}>
@@ -939,7 +939,7 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
                 <div key={item.label} style={{display:"flex",alignItems:"center",gap:8,background:"#fff",border:"1px solid "+BORDER,borderRadius:10,padding:"7px 13px"}}>
                   <Ic size={12} style={{color:"#94a3b8",flexShrink:0}}/>
                   <span style={{fontSize:"0.73rem",color:"#64748b"}}>{item.label}</span>
-                  <span style={{fontSize:"0.8rem",fontWeight:700,color:NAVY,fontFamily:"Georgia,serif",textTransform:"capitalize"}}>{item.value}</span>
+                  <span style={{fontSize:"0.8rem",fontWeight:700,color:NAVY,fontFamily:"'Newsreader Variable', Newsreader, Georgia, serif",textTransform:"capitalize"}}>{item.value}</span>
                 </div>
               );
             })}
@@ -967,7 +967,7 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
                   <div style={{fontSize:"0.85rem",fontWeight:600,color:"#0f172a",marginBottom:4,lineHeight:1.3}}>{wf.label}</div>
                   <div style={{fontSize:"0.74rem",color:"#64748b",lineHeight:1.5,flex:1}}>{wf.desc}</div>
                   <div style={{marginTop:11,display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%"}}>
-                    <span style={{fontSize:"0.6rem",fontWeight:700,color:isHover?NAVY:"#94a3b8",background:isHover?WARM:"#f1f5f9",border:"1px solid "+(isHover?BORDER:"transparent"),padding:"2px 7px",borderRadius:20,transition:"all 160ms"}}>~{cost} cr</span>
+                    <span style={{fontSize:"0.6rem",fontWeight:700,color:isHover?NAVY:"#94a3b8",background:isHover?WARM:"#f1f5f9",border:"1px solid "+(isHover?BORDER:"transparent"),padding:"2px 7px",borderRadius: 8,transition:"all 160ms"}}>~{cost} cr</span>
                     {isHover && <ArrowRight size={11} style={{color:NAVY}}/>}
                   </div>
                 </Card>
@@ -1154,7 +1154,7 @@ function InputArea({ state, dispatch, onSend }) {
   return (
     <div style={{flexShrink:0,padding:"16px 24px 20px",background:WARM,borderTop:"1px solid "+BORDER}}>
       <div style={{maxWidth:820,margin:"0 auto"}}>
-        <div style={{background:"#fff",border:"1.5px solid "+BORDER,borderRadius:16,overflow:"hidden",boxShadow:"0 4px 20px rgba(0,0,0,0.06)",transition:"border-color 150ms,box-shadow 150ms"}}
+        <div style={{background:"#fff",border:"1.5px solid "+BORDER,borderRadius: 8,overflow:"hidden",boxShadow:"0 4px 20px rgba(0,0,0,0.06)",transition:"border-color 150ms,box-shadow 150ms"}}
           onFocusCapture={function(e){e.currentTarget.style.borderColor=NAVY;e.currentTarget.style.boxShadow="0 4px 24px rgba(15,40,71,0.12)";}}
           onBlurCapture={function(e){e.currentTarget.style.borderColor=BORDER;e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,0.06)";}}>
           <textarea ref={textareaRef} value={state.inputText}
@@ -1172,7 +1172,7 @@ function InputArea({ state, dispatch, onSend }) {
                   {selAgent.label}<ChevronDown size={11}/>
                 </button>
                 {agentOpen && (
-                  <div style={{position:"absolute",bottom:"calc(100% + 6px)",left:0,zIndex:20,background:"#fff",border:"1px solid "+BORDER,borderRadius:12,boxShadow:"0 8px 32px rgba(0,0,0,0.12)",padding:6,minWidth:200}}>
+                  <div style={{position:"absolute",bottom:"calc(100% + 6px)",left:0,zIndex:20,background:"#fff",border:"1px solid "+BORDER,borderRadius: 8,boxShadow:"0 8px 32px rgba(0,0,0,0.12)",padding:6,minWidth:200}}>
                     {AGENTS.map(function(a){return (
                       <button key={a.id} onClick={function(){dispatch({type:"SET_AGENT",payload:a.id});setAgentOpen(false);}}
                         style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"7px 10px",borderRadius:8,border:"none",background:state.selectedAgent===a.id?WARM:"transparent",cursor:"pointer",textAlign:"left",fontSize:"0.8rem",color:state.selectedAgent===a.id?NAVY:"#374151",fontWeight:state.selectedAgent===a.id?600:400}}
@@ -1366,7 +1366,7 @@ function RightPanel({ state, dispatch, onRefreshContext, onDeleteMemory, onClear
                       );})}
                     </div>
                     <Button onClick={onClearMemory} variant="outline" size="sm" className="w-full"
-                      style={{marginTop:10,color:"#DC2626",borderColor:"#FCA5A5",background:"transparent"}}
+                      style={{marginTop:10,color:"#B42318",borderColor:"#FCA5A5",background:"transparent"}}
                       onMouseEnter={function(e){e.currentTarget.style.background="#FEF2F2";}}
                       onMouseLeave={function(e){e.currentTarget.style.background="transparent";}}>
                       Clear all memory (GDPR)
@@ -1385,6 +1385,14 @@ function RightPanel({ state, dispatch, onRefreshContext, onDeleteMemory, onClear
 export default function AIAssistant() {
   var { user } = useAuth();
   var [state, dispatch] = useReducer(reducer, initialState);
+  // A question typed on Home arrives as route state. Put it in the input so
+  // the researcher can review it (and its credit cost) before sending; it is
+  // never sent automatically.
+  var location = useLocation();
+  useEffect(function(){
+    var q = location.state && location.state.initialPrompt;
+    if (q) dispatch({type:"SET_INPUT",payload:String(q).slice(0,4000)});
+  },[location.state]);
   var [confirm, setConfirm] = useState(null);
   var [actionConfirm, setActionConfirm] = useState(null);
   var retryDataRef = useRef({});
@@ -1553,7 +1561,7 @@ export default function AIAssistant() {
 
   return (
     <ResearchLayout navItems={AI_NAV_ITEMS}>
-    <div style={{margin:"-24px",display:"flex",flexDirection:"column",background:WARM,overflow:"hidden",fontFamily:"system-ui,-apple-system,sans-serif",height:"calc(100vh - 120px)"}}>
+    <div style={{margin:0,display:"flex",flexDirection:"column",background:WARM,overflow:"hidden",height:"calc(100vh - 120px)"}}>
       <header style={{flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 18px",height:52,background:"#fff",borderBottom:"1px solid "+BORDER,zIndex:10}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
           <Button size="icon" variant="ghost" onClick={function(){dispatch({type:"TOGGLE_LEFT"});}} aria-label={state.leftPanelOpen ? "Collapse sidebar" : "Expand sidebar"} style={{color:"#94a3b8"}}>

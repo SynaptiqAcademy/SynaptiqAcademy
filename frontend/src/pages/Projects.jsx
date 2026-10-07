@@ -30,9 +30,9 @@ const STAGES = [
   { key: "idea",    label: "Ideation",         color: "#EA580C", bg: "#FFF7ED" },
   { key: "scope",   label: "Scoping",          color: "#D97706", bg: "#FFFBEB" },
   { key: "lit",     label: "Lit. Review",      color: "#059669", bg: "#F0FDF4" },
-  { key: "design",  label: "Research Design",  color: "#0891B2", bg: "#F0F9FF" },
-  { key: "data",    label: "Data Collection",  color: "#7C3AED", bg: "#FAF5FF" },
-  { key: "writing", label: "Writing",          color: NAVY,      bg: "#EFF6FF" },
+  { key: "design",  label: "Research Design",  color: "#0F2847", bg: "#eef2f8" },
+  { key: "data",    label: "Data Collection",  color: "#0F2847", bg: "#eef2f8" },
+  { key: "writing", label: "Writing",          color: NAVY,      bg: "#eef2f8" },
 ];
 
 function detectStage(p) {
@@ -72,8 +72,8 @@ function getGreeting() {
 
 // ─── Source badge ─────────────────────────────────────────────────────────────
 const SOURCE_META = {
-  gap_finder:  { label: "Via Gap Finder",  color: "#7C3AED" },
-  collab_intel: { label: "Via Collab AI",  color: "#0891B2" },
+  gap_finder:  { label: "Via Gap Finder",  color: "#0F2847" },
+  collab_intel: { label: "Via Collab AI",  color: "#0F2847" },
 };
 
 // ─── Projects Page ────────────────────────────────────────────────────────────

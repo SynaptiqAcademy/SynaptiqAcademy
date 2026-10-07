@@ -23,6 +23,7 @@ import { Modal } from "@/components/ds/Modal";
 import { NavTabs } from "@/components/ds/NavTabs";
 import { Callout, InlineError, Alert } from "@/components/ds/Alert";
 import { confirmDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "../lib/api";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -265,7 +266,7 @@ function OverviewTab({ request, user, onInvite }) {
       setInviteDue("");
       if (onInvite) onInvite();
     } catch (err) {
-      setInviteMsg({ type: "error", text: err?.response?.data?.detail || "Failed to send invitation." });
+      setInviteMsg({ type: "error", text: safeErrorMessage(err, "Failed to send invitation.") });
     } finally {
       setInviting(false);
     }
@@ -452,8 +453,8 @@ function MatchesTab({ requestId, data, loading, onRefresh }) {
                   {Object.keys(matchScore).length > 0 && (
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
                       {[
-                        { key: "area_match", label: "Area Match", color: "bg-blue-500" },
-                        { key: "quality", label: "Quality", color: "bg-indigo-500" },
+                        { key: "area_match", label: "Area Match", color: "bg-navy-500" },
+                        { key: "quality", label: "Quality", color: "bg-navy-500" },
                         { key: "availability", label: "Availability", color: "bg-emerald-500" },
                         { key: "diversity", label: "Diversity", color: "bg-amber-500" },
                       ].map(({ key, label, color }) => (
@@ -678,7 +679,7 @@ function ReportTab({ requestId, request, data, loading, user, onSubmit }) {
       await api.post(`/reviewer-marketplace/assignments/${aId}/report`, form);
       if (onSubmit) onSubmit();
     } catch (err) {
-      setSubmitError(err?.response?.data?.detail || "Failed to submit report.");
+      setSubmitError(safeErrorMessage(err, "Failed to submit report."));
     } finally {
       setSubmitting(false);
     }
@@ -692,7 +693,7 @@ function ReportTab({ requestId, request, data, loading, user, onSubmit }) {
       await api.post(`/reviewer-marketplace/requests/${requestId}/rate-reviewer`, rating);
       setRatingSubmitted(true);
     } catch (err) {
-      setRatingError(err?.response?.data?.detail || "Failed to submit rating.");
+      setRatingError(safeErrorMessage(err, "Failed to submit rating."));
     } finally {
       setRatingLoading(false);
     }
@@ -957,7 +958,7 @@ function ConflictsTab({ requestId, data, loading }) {
       const res = await api.post(`/reviewer-marketplace/requests/${requestId}/check-conflict/${checkUid.trim()}`);
       setCheckResult(res.data);
     } catch (err) {
-      setCheckError(err?.response?.data?.detail || "Failed to check conflict.");
+      setCheckError(safeErrorMessage(err, "Failed to check conflict."));
     } finally {
       setChecking(false);
     }
@@ -1077,7 +1078,7 @@ function SettingsTab({ requestId, request, user, onUpdate }) {
       setSaveMsg({ type: "success", text: "Settings saved successfully." });
       if (onUpdate) onUpdate(res.data);
     } catch (err) {
-      setSaveMsg({ type: "error", text: err?.response?.data?.detail || "Failed to save settings." });
+      setSaveMsg({ type: "error", text: safeErrorMessage(err, "Failed to save settings.") });
     } finally {
       setSaving(false);
     }
@@ -1091,7 +1092,7 @@ function SettingsTab({ requestId, request, user, onUpdate }) {
       if (onUpdate) onUpdate(res.data);
       setSaveMsg({ type: "success", text: "Request archived." });
     } catch (err) {
-      setSaveMsg({ type: "error", text: err?.response?.data?.detail || "Failed to archive request." });
+      setSaveMsg({ type: "error", text: safeErrorMessage(err, "Failed to archive request.") });
     } finally {
       setArchiving(false);
     }

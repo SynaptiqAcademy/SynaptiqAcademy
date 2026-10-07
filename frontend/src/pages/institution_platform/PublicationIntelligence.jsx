@@ -90,7 +90,7 @@ export default function PublicationIntelligence() {
           <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 700, color: NAVY }}>Quartile Distribution</h3>
           {Object.entries(pubs?.quartile_distribution || {}).map(([q, count]) => {
             const pct = Math.round(count / (pubs?.total || 1) * 100);
-            const color = q === "Q1" ? EMERALD : q === "Q2" ? "#0ea5e9" : q === "Q3" ? "#f59e0b" : "#94a3b8";
+            const color = q === "Q1" ? EMERALD : q === "Q2" ? "#2f5486" : q === "Q3" ? "#f59e0b" : "#94a3b8";
             return (
               <div key={q} style={{ marginBottom: 10 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>

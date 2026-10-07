@@ -9,20 +9,18 @@ import { WorkspaceSkeleton } from "@/components/workspace";
 import WorkflowLauncher from "@/components/layout/WorkflowLauncher";
 import { TID } from "@/lib/testIds";
 import api from "@/lib/api";
-import { WARM, NAVY, NAVY2, NAVY_LIGHT } from "@/lib/tokens";
+import "./home.css";
 
 import WelcomeHeader     from "./WelcomeHeader";
 import MyWork            from "./MyWork";
 import AICommandCenter   from "./AICommandCenter";
 import Activity          from "./Activity";
-import Analytics         from "./Analytics";
 import QuickActions      from "./QuickActions";
 import KpiCards          from "./KpiCards";
 import Upcoming          from "./Upcoming";
 import Recommendations   from "./Recommendations";
 import PersonalProgress  from "./PersonalProgress";
 import Learning          from "./Learning";
-import FooterSummary     from "./FooterSummary";
 
 export default function Home() {
   const { user }   = useAuth();
@@ -98,79 +96,36 @@ export default function Home() {
 
   const kpi = impact?.kpi;
 
-  const hero = (
-    <section
-      className="relative overflow-hidden"
-      style={{
-        margin:     "-24px 0 0",
-        background: `radial-gradient(1100px 520px at 15% -10%, ${NAVY_LIGHT} 0%, transparent 60%), linear-gradient(165deg, ${NAVY2} 0%, ${NAVY} 100%)`,
-      }}
-    >
-      {/* ambient dot-grid texture */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          opacity: 0.05,
-          backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)",
-          backgroundSize: "26px 26px",
-        }}
-        aria-hidden="true"
-      />
-
-      <div className="relative max-w-[1180px] mx-auto px-6 md:px-10 pt-7 pb-14">
-        <WelcomeHeader user={user} billing={billing} notifCount={notifCount} navigate={navigate} />
-        <AICommandCenter aiConvs={aiConvs} credits={billing?.credits} navigate={navigate} />
-        <Analytics kpi={kpi} feed={feed} manuscripts={manuscripts} workspaces={workspaces} />
-      </div>
-    </section>
-  );
-
+  // Home is a research command centre: who you are and what to ask first,
+  // then the work in progress, then what needs attention. It uses the same
+  // page header, surfaces and buttons as every other page.
   return (
-    <div data-testid={TID.discoverFeed} style={{ background: WARM, flex: 1, display: "flex", flexDirection: "column" }}>
-    <ResearchLayout customHero={hero} noPad>
+    <div data-testid={TID.discoverFeed} className="hm" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+    <ResearchLayout noPad>
+      <div className="hm-top">
+        <WelcomeHeader user={user} />
+        <AICommandCenter aiConvs={aiConvs} navigate={navigate} />
+      </div>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          THE SURFACE — where the actual work lives.
-          ══════════════════════════════════════════════════════════════ */}
-      <div className="max-w-[1180px] mx-auto px-1 md:px-2 pt-16 pb-16 space-y-16">
+      <div className="hm-body">
+        <KpiCards kpi={kpi} feed={feed} manuscripts={manuscripts} workspaces={workspaces} billing={billing} />
 
-        <div className="sq-fade-up">
-          <QuickActions onOpenLauncher={() => setLauncherOpen(true)} />
-        </div>
-
-        <div className="sq-fade-up sq-delay-1">
-          <KpiCards kpi={kpi} feed={feed} manuscripts={manuscripts} workspaces={workspaces} billing={billing} />
-        </div>
-
-        <div className="sq-fade-up sq-delay-1">
-          <MyWork manuscripts={manuscripts} workspaces={workspaces} />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-x-14 gap-y-16 items-start sq-fade-up sq-delay-2">
-          <div className="flex flex-col gap-16 min-w-0">
+        <div className="hm-grid">
+          <div className="hm-main">
+            <MyWork manuscripts={manuscripts} workspaces={workspaces} />
             <Activity feed={feed} manuscripts={manuscripts} />
             <Recommendations feed={feed} />
           </div>
-          <div className="flex flex-col gap-12">
+          <aside className="hm-aside" aria-label="Needs attention and shortcuts">
             <Upcoming deadlines={deadlines} />
+            <QuickActions onOpenLauncher={() => setLauncherOpen(true)} />
             <PersonalProgress />
             <Learning />
-          </div>
+          </aside>
         </div>
-
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════════════
-          THE STATUS BAR — a quiet dark strip mirroring the deck above.
-          ══════════════════════════════════════════════════════════════ */}
-      <div className="max-w-[1180px] mx-auto px-1 md:px-2 pb-10">
-        <footer style={{ background: NAVY2, borderRadius: 16 }} className="px-6 py-4">
-          <FooterSummary billing={billing} />
-        </footer>
       </div>
 
       <WorkflowLauncher open={launcherOpen} onClose={() => setLauncherOpen(false)} />
-
     </ResearchLayout>
     </div>
   );

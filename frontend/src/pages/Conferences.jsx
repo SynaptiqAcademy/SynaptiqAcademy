@@ -29,7 +29,7 @@ function urgencyLabel(dl) {
   if (d === 0)     return { text: "Today",      color: ACCENT,   bg: "#FFF1F2", closed: false };
   if (d <= 7)      return { text: `${d}d left`, color: ACCENT,   bg: "#FFF1F2", closed: false };
   if (d <= 30)     return { text: `${d}d left`, color: "#B45309",bg: "#FFFBEB", closed: false };
-  if (d <= 90)     return { text: `${d}d left`, color: "#0369A1",bg: "#F0F9FF", closed: false };
+  if (d <= 90)     return { text: `${d}d left`, color: "#0F2847",bg: "#eef2f8", closed: false };
   return {
     text: new Date(dl).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
     color: "#64748B", bg: "#F8FAFC", closed: false,
@@ -49,7 +49,7 @@ function fmtMonth(s) {
 // CORE Rank styles
 const RANK_STYLE = {
   "A*": { bg: "#ECFDF5", border: "#34D399", text: "#065F46" },
-  "A":  { bg: "#EFF6FF", border: "#60A5FA", text: "#1E3A8A" },
+  "A":  { bg: "#eef2f8", border: "#2f5486", text: "#0F2847" },
   "B":  { bg: "#FFFBEB", border: "#FCD34D", text: "#92400E" },
   "C":  { bg: "#F8FAFC", border: "#CBD5E1", text: "#475569" },
 };
@@ -61,8 +61,8 @@ function rankStyle(r) {
 // Format info
 const FORMAT_INFO = {
   "in-person": { Icon: MapPin,   label: "In-person", color: "#64748B" },
-  "virtual":   { Icon: Monitor,  label: "Virtual",   color: "#3B82F6" },
-  "hybrid":    { Icon: Wifi,     label: "Hybrid",    color: "#7C3AED" },
+  "virtual":   { Icon: Monitor,  label: "Virtual",   color: "#2f5486" },
+  "hybrid":    { Icon: Wifi,     label: "Hybrid",    color: "#0F2847" },
 };
 
 function formatInfo(f) {
@@ -491,8 +491,8 @@ function RecCard({ c, isCompared, onCompare }) {
       {/* Score + rank row */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         {score != null && (
-          <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#EFF6FF", border: "1.5px solid #60A5FA", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: "#1D4ED8", fontFamily: "monospace" }}>{Math.round(score)}</span>
+          <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#eef2f8", border: "1.5px solid #2f5486", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span style={{ fontSize: 10, fontWeight: 800, color: "#0F2847", fontFamily: "monospace" }}>{Math.round(score)}</span>
           </div>
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -512,7 +512,7 @@ function RecCard({ c, isCompared, onCompare }) {
       )}
 
       {/* Name */}
-      <div style={{ fontFamily: "Georgia, serif", fontSize: 12, color: "#0F172A", lineHeight: 1.4, marginBottom: 6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+      <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 12, color: "#0F172A", lineHeight: 1.4, marginBottom: 6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
         {c.name}
       </div>
 
@@ -728,7 +728,7 @@ function ConferenceCard({ c, isCompared, onCompare }) {
         )}
 
         {/* Full name */}
-        <h3 style={{ fontFamily: "Georgia, serif", fontSize: 13, color: "#0F172A", lineHeight: 1.4, marginBottom: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+        <h3 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 13, color: "#0F172A", lineHeight: 1.4, marginBottom: 8, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
           {c.name}
         </h3>
 
@@ -924,7 +924,7 @@ function TimelineCard({ c, isCompared, onCompare }) {
           {rs && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", background: rs.bg, border: `1px solid ${rs.border}`, color: rs.text }}>CORE {c.rank}</span>}
           {fi && <span style={{ fontSize: 9, color: fi.color, display: "flex", alignItems: "center", gap: 2 }}><fi.Icon size={9} strokeWidth={1.5} />{fi.label}</span>}
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 13, color: "#0F172A", lineHeight: 1.35, marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</div>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 13, color: "#0F172A", lineHeight: 1.35, marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</div>
         <div style={{ fontSize: 11, color: "#64748B" }}>
           {c.location && <span>{c.location}</span>}
           {c.start_date && <span style={{ marginLeft: c.location ? 8 : 0 }}>{fmtDate(c.start_date)}{c.end_date ? ` – ${fmtDate(c.end_date)}` : ""}</span>}
@@ -974,7 +974,7 @@ function ConferencesEmptyState({ hasFilters }) {
   return (
     <div style={{ textAlign: "center", padding: "60px 24px", border: `1px dashed ${BORDER}` }}>
       <CalendarDays size={44} strokeWidth={1} style={{ color: "#E2E8F0", margin: "0 auto 20px", display: "block" }} />
-      <h3 style={{ fontFamily: "Georgia, serif", fontSize: 22, color: "#1E293B", marginBottom: 8, fontWeight: 400 }}>
+      <h3 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, color: "#1E293B", marginBottom: 8, fontWeight: 400 }}>
         {hasFilters ? "No conferences match your search" : "No conferences indexed yet"}
       </h3>
       <p style={{ fontSize: 13, color: "#64748B", maxWidth: 420, margin: "0 auto 24px", lineHeight: 1.65 }}>
@@ -1004,7 +1004,7 @@ function GatedState() {
   return (
     <div style={{ textAlign: "center", padding: "60px 24px", border: `1px dashed ${BORDER}` }}>
       <CalendarDays size={44} strokeWidth={1} style={{ color: "#E2E8F0", margin: "0 auto 20px", display: "block" }} />
-      <h3 style={{ fontFamily: "Georgia, serif", fontSize: 22, color: "#1E293B", marginBottom: 8, fontWeight: 400 }}>Conference discovery limit reached</h3>
+      <h3 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, color: "#1E293B", marginBottom: 8, fontWeight: 400 }}>Conference discovery limit reached</h3>
       <p style={{ fontSize: 13, color: "#64748B", maxWidth: 360, margin: "0 auto 24px", lineHeight: 1.65 }}>
         You've reached your monthly conference discovery quota. Upgrade to access the full index of 800+ active calls for papers.
       </p>

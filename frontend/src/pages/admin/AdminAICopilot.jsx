@@ -4,6 +4,7 @@ import api from "@/lib/api";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Modal, Card } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 function useX(path, params = {}) {
   const [data, setData] = useState(null);
@@ -20,11 +21,11 @@ function useX(path, params = {}) {
 
 function BriefingRow({ brief, onView }) {
   return (
-    <tr className="border-t border-[#1a3050] hover:bg-[#1a3050]/30 cursor-pointer" onClick={() => onView(brief)}>
+    <tr className="border-t border-[#1c3e6d] hover:bg-[#1c3e6d]/30 cursor-pointer" onClick={() => onView(brief)}>
       <td className="px-3 py-2">
         <span className={`text-[10px] px-2 py-0.5 border ${
-          brief.kind === "daily" ? "text-blue-400 border-blue-700"
-          : brief.kind === "weekly" ? "text-purple-400 border-purple-700"
+          brief.kind === "daily" ? "text-navy-400 border-navy-700"
+          : brief.kind === "weekly" ? "text-navy-400 border-navy-700"
           : brief.kind === "monthly" ? "text-green-400 border-green-700"
           : "text-slate-400 border-slate-700"
         }`}>{brief.kind?.toUpperCase()}</span>
@@ -44,7 +45,7 @@ function BriefingModal({ brief, onClose }) {
       size="lg"
       title={
         <span className="inline-flex items-center gap-2 capitalize">
-          <Cpu size={16} className="text-blue-600" />
+          <Cpu size={16} className="text-navy-700" />
           {brief.kind} Briefing
         </span>
       }
@@ -94,7 +95,7 @@ export default function AdminAICopilot() {
       setGenResult(r.data);
       refBriefings();
     } catch (e) {
-      setGenResult({ briefing: e?.response?.data?.detail || "Generation failed", kind: genKind });
+      setGenResult({ briefing: safeErrorMessage(e, "Generation failed"), kind: genKind });
     } finally { setGenerating(false); }
   };
 
@@ -108,7 +109,7 @@ export default function AdminAICopilot() {
       const r = await api.post("/admin/x/copilot/query", { message: question, kind: "query" });
       setMessages(prev => [...prev, { role: "assistant", content: r.data.answer }]);
     } catch (e) {
-      setMessages(prev => [...prev, { role: "assistant", content: "Error: " + (e?.response?.data?.detail || "Request failed") }]);
+      setMessages(prev => [...prev, { role: "assistant", content: "Error: " + (safeErrorMessage(e, "Request failed")) }]);
     } finally { setChatLoading(false); }
   };
 
@@ -119,7 +120,7 @@ export default function AdminAICopilot() {
       title="Executive AI Copilot"
       subtitle="Anthropic-powered daily briefings, reports, and AI platform assistant"
       actions={
-        <button onClick={refBriefings} aria-label="Refresh briefings" className="p-1.5 bg-[#0F2847] border border-[#1a3050] text-slate-400 hover:text-white">
+        <button onClick={refBriefings} aria-label="Refresh briefings" className="p-1.5 bg-[#0F2847] border border-[#1c3e6d] text-slate-400 hover:text-white">
           <RefreshCw size={14} className={bL ? "animate-spin" : ""} />
         </button>
       }
@@ -129,23 +130,23 @@ export default function AdminAICopilot() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Generate briefing */}
         <div className="space-y-4">
-          <div className="bg-[#0F2847] border border-[#1a3050] p-5">
+          <div className="bg-[#0F2847] border border-[#1c3e6d] p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Cpu size={16} className="text-blue-400" />
+              <Cpu size={16} className="text-navy-400" />
               <span className="text-sm font-semibold text-white">Generate AI Briefing</span>
             </div>
             <div className="space-y-3">
               <div>
                 <label className="block text-[10px] text-slate-500 mb-1">Briefing Type</label>
                 <select value={genKind} onChange={e => setGenKind(e.target.value)}
-                  className="w-full text-xs bg-[#0B1C35] border border-[#1a3050] text-slate-300 px-2 py-1.5">
+                  className="w-full text-xs bg-[#0a1c34] border border-[#1c3e6d] text-slate-300 px-2 py-1.5">
                   <option value="daily">Daily Briefing</option>
                   <option value="weekly">Weekly Summary</option>
                   <option value="monthly">Monthly Executive Report</option>
                 </select>
               </div>
               <button onClick={generateBrief} disabled={generating}
-                className="w-full flex items-center justify-center gap-2 text-sm bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white py-2">
+                className="w-full flex items-center justify-center gap-2 text-sm bg-navy-700 hover:bg-navy-800 disabled:opacity-50 text-white py-2">
                 <Cpu size={14} className={generating ? "animate-pulse" : ""} />
                 {generating ? "Generating with Claude AI..." : `Generate ${genKind} briefing`}
               </button>
@@ -153,10 +154,10 @@ export default function AdminAICopilot() {
           </div>
 
           {genResult && (
-            <div className="bg-[#0F2847] border border-blue-700/40 p-4">
+            <div className="bg-[#0F2847] border border-navy-wash-border p-4">
               <div className="flex items-center gap-2 mb-3">
-                <Cpu size={12} className="text-blue-400" />
-                <span className="text-xs font-semibold text-blue-400 uppercase">{genResult.kind} Briefing — Generated</span>
+                <Cpu size={12} className="text-navy-400" />
+                <span className="text-xs font-semibold text-navy-400 uppercase">{genResult.kind} Briefing — Generated</span>
               </div>
               <div className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">
                 {genResult.briefing}
@@ -165,14 +166,14 @@ export default function AdminAICopilot() {
           )}
 
           {/* Past briefings */}
-          <div className="bg-[#0F2847] border border-[#1a3050]">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1a3050]">
+          <div className="bg-[#0F2847] border border-[#1c3e6d]">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1c3e6d]">
               <FileText size={13} className="text-slate-400" />
               <span className="text-sm font-semibold text-white">Past Briefings</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-slate-300">
-                <thead className="text-slate-500 border-b border-[#1a3050]">
+                <thead className="text-slate-500 border-b border-[#1c3e6d]">
                   <tr>
                     <th className="text-left px-3 py-2 font-medium">Kind</th>
                     <th className="text-left px-3 py-2 font-medium">Generated</th>
@@ -193,9 +194,9 @@ export default function AdminAICopilot() {
         </div>
 
         {/* AI Chat */}
-        <div className="bg-[#0F2847] border border-[#1a3050] flex flex-col" style={{ minHeight: 480 }}>
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1a3050]">
-            <Cpu size={14} className="text-blue-400" />
+        <div className="bg-[#0F2847] border border-[#1c3e6d] flex flex-col" style={{ minHeight: 480 }}>
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1c3e6d]">
+            <Cpu size={14} className="text-navy-400" />
             <span className="text-sm font-semibold text-white">Ask the Platform AI</span>
             <span className="text-[10px] text-slate-500">Powered by Claude</span>
           </div>
@@ -211,8 +212,8 @@ export default function AdminAICopilot() {
               <div key={i} className={`text-xs ${m.role === "user" ? "text-right" : "text-left"}`}>
                 <div className={`inline-block max-w-[80%] p-3 ${
                   m.role === "user"
-                    ? "bg-blue-600/20 border border-blue-700/40 text-blue-200"
-                    : "bg-[#0B1C35] border border-[#1a3050] text-slate-300"
+                    ? "bg-navy-wash border border-navy-wash-border text-navy-200"
+                    : "bg-[#0a1c34] border border-[#1c3e6d] text-slate-300"
                 }`}>
                   <div className="whitespace-pre-wrap">{m.content}</div>
                 </div>
@@ -220,7 +221,7 @@ export default function AdminAICopilot() {
             ))}
             {chatLoading && (
               <div className="text-left">
-                <div className="inline-block bg-[#0B1C35] border border-[#1a3050] p-3 text-xs text-slate-400">
+                <div className="inline-block bg-[#0a1c34] border border-[#1c3e6d] p-3 text-xs text-slate-400">
                   <span className="animate-pulse">Claude is thinking...</span>
                 </div>
               </div>
@@ -228,18 +229,18 @@ export default function AdminAICopilot() {
           </div>
 
           {/* Input */}
-          <div className="p-3 border-t border-[#1a3050]">
+          <div className="p-3 border-t border-[#1c3e6d]">
             <div className="flex gap-2">
               <input
                 value={inputVal}
                 onChange={e => setInputVal(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendMessage()}
                 placeholder="Ask about platform health, users, revenue..."
-                className="flex-1 text-xs bg-[#0B1C35] border border-[#1a3050] text-slate-300 placeholder-slate-600 px-3 py-2"
+                className="flex-1 text-xs bg-[#0a1c34] border border-[#1c3e6d] text-slate-300 placeholder-slate-600 px-3 py-2"
               />
               <button onClick={sendMessage} disabled={chatLoading || !inputVal.trim()}
                 aria-label="Send message"
-                className="px-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white">
+                className="px-3 bg-navy-700 hover:bg-navy-800 disabled:opacity-50 text-white">
                 <Send size={13} />
               </button>
             </div>
@@ -271,7 +272,7 @@ function AICopilotSidebar({ items, messages }) {
         </div>
         {items.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <div style={{ fontFamily: "Georgia, serif", fontSize: 24, color: "#0f172a" }}>{items.length}</div>
+            <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 24, color: "#0f172a" }}>{items.length}</div>
             <p style={{ fontSize: 11, color: "#94A3B8", margin: 0 }}>total briefings generated</p>
             {Object.entries(kindCounts).map(([kind, count]) => (
               <div key={kind} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>

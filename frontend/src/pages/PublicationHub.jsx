@@ -21,6 +21,7 @@ import { Tag, TagGroup } from "@/components/ds/Tag";
 import { Modal } from "@/components/ds/Modal";
 import { StatCard, StatGrid } from "@/components/ds/StatCard";
 import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
+import { safeErrorMessage } from "../lib/api";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const EMRL  = "#059669";
@@ -28,10 +29,10 @@ const EMRL  = "#059669";
 // ─── Stage system ─────────────────────────────────────────────────────────────
 const STAGES = [
   { key: "selected",           label: "Selected",     color: "#64748B", bg: "#F8FAFC", border: "#CBD5E1", accent: "#CBD5E1" },
-  { key: "ready",              label: "Ready",        color: "#0369A1", bg: "#EFF6FF", border: "#BAE6FD", accent: "#BAE6FD" },
-  { key: "submitted",          label: "Submitted",    color: "#4338CA", bg: "#EEF2FF", border: "#A5B4FC", accent: "#A5B4FC" },
+  { key: "ready",              label: "Ready",        color: "#0F2847", bg: "#eef2f8", border: "#d4dde9", accent: "#d4dde9" },
+  { key: "submitted",          label: "Submitted",    color: "#0F2847", bg: "#eef2f8", border: "#d4dde9", accent: "#d4dde9" },
   { key: "under_review",       label: "Under Review", color: "#B45309", bg: "#FFFBEB", border: "#FCD34D", accent: "#FCD34D" },
-  { key: "revision_requested", label: "Revising",     color: "#7C3AED", bg: "#F5F3FF", border: "#C4B5FD", accent: "#C4B5FD" },
+  { key: "revision_requested", label: "Revising",     color: "#0F2847", bg: "#eef2f8", border: "#d4dde9", accent: "#d4dde9" },
   { key: "accepted",           label: "Accepted",     color: EMRL,      bg: "#ECFDF5", border: "#6EE7B7", accent: "#6EE7B7" },
   { key: "published",          label: "Published",    color: "#065F46", bg: "#D1FAE5", border: "#34D399", accent: "#34D399" },
   { key: "rejected",           label: "Rejected",     color: "#DC2626", bg: "#FEF2F2", border: "#FCA5A5", accent: "#FCA5A5" },
@@ -100,7 +101,7 @@ function VenuePicker({ manuscriptId, onPicked, onClose }) {
       });
       toast.success(`Venue selected: ${kind === "journal" ? venue.title : venue.name}`);
       onPicked?.(data); onClose();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
     finally { setBusy(false); }
   };
 
@@ -203,7 +204,7 @@ function PipelineCard({ row, onAction }) {
             <>
               <Button onClick={() => onAction("accept", row)} variant="link" size="sm" className="!text-emerald-600">Accept</Button>
               <Button onClick={() => onAction("reject", row)} variant="link" size="sm" className="!text-red-600">Reject</Button>
-              <Button onClick={() => onAction("revision", row)} variant="link" size="sm" className="!text-violet-600">Revision</Button>
+              <Button onClick={() => onAction("revision", row)} variant="link" size="sm" className="!text-navy-700">Revision</Button>
             </>
           )}
           {s && stage === "accepted" && (
@@ -257,7 +258,7 @@ function OrcidSection() {
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: EMRL, marginBottom: 4 }}>
             Imported from ORCID
           </div>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0F172A", margin: 0, fontFamily: "Georgia, serif" }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0F172A", margin: 0, fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>
             Registered Publications
           </h3>
         </div>
@@ -279,7 +280,7 @@ function OrcidSection() {
             >
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#0F172A", lineHeight: 1.4, fontFamily: "Georgia, serif" }}>{p.title}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#0F172A", lineHeight: 1.4, fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{p.title}</div>
                   <div style={{ fontSize: 10, fontFamily: "monospace", color: "#94A3B8", marginTop: 4 }}>
                     {[p.journal, p.year, (p.type || "").replace(/_/g," "), p.doi ? `DOI: ${p.doi}` : null].filter(Boolean).join(" · ")}
                     {p.doi && (
@@ -365,7 +366,7 @@ export default function PublicationHub() {
       }
       toast.success("Updated");
       load();
-    } catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   if (gated) {

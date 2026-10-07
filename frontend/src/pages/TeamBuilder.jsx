@@ -13,6 +13,7 @@ import api from "@/lib/api";
 import { NAVY, TEXT_SECONDARY, TEXT_MUTED, BRD, EMERALD } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
 import { Card, Button, Badge, Input, Textarea, FormSelect, EmptyState, LoadingOverlay } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 const PRIORITY_META = {
   essential: { label: "Essential", color: "#B91C1C" },
@@ -52,7 +53,7 @@ function CandidateExplorer({ blueprintId, role, onSelect, onClose }) {
     let mounted = true;
     api.get(`/team-builder/blueprints/${blueprintId}/roles/${role.role_id}/candidates`)
       .then((r) => { if (mounted) setCandidates(r.data.candidates); })
-      .catch((e) => { if (mounted) setError(e?.response?.data?.detail || "Could not load candidates."); })
+      .catch((e) => { if (mounted) setError(safeErrorMessage(e, "Could not load candidates.")); })
       .finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
   }, [blueprintId, role.role_id]);
@@ -322,7 +323,7 @@ function CreateProjectSection({ blueprint, onCreated }) {
       });
       onCreated({ ...blueprint, project_id: r.data.project_id });
     } catch (e) {
-      setError(e?.response?.data?.detail || "Could not create the project. Please try again.");
+      setError(safeErrorMessage(e, "Could not create the project. Please try again."));
     } finally {
       setCreating(false);
     }
@@ -382,7 +383,7 @@ export default function TeamBuilder() {
     setLoading(true);
     api.get(`/team-builder/blueprints/${id}`)
       .then((r) => setBlueprint(r.data))
-      .catch((e) => setError(e?.response?.data?.detail || "Could not load this team blueprint."))
+      .catch((e) => setError(safeErrorMessage(e, "Could not load this team blueprint.")))
       .finally(() => setLoading(false));
   }, [id]);
 

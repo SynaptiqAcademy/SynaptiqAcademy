@@ -68,7 +68,7 @@ export function AcademicReputationSection({ analytics, researchRank, onSyncOpenA
     >
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 24, marginBottom: 20 }}>
         <div>
-          <div style={{ fontFamily: "Georgia, serif", fontSize: 40, fontWeight: 700, color: TEXT_PRIMARY, lineHeight: 1 }}>{overall}</div>
+          <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 40, fontWeight: 700, color: TEXT_PRIMARY, lineHeight: 1 }}>{overall}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
             <span style={{
               fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 100,
@@ -113,12 +113,12 @@ export function AcademicReputationSection({ analytics, researchRank, onSyncOpenA
           const pts = breakdown[key]?.points ?? 0;
           const pct = breakdown[key]?.percentage ?? 0;
           return (
-            <div key={key} style={{ border: `1px solid ${BRD}`, borderRadius: 12, padding: 14 }}>
+            <div key={key} style={{ border: `1px solid ${BRD}`, borderRadius: 8, padding: 14 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                 <Icon size={14} style={{ color: NAVY }} />
                 <span style={{ fontSize: 12, fontWeight: 700, color: TEXT_PRIMARY }}>{label}</span>
               </div>
-              <div style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 700, marginTop: 8 }}>{Math.round(pts)}</div>
+              <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, fontWeight: 700, marginTop: 8 }}>{Math.round(pts)}</div>
               <div style={{ ...TYPE.caption, marginTop: 2 }}>{pct}% of total{totalPts ? "" : ""}</div>
             </div>
           );

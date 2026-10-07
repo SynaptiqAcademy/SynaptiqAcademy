@@ -260,7 +260,7 @@ export default function Researchers() {
 
       {/* ── Find Researchers — one unified browse/search area ──────────────── */}
       <div ref={explorerRef} style={{ marginTop: 32 }}>
-        <h2 style={{ fontFamily: "Georgia, serif", fontSize: 24, color: NAVY, fontWeight: 400, marginBottom: 14 }}>
+        <h2 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 24, color: NAVY, fontWeight: 400, marginBottom: 14 }}>
           Find Researchers
         </h2>
 
@@ -427,7 +427,7 @@ function ResearchersSidebar({ savedCount, compareList, topMatch }) {
           <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
             <AvatarCircle r={topMatch} size={36} />
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{topMatch.full_name}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{topMatch.full_name}</div>
               <div style={{ fontSize: 11, color: "#64748B" }}>{topMatch.institution || topMatch.country || ""}</div>
             </div>
           </div>
@@ -604,7 +604,7 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
           {/* Name + role */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 4, flexWrap: "wrap" }}>
-              <h3 style={{ fontFamily: "Georgia, serif", fontSize: 14, color: "#0F172A", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
+              <h3 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 14, color: "#0F172A", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
                 {r.full_name || "Researcher"}
               </h3>
               {orcidPresent && (
@@ -685,10 +685,10 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
             <span style={{ fontSize: 9, fontWeight: 600, color: EMERALD, background: "#ECFDF5", border: "1px solid #A7F3D0", padding: "2px 6px" }}>Open to collaborate</span>
           )}
           {r.available_for_reviewing && (
-            <span style={{ fontSize: 9, fontWeight: 600, color: "#7C3AED", background: "#F5F3FF", border: "1px solid #DDD6FE", padding: "2px 6px" }}>Peer reviewer</span>
+            <span style={{ fontSize: 9, fontWeight: 600, color: "#0F2847", background: "#eef2f8", border: "1px solid #d4dde9", padding: "2px 6px" }}>Peer reviewer</span>
           )}
           {r.available_for_supervision && (
-            <span style={{ fontSize: 9, fontWeight: 600, color: "#0369A1", background: "#F0F9FF", border: "1px solid #BAE6FD", padding: "2px 6px" }}>Supervisor</span>
+            <span style={{ fontSize: 9, fontWeight: 600, color: "#0F2847", background: "#eef2f8", border: "1px solid #d4dde9", padding: "2px 6px" }}>Supervisor</span>
           )}
         </div>
       </div>
@@ -764,7 +764,7 @@ function ResearcherCardCompact({ r, isSaved, onSave, isCompared, onCompare, show
           <AvatarCircle r={r} size={36} />
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "Georgia, serif" }}>{r?.full_name}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{r?.full_name}</div>
           <div style={{ fontSize: 10, color: "#64748B", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r?.institution || r?.country || ""}</div>
         </div>
         <Button
@@ -923,7 +923,7 @@ function SectionEmptyState({ activeSection, user }) {
   return (
     <div style={{ textAlign: "center", padding: "48px 24px", border: `1px dashed ${BORDER}` }}>
       <Users size={40} strokeWidth={1} style={{ color: "#E2E8F0", margin: "0 auto 16px", display: "block" }} />
-      <h3 style={{ fontFamily: "Georgia, serif", fontSize: 20, color: "#1E293B", marginBottom: 6, fontWeight: 400 }}>
+      <h3 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 20, color: "#1E293B", marginBottom: 6, fontWeight: 400 }}>
         No researchers in this section yet
       </h3>
       <p style={{ fontSize: 13, color: "#64748B", marginBottom: 20, lineHeight: 1.6 }}>
@@ -951,7 +951,7 @@ function SearchEmptyState({ q }) {
   return (
     <div style={{ textAlign: "center", padding: "48px 24px", border: `1px dashed ${BORDER}` }}>
       <Users size={40} strokeWidth={1} style={{ color: "#E2E8F0", margin: "0 auto 16px", display: "block" }} />
-      <h3 style={{ fontFamily: "Georgia, serif", fontSize: 20, color: "#1E293B", marginBottom: 6, fontWeight: 400 }}>
+      <h3 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 20, color: "#1E293B", marginBottom: 6, fontWeight: 400 }}>
         No researchers match "{q}"
       </h3>
       <p style={{ fontSize: 13, color: "#64748B", maxWidth: 360, margin: "0 auto", lineHeight: 1.65 }}>
@@ -1000,7 +1000,7 @@ function ComparePanel({ researchers, onRemove, onClose }) {
                 <th key={r.id} style={{ padding: "4px 14px", textAlign: "left", borderBottom: "1px solid rgba(255,255,255,0.08)", minWidth: 160 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                     <AvatarCircle r={r} size={22} />
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "white", fontFamily: "Georgia, serif" }}>{r.full_name}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "white", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{r.full_name}</span>
                   </div>
                   <Button variant="link" onClick={() => onRemove(r.id)} style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>
                     <X size={7} strokeWidth={1.5} /> Remove

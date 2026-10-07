@@ -24,6 +24,7 @@ import { InlineError, Callout } from "@/components/ds/Alert";
 import { Modal } from "@/components/ds/Modal";
 import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
 import { CreditCostNumber } from "@/components/billing/CreditCost";
+import { safeErrorMessage } from "../lib/api";
 
 
 
@@ -137,7 +138,7 @@ function PubPotentialBadge({ level }) {
 function MaturityBadge({ level }) {
   const map = {
     emerging:   { color: "#16a34a" },
-    developing: { color: "#2563eb" },
+    developing: { color: "#0F2847" },
     mature:     { color: "#d97706" },
     saturated:  { color: "#dc2626" },
   };
@@ -507,7 +508,7 @@ function GapToProjectModal({ data, onClose }) {
       });
       navigate(`/projects/${proj.id}`);
     } catch (err) {
-      setError(err?.response?.data?.detail || "Failed to create project.");
+      setError(safeErrorMessage(err, "Failed to create project."));
       setSaving(false);
     }
   };
@@ -604,7 +605,7 @@ function CitationOpportunityAnalysis({ topic, keywords }) {
   if (loading) {
     return (
       <Card padding="xl">
-        <SectionHeader icon={Activity} label="Citation Opportunity Analysis" color="#0891b2" />
+        <SectionHeader icon={Activity} label="Citation Opportunity Analysis" color="#0F2847" />
         <div className="py-4 flex justify-center"><Spinner size={16} /></div>
       </Card>
     );
@@ -623,8 +624,8 @@ function CitationOpportunityAnalysis({ topic, keywords }) {
   const overallColor = overallScore >= 70 ? "#16a34a" : overallScore >= 45 ? "#d97706" : "#64748b";
 
   return (
-    <Card padding="xl" className="border-[#0891b2]/20">
-      <SectionHeader icon={Activity} label="Citation Opportunity Analysis" color="#0891b2" />
+    <Card padding="xl" className="border-[#0F2847]/20">
+      <SectionHeader icon={Activity} label="Citation Opportunity Analysis" color="#0F2847" />
       <p className="text-xs text-slate-500 mb-5">
         Based on your research area's actual citation patterns in SYNAPTIQ (OpenAlex-backed).
       </p>
@@ -643,8 +644,8 @@ function CitationOpportunityAnalysis({ topic, keywords }) {
             </div>
             <div className="flex-1 space-y-3">
               <ScoreBar label="Publication Potential" value={pubPotential} color="#0F2847" />
-              <ScoreBar label="Citation Opportunity"  value={citOpp}       color="#0891b2" />
-              <ScoreBar label="Research Momentum"     value={momentum}     color="#7c3aed" />
+              <ScoreBar label="Citation Opportunity"  value={citOpp}       color="#0F2847" />
+              <ScoreBar label="Research Momentum"     value={momentum}     color="#0F2847" />
             </div>
           </div>
 
@@ -689,7 +690,7 @@ function CitationOpportunityAnalysis({ topic, keywords }) {
             </p>
           )}
           <Link to="/citations"
-            className="mt-4 flex items-center gap-1 text-xs text-[#0891b2] hover:text-[#0F2847] transition-colors">
+            className="mt-4 flex items-center gap-1 text-xs text-[#0F2847] hover:text-[#0F2847] transition-colors">
             View citation tracker <ArrowRight size={10} />
           </Link>
         </div>
@@ -849,7 +850,7 @@ function ResultView({ data, onReset }) {
         {/* contradictions */}
         {g.contradictory_findings?.length > 0 && (
           <Card padding="xl">
-            <SectionHeader icon={MinusCircle} label="Contradictory Findings" color="#7c3aed" />
+            <SectionHeader icon={MinusCircle} label="Contradictory Findings" color="#0F2847" />
             <div className="space-y-3">
               {g.contradictory_findings.map((item, i) => (
                 <ExpandCard key={i} title={item.topic}>
@@ -858,8 +859,8 @@ function ResultView({ data, onReset }) {
                       <div className="text-xs overline text-red-700 mb-1">Position A</div>
                       <p className="text-sm text-slate-700">{item.position_a}</p>
                     </Card>
-                    <Card padding="sm" variant="ghost" className="!bg-blue-50 border border-slate-200">
-                      <div className="text-xs overline text-blue-700 mb-1">Position B</div>
+                    <Card padding="sm" variant="ghost" className="!bg-navy-50 border border-slate-200">
+                      <div className="text-xs overline text-navy-700 mb-1">Position B</div>
                       <p className="text-sm text-slate-700">{item.position_b}</p>
                     </Card>
                   </div>
@@ -876,9 +877,9 @@ function ResultView({ data, onReset }) {
           {[
             { key: "methodological_gaps", label: "Methodological Gaps", icon: Microscope, color: "#0F2847",
               fields: [["gap","Gap"], ["current_approach","Current Approach"], ["missing_approach","Missing Approach"], ["impact","Impact"]] },
-            { key: "geographic_gaps", label: "Geographic Gaps", icon: Globe, color: "#2563eb",
+            { key: "geographic_gaps", label: "Geographic Gaps", icon: Globe, color: "#0F2847",
               fields: [["region","Region"], ["nature_of_gap","Nature of Gap"], ["why_it_matters","Why It Matters"]] },
-            { key: "population_gaps", label: "Population Gaps", icon: Users, color: "#7c3aed",
+            { key: "population_gaps", label: "Population Gaps", icon: Users, color: "#0F2847",
               fields: [["population","Population"], ["nature_of_gap","Nature of Gap"], ["why_it_matters","Why It Matters"]] },
             { key: "data_gaps", label: "Data Gaps", icon: Database, color: "#d97706",
               fields: [["gap","Gap"], ["what_is_missing","What Is Missing"], ["potential_impact_if_addressed","Potential Impact"]] },

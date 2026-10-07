@@ -15,6 +15,7 @@ import { Card } from "@/components/ds/Card";
 import { Badge } from "@/components/ds/Badge";
 import { Button } from "@/components/ds/Button";
 import { Textarea } from "@/components/ds/Textarea";
+import { safeErrorMessage } from "../lib/api";
 
 const KIND_LABELS = {
   collaboration:              "Research Collaboration",
@@ -80,7 +81,7 @@ function InvitationRow({ inv, tab, onDecide, onWithdraw }) {
               <span className="overline text-[#0F2847]">{KIND_LABELS[inv.kind] || inv.kind?.replace(/_/g, " ")}</span>
               <StatusChip status={inv.status} />
               {inv.viewed_at && !isReceived && inv.status !== "pending" && (
-                <span className="text-[10px] text-sky-600 flex items-center gap-0.5">
+                <span className="text-[10px] text-navy-700 flex items-center gap-0.5">
                   <Eye size={9} strokeWidth={1.5} /> Seen
                 </span>
               )}
@@ -234,7 +235,7 @@ export default function Invitations() {
       toast.success(`Invitation ${decision}`);
       load();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed");
+      toast.error(safeErrorMessage(e, "Failed"));
       throw e;
     }
   };
@@ -245,7 +246,7 @@ export default function Invitations() {
       toast.success("Invitation withdrawn");
       load();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed to withdraw");
+      toast.error(safeErrorMessage(e, "Failed to withdraw"));
       throw e;
     }
   };

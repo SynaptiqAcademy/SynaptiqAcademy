@@ -21,6 +21,7 @@ import { Button } from "@/components/ds/Button";
 import { Textarea } from "@/components/ds/Textarea";
 import { Modal } from "@/components/ds/Modal";
 import { confirmDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "../lib/api";
 
 const KIND_LABEL = {
   co_author: "Co-author", statistician: "Statistician", methodology: "Methodology expert",
@@ -55,7 +56,7 @@ export default function ExpertiseRequestDetail() {
       setMsg("");
       load();
     } catch (e) {
-      toast.error(e?.response?.data?.detail || "Failed");
+      toast.error(safeErrorMessage(e, "Failed"));
     } finally { setApplying(false); }
   };
 
@@ -276,7 +277,7 @@ function AttachmentsSection({ requestId, isOwner }) {
 
   const attach = async (fileId) => {
     try { await api.post(`/expertise/${requestId}/attachments`, { file_id: fileId }); toast.success("File attached"); setPicking(false); load(); }
-    catch (e) { toast.error(e?.response?.data?.detail || "Failed"); }
+    catch (e) { toast.error(safeErrorMessage(e, "Failed")); }
   };
 
   const detach = async (fileId) => {

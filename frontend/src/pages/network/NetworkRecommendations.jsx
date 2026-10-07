@@ -6,9 +6,9 @@ import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Tag, Button, EmptyState, LoadingOverlay } from "@/components/ds";
 
 const CAT_COLOR = {
-  collaborator: ACCENT, institution: "#0ea5e9", community: "#f97316",
-  group: "#8b5cf6", event: "#06b6d4", collaboration: EMERALD,
-  mentor: "#ec4899", conference: NAVY, dataset: "#7c3aed", software: "#059669",
+  collaborator: ACCENT, institution: "#2f5486", community: "#f97316",
+  group: "#2f5486", event: "#2f5486", collaboration: EMERALD,
+  mentor: "#2f5486", conference: NAVY, dataset: "#0F2847", software: "#059669",
 };
 const CAT_LABEL = {
   collaborator: "Collaborator", institution: "Institution", community: "Community",
@@ -140,7 +140,7 @@ function NetworkRecommendationsSidebar({ recs }) {
           <Brain size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Active Recommendations</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{recs.length}</div>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{recs.length}</div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
           Personalised suggestions currently on your list.
         </p>

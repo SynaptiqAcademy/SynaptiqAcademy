@@ -85,7 +85,7 @@ export default function FinancialIntelligence() {
                     ProgressBar's colorByValue can't express an arbitrary fixed
                     color, so left hand-rolled. */}
                 <div style={{ height: 5, background: `${NAVY}12`, borderRadius: 99 }}>
-                  <div style={{ height: "100%", borderRadius: 99, background: "#8b5cf6", width: `${pct}%` }} />
+                  <div style={{ height: "100%", borderRadius: 99, background: "#2f5486", width: `${pct}%` }} />
                 </div>
               </div>
             );
@@ -111,7 +111,7 @@ function FinancialIntelligenceSidebar({ fin, byDept }) {
             <Coins size={13} style={{ color: NAVY }} />
             <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Funding Source</div>
           </div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{topFunder.funder}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{topFunder.funder}</div>
           <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
             €{(topFunder.income / 1000).toFixed(0)}k in research income
           </p>
@@ -124,7 +124,7 @@ function FinancialIntelligenceSidebar({ fin, byDept }) {
             <Building2 size={13} style={{ color: NAVY }} />
             <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Leading Department</div>
           </div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{topDept.department}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{topDept.department}</div>
           <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
             €{(topDept.total_income / 1000).toFixed(0)}k in research income
           </p>

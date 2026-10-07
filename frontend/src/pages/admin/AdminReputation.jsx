@@ -11,6 +11,7 @@ import { getLevel } from "../../hooks/useReputation";
 import { NAVY } from "@/lib/tokens";
 import { AdministrationLayout } from "@/layouts";
 import { Card, Button, Input, ProgressBar, Badge, SkeletonCard } from "@/components/ds";
+import { safeErrorMessage } from "../../lib/api";
 
 export default function AdminReputation() {
   const [data, setData]     = useState(null);
@@ -41,7 +42,7 @@ export default function AdminReputation() {
       const { data: r } = await api.post(`/reputation/admin/recalculate/${recalcId.trim()}`);
       setRecalcResult({ ok: true, overall: r.overall });
     } catch (e) {
-      setRecalcResult({ ok: false, msg: e?.response?.data?.detail || "Failed" });
+      setRecalcResult({ ok: false, msg: safeErrorMessage(e, "Failed") });
     } finally {
       setRecalcing(false);
     }
@@ -186,7 +187,7 @@ function ReputationSidebar({ topUsers, badgeDist }) {
         </div>
         {top ? (
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "Georgia, serif" }}>{top.full_name || "—"}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{top.full_name || "—"}</div>
             <div style={{ fontSize: 11, color: "#64748B", marginBottom: 8 }}>{top.institution || ""}</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
               <span className="font-serif" style={{ fontSize: 26, color: "#0f172a" }}>{Math.round(top.overall)}</span>

@@ -16,15 +16,15 @@ const API = "/api/timeline";
 // ── Category metadata ────────────────────────────────────────────────────────
 
 const CATEGORY_META = {
-  research:      { label: "Research",      icon: BookOpen,    color: "#0369A1" },
-  teaching:      { label: "Teaching",      icon: GraduationCap, color: "#7C3AED" },
-  grant:         { label: "Grants",        icon: DollarSign,  color: "#059669" },
+  research:      { label: "Research",      icon: BookOpen,    color: "#0F2847" },
+  teaching:      { label: "Teaching",      icon: GraduationCap, color: "#0F2847" },
+  grant:         { label: "Grants",        icon: DollarSign,  color: "#0F2847" },
   collaboration: { label: "Collaboration", icon: Users,       color: "#0F2847" },
-  review:        { label: "Review",        icon: FileCheck,   color: "#D97706" },
-  verification:  { label: "Verification",  icon: ShieldCheck, color: "#059669" },
-  recognition:   { label: "Recognition",   icon: Award,       color: "#D97706" },
-  community:     { label: "Community",     icon: Eye,         color: "#0369A1" },
-  ai:            { label: "AI",            icon: Sparkles,    color: "#7C3AED" },
+  review:        { label: "Review",        icon: FileCheck,   color: "#0F2847" },
+  verification:  { label: "Verification",  icon: ShieldCheck, color: "#0F2847" },
+  recognition:   { label: "Recognition",   icon: Award,       color: "#0F2847" },
+  community:     { label: "Community",     icon: Eye,         color: "#0F2847" },
+  ai:            { label: "AI",            icon: Sparkles,    color: "#0F2847" },
 };
 
 const HEATMAP_COLORS = ["#e2e8f0", "#bfdbfe", "#93c5fd", "#3b82f6", "#1d4ed8"];
@@ -207,7 +207,7 @@ function AddEventModal({ catalogue, onClose, onAdd }) {
       zIndex: 1000, padding: 16,
     }}>
       <div style={{
-        background: WHITE, borderRadius: 14, width: "100%", maxWidth: 500,
+        background: WHITE, borderRadius: 8, width: "100%", maxWidth: 500,
         padding: 28, boxShadow: "0 20px 60px rgba(0,0,0,.2)",
         maxHeight: "90vh", overflowY: "auto",
       }}>
@@ -445,7 +445,7 @@ export default function ResearchTimeline() {
         { label: "Day Streak",   value: heatmap?.current_streak || 0 },
       ] : undefined}
       sidebar={insights.length > 0 ? (
-        <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12, padding: 20 }}>
+        <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 8, padding: 20 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, marginBottom: 12 }}>
             Timeline Insights
           </div>
@@ -464,7 +464,7 @@ export default function ResearchTimeline() {
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: NAVY }}>{ins.title}</div>
                   <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginTop: 2 }}>{ins.body}</div>
-                  <div style={{ fontSize: 11, color: "#0369A1", marginTop: 4, fontWeight: 500 }}>
+                  <div style={{ fontSize: 11, color: "#0F2847", marginTop: 4, fontWeight: 500 }}>
                     → {ins.action}
                   </div>
                 </div>
@@ -478,7 +478,7 @@ export default function ResearchTimeline() {
 
         {/* Activity Heatmap */}
         {heatmap && heatmap.cells && (
-          <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12,
+          <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 8,
             padding: 20, marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: NAVY }}>
@@ -505,7 +505,7 @@ export default function ResearchTimeline() {
             {TABS.map(t => (
               <button key={t.key} onClick={() => { setCategory(t.key); setSkip(0); }}
                 style={{
-                  padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+                  padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600,
                   border: `1px solid ${category === t.key ? NAVY : BRD}`,
                   background: category === t.key ? NAVY : WHITE,
                   color: category === t.key ? WHITE : NAVY,
@@ -574,7 +574,7 @@ export default function ResearchTimeline() {
 
         {/* Timeline entries */}
         {events.length === 0 ? (
-          <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 12,
+          <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 8,
             padding: 60, textAlign: "center" }}>
             <Activity size={36} color={BRD} style={{ margin: "0 auto 16px", display: "block" }} />
             <p style={{ color: NAVY, fontWeight: 600, margin: "0 0 6px" }}>No events yet</p>

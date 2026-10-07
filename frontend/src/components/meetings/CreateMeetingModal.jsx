@@ -11,6 +11,7 @@ import { TEXT_MUTED, BRD, NAVY } from "@/lib/tokens";
 import api from "@/lib/api";
 import { createMeeting } from "@/hooks/useMeetings";
 import { toast } from "sonner";
+import { safeErrorMessage } from "@/lib/api";
 
 const MEETING_TYPES = [
   "Research Meeting", "PhD Supervision", "Project Meeting", "Grant Meeting",
@@ -136,7 +137,7 @@ export function CreateMeetingModal({ open, onClose, onCreated, defaultType, defa
       onCreated?.(created);
       onClose?.();
     } catch (e) {
-      setError(e?.response?.data?.detail?.message || e?.response?.data?.detail || "Could not create the meeting. Please try again.");
+      setError(e?.response?.data?.detail?.message || safeErrorMessage(e, "Could not create the meeting. Please try again."));
     } finally {
       setSubmitting(false);
     }

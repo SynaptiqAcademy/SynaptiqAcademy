@@ -6,10 +6,10 @@ import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Input, Textarea, FormSelect, Modal, NavTabs, EmptyState, LoadingOverlay } from "@/components/ds";
 
 const TOPIC_COLOR = {
-  research_methods: ACCENT, ai_in_research: "#8b5cf6", statistics: "#f97316",
-  open_science: EMERALD, peer_review: "#06b6d4", grant_writing: "#ec4899",
-  scientific_publishing: NAVY, teaching: "#0ea5e9", innovation: "#dc2626",
-  discipline_specific: "#7c3aed", software: "#059669", datasets: "#92400e",
+  research_methods: ACCENT, ai_in_research: "#2f5486", statistics: "#f97316",
+  open_science: EMERALD, peer_review: "#2f5486", grant_writing: "#2f5486",
+  scientific_publishing: NAVY, teaching: "#2f5486", innovation: "#dc2626",
+  discipline_specific: "#0F2847", software: "#059669", datasets: "#92400e",
 };
 
 function CommunityCard({ c, onJoin, onLeave, onOpen }) {
@@ -17,7 +17,7 @@ function CommunityCard({ c, onJoin, onLeave, onOpen }) {
   return (
     <Card padding="md">
       <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: `${color}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <div style={{ width: 44, height: 44, borderRadius: 8, background: `${color}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <MessageSquare size={20} color={color} />
         </div>
         <div style={{ flex: 1 }}>
@@ -266,7 +266,7 @@ function CommunitiesSidebar({ myCommunities, total }) {
           <MessageSquare size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Communities Found</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{total}</div>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{total}</div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
           Matching your current search and filters.
         </p>
@@ -277,7 +277,7 @@ function CommunitiesSidebar({ myCommunities, total }) {
           <Users size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Your Communities</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{myCommunities.length}</div>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>{myCommunities.length}</div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", lineHeight: 1.5 }}>
           Communities you've joined.
         </p>

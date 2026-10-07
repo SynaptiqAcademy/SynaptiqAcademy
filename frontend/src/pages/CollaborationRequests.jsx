@@ -19,6 +19,7 @@ import { NavTabs } from "@/components/ds/NavTabs";
 import { EmptyState as DsEmptyState } from "@/components/ds/EmptyState";
 import { SkeletonCard } from "@/components/ds/LoadingState";
 import { Alert } from "@/components/ds/Alert";
+import { safeErrorMessage } from "../lib/api";
 
 // ─────────────────────── helpers ─────────────────────────────────────────────
 
@@ -84,7 +85,7 @@ function RequestCard({ req, isSender, onStatusChange }) {
       if (status === "declined") setDeclining(false);
       if (status === "withdrawn" || status === "cancelled") setWithdrawConfirm(false);
     } catch (err) {
-      setError(err?.response?.data?.detail || "Action failed.");
+      setError(safeErrorMessage(err, "Action failed."));
     } finally {
       setActing(false);
     }
@@ -168,7 +169,7 @@ function RequestCard({ req, isSender, onStatusChange }) {
           )}
 
           {req.viewed_at && req.status === "viewed" && isSender && (
-            <div className="mt-2 flex items-center gap-1 text-xs text-sky-600">
+            <div className="mt-2 flex items-center gap-1 text-xs text-navy-700">
               <Eye size={10} strokeWidth={1.5} />
               Viewed {new Date(req.viewed_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
             </div>
@@ -362,7 +363,7 @@ export default function CollaborationRequests() {
           );
         }
       } catch (err) {
-        setError(err?.response?.data?.detail || "Failed to load requests.");
+        setError(safeErrorMessage(err, "Failed to load requests."));
       } finally {
         setLoading(false);
       }

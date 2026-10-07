@@ -26,9 +26,9 @@ const FILTER_TYPES = ["", ...ITEM_TYPES];
 // don't map cleanly onto the 6 fixed semantic Badge variants (distinct blue/
 // indigo/purple/amber/yellow/emerald/slate/red original palette).
 const TYPE_BADGE_COLOR = {
-  lesson:       "#1d4ed8",
-  course:       "#4338ca",
-  assessment:   "#7e22ce",
+  lesson:       "#0F2847",
+  course:       "#0F2847",
+  assessment:   "#0F2847",
   achievement:  "#b45309",
   award:        "#a16207",
   reflection:   "#047857",

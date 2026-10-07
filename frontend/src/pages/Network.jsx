@@ -19,6 +19,7 @@ import { useReputationBatch } from "../hooks/useReputation";
 import InviteModal from "../components/marketplace/InviteModal";
 import { toast } from "sonner";
 import { ACCENT, NAVY, WARM } from "@/lib/tokens";
+import { safeErrorMessage } from "../lib/api";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const BORDER = "#E4E8EF";
@@ -82,7 +83,7 @@ function OrcidBadge({ orcid }) {
 function MatchBadge({ score }) {
   if (!score || score <= 0) return null;
   const color = score >= 60 ? { text: "#059669", bg: "#F0FDF4", border: "#A7F3D0" }
-              : score >= 30 ? { text: "#0891B2", bg: "#F0F9FF", border: "#BAE6FD" }
+              : score >= 30 ? { text: "#0F2847", bg: "#eef2f8", border: "#d4dde9" }
               :               { text: "#94A3B8", bg: WARM,      border: BORDER };
   return (
     <span style={{ fontSize: 10, fontFamily: "monospace", color: color.text, background: color.bg, border: `1px solid ${color.border}`, padding: "2px 6px", fontWeight: 600 }}>
@@ -112,7 +113,7 @@ function ResearcherCard({ u, repScore, savedIds, onSaveToggle, onInvite, current
       }
       onSaveToggle(u.id, !isSaved);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed");
+      toast.error(safeErrorMessage(err, "Failed"));
     } finally {
       setSaveBusy(false);
     }
@@ -120,7 +121,7 @@ function ResearcherCard({ u, repScore, savedIds, onSaveToggle, onInvite, current
 
   const areaColor = (a) => {
     const idx = AREAS.indexOf(a);
-    const hues = ["#0891B2","#7C3AED","#059669","#D97706","#EA580C","#0891B2","#8A1538","#374151"];
+    const hues = ["#0F2847","#0F2847","#059669","#D97706","#EA580C","#0F2847","#0F2847","#374151"];
     return hues[idx % hues.length] || NAVY;
   };
 
@@ -569,8 +570,8 @@ export default function Network() {
                 <section>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, paddingBottom: 12, borderBottom: `1px solid ${BORDER}` }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ width: 26, height: 26, background: "#7C3AED" + "15", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <BrainCircuit size={12} strokeWidth={1.5} style={{ color: "#7C3AED" }} />
+                      <div style={{ width: 26, height: 26, background: "#0F2847" + "15", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <BrainCircuit size={12} strokeWidth={1.5} style={{ color: "#0F2847" }} />
                       </div>
                       <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}>Popular Research Teams</div>
                     </div>
@@ -601,7 +602,7 @@ export default function Network() {
               <DiscoverSection
                 title="International researchers"
                 icon={Globe2}
-                accent="#0891B2"
+                accent="#0F2847"
                 researchers={hubData?.sections?.international_matches || []}
                 savedIds={savedIds}
                 onSaveToggle={handleSaveToggle}
@@ -853,9 +854,9 @@ export default function Network() {
             <div style={{ display: "flex", flexDirection: "column", gap: 36 }}>
               {[
                 { key: "recommended",            title: "Recommended for you",      icon: Sparkles,     accent: ACCENT },
-                { key: "methodology_experts",     title: "Methodology experts",      icon: BarChart2,    accent: "#7C3AED" },
+                { key: "methodology_experts",     title: "Methodology experts",      icon: BarChart2,    accent: "#0F2847" },
                 { key: "institutional_matches",   title: "At your institution",      icon: GraduationCap,accent: "#059669" },
-                { key: "international_matches",   title: "International researchers",icon: Globe2,       accent: "#0891B2" },
+                { key: "international_matches",   title: "International researchers",icon: Globe2,       accent: "#0F2847" },
                 { key: "top_scholars",            title: "Top scholars",             icon: Star,         accent: "#D97706" },
                 { key: "available_collaborators", title: "Open to collaboration",    icon: Users,        accent: NAVY },
                 { key: "available_reviewers",     title: "Available for reviewing",  icon: CheckCircle,  accent: "#059669" },

@@ -241,11 +241,6 @@ function AppSidebarBody() {
   const initials = (user?.full_name || "U")
     .split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
-  const subtitle =
-    dashboardMode === "hybrid"   ? "Research & Education OS" :
-    dashboardMode === "teaching" ? "Education OS" :
-    "Research OS";
-
   return (
     <aside
       data-testid={TID.sidebar}
@@ -255,7 +250,7 @@ function AppSidebarBody() {
         transition: "width 220ms cubic-bezier(0.16,1,0.3,1)",
         willChange: "width",
       }}
-      className="hidden lg:flex flex-col border-r border-[rgba(15,23,42,0.11)] bg-[#FAFBFC] h-screen sticky top-0 overflow-hidden shrink-0"
+      className="hidden lg:flex flex-col border-r border-[#E6E2DA] bg-white h-screen sticky top-0 overflow-hidden shrink-0"
     >
       {/* ── Wordmark ─────────────────────────────────────────────────────── */}
       <div
@@ -268,27 +263,14 @@ function AppSidebarBody() {
       >
         <NavLink
           to="/discover"
-          className="flex items-center gap-2.5 min-w-0"
-          title={collapsed ? "SYNAPTIQ" : undefined}
+          className="flex items-center min-w-0"
+          title={collapsed ? "Synaptiq" : undefined}
+          aria-label="Synaptiq home"
         >
-          <div className="w-6 h-6 bg-[#0F2847] rounded-sm flex items-center justify-center shrink-0">
-            <BrainCircuit size={12} strokeWidth={2} className="text-white" />
-          </div>
-          <div
-            style={{
-              overflow: "hidden",
-              maxWidth: collapsed ? 0 : 200,
-              opacity: collapsed ? 0 : 1,
-              transition: "max-width 200ms ease, opacity 150ms ease",
-            }}
-          >
-            <div className="text-[12px] font-bold tracking-[0.07em] text-[#0F2847] whitespace-nowrap">
-              SYNAPTIQ
-            </div>
-            <div className="text-[9px] font-medium tracking-[0.08em] uppercase text-slate-400 whitespace-nowrap">
-              {subtitle}
-            </div>
-          </div>
+          {/* The same wordmark as the public site header. */}
+          <span className="text-[15px] font-extrabold tracking-[-0.04em] text-[#0F2847] whitespace-nowrap">
+            {collapsed ? "S" : "SYNAPTIQ"}
+          </span>
         </NavLink>
       </div>
 
@@ -404,7 +386,7 @@ function AppSidebarBody() {
           onClick={handleLogout}
           data-testid={TID.logoutBtn}
           title={collapsed ? "Sign out" : undefined}
-          className="w-full flex items-center gap-2.5 text-[12px] text-slate-500 hover:text-[#8A1538] hover:bg-slate-50 transition-colors duration-100 text-left"
+          className="w-full flex items-center gap-2.5 text-[12px] text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors duration-100 text-left"
           style={{
             padding: collapsed ? "5px 0" : "5px 14px",
             justifyContent: collapsed ? "center" : "flex-start",
@@ -533,7 +515,7 @@ const SidebarSection = memo(function SidebarSection({
               title={`Open ${section.label}`}
             >
               <SectionIcon size={12} strokeWidth={1.5} className="shrink-0" />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.08em]">
+              <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.08em]">
                 {section.label}
               </span>
             </NavLink>
@@ -543,7 +525,7 @@ const SidebarSection = memo(function SidebarSection({
               className={`flex-1 flex items-center gap-2 px-3.5 py-2.5 hover:bg-slate-50 transition-colors ${colorClass}`}
             >
               <SectionIcon size={12} strokeWidth={1.5} className="shrink-0" />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.08em]">
+              <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.08em]">
                 {section.label}
               </span>
             </button>
@@ -790,55 +772,56 @@ function CreditsWidget({ collapsed }) {
     if (state.reset_at) renews = new Date(state.reset_at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
   } catch (_) {}
 
+  // The one global credit indicator (the top bar no longer repeats it):
+  // total usable credits and plan at a glance, monthly / purchased / renewal
+  // underneath. Costs of individual AI actions are shown at the action.
+  const planName = state.plan_name || planDisplayName(state.plan_code);
+
   if (collapsed) {
     return (
       <Link
         to={usable ? "/ai-credits" : "/pricing"}
         data-testid={TID.creditsWidget}
-        title={usable ? `${total.toLocaleString()} AI credits` : "AI credits are part of Pro"}
-        className="flex items-center justify-center py-2 hover:bg-slate-50 transition-colors duration-100"
+        title={usable ? `${total.toLocaleString()} AI credits available` : "AI credits are part of Pro"}
+        className="flex flex-col items-center gap-0.5 py-2 hover:bg-slate-50 transition-colors duration-100"
       >
         <Sparkles size={13} strokeWidth={1.5} className="text-[#0F2847]" />
+        {usable && <span className="text-[9.5px] font-mono text-slate-600">{total.toLocaleString()}</span>}
       </Link>
     );
   }
 
   return (
     <Link
-      to={usable ? "/ai-credits#buy-credits" : "/pricing"}
+      to={usable ? "/ai-credits" : "/pricing"}
       data-testid={TID.creditsWidget}
-      className="block px-3 py-2 mx-2.5 mb-1 border border-[rgba(15,23,42,0.07)] rounded-md hover:border-[#0F2847]/30 transition-colors duration-150"
+      className="block px-3.5 py-2.5 mb-1 hover:bg-slate-50 transition-colors duration-150"
     >
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="flex items-center gap-1.5">
-          <Sparkles size={10} strokeWidth={1.5} className="text-[#0F2847]" />
-          <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400">
-            AI Credits
-          </span>
-        </div>
-        <span className="text-[9px] font-semibold text-slate-500">{state.plan_name || planDisplayName(state.plan_code)}</span>
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">AI credits</span>
+        <span className="text-[10px] font-semibold text-[#0F2847]">{planName}</span>
       </div>
       {usable ? (
         <>
-          <div className="flex items-baseline gap-1 mb-1.5" data-testid="credits-widget-balance">
-            <span className="text-base font-bold text-slate-900 tracking-tight">{sub.toLocaleString()}</span>
-            <span className="text-[10px] text-slate-400">/ {allowance.toLocaleString()} monthly credits available</span>
+          <div className="flex items-baseline gap-1 mt-1" data-testid="credits-widget-balance">
+            <span className="text-[15px] font-semibold text-slate-900 tabular-nums">{total.toLocaleString()}</span>
+            <span className="text-[11px] text-slate-500">available</span>
           </div>
-          <div className="h-px bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-[#0F2847] rounded-full transition-[width] duration-500" style={{ width: `${pct}%` }} />
+          <div className="text-[10.5px] text-slate-500 mt-0.5 leading-snug">
+            {sub.toLocaleString()} of {allowance.toLocaleString()} monthly · {purchased.toLocaleString()} purchased
+            {renews && <> · renews {renews}</>}
           </div>
-          <div className="text-[10px] text-slate-500 mt-1.5 space-y-0.5">
-            <div>Purchased credits: {purchased.toLocaleString()}</div>
-            <div className="font-semibold text-slate-700">Total available: {total.toLocaleString()}</div>
-            {renews && <div>Renews {renews}</div>}
-            <div className="text-[#0F2847] font-semibold pt-0.5">Buy Credits →</div>
-          </div>
+          {allowance > 0 && (
+            <div className="h-[2px] bg-slate-100 mt-1.5 overflow-hidden" aria-hidden="true">
+              <div className="h-full bg-[#0F2847] transition-[width] duration-500" style={{ width: `${pct}%` }} />
+            </div>
+          )}
         </>
       ) : (
-        <div className="text-[11px] text-slate-600 leading-snug" data-testid="credits-widget-upgrade">
+        <div className="text-[11px] text-slate-600 leading-snug mt-1" data-testid="credits-widget-upgrade">
           AI tools and credits are part of Pro.
-          {purchased > 0 && <span className="block text-slate-400 mt-0.5">{purchased.toLocaleString()} purchased credits kept for when you upgrade.</span>}
-          <span className="block text-[#0F2847] font-semibold mt-1">Upgrade →</span>
+          {purchased > 0 && <span className="block text-slate-500 mt-0.5">{purchased.toLocaleString()} purchased credits kept for when you upgrade.</span>}
+          <span className="block text-[#0F2847] font-semibold mt-1">See plans →</span>
         </div>
       )}
     </Link>
@@ -923,7 +906,7 @@ function AdminSection({ section }) {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2 text-sm transition-colors ${
                   isActive
-                    ? "bg-[#0F2847] text-white border-l-2 border-blue-400"
+                    ? "bg-[#0F2847] text-white border-l-2 border-navy-400"
                     : "text-slate-400 hover:text-white hover:bg-[#0F2847]/60 border-l-2 border-transparent"
                 }`
               }
@@ -953,9 +936,9 @@ function AdminSidebarBody() {
   return (
     <aside
       style={{ width: SIDEBAR_W }}
-      className="min-h-screen bg-[#0B1C35] flex flex-col flex-shrink-0 border-r border-[#1a3050]"
+      className="min-h-screen bg-[#0a1c34] flex flex-col flex-shrink-0 border-r border-[#1c3e6d]"
     >
-      <div className="px-5 py-5 border-b border-[#1a3050]">
+      <div className="px-5 py-5 border-b border-[#1c3e6d]">
         <div className="font-serif text-white text-lg tracking-wide">SYNAPTIQ</div>
         <div className="text-xs text-slate-400 mt-0.5 tracking-widest uppercase">Admin OS</div>
       </div>
@@ -965,7 +948,7 @@ function AdminSidebarBody() {
           <AdminSection key={section.label} section={section} />
         ))}
 
-        <div className="border-t border-[#1a3050] mx-2 my-2" />
+        <div className="border-t border-[#1c3e6d] mx-2 my-2" />
 
         <a
           href="/discover"
@@ -978,7 +961,7 @@ function AdminSidebarBody() {
         </a>
       </nav>
 
-      <div className="border-t border-[#1a3050] p-4">
+      <div className="border-t border-[#1c3e6d] p-4">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-8 h-8 bg-[#0F2847] border border-slate-600 flex items-center justify-center text-xs text-white font-medium flex-shrink-0">
             {initials}

@@ -15,6 +15,7 @@ import { AI_NAV_ITEMS } from "@/lib/navItems";
 import { Card } from "@/components/ds/Card";
 import { PLAN_DISPLAY_NAMES } from "@/lib/planNames";
 import { CreditCostNumber } from "@/components/billing/CreditCost";
+import { safeErrorMessage } from "../lib/api";
 
 // ─────────────────────── ai nav ──────────────────────────────────────────────
 
@@ -29,7 +30,7 @@ function ScoreRing({ score, size = 64 }) {
   const dash = (pct / 100) * circ;
   const color =
     pct >= 75 ? "#166534" :
-    pct >= 55 ? "#1d4ed8" :
+    pct >= 55 ? "#0F2847" :
     pct >= 40 ? "#b45309" : "#9f1239";
 
   return (
@@ -92,7 +93,7 @@ function Tag({ children, className = "" }) {
 function ScoreBadge({ score }) {
   const color =
     score >= 75 ? "border-green-700 text-green-700" :
-    score >= 55 ? "border-blue-700 text-blue-700" :
+    score >= 55 ? "border-navy-700 text-navy-700" :
     score >= 40 ? "border-amber-700 text-amber-700" : "border-rose-800 text-rose-800";
   return (
     <span className={`text-xs font-mono border px-1.5 py-0.5 ${color}`}>{score}</span>
@@ -294,7 +295,7 @@ function SendRequestModal({ researcher, onClose }) {
       });
       setDone(true);
     } catch (err) {
-      setError(err?.response?.data?.detail || "Failed to send request.");
+      setError(safeErrorMessage(err, "Failed to send request."));
       setSending(false);
     }
   };
@@ -383,7 +384,7 @@ function StartProjectModal({ researcher, onClose }) {
       });
       navigate(`/projects/${proj.id}`);
     } catch (err) {
-      setError(err?.response?.data?.detail || "Failed to create project.");
+      setError(safeErrorMessage(err, "Failed to create project."));
       setSaving(false);
     }
   };
@@ -833,7 +834,7 @@ export default function CollaborationIntelligence() {
         // UpgradeModal handles 402 globally via synaptiq:gate event
         setGated(true);
       } else {
-        setError(err?.response?.data?.detail || "Failed to generate recommendations. Please try again.");
+        setError(safeErrorMessage(err, "Failed to generate recommendations. Please try again."));
       }
     } finally {
       setLoading(false);
@@ -938,9 +939,9 @@ export default function CollaborationIntelligence() {
         <div className="border-b border-slate-200 px-6 pt-4 pb-6" style={{ background: "#F4F6FA" }}>
           <div style={{ height: 14 }} />
           {gapContext && (
-            <div className="flex items-start gap-2.5 border border-blue-200 bg-blue-50 px-4 py-3 mb-5">
-              <Sparkles size={13} strokeWidth={1.5} className="text-blue-600 mt-0.5 shrink-0" />
-              <div className="text-xs text-blue-800 leading-relaxed">
+            <div className="flex items-start gap-2.5 border border-navy-200 bg-navy-50 px-4 py-3 mb-5">
+              <Sparkles size={13} strokeWidth={1.5} className="text-navy-700 mt-0.5 shrink-0" />
+              <div className="text-xs text-navy-800 leading-relaxed">
                 <span className="font-medium">From Research Gap Finder:</span>{" "}
                 Finding collaborators for <span className="font-medium">{gapContext.topic}</span>
                 {gapContext.keywords.length > 0 && (

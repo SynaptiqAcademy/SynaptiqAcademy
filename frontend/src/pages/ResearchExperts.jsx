@@ -18,10 +18,11 @@
  */
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, X, Shield, CheckCircle2, Sparkles } from "lucide-react";
+import { Search, X, Shield, CheckCircle2, Sparkles, SlidersHorizontal } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import api from "@/lib/api";
-import { NAVY, EMERALD, TEXT_SECONDARY, TEXT_MUTED, BRD } from "@/lib/tokens";
+import { NAVY, TEXT_SECONDARY, TEXT_MUTED, BRD } from "@/lib/tokens";
+import "./research-experts.css";
 import { ResearchLayout } from "@/layouts";
 import { Card, Badge, Button, Input, EmptyState, LoadingOverlay, Pagination, Checkbox } from "@/components/ds";
 import ResearchNeedPanel from "@/components/research/ResearchNeedPanel";
@@ -36,20 +37,21 @@ const EMPTY_FILTERS = {
 
 function VerifiedBadge({ icon: Icon, label }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, fontWeight: 700, color: EMERALD, background: "#ECFDF5", padding: "2px 7px", borderRadius: 100 }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10.5, fontWeight: 600, color: "var(--sq-success-text)", background: "var(--sq-success-bg)", padding: "2px 7px", borderRadius: 4 }}>
       <Icon size={10} /> {label}
     </span>
   );
 }
 
-function ChipRow({ items, color = NAVY, bg }) {
+// Topic chips are information, not status: one neutral treatment.
+function ChipRow({ items }) {
   if (!items || items.length === 0) return null;
   const visible = items.slice(0, 4);
   const rest = items.length - visible.length;
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
       {visible.map((it) => (
-        <span key={it} style={{ fontSize: 11, padding: "2px 8px", background: bg || `${color}12`, color, border: `1px solid ${color}30` }}>{it}</span>
+        <span key={it} style={{ fontSize: 11, padding: "2px 8px", background: "var(--sq-surface-2)", color: TEXT_SECONDARY, border: `1px solid ${BRD}`, borderRadius: 4 }}>{it}</span>
       ))}
       {rest > 0 && <span style={{ fontSize: 11, color: TEXT_MUTED }}>+{rest} more</span>}
     </div>
@@ -87,10 +89,10 @@ function CompatibilityBadge({ compatibility }) {
 // on request — progressive disclosure per §11). Never a percentage: this is
 // relevance to THIS research need, not researcher quality (§2/§20).
 const LABEL_META = {
-  directly_relevant: { text: "Directly relevant", color: "#0891B2" },
-  complementary_expertise: { text: "Complementary expertise", color: "#0F766E" },
-  methods_specialist: { text: "Methods specialist", color: NAVY },
-  context_specialist: { text: "Context specialist", color: "#7C3AED" },
+  directly_relevant: { text: "Directly relevant" },
+  complementary_expertise: { text: "Complementary expertise" },
+  methods_specialist: { text: "Methods specialist" },
+  context_specialist: { text: "Context specialist" },
 };
 
 function WhyThisPerson({ explanation, contribution, relevanceLabels, evidence }) {
@@ -104,7 +106,7 @@ function WhyThisPerson({ explanation, contribution, relevanceLabels, evidence })
             const meta = LABEL_META[l];
             if (!meta) return null;
             return (
-              <span key={l} style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", color: meta.color, background: `${meta.color}14`, border: `1px solid ${meta.color}30` }}>
+              <span key={l} style={{ fontSize: 10.5, fontWeight: 600, padding: "2px 7px", color: NAVY, background: "var(--sq-navy-50)", border: "1px solid var(--sq-navy-100)", borderRadius: 4 }}>
                 {meta.text}
               </span>
             );
@@ -165,7 +167,7 @@ export function ExpertResultCard({ person, onInvite }) {
             {person.profile_picture ? <img src={person.profile_picture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (person.name || "?")[0].toUpperCase()}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 700, fontSize: 14.5, color: NAVY }}>{person.name || "Researcher"}</div>
+            <div style={{ fontWeight: 600, fontSize: 14.5, color: "var(--sq-text-primary)" }}>{person.name || "Researcher"}</div>
             {role && <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginTop: 1 }}>{role}</div>}
             <div style={{ fontSize: 11.5, color: TEXT_MUTED, marginTop: 1 }}>
               {[person.institution, person.country].filter(Boolean).join(" · ")}
@@ -181,9 +183,9 @@ export function ExpertResultCard({ person, onInvite }) {
       </Link>
 
       <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-        <ChipRow items={person.research_areas} color="#0891B2" />
-        <ChipRow items={person.professional_expertise} color="#0F766E" />
-        <ChipRow items={person.methods} color={NAVY} bg="#F8FAFC" />
+        <ChipRow items={person.research_areas} />
+        <ChipRow items={person.professional_expertise} />
+        <ChipRow items={person.methods} />
       </div>
 
       {person.explanation ? (
@@ -213,7 +215,8 @@ export function ExpertResultCard({ person, onInvite }) {
   );
 }
 
-function CompletenessBanner({ profile }) {
+// Contextual identity guidance: one dismissible line, not a banner card.
+function CompletenessHint({ profile }) {
   const [dismissed, setDismissed] = useState(false);
   if (dismissed || !profile) return null;
   const missing = [];
@@ -221,23 +224,32 @@ function CompletenessBanner({ profile }) {
   if (!(profile.methods || []).length) missing.push("methods");
   if (!(profile.professional_expertise || []).length) missing.push("professional expertise");
   if (!(profile.languages || []).length) missing.push("languages");
-  if (!(profile.orcid?.orcid_id)) missing.push("ORCID connection");
+  if (!(profile.orcid?.orcid_id)) missing.push("ORCID");
   if (missing.length === 0) return null;
   return (
-    <Card padding="md" style={{ marginBottom: 16, border: `1px solid ${NAVY}25`, background: "#F8FAFC" }}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-        <div style={{ fontSize: 12.5, color: TEXT_SECONDARY, lineHeight: 1.6 }}>
-          <strong style={{ color: NAVY }}>Other researchers find you through this same search.</strong>{" "}
-          Add {missing.slice(0, 3).join(", ")}{missing.length > 3 ? ", and more" : ""} on your Academic Passport so relevant collaborators can find you.
-        </div>
-        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-          <Link to="/academic-passport"><Button as="span" size="sm">Edit identity</Button></Link>
-          <Button size="sm" variant="ghost" onClick={() => setDismissed(true)}>Dismiss</Button>
-        </div>
-      </div>
-    </Card>
+    <p className="rx-hint">
+      Others find you through this same search. Adding {missing.slice(0, 3).join(", ")}{missing.length > 3 ? " and more" : ""} helps the right people find you.{" "}
+      <Link to="/academic-passport" className="rx-hint-link">Edit Academic Passport</Link>
+      <button type="button" className="rx-hint-x" onClick={() => setDismissed(true)} aria-label="Dismiss">
+        <X size={13} />
+      </button>
+    </p>
   );
 }
+
+const FILTER_FIELDS = [
+  { key: "institution", label: "Institution" },
+  { key: "country", label: "Country" },
+  { key: "discipline", label: "Research area or discipline" },
+  { key: "professional_role", label: "Professional role" },
+];
+const FILTER_FLAGS = [
+  { key: "available_for_collaboration", label: "Open to collaboration" },
+  { key: "available_for_reviewing", label: "Open to peer review" },
+  { key: "orcid_verified", label: "ORCID connected" },
+  { key: "institution_verified", label: "Institution verified" },
+];
+const MODE_KEY = "sq:rx-mode";
 
 export default function ResearchExperts() {
   const { user: me } = useAuth();
@@ -285,80 +297,112 @@ export default function ResearchExperts() {
     return next;
   };
 
+  const [mode, setMode] = useState(() => {
+    if (searchParams.get("q")) return "search";
+    try { return localStorage.getItem(MODE_KEY) || "need"; } catch { return "need"; }
+  });
+  const chooseMode = (m) => { setMode(m); try { localStorage.setItem(MODE_KEY, m); } catch {} };
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const active = [
+    ...FILTER_FIELDS.filter((f) => filters[f.key]).map((f) => ({ key: f.key, label: `${f.label}: ${filters[f.key]}`, clear: "" })),
+    ...FILTER_FLAGS.filter((f) => filters[f.key]).map((f) => ({ key: f.key, label: f.label, clear: false })),
+  ];
+
   return (
-    <ResearchLayout title="Research & Experts" subtitle="Find researchers and interdisciplinary experts across Synaptiq">
-      <CompletenessBanner profile={me} />
+    <ResearchLayout title="Research & Experts" subtitle="Find the expertise a research question needs, or search members directly.">
+      <CompletenessHint profile={me} />
 
-      <ResearchNeedPanel />
+      <div className="rx-modes" role="tablist" aria-label="How do you want to find people?">
+        <button type="button" role="tab" id="rx-tab-need" aria-selected={mode === "need"} aria-controls="rx-panel-need" onClick={() => chooseMode("need")}>
+          Describe a research need
+        </button>
+        <button type="button" role="tab" id="rx-tab-search" aria-selected={mode === "search"} aria-controls="rx-panel-search" onClick={() => chooseMode("search")}>
+          Search members
+        </button>
+      </div>
 
-      <form
-        onSubmit={(e) => { e.preventDefault(); runSearch(filters); }}
-        style={{ display: "flex", gap: 10, marginBottom: 12 }}
-      >
-        <Input
-          value={filters.q}
-          onChange={(e) => setFilter("q", e.target.value)}
-          placeholder="Search name, research area, methods, professional expertise…"
-          prefix={<Search size={15} />}
-          wrapperClassName="flex-1"
-        />
-        <Button type="submit" variant="primary">Search</Button>
-      </form>
+      <div id="rx-panel-need" role="tabpanel" aria-labelledby="rx-tab-need" hidden={mode !== "need"}>
+        <ResearchNeedPanel />
+      </div>
 
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-        {[
-          { key: "institution", placeholder: "Institution" },
-          { key: "country", placeholder: "Country" },
-          { key: "discipline", placeholder: "Research area or discipline" },
-          { key: "professional_role", placeholder: "Professional role" },
-        ].map(({ key, placeholder }) => (
-          <div key={key} style={{ position: "relative" }}>
-            <Input
-              value={filters[key]}
-              onChange={(e) => setFilter(key, e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") runSearch(setFilter(key, e.target.value)); }}
-              placeholder={placeholder}
-              size="sm"
-              style={{ paddingRight: filters[key] ? 30 : undefined }}
-            />
-            {filters[key] && (
-              <Button size="icon" variant="ghost" onClick={() => runSearch(setFilter(key, ""))} aria-label={`Clear ${placeholder}`}
-                style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", padding: 0 }}>
-                <X size={13} color={TEXT_SECONDARY} />
-              </Button>
-            )}
+      <div id="rx-panel-search" role="tabpanel" aria-labelledby="rx-tab-search" hidden={mode !== "search"}>
+        <form onSubmit={(e) => { e.preventDefault(); runSearch(filters); }} className="rx-search">
+          <Input
+            value={filters.q}
+            onChange={(e) => setFilter("q", e.target.value)}
+            placeholder="Name, research area, method or professional expertise"
+            aria-label="Search members"
+            prefix={<Search size={15} />}
+            wrapperClassName="flex-1"
+          />
+          <Button type="submit" variant="primary">Search</Button>
+          <Button type="button" variant="secondary" aria-expanded={filtersOpen} aria-controls="rx-filters" onClick={() => setFiltersOpen((v) => !v)}>
+            <SlidersHorizontal size={14} /> Filters{active.length ? ` · ${active.length}` : ""}
+          </Button>
+        </form>
+        <p className="rx-free">Member search is free and never uses AI credits.</p>
+
+        {filtersOpen && (
+          <div id="rx-filters" className="rx-filters">
+            <div className="rx-filter-grid">
+              {FILTER_FIELDS.map(({ key, label }) => (
+                <Input
+                  key={key}
+                  label={label}
+                  size="sm"
+                  value={filters[key]}
+                  onChange={(e) => setFilter(key, e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); runSearch(setFilter(key, e.target.value)); } }}
+                />
+              ))}
+            </div>
+            <div className="rx-filter-flags">
+              {FILTER_FLAGS.map(({ key, label }) => (
+                <Checkbox key={key} label={label} checked={filters[key]} onChange={(e) => runSearch(setFilter(key, e.target.checked))} />
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <Button type="button" variant="primary" size="sm" onClick={() => runSearch(filters)}>Apply filters</Button>
+            </div>
           </div>
-        ))}
+        )}
+
+        {active.length > 0 && (
+          <div className="rx-active" aria-label="Active filters">
+            {active.map((a) => (
+              <button key={a.key} type="button" className="rx-chip" onClick={() => runSearch(setFilter(a.key, a.clear))} aria-label={`Remove filter ${a.label}`}>
+                {a.label} <X size={11} />
+              </button>
+            ))}
+            <button type="button" className="rx-clear" onClick={() => { const next = { ...EMPTY_FILTERS, q: filters.q }; setFilters(next); runSearch(next); }}>
+              Clear all
+            </button>
+          </div>
+        )}
+
+        {!loading && <div className="rx-count">{total} result{total === 1 ? "" : "s"}</div>}
+
+        {loading ? (
+          <LoadingOverlay text="Searching…" />
+        ) : results.length === 0 ? (
+          <EmptyState
+            icon={<Search />}
+            title="No members match this search."
+            description="Try fewer filters or a broader term, or describe the research need instead."
+            action={<Button size="sm" variant="secondary" onClick={() => chooseMode("need")}>Describe a research need</Button>}
+          />
+        ) : (
+          <div className="rx-results">
+            {results.map((p) => <ExpertResultCard key={p.id} person={p} />)}
+          </div>
+        )}
+
+        {pages > 1 && (
+          <div style={{ marginTop: 20 }}>
+            <Pagination page={page} totalPages={pages} onPage={(p) => { setPage(p); search(filters, p); }} />
+          </div>
+        )}
       </div>
-
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 18, fontSize: 12.5 }}>
-        {[
-          { key: "available_for_collaboration", label: "Open to collaboration" },
-          { key: "available_for_reviewing", label: "Open to peer review" },
-          { key: "orcid_verified", label: "ORCID connected" },
-          { key: "institution_verified", label: "Institution verified" },
-        ].map(({ key, label }) => (
-          <Checkbox key={key} label={label} checked={filters[key]} onChange={(e) => runSearch(setFilter(key, e.target.checked))} />
-        ))}
-      </div>
-
-      {!loading && <div style={{ fontSize: 12, color: TEXT_MUTED, marginBottom: 12 }}>{total} result{total === 1 ? "" : "s"}</div>}
-
-      {loading ? (
-        <LoadingOverlay text="Searching…" />
-      ) : results.length === 0 ? (
-        <EmptyState title="No researchers or experts found." description="Try broadening your search or filters." />
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 12 }}>
-          {results.map((p) => <ExpertResultCard key={p.id} person={p} />)}
-        </div>
-      )}
-
-      {pages > 1 && (
-        <div style={{ marginTop: 20 }}>
-          <Pagination page={page} totalPages={pages} onPage={(p) => { setPage(p); search(filters, p); }} />
-        </div>
-      )}
     </ResearchLayout>
   );
 }

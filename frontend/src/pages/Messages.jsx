@@ -60,6 +60,7 @@ import { usePersistentSet } from "@/hooks/usePersistentSet";
 import { ShortcutsModal } from "@/components/shared/ShortcutsModal";
 import { ACCENT, NAVY, WARM, WHITE } from "@/lib/tokens";
 import { confirmDialog } from "@/lib/confirm";
+import { safeErrorMessage } from "../lib/api";
 
 // ─── Palette — no per-type rainbow, one accent only ──────────────────────────
 const INK     = "#1C2333";
@@ -231,7 +232,7 @@ function SideNav({ conversations, filter, setFilter, search, setSearch, activeId
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: RAIL_BG, borderRight: `1px solid ${HAIR}` }}>
       <div style={{ padding: "18px 16px 12px" }}>
-        <h1 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: "1.15rem", fontWeight: 700, color: INK, letterSpacing: "-0.02em", margin: "0 0 3px" }}>
+        <h1 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: "1.15rem", fontWeight: 700, color: INK, letterSpacing: "-0.02em", margin: "0 0 3px" }}>
           Messages
         </h1>
         <p style={{ fontSize: "0.68rem", color: MUTED, margin: "0 0 12px", lineHeight: 1.4 }}>
@@ -461,10 +462,7 @@ function ToolIconBtn({ icon: Icon, title, onClick, active }) {
       onClick={onClick}
       title={title}
       aria-label={title}
-      style={{
-        width: 30, height: 30, borderRadius: 8, border: "none",
-        background: active ? `${ACCENT}14` : "transparent", color: active ? ACCENT : MUTED,
-      }}
+      style={{ width: 30, height: 30, borderRadius: 4, border: "none", background: active ? `${ACCENT}14` : "transparent", color: active ? ACCENT : MUTED }}
     >
       <Icon size={14} fill={active && Icon === Star ? "currentColor" : "none"} />
     </Button>
@@ -523,13 +521,13 @@ function MessageBubble({ m, mine, convDetail, readBy, onReply, onEdit, onDelete,
 
         <div style={{
           background: mine ? NAVY : WHITE, border: mine ? "none" : `1px solid ${HAIR}`,
-          borderRadius: 16, padding: "11px 15px", fontSize: "0.86rem", lineHeight: 1.6,
+          borderRadius: 8, padding: "11px 15px", fontSize: "0.86rem", lineHeight: 1.6,
           color: mine ? WHITE : INK, wordBreak: "break-word",
           boxShadow: mine ? "none" : "0 1px 2px rgba(15,23,42,0.04)",
           outline: highlight ? `2px solid ${ACCENT}` : "none", outlineOffset: 1,
         }}>
           {m.reply_to && (
-            <div style={{ marginBottom: 8, padding: "6px 10px", borderRadius: 8, borderLeft: `2px solid ${mine ? "rgba(255,255,255,0.5)" : ACCENT}`, background: mine ? "rgba(255,255,255,0.1)" : "rgba(138,21,56,0.05)", fontSize: "0.76rem" }}>
+            <div style={{ marginBottom: 8, padding: "6px 10px", borderRadius: 8, borderLeft: `2px solid ${mine ? "rgba(255,255,255,0.5)" : ACCENT}`, background: mine ? "rgba(255,255,255,0.1)" : "rgba(15,40,71,0.05)", fontSize: "0.76rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2, opacity: 0.75 }}>
                 <CornerDownRight size={10} /> <span style={{ fontWeight: 650 }}>{m.reply_to.sender_name || "Reply"}</span>
               </div>
@@ -824,7 +822,7 @@ function SectionLabel({ children }) { return <div style={{ fontSize: "0.65rem", 
 function Stat({ value, label }) {
   return (
     <div>
-      <div style={{ fontFamily: "Georgia, serif", fontSize: "1.1rem", fontWeight: 700, color: INK, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: "1.1rem", fontWeight: 700, color: INK, lineHeight: 1 }}>{value}</div>
       <div style={{ fontSize: "0.66rem", color: MUTED, marginTop: 2 }}>{label}</div>
     </div>
   );
@@ -944,7 +942,7 @@ function Composer({
       onDrop={onDrop} onDragOver={onDragOver} onDragLeave={onDragLeave}
     >
       {dragOver && (
-        <div style={{ position: "absolute", inset: 8, border: `2px dashed ${ACCENT}`, borderRadius: 12, background: `${ACCENT}08`, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, pointerEvents: "none" }}>
+        <div style={{ position: "absolute", inset: 8, border: `2px dashed ${ACCENT}`, borderRadius: 8, background: `${ACCENT}08`, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 5, pointerEvents: "none" }}>
           <span style={{ fontSize: "0.82rem", fontWeight: 600, color: ACCENT }}>Drop to attach</span>
         </div>
       )}
@@ -1033,12 +1031,12 @@ function Composer({
             placeholder={placeholder}
             aria-label="Message"
             rows={1}
-            style={{ width: "100%", padding: "10px 14px", border: `1px solid ${HAIR}`, borderRadius: 12, fontSize: "0.86rem", color: "#374151", outline: "none", resize: "none", overflow: "hidden", minHeight: 42, maxHeight: 160, lineHeight: 1.5, fontFamily: "inherit", boxSizing: "border-box" }}
+            style={{ width: "100%", padding: "10px 14px", border: `1px solid ${HAIR}`, borderRadius: 8, fontSize: "0.86rem", color: "#374151", outline: "none", resize: "none", overflow: "hidden", minHeight: 42, maxHeight: 160, lineHeight: 1.5, fontFamily: "inherit", boxSizing: "border-box" }}
             onFocus={e => e.currentTarget.style.borderColor = ACCENT}
             onBlur={e => e.currentTarget.style.borderColor = HAIR}
           />
         </div>
-        <Button data-testid={TID.messageSendBtn} onClick={onSend} loading={sending} style={{ borderRadius: 12, padding: "10px 18px" }}>
+        <Button data-testid={TID.messageSendBtn} onClick={onSend} loading={sending} style={{ borderRadius: 8, padding: "10px 18px" }}>
           {!sending && <Send size={14} />}
           {editingMessage ? "Save" : "Send"}
         </Button>
@@ -1246,7 +1244,7 @@ export default function Messages() {
         await api.patch(`/conversations/${activeId}/messages/${editingMessage.id}`, { content });
         setInput(""); setEditingMessage(null);
         if (textareaRef.current) textareaRef.current.style.height = "auto";
-      } catch (e) { toast.error(e.response?.data?.detail || "Edit failed"); }
+      } catch (e) { toast.error(safeErrorMessage(e, "Edit failed")); }
       finally { setSending(false); }
       return;
     }
@@ -1264,7 +1262,7 @@ export default function Messages() {
       if (textareaRef.current) textareaRef.current.style.height = "auto";
       loadConversations();
       refreshUnread();
-    } catch (e) { toast.error(e.response?.data?.detail || "Failed to send"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed to send")); }
     finally { setSending(false); }
   };
 
@@ -1277,7 +1275,7 @@ export default function Messages() {
     try {
       await api.delete(`/conversations/${activeId}/messages/${msgId}`);
       setMessages(prev => prev.filter(m => m.id !== msgId));
-    } catch (e) { toast.error(e.response?.data?.detail || "Failed to delete"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed to delete")); }
   };
 
   const toggleReaction = async (msgId, emoji) => {
@@ -1296,7 +1294,7 @@ export default function Messages() {
       await api.post(`/conversations/${convId}/leave`);
       navigate("/messages");
       loadConversations();
-    } catch (e) { toast.error(e.response?.data?.detail || "Failed to leave conversation"); }
+    } catch (e) { toast.error(safeErrorMessage(e, "Failed to leave conversation")); }
   };
 
   const toggleMute = async (convId) => {
@@ -1315,7 +1313,7 @@ export default function Messages() {
       const { data } = await api.post("/uploads", form, { headers: { "Content-Type": "multipart/form-data" } });
       setPendingAttachments(prev => [...prev, data]);
       toast.success("Attached");
-    } catch (err) { toast.error(err.response?.data?.detail || "Upload failed"); }
+    } catch (err) { toast.error(safeErrorMessage(err, "Upload failed")); }
   };
 
   const onUploadClick = () => fileInputRef.current?.click();
@@ -1385,12 +1383,20 @@ export default function Messages() {
     <>
       <style>{`
         @keyframes tp{0%,80%,100%{transform:scale(0.6);opacity:0.4}40%{transform:scale(1);opacity:1}}
+        /* Below desktop: one pane at a time. The conversation list until a
+           conversation is open, then the thread; the details rail is hidden. */
+        @media (max-width: 1023px) {
+          .msg-grid { grid-template-columns: minmax(0, 1fr) !important; height: calc(100vh - 56px - 64px) !important; }
+          .msg-grid > :nth-child(3) { display: none !important; }
+          .msg-grid:not(.has-conv) > :nth-child(2) { display: none !important; }
+          .msg-grid.has-conv > :nth-child(1) { display: none !important; }
+        }
         .msg-scroll::-webkit-scrollbar{width:5px}
         .msg-scroll::-webkit-scrollbar-track{background:transparent}
         .msg-scroll::-webkit-scrollbar-thumb{background:#E2E8F0;border-radius:99px}
       `}</style>
 
-      <div style={{ margin: "-24px -24px 0", display: "grid", gridTemplateColumns: "260px 1fr 320px", background: WHITE, height: "calc(100vh - 56px)" }}>
+      <div className={`msg-grid ${activeId ? "has-conv" : ""}`} style={{ margin: "-24px -24px 0", display: "grid", gridTemplateColumns: "260px 1fr 320px", background: WHITE, height: "calc(100vh - 56px)" }}>
 
         {/* LEFT */}
         <SideNav

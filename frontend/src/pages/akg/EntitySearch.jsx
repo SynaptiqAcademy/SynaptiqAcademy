@@ -16,9 +16,9 @@ const ENTITY_TYPE_OPTIONS = [
 ];
 
 const TYPE_BADGE_COLORS = {
-  researcher: "#3b82f6", educator: "#7c3aed", institution: "#d97706",
-  topic: "#059669", grant: "#f59e0b", community: "#ec4899",
-  marketplace_service: "#8b5cf6", default: ACCENT,
+  researcher: "#2f5486", educator: "#0F2847", institution: "#d97706",
+  topic: "#059669", grant: "#f59e0b", community: "#2f5486",
+  marketplace_service: "#2f5486", default: ACCENT,
 };
 
 export default function EntitySearch() {
@@ -159,7 +159,7 @@ function EntitySearchSidebar({ results }) {
           <Search size={13} style={{ color: ACCENT }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Match Quality</div>
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 28, color: NAVY }}>{(avgScore * 100).toFixed(0)}%</div>
+        <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, color: NAVY }}>{(avgScore * 100).toFixed(0)}%</div>
         <div style={{ fontSize: 11, color: "#64748B" }}>
           Average relevance across {results.length} result{results.length !== 1 ? "s" : ""}
         </div>

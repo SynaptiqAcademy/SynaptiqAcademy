@@ -7,12 +7,13 @@ import {
   Card, Badge, Tag, Button, Input, Textarea, FormSelect, FormRow, Checkbox, Modal,
   NavTabs, EmptyState, LoadingOverlay, InlineError,
 } from "@/components/ds";
+import { safeErrorMessage } from "@/lib/api";
 
 const TYPE_COLOR = {
-  co_author: ACCENT, statistician: "#8b5cf6", ai_specialist: "#06b6d4",
-  data_analyst: "#f97316", reviewer: EMERALD, translator: "#ec4899",
-  supervisor: NAVY, institution_partner: "#0ea5e9", grant_partner: "#dc2626",
-  educator: "#7c3aed", research_assistant: "#059669", industry_expert: "#92400e",
+  co_author: ACCENT, statistician: "#2f5486", ai_specialist: "#2f5486",
+  data_analyst: "#f97316", reviewer: EMERALD, translator: "#2f5486",
+  supervisor: NAVY, institution_partner: "#2f5486", grant_partner: "#dc2626",
+  educator: "#0F2847", research_assistant: "#059669", industry_expert: "#92400e",
 };
 
 const TYPES = [
@@ -65,7 +66,7 @@ function ApplyModal({ collab, onClose, onSuccess }) {
       onSuccess();
       onClose();
     } catch (e) {
-      setError(e.response?.data?.detail || "Failed to apply");
+      setError(safeErrorMessage(e, "Failed to apply"));
       setSaving(false);
     }
   };
