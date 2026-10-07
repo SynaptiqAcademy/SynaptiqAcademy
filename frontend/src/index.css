@@ -235,13 +235,22 @@
   [data-debug-wrapper="true"] { display: contents !important; }
 }
 
-/* Marketing pages — Merriweather only for h1/h2 */
+/* Marketing pages — one editorial serif (Newsreader, as in landing.css) for h1/h2 */
 .marketing-page h1,
 .marketing-page h2,
 .marketing-page .font-serif {
-  font-family: 'Merriweather', Georgia, serif;
+  font-family: 'Newsreader Variable', 'Newsreader', Georgia, serif;
+  font-weight: 400;
   letter-spacing: -0.015em;
 }
+
+/* Public site container: header, page content (.lp-wrap) and footer share
+   one width and one left edge. */
+.mk-wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+@media (min-width: 1024px) { .mk-wrap { padding: 0 40px; } }
+.mk-cta { transition: background-color 140ms ease; }
+.mk-cta:hover { background: var(--sq-brand-navy-deep) !important; }
+.mk-cta:focus-visible, .mk-nav:focus-visible { outline: 2px solid var(--sq-brand-navy); outline-offset: 3px; }
 .marketing-page h3,
 .marketing-page h4,
 .marketing-page h5,

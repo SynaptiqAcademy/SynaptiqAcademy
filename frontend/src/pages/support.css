@@ -15,15 +15,12 @@
 .sp-section a, .sp-next a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
 .sp-now { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
 .sp-meta { margin-top: 6px; font-size: 0.74rem; color: var(--muted); }
-.sp-btn { font: inherit; font-size: 0.88rem; font-weight: 600; color: var(--navy); background: #fff; border: 1px solid var(--navy); border-radius: 2px; padding: 9px 16px; min-height: 40px; cursor: pointer; }
-.sp-btn:hover:not(:disabled) { background: var(--navy); color: #fff; }
-.sp-btn:disabled { opacity: 0.6; cursor: default; }
 
 .sp-rows { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--rule); }
 .sp-rows > li { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 13px 0; border-bottom: 1px solid var(--rule); }
 .sp-row-name { font-weight: 600; color: var(--ink); }
 .sp-row-what { font-size: 0.9rem; color: var(--muted); margin-top: 2px; }
-.sp-state { flex: none; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); border: 1px solid var(--rule-strong); padding: 3px 8px; border-radius: 2px; }
+.sp-state { flex: none; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); border: 1px solid var(--rule-strong); padding: 3px 8px; border-radius: var(--radius); }
 .sp-state-degraded, .sp-state-outage { color: var(--mark); border-color: var(--mark); }
 .sp-note { font-size: 0.88rem; color: var(--muted) !important; }
 .sp-next { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--ink-2); }
@@ -38,6 +35,5 @@
 .sp-faq .sp-answer { padding: 0 0 16px; color: var(--ink-2); line-height: 1.7; max-width: 44rem; }
 .sp-faq .sp-answer a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
 .sp-path { font-family: var(--mono); font-size: 0.86rem; white-space: nowrap; }
-.sp-faq summary:focus-visible, .sp-btn:focus-visible, .sp-section a:focus-visible, .sp-next a:focus-visible { outline: 2px solid var(--mark); outline-offset: 3px; }
-@media (max-width: 640px) { .sp-path { white-space: normal; } }
+.sp-faq summary:focus-visible, @media (max-width: 640px) { .sp-path { white-space: normal; } }
 .sp-linkbtn { background: none; border: none; padding: 0; font: inherit; color: var(--navy); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }

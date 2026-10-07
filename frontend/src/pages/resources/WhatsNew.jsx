@@ -14,9 +14,9 @@ import "../../components/whats-new/whats-new.css";
  */
 
 
-function Note({ n, latest }) {
+function Note({ n, latest, compact }) {
   return (
-    <article id={`note-${n.slug}`} className={`wn-note ${latest ? "is-latest" : ""}`} aria-labelledby={`t-${n.slug}`}>
+    <article id={`note-${n.slug}`} className={`wn-note ${latest ? "is-latest" : ""} ${compact ? "is-compact" : ""}`} aria-labelledby={`t-${n.slug}`}>
       <div className="wn-rail">
         <time dateTime={n.released_at} className="lp-mono wn-date">{formatDay(n.released_at)}</time>
         <a href={`#note-${n.slug}`} className="lp-mono wn-num" aria-label={`Permalink to product note ${n.number}`}
@@ -29,7 +29,12 @@ function Note({ n, latest }) {
         </div>
         <h3 id={`t-${n.slug}`} className="wn-title">{n.title}</h3>
         <p className="wn-summary">{n.summary}</p>
-        {n.details?.length > 0 && <ul className="wn-details">{n.details.map((d) => <li key={d}>{d}</li>)}</ul>}
+        {n.details?.length > 0 && (compact ? (
+          <details className="wn-more">
+            <summary>Details</summary>
+            <ul className="wn-details">{n.details.map((d) => <li key={d}>{d}</li>)}</ul>
+          </details>
+        ) : <ul className="wn-details">{n.details.map((d) => <li key={d}>{d}</li>)}</ul>)}
         <div className="wn-foot">
           <span className="lp-mono wn-avail">{n.availability}</span>
           {n.link && (
@@ -76,14 +81,9 @@ export default function WhatsNew() {
       <div className="lp wn">
         <section className="lp-hero wn-hero" aria-labelledby="wn-title">
           <div className="lp-wrap">
-            <div className="lp-index"><b>—</b> What's New</div>
+            <div className="lp-index lp-eyebrow">What's New</div>
             <h1 id="wn-title" className="lp-h1">What changed, and what it means.</h1>
             <p className="lp-hero-copy">A dated record of changes to Synaptiq that affect how you use it.</p>
-            <dl className="wn-key" aria-label="Note types">
-              {Object.values(TYPES).map((t) => (
-                <div key={t.label}><dt className="lp-mono">{t.label}</dt><dd>{t.meaning}</dd></div>
-              ))}
-            </dl>
           </div>
         </section>
 
@@ -94,10 +94,10 @@ export default function WhatsNew() {
             {notes.length === 0 ? (
               <p className="lp-lede">No product notes have been published yet.</p>
             ) : (
-              groups.map((g) => (
-                <section key={g.key} className="wn-month" aria-label={g.label}>
+              groups.map((g, gi) => (
+                <section key={g.key} className={`wn-month ${gi > 0 ? "is-archive" : ""}`} aria-label={g.label}>
                   <h3 className="lp-mono wn-month-label">{g.label}</h3>
-                  {g.notes.map((n) => <Note key={n.slug} n={n} latest={latest && n.slug === latest.slug} />)}
+                  {g.notes.map((n) => <Note key={n.slug} n={n} latest={latest && n.slug === latest.slug} compact={gi > 0} />)}
                 </section>
               ))
             )}

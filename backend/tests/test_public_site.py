@@ -104,3 +104,39 @@ def test_one_brand_navy_and_a_single_footer_navigation():
     assert 'data-testid="footer-cookie-settings"' in legal and "onClick={openPreferences}" in legal
     bottom = LAYOUT[LAYOUT.index("Bottom bar"):LAYOUT.index("</footer>")]
     assert "© 2026 Synaptiq. All rights reserved." in bottom and "<Link" not in bottom
+
+
+PAGE_CSS = [SRC / "components" / d / f"{d}.css" for d in ("platform", "research", "ai-workspace", "institutions",
+                                                           "pricing", "resources", "about", "blog", "whats-new")] + \
+           [SRC / "pages" / f for f in ("support.css", "contact.css", "security.css")]
+
+
+def test_one_public_visual_system():
+    css = (SRC / "components" / "landing" / "landing.css").read_text()
+    # One accent: the brand navy. Red is semantic (errors, missing states) only.
+    assert "--mark: var(--navy);" in css and "--danger: #9b3d23;" in css
+    assert "#9b3d23" not in css.replace("--danger: #9b3d23;", "")
+    # One button shape, matching the Sign In screens.
+    assert "--radius: 4px;" in css and "border-radius: var(--radius)" in css[css.index(".lp-btn {"):]
+    assert ".lp-btn--primary:hover:not(:disabled) { background: var(--navy-deep);" in css
+    # Page stylesheets use tokens, not their own accents, radii or hover blues.
+    for f in PAGE_CSS:
+        text = f.read_text()
+        assert not re.search(r"#(?:0a1c33|9b3d23|0f2847)", text, re.I), f.name
+        assert not re.search(r"border-radius: [23]px", text), f.name
+    # Leads are left-aligned; justification is for long-form prose only.
+    block = css[css.index("Editorial body copy"):]
+    assert ".lp .lp-lede" not in block
+    # Header and footer share the content container.
+    assert 'className="mk-wrap"' in LAYOUT and LAYOUT.count("mk-wrap") >= 2 and "1280" not in LAYOUT
+    assert ".mk-wrap { max-width: 1180px;" in (SRC / "index.css").read_text()
+    assert "gridColumn: 3" in LAYOUT          # header actions stay right when the nav collapses
+
+
+@pytest.mark.parametrize("name", ["Landing", "Platform", "ResearchLanding", "AIWorkspaceLanding", "Pricing", "About"])
+def test_start_free_is_always_the_primary_button(name):
+    srcs = [_page(name)] + ([(SRC / "components" / "landing" / f).read_text() for f in ("Hero.jsx", "Sections.jsx")]
+                            if name == "Landing" else [])
+    for text in srcs:
+        for m in re.finditer(r'<Link to="/register" className="([^"]+)"', text):
+            assert "lp-btn--primary" in m.group(1), (name, m.group(1))

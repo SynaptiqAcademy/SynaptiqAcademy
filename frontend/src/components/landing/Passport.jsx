@@ -26,12 +26,12 @@ export default function Passport() {
           <div className="lp-index"><b>03</b> Research identity</div>
           <h2 id="lp-passport-title" className="lp-h2">Academic Passport</h2>
           <p className="lp-lede">
-            What you work on, how you work and what you're open to. It's how
-            people find you, and it's free.
+            Your research identity: what you work on, how you work and what you're
+            open to. It's how people find you, and it's free.
           </p>
           <p className="lp-lede">
-            Students, researchers and lecturers have one, and so do practitioners:
-            a clinician, a policy analyst or an engineer whose experience a study needs.
+            For students, researchers and lecturers, and for practitioners whose
+            experience a study needs.
           </p>
         </div>
 

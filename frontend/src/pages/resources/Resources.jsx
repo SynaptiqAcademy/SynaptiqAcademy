@@ -67,7 +67,7 @@ export default function Resources() {
         {/* ── Intro ──────────────────────────────────────────────────── */}
         <section className="lp-hero rx-hero" aria-labelledby="rx-title">
           <div className="lp-wrap">
-            <div className="lp-index"><b>—</b> Resources</div>
+            <div className="lp-index lp-eyebrow">Resources</div>
             <h1 id="rx-title" className="lp-h1">A working library for research.</h1>
             <p className="lp-hero-copy">
               Practical guidance on defining research, working with others and publishing,

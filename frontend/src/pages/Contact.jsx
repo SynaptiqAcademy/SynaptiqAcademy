@@ -124,7 +124,7 @@ export default function Contact() {
                     placeholder={isInstitution ? "Your departments, how membership should work, and what you'd like people to be able to find." : ""} /></label>
                 {state === "error" && <p className="ct-error" role="alert">Your message couldn't be sent. Please try again in a moment.</p>}
                 <div className="ct-actions">
-                  <button data-testid={TID.contactSubmit} type="submit" className="ct-submit" disabled={state === "sending"}>
+                  <button data-testid={TID.contactSubmit} type="submit" className="lp-btn lp-btn--primary" disabled={state === "sending"}>
                     {state === "sending" ? "Sending…" : "Send message"}
                   </button>
                   <p className="ct-fine">We use what you send only to reply. See the <Link to="/privacy">Privacy Policy</Link>.</p>

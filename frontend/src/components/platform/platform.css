@@ -36,7 +36,7 @@
 
 .pf-node {
   position: absolute; transform: translate(-50%, -50%); width: 15.5%; min-height: 54px;
-  background: #fff; border: 1px solid var(--rule-strong); border-radius: 3px;
+  background: #fff; border: 1px solid var(--rule-strong); border-radius: var(--radius);
   padding: 8px 10px 7px; text-align: left; cursor: pointer;
   display: flex; flex-direction: column; gap: 2px;
   transition: border-color 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
@@ -124,9 +124,8 @@
 @media (min-width: 768px) { .pf-id { grid-template-columns: repeat(3, minmax(0, 1fr)); } .pf-id > div + div { border-left: 1px solid var(--rule); padding-left: 24px; } }
 .pf-id > div { padding: 18px 24px 18px 0; border-bottom: 1px solid var(--rule); min-width: 0; }
 @media (min-width: 768px) { .pf-id > div { border-bottom: none; } }
-.pf-id p { margin-top: 8px; font-size: 0.98rem; line-height: 1.55; color: var(--ink); }
-.pf-id-note { margin-top: 16px; }
-.pf-inst { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--rule); font-size: 1rem; color: var(--ink-2); }
+.pf-id dd { margin: 8px 0 0; font-size: 0.98rem; line-height: 1.55; color: var(--ink); }
+.pf-inst { margin-top: 32px; padding-top: 18px; border-top: 1px solid var(--rule); font-size: 1rem; color: var(--ink-2); }
 
 .pf .lp-final h2 { max-width: 20ch; }
 

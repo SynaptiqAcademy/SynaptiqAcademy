@@ -58,7 +58,7 @@
 .au-input::placeholder { color: #767d88; }
 .au-input:hover, .au-select:hover { border-color: #8f8a7f; }
 .au-input:focus, .au-select:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(15, 40, 71, 0.14); }
-.au-input[aria-invalid="true"] { border-color: var(--mark); }
+.au-input[aria-invalid="true"] { border-color: var(--danger); }
 .au-input-addon { padding-right: 48px; }
 .au-select { appearance: none; padding-right: 40px; cursor: pointer; }
 .au-select-chevron { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
@@ -74,7 +74,7 @@
 .au-strength-bar { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
 .au-strength-bar span { height: 3px; border-radius: 2px; background: var(--rule); transition: background 180ms ease; }
 .au-strength-bar span.on { background: var(--navy); }
-.au-strength[data-level="1"] .au-strength-bar span.on { background: var(--mark); }
+.au-strength[data-level="1"] .au-strength-bar span.on { background: var(--danger); }
 .au-strength-label { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); min-width: 4.5em; text-align: right; }
 
 .au-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; }
@@ -119,8 +119,8 @@
 .au-orcid svg { flex: none; }
 .au-orcid-hint { margin: 8px 0 0; font-size: 0.82rem; color: var(--muted); text-align: center; }
 
-.au-alert { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-left: 2px solid var(--mark); background: var(--mark-soft); color: #5d2414; font-size: 0.9rem; line-height: 1.55; border-radius: 0 4px 4px 0; }
-.au-alert svg { flex: none; margin-top: 2px; color: var(--mark); }
+.au-alert { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-left: 2px solid var(--danger); background: var(--danger-soft); color: #5d2414; font-size: 0.9rem; line-height: 1.55; border-radius: 0 4px 4px 0; }
+.au-alert svg { flex: none; margin-top: 2px; color: var(--danger); }
 .au-notice { padding: 12px 14px; border-left: 2px solid var(--navy); background: #fff; font-size: 0.9rem; line-height: 1.55; color: var(--ink-2); border-radius: 0 4px 4px 0; }
 
 .au-switch { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 0.93rem; color: var(--ink-2); }

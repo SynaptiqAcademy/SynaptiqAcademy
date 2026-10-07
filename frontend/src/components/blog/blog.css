@@ -23,10 +23,10 @@
 .bl-meta { margin-top: 8px; font-size: 0.72rem; color: var(--muted); }
 
 .bl-tools { margin-top: 32px; display: grid; gap: 12px; }
-.bl-search input { width: 100%; max-width: 32rem; font: inherit; font-size: 1rem; padding: 11px 14px; border: 1px solid var(--rule-strong); border-radius: 3px; background: #fff; color: var(--ink); }
+.bl-search input { width: 100%; max-width: 32rem; font: inherit; font-size: 1rem; padding: 11px 14px; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: #fff; color: var(--ink); }
 .bl-search input:focus-visible { outline: 2px solid var(--mark); outline-offset: 1px; }
 .bl-filters { display: flex; flex-wrap: wrap; gap: 8px; }
-.bl-filters button { background: #fff; border: 1px solid var(--rule-strong); border-radius: 2px; padding: 7px 12px; font-size: 0.9rem; color: var(--ink-2); cursor: pointer; }
+.bl-filters button { background: #fff; border: 1px solid var(--rule-strong); border-radius: var(--radius); padding: 7px 12px; font-size: 0.9rem; color: var(--ink-2); cursor: pointer; }
 .bl-filters button.is-sel { border-color: var(--mark); color: var(--ink); box-shadow: inset 0 -2px 0 var(--mark); }
 
 /* Bridge */

@@ -22,10 +22,10 @@
 
 /* Search and filters (appear only when the library is large enough) */
 .rx-tools { margin-top: 36px; display: grid; gap: 14px; }
-.rx-search input { width: 100%; max-width: 32rem; font: inherit; font-size: 1rem; padding: 11px 14px; border: 1px solid var(--rule-strong); border-radius: 3px; background: #fff; color: var(--ink); }
+.rx-search input { width: 100%; max-width: 32rem; font: inherit; font-size: 1rem; padding: 11px 14px; border: 1px solid var(--rule-strong); border-radius: var(--radius); background: #fff; color: var(--ink); }
 .rx-search input:focus-visible { outline: 2px solid var(--mark); outline-offset: 1px; }
 .rx-filters { display: flex; flex-wrap: wrap; gap: 8px; }
-.rx-filters button { background: #fff; border: 1px solid var(--rule-strong); border-radius: 2px; padding: 7px 12px; font-size: 0.9rem; color: var(--ink-2); cursor: pointer; }
+.rx-filters button { background: #fff; border: 1px solid var(--rule-strong); border-radius: var(--radius); padding: 7px 12px; font-size: 0.9rem; color: var(--ink-2); cursor: pointer; }
 .rx-filters button.is-sel { border-color: var(--mark); color: var(--ink); box-shadow: inset 0 -2px 0 var(--mark); }
 
 /* Elsewhere: each kind of writing labelled as what it is */
@@ -64,7 +64,7 @@
 .rx-a-related li { padding: 10px 0; border-bottom: 1px solid var(--rule); }
 .rx-a-related a { font-family: var(--serif); font-size: 1.15rem; color: var(--ink); }
 
-.rx-scope { margin-top: 16px; font-size: 0.98rem; line-height: 1.65; color: var(--muted); max-width: 46rem; }
+.rx-scope { margin-top: 16px; font-size: 0.98rem; line-height: 1.65; color: var(--muted); max-width: 42rem; }
 .rx-notes { border-top: 1px solid var(--ink); margin-top: 24px; }
 .rx-note { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: 0 20px; padding: 20px 0; border-bottom: 1px solid var(--rule); }
 .rx-note .rx-num { color: var(--ink); font-size: 0.78rem; letter-spacing: 0.06em; }

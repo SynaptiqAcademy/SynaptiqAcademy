@@ -29,13 +29,13 @@ const STAGES = [
 
 const PRINCIPLES = [
   ["Context travels with the question.",
-    "A question means more when its disciplines, methods and constraints stay attached to it, from the first draft to the people you approach."],
+    "Its disciplines, methods and constraints stay attached, from the first draft to the people you approach."],
   ["People are more than their titles.",
-    "Relevance lives in what someone works on and how. When Synaptiq suggests a person, it shows the evidence, so you can judge it yourself."],
+    "When Synaptiq suggests a person, it shows the evidence, so you can judge it yourself."],
   ["AI assists. People decide.",
-    "AI can structure a question, review a section or compare options, and it shows its cost before it runs. Who to contact, what to claim and where to submit stay with you. Synaptiq never contacts anyone on your behalf."],
-  ["Missing expertise is information.",
-    "Knowing what a team still lacks is as useful as knowing who already fits. It tells you who to look for next."],
+    "AI shows its cost before it runs. Who to contact, what to claim and where to submit stay with you."],
+  ["The researcher stays in charge.",
+    "You choose what your Academic Passport shows and whether you appear in discovery. When you leave an institution, your Passport stays with you."],
 ];
 
 export default function About() {
@@ -57,11 +57,11 @@ export default function About() {
         {/* ── Hero ───────────────────────────────────────────────────── */}
         <section className="lp-hero ab-hero" aria-labelledby="ab-h1">
           <div className="lp-wrap">
-            <div className="lp-index"><b>—</b> About</div>
+            <div className="lp-index lp-eyebrow">About</div>
             <h1 id="ab-h1" className="lp-h1">A research question can cross disciplines before the team working on it does.</h1>
             <p className="lp-hero-copy">
-              Synaptiq is being built for what happens next: finding the expertise a question needs,
-              the people who have it, and a place for them to work together.
+              Synaptiq is built for what happens next: finding the expertise a question needs, the people
+              who have it, and a place to work together.
             </p>
           </div>
         </section>
@@ -72,18 +72,13 @@ export default function About() {
             <div className="lp-index"><b>01</b> What we noticed</div>
             <h2 id="ab-problem" className="lp-h2">The tools are fine. The context gets lost between them.</h2>
             <p className="lp-prose">
-              A researcher's identity sits in one system and their publications in another. Possible collaborators are
-              found through email, conferences or word of mouth. The project lives in shared folders, the AI in a separate
-              window, the submission somewhere else again.
+              A researcher's identity sits in one system and their publications in another. Collaborators are found
+              by email or word of mouth, the project lives in shared folders and the AI in a separate window. Each tool
+              works. What gets lost between them is the reasoning: why this question, what it needs, who was approached.
             </p>
             <p className="lp-prose">
-              Each of these can work well on its own. What doesn't survive the move between them is the reasoning: why
-              this question, what it needs, who was approached and why, what was agreed.
-            </p>
-            <p className="lp-prose">
-              And a question rarely needs only information. It may need a statistician, someone who knows the clinical
-              setting, someone who has modelled this kind of system before. Titles and departments seldom tell you who
-              that is.
+              And a question rarely needs only information. It may need a statistician or someone who knows the clinical
+              setting. Titles and departments seldom tell you who that is.
             </p>
           </div>
         </section>
@@ -107,12 +102,9 @@ export default function About() {
             </figure>
             <div className="ab-prose ab-now">
               <p className="lp-prose">
-                Today a question can become a structured Research Need. Synaptiq can suggest people for it, showing what in
-                their profile makes them relevant. You invite each person yourself; those who accept can start a project and
-                workspace together, and manuscripts stay linked to the project they came from.
-              </p>
-              <p className="lp-prose">
-                The aim is that the next step never has to begin from zero.
+                Today a question can become a structured Research Need. Synaptiq suggests people for it, with the evidence.
+                You invite each person yourself; those who accept start a project together, and manuscripts stay linked to
+                it. The next step never has to begin from zero.
               </p>
             </div>
           </div>
@@ -145,30 +137,8 @@ export default function About() {
             <p className="lp-prose">
               Not all of this exists yet. The direction is a place where a question keeps its context from the first
               draft to the published work, where suggestions improve as profiles describe people more fully, including
-              expertise that sits outside universities, and where what a project produces becomes part of a credible
-              research record.
-            </p>
-            <p className="lp-prose">
-              Research also happens inside organisations, and a department chart rarely shows how expertise connects
-              across it. Making that visible, with people's consent, is part of the same idea.
-            </p>
-          </div>
-        </section>
-
-        {/* ── 05 Control ─────────────────────────────────────────────── */}
-        <section className="lp-section lp-section--quiet" aria-labelledby="ab-control">
-          <div className="lp-wrap ab-prose">
-            <div className="lp-index"><b>05</b> Built for researchers, not around them</div>
-            <h2 id="ab-control" className="lp-h2">The researcher stays in charge of the decisions.</h2>
-            <p className="lp-prose">
-              You choose what your Academic Passport shows and whether you appear in discovery. You decide who to
-              contact and which invitations to accept. Nothing an AI produces becomes part of your work unless you put
-              it there.
-            </p>
-            <p className="lp-prose">
-              Verification confirms specific things, such as an institutional affiliation. It never vouches for a person
-              as a whole. And a research identity is not tied to one job: when someone leaves an institution, its access
-              ends and their Passport stays with them.
+              expertise outside universities, and where expertise across an organisation becomes visible, with
+              people's consent.
             </p>
           </div>
         </section>
@@ -184,12 +154,6 @@ export default function About() {
                 <Link to="/platform" className="lp-btn lp-btn--ghost" onClick={() => track("about_platform_clicked")}>Explore the Platform</Link>
               </div>
               {registrationOpen === false && <p className="lp-small" style={{ marginTop: 16 }}>New sign-ups are paused while billing is set up.</p>}
-              <ul className="ab-more">
-                <li><Link to="/blog" onClick={() => track("about_blog_clicked")}>Blog</Link><span>Thinking on research and how it's changing</span></li>
-                <li><Link to="/resources" onClick={() => track("about_resources_clicked")}>Research Library</Link><span>Practical guidance</span></li>
-                <li><Link to="/whats-new">What's New</Link><span>What has changed in Synaptiq</span></li>
-                <li><Link to="/contact" onClick={() => track("about_contact_clicked")}>Contact</Link><span>Get in touch</span></li>
-              </ul>
             </div>
           </div>
         </section>

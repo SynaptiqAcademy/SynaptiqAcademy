@@ -7,10 +7,11 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import { openPreferences } from "../../lib/cookieConsent";
 
 const NAVY   = "var(--sq-brand-navy)";   // #0F2847, index.css
-const T_GRAY = "#64748b";
-const T_MAIN = "#0a0f1a";
-const T_FAINT= "#94a3b8";
-const BORDER = "#e8edf3";
+// Neutrals match the page palette in landing.css (--muted, --ink, --faint, --rule).
+const T_GRAY = "#5f6673";
+const T_MAIN = "#10141c";
+const T_FAINT= "#8a909a";
+const BORDER = "#e6e2da";
 
 // ─── Nav data ─────────────────────────────────────────────────────────────────
 
@@ -52,12 +53,16 @@ const linkStyle = {
 };
 
 function NavLink({ href, label }) {
+  const { pathname } = useLocation();
+  const current = pathname === href || pathname.startsWith(href + "/");
   return (
     <Link
       to={href}
-      style={linkStyle}
+      className="mk-nav"
+      aria-current={current ? "page" : undefined}
+      style={{ ...linkStyle, color: current ? T_MAIN : T_GRAY, boxShadow: current ? "inset 0 -2px 0 " + NAVY : "none" }}
       onMouseEnter={function(e) { e.currentTarget.style.color = T_MAIN; }}
-      onMouseLeave={function(e) { e.currentTarget.style.color = T_GRAY; }}
+      onMouseLeave={function(e) { e.currentTarget.style.color = current ? T_MAIN : T_GRAY; }}
     >
       {label}
     </Link>
@@ -147,7 +152,7 @@ function ResourcesDropdown() {
             listStyle: "none", margin: 0,
             background: "#fff",
             border: `1px solid ${BORDER}`,
-            borderRadius: 10,
+            borderRadius: 6,
             boxShadow: "0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
             padding: "6px",
             width: 280,
@@ -160,7 +165,7 @@ function ResourcesDropdown() {
                   <Link
                     to={item.href}
                     aria-current={current ? "page" : undefined}
-                    style={{ display: "block", padding: "10px 14px", textDecoration: "none", borderRadius: 7, transition: "background 100ms", background: current ? "#f8fafc" : "transparent" }}
+                    style={{ display: "block", padding: "10px 14px", textDecoration: "none", borderRadius: 4, transition: "background 100ms", background: current ? "#f8fafc" : "transparent" }}
                     onMouseEnter={function(e) { e.currentTarget.style.background = "#f8fafc"; }}
                     onMouseLeave={function(e) { e.currentTarget.style.background = current ? "#f8fafc" : "transparent"; }}
                   >
@@ -247,8 +252,9 @@ export default function MarketingLayout({ children }) {
         }}
       >
         <div
+          className="mk-wrap"
           style={{
-            maxWidth: 1280, margin: "0 auto", padding: "0 40px", height: 64,
+            height: 64,
             display: "grid",
             gridTemplateColumns: "1fr auto 1fr",
             alignItems: "center",
@@ -270,7 +276,7 @@ export default function MarketingLayout({ children }) {
           </nav>
 
           {/* Right: Sign In + Start Free + mobile toggle */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
+          <div style={{ gridColumn: 3, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
             {/* Desktop */}
             <div className="hidden lg:flex items-center" style={{ gap: 8 }}>
               {user ? (
@@ -305,14 +311,13 @@ export default function MarketingLayout({ children }) {
                   <Link
                     to="/register"
                     data-testid="marketing-join-link"
+                    className="mk-cta"
                     style={{
-                      fontSize: "0.875rem", fontWeight: 600, letterSpacing: "-0.01em",
+                      fontSize: "0.875rem", fontWeight: 600, letterSpacing: "-0.005em",
                       color: "#fff", textDecoration: "none",
-                      background: NAVY, padding: "8px 18px", borderRadius: 10,
-                      transition: "opacity 150ms", display: "inline-block",
+                      background: NAVY, padding: "0 18px", minHeight: 40, borderRadius: 4,
+                      display: "inline-flex", alignItems: "center",
                     }}
-                    onMouseEnter={function(e) { e.currentTarget.style.opacity = "0.85"; }}
-                    onMouseLeave={function(e) { e.currentTarget.style.opacity = "1"; }}
                   >
                     Start Free
                   </Link>
@@ -374,7 +379,7 @@ export default function MarketingLayout({ children }) {
                 <>
                   <Link to="/login" onClick={closeMobile} style={{ fontSize: "0.88rem", fontWeight: 500, color: T_MAIN, textDecoration: "none" }}>Sign In</Link>
                   <Link to="/register" onClick={closeMobile}
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.88rem", fontWeight: 600, color: "#fff", background: NAVY, padding: "12px 0", borderRadius: 10, textDecoration: "none" }}>
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.88rem", fontWeight: 600, color: "#fff", background: NAVY, minHeight: 48, borderRadius: 4, textDecoration: "none" }}>
                     Start Free
                   </Link>
                 </>
@@ -392,7 +397,7 @@ export default function MarketingLayout({ children }) {
           @media (max-width: 1023px) { .ft-nav { grid-template-columns: repeat(2, 1fr); gap: 40px; } }
           @media (max-width: 599px)  { .ft-nav { grid-template-columns: 1fr; gap: 32px; } }
         `}</style>
-        <div className="max-w-[1280px] mx-auto px-6 lg:px-10" style={{ paddingTop: 72, paddingBottom: 0 }}>
+        <div className="mk-wrap" style={{ paddingTop: 72, paddingBottom: 0 }}>
 
           {/* Brand */}
           <div style={{ marginBottom: 56 }}>

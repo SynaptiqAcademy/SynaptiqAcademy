@@ -9,27 +9,21 @@ export function WhySynaptiq() {
   return (
     <section className="lp-section" aria-labelledby="lp-why-title">
       <div className="lp-wrap">
-        <div className="lp-index"><b>04</b> Why Synaptiq</div>
+        <div className="lp-index"><b>04</b> AI, where it helps</div>
         <h2 id="lp-why-title" className="lp-h2">AI where it helps. Your judgment where it matters.</h2>
         <p className="lp-lede">
-          AI handles the slow parts: reviewing a section, checking a journal's fit,
-          drafting a lesson. Each action shows its cost before it runs. Who to work
-          with and what to publish stay your decisions.
+          AI handles the slow parts, such as reviewing a section or checking a journal's fit.
+          Each action shows its cost first. Who to work with and what to publish stay your decisions.
         </p>
-        <p style={{ marginTop: 18 }}>
+        <p style={{ marginTop: 16 }}>
           <Link to="/ai-workspace" className="lp-link">Explore AI Workspace →</Link>
         </p>
 
         <div className="lp-why-strip">
-          <span className="lp-mono">The rest of the work, in the same place</span>
+          <span className="lp-mono">Also in Synaptiq</span>
           <ul>{AREAS.map((a) => <li key={a}>{a}</li>)}</ul>
           <Link to="/platform" className="lp-link">See the platform →</Link>
         </div>
-
-        <p className="lp-why-who">
-          For people who do research, whatever their title says, and for questions
-          that sit between disciplines. <Link to="/for-institutions" className="lp-link">For institutions →</Link>
-        </p>
       </div>
     </section>
   );

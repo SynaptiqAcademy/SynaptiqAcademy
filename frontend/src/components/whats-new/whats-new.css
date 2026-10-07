@@ -1,15 +1,10 @@
 /* /resources/whats-new — the product ledger: a dated, ruled chronology. */
 
 .wn .lp-h1 { max-width: 16ch; }
-.wn-hero { padding-bottom: 72px; }
-.wn-key { margin-top: 32px; display: grid; gap: 6px 28px; max-width: 52rem; border-top: 1px solid var(--rule); padding-top: 14px; }
-@media (min-width: 768px) { .wn-key { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.wn-key > div { display: flex; gap: 12px; align-items: baseline; font-size: 0.9rem; color: var(--ink-2); }
-.wn-key dt { min-width: 5.5rem; color: var(--ink); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; }
-
+.wn-hero { padding-bottom: 64px; }
 .wn-month { margin-top: 36px; }
 .wn-month:first-of-type { margin-top: 8px; }
-.lp .wn-month-label { font-size: 0.72rem; font-weight: 500; color: var(--mark); text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 10px; border-bottom: 1px solid var(--ink); }
+.lp .wn-month-label { font-size: 0.72rem; color: var(--navy); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 10px; border-bottom: 1px solid var(--ink); }
 
 .wn-note { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 0 28px; padding: 24px 0; border-bottom: 1px solid var(--rule); scroll-margin-top: 80px; }
 .wn-note:target { background: linear-gradient(var(--mark-soft), var(--mark-soft)) no-repeat left / 3px 100%; }
@@ -18,11 +13,19 @@
 .wn-num { font-size: 0.72rem; color: var(--muted); text-decoration: none; }
 .wn-num:hover { text-decoration: underline; text-underline-offset: 3px; }
 .wn-kind { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-.wn-type { color: var(--ink); font-weight: 600; padding: 1px 6px; border: 1px solid var(--rule-strong); border-radius: 2px; }
-.wn-type--new { border-color: var(--mark); color: var(--mark); }
+.wn-type { color: var(--ink); font-weight: 600; padding: 1px 6px; border: 1px solid var(--rule-strong); border-radius: var(--radius); }
+.wn-type--new { border-color: var(--navy); color: #fff; background: var(--navy); }
 .wn-type--fixed { border-style: dashed; }
 .lp .wn-title { font-family: var(--serif); font-weight: 400; font-size: 1.45rem; line-height: 1.25; color: var(--ink); margin-top: 8px; }
 .wn-note.is-latest .wn-title { font-size: 1.85rem; }
+/* Earlier months: title and summary; details on request, availability dropped. */
+.wn-note.is-compact { padding: 18px 0; }
+.lp .wn-note.is-compact .wn-title { font-size: 1.2rem; }
+.wn-note.is-compact .wn-summary { font-size: 0.95rem; }
+.wn-note.is-compact .wn-avail { display: none; }
+.wn-more { margin-top: 6px; }
+.wn-more summary { cursor: pointer; font-size: 0.86rem; font-weight: 600; color: var(--navy); width: max-content; }
+.wn-more summary:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
 .wn-summary { margin-top: 8px; font-size: 1rem; line-height: 1.65; color: var(--ink-2); max-width: 62ch; }
 .wn-details { list-style: none; margin: 10px 0 0; padding: 0; max-width: 62ch; }
 .wn-details li { position: relative; padding: 4px 0 4px 16px; font-size: 0.94rem; line-height: 1.55; color: var(--ink-2); }

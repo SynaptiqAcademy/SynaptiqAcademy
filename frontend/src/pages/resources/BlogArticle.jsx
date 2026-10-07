@@ -61,7 +61,7 @@ export default function BlogArticle() {
         <div className="lp bl">
           <section className="lp-hero bl-hero">
             <div className="lp-wrap">
-              <div className="lp-index"><b>—</b> Blog</div>
+              <div className="lp-index lp-eyebrow">Blog</div>
               <h1 className="lp-h1">This article isn't available.</h1>
               <p className="lp-hero-copy">It may have moved or not be published.</p>
               <p style={{ marginTop: 24 }}><Link to="/blog" className="lp-link">Back to the Blog →</Link></p>

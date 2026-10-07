@@ -176,11 +176,11 @@ export default function InstitutionsLanding() {
         {/* ── Hero ───────────────────────────────────────────────────── */}
         <section className="lp-hero in-hero" aria-labelledby="in-hero-title">
           <div className="lp-wrap">
-            <div className="lp-index"><b>—</b> For institutions</div>
+            <div className="lp-index lp-eyebrow">For institutions</div>
             <h1 id="in-hero-title" className="lp-h1">The org chart shows where people sit. Not how the research connects.</h1>
             <p className="lp-hero-copy">
               Synaptiq adds an institutional layer to researchers' own Academic Passports, so the expertise
-              already inside your organisation can be seen across its departments.
+              inside your organisation is visible across departments.
             </p>
             <div className="lp-hero-actions">
               <a href="#inquiry" className="lp-btn lp-btn--primary" onClick={toInquiry("hero")}>Contact Sales</a>
@@ -231,15 +231,18 @@ export default function InstitutionsLanding() {
           </div>
         </section>
 
-        {/* ── 03 Departments ─────────────────────────────────────────── */}
+        {/* ── 03 Departments and administration ─────────────────────── */}
         <section className="lp-section lp-section--quiet" aria-labelledby="in-dept-title">
           <div className="lp-wrap in-two">
             <div>
-              <div className="lp-index"><b>03</b> Organise without flattening</div>
-              <h2 id="in-dept-title" className="lp-h2">Departments for structure. Research areas for everything else.</h2>
+              <div className="lp-index"><b>03</b> Departments and administration</div>
+              <h2 id="in-dept-title" className="lp-h2">Departments for structure. Admins decide who belongs.</h2>
               <p className="lp-lede">
-                Admins set up departments and give them their own admins and research coordinators. Members can
-                belong to more than one, and projects their members own can be linked to a department.
+                Departments get their own admins and research coordinators, and members can belong to more than one.
+              </p>
+              <p className="lp-lede">
+                Admins approve requests, invite people, assign roles and revoke membership. Every decision appears
+                in the institution's activity log.
               </p>
             </div>
             <figure className="in-roster" aria-labelledby="in-fig2" onMouseEnter={() => track("institutional_members_explored")}>
@@ -254,33 +257,10 @@ export default function InstitutionsLanding() {
           </div>
         </section>
 
-        {/* ── 04 Administration ──────────────────────────────────────── */}
-        <section className="lp-section" aria-labelledby="in-admin-title">
-          <div className="lp-wrap in-two">
-            <figure className="in-roster" aria-labelledby="in-fig3">
-              <figcaption id="in-fig3" className="lp-figcaption lp-mono">
-                <span>Fig. 3 — Membership requests</span><span aria-hidden="true">illustrative</span>
-              </figcaption>
-              <div className="in-row in-row--head lp-mono"><span>Person</span><span>How</span><span>State</span></div>
-              <div className="in-row"><span>Researcher 07</span><span>Institutional email</span><span className="lp-mono">approved</span></div>
-              <div className="in-row"><span>Researcher 08</span><span>Evidence link for review</span><span className="lp-mono in-act">approve · decline</span></div>
-              <div className="in-row"><span>Researcher 09</span><span>Invited by an admin</span><span className="lp-mono">awaiting acceptance</span></div>
-            </figure>
-            <div>
-              <div className="lp-index"><b>04</b> Administration</div>
-              <h2 id="in-admin-title" className="lp-h2">Admins decide who belongs. Every decision is recorded.</h2>
-              <p className="lp-lede">
-                Approve or decline requests, invite people by email, assign roles and revoke membership. Each of these
-                actions appears in the institution's activity log.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ── 05 Permissions ─────────────────────────────────────────── */}
-        <section className="lp-section lp-section--quiet" aria-labelledby="in-gov-title">
+        {/* ── 04 Permissions ─────────────────────────────────────────── */}
+        <section className="lp-section" aria-labelledby="in-gov-title">
           <div className="lp-wrap">
-            <div className="lp-index"><b>05</b> Permissions</div>
+            <div className="lp-index"><b>04</b> Permissions</div>
             <h2 id="in-gov-title" className="lp-h2">What belonging to an institution does, and doesn't, open.</h2>
             <dl className="in-perms" onMouseEnter={() => track("institutional_governance_explored")}>
               <div><dt>Members see</dt><dd>Colleagues' names and research areas, department rosters, and projects linked to their departments.</dd></div>
@@ -297,7 +277,7 @@ export default function InstitutionsLanding() {
             <div>
               <h2 id="in-final-title" className="lp-h2">Your institution already has a research network. Tell us about it.</h2>
               <p className="lp-lede">
-                We'll talk through your departments, how membership should work, and what you'd like people to be able to find.
+                Tell us about your departments and how membership should work.
               </p>
               <p className="in-links">
                 <Link to="/platform" className="lp-link" onClick={() => track("institutional_platform_clicked")}>Explore the Platform →</Link>

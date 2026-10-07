@@ -67,5 +67,25 @@ Avoid: Get Started, Join Now, Try Synaptiq, Start Today.
 
 ## Body text
 
-- Long explanatory paragraphs use the shared editorial treatment: class `lp-prose`, or the existing `lp-lede`. It justifies with hyphenation on wide screens and goes left-aligned below 700px.
-- Don't justify headings, labels, buttons, captions or card text.
+- Text is left-aligned by default, at a comfortable measure (about 42rem for body copy, 35rem for small print).
+- Full justification is only for genuinely long-form editorial prose (class `lp-prose`: the About essay; the Security model). It justifies with hyphenation on wide screens and goes left-aligned below 700px.
+- Don't justify leads, headings, labels, buttons, captions or card text.
+- Most paragraphs are one to three short sentences. If a sentence repeats its heading, cut it.
+
+## Visual system
+
+All public pages render inside `.lp` and use the tokens and primitives in `frontend/src/components/landing/landing.css`. Page stylesheets extend them; they don't define their own colours, buttons or spacing.
+
+| Element | Rule |
+|---|---|
+| Brand colour | One navy, `--sq-brand-navy` (#0F2847): primary buttons, active and selected states, section numbers, structural rules, arrows, focus rings, the footer and the Sign In panel. Hover is `--sq-brand-navy-deep`. |
+| Neutrals | `--ink` headings, `--ink-2` body, `--muted` secondary, `--rule` borders, `--paper` and `--surface` backgrounds. |
+| Semantic | `--danger` for errors and missing states only. ORCID keeps its own green. |
+| Type | Newsreader (serif) for H1, H2, figure titles and plan names; Plus Jakarta Sans for everything else; monospace only for eyebrows, labels and dates. |
+| Buttons | `lp-btn lp-btn--primary` (navy) and `lp-btn lp-btn--ghost` (neutral, bordered): 48px tall, 4px radius, the same shape as the Sign In screens. Tertiary actions are `lp-link` with "→". **Start Free is always the primary button.** |
+| Layout | One container: `.lp-wrap` for content, `.mk-wrap` for the header and footer (1180px, 24px / 40px gutters), so they share a left edge. |
+| Rhythm | Sections `--section-y` (96px, 64px on phones); heroes `--hero-y` (104px, 56px on phones). |
+| Eyebrows | A page's eyebrow (`lp-index lp-eyebrow`) names what the page is; section eyebrows are numbered (`<b>01</b> Name`). |
+| Cards | Only for discrete objects (plans, product fragments, specimen people). Use rules and spacing for everything else. |
+
+Each section carries one message. A page gets one H1 and at most two buttons per call to action.

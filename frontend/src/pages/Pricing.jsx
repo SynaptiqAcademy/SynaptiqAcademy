@@ -35,26 +35,18 @@ const HIGHLIGHTS = {
   pro_researcher: ["Everything in Pro", "Literature review, gap finder, study design and statistical review", "Collaboration Intelligence", "Impact Dashboard and Citation Monitoring"],
   institution: ["Approved membership and departments", "Member directory by research area", "Admin roles and activity log"],
 };
-const INTENTS = [
-  ["free", "Be found"],
-  ["researcher", "Collaborate and do the work"],
-  ["pro_researcher", "Go deeper"],
-  ["institution", "Bring Synaptiq to an organisation"],
-];
 const EVENT = { free: "pricing_free_clicked", researcher: "pricing_pro_clicked", pro_researcher: "pricing_pro_advanced_clicked", institution: "pricing_institutional_clicked" };
 
 const eur = (n) => `€${Number(n).toFixed(n % 1 ? 2 : 0)}`;
 const quota = (n, unit) => (n === -1 ? `Unlimited ${unit}` : `${n} ${unit}`);
 
-/* ── One rung of the access ladder ─────────────────────────────────── */
-function Rung({ plan, index, focus, registrationOpen, onChoose, busy }) {
+/* ── One individual plan ───────────────────────────────────────────── */
+function Rung({ plan, index, registrationOpen, onChoose, busy }) {
   const c = plan.code;
   const paid = c === "researcher" || c === "pro_researcher";
   const L = plan.limits || {};
   return (
-    <article className={`pr-rung pr-rung--${index} ${focus === c ? "is-focus" : ""} ${focus && focus !== c ? "is-dim" : ""}`}
-      aria-labelledby={`pr-name-${c}`}>
-      <div className="lp-mono pr-code">Individual · 0{index + 1}</div>
+    <article className={`pr-rung pr-rung--${index}`} aria-labelledby={`pr-name-${c}`}>
       <h3 id={`pr-name-${c}`} className="pr-name">{plan.name}</h3>
       <p className="pr-purpose">{PURPOSE[c]}</p>
       <div className="pr-price">
@@ -72,11 +64,11 @@ function Rung({ plan, index, focus, registrationOpen, onChoose, busy }) {
       <div className="pr-cta">
         {c === "free" ? (
           <>
-            <Link to="/register" className="lp-btn lp-btn--ghost" onClick={() => track(EVENT.free, { location: "ladder" })}>Start Free</Link>
+            <Link to="/register" className="lp-btn lp-btn--primary" onClick={() => track(EVENT.free, { location: "ladder" })}>Start Free</Link>
             {registrationOpen === false && <p className="lp-small pr-note">New sign-ups are paused while billing is set up.</p>}
           </>
         ) : plan.checkout_available ? (
-          <button type="button" className="lp-btn lp-btn--primary" disabled={busy === c} onClick={() => onChoose(plan)}>
+          <button type="button" className={`lp-btn ${c === "researcher" ? "lp-btn--primary" : "lp-btn--ghost"}`} disabled={busy === c} onClick={() => onChoose(plan)}>
             {busy === c ? "Opening…" : `Choose ${plan.name}`}
           </button>
         ) : (
@@ -155,7 +147,6 @@ export default function Pricing() {
   const [matrix, setMatrix] = useState(null);
   const [registrationOpen, setRegistrationOpen] = useState(null);
   const [failed, setFailed] = useState(false);
-  const [focus, setFocus] = useState(null);
   const [busy, setBusy] = useState(null);
   const creditsRef = useRef(null);
 
@@ -215,11 +206,10 @@ export default function Pricing() {
         {/* ── Hero ───────────────────────────────────────────────────── */}
         <section className="lp-hero pr-hero" aria-labelledby="pr-title">
           <div className="lp-wrap">
-            <div className="lp-index"><b>—</b> Pricing</div>
+            <div className="lp-index lp-eyebrow">Pricing</div>
             <h1 id="pr-title" className="lp-h1">Be found for free. Pay when the work moves here.</h1>
             <p className="lp-hero-copy">
-              Free gives you an academic identity others can find. Pro and Pro Advanced add the network,
-              the projects and AI-assisted work.
+              Free is your academic identity. Pro and Pro Advanced add the network, projects and AI.
             </p>
           </div>
         </section>
@@ -227,18 +217,7 @@ export default function Pricing() {
         {/* ── 01 Access ladder ───────────────────────────────────────── */}
         <section className="lp-section lp-section--quiet pr-access" aria-labelledby="pr-access-title">
           <div className="lp-wrap">
-            <div className="lp-index"><b>01</b> Access</div>
             <h2 id="pr-access-title" className="sr-only">Plans</h2>
-
-            <div className="pr-intent" role="group" aria-label="What do you want to do? (optional)">
-              <span className="lp-mono pr-intent-label">I want to</span>
-              {INTENTS.map(([code, label]) => (
-                <button key={code} type="button" aria-pressed={focus === code} className={focus === code ? "is-sel" : ""}
-                  onClick={() => { const next = focus === code ? null : code; setFocus(next); if (next) track("pricing_intent_selected", { intent: code }); }}>
-                  {label}
-                </button>
-              ))}
-            </div>
 
             {failed && (
               <div className="pr-failed" role="alert">
@@ -250,26 +229,27 @@ export default function Pricing() {
 
             {plans && (
               <div className="pr-ladder">
-                <div className="pr-individual">
-                  <div className="lp-mono pr-track-label">For individuals · each step adds to the one before</div>
-                  <div className="pr-rungs">
-                    {individual.map((p, i) => (
-                      <Rung key={p.code} plan={p} index={i} focus={focus} registrationOpen={registrationOpen} onChoose={choose} busy={busy} />
-                    ))}
-                  </div>
-                  <p className="lp-small pr-terms">Prices in euros, billed monthly. {!paidOpen && "Paid plans can't be bought online yet."}</p>
+                <div className="lp-mono pr-track-label">For individuals · each plan includes the one before</div>
+                <div className="pr-rungs">
+                  {individual.map((p, i) => (
+                    <Rung key={p.code} plan={p} index={i} registrationOpen={registrationOpen} onChoose={choose} busy={busy} />
+                  ))}
                 </div>
+                <p className="lp-small pr-terms">Prices in euros, billed monthly. {!paidOpen && "Paid plans can't be bought online yet."}</p>
 
                 {inst && (
-                  <article className={`pr-org ${focus === "institution" ? "is-focus" : ""} ${focus && focus !== "institution" ? "is-dim" : ""}`} aria-labelledby="pr-name-institution">
-                    <div className="lp-mono pr-track-label">For organisations</div>
-                    <div className="lp-mono pr-code">Organisation · 01</div>
-                    <h3 id="pr-name-institution" className="pr-name">{inst.name}</h3>
-                    <p className="pr-purpose">{PURPOSE.institution}</p>
-                    <div className="pr-price"><span className="pr-amount pr-amount--custom">Custom</span></div>
-                    <ul className="pr-high">{HIGHLIGHTS.institution.map((h) => <li key={h}>{h}</li>)}</ul>
-                    <p className="lp-small">Membership comes from the organisation, not from an individual plan.</p>
+                  <article className="pr-org" aria-labelledby="pr-name-institution">
+                    <div>
+                      <div className="lp-mono pr-code">For organisations</div>
+                      <h3 id="pr-name-institution" className="pr-name">{inst.name}</h3>
+                      <p className="pr-purpose">{PURPOSE.institution} Pricing is custom.</p>
+                    </div>
+                    <div>
+                      <ul className="pr-high">{HIGHLIGHTS.institution.map((h) => <li key={h}>{h}</li>)}</ul>
+                      <p className="lp-small">Membership comes from the organisation, not from an individual plan.</p>
+                    </div>
                     <div className="pr-cta">
+                      <div className="pr-price"><span className="pr-amount pr-amount--custom">Custom</span></div>
                       <Link to="/for-institutions#inquiry" className="lp-btn lp-btn--ghost" onClick={() => track(EVENT.institution, { location: "ladder" })}>Contact Sales</Link>
                     </div>
                   </article>
@@ -283,7 +263,7 @@ export default function Pricing() {
         {matrix && plans && (
           <section className="lp-section pr-compare" aria-labelledby="pr-compare-title">
             <div className="lp-wrap">
-              <div className="lp-index"><b>02</b> Compare</div>
+              <div className="lp-index"><b>01</b> Compare</div>
               <h2 id="pr-compare-title" className="lp-h2">The individual plans, side by side.</h2>
               <Compare matrix={matrix} plans={plans} />
             </div>
@@ -293,7 +273,7 @@ export default function Pricing() {
         {/* ── Section three: credits ──────────────────────────────────────────── */}
         <section ref={creditsRef} className="lp-section lp-section--quiet" aria-labelledby="pr-credits-title">
           <div className="lp-wrap">
-            <div className="lp-index"><b>03</b> AI credits</div>
+            <div className="lp-index"><b>02</b> AI credits</div>
             <h2 id="pr-credits-title" className="lp-h2">Credits are only for AI actions.</h2>
             <dl className="pr-qa">
               <div><dt>What uses them</dt><dd>
@@ -321,7 +301,7 @@ export default function Pricing() {
         {/* ── 04 Questions ───────────────────────────────────────────── */}
         <section className="lp-section" aria-labelledby="pr-faq-title">
           <div className="lp-wrap">
-            <div className="lp-index"><b>04</b> Questions</div>
+            <div className="lp-index"><b>03</b> Questions</div>
             <h2 id="pr-faq-title" className="lp-h2">Before you choose.</h2>
             <div className="pr-faq">
               <details><summary>Is Free a trial?</summary><p>No. Free is a plan with no time limit. It covers your Academic Passport, public research page and ORCID.</p></details>

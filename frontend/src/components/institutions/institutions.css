@@ -16,12 +16,12 @@
 .in-dept-name { font-weight: 600; font-size: 0.95rem; color: var(--ink); }
 .in-dept-field { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
 .in-dept ul { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
-.in-dept li { font-size: 0.9rem; color: var(--ink-2); padding: 6px 8px; border: 1px solid var(--rule); background: #fff; border-radius: 2px; transition: border-color 160ms ease, background-color 160ms ease; }
+.in-dept li { font-size: 0.9rem; color: var(--ink-2); padding: 6px 8px; border: 1px solid var(--rule); background: #fff; border-radius: var(--radius); transition: border-color 160ms ease, background-color 160ms ease; }
 .in-dept li.is-on { border-color: var(--mark); background: var(--mark-soft); color: var(--ink); font-weight: 600; }
 @media (max-width: 560px) { .in-org-depts { grid-template-columns: 1fr; } .in-org-depts::before { display: none; } }
 
 .in-areas { display: flex; flex-wrap: wrap; gap: 8px; }
-.in-areas button { background: #fff; border: 1px solid var(--rule-strong); border-radius: 2px; padding: 7px 12px; font-size: 0.9rem; color: var(--ink-2); cursor: pointer; }
+.in-areas button { background: #fff; border: 1px solid var(--rule-strong); border-radius: var(--radius); padding: 7px 12px; font-size: 0.9rem; color: var(--ink-2); cursor: pointer; }
 .in-areas button:hover { border-color: var(--ink); }
 .in-areas button.is-sel { border-color: var(--mark); color: var(--ink); box-shadow: inset 0 -2px 0 var(--mark); }
 .in-result { margin-top: 22px; border-top: 1px solid var(--ink); padding-top: 12px; }
@@ -74,10 +74,10 @@
 .in-form-row { display: grid; gap: 14px; }
 @media (min-width: 640px) { .in-form-row { grid-template-columns: 1fr 1fr; } }
 .in-form label { display: grid; gap: 6px; font-size: 0.86rem; font-weight: 600; color: var(--ink); min-width: 0; }
-.in-form input, .in-form textarea { width: 100%; font: inherit; font-weight: 400; font-size: 0.98rem; color: var(--ink); background: #fff; border: 1px solid var(--rule-strong); border-radius: 3px; padding: 10px 12px; }
+.in-form input, .in-form textarea { width: 100%; font: inherit; font-weight: 400; font-size: 0.98rem; color: var(--ink); background: #fff; border: 1px solid var(--rule-strong); border-radius: var(--radius); padding: 10px 12px; }
 .in-form input:focus-visible, .in-form textarea:focus-visible { outline: 2px solid var(--mark); outline-offset: 1px; border-color: var(--ink); }
 .in-form-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 4px; }
-.in-error { color: var(--mark); font-size: 0.9rem; }
+.in-error { color: var(--danger); font-size: 0.9rem; }
 .in-sent { border-top: 3px solid var(--ink); padding-top: 22px; }
 .in-sent-title { font-family: var(--serif); font-size: 1.5rem; color: var(--ink); line-height: 1.3; }
 

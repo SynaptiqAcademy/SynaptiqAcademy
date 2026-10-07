@@ -91,7 +91,7 @@ export default function ResearchQuestion({ onResult }) {
         </form>
 
         <p className="sr-only" aria-live="polite">{announce}</p>
-        {error && <p role="alert" className="lp-small" style={{ color: "var(--mark)", marginTop: 14 }}>{error}</p>}
+        {error && <p role="alert" className="lp-small" style={{ color: "var(--danger)", marginTop: 14 }}>{error}</p>}
 
         {result && <ResearchMap ref={mapRef} question={asked} result={result} />}
       </div>

@@ -7,17 +7,13 @@
 .ct-field > span em { font-style: normal; color: var(--muted); text-transform: none; letter-spacing: 0; font-family: inherit; }
 .ct-field input, .ct-field select, .ct-field textarea {
   font: inherit; font-size: 0.95rem; color: var(--ink); background: #fff;
-  border: 1px solid var(--rule-strong); border-radius: 2px; padding: 10px 12px; min-height: 44px; width: 100%; box-sizing: border-box;
+  border: 1px solid var(--rule-strong); border-radius: var(--radius); padding: 10px 12px; min-height: 44px; width: 100%; box-sizing: border-box;
 }
 .ct-field textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
 .ct-field input:focus-visible, .ct-field select:focus-visible, .ct-field textarea:focus-visible { outline: 2px solid var(--mark); outline-offset: 1px; border-color: var(--ink); }
 .ct-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
-.ct-submit { font: inherit; font-size: 0.92rem; font-weight: 600; color: #fff; background: var(--navy); border: 1px solid var(--navy); border-radius: 2px; padding: 11px 22px; min-height: 44px; cursor: pointer; }
-.ct-submit:hover:not(:disabled) { background: var(--ink); }
-.ct-submit:disabled { opacity: 0.6; cursor: default; }
-.ct-submit:focus-visible { outline: 2px solid var(--mark); outline-offset: 3px; }
 .ct-fine { margin: 0 !important; font-size: 0.84rem; color: var(--muted) !important; }
 .ct-fine a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
-.ct-error { color: var(--mark) !important; font-weight: 600; }
+.ct-error { color: var(--danger) !important; font-weight: 600; }
 .ct-done { margin-top: 16px; padding: 16px 18px; border-left: 2px solid var(--mark); background: var(--mark-soft); }
 .ct-done p + p { margin-top: 6px; }

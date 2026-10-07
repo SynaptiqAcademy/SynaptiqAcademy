@@ -40,7 +40,7 @@ export default function ResourceArticle() {
         <div className="lp rx">
           <section className="lp-hero rx-hero">
             <div className="lp-wrap">
-              <div className="lp-index"><b>—</b> Resources</div>
+              <div className="lp-index lp-eyebrow">Resources</div>
               <h1 className="lp-h1">This guide isn't available.</h1>
               <p className="lp-hero-copy">It may have moved or not be published yet.</p>
               <p style={{ marginTop: 24 }}><Link to="/resources" className="lp-link">Back to the library →</Link></p>

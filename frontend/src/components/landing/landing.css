@@ -1,72 +1,101 @@
-/* Landing page — editorial research grammar.
-   Newsreader (display serif) is self-hosted via @fontsource-variable/newsreader (src/index.js). */
+/* Public website design system — every public page (and the auth screens)
+   renders inside `.lp` and uses these tokens and primitives. Page stylesheets
+   extend them; they don't define their own colours, buttons or spacing.
+   Newsreader (display serif) is self-hosted via @fontsource-variable/newsreader (src/index.js).
+
+   Colour: one brand navy for actions, active states, structural accents and
+   focus. Everything else is neutral. Red (--danger) is semantic: errors and
+   missing states only. */
 
 .lp {
-  --ink: #10141c;
-  --ink-2: #3a4250;
-  --muted: #5f6673;
-  --faint: #8a909a;
+  /* Neutrals */
+  --ink: #10141c;            /* headings, primary text */
+  --ink-2: #3a4250;          /* body text */
+  --muted: #5f6673;          /* secondary text, labels */
+  --faint: #8a909a;          /* "not included", placeholders */
   --rule: #dcd8cf;
   --rule-strong: #b9b4a8;
-  --paper: #fbfaf7;
-  --navy: var(--sq-brand-navy);   /* #0F2847, see index.css */
-  --mark: #9b3d23;           /* annotation colour — used sparingly */
-  --mark-soft: rgba(155, 61, 35, 0.09);
+  --paper: #fbfaf7;          /* page surface */
+  --surface: #fff;           /* alternate section / object surface */
+  /* Brand */
+  --navy: var(--sq-brand-navy);            /* #0F2847, see index.css */
+  --navy-deep: var(--sq-brand-navy-deep);  /* hover / pressed */
+  --mark: var(--navy);                     /* the accent: index numbers, rules, active states */
+  --mark-soft: rgba(15, 40, 71, 0.07);
+  /* Semantic */
+  --danger: #9b3d23;
+  --danger-soft: rgba(155, 61, 35, 0.09);
+  /* Type */
   --serif: 'Newsreader Variable', 'Newsreader', 'Iowan Old Style', Georgia, serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Rhythm */
+  --section-y: 96px;
+  --hero-y: 104px;
+  --radius: 4px;
   color: var(--ink);
   background: var(--paper);
 }
+@media (max-width: 640px) { .lp { --section-y: 64px; --hero-y: 56px; } }
 
+/* One container. The global header and footer use the same width (.mk-wrap
+   in index.css), so the logo, headings and footer columns share a left edge. */
 .lp-wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
 @media (min-width: 1024px) { .lp-wrap { padding: 0 40px; } }
 
-/* Section shell: a numbered label sits in the margin, like a figure index. */
-.lp-section { padding: 96px 0; border-top: 1px solid var(--rule); }
-.lp-section--quiet { background: #fff; }
-@media (max-width: 640px) { .lp-section { padding: 64px 0; } }
+/* Section shell */
+.lp-section { padding: var(--section-y) 0; border-top: 1px solid var(--rule); }
+.lp-section--quiet { background: var(--surface); }
 
+/* Eyebrow: section number + name. */
 .lp-index {
   font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em;
   color: var(--muted); text-transform: uppercase;
-  display: flex; align-items: baseline; gap: 10px; margin-bottom: 20px;
+  display: flex; align-items: baseline; gap: 10px; margin-bottom: 18px;
 }
-.lp-index b { color: var(--mark); font-weight: 500; }
+.lp-index b { color: var(--navy); font-weight: 600; }
+/* Page eyebrow above an H1: names what the page is. */
+.lp .lp-eyebrow { color: var(--navy); font-weight: 600; }
 
 .lp .lp-h2 {
   font-family: var(--serif); font-weight: 400; font-size: clamp(1.9rem, 3.4vw, 2.75rem);
   line-height: 1.12; letter-spacing: -0.012em; color: var(--ink);
   max-width: 22ch; text-wrap: balance;
 }
-.lp-lede { font-size: 1.04rem; line-height: 1.7; color: var(--ink-2); max-width: 60ch; margin-top: 18px; }
-.lp-small { font-size: 0.86rem; line-height: 1.65; color: var(--muted); }
+.lp-lede { font-size: 1.04rem; line-height: 1.7; color: var(--ink-2); max-width: 42rem; margin-top: 16px; text-wrap: pretty; }
+.lp-small { font-size: 0.86rem; line-height: 1.65; color: var(--muted); max-width: 35rem; }
 .lp-mono { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.04em; }
+/* Reading measure: no paragraph runs wider than a comfortable line. */
+:where(.lp) p { max-width: 42rem; }
 
+/* Buttons: the same shape as the Sign In / Start Free screens (.au-btn).
+   Primary = brand navy; secondary = neutral surface; tertiary = .lp-link. */
 .lp-btn {
-  display: inline-flex; align-items: center; gap: 10px; min-height: 46px;
-  padding: 0 22px; border-radius: 6px; font-weight: 600; font-size: 0.93rem;
-  text-decoration: none; border: 1px solid transparent; cursor: pointer;
-  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px;
+  padding: 0 22px; border-radius: var(--radius); font-weight: 600; font-size: 0.94rem; line-height: 1.2;
+  text-decoration: none; border: 1px solid transparent; cursor: pointer; font-family: inherit;
+  transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease;
 }
-.lp-btn--primary { background: var(--navy); color: #fff; }
-.lp-btn--primary:hover { background: #0a1c33; }
-.lp-btn--ghost { color: var(--navy); border-color: var(--rule-strong); background: transparent; }
-.lp-btn--ghost:hover { border-color: var(--navy); }
+.lp-btn--primary { background: var(--navy); border-color: var(--navy); color: #fff; }
+.lp-btn--primary:hover:not(:disabled) { background: var(--navy-deep); border-color: var(--navy-deep); }
+.lp-btn--ghost { color: var(--ink); border-color: var(--rule-strong); background: var(--surface); }
+.lp-btn--ghost:hover:not(:disabled) { border-color: var(--ink); }
+.lp-btn:disabled { cursor: not-allowed; opacity: 0.6; }
 .lp-link { color: var(--navy); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
-.lp :focus-visible { outline: 2px solid var(--mark); outline-offset: 3px; border-radius: 2px; }
+.lp-link:hover { text-decoration-thickness: 2px; }
+.lp :focus-visible { outline: 2px solid var(--navy); outline-offset: 3px; border-radius: 2px; }
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
-.lp-hero { padding: 128px 0 136px; background: var(--paper); }
-@media (max-width: 640px) { .lp-hero { padding: 72px 0 80px; } }
-.lp-hero-grid { display: grid; gap: 56px; align-items: center; }
+.lp-hero { padding: var(--hero-y) 0; background: var(--paper); }
+.lp-hero-grid { display: grid; gap: 48px; align-items: center; }
 @media (min-width: 1024px) { .lp-hero-grid { grid-template-columns: 1.05fr 1fr; gap: 72px; } }
 .lp .lp-h1 {
-  font-family: var(--serif); font-weight: 400; font-size: clamp(2.6rem, 6vw, 4.6rem);
-  line-height: 1.02; letter-spacing: -0.02em; color: var(--ink); text-wrap: balance;
+  font-family: var(--serif); font-weight: 400; font-size: clamp(2.5rem, 5.4vw, 4.25rem);
+  line-height: 1.04; letter-spacing: -0.02em; color: var(--ink); text-wrap: balance;
 }
-.lp-hero-copy { font-size: 1.2rem; line-height: 1.6; color: var(--ink-2); max-width: 30rem; margin-top: 30px; }
-.lp-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px; }
-.lp-hero-note { margin-top: 18px; max-width: 34rem; }
+.lp-hero-copy { font-size: 1.18rem; line-height: 1.6; color: var(--ink-2); max-width: 32rem; margin-top: 24px; text-wrap: pretty; }
+.lp-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+.lp-hero-note { margin-top: 16px; max-width: 34rem; }
+@media (max-width: 420px) { .lp-hero-actions .lp-btn { flex: 1 1 100%; } }
 
 /* Fig. 1 — the annotated question */
 .lp-figure { border-top: 1px solid var(--ink); padding-top: 14px; }
@@ -146,7 +175,7 @@
 .lp-stop p { font-size: 0.88rem; line-height: 1.6; color: var(--ink-2); margin-top: 10px; }
 .lp-stop .lp-where { margin-top: 12px; color: var(--muted); }
 .lp-stop .lp-carry { margin-top: 14px; font-family: var(--serif); font-style: italic; font-size: 0.98rem; color: var(--mark); line-height: 1.4; }
-.lp-decide { display: inline-block; margin-top: 12px; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); border: 1px solid var(--ink); padding: 3px 7px; border-radius: 2px; }
+.lp-decide { display: inline-block; margin-top: 12px; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); border: 1px solid var(--ink); padding: 3px 7px; border-radius: var(--radius); }
 @media (max-width: 959px) {
   .lp-thread ol { border-left: 1px solid var(--ink); margin-left: 5px; }
   .lp-stop { padding: 0 0 34px 26px; }
@@ -169,7 +198,7 @@
 .lp-frag-row { display: flex; justify-content: space-between; gap: 16px; font-size: 0.88rem; padding: 7px 0; color: var(--ink); border-bottom: 1px dotted var(--rule); }
 .lp-frag-row:last-child { border-bottom: none; }
 .lp-frag-row span:last-child { color: var(--muted); font-family: var(--mono); font-size: 0.74rem; text-align: right; }
-.lp-chip { font-family: var(--mono); font-size: 0.7rem; padding: 2px 6px; border: 1px solid var(--rule-strong); border-radius: 2px; color: var(--ink-2); }
+.lp-chip { font-family: var(--mono); font-size: 0.7rem; padding: 2px 6px; border: 1px solid var(--rule-strong); border-radius: var(--radius); color: var(--ink-2); }
 .lp-continues { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--rule); font-family: var(--serif); font-size: clamp(1.2rem, 2vw, 1.45rem); line-height: 1.5; color: var(--ink); max-width: 52rem; }
 .lp-continues em { color: var(--mark); }
 
@@ -184,7 +213,7 @@
 .lp-state { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
 .lp-state--self { color: var(--muted); }
 .lp-state--connected { color: var(--navy); }
-.lp-state--verified { color: var(--mark); }
+.lp-state--verified { color: var(--navy); font-weight: 700; }
 @media (max-width: 600px) {
   .lp-ledger, .lp-ledger tbody, .lp-ledger tr, .lp-ledger th, .lp-ledger td { display: block; width: auto; }
   .lp-ledger tr { padding: 10px 0; border-bottom: 1px solid var(--rule); }
@@ -200,13 +229,11 @@
 .lp-why-strip ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 28px; flex: 1; }
 .lp-why-strip li { font-family: var(--serif); font-size: 1.45rem; color: var(--ink); }
 @media (max-width: 640px) { .lp-why-strip ul { flex-basis: 100%; gap: 4px 20px; } .lp-why-strip li { font-size: 1.25rem; } }
-.lp-why-who { margin-top: 32px; font-size: 1rem; line-height: 1.7; color: var(--ink-2); max-width: 46rem; }
 
 /* ── Final call to action: light, set apart from the dark footer ─────── */
-.lp-final { padding: 112px 0 120px; background: var(--paper); border-top: 1px solid var(--rule); }
-.lp-final-inner { border-top: 3px solid var(--ink); padding-top: 40px; max-width: 46rem; }
-.lp .lp-final h2 { font-size: clamp(2.2rem, 5vw, 3.6rem); }
-@media (max-width: 640px) { .lp-final { padding: 72px 0 88px; } }
+.lp-final { padding: var(--section-y) 0; background: var(--paper); border-top: 1px solid var(--rule); }
+.lp-final-inner { border-top: 3px solid var(--navy); padding-top: 36px; max-width: 46rem; }
+.lp .lp-final h2 { font-size: clamp(2.1rem, 4.2vw, 3.1rem); max-width: 20ch; }
 
 @media (prefers-reduced-motion: reduce) {
   .lp-in { animation: none !important; }
@@ -223,25 +250,20 @@
 @media (min-width: 960px) { .lp-proof { grid-template-columns: 1fr auto 1fr auto 1fr; gap: 18px; } }
 .lp-proof > * { min-width: 0; }
 .lp-proof-step { font-family: var(--serif); font-size: 1.35rem; margin-bottom: 10px; color: var(--ink); }
-.lp-proof-arrow { font-family: var(--serif); font-size: 1.4rem; color: var(--mark); padding-top: 52px; }
+.lp-proof-arrow { font-family: var(--serif); font-size: 1.4rem; color: var(--navy); padding-top: 52px; }
 @media (max-width: 959px) { .lp-proof-arrow { padding: 0; transform: rotate(90deg); width: max-content; } }
 .lp-proof .lp-frag { max-width: none; }
 
 /* ── Editorial body copy ────────────────────────────────────────────────────
-   Long explanatory paragraphs (leads, prose, notes that run several lines)
-   are justified with hyphenation, at a reading measure. Headings, labels,
-   buttons, captions, card text and short fragments are not: they stay left.
-   On narrow screens justification opens visible gaps between words, so it
-   falls back to left alignment below 700px. Add `lp-prose` to any new
-   long-form paragraph rather than declaring text-align locally. */
+   Text is left-aligned by default, at a comfortable measure. Full
+   justification is reserved for genuinely long-form editorial prose (the
+   About essay, the Security model), where it was checked at every
+   breakpoint: justified with hyphenation on wide screens, left-aligned below
+   700px, where justification opens visible gaps between words. Leads, card
+   text, labels, buttons and short notes are never justified. Add `lp-prose`
+   to a new long-form paragraph rather than declaring text-align locally. */
 .lp .lp-prose,
-.lp .lp-lede,
-.lp .ab-prose > p,
-.lp .sc-section > p,
-.lp .aw-integrity,
-.lp .in-aside,
-.lp .rx-scope,
-.lp .wn-summary {
+.lp .sc-section > p {
   text-align: justify;
   text-justify: inter-word;
   -webkit-hyphens: auto;
@@ -249,17 +271,10 @@
   hyphenate-limit-chars: 7 3 3;
   overflow-wrap: break-word;
 }
-.lp .lp-prose { max-width: 68ch; }
-.lp .aw-integrity, .lp .in-aside { max-width: 64ch; }
+.lp .lp-prose { max-width: 66ch; }
 @media (max-width: 700px) {
   .lp .lp-prose,
-  .lp .lp-lede,
-  .lp .ab-prose > p,
-  .lp .sc-section > p,
-  .lp .aw-integrity,
-  .lp .in-aside,
-  .lp .rx-scope,
-  .lp .wn-summary {
+  .lp .sc-section > p {
     text-align: left;
     -webkit-hyphens: manual;
     hyphens: manual;

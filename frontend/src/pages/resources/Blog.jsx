@@ -56,7 +56,7 @@ export default function Blog() {
       <div className="lp bl">
         <section className="lp-hero bl-hero" aria-labelledby="bl-h1">
           <div className="lp-wrap">
-            <div className="lp-index"><b>—</b> Blog</div>
+            <div className="lp-index lp-eyebrow">Blog</div>
             <h1 id="bl-h1" className="lp-h1">Notes on how research gets done.</h1>
             <p className="lp-hero-copy">
               Essays on research questions, collaboration, publishing and the technology around them.

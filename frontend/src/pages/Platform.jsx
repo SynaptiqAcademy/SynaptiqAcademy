@@ -24,10 +24,7 @@ const startFree = (location) => () => {
 /* Where a project's context usually ends up. */
 const SCATTER = ["Profile page", "Directory search", "Email thread", "Shared drive", "Task board", "Journal search", "Grant portal", "AI chat"];
 
-/* 02 — evidence, request, role: the shapes the product actually uses. */
-const EVIDENCE = ["Profile lists Health Services Research", "Uses discrete-event simulation", "Could contribute experience with process mapping."];
-
-/* 03 — one project followed through. Statuses are the manuscript model's own. */
+/* 02 — one project followed through. Statuses are the manuscript model's own. */
 const TRACE = [
   ["Team", "Roles from Team Builder, filled by accepted requests"],
   ["Project", "Tasks and milestones"],
@@ -38,7 +35,7 @@ const TRACE = [
 ];
 const STATUSES = ["draft", "internal review", "ready for submission", "submitted", "under review", "revision", "accepted"];
 
-/* 04 — the wider index. Links only where a public page exists. */
+/* 03 — the wider index. Links only where a public page exists. */
 const TOOLS = [
   ["Research", "Develop the work inside the project, with the AI Research Assistant.", "Pro", "/research", "Explore Research", "platform_research_clicked"],
   ["Funding", "Find calls in your areas and build the application with the team.", "Pro"],
@@ -65,7 +62,7 @@ export default function Platform() {
         <section className="lp-hero pf-hero" aria-labelledby="pf-hero-title">
           <div className="lp-wrap lp-hero-grid">
             <div>
-              <div className="lp-index"><b>—</b> The platform</div>
+              <div className="lp-index lp-eyebrow">The platform</div>
               <h1 id="pf-hero-title" className="lp-h1">The work moves on. The context comes with it.</h1>
               <p className="lp-hero-copy">
                 Synaptiq links your research identity, the expertise a problem needs,
@@ -76,7 +73,7 @@ export default function Platform() {
                 <a href="#system" className="lp-btn lp-btn--ghost" onClick={scrollToSystem}>Explore the system</a>
               </div>
               <p className="lp-hero-note lp-small">
-                Free: Academic Passport, public research page and ORCID. Collaboration and project tools are on Pro.
+                Free: Academic Passport and ORCID. Collaboration and projects are on Pro.
               </p>
             </div>
 
@@ -102,55 +99,15 @@ export default function Platform() {
           </div>
         </section>
 
-        {/* ── 02 People + work ─────────────────────────────────────────── */}
-        <section className="lp-section" aria-labelledby="pf-people-title">
-          <div className="lp-wrap">
-            <div className="lp-index"><b>02</b> People and work</div>
-            <h2 id="pf-people-title" className="lp-h2">Discovery doesn't end at a name.</h2>
-            <p className="lp-lede">
-              Each suggestion comes with the evidence behind it. No match percentages.
-              What happens next is up to you.
-            </p>
-
-            <ol className="pf-steps">
-              <li>
-                <div className="pf-step-head"><span className="lp-mono">a.</span> Understand why</div>
-                <div className="lp-frag">
-                  <div className="lp-frag-head lp-mono"><span>Complementary expertise</span><span>illustrative</span></div>
-                  {EVIDENCE.map((e) => <div key={e} className="lp-frag-row"><span>{e}</span></div>)}
-                </div>
-              </li>
-              <li>
-                <div className="pf-step-head"><span className="lp-mono">b.</span> Invite</div>
-                <div className="lp-frag">
-                  <div className="lp-frag-head lp-mono"><span>Collaboration request</span><span>illustrative</span></div>
-                  <div className="lp-frag-row"><span>Context</span><span>your Research Need</span></div>
-                  <div className="lp-frag-row"><span>Status</span><span>pending</span></div>
-                  <div className="lp-frag-row"><span>They decide</span><span>accept · decline</span></div>
-                </div>
-              </li>
-              <li>
-                <div className="pf-step-head"><span className="lp-mono">c.</span> Build the team</div>
-                <div className="lp-frag">
-                  <div className="lp-frag-head lp-mono"><span>Team Builder role</span><span>illustrative</span></div>
-                  <div className="lp-frag-row"><span>Operations researcher</span><span>essential</span></div>
-                  <p className="lp-small pf-why">Why needed: models patient flow under fixed staffing.</p>
-                  <div className="lp-frag-row"><span>Next</span><span>create project</span></div>
-                </div>
-              </li>
-            </ol>
-          </div>
-        </section>
-
-        {/* ── 03 Collaboration to output ───────────────────────────────── */}
-        <section className="lp-section lp-section--quiet" aria-labelledby="pf-output-title">
+        {/* ── 02 Collaboration to output ───────────────────────────────── */}
+        <section className="lp-section" aria-labelledby="pf-output-title">
           <div className="lp-wrap pf-output-grid">
             <div>
-              <div className="lp-index"><b>03</b> After the team says yes</div>
+              <div className="lp-index"><b>02</b> After the team says yes</div>
               <h2 id="pf-output-title" className="lp-h2">The project carries the work forward.</h2>
               <p className="lp-lede">
-                Manuscripts and grant applications stay linked to the project and workspace
-                they came from. The team, the files and the history stay attached.
+                Manuscripts and grant applications stay linked to the project they came from,
+                with the team, the files and the history.
               </p>
             </div>
             <figure className="pf-trace" aria-labelledby="pf-fig3-caption">
@@ -169,10 +126,10 @@ export default function Platform() {
           </div>
         </section>
 
-        {/* ── 04 One context, different tools ──────────────────────────── */}
-        <section className="lp-section" aria-labelledby="pf-tools-title">
+        {/* ── 03 One context, different tools ──────────────────────────── */}
+        <section className="lp-section lp-section--quiet" aria-labelledby="pf-tools-title">
           <div className="lp-wrap">
-            <div className="lp-index"><b>04</b> One context, different tools</div>
+            <div className="lp-index"><b>03</b> One context, different tools</div>
             <h2 id="pf-tools-title" className="lp-h2">Each part of the work, starting from what you already have.</h2>
             <dl className="pf-tools">
               {TOOLS.map(([name, line, plan, href, cta, ev]) => (
@@ -186,29 +143,20 @@ export default function Platform() {
                 </div>
               ))}
             </dl>
-          </div>
-        </section>
-
-        {/* ── 05 Identity layer ────────────────────────────────────────── */}
-        <section className="lp-section lp-section--quiet" aria-labelledby="pf-id-title">
-          <div className="lp-wrap">
-            <div className="lp-index"><b>05</b> The identity layer</div>
-            <h2 id="pf-id-title" className="lp-h2">Discovery reads your Passport. Your record keeps it current.</h2>
-            <div className="pf-id">
+            <dl className="pf-id" aria-label="What everything starts from">
               <div>
-                <div className="lp-state lp-state--self">Declared by you</div>
-                <p>Research areas, methods, professional expertise, what you're open to</p>
+                <dt className="lp-state lp-state--self">Academic Passport</dt>
+                <dd>Your research identity. Free on every plan.</dd>
               </div>
               <div>
-                <div className="lp-state lp-state--connected">Connected</div>
-                <p>ORCID iD and the publications imported from it</p>
+                <dt className="lp-state lp-state--connected">Suggestions</dt>
+                <dd>Each shows the evidence behind it. No match percentages.</dd>
               </div>
               <div>
-                <div className="lp-state lp-state--verified">Verified</div>
-                <p>Institutional affiliation only. Not degrees, licences or competence.</p>
+                <dt className="lp-state lp-state--verified">Verified</dt>
+                <dd>Institutional affiliation only. Not degrees, licences or competence.</dd>
               </div>
-            </div>
-            <p className="lp-small pf-id-note">The Passport is free on every plan.</p>
+            </dl>
             <p className="pf-inst">
               Using Synaptiq across a department or research organisation?{" "}
               <Link to="/for-institutions" className="lp-link" onClick={() => track("platform_institutions_clicked")}>For Institutions →</Link>

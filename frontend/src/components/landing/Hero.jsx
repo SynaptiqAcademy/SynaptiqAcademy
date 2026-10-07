@@ -14,10 +14,11 @@ export default function Hero({ registrationOpen, onSeeHow }) {
     <section className="lp-hero" aria-labelledby="lp-hero-title" data-testid={TID.landingHero}>
       <div className="lp-wrap lp-hero-grid">
         <div>
+          <div className="lp-index lp-eyebrow">Research collaboration platform</div>
           <h1 id="lp-hero-title" className="lp-h1">Research starts with a question.</h1>
           <p className="lp-hero-copy">
-            Synaptiq turns it into the expertise it needs, the people who have it,
-            and the work you do together.
+            Synaptiq shows the expertise your question needs, helps you find the people
+            who have it, and gives the team one place to work.
           </p>
           <div className="lp-hero-actions">
             <Link

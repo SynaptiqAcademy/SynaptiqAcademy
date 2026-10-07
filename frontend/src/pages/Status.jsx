@@ -68,7 +68,7 @@ export default function Status() {
           <section aria-labelledby="sp-now" className="sp-section">
             <div className="sp-now">
               <h2 id="sp-now" className="sp-h2">{loading ? "Checking…" : error ? "We couldn't reach the status check." : OVERALL[overall]}</h2>
-              <button type="button" className="sp-btn" onClick={load} disabled={loading}>Check again</button>
+              <button type="button" className="lp-btn lp-btn--ghost" onClick={load} disabled={loading}>Check again</button>
             </div>
             {checkedAt && <p className="lp-mono sp-meta">Checked {checkedAt.toLocaleString()}</p>}
             <ul className="sp-rows" aria-label="Service checks">

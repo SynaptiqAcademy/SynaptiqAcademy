@@ -40,14 +40,6 @@ function Cost({ k, unit = "AI Credits", before = "", after = "" }) {
   return <>{before}{n} {n === 1 ? unit.replace(/s$/, "") : unit}{after}</>;
 }
 
-function scrollTo(id, e) {
-  e?.preventDefault?.();
-  const el = document.getElementById(id);
-  if (!el) return;
-  const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-}
-
 /* ── 01 Contexts: what the AI is given, and what you can ask ─────────── */
 const CONTEXTS = [
   {
@@ -122,21 +114,21 @@ function ContextExplorer() {
 /* ── 03 Tasks grouped by research intent ─────────────────────────────── */
 const INTENTS = [
   { intent: "Understand", tools: [
-    ["Literature review", "A structured overview of a topic from the model's general knowledge. It doesn't search databases, so check every name and source.", "Pro Advanced", "ai_literature_review"],
-    ["Research gap finder", "Potential gaps and underexplored questions, also from model knowledge, for you to test against the literature.", "Pro Advanced", "ai_research_gap_finder"],
+    ["Literature review", "An overview of a topic from the model's general knowledge. It doesn't search databases, so check every source.", "Pro Advanced", "ai_literature_review"],
+    ["Research gap finder", "Possible gaps and open questions, to test against the literature.", "Pro Advanced", "ai_research_gap_finder"],
   ] },
   { intent: "Design", tools: [
-    ["Study design advisor", "Design options, trade-offs and questions to settle before you collect data.", "Pro Advanced", "ai_research_design_advisor"],
+    ["Study design advisor", "Design options and trade-offs to settle before you collect data.", "Pro Advanced", "ai_research_design_advisor"],
   ] },
   { intent: "Check", tools: [
-    ["Statistical review", "Paste the results you report. It flags reporting gaps and assumptions to check. It doesn't rerun your analysis.", "Pro Advanced", "ai_statistical_review"],
+    ["Statistical review", "Flags reporting gaps and assumptions in the results you paste. It doesn't rerun your analysis.", "Pro Advanced", "ai_statistical_review"],
   ] },
   { intent: "Place", tools: [
-    ["Journal, conference and grant fit", "Where the work might fit, and the criteria worth checking before you decide.", "Pro", "ai_journal_matching"],
+    ["Journal, conference and grant fit", "Where the work might fit, and what to check before you decide.", "Pro", "ai_journal_matching"],
   ] },
 ];
 
-/* ── 05 Credit strip: real, fixed costs ─────────────────────────────── */
+/* ── 04 Credit strip: real, fixed costs ─────────────────────────────── */
 const COSTS = [
   ["Rewrite a passage", "ai_rewriting"], ["Copilot message", "ai_chat_message"], ["Journal fit", "ai_journal_matching"],
   ["Statistical review", "ai_statistical_review"], ["Literature review", "ai_literature_review"],
@@ -199,17 +191,17 @@ export default function AIWorkspaceLanding() {
         <section className="lp-hero aw-hero" aria-labelledby="aw-hero-title">
           <div className="lp-wrap lp-hero-grid">
             <div>
-              <div className="lp-index"><b>—</b> AI Workspace</div>
+              <div className="lp-index lp-eyebrow">AI Workspace</div>
               <h1 id="aw-hero-title" className="lp-h1">Your research already has context. The AI starts from it.</h1>
               <p className="lp-hero-copy">
-                Open the AI on a manuscript, a project or a question. It works with that material
-                in view, suggests, and leaves the decisions to you.
+                Open the AI on a manuscript, a project or a question. It works with that material in view,
+                suggests, and leaves the decisions to you.
               </p>
               <div className="lp-hero-actions">
-                <a href="#aw-context" className="lp-btn lp-btn--primary"
-                  onClick={(e) => { scrollTo("aw-context", e); track("ai_start_clicked", { location: "hero" }); }}>
-                  See how it works
-                </a>
+                <Link to="/register" className="lp-btn lp-btn--primary"
+                  onClick={() => { track("ai_start_clicked", { location: "hero" }); track("signup_started", { location: "ai_workspace_hero" }); }}>
+                  Start Free
+                </Link>
                 <Link to="/pricing" className="lp-btn lp-btn--ghost" onClick={comparePlans("hero")}>Compare plans</Link>
               </div>
               <p className="lp-hero-note lp-small">AI is part of Pro and Pro Advanced. The Free plan has no AI Credits.</p>
@@ -252,7 +244,7 @@ export default function AIWorkspaceLanding() {
           <div className="lp-wrap">
             <div className="lp-index"><b>01</b> The work, not the chat</div>
             <h2 id="aw-ctx-title" className="lp-h2">You choose what it works on. That is what it's given.</h2>
-            <p className="lp-lede">No blank box and no re-explaining. The assistant opens on something you already have.</p>
+            <p className="lp-lede">No blank box. The assistant opens on something you already have.</p>
             <ContextExplorer />
           </div>
         </section>
@@ -264,8 +256,8 @@ export default function AIWorkspaceLanding() {
               <div className="lp-index"><b>02</b> The manuscript stays the object</div>
               <h2 id="aw-ms-title" className="lp-h2">Feedback in the margin, not a new document.</h2>
               <p className="lp-lede">
-                Manuscript Copilot works section by section inside your manuscript. For a whole draft, a full
-                review reads the file you upload and returns a revision checklist, ordered by priority.
+                Manuscript Copilot works section by section inside your manuscript. A full review of the
+                whole draft returns a revision checklist, ordered by priority.
               </p>
               <ul className="aw-areas" aria-label="Full review areas">
                 {["Research problem", "Literature foundation", "Methodology", "Statistical validity", "Writing quality"].map((a) => <li key={a}>{a}</li>)}
@@ -319,14 +311,8 @@ export default function AIWorkspaceLanding() {
               Also on Pro: the Research Assistant for open questions about your work<Cost k="DEEP_RESEARCH" unit="credits a run" before=" (" after=")" />, rewriting
               for clarity and tone, abstract drafts, and lesson plans and assessments in the Teaching Hub.
             </p>
-          </div>
-        </section>
 
-        {/* ── 04 Depth ───────────────────────────────────────────────── */}
-        <section className="lp-section" aria-labelledby="aw-depth-title">
-          <div className="lp-wrap">
-            <div className="lp-index"><b>04</b> Pro and Pro Advanced</div>
-            <h2 id="aw-depth-title" className="lp-h2">Same approach. More room and more kinds of analysis.</h2>
+            <h3 className="aw-depth-title">Pro and Pro Advanced</h3>
             <div className="aw-depth" onMouseEnter={() => track("ai_advanced_features_explored")}>
               <div>
                 <div className="aw-depth-name">Pro</div>
@@ -345,34 +331,27 @@ export default function AIWorkspaceLanding() {
                 </dl>
               </div>
             </div>
-            <p style={{ marginTop: 22 }}>
+            <p style={{ marginTop: 20 }}>
               <Link to="/pricing" className="lp-link" onClick={comparePlans("depth")}>Compare plans →</Link>
             </p>
           </div>
         </section>
 
-        {/* ── 05 Control and credits ─────────────────────────────────── */}
-        <section className="lp-section lp-section--quiet" aria-labelledby="aw-credits-title">
+        {/* ── 04 Control and credits ─────────────────────────────────── */}
+        <section className="lp-section" aria-labelledby="aw-credits-title">
           <div className="lp-wrap">
-            <div className="lp-index"><b>05</b> Control and credits</div>
+            <div className="lp-index"><b>04</b> Control and credits</div>
             <h2 id="aw-credits-title" className="lp-h2">You see the cost before anything runs.</h2>
-            <ol className="aw-control">
-              {["You choose the material", "You choose the task", "You see the cost", "AI suggests", "You decide"].map((s, i) => (
-                <li key={s} className={i === 3 ? "is-ai" : ""}><span className="lp-mono">{String(i + 1).padStart(2, "0")}</span>{s}</li>
-              ))}
-            </ol>
             <div className="aw-credits" onMouseEnter={() => track("ai_credits_explored")}>
               <CostStrip />
               <div className="aw-rules">
-                <p>Each action has a fixed cost, shown before it runs. If a request fails, the credits go back.</p>
-                <p>Monthly credits renew with your plan and don't roll over. Credit packs, on paid plans, don't expire and are used after the monthly credits.</p>
-                <p>Your AI usage page lists what you've used and when.</p>
+                <p>Each action has a fixed cost in AI Credits, shown before it runs. If a request fails, the credits go back.</p>
+                <p>Monthly credits renew with your plan and don't roll over. Your AI usage page lists what you've used.</p>
               </div>
             </div>
             <p className="aw-integrity">
-              AI can be wrong. Check sources, especially names and references. Methods and conclusions stay
-              your judgment, and nothing here can secure a publication, a grant or a review outcome. The AI
-              never contacts anyone for you.
+              AI can be wrong: check sources, especially names and references. It can't secure a publication,
+              a grant or a review outcome, and it never contacts anyone for you.
             </p>
           </div>
         </section>
@@ -383,11 +362,11 @@ export default function AIWorkspaceLanding() {
             <div className="lp-final-inner">
               <h2 id="aw-final-title" className="lp-h2">The research stays yours. The AI works on it when you ask.</h2>
               <div className="lp-hero-actions">
-                <Link to="/pricing" className="lp-btn lp-btn--primary" onClick={comparePlans("final")}>Compare plans</Link>
-                <Link to="/register" className="lp-btn lp-btn--ghost"
+                <Link to="/register" className="lp-btn lp-btn--primary"
                   onClick={() => { track("ai_start_clicked", { location: "final" }); track("signup_started", { location: "ai_workspace_final" }); }}>
                   Start Free
                 </Link>
+                <Link to="/pricing" className="lp-btn lp-btn--ghost" onClick={comparePlans("final")}>Compare plans</Link>
               </div>
               <p className="lp-small" style={{ marginTop: 16 }}>
                 {registrationOpen === false

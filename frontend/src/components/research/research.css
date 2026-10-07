@@ -32,9 +32,8 @@
 .rs-margin li.is-on::before { background: var(--mark); border-color: var(--mark); }
 .rs-margin a:hover { color: var(--ink); }
 
-.rs-sec { padding: 96px 0; border-top: 1px solid var(--rule); scroll-margin-top: 72px; }
+.rs-sec { padding: var(--section-y) 0; border-top: 1px solid var(--rule); scroll-margin-top: 72px; }
 .rs-sec:first-child { border-top: none; }
-@media (max-width: 640px) { .rs-sec { padding: 64px 0; } }
 
 /* Fig. 2 — Research Need record */
 .rs-record { margin-top: 40px; border-top: 1px solid var(--ink); padding-top: 14px; max-width: 52rem; }
@@ -93,8 +92,8 @@
 .rs-role-pri { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 .rs-role-state { font-size: 0.92rem; color: var(--ink-2); }
 .rs-role--self .rs-role-state { color: var(--navy); font-weight: 600; }
-.rs-role--missing .rs-role-state { color: var(--mark); font-weight: 600; }
-.rs-role--missing { border-left: 2px solid var(--mark); padding-left: 12px; }
+.rs-role--missing .rs-role-state { color: var(--danger); font-weight: 600; }
+.rs-role--missing { border-left: 2px solid var(--danger); padding-left: 12px; }
 .rs-role details p { padding: 0 0 14px; }
 .rs-blueprint-foot { margin-top: 14px; }
 @media (max-width: 640px) {
@@ -102,17 +101,7 @@
   .rs-role-state { grid-column: 1 / -1; }
 }
 
-/* 06 — hand-off */
-.rs-handoff { list-style: none; margin: 40px 0 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--ink); }
-@media (min-width: 900px) { .rs-handoff { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-.rs-handoff li { position: relative; padding: 16px 20px 16px 0; border-bottom: 1px solid var(--rule); min-width: 0; }
-@media (min-width: 900px) {
-  .rs-handoff li { border-bottom: none; }
-  .rs-handoff li + li { padding-left: 20px; border-left: 1px solid var(--rule); }
-  .rs-handoff li + li::before { content: "→"; position: absolute; left: -8px; top: 14px; background: var(--paper); color: var(--mark); font-size: 0.9rem; }
-}
-.rs-handoff-k { display: block; font-family: var(--serif); font-size: 1.25rem; color: var(--ink); }
-.rs-handoff-v { display: block; margin-top: 4px; font-size: 0.88rem; color: var(--ink-2); line-height: 1.5; }
+/* Hand-off line after the team */
 .rs-bridge { margin-top: 32px; font-size: 1rem; line-height: 1.65; color: var(--ink-2); max-width: 46rem; }
 
 .rs .lp-final h2 { max-width: 18ch; }

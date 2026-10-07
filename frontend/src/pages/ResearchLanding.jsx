@@ -27,7 +27,6 @@ const STATES = [
   ["rs-expertise", "Expertise"],
   ["rs-people", "People"],
   ["rs-team", "Team"],
-  ["rs-work", "Work"],
 ];
 
 function scrollTo(id, e) {
@@ -182,14 +181,6 @@ const ROLES = [
   { role: "Health policy", priority: "optional", state: "Missing expertise · no eligible match yet", tone: "missing", why: "How decisions about hospital capacity are made." },
 ];
 
-/* ── 06 Hand-off ──────────────────────────────────────────────────── */
-const HANDOFF = [
-  ["Blueprint", "ready when essential roles have accepted"],
-  ["Project", "problem statement and keywords from the need"],
-  ["Workspace", "members who accepted, with their team roles"],
-  ["Manuscript", "linked to the project and its workspace"],
-];
-
 export default function ResearchLanding() {
 
   useEffect(() => setPageSeo({
@@ -214,8 +205,8 @@ export default function ResearchLanding() {
               <State n={1} label="Question" />
               <h1 id="rs-hero-title" className="lp-h1">Before the answer, work out what the question needs.</h1>
               <p className="lp-hero-copy">
-                Synaptiq reads a research problem for the fields, methods and expertise it calls for,
-                then shows whose work fits, and why.
+                Synaptiq reads a research problem for the expertise it calls for, then shows
+                whose work fits, and why.
               </p>
               <div className="lp-hero-actions">
                 <Link to="/register" className="lp-btn lp-btn--primary" onClick={startFree("hero")}>Start Free</Link>
@@ -257,8 +248,7 @@ export default function ResearchLanding() {
               <State n={2} label="Structured" />
               <h2 id="rs-need-title" className="lp-h2">What does this question require?</h2>
               <p className="lp-lede">
-                The question becomes a Research Need: a short record of what the problem calls for.
-                It describes the need. It doesn't answer the question.
+                The question becomes a Research Need: a short, editable record of what the problem calls for.
               </p>
               <figure className="rs-record" aria-labelledby="rs-fig2">
                 <figcaption id="rs-fig2" className="lp-figcaption lp-mono">
@@ -272,8 +262,8 @@ export default function ResearchLanding() {
                   ))}
                 </dl>
                 <p className="lp-small rs-record-foot">
-                  Read with AI when you ask for it (it uses AI Credits), otherwise with a fixed research
-                  vocabulary. Either way, you review and edit it before anyone is searched.
+                  Read with AI if you ask (it uses AI Credits), otherwise with a fixed research vocabulary.
+                  You review it before anyone is searched.
                 </p>
               </figure>
             </section>
@@ -283,7 +273,7 @@ export default function ResearchLanding() {
               <State n={3} label="Expertise" />
               <h2 id="rs-exp-title" className="lp-h2">Where is the expertise you don't have?</h2>
               <p className="lp-lede">
-                Part of it sits in your own field. Part sits next door, in fields that see a different side of the same problem.
+                Some of it sits in your field. Some sits next door, in fields that see another side of the problem.
               </p>
               <ExpertiseMap />
             </section>
@@ -293,16 +283,13 @@ export default function ResearchLanding() {
               <State n={4} label="People" />
               <h2 id="rs-people-title" className="lp-h2">Why does this person appear?</h2>
               <p className="lp-lede">
-                A directory starts from a name. This starts from the need, and searches eligible members'
-                Academic Passports against it. Every suggestion shows its evidence. There are no scores.
+                Suggestions start from the need, not from a name. Each one shows its evidence. There are no scores.
               </p>
               <div className="rs-cards">
                 {PEOPLE.map((p) => <Candidate key={p.k} p={p} />)}
               </div>
               <p className="lp-small rs-fields">
-                Matched against research areas, interests and keywords, methods and software, professional
-                expertise and role, and publication titles. Specimens, not real members.{" "}
-                <Link to="/platform" className="lp-link">Explore the Platform →</Link>
+                Matched against what members list in their Academic Passports. Specimens, not real members.
               </p>
             </section>
 
@@ -311,8 +298,7 @@ export default function ResearchLanding() {
               <State n={5} label="Team" />
               <h2 id="rs-team-title" className="lp-h2">What is the team still missing?</h2>
               <p className="lp-lede">
-                Team Builder turns the need into roles. Mark the ones you cover, choose people for the rest,
-                and invite each person yourself. They accept or decline.
+                Team Builder turns the need into roles. Cover some yourself and invite people for the rest.
               </p>
               <figure className="rs-blueprint" aria-labelledby="rs-fig5">
                 <figcaption id="rs-fig5" className="lp-figcaption lp-mono">
@@ -344,24 +330,10 @@ export default function ResearchLanding() {
                   One person can cover more than one role. Nobody joins until they accept.
                 </p>
               </figure>
-            </section>
-
-            {/* ── 06 Work ────────────────────────────────────────────── */}
-            <section id="rs-work" className="rs-sec" aria-labelledby="rs-work-title">
-              <State n={6} label="Work" />
-              <h2 id="rs-work-title" className="lp-h2">Where does the work go next?</h2>
-              <p className="lp-lede">
-                When you decide the team is ready, you create the project. The need comes with it.
-              </p>
-              <ol className="rs-handoff">
-                {HANDOFF.map(([k, v]) => (
-                  <li key={k}><span className="rs-handoff-k">{k}</span><span className="rs-handoff-v">{v}</span></li>
-                ))}
-              </ol>
               <p className="rs-bridge">
-                As the work develops, journal, conference and grant discovery are there on Pro, and AI
-                assistance sits inside the project.{" "}
-                <Link to="/ai-workspace" className="lp-link" onClick={() => track("research_ai_workspace_clicked")}>Explore AI Workspace →</Link>
+                When the team is ready, you create the project. The need, the team and later the manuscript
+                stay linked to it.{" "}
+                <Link to="/platform" className="lp-link" onClick={() => track("research_platform_clicked")}>See what happens next →</Link>
               </p>
             </section>
           </div>
@@ -373,8 +345,7 @@ export default function ResearchLanding() {
             <div className="lp-final-inner">
               <h2 id="rs-final-title" className="lp-h2">Bring the question. Work out who it needs.</h2>
               <p className="lp-lede">
-                Start with a free Academic Passport and connect ORCID so others can find your work.
-                Pro adds the search, the requests and the team.
+                Start with a free Academic Passport. Pro adds the search, the requests and the team.
               </p>
               <div className="lp-hero-actions">
                 <Link to="/register" className="lp-btn lp-btn--primary" onClick={startFree("final")}>Start Free</Link>
