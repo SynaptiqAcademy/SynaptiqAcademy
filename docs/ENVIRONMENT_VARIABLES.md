@@ -211,3 +211,27 @@ no further action needed): the `google_oauth.py`/`FRONTEND_BASE_URL` mismatch de
 the "URLs" section above, the dead `JWT_SECRET_KEY` admin-panel check, the dead
 `STRIPE_PRICE_*` variables, the undocumented `DATABASE_URL`/`MONGO_URI` Mongo-connection
 fallbacks, and Google OAuth's lack of a dedicated, overridable state secret.
+
+## Launch-readiness settings (October 2026)
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `CLIENT_IP_SOURCE` | `x-real-ip` | Where the client address comes from: `x-real-ip` (Railway edge header, then the proxy-appended `X-Forwarded-For` entry), `xff`, or `peer` (no proxy). Used for rate limits, IP blocks, audit logs. |
+| `TRUSTED_PROXY_HOPS` | `1` | Number of trusted proxies appending to `X-Forwarded-For`. |
+| `FORWARDED_ALLOW_IPS` | (gunicorn default) | Must **not** be `*`: that would let clients set the peer address. |
+| `RATE_LIMIT_STORAGE` | `auto` | `auto`: Redis if `REDIS_URL` is set, otherwise the MongoDB database (`rate_limit_*` collections), so every worker and replica shares the limits. `memory` only for single-process development. |
+| `ALERT_WEBHOOK_URL` | — | Slack/Discord/Teams incoming webhook for operational alerts (see MONITORING.md). |
+| `ALERT_ENVIRONMENT` | `APP_ENV` | Label in alert messages. |
+| `STRIPE_REFETCH_SUBSCRIPTIONS` | `1` | Re-read a subscription from Stripe before applying a `customer.subscription.*` event, so a delayed event never applies stale state. |
+| `STALE_RESERVATION_MINUTES` | `30` | Age after which a request-scoped AI credit reservation that was never finalised is returned to the user. |
+| `AI_MONTHLY_BUDGET_USD` | `500` | Total AI provider budget per month; source of every AI spending cap. |
+| `AI_SYSTEM_BUDGET_SHARE` | `0.10` | Share of the budget available to background AI (no paying user). |
+| `AI_EXPECTED_COST_PER_CREDIT_USD` | `0.01` | Planning provider cost per credit; measure it from `ai_requests` after launch. |
+| `AI_USER_HEADROOM` | `3` | Per-user monthly AI cost ceiling = plan credits × cost per credit × headroom. |
+| `AI_BUDGET_ALERT_THRESHOLDS` | `0.5,0.8,1.0` | Budget fractions that trigger an alert. |
+| `API_DOCS_PUBLIC` | — | `1` serves `/docs`, `/redoc`, `/openapi.json` outside development (off by default). |
+| `ENCRYPTION_REQUIRED` | — | `1` makes field encryption fail closed outside production too. In production it always does. |
+| `COOKIE_SECURE` | `0` | Accepts `1/true/yes/on`. `SameSite=None` always forces `Secure`. |
+| `COOKIE_SAMESITE` | `lax` | `lax` once the API is served from `api.synaptiq.academy` (same site as the app). |
+| `PASSWORD_HASH_THREADS` | min(4, CPUs) | Size of the dedicated thread pool for bcrypt, kept apart from the database driver's threads. |
+| `LOGIN_GEOLOCATION_URL` | — (off) | HTTPS endpoint with `{ip}` for login risk geolocation. Off by default: it sends users' IP addresses to a third party, so enable it only with a provider listed in `docs/privacy/processors-and-transfers.md`. Plain-HTTP URLs are refused. |

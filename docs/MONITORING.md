@@ -10,19 +10,45 @@
 | `GET /api/status` | Public, machine-readable platform status (incidents, component status) | Backs the in-app "Platform Status" admin page; also usable as an external status-page data source |
 | `GET /api/ops/health`, `/api/ops/health/{component}` | Detailed per-component health (super-admin) | `backend/obs/router.py` |
 
-## What to monitor externally
+## External uptime monitoring (set up in an uptime service)
 
-| Signal | How | Alert condition |
+Production runs on Railway and Vercel; the cron-based checks in `deploy/synaptiq.cron`
+target a self-hosted server and **do not run there**. Create these monitors in an external
+service (Better Stack, UptimeRobot or similar), alerting by email plus SMS or push to at
+least two people:
+
+| Monitor | URL | Interval | Alert when |
+|---|---|---|---|
+| API health | `https://api.synaptiq.academy/api/health` (until the domain is live: the Railway URL) | 1 min | status ≠ 200, or body lacks `"status":"ok"`, for 2 consecutive checks |
+| API readiness | `https://api.synaptiq.academy/api/health/ready` | 1 min | status ≠ 200 for 2 checks (database unreachable) |
+| Web app | `https://www.synaptiq.academy/` | 1 min | status ≠ 200, or the page lacks the text `Synaptiq` |
+| Apex redirect | `https://synaptiq.academy/` | 5 min | not a 3xx to `www` |
+| TLS certificates | both domains | daily | expiry < 14 days |
+
+Railway's deploy health check uses `/api/health/live` (process alive). Consider switching it
+to `/api/health/ready` so a release that cannot reach the database is not promoted.
+
+## Alerts sent by the backend
+
+`services/alerts.py` posts to `ALERT_WEBHOOK_URL` (a Slack, Discord or Teams incoming
+webhook). Each alert is sent once per throttle window across all workers and replicas, and
+never contains secrets or personal data.
+
+| Alert | Trigger | What to do |
 |---|---|---|
-| Uptime | UptimeRobot / BetterStack (or similar) polling `https://api.synaptiq.academy/api/health` every 1–5 min | HTTP status ≠ 200 for 2 consecutive checks, or JSON `status` ≠ `"ok"` |
-| Frontend availability | Same tool, polling `https://synaptiq.academy/` | HTTP status ≠ 200 |
-| Errors | Sentry (`SENTRY_DSN`) | New error type, or error rate spike (>10/min recommended starting threshold) |
-| Disk space | `deploy/synaptiq.cron` hourly check + `/api/health`'s own `disk_pct` field | >80% warning, >95% critical (thresholds referenced in `deploy/INCIDENT_RESPONSE.md`) |
-| Backup success/failure | `ALERT_WEBHOOK_URL` (Slack/Discord-compatible), fired by `deploy/backup.sh` | Any failure |
-| Backup integrity | `ALERT_WEBHOOK_URL`, fired by `deploy/check_backup_integrity.sh` (weekly) | Checksum mismatch |
-| DR readiness | `ALERT_WEBHOOK_URL`, fired by `deploy/dr_validate.sh` (weekly) | Any validation failure |
-| MongoDB Atlas | Atlas's own built-in alerting (connections, disk, replication lag, slow queries) | Configure directly in Atlas UI — not automated by this codebase |
-| AI spend | `obs_cost` collection / `GET /api/ops/cost`, `/api/ops/cost/breakdown` | Approaching `AI_DAILY_BUDGET_USD`/`AI_MONTHLY_BUDGET_USD` |
+| `stripe_webhook_failed` | A Stripe event failed to process (Stripe retries it) | Check logs for the event id; Stripe → Developers → Webhooks → resend once fixed |
+| `job_failed` | A scheduled job (imports, digests, ORCID/citation sync) failed for its window | Check logs; the job does not re-run in the same window |
+| `credits_released` | Abandoned AI reservations were returned to users (requests killed by a restart, timeout or crash) | Expected after deploys; investigate if frequent |
+| `ai_background_budget` | Background AI reached its daily or monthly budget and was paused | Review background AI usage or raise `AI_SYSTEM_BUDGET_SHARE` |
+| `ai_budget` | Total AI provider spend crossed 50% / 80% / 100% of `AI_MONTHLY_BUDGET_USD` | Review usage; provider-side hard limits are the final backstop |
+
+Also configure:
+
+- **Sentry** (`SENTRY_DSN`): issue alerts for new issues and error spikes, routed to email or chat.
+- **Stripe** → Developers → Webhooks → endpoint → email on failing deliveries.
+- **Atlas** → Alerts: connections > 80% of limit, disk > 80%, replication lag, CPU sustained > 80%,
+  backup failures.
+- **AI providers**: monthly spend limits and notification thresholds in the Anthropic and OpenAI consoles.
 
 ## Internal observability platform (`backend/obs/`)
 
@@ -71,11 +97,7 @@ repeated brief outages.
 
 ## Missing Production Requirements
 
-- No pre-built Grafana/Datadog dashboard definitions exist in the repo — the data is
-  collected (`obs_metrics`, `obs_traces`, etc.) but visualization is left to the operator.
-- No alerting is wired directly from `obs/alerting.py`'s alert records to an external
-  paging tool (PagerDuty, Opsgenie) — only the cron-based `ALERT_WEBHOOK_URL` (Slack/
-  Discord) path exists today. For true on-call paging, integrate one.
-- `/api/health` does not check S3 or AI provider connectivity (see
-  [AWS_S3_SETUP.md](AWS_S3_SETUP.md) and [OPENAI_ANTHROPIC_SETUP.md](OPENAI_ANTHROPIC_SETUP.md)
-  "Missing Production Requirements").
+- No pre-built dashboards; the data is collected (`obs_metrics`, `obs_traces`) but
+  visualisation is left to the operator.
+- `/api/health` does not check S3 or AI provider connectivity.
+- For on-call paging beyond chat, connect the uptime service and Sentry to a pager.
