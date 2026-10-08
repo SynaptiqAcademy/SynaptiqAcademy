@@ -20,7 +20,7 @@ import logging
 import threading
 import time
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from .tracer import get_context_dict
@@ -111,7 +111,9 @@ class StructuredHandler(logging.Handler):
         try:
             ctx = get_context_dict()
             doc: dict = {
-                "timestamp":  datetime.utcfromtimestamp(record.created).isoformat(),
+                # BSON Date (not an ISO string) so a TTL index on this field
+                # can actually expire documents — see obs_logs_timestamp_ttl.
+                "timestamp":  datetime.fromtimestamp(record.created, tz=timezone.utc),
                 "level":      record.levelname,
                 "logger":     record.name,
                 "component":  record.name.split(".")[0],
@@ -206,6 +208,14 @@ async def flush_logs(db: Any | None = None) -> int:
     return await _handler.flush_to_db()
 
 
+def _parse_ts(value: str) -> datetime:
+    """Parse a caller-supplied from_ts/to_ts query string into a datetime
+    the driver will compare correctly against BSON Date-typed values."""
+    v = value[:-1] + "+00:00" if value.endswith("Z") else value
+    dt = datetime.fromisoformat(v)
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
 async def search_logs_in_db(
     db:        Any,
     level:     str | None = None,
@@ -228,11 +238,18 @@ async def search_logs_in_db(
         if user_id:
             filt["user_id"] = user_id
         if from_ts or to_ts:
+            # timestamp is stored as a BSON Date (as of the obs_logs schema
+            # fix) — a raw ISO string operand would never match a Date field
+            # per BSON type-ordering, so parse the incoming query strings
+            # into datetimes before filtering. Any record still holding the
+            # older string-typed timestamp (pre-fix, all >7 days old and
+            # subject to TTL expiry) simply won't match a range query here,
+            # which is an accepted trade-off of the migration.
             ts_filt: dict = {}
             if from_ts:
-                ts_filt["$gte"] = from_ts
+                ts_filt["$gte"] = _parse_ts(from_ts)
             if to_ts:
-                ts_filt["$lte"] = to_ts
+                ts_filt["$lte"] = _parse_ts(to_ts)
             filt["timestamp"] = ts_filt
         return await db[_LOGS_COL].find(
             filt, {"_id": 0}

@@ -2,7 +2,9 @@
 
 Analyses the current user's research profile and finds the most compatible
 researchers in the platform using a two-stage approach:
-  1. Local pre-scoring via field overlap (research areas, keywords, skills)
+  1. Canonical deterministic pre-scoring (services.collab_intelligence's
+     9-dimension matching engine — the same signal used by /network/matches
+     and the /discover feed) to narrow the candidate pool cheaply.
   2. Claude enrichment for ranked compatibility scores + transparent explanations
 
 Endpoints:
@@ -29,6 +31,7 @@ from db import get_db
 from services.ai.llm import call_llm
 from services.credits_service import consume_credits, refund_credits
 from services.permissions import require_feature, REAL_CUSTOMER_FILTER
+from services.collab_intelligence.engine import get_collab_engine
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -36,7 +39,6 @@ log = logging.getLogger("synaptiq.collaboration_intelligence")
 router = APIRouter(prefix="/api/collaboration-intelligence", tags=["collaboration-intelligence"])
 
 _MAX_CANDIDATES = 100
-_PRESCORE_POOL = 15   # pre-score this many, send top N to Claude
 _CLAUDE_POOL = 10     # how many candidates Claude scores per run
 
 
@@ -49,54 +51,6 @@ class GenerateRequest(BaseModel):
     user_type:       Optional[str] = Field(None, max_length=50)
     primary_domain:  Optional[str] = Field(None, max_length=20)
     min_score:       int = Field(default=0, ge=0, le=100)
-
-
-# ──────────────────────────────── pre-scorer ─────────────────────────────────
-
-def _safe_set(values) -> set:
-    if not values:
-        return set()
-    return {str(v).lower().strip() for v in values if v}
-
-
-def _jaccard(a: set, b: set) -> float:
-    if not a or not b:
-        return 0.0
-    union = a | b
-    return len(a & b) / len(union)
-
-
-def _prescore(user: dict, candidate: dict) -> dict:
-    """Fast local similarity estimate. Returns 0-100 integer pre-score + overlaps."""
-    u_areas   = _safe_set(user.get("research_areas"))
-    c_areas   = _safe_set(candidate.get("research_areas"))
-    u_kw      = _safe_set(user.get("research_keywords"))
-    c_kw      = _safe_set(candidate.get("research_keywords"))
-    u_skills  = _safe_set(user.get("skills"))
-    c_skills  = _safe_set(candidate.get("skills"))
-    u_looking = _safe_set(user.get("looking_for"))
-    c_offers  = _safe_set(candidate.get("can_contribute"))
-    c_looking = _safe_set(candidate.get("looking_for"))
-    u_offers  = _safe_set(user.get("can_contribute"))
-
-    area_sim   = _jaccard(u_areas, c_areas)
-    kw_sim     = _jaccard(u_kw, c_kw)
-    skill_sim  = _jaccard(u_skills, c_skills)
-    need_match = len((u_looking & c_offers) | (c_looking & u_offers))
-
-    # Weighted components → max 100
-    topic_raw  = min(30, int(area_sim * 30 + kw_sim * 10))
-    method_raw = min(20, int(skill_sim * 20))
-    collab_raw = min(15, need_match * 5)
-    # Publication and funding gaps are filled by Claude
-    total = topic_raw + method_raw + collab_raw
-
-    return {
-        "prescore": min(100, total),
-        "area_overlap":  list(u_areas & c_areas)[:6],
-        "kw_overlap":    list(u_kw & c_kw)[:8],
-        "skill_overlap": list(u_skills & c_skills)[:6],
-    }
 
 
 # ──────────────────────────────── Claude prompt ──────────────────────────────
@@ -357,14 +311,16 @@ async def generate_recommendations(
                 "message": "No other researchers found matching your filters. Try broadening your search.",
             }
 
-        # Pre-score all candidates
-        prescored = []
-        for c in raw_candidates:
-            sc = _prescore(full_user, c)
-            prescored.append((sc["prescore"], sc, c))
-
-        prescored.sort(key=lambda x: x[0], reverse=True)
-        top_candidates = [c for _, _, c in prescored[:_CLAUDE_POOL]]
+        # Pre-score all candidates via the canonical deterministic engine —
+        # cheap local ranking to narrow the pool before the expensive Claude call.
+        engine = await get_collab_engine()
+        ranked = engine.rank_candidates(full_user, raw_candidates, top_n=_CLAUDE_POOL)
+        candidate_map_all = {str(c["_id"]): c for c in raw_candidates}
+        top_candidates = [
+            candidate_map_all[r["researcher_b_id"]]
+            for r in ranked
+            if r["researcher_b_id"] in candidate_map_all
+        ]
 
         # AI enrichment via gateway
         claude_recs = await _run_claude(full_user, top_candidates, user_id=user_id, db=db)

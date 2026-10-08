@@ -37,6 +37,7 @@ from db import get_db
 from models import WorkspaceCreate, WorkspaceUpdate
 from services.permissions import assert_quota
 from services.workspace_metrics import compute_task_metrics, compute_content_activity
+from services.workspace_provisioning import provision_workspace, WORKSPACE_TYPES
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -44,12 +45,6 @@ log = logging.getLogger("synaptiq.workspaces")
 router = APIRouter(prefix="/api/workspaces", tags=["workspaces"])
 
 # ── constants ──────────────────────────────────────────────────────────────────
-
-WORKSPACE_TYPES = {
-    "Research Project", "Manuscript", "Grant Proposal", "Conference Paper",
-    "Doctoral Thesis", "Research Group", "Institutional Research Team",
-    "Consulting Project", "Systematic Review", "Custom Workspace",
-}
 
 WS_ROLES = [
     "Owner", "Administrator", "Lead Researcher", "Co-Author", "Reviewer",
@@ -323,46 +318,15 @@ async def create_workspace(payload: WorkspaceCreate, user: dict = Depends(get_cu
     db = get_db()
     db = DBProxy(db, SecurityContext.from_user(user))
 
-    ws_type = payload.workspace_type if payload.workspace_type in WORKSPACE_TYPES else "Research Project"
-    now = _now()
-    doc = {
-        "name":           payload.name.strip(),
-        "description":    (payload.description or "").strip(),
-        "workspace_type": ws_type,
-        "visibility":     payload.visibility or "private",
-        "institution":    payload.institution or "",
-        "research_area":  payload.research_area or "",
-        "keywords":       payload.keywords or [],
-        "owner_id":       user["id"],
-        "members":        [user["id"]],
-        "member_roles":   {user["id"]: "Owner"},
-        "project_ids":    [],
-        "status":         "active",
-        "created_at":     now,
-        "updated_at":     now,
-    }
-    res = await db.workspaces.insert_one(doc)
-    doc["_id"] = res.inserted_id
-    ws_id = str(res.inserted_id)
-
-    # Auto-create workspace group conversation
-    try:
-        conv_key = f"workspace:{ws_id}"
-        cr = await db.conversations.insert_one({
-            "type": "workspace", "context_id": ws_id, "context_key": conv_key,
-            "title": doc["name"], "created_by": user["id"],
-            "created_at": now, "last_message_at": now, "last_message_preview": "",
-        })
-        await db.conversation_members.insert_one({
-            "conversation_id": str(cr.inserted_id), "user_id": user["id"],
-            "role": "owner", "joined_at": now, "last_read_at": now, "muted": False,
-        })
-    except Exception as exc:
-        log.warning("workspace conversation create failed: %s", exc)
-
-    await _log_activity(db, ws_id, user["id"], user.get("full_name", "Someone"),
-                        f"Workspace created by {user.get('full_name','Someone')}", kind="workspace_created")
-    return _ser(doc)
+    return await provision_workspace(
+        db, user["id"], user.get("full_name", "Someone"),
+        payload.name.strip(), payload.workspace_type,
+        description=payload.description or "",
+        institution=payload.institution or "",
+        research_area=payload.research_area or "",
+        keywords=payload.keywords or [],
+        visibility=payload.visibility or "private",
+    )
 
 
 @router.get("/{workspace_id}")

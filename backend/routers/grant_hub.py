@@ -253,7 +253,7 @@ async def create_grant_collaboration(
         from services.grant_hub.collaboration_service import create_collaboration
     except ImportError:
         raise HTTPException(status_code=503, detail="Grant Hub services not available")
-    return await create_collaboration(user["id"], body.dict(), db)
+    return await create_collaboration(user["id"], body.dict(), db, owner_name=user.get("full_name", ""))
 
 
 @router.get("/")

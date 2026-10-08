@@ -219,6 +219,22 @@ async def respond_to_invitation(invitation_id: str, user_id: str, response: str,
             except Exception:
                 pass
 
+            # Sync into the collaboration's linked workspace too, so accepting
+            # a grant-team invite has the same effect as accepting a
+            # collaboration request (Phase 2): the new member can immediately
+            # work inside the shared workspace, not just show up in the roster.
+            try:
+                collab = await db["grant_collaborations"].find_one({"_id": ObjectId(collab_id)})
+                ws_id = (collab or {}).get("workspace_id")
+                if ws_id and ObjectId.is_valid(ws_id):
+                    await db["workspaces"].update_one(
+                        {"_id": ObjectId(ws_id)},
+                        {"$addToSet": {"members": user_id},
+                         "$set": {f"member_roles.{user_id}": "Co-Author"}},
+                    )
+            except Exception:
+                pass
+
         # Mark position as filled
         if position_id:
             try:

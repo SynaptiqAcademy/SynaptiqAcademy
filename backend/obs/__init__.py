@@ -177,9 +177,21 @@ async def _ensure_indexes(db: Any) -> None:
         await AuditLogger(db).ensure_indexes()
         await CostTracker(db).ensure_indexes()
         await SecurityObserver(db).ensure_indexes()
-        # obs_logs index
+        # obs_logs indexes. timestamp carries the 7-day TTL retention
+        # (obs_logs_timestamp_ttl) — it only works because emit() now
+        # stores timestamp as a BSON Date; see obs/logger.py. This call is
+        # idempotent once the index exists in this exact shape, but the
+        # very first time it runs against a database still holding the old
+        # plain (non-TTL) timestamp_1 index, it will fail with
+        # IndexOptionsConflict (can't have two indexes on the same key with
+        # different options) — caught below, non-fatal. That one-time
+        # conversion is done manually (drop timestamp_1, then create this).
         try:
-            await db["obs_logs"].create_index("timestamp")
+            await db["obs_logs"].create_index(
+                [("timestamp", 1)],
+                name="obs_logs_timestamp_ttl",
+                expireAfterSeconds=604800,
+            )
             await db["obs_logs"].create_index("trace_id")
             await db["obs_logs"].create_index("user_id")
             await db["obs_logs"].create_index("level")

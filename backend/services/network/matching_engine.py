@@ -1,6 +1,12 @@
-"""AI matching engine — rule-based keyword similarity for collaborator recommendations."""
-import asyncio
+"""AI matching engine — thin wrapper over the canonical person-matching engine
+(services/collab_intelligence/matching_engine.py) for network-specific role
+fanout (co_author/mentor/reviewer/etc). Scoring itself is delegated to the
+canonical 9-dimension engine so every part of the platform that ranks people
+against each other uses the same signal."""
 from datetime import datetime, timezone
+
+from services.collab_intelligence.researcher_profiler import build_researcher_profile
+from services.collab_intelligence.matching_engine import match_researchers
 
 
 def _now():
@@ -35,23 +41,10 @@ _CAREER_FIELDS   = ["career_stage"]
 
 
 async def compute_similarity(user: dict, candidate: dict) -> float:
-    """Return 0-1 similarity between two user profiles."""
-    user_tokens = _field_tokens(user, _INTEREST_FIELDS)
-    cand_tokens = _field_tokens(candidate, _INTEREST_FIELDS)
-    semantic = _jaccard(user_tokens, cand_tokens)
-
-    # Boost for same institution country (international collab is valuable too — mild boost only)
-    country_bonus = 0.05 if user.get("country") == candidate.get("country") else 0.0
-    # Boost for compatible career stages (peers or mentor-mentee)
-    stage_bonus = 0.0
-    stage_map = {"student": 0, "postdoc": 1, "early_career": 2, "mid_career": 3, "senior": 4, "professor": 5}
-    us = stage_map.get(user.get("career_stage", ""), -1)
-    cs = stage_map.get(candidate.get("career_stage", ""), -1)
-    if us >= 0 and cs >= 0:
-        diff = abs(us - cs)
-        stage_bonus = 0.1 if diff <= 1 else (0.08 if diff == 2 else 0.0)
-
-    return min(1.0, semantic + country_bonus + stage_bonus)
+    """Return 0-1 similarity between two user profiles, via the canonical engine."""
+    pa = build_researcher_profile(user)
+    pb = build_researcher_profile(candidate)
+    return match_researchers(pa, pb).overall_score
 
 
 def _explain(user: dict, candidate: dict, role: str) -> str:
@@ -96,10 +89,24 @@ async def get_matches_for_user(user_id: str, db, limit: int = 30) -> list:
     if not user:
         return []
 
+    # Projection covers every field services.collab_intelligence.researcher_profiler
+    # reads to build a ResearcherProfile, plus the fields this module's own
+    # role-fanout/display logic needs (career_stage, country, trust_score, ...).
     candidates_cursor = db["users"].find(
         {"_id": {"$ne": uid}},
-        {"name": 1, "email": 1, "institution": 1, "department": 1,
-         "research_interests": 1, "expertise": 1, "career_stage": 1,
+        {"name": 1, "full_name": 1, "first_name": 1, "last_name": 1, "email": 1,
+         "institution": 1, "university": 1, "department": 1, "faculty": 1,
+         "research_interests": 1, "research_areas": 1, "domains": 1, "expertise": 1,
+         "keywords": 1, "research_keywords": 1, "research_methods": 1, "methods": 1,
+         "statistical_expertise": 1, "statistics": 1,
+         "programming_skills": 1, "software_skills": 1,
+         "languages": 1, "language": 1,
+         "career_stage": 1, "position": 1, "academic_position": 1, "user_type": 1,
+         "h_index": 1, "publication_count": 1, "citation_count": 1,
+         "peer_review_count": 1, "grant_success_rate": 1,
+         "collaboration_count": 1, "active_collaborations": 1, "collaborators": 1,
+         "international_collab_ratio": 1, "international_collaborations": 1,
+         "availability": 1, "availability_score": 1, "response_rate": 1,
          "country": 1, "verification_level": 1, "trust_score": 1}
     ).limit(200)
     candidates = await candidates_cursor.to_list(200)

@@ -4,7 +4,14 @@
     {
       "name": "backend",
       "runtimeExecutable": "venv/bin/uvicorn",
-      "runtimeArgs": ["server:app", "--reload", "--host", "0.0.0.0", "--port", "8000"],
+      "runtimeArgs": [
+        "server:app",
+        "--reload",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
       "cwd": "backend",
       "port": 8000,
       "autoPort": true
@@ -12,7 +19,10 @@
     {
       "name": "frontend",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start"],
+      "runtimeArgs": [
+        "run",
+        "start"
+      ],
       "cwd": "frontend",
       "port": 3000,
       "autoPort": true
@@ -20,7 +30,10 @@
     {
       "name": "frontend-preview",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start"],
+      "runtimeArgs": [
+        "run",
+        "start"
+      ],
       "cwd": "frontend",
       "port": 3001,
       "autoPort": true

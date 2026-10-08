@@ -10,6 +10,8 @@ from auth_utils import get_current_user, serialize_public_user
 from db import get_db
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
+from services.collab_intelligence.researcher_profiler import build_researcher_profile
+from services.collab_intelligence.matching_engine import match_researchers
 from services.permissions import REAL_CUSTOMER_FILTER
 
 log = logging.getLogger("synaptiq.discover")
@@ -104,9 +106,6 @@ async def feed(user: dict = Depends(get_current_user)):
     connected_ids: list[str] = user.get("connections") or []
     excluded_ids = {ObjectId(uid)} | {ObjectId(cid) for cid in connected_ids if cid}
 
-    user_kw_set = {k.lower() for k in (user.get("research_keywords") or [])}
-    user_methods_set = {m.lower() for m in (user.get("methods") or [])}
-
     base_filter: dict = {
         "_id": {"$nin": list(excluded_ids)},
         "is_demo": {"$ne": True},
@@ -155,21 +154,13 @@ async def feed(user: dict = Depends(get_current_user)):
         except Exception as exc:
             log.warning("Topic expansion failed: %s", exc)
 
-    # Rank by full signal score
+    # Rank by the canonical person-matching engine (same signal used across the
+    # whole platform — network matches, collaboration intelligence, discover feed).
+    source_profile = build_researcher_profile(user)
+
     def researcher_score(r):
-        r_areas   = {a.lower() for a in (r.get("research_areas") or [])}
-        r_kw      = {k.lower() for k in (r.get("research_keywords") or [])}
-        r_methods = {m.lower() for m in (r.get("methods") or [])}
-        area_overlap   = len(area_set & r_areas)
-        topic_overlap  = len(topic_set & r_areas)
-        kw_overlap     = len(user_kw_set & r_kw)
-        method_overlap = len(user_methods_set & r_methods)
-        h = int((r.get("openalex_metrics") or {}).get("h_index") or r.get("h_index") or 0)
-        pubs = int(r.get("publications_count") or 0)
-        inst_bonus = 2 if (user.get("institution") and r.get("institution") == user.get("institution")) else 0
-        return (area_overlap * 5 + topic_overlap * 3 + kw_overlap * 3 + method_overlap * 4
-                + (2 if h > 5 else 1 if h > 0 else 0)
-                + (1 if pubs > 0 else 0) + inst_bonus)
+        r_profile = build_researcher_profile(r)
+        return match_researchers(source_profile, r_profile).overall_score * 100
 
     researchers.sort(key=researcher_score, reverse=True)
     seen_final: set[str] = set()

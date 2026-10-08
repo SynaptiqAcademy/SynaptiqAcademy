@@ -19,6 +19,8 @@ from typing import Optional
 
 from bson import ObjectId
 
+from services.workspace_provisioning import provision_workspace
+
 
 def _ser(d: dict) -> dict:
     """Serialize a MongoDB document: ObjectId → str, keep all fields."""
@@ -40,8 +42,14 @@ def _now() -> str:
 
 # ── create ────────────────────────────────────────────────────────────────────
 
-async def create_collaboration(user_id: str, data: dict, db) -> dict:
-    """Insert a new collaboration workspace and add creator as lead member."""
+async def create_collaboration(user_id: str, data: dict, db, owner_name: str = "") -> dict:
+    """Insert a new collaboration workspace and add creator as lead member.
+
+    Also provisions a shared Workspace (workspace_provisioning.provision_workspace)
+    so every grant collaboration is backed by the same collaborate-and-produce
+    space manuscripts/collaboration-requests get — this is the grant system's
+    equivalent of Phase 2's accept-time auto-provisioning.
+    """
     now = _now()
     doc = {
         "lead_user_id": user_id,
@@ -57,6 +65,7 @@ async def create_collaboration(user_id: str, data: dict, db) -> dict:
         "visibility": data.get("visibility", "public"),
         "budget_total": float(data.get("budget_total", 0.0)),
         "member_count": 1,
+        "workspace_id": "",
         "created_at": now,
         "updated_at": now,
     }
@@ -72,6 +81,20 @@ async def create_collaboration(user_id: str, data: dict, db) -> dict:
         "joined_at": now,
     }
     await db["grant_team_members"].insert_one(member_doc)
+
+    try:
+        ws = await provision_workspace(
+            db, owner_id=user_id, owner_name=owner_name or "Someone",
+            name=doc["title"] or "Grant Collaboration", workspace_type="Grant Proposal",
+            description=doc["description"],
+            activity_message=f"Workspace auto-created for grant collaboration \"{doc['title'] or 'Untitled'}\".",
+        )
+        await db["grant_collaborations"].update_one(
+            {"_id": result.inserted_id}, {"$set": {"workspace_id": ws["id"]}}
+        )
+        doc["workspace_id"] = ws["id"]
+    except Exception:
+        pass  # non-fatal — collaboration still usable without an auto-workspace
 
     return _ser(doc)
 

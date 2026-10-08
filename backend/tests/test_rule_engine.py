@@ -474,17 +474,23 @@ class TestMatchingEngine:
         assert score == pytest.approx(75.0)
 
     def test_researcher_matcher_returns_results(self):
-        from services.rule_engine.matching.researcher_matcher import match_researchers
-        user = {"research_areas": ["machine learning", "NLP"], "user_type": "researcher"}
+        # Researcher-to-researcher matching now lives in the canonical
+        # collab_intelligence engine (services.rule_engine.matching.researcher_matcher
+        # was a duplicate, retired — see the matching-engine consolidation).
+        from services.collab_intelligence.researcher_profiler import build_researcher_profile
+        from services.collab_intelligence.matching_engine import rank_matches
+        user = {"_id": "u", "research_areas": ["machine learning", "NLP"], "user_type": "researcher"}
         candidates = [
             {"_id": "1", "research_areas": ["machine learning", "CV"], "user_type": "phd_candidate"},
             {"_id": "2", "research_areas": ["ecology", "biology"], "user_type": "researcher"},
             {"_id": "3", "research_areas": ["machine learning", "NLP"], "user_type": "researcher"},
         ]
-        results = match_researchers(user, candidates, top_n=3)
+        source = build_researcher_profile(user)
+        profiles = [build_researcher_profile(c) for c in candidates]
+        results = rank_matches(source, profiles, top_n=3)
         assert len(results) == 3
-        # Best match (same areas) should rank first
-        assert results[0].candidate_id == "3" or results[0].score >= results[1].score
+        # Best match (identical areas) should rank first
+        assert results[0].researcher_b_id == "3" or results[0].overall_score >= results[1].overall_score
 
     def test_reviewer_matcher_conflict_of_interest(self):
         from services.rule_engine.matching.reviewer_matcher import match_reviewers
@@ -705,16 +711,13 @@ class TestRuleEngineOrchestrator:
         assert "formatted" in result
         assert "2023" in result["formatted"]
 
-    def test_execute_match_researchers(self):
-        result = self.engine.execute("match_researchers", {
-            "user": {"research_areas": ["ML"]},
-            "candidates": [
-                {"_id": "1", "research_areas": ["ML", "DL"]},
-                {"_id": "2", "research_areas": ["ecology"]},
-            ],
-        })
-        assert "matches" in result
-        assert len(result["matches"]) > 0
+    def test_match_researchers_feature_retired(self):
+        # Researcher-to-researcher matching was retired from the rule engine
+        # in favor of the canonical services.collab_intelligence engine (had
+        # zero production callers here — see matching-engine consolidation).
+        assert "match_researchers" not in self.engine.supported_features()
+        result = self.engine.execute("match_researchers", {"user": {}, "candidates": []})
+        assert "error" in result
 
 
 # ── Telemetry ─────────────────────────────────────────────────────────────────

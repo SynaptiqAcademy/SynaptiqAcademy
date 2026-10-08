@@ -192,16 +192,6 @@ def _handle_profile_report(data: dict) -> dict:
     )
 
 
-def _handle_match_researchers(data: dict) -> dict:
-    from .matching.researcher_matcher import match_researchers
-    results = match_researchers(
-        user=data.get("user") or {},
-        candidates=data.get("candidates") or [],
-        top_n=int(data.get("top_n") or 10),
-    )
-    return {"matches": [r.to_dict() for r in results]}
-
-
 def _handle_match_reviewers(data: dict) -> dict:
     from .matching.reviewer_matcher import match_reviewers
     results = match_reviewers(
@@ -250,7 +240,6 @@ _HANDLERS: dict[str, Callable[[dict], dict]] = {
     "profile_recommendations":    _handle_profile_recommendations,
     "action_recommendations":     _handle_action_recommendations,
     "profile_report":             _handle_profile_report,
-    "match_researchers":          _handle_match_researchers,
     "match_reviewers":            _handle_match_reviewers,
     "publication_analytics":      _handle_publication_analytics,
     "citation_analytics":         _handle_citation_analytics,

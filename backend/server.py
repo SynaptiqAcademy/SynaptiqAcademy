@@ -21,7 +21,7 @@ from services.prod_validator import validate_on_startup
 from routers import (
     auth, users, collaborations, projects, notifications, discover,
     ai, analytics,
-    journals, conferences, funding, grants, workspaces, manuscripts,
+    journals, conferences, conference_teams, funding, grants, workspaces, manuscripts,
     publication_hub, repository,
     billing, credits, messaging,
     research_os,
@@ -332,6 +332,7 @@ app.include_router(ai.router)
 app.include_router(analytics.router)
 app.include_router(journals.router)
 app.include_router(conferences.router)
+app.include_router(conference_teams.router)
 app.include_router(funding.router)
 app.include_router(grants.router)
 app.include_router(grant_applications_router.router)
@@ -513,10 +514,6 @@ app.include_router(api_platform_router)
 # Phase XXXV.8 — Zero Trust Security Platform
 from zt.router import router as zt_router
 app.include_router(zt_router)
-
-# Academic Research Record (Phase 1 consolidation)
-from routers import research_record as research_record_router
-app.include_router(research_record_router.router)
 
 
 @app.get("/api/")
@@ -780,17 +777,6 @@ async def startup():
         logger.exception("Content seed/tagging migration failed: %s", content_e)
 
     try:
-        # Academic Research Record (Phase 1 consolidation) — idempotent
-        # owner_id/user_id/author_ids alias backfill + origin backfill.
-        # Independent of every other startup task; see
-        # services/research_record/migration.py's docstring.
-        from services.research_record.migration import ensure_publications_backward_compat
-        await ensure_publications_backward_compat(db)
-        logger.info("Academic Research Record backward-compat migration complete")
-    except Exception as arr_e:
-        logger.exception("Academic Research Record migration failed: %s", arr_e)
-
-    try:
         # ── Core uniqueness indexes — run BEFORE any data inserts ─────────
         try:
             await db.users.create_index([("email", 1)], unique=True)
@@ -913,28 +899,9 @@ async def startup():
             await db.grant_applications.create_index([("pi_id", 1), ("grant_id", 1)])
             await db.grant_applications.create_index([("grant_id", 1), ("status", 1)])
             await db.grant_applications.create_index([("pi_id", 1), ("updated_at", -1)])
-            # Grant team members — two independent team-membership schemas
-            # share this collection: application-keyed (grant_applications.py)
-            # and collaboration-keyed (grant_hub services). A single
-            # non-sparse unique index on (application_id, user_id) collapsed
-            # every collaboration-keyed doc onto (null, user_id) collection-
-            # wide. Split into two partial unique indexes, one per schema.
-            try:
-                await db.grant_team_members.drop_index("application_id_1_user_id_1")
-            except Exception:
-                pass  # index doesn't exist yet (fresh env) — nothing to drop
-            await db.grant_team_members.create_index(
-                [("application_id", 1), ("user_id", 1)],
-                unique=True,
-                partialFilterExpression={"application_id": {"$exists": True}},
-                name="unique_application_team_member",
-            )
-            await db.grant_team_members.create_index(
-                [("collaboration_id", 1), ("user_id", 1)],
-                unique=True,
-                partialFilterExpression={"collaboration_id": {"$exists": True}},
-                name="unique_collaboration_team_member",
-            )
+            await db.grant_applications.create_index([("workspace_id", 1)])
+            await db.grant_applications.create_index([("grant_collaboration_id", 1)])
+            await db.grant_team_members.create_index([("application_id", 1), ("user_id", 1)], unique=True)
             await db.grant_team_members.create_index([("user_id", 1), ("status", 1)])
             await db.grant_budget_items.create_index([("application_id", 1), ("category", 1)])
             await db.grant_deliverables.create_index([("application_id", 1), ("due_date", 1)])
@@ -1071,6 +1038,7 @@ async def startup():
             await db.grant_collaborations.create_index([("research_areas", 1)])
             await db.grant_collaborations.create_index([("deadline", 1)])
             await db.grant_collaborations.create_index([("created_at", -1)])
+            await db.grant_collaborations.create_index([("workspace_id", 1)])
             await db.grant_consortia.create_index([("collaboration_id", 1)], unique=True)
             await db.grant_positions.create_index([("collaboration_id", 1), ("status", 1)])
             await db.grant_partner_matches.create_index([("collaboration_id", 1), ("score", -1)])
@@ -1139,27 +1107,6 @@ async def startup():
             await db.verification_profiles.create_index([("user_id", 1)], unique=True)
             await db.verification_profiles.create_index([("verification_level", -1)])
             await db.verification_profiles.create_index([("verification_score", -1)])
-            # Trust Center (P1 Phase 2 audit) — trust_passports and
-            # trust_verifications are real, actively-read-by-user_id
-            # collections (routers/trust_center.py, services/trust/
-            # {integrity_service,score_service,passport_service}.py,
-            # services/timeline/*) that had NO index at all in server.py
-            # before this. trust_passports is a confirmed 1-doc-per-user
-            # profile (matches the same shape as verification_profiles/
-            # reputation_scores/research_reputation above — unique is safe,
-            # verified zero duplicates in production first). trust_verifications
-            # is a log of per-claim records (one user can have an "orcid" row
-            # AND a "department" row AND a "researcher_identity" row) — the
-            # existing find_one({user_id, verification_type}) + insert/update
-            # pattern at routers/trust_center.py:201,845 already assumes
-            # (user_id, verification_type) is unique; this makes the DB
-            # enforce what the app layer only assumed, closing the same class
-            # of race-condition gap fixed earlier for grant_team_members /
-            # collaboration_requests.
-            await db.trust_passports.create_index([("user_id", 1)], unique=True)
-            await db.trust_verifications.create_index(
-                [("user_id", 1), ("verification_type", 1)], unique=True)
-            await db.trust_verifications.create_index([("user_id", 1), ("status", 1)])
             await db.verification_requests.create_index([("user_id", 1)])
             await db.verification_requests.create_index([("status", 1)])
             await db.verification_requests.create_index([("created_at", -1)])
@@ -1232,24 +1179,7 @@ async def startup():
             await db.institution_audit.create_index([("institution_id", 1), ("created_at", -1)])
             # Publications (ORCID-sourced canonical store)
             await db.publications.create_index([("owner_id", 1), ("year", -1)])
-            # Academic Research Record — publication <-> Synaptiq-user
-            # relationship collection (Phase 1). A publication is a global
-            # record; this is the many-to-one link, not a second
-            # publications store.
-            await db.publication_authors.create_index(
-                [("publication_id", 1), ("synaptiq_user_id", 1)], unique=True)
-            await db.publication_authors.create_index([("synaptiq_user_id", 1)])
-            # Global DOI identity constraint (Phase 1) — confirmed zero
-            # duplicate normalized DOIs in production before this was added.
-            # Deliberately NOT (owner_id, doi): a publication is one global
-            # record regardless of who imported/confirmed it; per-user
-            # authorship is publication_authors above, not part of this key.
-            try:
-                await db.publications.drop_index("doi_1")
-            except Exception:
-                pass  # old non-unique sparse index doesn't exist in a fresh env
-            await db.publications.create_index(
-                [("doi", 1)], unique=True, sparse=True, name="doi_unique_sparse")
+            await db.publications.create_index([("doi", 1)], sparse=True)
             await db.publications.create_index([("orcid_put_code", 1)], sparse=True)
             await db.publications.create_index([("title_norm", 1)])
             # Research File Layer
@@ -1515,16 +1445,6 @@ async def startup():
                 partialFilterExpression={"status": "pending"},
                 name="unique_pending_connection_request",
             )
-            # Collaboration requests — same protection; collaboration_requests
-            # is a distinct relationship concept from connection_requests (see
-            # Phase 1 architecture audit) but had no DB-level duplicate-pending
-            # guard at all, unlike connection_requests above.
-            await db.collaboration_requests.create_index(
-                [("sender_id", 1), ("receiver_id", 1)],
-                unique=True,
-                partialFilterExpression={"status": "pending"},
-                name="unique_pending_collaboration_request",
-            )
             # P1 Phase 8F — this blanket unique index on
             # collaboration_requests(sender_id, receiver_id) for
             # status=pending directly contradicts Phase 8E/8F's
@@ -1549,6 +1469,15 @@ async def startup():
             await db.grants.create_index([("deadline", 1)], sparse=True)
             await db.conferences.create_index([("created_at", -1)])
             await db.conferences.create_index([("start_date", 1)], sparse=True)
+            # Conference submission teams (Phase 4 — matching-to-workspace unification)
+            await db.conference_submission_teams.create_index([("conference_id", 1), ("status", 1)])
+            await db.conference_submission_teams.create_index([("lead_user_id", 1)])
+            await db.conference_submission_teams.create_index([("workspace_id", 1)])
+            await db.conference_team_members.create_index([("team_id", 1), ("user_id", 1)], unique=True)
+            await db.conference_team_members.create_index([("user_id", 1)])
+            await db.conference_team_invitations.create_index([("team_id", 1), ("status", 1)])
+            await db.conference_team_invitations.create_index([("to_user_id", 1), ("status", 1)])
+            await db.conference_team_invitations.create_index([("expires_at", 1)])
             # Email campaigns — status lookup for bulk send progress polling
             await db.email_campaigns.create_index([("status", 1), ("created_at", -1)])
             await db.email_campaigns.create_index([("sent_by", 1), ("created_at", -1)])

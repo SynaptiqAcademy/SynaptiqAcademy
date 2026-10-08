@@ -47,6 +47,7 @@ from pydantic import BaseModel
 
 from auth_utils import get_current_user
 from db import get_db
+from services.workspace_provisioning import provision_workspace
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 
@@ -162,6 +163,12 @@ async def _enrich_application(doc: dict, db) -> dict:
             "id": str(pi_user["_id"]), "full_name": pi_user.get("full_name", ""),
             "institution": pi_user.get("institution", ""), "avatar_url": pi_user.get("avatar_url"),
         }
+
+    # Enrich linked workspace, same optional-string-FK pattern as manuscripts.py
+    if app.get("workspace_id") and ObjectId.is_valid(app["workspace_id"]):
+        ws = await db.workspaces.find_one({"_id": ObjectId(app["workspace_id"])}, {"name": 1, "workspace_type": 1})
+        if ws:
+            app["workspace"] = {"id": str(ws["_id"]), "name": ws.get("name", ""), "workspace_type": ws.get("workspace_type", "")}
 
     # Enrich team members
     member_user_ids = [ObjectId(m["user_id"]) for m in team_raw if ObjectId.is_valid(m.get("user_id", ""))]
@@ -347,6 +354,8 @@ async def create_application(body: dict, user: dict = Depends(get_current_user))
         "pi_id":             user["id"],
         "consortium_name":   body.get("consortium_name", ""),
         "institution":       body.get("institution") or user.get("institution", ""),
+        "workspace_id":            body.get("workspace_id") or "",
+        "grant_collaboration_id":  body.get("grant_collaboration_id") or "",
         "status":            "draft",
         "proposal_sections": dict(PROPOSAL_SECTIONS),
         "current_version":   0,
@@ -424,6 +433,48 @@ async def update_application(app_id: str, body: dict, user: dict = Depends(get_c
         await db.grant_applications.update_one({"_id": oid}, {"$set": update})
 
     return _ser(await db.grant_applications.find_one({"_id": oid}))
+
+
+@router.post("/{app_id}/link-collaboration")
+async def link_collaboration(app_id: str, body: dict, user: dict = Depends(get_current_user)):
+    """Retroactively attach a grant-hub team (grant_collaborations doc) to this
+    application — for the case where a team was formed in Grant Hub *after*
+    the application already existed. Backfills workspace_id from the
+    collaboration if the application doesn't have one of its own yet."""
+    db = get_db()
+    db = DBProxy(db, SecurityContext.from_user(user))
+
+    collab_id = (body.get("grant_collaboration_id") or "").strip()
+    if not collab_id or not ObjectId.is_valid(collab_id):
+        raise HTTPException(400, "A valid grant_collaboration_id is required")
+
+    try:
+        oid = ObjectId(app_id)
+    except Exception:
+        raise HTTPException(404, "Not found")
+    doc = await db.grant_applications.find_one({"_id": oid})
+    if not doc:
+        raise HTTPException(404, "Not found")
+    _assert_pi(doc, user["id"])
+
+    collab = await db.grant_collaborations.find_one({"_id": ObjectId(collab_id)})
+    if not collab:
+        raise HTTPException(404, "Grant collaboration not found")
+
+    update: dict = {"grant_collaboration_id": collab_id, "updated_at": _now()}
+    if not doc.get("workspace_id"):
+        if collab.get("workspace_id"):
+            update["workspace_id"] = collab["workspace_id"]
+        else:
+            ws = await provision_workspace(
+                db, owner_id=doc["pi_id"], owner_name=user.get("full_name") or "Someone",
+                name=doc.get("grant_title") or "Grant Application", workspace_type="Grant Proposal",
+                description=f"Linked to grant collaboration {collab_id}",
+            )
+            update["workspace_id"] = ws["id"]
+
+    await db.grant_applications.update_one({"_id": oid}, {"$set": update})
+    return await _enrich_application(await db.grant_applications.find_one({"_id": oid}), db)
 
 
 @router.delete("/{app_id}", status_code=204)
