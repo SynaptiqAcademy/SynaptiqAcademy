@@ -36,6 +36,7 @@ from __future__ import annotations
 import contextlib
 import contextvars
 import logging
+import os
 from datetime import datetime, timezone, timedelta
 
 from bson import ObjectId
@@ -353,6 +354,9 @@ async def consume_credits(user_id: str, action: str, metadata: dict | None = Non
         "from_pack": from_pack,
         "status": RESERVED,
         "plan_code": user.get("plan_code") or "free",
+        # "request": finalized by the monetization middleware when the HTTP
+        # request ends; "background": finalized by the job that created it.
+        "origin": "request" if ctx is not None else "background",
         "created_at": _now_iso(),
         "telemetry": {"calls": 0, "input_tokens": 0, "output_tokens": 0,
                       "cache_read_tokens": 0, "cache_write_tokens": 0, "cost_usd": 0.0},
@@ -436,6 +440,37 @@ async def release_reservation(reservation_id: str, reason: str = "") -> bool:
                  {"feature": res["action"], "operation": res.get("operation"),
                   "credits_refunded": res["credits"], "reason": reason[:120]})
     return True
+
+
+# A request-scoped reservation is always finalized (COMPLETED or RELEASED)
+# when its HTTP request ends. One still RESERVED long after any request could
+# have finished was abandoned: the worker was killed (timeout, deploy, crash,
+# --max-requests recycling) before the middleware ran. Its credits are
+# returned. Legacy rows without an origin are only touched after a day.
+STALE_REQUEST_RESERVATION_MINUTES = int(os.environ.get("STALE_RESERVATION_MINUTES", "30"))
+STALE_LEGACY_RESERVATION_HOURS = 24
+
+
+async def release_stale_reservations(limit: int = 500) -> dict:
+    """Release abandoned reservations. Safe to run concurrently and
+    repeatedly: release_reservation() transitions each one exactly once."""
+    db = _db()
+    now = _now()
+    req_cutoff = (now - timedelta(minutes=STALE_REQUEST_RESERVATION_MINUTES)).isoformat()
+    legacy_cutoff = (now - timedelta(hours=STALE_LEGACY_RESERVATION_HOURS)).isoformat()
+    cursor = db.credit_reservations.find(
+        {"status": RESERVED, "$or": [
+            {"origin": "request", "created_at": {"$lt": req_cutoff}},
+            {"origin": {"$exists": False}, "created_at": {"$lt": legacy_cutoff}},
+        ]},
+        {"_id": 1, "credits": 1},
+    ).limit(limit)
+    released, credits = 0, 0
+    async for r in cursor:
+        if await release_reservation(str(r["_id"]), reason="abandoned: request did not finish"):
+            released += 1
+            credits += int(r.get("credits") or 0)
+    return {"released": released, "credits_returned": credits}
 
 
 async def complete_reservation(reservation_id: str) -> bool:

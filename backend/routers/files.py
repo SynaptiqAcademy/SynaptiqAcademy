@@ -7,6 +7,7 @@ Permissions inherit from the parent entity's membership. Versions chain via
 Storage: Emergent Object Storage via services/storage_service.py.
 """
 from __future__ import annotations
+import asyncio
 import hashlib
 import logging
 import os
@@ -22,7 +23,7 @@ from auth_utils import get_current_user, safe_disposition_filename
 from db import get_db
 from services import storage_service as S
 from services.audit import write_audit
-from services.permissions import assert_storage_quota, is_super_admin
+from services.permissions import assert_storage_quota, is_super_admin, storage_upload_slot
 from repo.shim import DBProxy
 from repo.security_context import SecurityContext
 from zt.deps import zt_check, zt_is_admin, zt_is_super_admin
@@ -147,60 +148,65 @@ async def upload(
     if file.content_type not in ALLOWED_MIME:
         raise HTTPException(415, f"Unsupported file type: {file.content_type}")
 
+    # Reject by declared size before reading the body into memory.
+    if file.size is not None and file.size > MAX_FILE_SIZE:
+        raise HTTPException(413, f"File exceeds {MAX_FILE_SIZE//1024//1024} MB limit")
     data = await file.read()
     if len(data) > MAX_FILE_SIZE:
         raise HTTPException(413, f"File exceeds {MAX_FILE_SIZE//1024//1024} MB limit")
-    await assert_storage_quota(user, len(data))
-    sha = hashlib.sha256(data).hexdigest()
-    ext = ALLOWED_MIME[file.content_type]
-    storage_path = S.build_path(user["id"], ext)
-    try:
-        S.put_object(storage_path, data, file.content_type)
-    except Exception as e:
-        log.error("Storage upload failed: %s", e)
-        raise HTTPException(502, f"Storage upload failed: {str(e)[:200]}")
+    # Check, store and record under the user's upload slot so concurrent
+    # uploads cannot exceed the plan's storage limit together.
+    async with storage_upload_slot(user, len(data)):
+        sha = hashlib.sha256(data).hexdigest()
+        ext = ALLOWED_MIME[file.content_type]
+        storage_path = S.build_path(user["id"], ext)
+        try:
+            await asyncio.to_thread(S.put_object, storage_path, data, file.content_type)
+        except Exception as e:
+            log.error("Storage upload failed: %s", type(e).__name__)
+            raise HTTPException(502, "File storage is temporarily unavailable. Please try again.")
 
-    db = get_db()
-    db = DBProxy(db, SecurityContext.from_user(user))
+        db = get_db()
+        db = DBProxy(db, SecurityContext.from_user(user))
 
-    # Version chain
-    root_id = None; version = 1
-    if replaces_id:
-        try: prev_oid = ObjectId(replaces_id)
-        except Exception: raise HTTPException(400, "Invalid replaces_id")
-        prev = await db.files.find_one({"_id": prev_oid})
-        if not prev: raise HTTPException(404, "Previous version not found")
-        root_id = prev.get("root_id") or str(prev_oid)
-        # latest version in chain
-        latest = await db.files.find({"root_id": root_id}).sort("version", -1).limit(1).to_list(1)
-        version = (latest[0]["version"] + 1) if latest else 2
+        # Version chain
+        root_id = None; version = 1
+        if replaces_id:
+            try: prev_oid = ObjectId(replaces_id)
+            except Exception: raise HTTPException(400, "Invalid replaces_id")
+            prev = await db.files.find_one({"_id": prev_oid})
+            if not prev: raise HTTPException(404, "Previous version not found")
+            root_id = prev.get("root_id") or str(prev_oid)
+            # latest version in chain
+            latest = await db.files.find({"root_id": root_id}).sort("version", -1).limit(1).to_list(1)
+            version = (latest[0]["version"] + 1) if latest else 2
 
-    doc = {
-        "entity_kind": entity_kind, "entity_id": entity_id,
-        "filename":    file.filename or f"upload.{ext}",
-        "ext":         ext, "mime": file.content_type,
-        "size_bytes":  len(data),
-        "sha256":      sha,
-        "owner_id":    user["id"],
-        "storage_path": storage_path,
-        "description": description,
-        "root_id":     root_id,
-        "version":     version,
-        "is_latest":   True,
-        "created_at":  _now(), "updated_at": _now(),
-    }
-    r = await db.files.insert_one(doc)
-    fid = str(r.inserted_id)
-    if not root_id:
-        # Self-rooted (first version)
-        await db.files.update_one({"_id": r.inserted_id}, {"$set": {"root_id": fid}})
-        doc["root_id"] = fid
-    else:
-        # Mark previous latest as not-latest
-        await db.files.update_many(
-            {"root_id": root_id, "_id": {"$ne": r.inserted_id}},
-            {"$set": {"is_latest": False}}
-        )
+        doc = {
+            "entity_kind": entity_kind, "entity_id": entity_id,
+            "filename":    file.filename or f"upload.{ext}",
+            "ext":         ext, "mime": file.content_type,
+            "size_bytes":  len(data),
+            "sha256":      sha,
+            "owner_id":    user["id"],
+            "storage_path": storage_path,
+            "description": description,
+            "root_id":     root_id,
+            "version":     version,
+            "is_latest":   True,
+            "created_at":  _now(), "updated_at": _now(),
+        }
+        r = await db.files.insert_one(doc)
+        fid = str(r.inserted_id)
+        if not root_id:
+            # Self-rooted (first version)
+            await db.files.update_one({"_id": r.inserted_id}, {"$set": {"root_id": fid}})
+            doc["root_id"] = fid
+        else:
+            # Mark previous latest as not-latest
+            await db.files.update_many(
+                {"root_id": root_id, "_id": {"$ne": r.inserted_id}},
+                {"$set": {"is_latest": False}}
+            )
     doc.pop("_id", None)
     doc["id"] = fid
     await _log_activity(fid, user["id"],
@@ -343,9 +349,9 @@ async def download(fid: str, user: dict = Depends(get_current_user)):
     if not d: raise HTTPException(404, "Not found")
     if not await _can_read_file(d, user): raise HTTPException(403, "No access")
     try:
-        data, ctype = S.get_object(d["storage_path"])
+        data, ctype = await asyncio.to_thread(S.get_object, d["storage_path"])
     except Exception as e:
-        raise HTTPException(502, f"Storage fetch failed: {str(e)[:200]}")
+        raise HTTPException(502, "File storage is temporarily unavailable. Please try again.")
     await _log_activity(fid, user["id"], "download")
     return StreamingResponse(
         io.BytesIO(data),
@@ -371,9 +377,9 @@ async def preview(fid: str, user: dict = Depends(get_current_user)):
     if d["ext"] not in ("pdf", "png", "jpg", "jpeg", "webp", "gif", "csv", "txt", "md", "json"):
         raise HTTPException(415, "Preview not supported for this file type")
     try:
-        data, ctype = S.get_object(d["storage_path"])
+        data, ctype = await asyncio.to_thread(S.get_object, d["storage_path"])
     except Exception as e:
-        raise HTTPException(502, f"Storage fetch failed: {str(e)[:200]}")
+        raise HTTPException(502, "File storage is temporarily unavailable. Please try again.")
     await _log_activity(fid, user["id"], "preview")
     return StreamingResponse(
         io.BytesIO(data),
@@ -403,9 +409,9 @@ async def preview_csv(fid: str, rows: int = Query(100, le=500),
     if d["ext"] not in ("csv", "tsv", "txt"):
         raise HTTPException(415, "CSV preview not supported for this file type")
     try:
-        data, _ = S.get_object(d["storage_path"])
+        data, _ = await asyncio.to_thread(S.get_object, d["storage_path"])
     except Exception as e:
-        raise HTTPException(502, f"Storage fetch failed: {str(e)[:200]}")
+        raise HTTPException(502, "File storage is temporarily unavailable. Please try again.")
     try:
         text = data.decode("utf-8", errors="replace")
     except Exception:

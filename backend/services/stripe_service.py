@@ -208,6 +208,18 @@ def create_billing_portal_session(customer_id: str, return_url: str) -> Optional
     return portal.url
 
 
+def retrieve_subscription(subscription_id: str) -> Optional[dict]:
+    """Current state of a subscription from Stripe (blocking — call it in a
+    thread). None when Stripe is not configured or the call fails."""
+    stripe = _stripe()
+    if stripe is None or not subscription_id:
+        return None
+    try:
+        return stripe.Subscription.retrieve(subscription_id).to_dict()
+    except Exception:
+        return None
+
+
 def construct_event(payload: bytes, sig_header: str, webhook_secret: str):
     """Verify and parse a Stripe webhook event. Raises on signature failure."""
     stripe = _stripe()

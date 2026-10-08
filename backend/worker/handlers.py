@@ -199,6 +199,20 @@ async def handle_publication_monitor(job: Job, ctx: HandlerContext) -> HandlerRe
         return HandlerResult()
 
 
+@_registry.register("credits.release_stale")
+async def handle_credits_release_stale(job: Job, ctx: HandlerContext) -> HandlerResult:
+    """Return credits held by requests whose worker died before finishing."""
+    from services.credits_service import release_stale_reservations
+    out = await release_stale_reservations()
+    if out["released"]:
+        from services.alerts import send_alert
+        await send_alert("credits_released",
+                         f"Returned {out['credits_returned']} credits from {out['released']} abandoned AI "
+                         "reservations (requests interrupted by a restart, timeout or crash)",
+                         severity="warning", dedup_key="credits_released", throttle_minutes=60)
+    return HandlerResult()
+
+
 @_registry.register("citation.monitor")
 async def handle_citation_monitor(job: Job, ctx: HandlerContext) -> HandlerResult:
     """Check for new citations on monitored papers."""

@@ -437,6 +437,42 @@ async def cancel_subscription(user: dict = Depends(get_current_user)):
 # Stripe retries — a failed delivery is never silently swallowed as a duplicate.
 
 _ENDED_STATUSES = ("canceled", "incomplete_expired")
+# Local subscription statuses that are final: Stripe never revives a canceled
+# subscription, so no later event may make one live again.
+_TERMINAL_LOCAL_STATUSES = ("expired",) + _ENDED_STATUSES
+
+
+async def _event_is_current(db, sub_id: str, field: str, event_created: int) -> bool:
+    """Ordering guard. Stripe does not deliver events in order and retries
+    late ones, so an event older than the newest one already applied to this
+    subscription (per stream: subscription.* or invoice.*) is ignored. The
+    compare-and-set is atomic, so concurrent deliveries cannot both win."""
+    if not sub_id or not event_created:
+        return True
+    res = await db.subscriptions.update_one(
+        {"stripe_subscription_id": sub_id,
+         "$or": [{field: {"$exists": False}}, {field: {"$lte": event_created}}]},
+        {"$set": {field: event_created}},
+    )
+    if res.matched_count:
+        return True
+    # No local record yet: this is the first event for the subscription.
+    return await db.subscriptions.find_one({"stripe_subscription_id": sub_id}, {"_id": 1}) is None
+
+
+def _refetch_enabled() -> bool:
+    return os.environ.get("STRIPE_REFETCH_SUBSCRIPTIONS", "1") == "1"
+
+
+async def _current_subscription(obj: dict) -> dict:
+    """The subscription as Stripe has it now, rather than the snapshot in a
+    possibly delayed event. Falls back to the event payload when Stripe
+    cannot be reached (the ordering guard still applies)."""
+    if not _refetch_enabled() or not str(obj.get("id", "")).startswith("sub_"):
+        return obj
+    import asyncio
+    fresh = await asyncio.to_thread(stripe_service.retrieve_subscription, obj["id"])
+    return fresh or obj
 _STALE_PROCESSING = timedelta(minutes=10)
 
 
@@ -586,6 +622,10 @@ async def _handle_subscription_change(db, obj: dict, event_type: str, stripe_eve
     cycle_key = f"{sub_id}:{period_start}" if sub_id and period_start else None
 
     prior_local = await db.subscriptions.find_one({"stripe_subscription_id": sub_id}) if sub_id else None
+    if (prior_local or {}).get("status") in _TERMINAL_LOCAL_STATUSES and status not in _ENDED_STATUSES:
+        logger.warning("[billing/webhook] %s for ended subscription %s (status %s) ignored",
+                       event_type, sub_id, status)
+        return
     if sub_id:
         await db.subscriptions.update_one(
             {"stripe_subscription_id": sub_id},
@@ -705,8 +745,14 @@ async def _handle_invoice_paid(db, inv: dict, stripe_event_id: str) -> None:
     reason = inv.get("billing_reason")
     line = _invoice_subscription_line(inv)
     period = line.get("period") or {}
+    local = await db.subscriptions.find_one({"stripe_subscription_id": sub_id})
+    if (local or {}).get("status") in _TERMINAL_LOCAL_STATUSES:
+        # Late payment event for a subscription that has already ended:
+        # recorded above, but it grants nothing.
+        logger.warning("[billing/webhook] invoice %s for ended subscription %s: no credits granted",
+                       inv.get("id"), sub_id)
+        return
     if reason in ("subscription_cycle", "subscription_create") and period.get("start"):
-        local = await db.subscriptions.find_one({"stripe_subscription_id": sub_id})
         plan_code = (get_plan_by_price_id(_line_price_id(line)) or (None,))[0] or (local or {}).get("plan_code")
         if plan_code in VALID_PAID_PLANS:
             allocated = await allocate_subscription_credits(
@@ -869,7 +915,7 @@ async def stripe_webhook(request: Request):
 
     obj = (payload.get("data") or {}).get("object") or {}
     try:
-        await _dispatch_event(db, event_type, obj, stripe_event_id)
+        await _dispatch_event(db, event_type, obj, stripe_event_id, int(payload.get("created") or 0))
     except Exception as exc:
         logger.exception("[billing/webhook] processing %s (%s) failed: %s", stripe_event_id, event_type, exc)
         try:
@@ -877,6 +923,13 @@ async def stripe_webhook(request: Request):
                 {"stripe_event_id": stripe_event_id},
                 {"$set": {"status": "FAILED", "last_error": str(exc)[:500],
                           "failed_at": datetime.now(timezone.utc).isoformat()}})
+        except Exception:
+            pass
+        try:
+            from services.alerts import send_alert
+            await send_alert("stripe_webhook_failed",
+                             f"{event_type} {stripe_event_id} failed ({type(exc).__name__}); Stripe will retry",
+                             severity="error", dedup_key=f"stripe_webhook_failed:{stripe_event_id}")
         except Exception:
             pass
         raise HTTPException(status_code=500, detail="Webhook processing failed; Stripe will retry.")
@@ -904,7 +957,8 @@ async def stripe_webhook(request: Request):
     return {"received": True}
 
 
-async def _dispatch_event(db, event_type: str, obj: dict, stripe_event_id: str) -> None:
+async def _dispatch_event(db, event_type: str, obj: dict, stripe_event_id: str,
+                          event_created: int = 0) -> None:
     if event_type in ("checkout.session.completed", "checkout.session.async_payment_succeeded"):
         user_id = await _resolve_user_id(db, obj)
         md = obj.get("metadata") or {}
@@ -922,10 +976,16 @@ async def _dispatch_event(db, event_type: str, obj: dict, stripe_event_id: str) 
             )
 
     elif event_type in ("customer.subscription.created", "customer.subscription.updated"):
-        await _handle_subscription_change(db, obj, event_type, stripe_event_id)
+        if not await _event_is_current(db, obj.get("id", ""), "last_subscription_event_created", event_created):
+            logger.info("[billing/webhook] stale %s %s for %s ignored (newer event already applied)",
+                        event_type, stripe_event_id, obj.get("id"))
+            return
+        await _handle_subscription_change(db, await _current_subscription(obj), event_type, stripe_event_id)
 
     elif event_type == "customer.subscription.deleted":
+        # Deletion is final whatever its timestamp; record it as the newest event.
         sub_id = obj.get("id", "")
+        await _event_is_current(db, sub_id, "last_subscription_event_created", event_created)
         user_id = await _resolve_user_id(db, obj, subscription_id=sub_id)
         local = await db.subscriptions.find_one({"stripe_subscription_id": sub_id}) if sub_id else None
         if sub_id:
@@ -939,10 +999,18 @@ async def _dispatch_event(db, event_type: str, obj: dict, stripe_event_id: str) 
                                     sub_id, "canceled", "customer.subscription.deleted")
 
     elif event_type in ("invoice.paid", "invoice.payment_succeeded"):
+        if not await _event_is_current(db, _invoice_subscription_id(obj), "last_invoice_event_created", event_created):
+            logger.info("[billing/webhook] stale %s %s ignored", event_type, stripe_event_id)
+            return
         await _handle_invoice_paid(db, obj, stripe_event_id)
 
     elif event_type == "invoice.payment_failed":
         sub_id = _invoice_subscription_id(obj)
+        # A failure older than a payment already applied must not put a paid
+        # account back into past_due.
+        if not await _event_is_current(db, sub_id, "last_invoice_event_created", event_created):
+            logger.info("[billing/webhook] stale %s %s ignored", event_type, stripe_event_id)
+            return
         user_id = await _resolve_user_id(db, obj, subscription_id=sub_id)
         if not user_id:
             return

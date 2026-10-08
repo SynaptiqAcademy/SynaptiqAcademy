@@ -243,6 +243,14 @@ async def _register_built_in_schedules(sched: Scheduler) -> None:
             schedule_id="builtin:citation_weekly",
             priority=Priority.LOW,
         ),
+        # Abandoned AI credit reservations returned every 10 minutes
+        dict(
+            job_type="credits.release_stale",
+            payload={},
+            cron_expr="*/10 * * * *",
+            schedule_id="builtin:credits_release_stale",
+            priority=Priority.NORMAL,
+        ),
         # Publication monitoring every 6 hours
         dict(
             job_type="publication.monitor",

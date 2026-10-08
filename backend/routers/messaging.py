@@ -813,32 +813,35 @@ async def toggle_mute(conv_id: str, user: dict = Depends(get_current_user)):
 async def upload_file(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
     if file.content_type not in ALLOWED_MIME:
         raise HTTPException(status_code=415, detail=f"Unsupported file type: {file.content_type}")
+    if file.size is not None and file.size > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="File too large (max 25 MB)")
     data = await file.read()
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="File too large (max 25 MB)")
-    from services.permissions import assert_storage_quota
-    await assert_storage_quota(user, len(data))   # plan storage limit (server-side)
-    ext = ALLOWED_MIME[file.content_type]
-    path = build_path(user["id"], ext)
-    try:
-        result = await asyncio.to_thread(put_object, path, data, file.content_type)
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Storage unavailable: {str(e)[:200]}")
-    kind = "image" if file.content_type.startswith("image/") else "file"
-    db = get_db()
-    db = DBProxy(db, SecurityContext.from_user(user))
+    from services.permissions import storage_upload_slot
+    # Check, store and record under the user's upload slot (concurrent-safe quota).
+    async with storage_upload_slot(user, len(data)):
+        ext = ALLOWED_MIME[file.content_type]
+        path = build_path(user["id"], ext)
+        try:
+            result = await asyncio.to_thread(put_object, path, data, file.content_type)
+        except Exception as e:
+            raise HTTPException(status_code=503, detail="File storage is temporarily unavailable. Please try again.")
+        kind = "image" if file.content_type.startswith("image/") else "file"
+        db = get_db()
+        db = DBProxy(db, SecurityContext.from_user(user))
 
-    doc = {
-        "owner_id": user["id"],
-        "storage_path": result["path"],
-        "original_filename": file.filename or f"upload.{ext}",
-        "content_type": file.content_type,
-        "size": result.get("size", len(data)),
-        "kind": kind,
-        "is_deleted": False,
-        "created_at": _now_iso(),
-    }
-    res = await db.message_attachments.insert_one(doc)
+        doc = {
+            "owner_id": user["id"],
+            "storage_path": result["path"],
+            "original_filename": file.filename or f"upload.{ext}",
+            "content_type": file.content_type,
+            "size": result.get("size", len(data)),
+            "kind": kind,
+            "is_deleted": False,
+            "created_at": _now_iso(),
+        }
+        res = await db.message_attachments.insert_one(doc)
     return {
         "id": str(res.inserted_id),
         "filename": doc["original_filename"],
@@ -870,7 +873,7 @@ async def download_file(attachment_id: str, request_user: dict = Depends(get_cur
     try:
         data, ctype = await asyncio.to_thread(get_object, att["storage_path"])
     except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Storage error: {str(e)[:200]}")
+        raise HTTPException(status_code=503, detail="File storage is temporarily unavailable. Please try again.")
     return Response(content=data, media_type=att.get("content_type", ctype),
                     headers={"Content-Disposition": f'inline; filename="{safe_disposition_filename(att.get("original_filename"))}"'})
 
@@ -904,7 +907,7 @@ async def download_blob(attachment_id: str, token: Optional[str] = Query(None)):
     try:
         data, ctype = await asyncio.to_thread(get_object, att["storage_path"])
     except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Storage error: {str(e)[:200]}")
+        raise HTTPException(status_code=503, detail="File storage is temporarily unavailable. Please try again.")
     from fastapi.responses import Response
     return Response(content=data, media_type=att.get("content_type", ctype))
 

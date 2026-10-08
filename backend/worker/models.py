@@ -48,6 +48,7 @@ JOB_TWIN_UPDATE           = "twin.update"
 JOB_RECOMMENDATION_GEN    = "recommendation.generate"
 JOB_GRANT_DISCOVERY       = "grant.discovery"
 JOB_PUBLICATION_MONITOR   = "publication.monitor"
+JOB_CREDITS_RELEASE_STALE = "credits.release_stale"
 JOB_CITATION_MONITOR      = "citation.monitor"
 JOB_ORCID_SYNC            = "orcid.sync"
 JOB_ORCID_WEEKLY_SYNC     = "orcid.weekly_sync"
@@ -72,6 +73,7 @@ ALL_JOB_TYPES: list[str] = [
     JOB_MARKETPLACE_PROCESS, JOB_NOTIFICATION_DELIVER, JOB_DATA_IMPORT,
     JOB_GRAPH_REBUILD, JOB_REPORT_GENERATE, JOB_INTEGRITY_ANALYSIS, JOB_MEMORY_ENRICH,
     JOB_EMAIL_SEND, JOB_EMAIL_GETTING_STARTED_CHECK,
+    JOB_CREDITS_RELEASE_STALE,
 ]
 
 # Queue name constants

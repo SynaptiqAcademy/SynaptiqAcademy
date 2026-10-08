@@ -45,25 +45,26 @@ async def upload_document(
         raise HTTPException(status_code=413, detail="File too large (max 50 MB)")
     if len(content) == 0:
         raise HTTPException(status_code=400, detail="Empty file")
-    from services.permissions import assert_storage_quota
+    from services.permissions import storage_upload_slot
     _u = dict(user, id=str(user.get("id") or user.get("_id", "")))
-    await assert_storage_quota(_u, len(content))   # plan storage limit (server-side)
+    # Check and record under the user's upload slot (concurrent-safe quota).
+    async with storage_upload_slot(_u, len(content)):
 
-    if visibility not in ("private", "workspace", "public"):
-        visibility = "private"
+        if visibility not in ("private", "workspace", "public"):
+            visibility = "private"
 
-    user_id = str(user.get("_id", ""))
-    engine = await _engine()
-    document_id = await engine.submit_document(
-        content_bytes=content,
-        filename=filename,
-        user_id=user_id,
-        file_type=ext,
-        workspace_id=workspace_id,
-        source_kind=source_kind,
-        source_id=source_id,
-        visibility=visibility,
-    )
+        user_id = str(user.get("_id", ""))
+        engine = await _engine()
+        document_id = await engine.submit_document(
+            content_bytes=content,
+            filename=filename,
+            user_id=user_id,
+            file_type=ext,
+            workspace_id=workspace_id,
+            source_kind=source_kind,
+            source_id=source_id,
+            visibility=visibility,
+        )
     return {
         "document_id": document_id,
         "filename": filename,

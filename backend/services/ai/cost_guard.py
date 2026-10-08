@@ -93,6 +93,10 @@ def _attribution(request) -> GuardContext:
                         operation=None, reservation_id=None, credits=0)
 
 
+SYSTEM_COUNTER = "system"   # cost counters for AI with no paying user attached
+ALL_COUNTER = "all"         # total provider spend, for budget alerts
+
+
 def _counter_ids(user_id: str, now: datetime) -> tuple[str, str]:
     return f"{user_id}:d:{now:%Y-%m-%d}", f"{user_id}:m:{now:%Y-%m}"
 
@@ -193,6 +197,33 @@ async def preflight(request, system: str, user_text: str) -> GuardContext:
                 "code": "ai_monthly_limit",
                 "message": "You've reached this month's AI usage safety limit. Contact support if you need more.",
             })
+    elif g.tier == "SYSTEM":
+        # Background / system AI (no paying user): bounded by its share of the
+        # explicit AI budget (services/ai/budget.py). Fails closed only on the
+        # cap itself; if counters are unreadable the call proceeds.
+        now = datetime.now(timezone.utc)
+        day_id, month_id = _counter_ids(SYSTEM_COUNTER, now)
+        try:
+            docs = await _db().ai_user_cost_counters.find(
+                {"_id": {"$in": [day_id, month_id]}}).to_list(2)
+        except Exception as exc:
+            logger.warning("system cost counters unavailable (failing open): %s", exc)
+            docs = []
+        spent = {d["_id"]: float(d.get("cost_usd", 0)) for d in docs}
+        over = ("daily" if spent.get(day_id, 0) >= limits["daily_cost_limit_usd"] else
+                "monthly" if spent.get(month_id, 0) >= limits["monthly_cost_limit_usd"] else None)
+        if over:
+            try:
+                from services.alerts import send_alert
+                await send_alert("ai_background_budget",
+                                 f"Background AI {over} budget reached (feature {feature}); background AI paused",
+                                 severity="warning", dedup_key=f"ai_background_budget:{over}:{now:%Y-%m-%d}")
+            except Exception:
+                pass
+            raise HTTPException(status_code=429, detail={
+                "code": "ai_background_budget",
+                "message": "Background AI processing is paused until its budget resets.",
+            })
     return g
 
 
@@ -208,18 +239,48 @@ async def record_provider_usage(billing: dict | None, *, model: str, input_token
         await attach_telemetry(billing["id"], input_tokens=input_tokens,
                                output_tokens=output_tokens, cache_read_tokens=cache_read_tokens,
                                cache_write_tokens=cache_write_tokens, cost_usd=cost_usd, model=model)
-    uid = billing.get("user_id")
-    if uid and cost_usd:
-        now = datetime.now(timezone.utc)
-        day_id, month_id = _counter_ids(uid, now)
-        try:
-            db = _db()
+    if not cost_usd:
+        return
+    # The paying user's counters, or the background (system) counters when no
+    # user is attached; plus the all-spend counters used for budget alerts.
+    uid = billing.get("user_id") or SYSTEM_COUNTER
+    now = datetime.now(timezone.utc)
+    month_total = None
+    try:
+        db = _db()
+        for owner in (uid, ALL_COUNTER):
+            day_id, month_id = _counter_ids(owner, now)
             for cid, period in ((day_id, f"{now:%Y-%m-%d}"), (month_id, f"{now:%Y-%m}")):
-                await db.ai_user_cost_counters.update_one(
+                doc = await db.ai_user_cost_counters.find_one_and_update(
                     {"_id": cid},
                     {"$inc": {"cost_usd": float(cost_usd), "requests": 1},
-                     "$setOnInsert": {"user_id": uid, "period": period}},
-                    upsert=True,
+                     "$setOnInsert": {"user_id": owner, "period": period}},
+                    upsert=True, return_document=True,
                 )
-        except Exception as exc:
-            logger.warning("cost counter update failed (non-blocking): %s", exc)
+                if owner == ALL_COUNTER and cid == month_id and doc:
+                    month_total = float(doc.get("cost_usd", 0))
+    except Exception as exc:
+        logger.warning("cost counter update failed (non-blocking): %s", exc)
+    if month_total is not None:
+        await _budget_alerts(month_total, float(cost_usd), now)
+
+
+async def _budget_alerts(month_total: float, last_cost: float, now: datetime) -> None:
+    """Alert once per month when total provider spend crosses a budget threshold."""
+    try:
+        from services.ai import budget
+        total_budget = budget.monthly_budget_usd()
+        if total_budget <= 0:
+            return
+        before = month_total - last_cost
+        for t in budget.alert_thresholds():
+            line = total_budget * t
+            if before < line <= month_total:
+                from services.alerts import send_alert
+                await send_alert("ai_budget",
+                                 f"AI provider spend reached {int(t * 100)}% of the ${total_budget:,.0f} monthly "
+                                 f"budget (${month_total:,.2f} so far in {now:%Y-%m})",
+                                 severity="critical" if t >= 1 else "warning",
+                                 dedup_key=f"ai_budget:{now:%Y-%m}:{t}", throttle_minutes=60 * 24 * 31)
+    except Exception as exc:
+        logger.warning("budget alert check failed: %s", exc)

@@ -402,18 +402,30 @@ def _parse_ics(text: str) -> list[dict]:
     return [e for e in events if e.get("title") and e.get("start_at")]
 
 
+ICS_MAX_BYTES = 2 * 1024 * 1024
+ICS_MAX_EVENTS = 1000
+
+
 @router.post("/import-ics", status_code=201)
 async def import_ics(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
     """Import meetings from an uploaded .ics calendar export."""
     if not file.filename.lower().endswith(".ics"):
         raise HTTPException(400, "File must be a .ics calendar export")
-    raw = await file.read()
+    # Calendar exports are small; cap size and event count so one upload
+    # cannot exhaust memory or flood the meetings collection.
+    if file.size is not None and file.size > ICS_MAX_BYTES:
+        raise HTTPException(413, "Calendar file is too large (max 2 MB)")
+    raw = await file.read(ICS_MAX_BYTES + 1)
+    if len(raw) > ICS_MAX_BYTES:
+        raise HTTPException(413, "Calendar file is too large (max 2 MB)")
     try:
         text = raw.decode("utf-8", errors="replace")
     except Exception:
         raise HTTPException(400, "Could not read file as text")
 
     events = _parse_ics(text)
+    if len(events) > ICS_MAX_EVENTS:
+        raise HTTPException(422, f"Calendar file has more than {ICS_MAX_EVENTS} events; export a shorter range")
     if not events:
         return {"imported": 0, "errors": ["No valid VEVENT entries found in file"]}
 

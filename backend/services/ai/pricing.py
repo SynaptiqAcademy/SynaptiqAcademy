@@ -101,7 +101,9 @@ def model_for_tier(model_tier: str | None) -> str | None:
 # ───────────────────────── cost guards ─────────────────────────
 
 # Credits are the economic control; these are runaway/abuse backstops.
-# Token limits are per provider call; cost limits in USD.
+# Token limits are per provider call; cost limits in USD. The daily/monthly
+# values below are placeholders replaced in _load_guards() by caps derived
+# from the explicit AI budget (services/ai/budget.py).
 _DEFAULT_GUARDS: dict[str, dict[str, float]] = {
     "PRO": {
         "max_input_tokens": 60_000,
@@ -124,6 +126,15 @@ _DEFAULT_GUARDS["SYSTEM"] = dict(_DEFAULT_GUARDS["PRO_ADVANCED"])
 
 def _load_guards() -> dict[str, dict[str, float]]:
     guards = {k: dict(v) for k, v in _DEFAULT_GUARDS.items()}
+    # Daily / monthly ceilings come from the explicit AI cost budget
+    # (services/ai/budget.py), not from plan prices.
+    from services.ai import budget
+    for tier in ("PRO", "PRO_ADVANCED"):
+        daily, monthly = budget.user_caps_usd(tier)
+        guards[tier]["daily_cost_limit_usd"] = daily
+        guards[tier]["monthly_cost_limit_usd"] = monthly
+    guards["SYSTEM"]["daily_cost_limit_usd"] = budget.system_daily_cap_usd()
+    guards["SYSTEM"]["monthly_cost_limit_usd"] = budget.system_monthly_cap_usd()
     raw = os.environ.get("AI_COST_GUARDS_JSON", "").strip()
     if raw:
         try:

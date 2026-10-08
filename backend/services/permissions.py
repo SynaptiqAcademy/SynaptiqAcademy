@@ -13,6 +13,8 @@ Server-side enforcement only — clients never participate in the decision.
 """
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+
 import os
 from datetime import datetime, timezone
 from typing import Callable
@@ -307,6 +309,48 @@ async def assert_storage_quota(user: dict, upload_size_bytes: int) -> None:
                 "upgrade_url": "/pricing",
             },
         )
+
+
+@asynccontextmanager
+async def storage_upload_slot(user: dict, upload_size_bytes: int, *, wait_seconds: float = 120.0):
+    """Quota check that holds under concurrent uploads.
+
+    The plan limit is checked against stored bytes, then the file is stored and
+    recorded. Without serialisation, several uploads started together all see
+    the same usage and all pass. Each user's uploads therefore run one at a
+    time inside a short MongoDB lease (services/coordination.py): the check,
+    the storage write and the database record happen together, and the next
+    upload checks against the updated total. A crashed holder's lease expires
+    after LEASE_TTL, so nothing stays blocked.
+
+        async with storage_upload_slot(user, len(data)):
+            put_object(...); insert the file record
+    """
+    import asyncio
+    import time
+    import uuid as _uuid
+    from services.coordination import LeaseLock
+
+    if is_super_admin(user):
+        yield
+        return
+    uid = str(user.get("id") or user.get("_id") or "")
+    lock = LeaseLock(f"storage-quota:{uid}", ttl_seconds=180, holder=f"upload:{_uuid.uuid4().hex}")
+    deadline = time.monotonic() + wait_seconds
+    while not await lock.acquire():
+        if time.monotonic() > deadline:
+            raise HTTPException(status_code=429, detail={
+                "code": "upload_in_progress",
+                "message": "Another upload is still finishing. Please try again in a moment."})
+        await asyncio.sleep(0.25)
+    try:
+        await assert_storage_quota(dict(user, id=uid), upload_size_bytes)
+        yield
+    finally:
+        try:
+            await lock.release()
+        except Exception:
+            pass
 
 
 # ---------------------------- discovery quota ----------------------------
