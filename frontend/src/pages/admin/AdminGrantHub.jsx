@@ -21,7 +21,7 @@ export default function AdminGrantHub() {
       .then(([s, c]) => {
         if (!mounted) return;
         setStats(s.data);
-        setCollabs(c.data || []);
+        setCollabs(Array.isArray(c.data) ? c.data : c.data?.collaborations || []);
       })
       .catch((e) => { if (mounted) setErr(safeErrorMessage(e, "Failed to load")); })
       .finally(() => { if (mounted) setLoading(false); });

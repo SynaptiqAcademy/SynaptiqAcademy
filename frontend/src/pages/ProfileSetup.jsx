@@ -796,7 +796,7 @@ export default function ProfileSetup() {
             </Banner>
           )}
 
-          <div className="grid gap-6 mt-6" style={{ gridTemplateColumns: "220px 1fr 280px" }}>
+          <div className="grid gap-6 mt-6 grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)_280px]">
           {/* Left: section nav */}
           <aside>
             <Card padding="md" style={{ position: "sticky", top: 24 }}>
@@ -873,7 +873,7 @@ export default function ProfileSetup() {
           </main>
 
           {/* Right: contextual profile guide */}
-          <aside style={{ position: "sticky", top: 24 }}>
+          <aside className="lg:sticky lg:top-6">
             <ProfileGuide user={liveUser} score={score} />
           </aside>
         </div>

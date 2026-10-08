@@ -1168,9 +1168,8 @@ export default function WorkspaceDetail() {
                           onClick={() => api.patch(`/workspaces/${id}/activity/${r.id}`, { metadata: { ...r.metadata, status: "approved" } }).then(() => loadReviewsData()).catch(() => {})}
                         >Approve</Button>
                         <Button
-                          variant="ghost"
+                          variant="danger-outline"
                           size="sm"
-                          className="text-red-600 border-red-200 hover:bg-red-50"
                           onClick={() => api.patch(`/workspaces/${id}/activity/${r.id}`, { metadata: { ...r.metadata, status: "rejected" } }).then(() => loadReviewsData()).catch(() => {})}
                         >Reject</Button>
                       </div>

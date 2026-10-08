@@ -37,6 +37,10 @@ export function NavTabs({
       display: "flex",
       gap: 0,
       borderBottom: `1px solid ${BRD}`,
+      // Long tab rows scroll inside themselves, never widen the page.
+      overflowX: "auto",
+      scrollbarWidth: "none",
+      maxWidth: "100%",
     },
     pill: {
       display: "flex",
@@ -45,6 +49,8 @@ export function NavTabs({
     },
     segment: {
       display: "flex",
+      overflowX: "auto",
+      maxWidth: "100%",
       background: ADMIN_BG,
       borderRadius: RADIUS_LG,
       padding: 3,

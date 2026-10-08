@@ -36,8 +36,9 @@ export default function AdminSecurity() {
         api.get(`/admin/security/failed-logins?hours=${hours}`),
         api.get("/admin/security/blocked-ips"),
       ]);
-      setFailedLogins(fl.data || []);
-      setBlockedIps(bi.data || []);
+      // The API wraps lists as { items: [...] }.
+      setFailedLogins(Array.isArray(fl.data) ? fl.data : fl.data?.items || []);
+      setBlockedIps(Array.isArray(bi.data) ? bi.data : bi.data?.items || []);
     } catch (e) {
       toast.error("Failed to load security data");
     } finally {
