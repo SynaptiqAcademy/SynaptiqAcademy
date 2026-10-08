@@ -208,18 +208,18 @@ export default function TeamHome() {
           <div>
             {group.description ? (
               <Card padding="lg" className="mb-5">
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 12 }}>About</div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d", marginBottom: 12 }}>About</div>
                 <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.7, margin: 0 }}>{group.description}</p>
               </Card>
             ) : (
               <div style={{ background: WARM, border: `1px dashed ${BORDER}`, padding: 24, marginBottom: 20, textAlign: "center" }}>
-                <div style={{ fontSize: 13, color: "#94A3B8" }}>No description yet.{isOwner && " Edit team settings to add one."}</div>
+                <div style={{ fontSize: 13, color: "#6b717d" }}>No description yet.{isOwner && " Edit team settings to add one."}</div>
               </div>
             )}
 
             {group.keywords?.length > 0 && (
               <Card padding="md" className="mb-5">
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 10 }}>Keywords</div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d", marginBottom: 10 }}>Keywords</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {group.keywords.map((kw) => (
                     <Tag key={kw}>{kw}</Tag>
@@ -230,7 +230,7 @@ export default function TeamHome() {
 
             {/* Quick links to integrated features */}
             <Card padding="md">
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 14 }}>Integrated Features</div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d", marginBottom: 14 }}>Integrated Features</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
                 {[
                   { label: "Workspace",    icon: LayoutGrid,    to: "/workspaces",     desc: "Shared writing workspace" },
@@ -246,7 +246,7 @@ export default function TeamHome() {
                     </div>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>{label}</div>
-                      <div style={{ fontSize: 11, color: "#94A3B8" }}>{desc}</div>
+                      <div style={{ fontSize: 11, color: "#6b717d" }}>{desc}</div>
                     </div>
                   </Card>
                 ))}
@@ -258,7 +258,7 @@ export default function TeamHome() {
           <div>
             <Card padding="md">
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}>Members ({count})</div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d" }}>Members ({count})</div>
                 {isMember && <Button variant="link" size="sm" onClick={() => setTab("members")}>View all</Button>}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -269,14 +269,14 @@ export default function TeamHome() {
                       <Avatar url={m.avatar_url} name={m.full_name || m.name} size={28} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.full_name || m.name || "Member"}</div>
-                        <div style={{ fontSize: 10, color: "#94A3B8" }}>{m.institution || ""}</div>
+                        <div style={{ fontSize: 10, color: "#6b717d" }}>{m.institution || ""}</div>
                       </div>
                       {m.role === "owner" && <Crown size={10} strokeWidth={1.5} style={{ color: "#D97706", flexShrink: 0 }} />}
                     </Link>
                   );
                 })}
                 {members.length === 0 && (
-                  <div style={{ fontSize: 12, color: "#94A3B8", textAlign: "center", padding: "12px 0" }}>No members loaded</div>
+                  <div style={{ fontSize: 12, color: "#6b717d", textAlign: "center", padding: "12px 0" }}>No members loaded</div>
                 )}
               </div>
             </Card>
@@ -288,7 +288,7 @@ export default function TeamHome() {
       {tab === "members" && (
         <div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}>{count} member{count !== 1 ? "s" : ""}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d" }}>{count} member{count !== 1 ? "s" : ""}</div>
             {isOwner && (
               <Button size="sm">
                 <UserPlus size={12} strokeWidth={2} />Invite Member
@@ -310,7 +310,7 @@ export default function TeamHome() {
                           {m.full_name || m.name || "Member"}
                           {m.role === "owner" && <Crown size={11} strokeWidth={1.5} style={{ color: "#D97706", marginLeft: 6, display: "inline" }} />}
                         </div>
-                        <div style={{ fontSize: 11, color: "#94A3B8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.institution || m.email || ""}</div>
+                        <div style={{ fontSize: 11, color: "#6b717d", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.institution || m.email || ""}</div>
                       </div>
                     </Link>
                     <div style={{ flexShrink: 0 }}>
@@ -344,7 +344,7 @@ export default function TeamHome() {
           <div style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", marginBottom: 8, letterSpacing: "-0.02em" }}>
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </div>
-          <div style={{ fontSize: 13, color: "#94A3B8", maxWidth: 360, margin: "0 auto 24px" }}>
+          <div style={{ fontSize: 13, color: "#6b717d", maxWidth: 360, margin: "0 auto 24px" }}>
             {tab === "workspace"    && "Access your shared writing workspace and collaborative documents."}
             {tab === "repository"   && "Manage files, versions and shared research assets."}
             {tab === "chat"         && "Team messaging and real-time collaboration."}

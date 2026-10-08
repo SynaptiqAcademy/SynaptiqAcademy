@@ -65,9 +65,9 @@ import { safeErrorMessage } from "../lib/api";
 // ─── Palette — no per-type rainbow, one accent only ──────────────────────────
 const INK     = "#1C2333";
 const HAIR    = "#E7E9F0";
-const RAIL_BG = "#FAFAFB";
-const MUTED   = "#8A93A6";
-const DISABLED= "#B8C0CE";
+const RAIL_BG = "#FBFAF7";
+const MUTED   = "#6b717d";
+const DISABLED= "#6b717d";   // section labels: readable, not disabled-looking
 
 // ─── Domain constants (unchanged business classification) ───────────────────
 const TYPE_LABEL = {
@@ -232,7 +232,7 @@ function SideNav({ conversations, filter, setFilter, search, setSearch, activeId
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: RAIL_BG, borderRight: `1px solid ${HAIR}` }}>
       <div style={{ padding: "18px 16px 12px" }}>
-        <h1 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: "1.15rem", fontWeight: 700, color: INK, letterSpacing: "-0.02em", margin: "0 0 3px" }}>
+        <h1 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: "1.35rem", fontWeight: 400, color: INK, letterSpacing: "-0.02em", margin: "0 0 3px" }}>
           Messages
         </h1>
         <p style={{ fontSize: "0.68rem", color: MUTED, margin: "0 0 12px", lineHeight: 1.4 }}>

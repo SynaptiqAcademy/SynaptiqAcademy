@@ -76,7 +76,7 @@ function RiskFlag({ flag, defaultOpen = false }) {
 
 function FactorBar({ label, value, weight }) {
   const pct = Math.round(value || 0);
-  const barColor = pct >= 70 ? EMERALD : pct >= 50 ? "#f59e0b" : ACCENT;
+  const barColor = pct >= 70 ? EMERALD : pct >= 50 ? "#b45309" : "#B42318";
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
@@ -197,9 +197,9 @@ export default function IntegrityCenter() {
           onClick={() => handleAnalyze(!report)}
           disabled={running || isAnalyzing}
           style={{
-            background: running || isAnalyzing ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.1)",
+            background: "#0F2847",
             color: WHITE,
-            border: "1px solid rgba(255,255,255,0.24)", borderRadius: 8, padding: "8px 18px",
+            border: "1px solid #0F2847", borderRadius: 4, padding: "8px 16px",
             fontWeight: 700, fontSize: 13, cursor: running || isAnalyzing ? "not-allowed" : "pointer",
             display: "flex", alignItems: "center", gap: 6, opacity: running || isAnalyzing ? 0.6 : 1,
           }}

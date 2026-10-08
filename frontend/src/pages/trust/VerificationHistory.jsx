@@ -23,7 +23,7 @@ const EVENT_COLORS = {
   verification_run:    NAVY,
   request_submitted:   "#D97706",
   request_approved:    EMERALD,
-  request_rejected:    ACCENT,
+  request_rejected:    "#B42318",
   badge_awarded:       "#0F2847",
   admin_override:      "#0F2847",
   fraud_flag:          ACCENT,

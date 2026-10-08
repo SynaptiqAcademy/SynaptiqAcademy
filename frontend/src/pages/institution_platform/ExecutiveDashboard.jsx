@@ -13,9 +13,10 @@ import { fetchApi } from "@/lib/api";
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
 
-const GRADE_COLOR = { "A+": EMERALD, A: EMERALD, B: "#2f5486", C: "#f59e0b", D: "#f97316", F: ACCENT };
+const GRADE_COLOR = { "A+": EMERALD, A: EMERALD, B: "#2f5486", C: "#b45309", D: "#c2410c", F: "#B42318" };
 const LEVEL_BG = { critical: "#fee2e2", high: "#fff7ed", medium: "#fefce8", low: "#f8f5f0" };
-const LEVEL_COLOR = { critical: "#dc2626", high: "#f97316", medium: "#f59e0b", low: "#64748b" };
+// Severity is semantic; shades are dark enough to read as text on their tints.
+const LEVEL_COLOR = { critical: "#b42318", high: "#c2410c", medium: "#b45309", low: "#5f6673" };
 
 // GradeRing is unused dead code in the original file (never rendered in the
 // return JSX below) — left exactly as-is rather than migrating unreferenced code.
@@ -96,12 +97,15 @@ export default function ExecutiveDashboard() {
   );
 
   if (err) return (
-    <div style={{ maxWidth: 700, margin: "60px auto", padding: 32 }}>
-      <ErrorState
-        message="This dashboard isn't available to your account"
-        detail="Institution Intelligence is for institution administrators with an institution set on their profile. Nothing in your account has changed."
-        onRetry={load}
-      />
+    <div style={{ maxWidth: 600, padding: "8px 0 24px" }}>
+      <p className="pl-eyebrow">Institution intelligence</p>
+      <h1 className="pl-hero-title">This dashboard is for institution administrators.</h1>
+      <p className="pl-sub" style={{ marginTop: 8 }}>
+        It needs an administrator account with an institution set on your profile. Nothing in your account has changed.
+      </p>
+      <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+        <button type="button" onClick={load} className="inline-flex items-center h-9 px-4 text-[13px] font-semibold rounded-btn border border-hairline-strong bg-white">Try again</button>
+      </div>
     </div>
   );
 
@@ -171,7 +175,7 @@ export default function ExecutiveDashboard() {
           {[...Array(5)].map((_, i) => {
             const ind = (data.health?.indicators || [])[i];
             if (!ind) return null;
-            const barColor = ind.value >= 70 ? EMERALD : ind.value >= 50 ? "#f59e0b" : ACCENT;
+            const barColor = ind.value >= 70 ? EMERALD : ind.value >= 50 ? "#b45309" : "#B42318";
             return (
               <div key={ind.key} style={{ marginBottom: 10 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
@@ -190,7 +194,7 @@ export default function ExecutiveDashboard() {
         <Card padding="lg">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <AlertTriangle size={16} color={ACCENT} />
+              <AlertTriangle size={16} color={"#B42318"} />
               <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: NAVY }}>
                 Active Risk Flags ({r.total ?? 0})
               </h3>

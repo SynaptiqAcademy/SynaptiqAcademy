@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { NAVY, NAVY_08 } from "@/lib/tokens";
+import { NAVY } from "@/lib/tokens";
 
 /**
  * Avatar — canonical implementation.
@@ -33,7 +33,7 @@ export function Avatar({ url, name, size = 32, className = "", border = false })
       style={{
         width: size,
         height: size,
-        background: NAVY_08,
+        background: "#eef2f8",   // opaque so initials stay legible on navy surfaces too
         border: border ? "1.5px solid #E4E8EF" : undefined,
       }}
       aria-label={name ? `Avatar for ${name}` : undefined}

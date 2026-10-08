@@ -26,7 +26,7 @@ const BORDER = "#E4E8EF";
 
 // ─── Research lifecycle stages ────────────────────────────────────────────────
 const STAGES = [
-  { key: "draft",   label: "Draft",           color: "#94A3B8", bg: "#F1F5F9" },
+  { key: "draft",   label: "Draft",           color: "#6b717d", bg: "#F1F5F9" },
   { key: "idea",    label: "Ideation",         color: "#EA580C", bg: "#FFF7ED" },
   { key: "scope",   label: "Scoping",          color: "#D97706", bg: "#FFFBEB" },
   { key: "lit",     label: "Lit. Review",      color: "#059669", bg: "#F0FDF4" },
@@ -164,7 +164,7 @@ export default function Projects() {
           <Button
             data-testid={TID.projectCreateBtn}
             onClick={() => setShowNew((v) => !v)}
-            variant="hero"
+            variant="primary"
             size="sm"
           >
             <Plus size={13} strokeWidth={2} />
@@ -193,7 +193,7 @@ export default function Projects() {
       {/* ── CREATE FORM ──────────────────────────────────────────────────── */}
       {showNew && (
         <Card padding="xl" style={{ marginTop: 24, maxWidth: 640 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 18 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b717d", marginBottom: 18 }}>
             New Research Project
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -228,9 +228,9 @@ export default function Projects() {
                       background: newVis === val ? WARM : "white", cursor: "pointer", textAlign: "center",
                     }}
                   >
-                    <Icon size={14} strokeWidth={1.5} style={{ color: newVis === val ? NAVY : "#94A3B8", margin: "0 auto 4px" }} />
+                    <Icon size={14} strokeWidth={1.5} style={{ color: newVis === val ? NAVY : "#6b717d", margin: "0 auto 4px" }} />
                     <div style={{ fontSize: 12, fontWeight: 600, color: newVis === val ? NAVY : "#374151" }}>{label}</div>
-                    <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 2 }}>{desc}</div>
+                    <div style={{ fontSize: 10, color: "#6b717d", marginTop: 2 }}>{desc}</div>
                   </button>
                 ))}
               </div>
@@ -396,8 +396,8 @@ function ProjectCard({ p, idx, userId }) {
         {/* Completeness bar */}
         <div style={{ marginBottom: 14 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
-            <span style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Profile</span>
-            <span style={{ fontSize: 10, fontFamily: "monospace", color: complete >= 75 ? "#10B981" : complete >= 40 ? "#D97706" : "#94A3B8", fontWeight: 600 }}>
+            <span style={{ fontSize: 10, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Profile</span>
+            <span style={{ fontSize: 10, fontFamily: "monospace", color: complete >= 75 ? "#10B981" : complete >= 40 ? "#D97706" : "#6b717d", fontWeight: 600 }}>
               {complete}%
             </span>
           </div>
@@ -409,7 +409,7 @@ function ProjectCard({ p, idx, userId }) {
         {/* Footer */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 12, borderTop: `1px solid ${BORDER}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#94A3B8" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6b717d" }}>
               <Users size={10} strokeWidth={1.5} />
               {memberCount} {memberCount === 1 ? "member" : "members"}
             </span>
@@ -419,9 +419,9 @@ function ProjectCard({ p, idx, userId }) {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {p.created_at && (
-              <span style={{ fontSize: 10, color: "#CBD5E1", fontFamily: "monospace" }}>{fmtDate(p.created_at)}</span>
+              <span style={{ fontSize: 10, color: "#8a909a", fontFamily: "monospace" }}>{fmtDate(p.created_at)}</span>
             )}
-            <ChevronRight size={12} strokeWidth={1.5} style={{ color: "#CBD5E1" }} />
+            <ChevronRight size={12} strokeWidth={1.5} style={{ color: "#8a909a" }} />
           </div>
         </div>
       </div>
@@ -445,7 +445,7 @@ function ResearchLifecycleGuide({ projects }) {
 
   return (
     <div style={{ marginTop: 36, paddingTop: 24, borderTop: `1px solid ${BORDER}` }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 14 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b717d", marginBottom: 14 }}>
         Research Lifecycle — Portfolio Overview
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 0, overflowX: "auto" }}>
@@ -454,8 +454,8 @@ function ResearchLifecycleGuide({ projects }) {
           return (
             <React.Fragment key={s.key}>
               <div style={{ textAlign: "center", padding: "12px 16px", background: count > 0 ? s.bg : WARM, border: `1px solid ${count > 0 ? s.color + "40" : BORDER}`, minWidth: 110, flexShrink: 0 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: count > 0 ? s.color : "#CBD5E1", fontFamily: "monospace" }}>{count}</div>
-                <div style={{ fontSize: 10, fontWeight: 600, color: count > 0 ? s.color : "#CBD5E1", textTransform: "uppercase", letterSpacing: "0.07em", marginTop: 4 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: count > 0 ? s.color : "#8a909a", fontFamily: "monospace" }}>{count}</div>
+                <div style={{ fontSize: 10, fontWeight: 600, color: count > 0 ? s.color : "#8a909a", textTransform: "uppercase", letterSpacing: "0.07em", marginTop: 4 }}>
                   {s.label}
                 </div>
               </div>

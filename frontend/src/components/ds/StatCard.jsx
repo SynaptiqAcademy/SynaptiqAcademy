@@ -21,6 +21,12 @@ import {
  *   to           string          — Renders as a Link, makes card interactive
  *   className    string
  */
+const isEmptyValue = (v) => {
+  if (v === null || v === undefined) return true;
+  const t = String(typeof v === "object" ? "x" : v).trim();
+  return ["", "0", "—", "-", "0%", "+0%", "+0", "0.0", "0/0", "0h", "$0.00", "€0"].includes(t);
+};
+
 export function StatCard({
   label,
   value,
@@ -40,11 +46,14 @@ export function StatCard({
   const trendSign = trend > 0 ? "+" : "";
 
   const Tag = to ? Link : "div";
+  // Marked so a container of only-empty metrics can be hidden in CSS
+  // (index.css: .sq-stat / .is-empty), whatever wraps the cards.
+  const empty = isEmptyValue(value);
 
   return (
     <Tag
       to={to}
-      className={className}
+      className={`sq-stat ${empty ? "is-empty" : ""} ${className}`}
       onClick={onClick}
       onMouseEnter={isInteractive ? () => setHovered(true) : undefined}
       onMouseLeave={isInteractive ? () => setHovered(false) : undefined}
@@ -131,16 +140,13 @@ export function StatCard({
  * StatGrid — responsive grid of StatCards.
  * cols: number of columns at large screen (default: 4)
  */
-const isEmptyValue = (v) => {
-  if (v === null || v === undefined) return true;
-  const t = String(typeof v === "object" ? "x" : v).trim();
-  return t === "" || t === "0" || t === "—" || t === "-" || t === "0%" || t === "0.0" || t === "$0.00";
-};
+
 
 export function StatGrid({ children, cols = 4, className = "" }) {
   // A grid of zeros earns no space: when every metric is empty the grid is
   // left out, and appears as soon as there is something to report.
-  const items = React.Children.toArray(children).filter(Boolean);
+  const flat = (kids) => React.Children.toArray(kids).flatMap((c) => (c && c.type === React.Fragment ? flat(c.props.children) : [c]));
+  const items = flat(children).filter(Boolean);
   const valued = items.filter((c) => c && c.props && "value" in c.props);
   if (valued.length > 0 && valued.length === items.length && valued.every((c) => isEmptyValue(c.props.value))) return null;
   return (

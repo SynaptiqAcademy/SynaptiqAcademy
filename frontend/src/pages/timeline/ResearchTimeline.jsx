@@ -225,7 +225,7 @@ function AddEventModal({ catalogue, onClose, onAdd }) {
           </Button>
         </div>
 
-        {error && <div style={{ color: ACCENT, fontSize: 13, marginBottom: 12 }}>{error}</div>}
+        {error && <div style={{ color: "#B42318", fontSize: 13, marginBottom: 12 }}>{error}</div>}
 
         <form onSubmit={submit}>
           <div style={{ marginBottom: 14 }}>
@@ -425,8 +425,8 @@ export default function ResearchTimeline() {
       </a>
       <button onClick={() => setShowAdd(true)}
         style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px",
-          borderRadius: 7, background: "rgba(255,255,255,0.12)", color: WHITE,
-          border: "1px solid rgba(255,255,255,0.24)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+          borderRadius: 4, background: "#0F2847", color: WHITE,
+          border: "1px solid #0F2847", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
         <Plus size={13} /> Add Event
       </button>
     </div>

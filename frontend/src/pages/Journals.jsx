@@ -182,7 +182,7 @@ export default function Journals() {
           </Button>
         </>
       }
-      sidebar={<JournalsSidebar compareList={compareList} />}
+      sidebar={compareList.length ? <JournalsSidebar compareList={compareList} /> : undefined}
       nav={
         <NavTabs
           tabs={tabLinks.map(({ to, label, testid }) => ({ id: to, label, "data-testid": testid }))}
@@ -207,7 +207,7 @@ export default function Journals() {
               imperative ref for focusSearch()'s focus()+scrollIntoView(), and
               ds/Input isn't forwardRef-wrapped */}
           <div style={{ flex: 1, position: "relative" }}>
-            <Search size={14} strokeWidth={1.5} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#94A3B8", pointerEvents: "none" }} />
+            <Search size={14} strokeWidth={1.5} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#6b717d", pointerEvents: "none" }} />
             <input
               ref={searchRef}
               data-testid={TID.discoverySearch}
@@ -256,7 +256,7 @@ export default function Journals() {
               <span style={{ fontSize: 12, fontWeight: 700, color: NAVY, textTransform: "uppercase", letterSpacing: "0.08em" }}>
                 Recommended for You
               </span>
-              <span style={{ fontSize: 11, color: "#94A3B8" }}>Based on your research profile</span>
+              <span style={{ fontSize: 11, color: "#6b717d" }}>Based on your research profile</span>
             </div>
             <Link to="/academic-passport" style={{ fontSize: 11, color: "#64748B", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 3 }}>
               Update profile <ArrowRight size={10} strokeWidth={1.5} />
@@ -334,7 +334,7 @@ export default function Journals() {
               {loading ? "Searching…" : `${total.toLocaleString()} ${total === 1 ? "journal" : "journals"}`}
             </span>
             {page > 1 && !loading && (
-              <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>Page {page}</span>
+              <span style={{ fontSize: 11, color: "#6b717d", fontFamily: "monospace" }}>Page {page}</span>
             )}
           </div>
 
@@ -372,7 +372,7 @@ export default function Journals() {
               >
                 <ChevronLeft size={12} strokeWidth={1.5} /> Previous
               </Button>
-              <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>Page {page}</span>
+              <span style={{ fontSize: 11, color: "#6b717d", fontFamily: "monospace" }}>Page {page}</span>
               <Button
                 data-testid={TID.discoveryPageNext}
                 disabled={!hasMore}
@@ -418,11 +418,11 @@ function JournalsSidebar({ compareList }) {
               <div key={j.id} style={{ fontSize: 12, color: "#374151" }}>{j.title}</div>
             ))}
             {compareList.length < 2 && (
-              <p style={{ fontSize: 11, color: "#94A3B8", margin: "6px 0 0" }}>Add one more to compare.</p>
+              <p style={{ fontSize: 11, color: "#6b717d", margin: "6px 0 0" }}>Add one more to compare.</p>
             )}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             Select up to 3 journals below to compare them side by side.
           </p>
         )}
@@ -473,7 +473,7 @@ function JournalCard({ j, inCompare, canAddToCompare, onCompare }) {
               </span>
             )}
           </div>
-          <span style={{ fontSize: 10, color: "#CBD5E1", fontFamily: "monospace" }}>
+          <span style={{ fontSize: 10, color: "#8a909a", fontFamily: "monospace" }}>
             {SRC_LABEL[j.source] || ""}
           </span>
         </div>
@@ -487,7 +487,7 @@ function JournalCard({ j, inCompare, canAddToCompare, onCompare }) {
         </h3>
 
         {/* Publisher · Country */}
-        <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: 11, color: "#6b717d", marginBottom: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {j.publisher || "Publisher unknown"}
           {j.country && ` · ${j.country}`}
         </div>
@@ -501,7 +501,7 @@ function JournalCard({ j, inCompare, canAddToCompare, onCompare }) {
               </span>
             ))}
             {j.subjects.length > 3 && (
-              <span style={{ fontSize: 10, color: "#94A3B8" }}>+{j.subjects.length - 3}</span>
+              <span style={{ fontSize: 10, color: "#6b717d" }}>+{j.subjects.length - 3}</span>
             )}
           </div>
         )}
@@ -521,12 +521,12 @@ function JournalCard({ j, inCompare, canAddToCompare, onCompare }) {
           <div style={{ display: "flex", gap: 10, marginTop: 9, flexWrap: "wrap" }}>
             {j.apc_usd && (
               <span style={{ fontSize: 10, color: "#64748B" }}>
-                <span style={{ color: "#CBD5E1", fontSize: 9 }}>APC </span>${j.apc_usd.toLocaleString()}
+                <span style={{ color: "#8a909a", fontSize: 9 }}>APC </span>${j.apc_usd.toLocaleString()}
               </span>
             )}
             {j.review_time_weeks && (
               <span style={{ fontSize: 10, color: "#64748B", display: "inline-flex", alignItems: "center", gap: 3 }}>
-                <Clock size={9} strokeWidth={1.5} style={{ color: "#94A3B8" }} />
+                <Clock size={9} strokeWidth={1.5} style={{ color: "#6b717d" }} />
                 {j.review_time_weeks}w review
               </span>
             )}
@@ -598,7 +598,8 @@ function JournalCard({ j, inCompare, canAddToCompare, onCompare }) {
 function RecommendationCard({ rec, rank }) {
   const qStyle = Q_STYLE[rec.quartile] || null;
   const scorePct = Math.min(100, Math.round(rec.score));
-  const scoreColor = scorePct >= 70 ? "#059669" : scorePct >= 45 ? "#D97706" : "#94A3B8";
+  // Fit is information, not status: one navy bar whatever the value.
+  const scoreColor = "#0F2847";
 
   return (
     <Link
@@ -609,7 +610,7 @@ function RecommendationCard({ rec, rank }) {
     >
       {/* Rank + badges */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: "#CBD5E1", fontFamily: "monospace" }}>#{rank}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: "#8a909a", fontFamily: "monospace" }}>#{rank}</span>
         <div style={{ display: "flex", gap: 4 }}>
           {rec.quartile && qStyle && (
             <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", background: qStyle.bg, border: `1px solid ${qStyle.border}`, color: qStyle.text, letterSpacing: "0.06em" }}>
@@ -628,14 +629,14 @@ function RecommendationCard({ rec, rank }) {
       </div>
 
       {/* Publisher */}
-      <div style={{ fontSize: 10, color: "#94A3B8", marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+      <div style={{ fontSize: 10, color: "#6b717d", marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
         {rec.publisher || "—"}
       </div>
 
       {/* Match score bar */}
       <div style={{ marginBottom: 8 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
-          <span style={{ fontSize: 9, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.07em" }}>Match</span>
+          <span style={{ fontSize: 9, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.07em" }}>Match</span>
           <span style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 700, color: scoreColor }}>{scorePct}%</span>
         </div>
         <div style={{ height: 3, background: "#E2E8F0" }}>
@@ -653,12 +654,12 @@ function RecommendationCard({ rec, rank }) {
       {/* Review time + acceptance */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {rec.review_time_estimate && (
-          <span style={{ fontSize: 9, color: "#94A3B8", display: "inline-flex", alignItems: "center", gap: 3 }}>
+          <span style={{ fontSize: 9, color: "#6b717d", display: "inline-flex", alignItems: "center", gap: 3 }}>
             <Clock size={8} strokeWidth={1.5} /> {rec.review_time_estimate}
           </span>
         )}
         {rec.acceptance_probability && (
-          <span style={{ fontSize: 9, color: "#94A3B8" }}>
+          <span style={{ fontSize: 9, color: "#6b717d" }}>
             Acceptance: {rec.acceptance_probability}
           </span>
         )}
@@ -672,7 +673,7 @@ function MetricCell({ label, value }) {
   return (
     <div style={{ textAlign: "center" }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "monospace", lineHeight: 1 }}>{value}</div>
-      <div style={{ fontSize: 9, color: "#94A3B8", letterSpacing: "0.05em", textTransform: "uppercase", marginTop: 3 }}>{label}</div>
+      <div style={{ fontSize: 9, color: "#6b717d", letterSpacing: "0.05em", textTransform: "uppercase", marginTop: 3 }}>{label}</div>
     </div>
   );
 }
@@ -691,8 +692,8 @@ function FacetGroup({ label, values, activeValue, onChange, fmt }) {
           {label}
         </span>
         {open
-          ? <ChevronUp size={11} strokeWidth={1.5} style={{ color: "#CBD5E1" }} />
-          : <ChevronDown size={11} strokeWidth={1.5} style={{ color: "#CBD5E1" }} />
+          ? <ChevronUp size={11} strokeWidth={1.5} style={{ color: "#8a909a" }} />
+          : <ChevronDown size={11} strokeWidth={1.5} style={{ color: "#8a909a" }} />
         }
       </button>
       {open && (
@@ -717,7 +718,7 @@ function FacetGroup({ label, values, activeValue, onChange, fmt }) {
                   <span style={{ fontSize: 11, color: active ? NAVY : "#64748B", fontWeight: active ? 600 : 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 148 }}>
                     {disp}
                   </span>
-                  <span style={{ fontSize: 10, color: "#94A3B8", fontFamily: "monospace", flexShrink: 0, marginLeft: 4 }}>{f.count}</span>
+                  <span style={{ fontSize: 10, color: "#6b717d", fontFamily: "monospace", flexShrink: 0, marginLeft: 4 }}>{f.count}</span>
                 </button>
               </li>
             );
@@ -733,7 +734,7 @@ function CategoryBar({ subjects, onSelect }) {
   const top = subjects.slice(0, 10);
   return (
     <div style={{ marginBottom: 18, padding: "14px 16px", background: WARM, border: `1px solid ${BORDER}` }}>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#94A3B8", marginBottom: 10 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#6b717d", marginBottom: 10 }}>
         Browse by research field
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -800,7 +801,7 @@ function ComparePanel({ journals, onRemove, onClose, onClearAll }) {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <thead>
             <tr style={{ background: WARM }}>
-              <th style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.07em", width: 150, borderRight: `1px solid ${BORDER}` }}>
+              <th style={{ padding: "10px 16px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.07em", width: 150, borderRight: `1px solid ${BORDER}` }}>
                 Metric
               </th>
               {journals.map((j) => (
@@ -814,7 +815,7 @@ function ComparePanel({ journals, onRemove, onClose, onClearAll }) {
                         </span>
                       )}
                     </div>
-                    <button onClick={() => onRemove(j.id)} aria-label={`Remove ${j.title} from comparison`} style={{ color: "#CBD5E1", background: "none", border: "none", cursor: "pointer", flexShrink: 0, padding: 2 }}>
+                    <button onClick={() => onRemove(j.id)} aria-label={`Remove ${j.title} from comparison`} style={{ color: "#8a909a", background: "none", border: "none", cursor: "pointer", flexShrink: 0, padding: 2 }}>
                       <X size={11} strokeWidth={1.5} />
                     </button>
                   </div>
@@ -917,7 +918,7 @@ function JournalsEmptyState({ q, filters, onClear, onSearch }) {
               "Filter by open access and APC range",
             ].map((tip) => (
               <div key={tip} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#64748B" }}>
-                <Target size={10} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} /> {tip}
+                <Target size={10} strokeWidth={1.5} style={{ color: "#8a909a", flexShrink: 0 }} /> {tip}
               </div>
             ))}
           </div>

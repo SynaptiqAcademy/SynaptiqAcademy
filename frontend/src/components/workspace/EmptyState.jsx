@@ -50,7 +50,7 @@ export function EmptyState({
           {React.isValidElement(icon)
             ? React.cloneElement(icon, {
                 size: ISIZE,
-                style: { color: "#94a3b8", ...(icon.props.style || {}) },
+                style: { color: "#6b717d", ...(icon.props.style || {}) },
               })
             : icon}
         </div>

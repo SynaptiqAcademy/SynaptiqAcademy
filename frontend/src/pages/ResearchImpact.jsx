@@ -51,8 +51,8 @@ function IntelNav({ current }) {
         const isCur = s.to === current;
         return (
           <React.Fragment key={s.to}>
-            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} />}
-            <Link to={s.to} style={{ fontSize: 11, fontWeight: isCur ? 700 : 400, color: isCur ? "#0F2847" : "#94A3B8", padding: "3px 7px", background: isCur ? "rgba(15,40,71,0.07)" : "transparent", borderRadius: 3, textDecoration: "none", whiteSpace: "nowrap" }}>
+            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#8a909a", flexShrink: 0 }} />}
+            <Link to={s.to} style={{ fontSize: 11, fontWeight: isCur ? 700 : 400, color: isCur ? "#0F2847" : "#6b717d", padding: "3px 7px", background: isCur ? "rgba(15,40,71,0.07)" : "transparent", borderRadius: 3, textDecoration: "none", whiteSpace: "nowrap" }}>
               {s.label}
             </Link>
           </React.Fragment>
@@ -67,11 +67,11 @@ const ImpactHero = ({ kpi, onExport }) => (
     <IntelNav current="/research-impact" />
     <div style={{ marginTop: 16, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
       <div>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 6 }}>Research Intelligence</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b717d", marginBottom: 6 }}>Research Intelligence</div>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: "#0F172A", margin: "0 0 6px", letterSpacing: "-0.02em", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>Research Impact</h1>
         <p style={{ fontSize: 13, color: "#64748B", margin: 0, maxWidth: 520, lineHeight: 1.6 }}>
           Publication output, citation growth, collaboration network, and research score in one view.
-          {kpi?.last_synced && <span style={{ color: "#94A3B8", marginLeft: 6 }}>Last synced: {new Date(kpi.last_synced).toLocaleDateString()}</span>}
+          {kpi?.last_synced && <span style={{ color: "#6b717d", marginLeft: 6 }}>Last synced: {new Date(kpi.last_synced).toLocaleDateString()}</span>}
         </p>
       </div>
       <div style={{ display: "flex", gap: 8 }}>
@@ -542,7 +542,7 @@ export default function ResearchImpact() {
       subtitle={
         <>
           Publication output, citation growth, collaboration network, and research score in one view.
-          {kpi?.last_synced && <span style={{ color: "#94A3B8", marginLeft: 6 }}>Last synced: {new Date(kpi.last_synced).toLocaleDateString()}</span>}
+          {kpi?.last_synced && <span style={{ color: "#6b717d", marginLeft: 6 }}>Last synced: {new Date(kpi.last_synced).toLocaleDateString()}</span>}
         </>
       }
       actions={

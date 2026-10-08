@@ -41,7 +41,6 @@ export default function IndustryPartners() {
     <ResearchLayout
       title="Industry Partners"
       subtitle="Discover industry organisations for applied research, technology transfer, and co-funded projects."
-      sidebar={<IndustryPartnersSidebar results={results} total={total} q={q} />}
     >
 
       {/* Search */}
@@ -118,7 +117,7 @@ function IndustryPartnersSidebar({ results, total, q }) {
             {results.slice(0, 5).map((inst, i) => (
               <div key={i}>
                 <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{inst.name}</div>
-                <div style={{ fontSize: 11, color: "#94A3B8" }}>{inst.country}</div>
+                <div style={{ fontSize: 11, color: "#6b717d" }}>{inst.country}</div>
               </div>
             ))}
           </div>

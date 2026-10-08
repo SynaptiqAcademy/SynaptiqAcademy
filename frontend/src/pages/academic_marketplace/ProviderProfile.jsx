@@ -107,14 +107,14 @@ export default function ProviderProfile() {
       sidebar={<ProviderProfileSidebar summary={summary} p={p} userId={userId} />}
     >
         <div className="mb-2">
-          <Link to="/academic-marketplace/providers" className="text-crimson-600 text-[13px] no-underline">← Back to Providers</Link>
+          <Link to="/academic-marketplace/providers" className="text-navy-700 text-[13px] no-underline">← Back to Providers</Link>
         </div>
 
         {/* Header */}
         <Card padding="xl" className="mb-5">
           <div className="flex gap-5 items-start">
             <div className="w-[72px] h-[72px] rounded-full flex items-center justify-center shrink-0" style={{ background: ACCENT + "22" }}>
-              <span className="text-[28px] font-bold text-crimson-600">{(p?.display_name || "?")[0]}</span>
+              <span className="text-[28px] font-bold text-navy-700">{(p?.display_name || "?")[0]}</span>
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-3 flex-wrap mb-1.5">
@@ -155,7 +155,7 @@ export default function ProviderProfile() {
                   <div className="text-sm font-semibold text-navy-700 mb-1.5">{item.title}</div>
                   <div className="text-[13px] text-slate-600 leading-normal">{item.description?.slice(0, 100)}</div>
                   {item.link && (
-                    <a href={item.link} target="_blank" rel="noreferrer" className="text-xs text-crimson-600 no-underline mt-2 block">View →</a>
+                    <a href={item.link} target="_blank" rel="noreferrer" className="text-xs text-navy-700 no-underline mt-2 block">View →</a>
                   )}
                 </div>
               ))}

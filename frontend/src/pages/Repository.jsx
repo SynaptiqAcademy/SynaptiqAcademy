@@ -50,12 +50,12 @@ function LifecycleNav({ current }) {
         const isCur = s.to === current;
         return (
           <React.Fragment key={s.to}>
-            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} />}
+            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#8a909a", flexShrink: 0 }} />}
             <Link
               to={s.to}
               style={{
                 fontSize: 11, fontWeight: isCur ? 700 : 400,
-                color: isCur ? NAVY : "#94A3B8",
+                color: isCur ? NAVY : "#6b717d",
                 padding: "3px 7px",
                 background: isCur ? "rgba(15,40,71,0.07)" : "transparent",
                 borderRadius: 3, textDecoration: "none", whiteSpace: "nowrap",
@@ -108,9 +108,9 @@ function AssetCard({ item }) {
       {/* Footer */}
       <div style={{ marginTop: "auto", paddingTop: 12, borderTop: `1px solid ${BRD}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
-          <div style={{ fontSize: 10, fontFamily: "monospace", color: "#94A3B8" }}>{item.owner_name || "—"}</div>
+          <div style={{ fontSize: 10, fontFamily: "monospace", color: "#6b717d" }}>{item.owner_name || "—"}</div>
           {item.created_at && (
-            <div style={{ fontSize: 9, fontFamily: "monospace", color: "#CBD5E1" }}>
+            <div style={{ fontSize: 9, fontFamily: "monospace", color: "#8a909a" }}>
               {new Date(item.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
             </div>
           )}
@@ -153,7 +153,7 @@ function AddItemForm({ onCreated, onCancel }) {
 
   return (
     <Card padding="xl" style={{ maxWidth: 640, marginBottom: 28 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 16 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d", marginBottom: 16 }}>
         Add to Repository
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -218,7 +218,7 @@ function TypeStats({ items }) {
             </div>
             <div>
               <div style={{ fontSize: 20, fontWeight: 700, color: "#0F172A", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", lineHeight: 1 }}>{count}</div>
-              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#94A3B8", marginTop: 2 }}>{label}</div>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#6b717d", marginTop: 2 }}>{label}</div>
             </div>
           </Card>
         );
@@ -260,7 +260,7 @@ export default function Repository() {
       <Button
         data-testid={TID.repositoryCreateBtn}
         onClick={() => setShowNew(!showNew)}
-        variant="hero"
+        variant="primary"
         size="sm"
       >
         <Plus size={13} strokeWidth={1.5} /> Add Item

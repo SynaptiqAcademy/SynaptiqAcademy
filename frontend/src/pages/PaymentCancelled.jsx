@@ -17,7 +17,7 @@ export default function PaymentCancelled() {
 
   return (
     <div style={{ maxWidth: 520, margin: "0 auto", padding: "64px 24px", textAlign: "center" }}>
-      <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0a0f1a", marginBottom: 8 }}>
+      <h1 className="pl-hero-title" style={{ marginBottom: 8 }}>
         Checkout cancelled.
       </h1>
       <p style={{ fontSize: "0.9rem", color: "#64748b", marginBottom: 28, lineHeight: 1.7 }}>

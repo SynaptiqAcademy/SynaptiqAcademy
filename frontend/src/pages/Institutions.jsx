@@ -49,7 +49,7 @@ export default function Institutions() {
       title="Institutional research"
       subtitle="Universities, research institutes, and government agencies. Join your home institution, govern your roster, and aggregate the research output of every researcher under one roof."
       actions={
-        <Button data-testid="create-institution-btn" onClick={() => setCreating(true)} variant="hero">
+        <Button data-testid="create-institution-btn" onClick={() => setCreating(true)} variant="primary">
           <Plus size={12} strokeWidth={1.5} /> Register institution
         </Button>
       }

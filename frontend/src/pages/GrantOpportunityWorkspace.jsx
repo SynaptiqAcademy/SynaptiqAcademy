@@ -107,18 +107,6 @@ function ScoreBar({ label, value, max = 100, color = "#0F2847" }) {
   );
 }
 
-function CompatBar({ label, value }) {
-  const color = value >= 70 ? "#059669" : value >= 50 ? "#d97706" : "#64748b";
-  return (
-    <div className="flex items-center gap-2">
-      <span className="w-32 text-xs text-slate-500 truncate">{label}</span>
-      <div className="flex-1 bg-slate-100 rounded-full h-1.5">
-        <div className="h-1.5 rounded-full" style={{ width: `${value}%`, backgroundColor: color }} />
-      </div>
-      <span className="text-xs font-medium w-8 text-right" style={{ color }}>{value}%</span>
-    </div>
-  );
-}
 
 // ─── tab sub-components ───────────────────────────────────────────────────────
 
@@ -626,7 +614,6 @@ function MatchesTab({ data, collabId, onRefresh }) {
     }
   };
 
-  const scoreColor = (s) => s >= 70 ? "text-emerald-600" : s >= 50 ? "text-amber-600" : "text-slate-400";
 
   return (
     <div className="space-y-5">
@@ -649,8 +636,6 @@ function MatchesTab({ data, collabId, onRefresh }) {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {matches.map((m, i) => {
-            const score = m.compatibility_score || m.score || 0;
-            const breakdown = m.score_breakdown || {};
             return (
               <Card key={m._id || m.user_id || i} padding="md" className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
@@ -663,16 +648,8 @@ function MatchesTab({ data, collabId, onRefresh }) {
                       </div>
                     )}
                   </div>
-                  <div className={`text-2xl font-bold tabular-nums shrink-0 ${scoreColor(score)}`}>{score}%</div>
                 </div>
 
-                {Object.keys(breakdown).length > 0 && (
-                  <div className="space-y-1.5">
-                    {Object.entries(breakdown).map(([k, v]) => (
-                      <CompatBar key={k} label={k.replace(/_/g, " ")} value={typeof v === "number" ? v : 0} />
-                    ))}
-                  </div>
-                )}
 
                 {inlineInvite === (m.user_id || m._id) ? (
                   <div className="space-y-2 pt-2 border-t border-slate-100">

@@ -164,11 +164,11 @@ function DisputeDetailSidebar({ dispute }) {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-            <span style={{ color: "#94A3B8" }}>Evidence</span>
+            <span style={{ color: "#6b717d" }}>Evidence</span>
             <span style={{ color: "#374151", fontWeight: 600 }}>{dispute.evidence?.length || 0}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-            <span style={{ color: "#94A3B8" }}>Messages</span>
+            <span style={{ color: "#6b717d" }}>Messages</span>
             <span style={{ color: "#374151", fontWeight: 600 }}>{dispute.messages?.length || 0}</span>
           </div>
         </div>

@@ -679,9 +679,9 @@ function RecommendationCenterSidebar({ qualityItems, qualityLoading, topAreas, t
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Quality Signals</div>
         </div>
         {qualityLoading ? (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0 }}>Loading…</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0 }}>Loading…</p>
         ) : qualityItems.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No quality metrics available yet.
           </p>
         ) : (
@@ -702,9 +702,9 @@ function RecommendationCenterSidebar({ qualityItems, qualityLoading, topAreas, t
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Research Areas</div>
         </div>
         {topAreasLoading ? (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0 }}>Loading…</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0 }}>Loading…</p>
         ) : topAreas.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No area data yet.
           </p>
         ) : (
@@ -712,7 +712,7 @@ function RecommendationCenterSidebar({ qualityItems, qualityLoading, topAreas, t
             {topAreas.slice(0, 5).map((d, i) => (
               <div key={d.area || d.name || i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                 <span style={{ fontSize: 11.5, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.area || d.name || "Unknown"}</span>
-                <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>{(d.count || 0).toLocaleString()}</span>
+                <span style={{ fontSize: 11, color: "#6b717d", fontFamily: "monospace" }}>{(d.count || 0).toLocaleString()}</span>
               </div>
             ))}
           </div>

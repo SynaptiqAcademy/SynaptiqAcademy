@@ -153,7 +153,7 @@ export default function ExpertiseRequestDetail() {
           )}
           {r.i_am_owner && (
             <Button
-              variant="danger"
+              variant="danger-outline"
               size="sm"
               data-testid="delete-request-btn"
               onClick={del}

@@ -484,9 +484,9 @@ function LessonPlanDetailSidebar({ lesson, totalDuration }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Outline Coverage</div>
         </div>
         <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
-          {totalDuration} <span style={{ fontSize: 15, fontWeight: 400, color: "#94A3B8" }}>/ {lesson.duration_minutes} min</span>
+          {totalDuration} <span style={{ fontSize: 15, fontWeight: 400, color: "#6b717d" }}>/ {lesson.duration_minutes} min</span>
         </div>
-        <p style={{ fontSize: 12, color: phaseCount === 0 ? "#94A3B8" : (onTarget ? "#64748B" : "#B45309"), margin: "4px 0 0", lineHeight: 1.5 }}>
+        <p style={{ fontSize: 12, color: phaseCount === 0 ? "#6b717d" : (onTarget ? "#64748B" : "#B45309"), margin: "4px 0 0", lineHeight: 1.5 }}>
           {phaseCount === 0
             ? "No outline phases added yet."
             : onTarget
@@ -503,11 +503,11 @@ function LessonPlanDetailSidebar({ lesson, totalDuration }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontSize: 12.5, color: "#374151" }}>Learning objectives</span>
-            <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>{objectivesCount}</span>
+            <span style={{ fontSize: 11, color: "#6b717d", fontFamily: "monospace" }}>{objectivesCount}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontSize: 12.5, color: "#374151" }}>Materials</span>
-            <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>{materialsCount}</span>
+            <span style={{ fontSize: 11, color: "#6b717d", fontFamily: "monospace" }}>{materialsCount}</span>
           </div>
         </div>
       </Card>

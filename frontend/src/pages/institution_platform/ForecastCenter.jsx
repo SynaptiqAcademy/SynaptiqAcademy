@@ -173,7 +173,7 @@ function ForecastCenterSidebar({ pubF, grantF, facF, citF }) {
               <div key={r.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                 <span style={{ fontSize: 12.5, color: "#374151" }}>{r.label}</span>
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: r.color }}>
-                  {val.toLocaleString()} <span style={{ fontSize: 10, fontWeight: 400, color: "#94A3B8" }}>({f.confidence_pct}%)</span>
+                  {val.toLocaleString()} <span style={{ fontSize: 10, fontWeight: 400, color: "#6b717d" }}>({f.confidence_pct}%)</span>
                 </span>
               </div>
             );

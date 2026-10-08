@@ -195,7 +195,7 @@ function ReputationSidebar({ topUsers, badgeDist }) {
             </div>
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No contributor data yet.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No contributor data yet.</p>
         )}
       </Card>
 
@@ -205,7 +205,7 @@ function ReputationSidebar({ topUsers, badgeDist }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Most Awarded Badges</div>
         </div>
         {topBadges.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No badges awarded yet.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No badges awarded yet.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {topBadges.map((b) => (

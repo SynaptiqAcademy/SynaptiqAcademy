@@ -7,7 +7,7 @@ import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
-const GRADE_COLOR = { "A+": EMERALD, A: EMERALD, B: "#2f5486", C: "#f59e0b", D: "#f97316", F: ACCENT };
+const GRADE_COLOR = { "A+": EMERALD, A: EMERALD, B: "#2f5486", C: "#b45309", D: "#c2410c", F: "#B42318" };
 
 // Grade-colored ring with a custom "Grade X" subtext has no equivalent in
 // ProgressRing (which only supports colorByValue's fixed 80/50/30 thresholds
@@ -35,8 +35,8 @@ function ScoreRing({ score, grade }) {
 // left hand-rolled; its 70/50 qualitative bar-color bands don't match
 // ProgressBar's colorByValue 80/100 overrun thresholds.
 function IndicatorRow({ ind }) {
-  const barColor = ind.value >= 70 ? EMERALD : ind.value >= 50 ? "#f59e0b" : ACCENT;
-  const statusColor = { good: EMERALD, warning: "#f59e0b", critical: ACCENT }[ind.status] || TEXT_SECONDARY;
+  const barColor = ind.value >= 70 ? EMERALD : ind.value >= 50 ? "#b45309" : "#B42318";
+  const statusColor = { good: EMERALD, warning: "#b45309", critical: "#B42318" }[ind.status] || TEXT_SECONDARY;
   return (
     <div style={{ padding: "12px 0", borderBottom: `1px solid ${BRD}` }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
@@ -116,7 +116,7 @@ export default function InstitutionHealth() {
             data={history.map(h => ({
               label: h.date,
               value: h.score,
-              color: h.score >= 70 ? EMERALD : h.score >= 50 ? "#f59e0b" : ACCENT,
+              color: h.score >= 70 ? EMERALD : h.score >= 50 ? "#b45309" : "#B42318",
             }))}
             height={60}
             gap={4}

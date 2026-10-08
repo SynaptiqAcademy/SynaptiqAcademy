@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Building2 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 /**
@@ -38,20 +37,28 @@ export default function RequireInstitution({ children, requireAdmin = false }) {
   const allowed  = requireAdmin ? isAdmin : isMember;
 
   if (!allowed) {
+    // Same page language as everywhere else: a title, one line, the next step.
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-6">
-        <Building2 size={28} strokeWidth={1.5} className="text-slate-300 mb-3" />
-        <div className="text-slate-700 font-medium mb-1">
-          {isMember ? "Institution admin access required" : "You're not part of an institution yet"}
-        </div>
-        <p className="text-slate-500 text-sm max-w-sm mb-4">
+      <div style={{ maxWidth: 600, padding: "8px 0 24px" }}>
+        <p className="pl-eyebrow">Institution</p>
+        <h1 className="pl-hero-title">
+          {isMember ? "This page is for institution admins." : "This page is for members of an institution."}
+        </h1>
+        <p className="pl-sub" style={{ marginTop: 8 }}>
           {isMember
-            ? "This page is only available to institution owners and admins."
-            : "This page is only available to verified members of a Synaptiq institution."}
+            ? "You're a member of your institution; this page is for its owners and admins."
+            : "Membership comes from your institution: through your institutional email, an invitation, or an admin approving your request."}
         </p>
-        <Link to="/discover" className="text-sm text-[#0F2847] font-medium hover:underline">
-          Back to Home
-        </Link>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16 }}>
+          {!isMember && (
+            <Link to="/institutions" className="inline-flex items-center h-9 px-4 text-[13px] font-semibold rounded-btn bg-navy-700 text-white no-underline hover:bg-navy-800">
+              Find your institution
+            </Link>
+          )}
+          <Link to="/discover" className="inline-flex items-center h-9 px-4 text-[13px] font-semibold rounded-btn border border-hairline-strong bg-white text-[color:var(--sq-text-primary)] no-underline hover:border-[color:var(--sq-text-primary)]">
+            Back to Home
+          </Link>
+        </div>
       </div>
     );
   }

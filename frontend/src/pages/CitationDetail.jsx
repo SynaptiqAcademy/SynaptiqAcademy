@@ -128,7 +128,7 @@ function VelocityGauge({ velocity, growthRate, recentDelta }) {
     velocity >= 10   ? { label: "Active",           color: "#0F2847", pct: 65 } :
     velocity >= 3    ? { label: "Moderate",         color: "#d97706", pct: 40 } :
     velocity >= 0.5  ? { label: "Low Activity",     color: "#64748b", pct: 20 } :
-                       { label: "No Recent Growth", color: "#cbd5e1", pct: 5  };
+                       { label: "No Recent Growth", color: "#8a909a", pct: 5  };
   return (
     <Card padding="lg">
       <div className="overline mb-3">Citation Velocity</div>

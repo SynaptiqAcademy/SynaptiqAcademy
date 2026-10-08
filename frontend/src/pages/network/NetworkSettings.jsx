@@ -175,7 +175,7 @@ function NetworkSettingsSidebar({ settings }) {
             </div>
           </>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No discovery categories selected — the AI won't generate recommendations.
           </p>
         )}

@@ -463,7 +463,7 @@ function EmailCenterSidebar({ templates, campaigns, fmt }) {
               <div key={tpl.id} style={{ fontSize: 12, color: "#374151" }}>{tpl.name}</div>
             ))}
           </div>
-          <p style={{ fontSize: 11, color: "#94A3B8", margin: "8px 0 0" }}>{templates.length} template{templates.length !== 1 ? "s" : ""} saved</p>
+          <p style={{ fontSize: 11, color: "#6b717d", margin: "8px 0 0" }}>{templates.length} template{templates.length !== 1 ? "s" : ""} saved</p>
         </Card>
       )}
 
@@ -477,7 +477,7 @@ function EmailCenterSidebar({ templates, campaigns, fmt }) {
             {campaigns.slice(0, 3).map((c) => (
               <div key={c.id}>
                 <div style={{ fontSize: 12, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.subject}</div>
-                <div style={{ fontSize: 11, color: "#94A3B8" }}>{fmt(c.created_at)} · {c.sent_count} sent</div>
+                <div style={{ fontSize: 11, color: "#6b717d" }}>{fmt(c.created_at)} · {c.sent_count} sent</div>
               </div>
             ))}
           </div>

@@ -39,7 +39,7 @@ export default function ContractView() {
       sidebar={<ContractViewSidebar contract={contract} orderId={orderId} />}
     >
         <div className="mb-2">
-          <Link to={`/academic-marketplace/orders/${orderId}`} className="text-crimson-600 text-[13px] no-underline">← Back to Order</Link>
+          <Link to={`/academic-marketplace/orders/${orderId}`} className="text-navy-700 text-[13px] no-underline">← Back to Order</Link>
         </div>
 
         {msg && (
@@ -101,11 +101,11 @@ function ContractViewSidebar({ contract, orderId }) {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-            <span style={{ color: "#94A3B8" }}>Status</span>
+            <span style={{ color: "#6b717d" }}>Status</span>
             <span style={{ color: contract.status === "active" ? EMERALD : "#374151", fontWeight: 600, textTransform: "capitalize" }}>{contract.status}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-            <span style={{ color: "#94A3B8" }}>Created</span>
+            <span style={{ color: "#6b717d" }}>Created</span>
             <span style={{ color: "#374151", fontWeight: 600 }}>{new Date(contract.created_at).toLocaleDateString()}</span>
           </div>
         </div>

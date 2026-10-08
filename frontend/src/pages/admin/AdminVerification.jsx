@@ -161,7 +161,7 @@ function VerificationSidebar({ fraud, queue }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
               <span className="font-serif" style={{ fontSize: 22, color: "#0f172a" }}>{fraud.flag_rate_pct ?? 0}%</span>
-              <span style={{ fontSize: 11, color: "#94A3B8" }}>flag rate</span>
+              <span style={{ fontSize: 11, color: "#6b717d" }}>flag rate</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
               <span style={{ fontSize: 11.5, color: "#64748B" }}>Flagged users</span>
@@ -177,7 +177,7 @@ function VerificationSidebar({ fraud, queue }) {
             </div>
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No fraud data yet.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No fraud data yet.</p>
         )}
       </Card>
 
@@ -187,7 +187,7 @@ function VerificationSidebar({ fraud, queue }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Queue by Type</div>
         </div>
         {typeEntries.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>Queue is clear.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>Queue is clear.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {typeEntries.map(([type, count]) => (

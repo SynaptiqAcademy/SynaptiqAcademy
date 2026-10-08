@@ -25,7 +25,7 @@ const LEVEL_COLORS = {
 function FactorRow({ id, factor }) {
   const [open, setOpen] = useState(false);
   const contribution = (factor.score * factor.weight) / 100;
-  const color = factor.score >= 80 ? EMERALD : factor.score >= 50 ? "#0F2847" : factor.score >= 20 ? "#D97706" : ACCENT;
+  const color = factor.score >= 80 ? EMERALD : factor.score >= 50 ? "#0F2847" : factor.score >= 20 ? "#D97706" : "#B42318";
 
   return (
     <div style={{ borderBottom: `1px solid ${BRD}` }}>

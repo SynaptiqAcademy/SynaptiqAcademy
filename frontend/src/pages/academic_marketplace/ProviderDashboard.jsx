@@ -48,7 +48,7 @@ export default function ProviderDashboard() {
       title="Provider Dashboard"
       actions={
         <>
-          <Button as={Link} to="/academic-marketplace/services/create" variant="hero">
+          <Button as={Link} to="/academic-marketplace/services/create" variant="primary">
             + Create Service
           </Button>
           <Button as={Link} to="/academic-marketplace/orders?role=provider" variant="hero">
@@ -73,11 +73,19 @@ export default function ProviderDashboard() {
           </Alert>
         )}
 
+        {!(data.recent_orders?.length > 0) && !(data.orders?.pending > 0) && (
+          <EmptyState
+            title="No orders yet."
+            description="Researchers can order your services once they're listed. Create a service to describe what you offer."
+            action={<Button as={Link} to="/academic-marketplace/services/create" size="sm">Create a service</Button>}
+          />
+        )}
+
         {data.recent_orders?.length > 0 && (
           <Card padding="lg" className="mt-5">
             <div className="flex justify-between items-center mb-4">
               <H2 className="m-0" style={{ fontSize: "1.0625rem" }}>Recent Orders</H2>
-              <Link to="/academic-marketplace/orders?role=provider" className="text-crimson-600 text-[13px] no-underline">View all →</Link>
+              <Link to="/academic-marketplace/orders?role=provider" className="text-navy-700 text-[13px] no-underline">View all →</Link>
             </div>
             {data.recent_orders.map((o, i) => {
               const c = STATUS_COLORS[o.status] || "#475569";
@@ -106,7 +114,7 @@ export default function ProviderDashboard() {
             <Alert variant="error">
               <div className="flex items-center justify-between gap-3 w-full">
                 <span>{data.disputes.open} open dispute{data.disputes.open !== 1 ? "s" : ""} need attention.</span>
-                <Link to="/academic-marketplace/disputes" className="text-crimson-600 text-[13px] no-underline shrink-0">View →</Link>
+                <Link to="/academic-marketplace/disputes" className="text-navy-700 text-[13px] no-underline shrink-0">View →</Link>
               </div>
             </Alert>
           </div>

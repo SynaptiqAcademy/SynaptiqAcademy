@@ -46,7 +46,7 @@ function ProviderBrowseSidebar({ categories, category, onSelectCategory, results
           <a href={`/academic-marketplace/providers/${topRated.user_id}`} style={{ textDecoration: "none" }}>
             <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a" }}>{topRated.display_name}</div>
           </a>
-          <div style={{ fontSize: 11, color: "#94A3B8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{topRated.headline}</div>
+          <div style={{ fontSize: 11, color: "#6b717d", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{topRated.headline}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4 }}>
             <Star size={10} style={{ color: "#F59E0B" }} fill="#F59E0B" />
             <span style={{ fontSize: 11, color: "#64748B" }}>
@@ -142,7 +142,7 @@ export default function ProviderBrowse() {
                 <Card key={p.user_id} to={`/academic-marketplace/providers/${p.user_id}`} padding="lg">
                   <div className="flex items-start gap-3 mb-3">
                     <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: ACCENT + "22" }}>
-                      <span className="text-lg font-bold text-crimson-600">{(p.display_name || "?")[0]}</span>
+                      <span className="text-lg font-bold text-navy-700">{(p.display_name || "?")[0]}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[15px] font-bold text-navy-700 mb-0.5">{p.display_name}</div>

@@ -25,7 +25,7 @@ function daysUntil(dl) {
 function urgencyLabel(dl) {
   const d = daysUntil(dl);
   if (d === null)  return null;
-  if (d < 0)       return { text: "Closed",     color: "#94A3B8", bg: "#F1F5F9", closed: true };
+  if (d < 0)       return { text: "Closed",     color: "#6b717d", bg: "#F1F5F9", closed: true };
   if (d === 0)     return { text: "Today",      color: ACCENT,   bg: "#FFF1F2", closed: false };
   if (d <= 7)      return { text: `${d}d left`, color: ACCENT,   bg: "#FFF1F2", closed: false };
   if (d <= 30)     return { text: `${d}d left`, color: "#B45309",bg: "#FFFBEB", closed: false };
@@ -73,8 +73,8 @@ function formatInfo(f) {
 const STATE_DISPLAY = {
   open:          { label: "Open",          color: EMERALD,  bg: "#ECFDF5" },
   closing_soon:  { label: "Closing soon",  color: "#B45309", bg: "#FFFBEB" },
-  closed:        { label: "Closed",        color: "#94A3B8", bg: "#F1F5F9" },
-  unknown:       { label: "No deadline",   color: "#94A3B8", bg: "#F8FAFC" },
+  closed:        { label: "Closed",        color: "#6b717d", bg: "#F1F5F9" },
+  unknown:       { label: "No deadline",   color: "#6b717d", bg: "#F8FAFC" },
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -280,7 +280,7 @@ export default function Conferences() {
           {/* Search + sort + view */}
           <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 12 }}>
             <div style={{ flex: 1, position: "relative" }}>
-              <Search size={14} strokeWidth={1.5} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#94A3B8", pointerEvents: "none" }} />
+              <Search size={14} strokeWidth={1.5} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#6b717d", pointerEvents: "none" }} />
               <input
                 data-testid={TID.discoverySearch}
                 value={q}
@@ -301,7 +301,7 @@ export default function Conferences() {
                     right: 10,
                     top: "50%",
                     transform: "translateY(-50%)",
-                    color: "#94A3B8",
+                    color: "#6b717d",
                     display: "flex",
                     alignItems: "center"
                   }}>
@@ -341,7 +341,7 @@ export default function Conferences() {
               {Object.entries(filters).map(([k, v]) => v && (
                 <FilterChip key={k} label={`${k.replace(/_/g, " ")}: ${v}`} onRemove={() => setFilter(k, "")} />
               ))}
-              <button onClick={() => { setFilters({}); setFormat(""); setQ(""); }} style={{ fontSize: 11, color: "#94A3B8", cursor: "pointer", padding: "3px 8px", background: "none", border: "none", outline: "none", textDecoration: "underline" }}>
+              <button onClick={() => { setFilters({}); setFormat(""); setQ(""); }} style={{ fontSize: 11, color: "#6b717d", cursor: "pointer", padding: "3px 8px", background: "none", border: "none", outline: "none", textDecoration: "underline" }}>
                 Clear all
               </button>
             </div>
@@ -349,7 +349,7 @@ export default function Conferences() {
 
           {/* Count */}
           {!loading && !gated && (
-            <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 16, fontFamily: "monospace" }}>
+            <div style={{ fontSize: 12, color: "#6b717d", marginBottom: 16, fontFamily: "monospace" }}>
               {total.toLocaleString()} {hasFilters ? "matching" : "indexed"} conferences
             </div>
           )}
@@ -384,18 +384,18 @@ export default function Conferences() {
                 data-testid={TID.discoveryPagePrev}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", fontSize: 13, border: `1px solid ${BORDER}`, background: page === 1 ? "#F8FAFC" : "white", color: page === 1 ? "#CBD5E1" : NAVY, cursor: page === 1 ? "not-allowed" : "pointer", outline: "none" }}
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", fontSize: 13, border: `1px solid ${BORDER}`, background: page === 1 ? "#F8FAFC" : "white", color: page === 1 ? "#8a909a" : NAVY, cursor: page === 1 ? "not-allowed" : "pointer", outline: "none" }}
               >
                 <ChevronLeft size={14} strokeWidth={1.5} /> Previous
               </button>
-              <span style={{ fontSize: 12, color: "#94A3B8", fontFamily: "monospace" }}>
+              <span style={{ fontSize: 12, color: "#6b717d", fontFamily: "monospace" }}>
                 Page {page} of {Math.ceil(total / PAGE_SIZE)}
               </span>
               <button
                 data-testid={TID.discoveryPageNext}
                 onClick={() => setPage((p) => p + 1)}
                 disabled={!hasMore}
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", fontSize: 13, border: `1px solid ${BORDER}`, background: !hasMore ? "#F8FAFC" : "white", color: !hasMore ? "#CBD5E1" : NAVY, cursor: !hasMore ? "not-allowed" : "pointer", outline: "none" }}
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", fontSize: 13, border: `1px solid ${BORDER}`, background: !hasMore ? "#F8FAFC" : "white", color: !hasMore ? "#8a909a" : NAVY, cursor: !hasMore ? "not-allowed" : "pointer", outline: "none" }}
               >
                 Next <ChevronRight size={14} strokeWidth={1.5} />
               </button>
@@ -428,7 +428,7 @@ function RecsPanel({ recs, loading, compareList, toggleCompare, user }) {
           <span style={{ fontSize: 12, fontWeight: 700, color: NAVY, textTransform: "uppercase", letterSpacing: "0.08em" }}>
             Recommended Conferences
           </span>
-          <span style={{ fontSize: 11, color: "#94A3B8" }}>Matched to your research profile</span>
+          <span style={{ fontSize: 11, color: "#6b717d" }}>Matched to your research profile</span>
           {!hasProfile && (
             <span style={{ fontSize: 11, color: "#D97706", display: "flex", alignItems: "center", gap: 3 }}>
               <AlertCircle size={11} strokeWidth={1.5} />
@@ -446,7 +446,7 @@ function RecsPanel({ recs, loading, compareList, toggleCompare, user }) {
             onClick={() => setExpanded((v) => !v)}
             aria-label={expanded ? "Collapse recommendations" : "Expand recommendations"}
             style={{
-              color: "#94A3B8",
+              color: "#6b717d",
               display: "flex",
               alignItems: "center"
             }}>
@@ -518,7 +518,7 @@ function RecCard({ c, isCompared, onCompare }) {
 
       {/* Explanation */}
       {c.explanation && (
-        <div style={{ fontSize: 10, color: "#94A3B8", fontStyle: "italic", lineHeight: 1.4, marginBottom: 8 }}>
+        <div style={{ fontSize: 10, color: "#6b717d", fontStyle: "italic", lineHeight: 1.4, marginBottom: 8 }}>
           {c.explanation}
         </div>
       )}
@@ -576,7 +576,7 @@ function DeadlineTicker({ items }) {
               style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 10px", background: ul.bg, textDecoration: "none", flexShrink: 0, border: `1px solid ${ul.color}22` }}
             >
               <span style={{ fontSize: 10, fontWeight: 700, color: ul.color, whiteSpace: "nowrap" }}>{ul.text}</span>
-              <span style={{ fontSize: 10, color: "#94A3B8" }}>·</span>
+              <span style={{ fontSize: 10, color: "#6b717d" }}>·</span>
               {(c.acronym || c.year) && (
                 <span style={{ fontSize: 10, color: NAVY, fontWeight: 700, whiteSpace: "nowrap", fontFamily: "monospace" }}>{c.acronym} {c.year}</span>
               )}
@@ -603,7 +603,7 @@ function FacetPanel({ facets, filters, setFilter, format, setFormat }) {
       <div style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 10, marginBottom: 10 }}>
         <button onClick={() => toggle(sk)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: isOpen ? 8 : 0, cursor: "pointer", background: "none", border: "none", outline: "none", padding: 0 }}>
           <span style={{ fontSize: 10, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.1em" }}>{title}</span>
-          <ChevronDown size={11} strokeWidth={1.5} style={{ color: "#94A3B8", transform: isOpen ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 150ms" }} />
+          <ChevronDown size={11} strokeWidth={1.5} style={{ color: "#6b717d", transform: isOpen ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 150ms" }} />
         </button>
         {isOpen && (items || []).slice(0, 12).map((f) => (
           <button
@@ -615,7 +615,7 @@ function FacetPanel({ facets, filters, setFilter, format, setFormat }) {
             <span style={{ fontSize: 12, color: active === f._id ? NAVY : "#64748B", fontWeight: active === f._id ? 700 : 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>
               {active === f._id && "✓ "}{fmtLabel ? fmtLabel(f._id) : f._id}
             </span>
-            <span style={{ fontSize: 10, color: "#94A3B8", fontFamily: "monospace", flexShrink: 0, marginLeft: 4 }}>{f.count}</span>
+            <span style={{ fontSize: 10, color: "#6b717d", fontFamily: "monospace", flexShrink: 0, marginLeft: 4 }}>{f.count}</span>
           </button>
         ))}
       </div>
@@ -745,7 +745,7 @@ function ConferenceCard({ c, isCompared, onCompare }) {
         {/* Location */}
         {c.location && (
           <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
-            <MapPin size={10} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0 }} />
+            <MapPin size={10} strokeWidth={1.5} style={{ color: "#6b717d", flexShrink: 0 }} />
             <span style={{ fontSize: 11, color: "#64748B", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.location}</span>
           </div>
         )}
@@ -753,7 +753,7 @@ function ConferenceCard({ c, isCompared, onCompare }) {
         {/* Conference dates */}
         {c.start_date && (
           <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
-            <CalendarDays size={10} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0 }} />
+            <CalendarDays size={10} strokeWidth={1.5} style={{ color: "#6b717d", flexShrink: 0 }} />
             <span style={{ fontSize: 11, color: "#64748B" }}>
               {fmtDate(c.start_date)}{c.end_date ? ` → ${fmtDate(c.end_date)}` : ""}
             </span>
@@ -766,7 +766,7 @@ function ConferenceCard({ c, isCompared, onCompare }) {
             {c.topics.slice(0, 4).map((t, i) => (
               <span key={i} style={{ fontSize: 9, color: "#64748B", background: "#F8FAFC", border: `1px solid ${BORDER}`, padding: "2px 5px" }}>{t}</span>
             ))}
-            {c.topics.length > 4 && <span style={{ fontSize: 9, color: "#94A3B8" }}>+{c.topics.length - 4}</span>}
+            {c.topics.length > 4 && <span style={{ fontSize: 9, color: "#6b717d" }}>+{c.topics.length - 4}</span>}
           </div>
         )}
 
@@ -780,16 +780,16 @@ function ConferenceCard({ c, isCompared, onCompare }) {
       >
         <button
           onClick={(e) => onCompare(c, e)}
-          style={{ fontSize: 10, fontWeight: 600, color: isCompared ? NAVY : "#94A3B8", cursor: "pointer", display: "flex", alignItems: "center", gap: 3, background: "none", border: "none", outline: "none", textDecoration: isCompared ? "underline" : "none", padding: 0 }}
+          style={{ fontSize: 10, fontWeight: 600, color: isCompared ? NAVY : "#6b717d", cursor: "pointer", display: "flex", alignItems: "center", gap: 3, background: "none", border: "none", outline: "none", textDecoration: isCompared ? "underline" : "none", padding: 0 }}
         >
           <BarChart2 size={10} strokeWidth={1.5} /> {isCompared ? "Comparing" : "Compare"}
         </button>
         <span style={{ color: "#E2E8F0" }}>|</span>
-        <Link to="/ai/abstract" onClick={(e) => e.stopPropagation()} style={{ fontSize: 10, fontWeight: 600, color: "#94A3B8", display: "flex", alignItems: "center", gap: 3, textDecoration: "none" }}>
+        <Link to="/ai/abstract" onClick={(e) => e.stopPropagation()} style={{ fontSize: 10, fontWeight: 600, color: "#6b717d", display: "flex", alignItems: "center", gap: 3, textDecoration: "none" }}>
           <Sparkles size={10} strokeWidth={1.5} /> Abstract
         </Link>
         <span style={{ color: "#E2E8F0" }}>|</span>
-        <Link to="/manuscript-review" onClick={(e) => e.stopPropagation()} style={{ fontSize: 10, fontWeight: 600, color: "#94A3B8", display: "flex", alignItems: "center", gap: 3, textDecoration: "none" }}>
+        <Link to="/manuscript-review" onClick={(e) => e.stopPropagation()} style={{ fontSize: 10, fontWeight: 600, color: "#6b717d", display: "flex", alignItems: "center", gap: 3, textDecoration: "none" }}>
           <FileText size={10} strokeWidth={1.5} /> Review
         </Link>
       </div>
@@ -826,7 +826,7 @@ function FilterChip({ label, onRemove }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 8px", background: `${NAVY}0D`, border: `1px solid ${NAVY}20`, fontSize: 11, color: NAVY, fontWeight: 600 }}>
       {label}
-      <button onClick={onRemove} aria-label={`Remove ${label} filter`} style={{ display: "flex", alignItems: "center", color: "#94A3B8", cursor: "pointer", marginLeft: 2, background: "none", border: "none", outline: "none" }}>
+      <button onClick={onRemove} aria-label={`Remove ${label} filter`} style={{ display: "flex", alignItems: "center", color: "#6b717d", cursor: "pointer", marginLeft: 2, background: "none", border: "none", outline: "none" }}>
         <X size={10} strokeWidth={2} />
       </button>
     </div>
@@ -861,7 +861,7 @@ function TimelineView({ items, loading, compareList, toggleCompare }) {
               Submit by {month}
             </div>
             <div style={{ flex: 1, height: 1, background: BORDER }} />
-            <span style={{ fontSize: 10, color: "#94A3B8", fontFamily: "monospace" }}>{confs.length}</span>
+            <span style={{ fontSize: 10, color: "#6b717d", fontFamily: "monospace" }}>{confs.length}</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {confs.map((c) => (
@@ -911,7 +911,7 @@ function TimelineCard({ c, isCompared, onCompare }) {
             )}
           </>
         ) : (
-          <div style={{ fontSize: 9, color: "#94A3B8", textAlign: "center", lineHeight: 1.4 }}>No deadline</div>
+          <div style={{ fontSize: 9, color: "#6b717d", textAlign: "center", lineHeight: 1.4 }}>No deadline</div>
         )}
       </div>
 
@@ -935,18 +935,18 @@ function TimelineCard({ c, isCompared, onCompare }) {
       <div style={{ width: 76, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: 10, borderLeft: `1px solid ${BORDER}` }} onClick={(e) => e.stopPropagation()}>
         <button
           onClick={(e) => onCompare(c, e)}
-          style={{ color: isCompared ? NAVY : "#CBD5E1", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, background: "none", border: "none", outline: "none" }}
+          style={{ color: isCompared ? NAVY : "#8a909a", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, background: "none", border: "none", outline: "none" }}
         >
           <BarChart2 size={14} strokeWidth={1.5} />
-          <span style={{ fontSize: 9, color: "#94A3B8" }}>Compare</span>
+          <span style={{ fontSize: 9, color: "#6b717d" }}>Compare</span>
         </button>
         <Link
           to="/ai"
           onClick={(e) => e.stopPropagation()}
-          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: "#CBD5E1", textDecoration: "none" }}
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: "#8a909a", textDecoration: "none" }}
         >
           <Sparkles size={14} strokeWidth={1.5} />
-          <span style={{ fontSize: 9, color: "#94A3B8" }}>Prepare</span>
+          <span style={{ fontSize: 9, color: "#6b717d" }}>Prepare</span>
         </Link>
       </div>
     </div>
@@ -990,7 +990,7 @@ function ConferencesEmptyState({ hasFilters }) {
           { Icon: FileText,  text: "Try searching by acronym, e.g. \"ICML\", \"NeurIPS\", \"AAAI\"" },
         ].map(({ Icon, text }) => (
           <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "#64748B" }}>
-            <Icon size={12} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0, marginTop: 2 }} />
+            <Icon size={12} strokeWidth={1.5} style={{ color: "#6b717d", flexShrink: 0, marginTop: 2 }} />
             {text}
           </div>
         ))}

@@ -53,12 +53,12 @@ function LifecycleNav({ current }) {
         const isCur = s.to === current;
         return (
           <React.Fragment key={s.to}>
-            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} />}
+            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#8a909a", flexShrink: 0 }} />}
             <Link
               to={s.to}
               style={{
                 fontSize: 11, fontWeight: isCur ? 700 : 400,
-                color: isCur ? NAVY : "#94A3B8",
+                color: isCur ? NAVY : "#6b717d",
                 padding: "3px 7px",
                 background: isCur ? "rgba(15,40,71,0.07)" : "transparent",
                 borderRadius: 3, textDecoration: "none",
@@ -103,7 +103,7 @@ function VerdictForm({ rr, onSubmitted }) {
 
   return (
     <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${BRD}`, display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94A3B8" }}>
+      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#6b717d" }}>
         Submit Verdict
       </div>
       <FormSelect
@@ -157,9 +157,9 @@ function ReviewCard({ rr, onLoad }) {
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: 16, justifyContent: "space-between" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 6 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#6b717d", marginBottom: 6 }}>
             {rr.manuscript?.manuscript_type || "Manuscript"}
-            {rr.section && <span style={{ marginLeft: 8, color: "#CBD5E1" }}>· {rr.section.replace(/_/g," ")}</span>}
+            {rr.section && <span style={{ marginLeft: 8, color: "#8a909a" }}>· {rr.section.replace(/_/g," ")}</span>}
           </div>
           <Link
             to={`/manuscripts/${rr.manuscript_id}`}
@@ -179,7 +179,7 @@ function ReviewCard({ rr, onLoad }) {
               <Avatar url={rr.requester.avatar_url} name={rr.requester.full_name} size={24} />
               <span style={{ fontSize: 12, color: "#475569" }}>
                 {rr.requester.full_name}
-                {rr.requester.institution && <span style={{ color: "#94A3B8" }}> · {rr.requester.institution}</span>}
+                {rr.requester.institution && <span style={{ color: "#6b717d" }}> · {rr.requester.institution}</span>}
               </span>
             </div>
           )}
@@ -231,7 +231,7 @@ function ReviewCard({ rr, onLoad }) {
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
           <Badge verdict={rr.verdict} status={rr.status} />
-          <span style={{ fontSize: 10, fontFamily: "monospace", color: "#CBD5E1" }}>
+          <span style={{ fontSize: 10, fontFamily: "monospace", color: "#8a909a" }}>
             {new Date(rr.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
           </span>
         </div>
@@ -294,7 +294,7 @@ export default function Reviews() {
           </div>
         </>
       }
-      sidebar={<ReviewsSidebar buckets={buckets} loaded={loaded} />}
+      sidebar={loaded && ((buckets.accepted || []).length || (buckets.completed || []).length) ? <ReviewsSidebar buckets={buckets} loaded={loaded} /> : undefined}
       actions={actions}
     >
       <div data-testid={TID.reviewsDashboard} style={{ maxWidth: 840, paddingBottom: 64 }}>
@@ -344,7 +344,7 @@ function ReviewsSidebar({ buckets, loaded }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>In Progress</div>
         </div>
         {!loaded ? (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0 }}>Loading…</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0 }}>Loading…</p>
         ) : inProgress.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {inProgress.slice(0, 4).map((rr) => (
@@ -352,12 +352,12 @@ function ReviewsSidebar({ buckets, loaded }) {
                 <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {rr.manuscript?.title || "Untitled Manuscript"}
                 </div>
-                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>Verdict pending</div>
+                <div style={{ fontSize: 11, color: "#6b717d", marginTop: 1 }}>Verdict pending</div>
               </Link>
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No reviews currently in progress.
           </p>
         )}

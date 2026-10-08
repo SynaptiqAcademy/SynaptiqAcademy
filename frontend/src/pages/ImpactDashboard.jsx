@@ -47,8 +47,8 @@ function IntelNav({ current }) {
         const isCur = s.to === current;
         return (
           <React.Fragment key={s.to}>
-            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} />}
-            <Link to={s.to} style={{ fontSize: 11, fontWeight: isCur ? 700 : 400, color: isCur ? "#0F2847" : "#94A3B8", padding: "3px 7px", background: isCur ? "rgba(15,40,71,0.07)" : "transparent", borderRadius: 3, textDecoration: "none", whiteSpace: "nowrap" }}>
+            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#8a909a", flexShrink: 0 }} />}
+            <Link to={s.to} style={{ fontSize: 11, fontWeight: isCur ? 700 : 400, color: isCur ? "#0F2847" : "#6b717d", padding: "3px 7px", background: isCur ? "rgba(15,40,71,0.07)" : "transparent", borderRadius: 3, textDecoration: "none", whiteSpace: "nowrap" }}>
               {s.label}
             </Link>
           </React.Fragment>
@@ -148,10 +148,11 @@ function EmptyState({ icon: Icon = AlertCircle, message, sub }) {
 
 function KpiCard({ label, value, sub, highlight, loading, ringColor, ringPct, icon: Icon }) {
   if (loading) return <SkeletonCard rows={3} />;
+  const statCls = `sq-stat ${value == null || value === 0 || value === "0" || value === "—" ? "is-empty" : ""}`;
 
   if (ringColor) {
     return (
-      <Card padding="lg" style={highlight ? { borderColor: "#0F2847" } : undefined}>
+      <Card className={statCls} padding="lg" style={highlight ? { borderColor: "#0F2847" } : undefined}>
         <div className="flex items-center justify-between mb-2">
           <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</div>
           {Icon && <Icon size={14} strokeWidth={1.5} className="text-slate-400" />}

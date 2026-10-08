@@ -179,13 +179,13 @@ function TrustCenterSidebar({ pending, auditLog }) {
               AI confidence: {topPending.ai_confidence}%
             </p>
             {topPending.user_notes && (
-              <p style={{ fontSize: 11.5, color: "#94A3B8", fontStyle: "italic", margin: "8px 0 0", lineHeight: 1.5 }}>
+              <p style={{ fontSize: 11.5, color: "#6b717d", fontStyle: "italic", margin: "8px 0 0", lineHeight: 1.5 }}>
                 "{topPending.user_notes}"
               </p>
             )}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No pending requests.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No pending requests.</p>
         )}
       </Card>
 
@@ -195,11 +195,11 @@ function TrustCenterSidebar({ pending, auditLog }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Audit Activity Today</div>
         </div>
         {auditLog.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No audit events yet.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No audit events yet.</p>
         ) : (
           <div>
             <span className="font-serif" style={{ fontSize: 26, color: "#0f172a" }}>{eventsToday}</span>
-            <p style={{ fontSize: 11.5, color: "#94A3B8", margin: "6px 0 0" }}>events logged today</p>
+            <p style={{ fontSize: 11.5, color: "#6b717d", margin: "6px 0 0" }}>events logged today</p>
           </div>
         )}
       </Card>

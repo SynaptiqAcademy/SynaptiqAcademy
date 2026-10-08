@@ -357,7 +357,7 @@ function AiRecsPanel({ recs, loading, compareList, toggleCompare }) {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Sparkles size={13} strokeWidth={1.5} style={{ color: NAVY }} />
           <span style={{ fontSize: 12, fontWeight: 700, color: NAVY, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Reviewer Matches</span>
-          <span style={{ fontSize: 11, color: "#94A3B8" }}>Matched to your expertise and current work</span>
+          <span style={{ fontSize: 11, color: "#6b717d" }}>Matched to your expertise and current work</span>
         </div>
         <Button
           size="icon"
@@ -365,7 +365,7 @@ function AiRecsPanel({ recs, loading, compareList, toggleCompare }) {
           onClick={() => setExpanded((v) => !v)}
           aria-label={expanded ? "Collapse recommendations" : "Expand recommendations"}
           style={{
-            color: "#94A3B8",
+            color: "#6b717d",
             display: "flex",
             alignItems: "center"
           }}>
@@ -399,9 +399,9 @@ function OpenRequestsStrip({ requests, onPost }) {
     <div style={{ marginTop: 20, padding: "14px 0 16px", borderBottom: `1px solid ${BORDER}` }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <ClipboardCheck size={11} strokeWidth={1.5} style={{ color: "#94A3B8" }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em" }}>Open Review Requests</span>
-          <span style={{ fontSize: 10, color: "#CBD5E1" }}>Seeking reviewers now</span>
+          <ClipboardCheck size={11} strokeWidth={1.5} style={{ color: "#6b717d" }} />
+          <span style={{ fontSize: 10, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em" }}>Open Review Requests</span>
+          <span style={{ fontSize: 10, color: "#8a909a" }}>Seeking reviewers now</span>
         </div>
         <Button variant="link" size="sm" onClick={onPost}>
           Post yours <ArrowRight size={10} strokeWidth={2} />
@@ -425,7 +425,7 @@ function OpenRequestsStrip({ requests, onPost }) {
               <span style={{ fontSize: 10, color: "#64748B", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{req.research_area}</span>
             )}
             {req.deadline && (
-              <span style={{ fontSize: 9, color: "#94A3B8" }}>Due {fmtDate(req.deadline)}</span>
+              <span style={{ fontSize: 9, color: "#6b717d" }}>Due {fmtDate(req.deadline)}</span>
             )}
           </Card>
         ))}
@@ -488,13 +488,13 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
         <div style={{ marginBottom: 9 }}>
           {r.institution && (
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
-              <Building2 size={9} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0 }} />
+              <Building2 size={9} strokeWidth={1.5} style={{ color: "#6b717d", flexShrink: 0 }} />
               <span style={{ fontSize: 11, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.institution}</span>
             </div>
           )}
           {r.country && (
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <Globe size={9} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0 }} />
+              <Globe size={9} strokeWidth={1.5} style={{ color: "#6b717d", flexShrink: 0 }} />
               <span style={{ fontSize: 11, color: "#64748B" }}>{r.country}</span>
             </div>
           )}
@@ -506,7 +506,7 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
             {areas.map((a, i) => (
               <Tag key={i} size="sm">{a}</Tag>
             ))}
-            {(r.research_areas || []).length > 3 && <span style={{ fontSize: 9, color: "#94A3B8" }}>+{r.research_areas.length - 3}</span>}
+            {(r.research_areas || []).length > 3 && <span style={{ fontSize: 9, color: "#6b717d" }}>+{r.research_areas.length - 3}</span>}
           </div>
         )}
 
@@ -523,7 +523,7 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
         {showScore && (
           <div style={{ marginBottom: 8 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
-              <span style={{ fontSize: 9, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>Reviewer Score</span>
+              <span style={{ fontSize: 9, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>Reviewer Score</span>
               <span style={{ fontSize: 10, fontWeight: 800, color: NAVY, fontFamily: "monospace" }}>{Math.round(r.reviewer_score)}</span>
             </div>
             <div style={{ height: 3, background: "#F1F5F9", overflow: "hidden" }}>
@@ -542,7 +542,7 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
               </div>
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-              <ClipboardCheck size={9} strokeWidth={1.5} style={{ color: "#94A3B8" }} />
+              <ClipboardCheck size={9} strokeWidth={1.5} style={{ color: "#6b717d" }} />
               <span style={{ fontSize: 10, color: "#64748B" }}>{r.reviews_completed} review{r.reviews_completed !== 1 ? "s" : ""}</span>
             </div>
           </div>
@@ -568,7 +568,7 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
           variant="link"
           size="sm"
           onClick={(e) => onCompare(r, e)}
-          style={{ color: isCompared ? NAVY : "#94A3B8", textDecoration: isCompared ? "underline" : "none" }}
+          style={{ color: isCompared ? NAVY : "#6b717d", textDecoration: isCompared ? "underline" : "none" }}
         >
           <BarChart2 size={10} strokeWidth={1.5} /> Compare
         </Button>
@@ -577,7 +577,7 @@ function ReviewerCard({ r, isCompared, onCompare, onInvite }) {
           variant="link"
           size="sm"
           onClick={(e) => { e.stopPropagation(); onInvite(); }}
-          style={{ color: "#94A3B8" }}
+          style={{ color: "#6b717d" }}
         >
           <ClipboardCheck size={10} strokeWidth={1.5} /> Invite
         </Button>
@@ -635,7 +635,7 @@ function ReviewerCardCompact({ r, isCompared, onCompare, loading: cardLoading })
       )}
 
       {r?.explanation && (
-        <div style={{ fontSize: 10, color: "#94A3B8", fontStyle: "italic", lineHeight: 1.4 }}>{r.explanation}</div>
+        <div style={{ fontSize: 10, color: "#6b717d", fontStyle: "italic", lineHeight: 1.4 }}>{r.explanation}</div>
       )}
 
       <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6 }}>
@@ -700,7 +700,7 @@ function FilterPanel({ filters, setFilter, onClear }) {
 
       {/* Availability */}
       <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Availability</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Availability</div>
         {AVAIL_OPTIONS.map((o) => {
           const cfg = AVAIL_CONFIG[o.value];
           return (
@@ -736,7 +736,7 @@ function FilterPanel({ filters, setFilter, onClear }) {
 
       {/* Level */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Reviewer Level</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Reviewer Level</div>
         <FormSelect
           data-testid={TID.discoverySortSelect}
           size="sm"
@@ -750,7 +750,7 @@ function FilterPanel({ filters, setFilter, onClear }) {
 
       {/* Research Area */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Area</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Area</div>
         <Input
           size="sm"
           value={filters.research_area || ""}
@@ -761,7 +761,7 @@ function FilterPanel({ filters, setFilter, onClear }) {
 
       {/* Methodology */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Methodology</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Methodology</div>
         <Input
           size="sm"
           value={filters.methods_expertise || ""}
@@ -772,7 +772,7 @@ function FilterPanel({ filters, setFilter, onClear }) {
 
       {/* Country */}
       <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Country</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Country</div>
         <Input
           size="sm"
           value={filters.country || ""}
@@ -800,7 +800,7 @@ function EmptyState() {
             { Icon: Lightbulb,   text: "Become a reviewer yourself and expand the community" },
           ].map(({ Icon, text }) => (
             <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "#64748B", textAlign: "left" }}>
-              <Icon size={12} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0, marginTop: 2 }} />
+              <Icon size={12} strokeWidth={1.5} style={{ color: "#6b717d", flexShrink: 0, marginTop: 2 }} />
               {text}
             </div>
           ))}

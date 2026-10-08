@@ -100,7 +100,7 @@ export default function ServiceDetail() {
     >
       <div>
           <Card padding="xl" className="mb-5">
-            <div className="text-xs text-crimson-600 font-semibold uppercase mb-2">
+            <div className="text-xs text-navy-700 font-semibold uppercase mb-2">
               {service.category?.replace(/_/g, " ")}
             </div>
             <H1 as="h1" style={{ fontSize: "1.5rem" }} className="mb-3">{service.title}</H1>

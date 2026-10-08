@@ -47,7 +47,7 @@ export default function OrderPlace() {
       sidebar={<OrderPlaceSidebar service={service} pkg={pkg} serviceId={serviceId} />}
     >
         <div className="mb-2">
-          <Link to={`/academic-marketplace/services/${serviceId}`} className="text-crimson-600 text-[13px] no-underline">← Back to Service</Link>
+          <Link to={`/academic-marketplace/services/${serviceId}`} className="text-navy-700 text-[13px] no-underline">← Back to Service</Link>
         </div>
 
         {msg && (
@@ -136,7 +136,7 @@ function OrderPlaceSidebar({ service, pkg, serviceId }) {
           <span style={{ fontSize: 15, fontWeight: 700, color: "#0f172a" }}>
             {service.average_rating > 0 ? service.average_rating.toFixed(1) : "New"}
           </span>
-          <span style={{ fontSize: 12, color: "#94A3B8" }}>({service.rating_count || 0} reviews)</span>
+          <span style={{ fontSize: 12, color: "#6b717d" }}>({service.rating_count || 0} reviews)</span>
         </div>
         <p style={{ fontSize: 12, color: "#64748B", margin: "0 0 10px", lineHeight: 1.5 }}>
           {service.order_count || 0} order{service.order_count === 1 ? "" : "s"} completed

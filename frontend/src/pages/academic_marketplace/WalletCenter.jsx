@@ -37,7 +37,7 @@ export default function WalletCenter() {
         { label: "Total Spent", value: `$${wallet?.total_spent?.toFixed(2) || "0.00"}` },
         { label: "Total Earned", value: `$${wallet?.total_earned?.toFixed(2) || "0.00"}` },
       ]}
-      sidebar={<WalletCenterSidebar txns={txns} txColors={TX_COLORS} />}
+      sidebar={(txns || []).length ? <WalletCenterSidebar txns={txns} txColors={TX_COLORS} /> : undefined}
     >
 
         {/* Transaction history */}
@@ -104,10 +104,10 @@ function WalletCenterSidebar({ txns, txColors }) {
                 ${latest.amount?.toFixed(2)}
               </div>
             )}
-            <p style={{ fontSize: 11, color: "#94A3B8", margin: "4px 0 0" }}>{new Date(latest.created_at).toLocaleString()}</p>
+            <p style={{ fontSize: 11, color: "#6b717d", margin: "4px 0 0" }}>{new Date(latest.created_at).toLocaleString()}</p>
           </>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No transactions yet.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No transactions yet.</p>
         )}
       </Card>
 
@@ -121,7 +121,7 @@ function WalletCenterSidebar({ txns, txColors }) {
             {typeEntries.map(([type, count]) => (
               <div key={type} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
                 <span style={{ color: "#374151", textTransform: "capitalize" }}>{type.replace(/_/g, " ")}</span>
-                <span style={{ color: "#94A3B8", fontWeight: 600 }}>{count}</span>
+                <span style={{ color: "#6b717d", fontWeight: 600 }}>{count}</span>
               </div>
             ))}
           </div>

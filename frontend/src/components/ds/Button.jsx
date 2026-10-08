@@ -13,7 +13,7 @@ import React from "react";
  *             as secondary unless a page passes variant="primary".
  *   subtle    quiet filled neutral, for tertiary actions in dense UI
  *   link      text action
- *   danger    semantic red, destructive actions only
+ *   danger    semantic red, destructive actions only (danger-outline: quiet version)
  * Sizes: sm | md (default) | lg | icon
  */
 
@@ -33,6 +33,9 @@ const VARIANTS = {
   outline:   SECONDARY,
   hero:      SECONDARY,
   danger:    "border border-crimson-600 bg-crimson-600 text-white hover:bg-crimson-700 hover:border-crimson-700",
+  // Destructive action that isn't the point of the view (e.g. Delete in a
+  // page header): red text, quiet surface; the confirm dialog carries the weight.
+  "danger-outline": "border border-crimson-200 bg-white text-crimson-600 hover:border-crimson-600",
   subtle:    "bg-[color:var(--sq-surface-2)] text-[color:var(--sq-text-secondary)] hover:text-[color:var(--sq-text-primary)] hover:bg-[#EEECE6]",
   link:      "bg-transparent text-navy-700 underline underline-offset-[3px] decoration-1 hover:decoration-2 p-0 h-auto",
 };

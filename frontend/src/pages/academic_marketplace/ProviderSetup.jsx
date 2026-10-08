@@ -15,7 +15,7 @@ function ProviderSetupSidebar({ existing }) {
     if (lvl >= 4) return { label: "Expert Verified", color: EMERALD };
     if (lvl >= 3) return { label: "Institution Verified", color: ACCENT };
     if (lvl >= 2) return { label: "ID Verified", color: "#0F2847" };
-    return { label: "Unverified", color: "#94A3B8" };
+    return { label: "Unverified", color: "#6b717d" };
   };
   const ver = verLabel(existing.verification_level);
 
@@ -52,7 +52,7 @@ function ProviderSetupSidebar({ existing }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Verification</div>
         </div>
         <div style={{ fontSize: 12.5, fontWeight: 700, color: ver.color }}>{ver.label}</div>
-        <p style={{ fontSize: 11.5, color: "#94A3B8", margin: "6px 0 0", lineHeight: 1.5 }}>
+        <p style={{ fontSize: 11.5, color: "#6b717d", margin: "6px 0 0", lineHeight: 1.5 }}>
           Higher verification levels build trust with buyers and improve your ranking.
         </p>
       </Card>

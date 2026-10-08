@@ -240,7 +240,7 @@ function AICreditsSidebar({ byKind, lastPurchase, planLabel, monthlyAllowance })
             {byKind.slice(0, 3).map((k) => (
               <div key={k._id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
                 <span style={{ color: "#374151" }}>{(k._id || "").replace(/_/g, " ")}</span>
-                <span style={{ color: "#94A3B8", fontFamily: "monospace" }}>{k.credits} cr</span>
+                <span style={{ color: "#6b717d", fontFamily: "monospace" }}>{k.credits} cr</span>
               </div>
             ))}
           </div>

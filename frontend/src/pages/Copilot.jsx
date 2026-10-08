@@ -262,7 +262,7 @@ export default function Copilot() {
             {showAgentMap ? "Hide" : "Show"} agent map
           </Button>
           {!isEmpty && (
-            <Button onClick={newSession} variant="hero" size="sm">
+            <Button onClick={newSession} variant="primary" size="sm">
               <RefreshCw size={10} strokeWidth={1.5} />
               New session
             </Button>
@@ -372,12 +372,10 @@ export default function Copilot() {
             style={{ position: "sticky", top: "80px", maxHeight: "80vh", overflowY: "auto" }}
           >
             {/* Orchestration map */}
-            {currentPlan ? (
+            {currentPlan && (
               <Card padding="md">
                 <OrchestrationMap plan={currentPlan} statuses={agentStatuses} />
               </Card>
-            ) : (
-              <EmptyState size="sm" icon={<BarChart2 />} title="Agent orchestration map appears here" />
             )}
 
             {/* Agent status cards */}

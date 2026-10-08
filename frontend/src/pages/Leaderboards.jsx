@@ -276,7 +276,7 @@ export default function Leaderboards() {
               <Button variant="ghost" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
                 <ChevronLeft size={13} strokeWidth={1.5} /> Previous
               </Button>
-              <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>Page {page}</span>
+              <span style={{ fontSize: 11, color: "#6b717d", fontFamily: "monospace" }}>Page {page}</span>
               <Button variant="ghost" size="sm" onClick={() => setPage((p) => p + 1)} disabled={isLastPage}>
                 Next <ChevronRight size={13} strokeWidth={1.5} />
               </Button>
@@ -321,11 +321,11 @@ function MyStandingPanel({ myRep, events, loading }) {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Sparkles size={13} strokeWidth={1.5} style={{ color: NAVY }} />
           <span style={{ fontSize: 12, fontWeight: 700, color: NAVY, textTransform: "uppercase", letterSpacing: "0.08em" }}>My Academic Standing</span>
-          <span style={{ fontSize: 11, color: "#94A3B8" }}>Your contribution breakdown</span>
+          <span style={{ fontSize: 11, color: "#6b717d" }}>Your contribution breakdown</span>
         </div>
         {collapsed
-          ? <ChevronDown size={14} strokeWidth={1.5} style={{ color: "#94A3B8" }} />
-          : <ChevronUp size={14} strokeWidth={1.5} style={{ color: "#94A3B8" }} />
+          ? <ChevronDown size={14} strokeWidth={1.5} style={{ color: "#6b717d" }} />
+          : <ChevronUp size={14} strokeWidth={1.5} style={{ color: "#6b717d" }} />
         }
       </div>
 
@@ -334,7 +334,7 @@ function MyStandingPanel({ myRep, events, loading }) {
 
           {/* Score breakdown */}
           <div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
               Score Breakdown
             </div>
             {loading ? (
@@ -374,7 +374,7 @@ function MyStandingPanel({ myRep, events, loading }) {
 
           {/* Recent events */}
           <div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
               Recent Activity
             </div>
             {loading ? (
@@ -398,13 +398,13 @@ function MyStandingPanel({ myRep, events, loading }) {
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, color: "#1E293B", lineHeight: 1.3 }}>{ev.description || ev.event_type?.replace(/_/g, " ")}</div>
-                      <div style={{ fontSize: 9, color: "#94A3B8", marginTop: 2 }}>{fmtDate(ev.created_at)}</div>
+                      <div style={{ fontSize: 9, color: "#6b717d", marginTop: 2 }}>{fmtDate(ev.created_at)}</div>
                     </div>
                   </div>
                 );
               })
             ) : (
-              <div style={{ padding: "12px 0", fontSize: 12, color: "#94A3B8", lineHeight: 1.6 }}>
+              <div style={{ padding: "12px 0", fontSize: 12, color: "#6b717d", lineHeight: 1.6 }}>
                 No activity yet. Start collaborating, reviewing, and contributing to earn reputation points.
               </div>
             )}
@@ -422,7 +422,7 @@ function CategorySidebar({ categories, active, onSelect, country, setCountry, in
     <div>
       {/* Category nav */}
       <div style={{ background: "white", border: `1px solid ${BORDER}`, padding: "10px 8px", marginBottom: 12 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", padding: "6px 8px 10px" }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", padding: "6px 8px 10px" }}>
           Categories
         </div>
         <nav>
@@ -463,13 +463,13 @@ function CategorySidebar({ categories, active, onSelect, country, setCountry, in
       {/* Filters */}
       <div style={{ background: "white", border: `1px solid ${BORDER}`, padding: "14px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em" }}>Filters</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em" }}>Filters</span>
           {hasFilters && (
             <Button variant="link" size="sm" onClick={() => { setCountry(""); setInstitution(""); }} style={{ fontSize: 9, textDecoration: "underline" }}>Clear</Button>
           )}
         </div>
         <div style={{ marginBottom: 10 }}>
-          <div style={{ fontSize: 9, fontWeight: 600, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>Country</div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>Country</div>
           <Input
             size="sm"
             value={country}
@@ -478,7 +478,7 @@ function CategorySidebar({ categories, active, onSelect, country, setCountry, in
           />
         </div>
         <div>
-          <div style={{ fontSize: 9, fontWeight: 600, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>Institution</div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>Institution</div>
           <Input
             size="sm"
             value={institution}
@@ -514,7 +514,7 @@ function RankDisplay({ rank }) {
     </div>
   );
   return (
-    <div style={{ width: 28, textAlign: "center", fontSize: 11, fontWeight: 700, color: "#94A3B8", fontFamily: "monospace", flexShrink: 0 }}>
+    <div style={{ width: 28, textAlign: "center", fontSize: 11, fontWeight: 700, color: "#6b717d", fontFamily: "monospace", flexShrink: 0 }}>
       #{rank}
     </div>
   );
@@ -565,13 +565,13 @@ function ResearcherCard({ item, compared, onCompare }) {
         <div style={{ marginBottom: 10 }}>
           {item.institution && (
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
-              <Building2 size={9} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0 }} />
+              <Building2 size={9} strokeWidth={1.5} style={{ color: "#6b717d", flexShrink: 0 }} />
               <span style={{ fontSize: 11, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.institution}</span>
             </div>
           )}
           {item.country && (
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <Globe size={9} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0 }} />
+              <Globe size={9} strokeWidth={1.5} style={{ color: "#6b717d", flexShrink: 0 }} />
               <span style={{ fontSize: 11, color: "#64748B" }}>{item.country}</span>
             </div>
           )}
@@ -588,18 +588,18 @@ function ResearcherCard({ item, compared, onCompare }) {
         {/* Score + badges + percentile */}
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
           <div>
-            <div style={{ fontSize: 9, color: "#94A3B8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>Score</div>
+            <div style={{ fontSize: 9, color: "#6b717d", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>Score</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: NAVY, fontFamily: "monospace" }}>{fmtPts(score)}</div>
           </div>
           {item.badges_count > 0 && (
             <div>
-              <div style={{ fontSize: 9, color: "#94A3B8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>Badges</div>
+              <div style={{ fontSize: 9, color: "#6b717d", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>Badges</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>{item.badges_count}</div>
             </div>
           )}
           {item.percentile_global > 0 && (
             <div>
-              <div style={{ fontSize: 9, color: "#94A3B8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>Percentile</div>
+              <div style={{ fontSize: 9, color: "#6b717d", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>Percentile</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: EMERALD }}>{item.percentile_global.toFixed(1)}%</div>
             </div>
           )}
@@ -621,7 +621,7 @@ function ResearcherCard({ item, compared, onCompare }) {
         <span style={{ color: "#E2E8F0" }}>|</span>
         <button
           onClick={(e) => onCompare(item, e)}
-          style={{ fontSize: 10, fontWeight: 600, color: compared ? NAVY : "#94A3B8", cursor: "pointer", display: "flex", alignItems: "center", gap: 3, background: "none", border: "none", outline: "none", padding: 0, textDecoration: compared ? "underline" : "none" }}
+          style={{ fontSize: 10, fontWeight: 600, color: compared ? NAVY : "#6b717d", cursor: "pointer", display: "flex", alignItems: "center", gap: 3, background: "none", border: "none", outline: "none", padding: 0, textDecoration: compared ? "underline" : "none" }}
         >
           <BarChart2 size={10} strokeWidth={1.5} /> {compared ? "Remove" : "Compare"}
         </button>
@@ -695,8 +695,8 @@ function AggregateList({ items, loading, catKey }) {
             <RankDisplay rank={item.rank} />
 
             {isInstitution
-              ? <Building2 size={22} strokeWidth={1} style={{ color: "#94A3B8", flexShrink: 0 }} />
-              : <Globe size={22} strokeWidth={1} style={{ color: "#94A3B8", flexShrink: 0 }} />
+              ? <Building2 size={22} strokeWidth={1} style={{ color: "#6b717d", flexShrink: 0 }} />
+              : <Globe size={22} strokeWidth={1} style={{ color: "#6b717d", flexShrink: 0 }} />
             }
 
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -710,7 +710,7 @@ function AggregateList({ items, loading, catKey }) {
 
             <div style={{ textAlign: "right", flexShrink: 0 }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: NAVY, fontFamily: "monospace" }}>{fmtPts(score)}</div>
-              <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 1 }}>{count} member{count !== 1 ? "s" : ""}</div>
+              <div style={{ fontSize: 10, color: "#6b717d", marginTop: 1 }}>{count} member{count !== 1 ? "s" : ""}</div>
             </div>
           </div>
         );
@@ -726,7 +726,7 @@ function BadgesSection({ badges }) {
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 20 }}>
         <Award size={14} strokeWidth={1.5} style={{ color: NAVY }} />
         <h2 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, color: NAVY, fontWeight: 400 }}>My Achievements</h2>
-        <span style={{ fontSize: 11, color: "#94A3B8" }}>{badges.length} earned</span>
+        <span style={{ fontSize: 11, color: "#6b717d" }}>{badges.length} earned</span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
         {badges.map((b) => {

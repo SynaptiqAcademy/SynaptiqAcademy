@@ -68,12 +68,12 @@ export default function NetworkAnalytics() {
     >
 
       {/* Network Score */}
-      {overview && (
-        <div style={{ background: NAVY, borderRadius: 8, padding: "28px 32px", color: WHITE, marginBottom: 24, display: "flex", alignItems: "center", gap: 32 }}>
+      {overview && overview.network_score > 0 && (
+        <div style={{ background: WHITE, border: "1px solid var(--sq-border)", borderRadius: 6, padding: "24px 28px", color: "var(--sq-text-primary)", marginBottom: 24, display: "flex", alignItems: "center", gap: 32 }}>
           <ScoreRing score={overview.network_score || 0} color={ACCENT} />
           <div>
-            <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Your Network Score</div>
-            <div style={{ opacity: 0.75, fontSize: 13, marginBottom: 12 }}>Based on groups, communities, collaborations, mentorship, and events.</div>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>Your network score</div>
+            <div style={{ color: "var(--sq-text-tertiary)", fontSize: 13, marginBottom: 12 }}>Based on groups, communities, collaborations, mentorship, and events.</div>
             <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
               {[
                 ["Groups", overview.groups], ["Communities", overview.communities],
@@ -81,8 +81,8 @@ export default function NetworkAnalytics() {
                 ["Events", overview.events_attended],
               ].map(([label, val]) => (
                 <div key={label} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: ACCENT }}>{val || 0}</div>
-                  <div style={{ fontSize: 11, opacity: 0.75 }}>{label}</div>
+                  <div className="font-display" style={{ fontSize: 20, color: "var(--sq-text-primary)" }}>{val || 0}</div>
+                  <div style={{ fontSize: 11, color: "var(--sq-text-tertiary)" }}>{label}</div>
                 </div>
               ))}
             </div>

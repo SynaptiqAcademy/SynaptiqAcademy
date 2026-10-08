@@ -45,8 +45,8 @@ const CATEGORIES = [
   { id: "productivity", label: "Productivity",   icon: Zap },
 ];
 
-const HEALTH_COLOR = (score) =>
-  score >= 80 ? "#047857" : score >= 60 ? "#B45309" : "#DC2626";
+// Activity scores are progress, not errors: ink, with no alarm colours.
+const HEALTH_COLOR = () => "#10141c";
 
 const INSIGHT_ICON_MAP = {
   "file-text": FileText,
@@ -229,7 +229,7 @@ export default function RecommendationCenter() {
                 </span>
                 <TrendingUp size={11} strokeWidth={1.5} style={{ color: NAVY }} />
               </div>
-              <div className="text-[28px] font-bold leading-none text-[#B45309] mb-1">
+              <div className="font-display text-[28px] leading-none text-[color:var(--sq-text-primary)] mb-1">
                 {opportunity.total_open_items ?? opportunity.score ?? 0}
               </div>
               <div className="text-[11px] text-slate-500 mb-1">{opportunity.label}</div>

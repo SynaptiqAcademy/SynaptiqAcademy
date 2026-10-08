@@ -617,10 +617,10 @@ export default function ManuscriptDetail() {
       >
         <GitBranch size={11} strokeWidth={1.5} /> Snapshot
       </Button>
-      <div className="flex items-center border border-white/20 divide-x divide-white/20">
+      <div className="flex items-center border border-hairline-strong rounded-btn divide-x divide-[color:var(--sq-border)] bg-white">
         <span className="flex items-center gap-1 pl-2 pr-1">
-          <Sparkles size={10} strokeWidth={1.5} className="text-white/70" />
-          <span className="text-[10px] text-white/50 font-mono">AI match</span>
+          <Sparkles size={10} strokeWidth={1.5} className="text-navy-700" />
+          <span className="text-[11px] text-[color:var(--sq-text-tertiary)]">AI match</span>
         </span>
         <Button data-testid="ai-match-journal"     onClick={() => setAIMatch("journal")}     variant="hero" size="sm" className="!border-0 !h-8 text-[10px]">Journal</Button>
         <Button data-testid="ai-match-conference" onClick={() => setAIMatch("conference")}  variant="hero" size="sm" className="!border-0 !h-8 text-[10px]">Conf</Button>

@@ -16,7 +16,7 @@ const POSITIONS = [
 ];
 
 function ReadinessBar({ req }) {
-  const color = req.met ? EMERALD : req.pct >= 60 ? "#f59e0b" : ACCENT;
+  const color = req.met ? EMERALD : req.pct >= 60 ? "#b45309" : "#B42318";
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>

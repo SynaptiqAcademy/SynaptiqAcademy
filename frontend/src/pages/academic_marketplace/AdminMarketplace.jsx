@@ -45,7 +45,7 @@ export default function AdminMarketplace() {
         { label: "Unique Buyers", value: stats.buyers ?? "—" },
         { label: "Dispute Rate", value: `${stats.disputes?.rate?.toFixed(1)}%` },
       ] : undefined}
-      sidebar={<AdminMarketplaceSidebar oldestDispute={oldestDispute} topCategory={topCategory} />}
+      sidebar={oldestDispute || topCategory ? <AdminMarketplaceSidebar oldestDispute={oldestDispute} topCategory={topCategory} /> : undefined}
     >
 
         {stats && (
@@ -73,7 +73,7 @@ export default function AdminMarketplace() {
 
         {/* Open Disputes */}
         <Card padding="lg">
-          <H2 className="mb-4">Open Disputes Requiring Action</H2>
+          <h2 className="sq-h2">Open disputes requiring action</h2>
           {disputes.length === 0 ? (
             <EmptyState title="No open disputes." size="sm" dashed={false} />
           ) : (
@@ -87,7 +87,7 @@ export default function AdminMarketplace() {
                   <div className="text-sm font-semibold text-navy-700">{d.reason?.replace(/_/g, " ")?.replace(/\b\w/g, l => l.toUpperCase())}</div>
                   <Caption>Order {d.order_id?.slice(-8)?.toUpperCase()} · Opened {new Date(d.opened_at).toLocaleDateString()}</Caption>
                 </div>
-                <Link to={`/academic-marketplace/disputes/${d.id}`} className="text-crimson-600 text-[13px] no-underline">Resolve →</Link>
+                <Link to={`/academic-marketplace/disputes/${d.id}`} className="text-navy-700 text-[13px] no-underline">Resolve →</Link>
               </div>
             ))
           )}
@@ -110,7 +110,7 @@ function AdminMarketplaceSidebar({ oldestDispute, topCategory }) {
             <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a" }}>
               {oldestDispute.reason?.replace(/_/g, " ")?.replace(/\b\w/g, l => l.toUpperCase())}
             </div>
-            <p style={{ fontSize: 11, color: "#94A3B8", margin: "4px 0 10px" }}>
+            <p style={{ fontSize: 11, color: "#6b717d", margin: "4px 0 10px" }}>
               Order {oldestDispute.order_id?.slice(-8)?.toUpperCase()} · Opened {new Date(oldestDispute.opened_at).toLocaleDateString()}
             </p>
             <Link to={`/academic-marketplace/disputes/${oldestDispute.id}`} style={{ fontSize: 12, fontWeight: 600, color: NAVY, textDecoration: "none" }}>
@@ -118,7 +118,7 @@ function AdminMarketplaceSidebar({ oldestDispute, topCategory }) {
             </Link>
           </>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No open disputes right now.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No open disputes right now.</p>
         )}
       </Card>
 

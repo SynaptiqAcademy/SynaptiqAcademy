@@ -95,7 +95,7 @@ export default function CreateTeam() {
         {/* Team type picker */}
         <section style={{ marginBottom: 32 }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", marginBottom: 4, letterSpacing: "-0.01em" }}>Team Type</div>
-          <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 16 }}>Choose the purpose of your team. This determines what features are highlighted.</div>
+          <div style={{ fontSize: 12, color: "#6b717d", marginBottom: 16 }}>Choose the purpose of your team. This determines what features are highlighted.</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
             {TEAM_TYPES.filter((t) => t.value !== "").map((t) => {
               const active = type === t.value;
@@ -206,9 +206,9 @@ export default function CreateTeam() {
                       onClick={() => setVisibility(v.value)}
                       style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, border: `2px solid ${active ? NAVY : BORDER}`, background: active ? WARM : "white" }}
                     >
-                      <Icon size={16} strokeWidth={1.5} style={{ color: active ? NAVY : "#94A3B8" }} />
+                      <Icon size={16} strokeWidth={1.5} style={{ color: active ? NAVY : "#6b717d" }} />
                       <span style={{ fontSize: 12, fontWeight: active ? 700 : 500, color: active ? NAVY : "#64748B" }}>{v.label}</span>
-                      <span style={{ fontSize: 10, color: "#94A3B8" }}>{v.sub}</span>
+                      <span style={{ fontSize: 10, color: "#6b717d" }}>{v.sub}</span>
                     </Card>
                   );
                 })}
@@ -226,7 +226,7 @@ export default function CreateTeam() {
                   onChange={(e) => setMaxMembers(Number(e.target.value) || 10)}
                   className="w-20"
                 />
-                <span style={{ fontSize: 12, color: "#94A3B8" }}>members</span>
+                <span style={{ fontSize: 12, color: "#6b717d" }}>members</span>
               </div>
             </div>
           </div>

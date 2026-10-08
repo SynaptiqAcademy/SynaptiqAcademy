@@ -40,8 +40,8 @@ function IntelNav({ current }) {
         const isCur = s.to === current;
         return (
           <React.Fragment key={s.to}>
-            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} />}
-            <Link to={s.to} style={{ fontSize: 11, fontWeight: isCur ? 700 : 400, color: isCur ? "#0F2847" : "#94A3B8", padding: "3px 7px", background: isCur ? "rgba(15,40,71,0.07)" : "transparent", borderRadius: 3, textDecoration: "none", whiteSpace: "nowrap" }}>
+            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#8a909a", flexShrink: 0 }} />}
+            <Link to={s.to} style={{ fontSize: 11, fontWeight: isCur ? 700 : 400, color: isCur ? "#0F2847" : "#6b717d", padding: "3px 7px", background: isCur ? "rgba(15,40,71,0.07)" : "transparent", borderRadius: 3, textDecoration: "none", whiteSpace: "nowrap" }}>
               {s.label}
             </Link>
           </React.Fragment>
@@ -281,7 +281,7 @@ export default function CitationMonitoring() {
         <>
           Tracking citation impact for <strong style={{ color: "#0F2847" }}>{author.full_name || "your account"}</strong>
           {author.institution ? ` · ${author.institution}` : ""}.
-          {summary.last_synced && <span style={{ color: "#94A3B8", marginLeft: 6 }}>Last synced {new Date(summary.last_synced).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}.</span>}
+          {summary.last_synced && <span style={{ color: "#6b717d", marginLeft: 6 }}>Last synced {new Date(summary.last_synced).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}.</span>}
           {syncMsg && (
             <span className={`ml-3 inline-flex items-center gap-1 text-sm ${syncMsg.ok ? "text-green-700" : "text-red-600"}`}>
               {syncMsg.ok ? <CheckCircle2 size={12} /> : <XCircle size={12} />}

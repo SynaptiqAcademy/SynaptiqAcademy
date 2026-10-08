@@ -12,7 +12,7 @@ const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` 
 // 80/100 overrun-style thresholds — left hand-rolled.
 function ScoreBar({ value, max = 100 }) {
   const pct = Math.min(100, (value / max) * 100);
-  const color = pct >= 70 ? EMERALD : pct >= 40 ? "#f59e0b" : ACCENT;
+  const color = pct >= 70 ? EMERALD : pct >= 40 ? "#b45309" : "#B42318";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
       <div style={{ flex: 1, height: 5, background: `${NAVY}15`, borderRadius: 99 }}>
@@ -101,7 +101,7 @@ export default function FacultyIntelligence() {
         { label: "Engagement Rate", value: `${overview.engagement_rate ?? 0}%` },
         { label: "Departments", value: overview.departments?.length ?? 0 },
       ] : undefined}
-      sidebar={<FacultyIntelligenceSidebar top={top} atRisk={atRisk} promo={promo} />}
+      sidebar={(top || []).length || (atRisk || []).length || (promo || []).length ? <FacultyIntelligenceSidebar top={top} atRisk={atRisk} promo={promo} /> : undefined}
     >
       {/* Department breakdown */}
       {overview?.departments?.length > 0 && (
@@ -179,7 +179,7 @@ function FacultyIntelligenceSidebar({ top, atRisk, promo }) {
             </p>
           </>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No top performers identified yet.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No top performers identified yet.</p>
         )}
       </Card>
 

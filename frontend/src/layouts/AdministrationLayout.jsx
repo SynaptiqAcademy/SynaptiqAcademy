@@ -1,12 +1,11 @@
 /* eslint-disable */
 import React from "react";
 import { PageLayout } from "@/components/ds/PageLayout";
-import { ADMIN_BG } from "@/lib/tokens";
 
-/** AdministrationLayout — admin panel pages. Uses ADMIN_BG to distinguish from user-facing areas. */
+/** AdministrationLayout — admin panel pages. Same surface as every other page; the title says it is an admin page. */
 export function AdministrationLayout({ title, subtitle, icon, actions, stats, ring, nav, toolbar, summaryRow, sidebar, children }) {
   return (
-    <div style={{ background: ADMIN_BG, flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
       <PageLayout
         title={title}
         subtitle={subtitle}

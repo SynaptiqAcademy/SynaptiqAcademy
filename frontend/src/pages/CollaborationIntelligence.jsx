@@ -21,56 +21,6 @@ import { safeErrorMessage } from "../lib/api";
 
 
 
-// ─────────────────────── score ring ──────────────────────────────────────────
-
-function ScoreRing({ score, size = 64 }) {
-  const r = (size - 8) / 2;
-  const circ = 2 * Math.PI * r;
-  const pct = Math.max(0, Math.min(100, score || 0));
-  const dash = (pct / 100) * circ;
-  const color =
-    pct >= 75 ? "#166534" :
-    pct >= 55 ? "#0F2847" :
-    pct >= 40 ? "#b45309" : "#9f1239";
-
-  return (
-    <svg width={size} height={size} className="shrink-0">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e2e8f0" strokeWidth={4} />
-      <circle
-        cx={size / 2} cy={size / 2} r={r}
-        fill="none" stroke={color} strokeWidth={4}
-        strokeDasharray={`${dash} ${circ - dash}`}
-        strokeLinecap="butt"
-        transform={`rotate(-90 ${size / 2} ${size / 2})`}
-      />
-      <text
-        x={size / 2} y={size / 2 + 1}
-        textAnchor="middle" dominantBaseline="middle"
-        className="font-serif" fontSize={size < 56 ? 11 : 14} fill={color} fontWeight="600"
-      >
-        {pct}
-      </text>
-    </svg>
-  );
-}
-
-// ─────────────────────── score bar ───────────────────────────────────────────
-
-function ScoreBar({ label, value, max }) {
-  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
-  return (
-    <div className="space-y-1">
-      <div className="flex justify-between items-center">
-        <span className="text-xs text-slate-500">{label}</span>
-        <span className="text-xs font-mono text-slate-700">{value}/{max}</span>
-      </div>
-      <div className="h-1 bg-slate-100">
-        <div className="h-1 bg-[#0F2847] transition-all" style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  );
-}
-
 // ─────────────────────── primitives ──────────────────────────────────────────
 
 function SectionHeader({ icon: Icon, label, color = "#0F2847" }) {
@@ -90,15 +40,6 @@ function Tag({ children, className = "" }) {
   );
 }
 
-function ScoreBadge({ score }) {
-  const color =
-    score >= 75 ? "border-green-700 text-green-700" :
-    score >= 55 ? "border-navy-700 text-navy-700" :
-    score >= 40 ? "border-amber-700 text-amber-700" : "border-rose-800 text-rose-800";
-  return (
-    <span className={`text-xs font-mono border px-1.5 py-0.5 ${color}`}>{score}</span>
-  );
-}
 
 function FilterPill({ label, value, onRemove }) {
   return (
@@ -133,9 +74,8 @@ function GateView() {
         </p>
         <ul className="space-y-2.5 mb-8">
           {[
-            "Compatibility scores 0–100 with transparent breakdowns",
             "Why This Match — specific explanations, not generic text",
-            "5-component scoring: topic, method, publication, funding, potential",
+            "Matches explained by shared topics, methods and complementary strengths",
             "Smart filters by research area, method, country, and role",
             "Suggested actions: message, workspace invite, project",
             "Recommended collaboration types for each match",
@@ -251,7 +191,7 @@ function FilterPanel({ filters, onChange }) {
       {/* Min score */}
       <div>
         <label className="block text-xs font-medium text-slate-700 mb-2">
-          Min Compatibility Score: <span className="font-mono text-[#0F2847]">{filters.min_score ?? 0}</span>
+          Minimum relevance: <span className="font-mono text-[#0F2847]">{filters.min_score ?? 0}</span>
         </label>
         <input
           type="range" min={0} max={90} step={5}
@@ -486,10 +426,8 @@ function ResearcherCard({ rec }) {
   const [showSendRequest, setShowSendRequest] = useState(false);
   const [showStartProject, setShowStartProject] = useState(false);
   const r = rec.researcher || {};
-  const score = rec.compatibility_score || 0;
   const initials = (r.full_name || "?")
     .split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
-  const sc = rec.score_components || {};
   const Chev = expanded ? ChevronUp : ChevronDown;
 
   return (
@@ -519,7 +457,6 @@ function ResearcherCard({ rec }) {
                 </div>
               )}
             </div>
-            <ScoreRing score={score} size={56} />
           </div>
 
           {/* Research areas */}
@@ -563,24 +500,12 @@ function ResearcherCard({ rec }) {
         onClick={() => setExpanded((e) => !e)}
         className="w-full flex items-center justify-between px-5 py-3 text-xs text-slate-500 hover:bg-slate-50 border-t border-slate-100 transition-colors"
       >
-        <span>Score breakdown &amp; collaboration types</span>
+        <span>Strengths &amp; collaboration types</span>
         <Chev size={13} strokeWidth={1.5} />
       </button>
 
       {expanded && (
         <div className="px-5 pb-5 pt-4 border-t border-slate-100 space-y-5">
-          {/* Score components */}
-          <div>
-            <div className="overline text-slate-400 mb-3" style={{ fontSize: 9 }}>Score Breakdown</div>
-            <div className="space-y-2.5">
-              <ScoreBar label="Research Topic Match" value={sc.topic_match || 0} max={30} />
-              <ScoreBar label="Methodology Match" value={sc.method_match || 0} max={20} />
-              <ScoreBar label="Publication Match" value={sc.publication_match || 0} max={20} />
-              <ScoreBar label="Funding Alignment" value={sc.funding_match || 0} max={15} />
-              <ScoreBar label="Collaboration Potential" value={sc.collaboration_potential || 0} max={15} />
-            </div>
-          </div>
-
           {/* Complementary strengths */}
           {(rec.complementary_strengths || []).length > 0 && (
             <div>
@@ -1039,7 +964,7 @@ export default function CollaborationIntelligence() {
                 <div className="flex items-center justify-between">
                   <SectionHeader icon={Target} label={`${visibleRecs.length} Recommended Researcher${visibleRecs.length !== 1 ? "s" : ""}`} />
                   <div className="text-xs text-slate-400 font-mono">
-                    Sorted by compatibility ↓
+                    Sorted by relevance
                   </div>
                 </div>
 
@@ -1070,7 +995,8 @@ export default function CollaborationIntelligence() {
       </div>
 
       {/* History sidebar (xl+) */}
-      <aside className="hidden xl:flex flex-col w-64 border-l border-slate-200 bg-white shrink-0">
+      {/* Run history appears once there is a run to show */}
+      {history.length > 0 && <aside className="hidden xl:flex flex-col w-64 border-l border-hairline bg-white shrink-0">
         <div className="px-4 py-4 border-b border-slate-200">
           <div className="overline text-slate-500">Run History</div>
         </div>
@@ -1090,7 +1016,7 @@ export default function CollaborationIntelligence() {
             ))
           )}
         </div>
-      </aside>
+      </aside>}
     </div>    </ResearchLayout>
 
   );

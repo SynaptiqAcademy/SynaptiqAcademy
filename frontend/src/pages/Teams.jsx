@@ -27,19 +27,19 @@ import { safeErrorMessage } from "../lib/api";
 const BORDER = "#E4E8EF";
 
 export const TEAM_TYPES = [
-  { value: "",                   label: "All Types",          icon: Layers,        color: "#64748B" },
+  { value: "",                   label: "All Types",          icon: Layers,        color: "#0F2847" },
   { value: "research_paper",     label: "Research Paper",     icon: FileText,      color: "#0F2847" },
   { value: "conference_paper",   label: "Conference Paper",   icon: BookOpen,      color: "#0F2847" },
-  { value: "grant",              label: "Grant Team",         icon: Award,         color: "#D97706" },
-  { value: "book",               label: "Book",               icon: BookMarked,    color: "#059669" },
-  { value: "monograph",          label: "Monograph",          icon: BookMarked,    color: "#065F46" },
-  { value: "teaching",           label: "Teaching",           icon: GraduationCap, color: "#2f5486" },
+  { value: "grant",              label: "Grant Team",         icon: Award,         color: "#0F2847" },
+  { value: "book",               label: "Book",               icon: BookMarked,    color: "#0F2847" },
+  { value: "monograph",          label: "Monograph",          icon: BookMarked,    color: "#0F2847" },
+  { value: "teaching",           label: "Teaching",           icon: GraduationCap, color: "#0F2847" },
   { value: "course_development", label: "Course Development", icon: PenTool,       color: "#0F2847" },
-  { value: "innovation",         label: "Innovation",         icon: Lightbulb,     color: "#F59E0B" },
-  { value: "interdisciplinary",  label: "Interdisciplinary",  icon: FlaskConical,  color: "#2f5486" },
-  { value: "institution",        label: "Institution",        icon: Building2,     color: "#374151" },
-  { value: "review_team",        label: "Review Team",        icon: CheckSquare,   color: "#DC2626" },
-  { value: "editorial_team",     label: "Editorial Team",     icon: Shield,        color: "#EA580C" },
+  { value: "innovation",         label: "Innovation",         icon: Lightbulb,     color: "#0F2847" },
+  { value: "interdisciplinary",  label: "Interdisciplinary",  icon: FlaskConical,  color: "#0F2847" },
+  { value: "institution",        label: "Institution",        icon: Building2,     color: "#0F2847" },
+  { value: "review_team",        label: "Review Team",        icon: CheckSquare,   color: "#0F2847" },
+  { value: "editorial_team",     label: "Editorial Team",     icon: Shield,        color: "#0F2847" },
 ];
 
 function typeInfo(typeValue) {
@@ -71,7 +71,7 @@ function TeamCard({ group, myIds, onJoin, onLeave, busy }) {
             {React.createElement(typeInfo_.icon, { size: 16, strokeWidth: 1.5, style: { color: typeInfo_.color } })}
           </div>
           {group.visibility === "private" && (
-            <Lock size={11} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0 }} />
+            <Lock size={11} strokeWidth={1.5} style={{ color: "#6b717d", flexShrink: 0 }} />
           )}
         </div>
 
@@ -83,7 +83,7 @@ function TeamCard({ group, myIds, onJoin, onLeave, busy }) {
         )}
 
         {group.description && (
-          <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 8, lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+          <div style={{ fontSize: 12, color: "#6b717d", marginTop: 8, lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
             {group.description}
           </div>
         )}
@@ -94,12 +94,12 @@ function TeamCard({ group, myIds, onJoin, onLeave, busy }) {
               <Tag key={kw} size="sm">{kw}</Tag>
             ))}
             {group.keywords.length > 3 && (
-              <span style={{ fontSize: 10, padding: "2px 6px", color: "#94A3B8" }}>+{group.keywords.length - 3}</span>
+              <span style={{ fontSize: 10, padding: "2px 6px", color: "#6b717d" }}>+{group.keywords.length - 3}</span>
             )}
           </div>
         )}
 
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, paddingTop: 12, borderTop: `1px solid ${BORDER}`, fontSize: 11, color: "#94A3B8" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, paddingTop: 12, borderTop: `1px solid ${BORDER}`, fontSize: 11, color: "#6b717d" }}>
           <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <Users size={10} strokeWidth={1.5} />
             {count} member{count !== 1 ? "s" : ""}
@@ -232,7 +232,7 @@ export default function Teams() {
       title="Research Teams"
       subtitle="Find, create and manage research teams across all academic disciplines."
       actions={
-        <Button onClick={() => navigate("/teams/create")} variant="hero">
+        <Button onClick={() => navigate("/teams/create")} variant="primary">
           <Plus size={14} strokeWidth={2} />
           Create Team
         </Button>

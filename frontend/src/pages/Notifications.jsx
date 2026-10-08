@@ -65,7 +65,7 @@ import {
 
 const INK      = "#1C2333";                 // charcoal — primary UI ink
 const NAV_BG   = WHITE;
-const RAIL_BG  = "#FAFAFB";
+const RAIL_BG  = "#FBFAF7";
 const HAIR     = BRDX;
 
 // ─── Notification type → icon + label (business classification, unchanged) ──
@@ -605,7 +605,7 @@ function SideNav({ filter, setFilter, unreadCount, priorityCount, pinnedCount, a
         style={{ width: 228, flexShrink: 0, background: RAIL_BG, borderRight: `1px solid ${HAIR}`, padding: "20px 12px" }}
       >
         <div className="px-2 mb-5">
-          <h1 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: "1.15rem", fontWeight: 700, color: INK, letterSpacing: "-0.02em", margin: "0 0 3px" }}>
+          <h1 style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: "1.35rem", fontWeight: 400, color: INK, letterSpacing: "-0.02em", margin: "0 0 3px" }}>
             Inbox
           </h1>
           <p style={{ fontSize: "0.68rem", color: TEXT_MUTED, margin: 0, lineHeight: 1.4 }}>
@@ -705,7 +705,7 @@ function NavGroup({ children }) {
 
 function NavSectionLabel({ children }) {
   return (
-    <div style={{ fontSize: "0.63rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_DISABLED, padding: "0 10px 6px" }}>
+    <div style={{ fontSize: "0.63rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_MUTED, padding: "0 10px 6px" }}>
       {children}
     </div>
   );
@@ -765,7 +765,7 @@ function Toolbar({ q, setQ, searchRef, sortBy, setSortBy, unreadCount, hasRead, 
         placeholder="Search your inbox…"
         style={{ flex: 1, maxWidth: 420 }}
       />
-      <span style={{ fontSize: "0.72rem", color: TEXT_DISABLED, flexShrink: 0 }}>
+      <span style={{ fontSize: "0.72rem", color: TEXT_MUTED, flexShrink: 0 }}>
         {resultCount} {resultCount === 1 ? "item" : "items"}
       </span>
       <div className="flex-1" />
@@ -822,7 +822,7 @@ function FeedGroup({ label, items, ...rowProps }) {
   if (!items?.length) return null;
   return (
     <div>
-      <div style={{ padding: "16px 24px 8px", fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_DISABLED }}>
+      <div style={{ padding: "16px 24px 8px", fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_MUTED }}>
         {label}
       </div>
       {items.map(n => <FeedCard key={n.id} n={n} {...rowProps} />)}
@@ -886,7 +886,7 @@ function FeedCard({ n, selectedId, onSelect, onRead, onDelete, pinned, onToggleP
           }}>
             {n.title}
           </p>
-          <span style={{ fontSize: "0.68rem", color: TEXT_DISABLED, flexShrink: 0, marginTop: 2 }}>
+          <span style={{ fontSize: "0.68rem", color: TEXT_MUTED, flexShrink: 0, marginTop: 2 }}>
             {timeAgo(n.created_at)}
           </span>
         </div>
@@ -1021,7 +1021,7 @@ function IntelligencePanel({
           <h2 style={{ fontSize: "1.05rem", fontWeight: 650, color: INK, lineHeight: 1.35, margin: "0 0 6px", letterSpacing: "-0.01em" }}>
             {selected.title}
           </h2>
-          <span style={{ fontSize: "0.72rem", color: TEXT_DISABLED }}>{fullDate(selected.created_at)}</span>
+          <span style={{ fontSize: "0.72rem", color: TEXT_MUTED }}>{fullDate(selected.created_at)}</span>
         </div>
 
         {selected.body && (
@@ -1104,7 +1104,7 @@ function IntelligencePanel({
         </div>
 
         {/* Honest note on what isn't shown */}
-        <div style={{ fontSize: "0.7rem", color: TEXT_DISABLED, lineHeight: 1.6, paddingTop: 4 }}>
+        <div style={{ fontSize: "0.7rem", color: TEXT_MUTED, lineHeight: 1.6, paddingTop: 4 }}>
           This item carries no attachments, linked workspace, or citation data from the server —
           only what's shown above is real.
         </div>
@@ -1115,7 +1115,7 @@ function IntelligencePanel({
 
 function SectionHeading({ children }) {
   return (
-    <div style={{ fontSize: "0.66rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: TEXT_DISABLED, marginBottom: 8 }}>
+    <div style={{ fontSize: "0.66rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: TEXT_MUTED, marginBottom: 8 }}>
       {children}
     </div>
   );

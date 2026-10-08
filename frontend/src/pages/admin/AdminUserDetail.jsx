@@ -596,7 +596,7 @@ function UserDetailSidebar({ user, s }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Activity Snapshot</div>
         </div>
         {activityItems.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No activity data yet.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No activity data yet.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {activityItems.map((i) => (

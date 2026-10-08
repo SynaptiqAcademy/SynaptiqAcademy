@@ -236,7 +236,6 @@ function ResearcherCard({ item, onDismiss, onClickAction }) {
           </div>
           <ChipList items={item.research_areas || item.interests || []} max={4} />
           <div className="flex items-center gap-2 mt-2">
-            <ScoreBadge score={item.score} />
           </div>
           <ExplanationToggle bullets={bullets} />
         </div>
@@ -478,7 +477,6 @@ function MentorCard({ item, onDismiss, onClickAction }) {
           </div>
           <ChipList items={item.research_areas || item.interests || []} max={3} />
           <div className="flex items-center gap-2 mt-2">
-            <ScoreBadge score={item.score} />
             {item.publication_count != null && (
               <span className="text-xs text-slate-500">Publications: {item.publication_count}</span>
             )}
@@ -514,7 +512,6 @@ function ReviewerCard({ item, onClickAction }) {
             {[item.role, item.institution].filter(Boolean).join(" · ")}
           </div>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
-            <ScoreBadge score={item.score} />
             {item.no_coi !== false && (
               <StatusBadge label="No COI" color="green" />
             )}

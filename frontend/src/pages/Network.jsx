@@ -79,19 +79,6 @@ function OrcidBadge({ orcid }) {
   );
 }
 
-// ─── Match score badge ────────────────────────────────────────────────────────
-function MatchBadge({ score }) {
-  if (!score || score <= 0) return null;
-  const color = score >= 60 ? { text: "#059669", bg: "#F0FDF4", border: "#A7F3D0" }
-              : score >= 30 ? { text: "#0F2847", bg: "#eef2f8", border: "#d4dde9" }
-              :               { text: "#94A3B8", bg: WARM,      border: BORDER };
-  return (
-    <span style={{ fontSize: 10, fontFamily: "monospace", color: color.text, background: color.bg, border: `1px solid ${color.border}`, padding: "2px 6px", fontWeight: 600 }}>
-      {score}% match
-    </span>
-  );
-}
-
 // ─── Researcher Card (premium redesign) ───────────────────────────────────────
 function ResearcherCard({ u, repScore, savedIds, onSaveToggle, onInvite, currentUserId }) {
   const isSelf   = u.id === currentUserId;
@@ -151,13 +138,13 @@ function ResearcherCard({ u, repScore, savedIds, onSaveToggle, onInvite, current
               {userTypeLabel(u, "Researcher")}
             </div>
             {u.institution && (
-              <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#94A3B8", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, color: "#6b717d", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 <Building2 size={9} strokeWidth={1.5} style={{ flexShrink: 0 }} />
                 {u.institution}
               </div>
             )}
             {u.country && (
-              <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, color: "#CBD5E1", marginTop: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, color: "#8a909a", marginTop: 1 }}>
                 <MapPin size={9} strokeWidth={1.5} style={{ flexShrink: 0 }} />
                 {u.country}
               </div>
@@ -177,7 +164,7 @@ function ResearcherCard({ u, repScore, savedIds, onSaveToggle, onInvite, current
               );
             })}
             {areas.length > 3 && (
-              <span style={{ fontSize: 10, padding: "2px 7px", color: "#94A3B8", background: WARM, border: `1px solid ${BORDER}` }}>
+              <span style={{ fontSize: 10, padding: "2px 7px", color: "#6b717d", background: WARM, border: `1px solid ${BORDER}` }}>
                 +{areas.length - 3}
               </span>
             )}
@@ -192,15 +179,15 @@ function ResearcherCard({ u, repScore, savedIds, onSaveToggle, onInvite, current
               Already gated by the strict u.orcid?.orcid_id check above, so
               this is a genuinely authenticated connection. */}
           {u.orcid?.orcid_id && <OrcidBadge orcidId={u.orcid.orcid_id} verified />}
-          {u.match_score > 0 && <MatchBadge score={u.match_score} />}
+          {/* Ranked by relevance; no match percentage is shown. */}
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
             {u.h_index > 0 && (
-              <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>
+              <span style={{ fontSize: 11, color: "#6b717d", fontFamily: "monospace" }}>
                 h <strong style={{ color: "#374151" }}>{u.h_index}</strong>
               </span>
             )}
             {u.publications_count > 0 && (
-              <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>
+              <span style={{ fontSize: 11, color: "#6b717d", fontFamily: "monospace" }}>
                 <strong style={{ color: "#374151" }}>{u.publications_count}</strong> pub
               </span>
             )}
@@ -256,12 +243,12 @@ function DiscoverSection({ title, icon: Icon, accent, researchers, savedIds, onS
             </div>
           )}
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d" }}>
               {title}
             </div>
           </div>
         </div>
-        <span style={{ fontSize: 10, fontFamily: "monospace", color: "#CBD5E1" }}>
+        <span style={{ fontSize: 10, fontFamily: "monospace", color: "#8a909a" }}>
           {researchers.length} researcher{researchers.length !== 1 ? "s" : ""}
         </span>
       </div>
@@ -456,13 +443,13 @@ export default function Network() {
               style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2, padding: "14px 20px", borderBottom: `2px solid ${active ? NAVY : "transparent"}`, background: "transparent", cursor: "pointer", transition: "border-color 0.15s", borderTop: "none", borderLeft: "none", borderRight: "none", minWidth: 140 }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <t.icon size={13} strokeWidth={1.5} style={{ color: active ? NAVY : "#94A3B8" }} />
+                <t.icon size={13} strokeWidth={1.5} style={{ color: active ? NAVY : "#6b717d" }} />
                 <span style={{ fontSize: 13, fontWeight: active ? 700 : 500, color: active ? NAVY : "#64748B" }}>{t.label}</span>
                 {t.key === "saved" && savedIds.size > 0 && (
                   <span style={{ fontSize: 10, fontFamily: "monospace", background: NAVY, color: "white", padding: "1px 6px", fontWeight: 600 }}>{savedIds.size}</span>
                 )}
               </div>
-              <span style={{ fontSize: 10, color: "#CBD5E1" }}>{t.sub}</span>
+              <span style={{ fontSize: 10, color: "#8a909a" }}>{t.sub}</span>
             </button>
           );
         })}
@@ -489,7 +476,7 @@ export default function Network() {
                   ].map(({ label, value }) => (
                     <div key={label} style={{ background: "white", padding: "18px 20px", textAlign: "center" }}>
                       <div style={{ fontSize: 22, fontWeight: 700, color: NAVY, letterSpacing: "-0.03em", fontFamily: "monospace" }}>{value}</div>
-                      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8", marginTop: 4 }}>{label}</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d", marginTop: 4 }}>{label}</div>
                     </div>
                   ))}
                 </div>
@@ -542,7 +529,7 @@ export default function Network() {
                       <div style={{ width: 26, height: 26, background: "#059669" + "15", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <Target size={12} strokeWidth={1.5} style={{ color: "#059669" }} />
                       </div>
-                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}>Open Collaboration Requests</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d" }}>Open Collaboration Requests</div>
                     </div>
                     <Link to="/network/collaborations" style={{ fontSize: 12, color: NAVY, textDecoration: "none", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
                       View all <ArrowRight size={11} strokeWidth={2} />
@@ -554,7 +541,7 @@ export default function Network() {
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 4 }}>{c.title}</div>
                         <div style={{ fontSize: 11, color: "#64748B", marginBottom: 8, lineHeight: 1.5 }}>{c.type} · {c.discipline}</div>
                         {c.description && (
-                          <div style={{ fontSize: 12, color: "#94A3B8", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", marginBottom: 10 }}>{c.description}</div>
+                          <div style={{ fontSize: 12, color: "#6b717d", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", marginBottom: 10 }}>{c.description}</div>
                         )}
                         <Link to={`/network/collaborations`} style={{ fontSize: 11, color: NAVY, fontWeight: 600, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
                           Apply <ArrowRight size={10} strokeWidth={2} />
@@ -573,7 +560,7 @@ export default function Network() {
                       <div style={{ width: 26, height: 26, background: "#0F2847" + "15", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <BrainCircuit size={12} strokeWidth={1.5} style={{ color: "#0F2847" }} />
                       </div>
-                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}>Popular Research Teams</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d" }}>Popular Research Teams</div>
                     </div>
                     <Link to="/teams" style={{ fontSize: 12, color: NAVY, textDecoration: "none", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
                       View all <ArrowRight size={11} strokeWidth={2} />
@@ -585,10 +572,10 @@ export default function Network() {
                         onMouseEnter={(e) => e.currentTarget.style.borderColor = NAVY + "50"}
                         onMouseLeave={(e) => e.currentTarget.style.borderColor = BORDER}
                       >
-                        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 6 }}>{g.type?.replace(/_/g, " ") || "Team"}</div>
+                        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#6b717d", marginBottom: 6 }}>{g.type?.replace(/_/g, " ") || "Team"}</div>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 4 }}>{g.name}</div>
                         {g.discipline && <div style={{ fontSize: 11, color: "#64748B" }}>{g.discipline}</div>}
-                        <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
+                        <div style={{ fontSize: 11, color: "#6b717d", marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
                           <Users size={10} strokeWidth={1.5} />
                           {g.member_count ?? 0} members
                         </div>
@@ -632,7 +619,7 @@ export default function Network() {
                       <div style={{ width: 26, height: 26, background: "#374151" + "15", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <Activity size={12} strokeWidth={1.5} style={{ color: "#374151" }} />
                       </div>
-                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}>Recent Activity</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d" }}>Recent Activity</div>
                     </div>
                     <Link to="/feed" style={{ fontSize: 12, color: NAVY, textDecoration: "none", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
                       Research Feed <ArrowRight size={11} strokeWidth={2} />
@@ -679,7 +666,7 @@ export default function Network() {
           {/* Quick type chips */}
           {suggestedTypes.length > 0 && !userType && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", marginBottom: 16 }}>
-              <span style={{ fontSize: 11, color: "#94A3B8" }}>Quick filter:</span>
+              <span style={{ fontSize: 11, color: "#6b717d" }}>Quick filter:</span>
               {suggestedTypes.map((t) => {
                 const opt = USER_TYPE_OPTIONS.find((o) => o.value === t);
                 if (!opt) return null;
@@ -733,7 +720,7 @@ export default function Network() {
                   { label: "Min h-index", el: <Input size="sm" type="number" min={0} max={200} value={minHIndex || ""} onChange={(e) => setMinHIndex(Number(e.target.value) || 0)} placeholder="0" /> },
                 ].map(({ label, el }) => (
                   <div key={label}>
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 5 }}>{label}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#6b717d", marginBottom: 5 }}>{label}</div>
                     {el}
                   </div>
                 ))}
@@ -904,7 +891,7 @@ export default function Network() {
             />
           ) : (
             <>
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b717d", marginBottom: 16 }}>
                 {savedIds.size} saved researcher{savedIds.size !== 1 ? "s" : ""}
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>

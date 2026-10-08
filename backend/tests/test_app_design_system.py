@@ -102,3 +102,41 @@ def test_raw_api_errors_never_reach_the_ui():
     hits = [str(f.relative_to(SRC)) for f in list((SRC / "pages").rglob("*.jsx")) + list((SRC / "components").rglob("*.jsx"))
             if pat.search(f.read_text())]
     assert not hits, hits
+
+
+def test_no_match_percentages_for_people():
+    # The public site promises "No match percentages": people are ranked, the
+    # card shows the evidence (shared topics, complementary skills), never a number.
+    rx = _read("pages/ResearchExperts.jsx")
+    assert "Research compatibility ·" not in rx and "Why they may fit" in rx
+    assert "MatchBadge" not in _read("pages/Network.jsx")
+    assert "ScoreRing" not in _read("pages/CollaborationIntelligence.jsx")
+    assert "CompatBar" not in _read("pages/GrantOpportunityWorkspace.jsx")
+    assert "match_score" not in _read("pages/Researchers.jsx")
+    card = _read("components/ds/EntityCards.jsx").split("export function ResearcherCard")[1].split("export function")[0]
+    assert "match_score" not in card
+    assert "const score" not in _read("components/marketplace/MatchCard.jsx")
+    recs = _read("pages/Recommendations.jsx")
+    for card in ("function ResearcherCard", "function MentorCard", "function ReviewerCard"):
+        body = recs.split(card)[1].split("\nfunction ")[0]
+        assert "ScoreBadge" not in body, card
+
+
+def test_ai_credit_prices_come_from_the_server_catalogue():
+    assistant = _read("pages/AIAssistant.jsx")
+    assert "WF_CREDITS" not in assistant and "~12 cr" not in assistant
+    assert "loadCreditCatalogue" in assistant and "ai_os_message" in assistant
+    market = _read("pages/Marketplace.jsx")
+    assert "RERANK_COST" not in market and "ai_marketplace_rerank" in market
+    assert "loadCreditCatalogue" in _read("pages/Today.jsx")
+    pat = re.compile(r"~\d+\s*cr\b|\b\d+\s*credits?\s*per\b")
+    hits = [str(f.relative_to(SRC)) for f in (SRC / "pages").rglob("*.jsx") if pat.search(f.read_text())]
+    assert not hits, hits
+
+
+def test_page_title_classes_are_global():
+    css = _read("index.css")
+    assert ".pl-hero-title {" in css and ".pl-eyebrow {" in css
+    assert ".pl-hero-title {" not in (DS / "PageLayout.jsx").read_text()
+    for page in ("pages/PaymentSuccess.jsx", "pages/PaymentCancelled.jsx", "components/auth/RequireInstitution.jsx"):
+        assert 'className="pl-hero-title"' in _read(page), page

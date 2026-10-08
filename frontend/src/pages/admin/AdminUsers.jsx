@@ -210,7 +210,7 @@ export default function AdminUsers() {
       render: (_v, row) => (
         <div>
           <div style={{ fontWeight: 500, color: "#0f172a" }}>{row.full_name || "—"}</div>
-          <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{row.email}</div>
+          <div style={{ fontSize: "0.72rem", color: "#6b717d" }}>{row.email}</div>
         </div>
       ),
     },
@@ -285,7 +285,7 @@ export default function AdminUsers() {
 
         {recentFilters.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
-            <span style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94a3b8" }}>
+            <span style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#6b717d" }}>
               Recent
             </span>
             {recentFilters.map((f, i) => (

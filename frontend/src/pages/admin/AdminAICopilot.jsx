@@ -273,7 +273,7 @@ function AICopilotSidebar({ items, messages }) {
         {items.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 24, color: "#0f172a" }}>{items.length}</div>
-            <p style={{ fontSize: 11, color: "#94A3B8", margin: 0 }}>total briefings generated</p>
+            <p style={{ fontSize: 11, color: "#6b717d", margin: 0 }}>total briefings generated</p>
             {Object.entries(kindCounts).map(([kind, count]) => (
               <div key={kind} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>
                 <span style={{ textTransform: "capitalize" }}>{kind}</span>
@@ -282,7 +282,7 @@ function AICopilotSidebar({ items, messages }) {
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No briefings generated yet — use the panel to create your first one.
           </p>
         )}
@@ -298,7 +298,7 @@ function AICopilotSidebar({ items, messages }) {
             You've asked {userQuestions} question{userQuestions !== 1 ? "s" : ""} to the platform AI this session.
           </p>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             Ask the AI about platform health, users, or revenue to see activity here.
           </p>
         )}

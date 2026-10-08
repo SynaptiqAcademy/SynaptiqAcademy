@@ -209,7 +209,7 @@ export function JournalCard({ journal, onClick, matchScore }) {
 export function ResearcherCard({ researcher, onClick, onFollow, layout = "grid" }) {
   const {
     name, title: jobTitle, institution, expertise = [],
-    publications, citations, h_index, match_score,
+    publications, citations, h_index,
     avatar, verified, following,
   } = researcher || {};
 
@@ -231,9 +231,6 @@ export function ResearcherCard({ researcher, onClick, onFollow, layout = "grid" 
             {publications != null && <MetricPill label="Pubs" value={publications} />}
             {h_index != null && <MetricPill label="H-index" value={h_index} />}
           </div>
-          {match_score != null && (
-            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: EMERALD, flexShrink: 0 }}>{match_score}%</span>
-          )}
         </div>
       </Card>
     );
@@ -265,11 +262,6 @@ export function ResearcherCard({ researcher, onClick, onFollow, layout = "grid" 
         {h_index != null && <MetricPill label="H-index" value={h_index} />}
       </div>
 
-      {match_score != null && (
-        <div style={{ marginTop: 12 }}>
-          <ProgressBar value={match_score} max={100} size="sm" label="Match" colorByValue />
-        </div>
-      )}
 
       {onFollow && (
         <button

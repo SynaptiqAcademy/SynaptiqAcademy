@@ -270,7 +270,7 @@ function GrantCollaborationHubSidebar({ myInvitations, myLead, myParticipating, 
                   {inv.collaboration_title || inv.collab?.title || "Untitled Collaboration"}
                 </div>
                 {inv.invited_by_name && (
-                  <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>Invited by {inv.invited_by_name}</div>
+                  <div style={{ fontSize: 11, color: "#6b717d", marginTop: 1 }}>Invited by {inv.invited_by_name}</div>
                 )}
               </button>
             ))}
@@ -279,7 +279,7 @@ function GrantCollaborationHubSidebar({ myInvitations, myLead, myParticipating, 
             </Button>
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No pending invitations right now.
           </p>
         )}
@@ -293,11 +293,11 @@ function GrantCollaborationHubSidebar({ myInvitations, myLead, myParticipating, 
         <div style={{ display: "flex", gap: 20 }}>
           <div>
             <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{myLead.length}</div>
-            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Leading</div>
+            <div style={{ fontSize: 10, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.05em" }}>Leading</div>
           </div>
           <div>
             <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{myParticipating.length}</div>
-            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Participating</div>
+            <div style={{ fontSize: 10, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.05em" }}>Participating</div>
           </div>
         </div>
         <Button onClick={() => onViewTab("my-hub")} size="sm" variant="ghost" style={{ width: "100%", marginTop: 10 }}>
@@ -314,7 +314,7 @@ function GrantCollaborationHubSidebar({ myInvitations, myLead, myParticipating, 
           <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 24, fontWeight: 700, color: "#0f172a" }}>
             {Math.round(((analytics.invitations_accepted || 0) / analytics.invitations_sent) * 100)}%
           </div>
-          <p style={{ fontSize: 11, color: "#94A3B8", margin: "2px 0 0" }}>
+          <p style={{ fontSize: 11, color: "#6b717d", margin: "2px 0 0" }}>
             {analytics.invitations_accepted || 0} of {analytics.invitations_sent} invitations accepted
           </p>
         </Card>
@@ -460,7 +460,7 @@ export default function GrantCollaborationHub() {
         { label: "My Collaborations",     value: myCollabs.length },
         { label: "Pending Invitations",   value: myInvitations.length },
       ]}
-      sidebar={
+      sidebar={(myInvitations.length || myLead.length || myParticipating.length) ? (
         <GrantCollaborationHubSidebar
           myInvitations={myInvitations}
           myLead={myLead}
@@ -468,9 +468,9 @@ export default function GrantCollaborationHub() {
           analytics={analytics}
           onViewTab={setActiveTab}
         />
-      }
+      ) : undefined}
       actions={
-        <Button onClick={() => setShowCreateModal(true)} variant="hero" className="shrink-0">
+        <Button onClick={() => setShowCreateModal(true)} variant="primary" className="shrink-0">
           <Plus size={15} /> New Collaboration
         </Button>
       }

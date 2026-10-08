@@ -130,7 +130,7 @@ export default function ActivityCenter() {
       title="Activity Center"
       subtitle="Professional academic events only. No likes, no engagement metrics. Sorted by academic relevance."
       actions={<Button variant="hero" onClick={() => setShowPost(true)}><Plus size={15} />Share Update</Button>}
-      sidebar={<ActivityCenterSidebar feed={feed} myActivity={myActivity} />}
+      sidebar={(feed || []).length || (myActivity || []).length ? <ActivityCenterSidebar feed={feed} myActivity={myActivity} /> : undefined}
     >
 
       <div style={{ marginBottom: 16 }}>
@@ -190,7 +190,7 @@ function ActivityCenterSidebar({ feed, myActivity }) {
             You've shared {myActivity.length} update{myActivity.length !== 1 ? "s" : ""} to the academic feed.
           </p>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             You haven't shared any updates yet — use "Share Update" to post your first one.
           </p>
         )}
@@ -214,7 +214,7 @@ function ActivityCenterSidebar({ feed, myActivity }) {
             })}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No academic activity has been posted yet.
           </p>
         )}

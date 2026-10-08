@@ -191,7 +191,7 @@ function EntityDetailSidebar({ rels, suggestions, nav }) {
             </div>
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No relationships found for this entity yet.
           </p>
         )}
@@ -212,13 +212,13 @@ function EntityDetailSidebar({ rels, suggestions, nav }) {
               >
                 <div style={{ fontSize: 12, fontWeight: 600, color: NAVY }}>{s.label}</div>
                 {s.score !== undefined && (
-                  <div style={{ fontSize: 11, color: "#94A3B8" }}>Match: {(s.score * 100).toFixed(0)}%</div>
+                  <div style={{ fontSize: 11, color: "#6b717d" }}>Match: {(s.score * 100).toFixed(0)}%</div>
                 )}
               </div>
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No related entities discovered yet.
           </p>
         )}

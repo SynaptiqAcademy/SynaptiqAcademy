@@ -81,7 +81,7 @@ function PublicationRow({ pub }) {
             DOI <ExternalLink size={9} />
           </a>
         )}
-        <ChevronDown size={12} style={{ color: "#CBD5E1", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 150ms" }} />
+        <ChevronDown size={12} style={{ color: "#8a909a", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 150ms" }} />
       </div>
     </div>
   );

@@ -58,7 +58,7 @@ const TABS = [
 
 // ── Document lifecycle stages ──────────────────────────────────────────────────
 const DOC_STAGES = [
-  { key: "idea",              label: "Idea",              color: "#94A3B8" },
+  { key: "idea",              label: "Idea",              color: "#6b717d" },
   { key: "outline",           label: "Outline",           color: "#64748B" },
   { key: "draft",             label: "Draft",             color: "#0F2847" },
   { key: "in_progress",       label: "In Progress",       color: "#0F2847" },

@@ -714,8 +714,8 @@ function AboutSection({ profile, isMe }) {
         </div>
       ) : isMe ? (
         <div style={{ padding: "16px 20px", border: `1px dashed ${BORDER}`, marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
-          <PenLine size={14} strokeWidth={1.5} style={{ color: "#CBD5E1" }} />
-          <span style={{ fontSize: 13, color: "#94A3B8" }}>No biography yet. </span>
+          <PenLine size={14} strokeWidth={1.5} style={{ color: "#8a909a" }} />
+          <span style={{ fontSize: 13, color: "#6b717d" }}>No biography yet. </span>
           <span style={{ fontSize: 13, color: NAVY, cursor: "pointer", textDecoration: "underline" }}>Add one to improve your profile visibility.</span>
         </div>
       ) : null}
@@ -723,7 +723,7 @@ function AboutSection({ profile, isMe }) {
       {/* Research Areas */}
       {(profile.research_areas || []).length > 0 && (
         <div style={{ marginBottom: 18 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Areas</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Areas</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {profile.research_areas.map((area, i) => {
               const c = AREA_PALETTE[i % AREA_PALETTE.length];
@@ -740,7 +740,7 @@ function AboutSection({ profile, isMe }) {
       {/* Research Keywords */}
       {(profile.research_keywords || []).length > 0 && (
         <div style={{ marginBottom: 18 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Keywords</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Keywords</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
             {profile.research_keywords.map((k) => (
               <Badge key={k} variant="default" size="sm">
@@ -754,7 +754,7 @@ function AboutSection({ profile, isMe }) {
       {/* Research Interests */}
       {(profile.research_interests || []).length > 0 && (
         <div style={{ marginBottom: 18 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Interests</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Interests</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
             {profile.research_interests.map((r) => (
               <Badge key={r} variant="neutral" size="sm">
@@ -775,7 +775,7 @@ function AboutSection({ profile, isMe }) {
             {(profile.available_for_collaboration || profile.available_for_supervision ||
               profile.available_for_reviewing || profile.available_for_consulting) && (
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Open to</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Open to</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                   {profile.available_for_collaboration && <OpenBadge label="Collaboration" />}
                   {profile.available_for_supervision   && <OpenBadge label="Supervision" />}
@@ -788,7 +788,7 @@ function AboutSection({ profile, isMe }) {
             {/* Can contribute */}
             {(profile.can_contribute || []).length > 0 && (
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Can contribute</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Can contribute</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                   {profile.can_contribute.map((c) => (
                     <Badge key={c} variant="default" size="sm">{c}</Badge>
@@ -800,7 +800,7 @@ function AboutSection({ profile, isMe }) {
             {/* Looking for */}
             {(profile.looking_for || []).length > 0 && (
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Looking for</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Looking for</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                   {profile.looking_for.map((c) => (
                     <Badge key={c} variant="warning" size="sm">{c}</Badge>
@@ -813,7 +813,7 @@ function AboutSection({ profile, isMe }) {
       )}
 
       {!hasAbout && isMe && (
-        <div style={{ textAlign: "center", padding: "32px 24px", color: "#94A3B8", fontSize: 13 }}>
+        <div style={{ textAlign: "center", padding: "32px 24px", color: "#6b717d", fontSize: 13 }}>
           Complete your profile to improve your research visibility and attract collaborators.
         </div>
       )}
@@ -879,7 +879,7 @@ function PublicationsSection({ pubs, loading, isMe, query, onQuery, onRefresh })
       {!loading && pubs && pubs.results.length > 0 && (
         <div>
           {pubs.total > pubs.results.length && (
-            <div style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace", marginBottom: 12 }}>
+            <div style={{ fontSize: 11, color: "#6b717d", fontFamily: "monospace", marginBottom: 12 }}>
               Showing {pubs.results.length} of {pubs.total} publications
             </div>
           )}
@@ -917,7 +917,7 @@ function PublicationCard({ pub }) {
       {/* Year badge */}
       <div style={{ flexShrink: 0, minWidth: 48, textAlign: "center" }}>
         {pub.year && (
-          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "monospace", color: isRecent ? "#0F2847" : "#94A3B8" }}>
+          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "monospace", color: isRecent ? "#0F2847" : "#6b717d" }}>
             {pub.year}
           </div>
         )}
@@ -968,7 +968,7 @@ function PublicationCard({ pub }) {
         {pub.citations > 0 && (
           <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "monospace", color: "#0f172a" }}>
             {pub.citations}
-            <span style={{ fontSize: 10, fontWeight: 400, color: "#94A3B8", marginLeft: 3 }}>cites</span>
+            <span style={{ fontSize: 10, fontWeight: 400, color: "#6b717d", marginLeft: 3 }}>cites</span>
           </div>
         )}
         {pub.doi && (
@@ -982,7 +982,7 @@ function PublicationCard({ pub }) {
             DOI <ExternalLink size={9} strokeWidth={1.5} />
           </a>
         )}
-        <ChevronDown size={12} strokeWidth={1.5} style={{ color: "#CBD5E1", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.15s", marginTop: 4 }} />
+        <ChevronDown size={12} strokeWidth={1.5} style={{ color: "#8a909a", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.15s", marginTop: 4 }} />
       </div>
     </div>
   );
@@ -1006,7 +1006,7 @@ function CVSection({ educations, employments, isMe }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
           {employments.length > 0 && (
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
                 Employment
               </div>
               <TimelineList records={employments} type="employment" />
@@ -1014,7 +1014,7 @@ function CVSection({ educations, employments, isMe }) {
           )}
           {educations.length > 0 && (
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
                 Education
               </div>
               <TimelineList records={educations} type="education" />
@@ -1053,12 +1053,12 @@ function TimelineList({ records, type }) {
                 )}
                 <div style={{ display: "flex", gap: 10, marginTop: 4, alignItems: "center" }}>
                   {yearRange && (
-                    <span style={{ fontSize: 10, fontFamily: "monospace", color: isCurrent ? "#0F2847" : "#94A3B8", fontWeight: isCurrent ? 600 : 400 }}>
+                    <span style={{ fontSize: 10, fontFamily: "monospace", color: isCurrent ? "#0F2847" : "#6b717d", fontWeight: isCurrent ? 600 : 400 }}>
                       {yearRange}
                     </span>
                   )}
                   {(r.city || r.country) && (
-                    <span style={{ fontSize: 10, color: "#CBD5E1", display: "flex", alignItems: "center", gap: 3 }}>
+                    <span style={{ fontSize: 10, color: "#8a909a", display: "flex", alignItems: "center", gap: 3 }}>
                       <MapPin size={9} strokeWidth={1.5} />
                       {[r.city, r.country].filter(Boolean).join(", ")}
                     </span>
@@ -1101,7 +1101,7 @@ function FundingSection({ fundings, isMe }) {
                   </span>
                 )}
                 {(f.start_year || f.end_year) && (
-                  <span style={{ fontSize: 10, fontFamily: "monospace", color: "#94A3B8" }}>
+                  <span style={{ fontSize: 10, fontFamily: "monospace", color: "#6b717d" }}>
                     {f.start_year || "?"} – {f.end_year || "present"}
                   </span>
                 )}
@@ -1134,7 +1134,7 @@ function SkillsSection({ profile }) {
     if (!items || items.length === 0) return null;
     return (
       <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>{label}</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>{label}</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
           {items.map((item) => (
             <span key={item} style={{ fontSize: 12, padding: "4px 11px", background: chipBg, color: chipColor, border: `1px solid ${chipBorder}`, fontWeight: 500 }}>
@@ -1189,12 +1189,12 @@ function IdentifiersSection({ profile, orcidId }) {
               <Link2 size={12} strokeWidth={1.5} style={{ color }} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</div>
               <div style={{ fontSize: 11, color: "#374151", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {typeof value === "string" && value.length > 22 ? value.slice(0, 22) + "…" : value}
               </div>
             </div>
-            {href && <ExternalLink size={11} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} />}
+            {href && <ExternalLink size={11} strokeWidth={1.5} style={{ color: "#8a909a", flexShrink: 0 }} />}
           </a>
         ))}
       </div>
@@ -1237,7 +1237,7 @@ function AchievementsSection({ profile, pubs }) {
             </div>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#0f172a" }}>{label}</div>
-              <div style={{ fontSize: 10, color: "#94A3B8", marginTop: 2 }}>{desc}</div>
+              <div style={{ fontSize: 10, color: "#6b717d", marginTop: 2 }}>{desc}</div>
             </div>
           </div>
         ))}
@@ -1250,12 +1250,12 @@ function AchievementsSection({ profile, pubs }) {
 
 function CompletionWidget({ completion }) {
   const pct = completion.percentage;
-  const barColor = pct >= 80 ? "#059669" : pct >= 50 ? "#D97706" : ACCENT;
+  const barColor = pct >= 80 ? "#059669" : pct >= 50 ? "#D97706" : "#B42318";
   return (
     <div style={{ border: `1px solid ${BORDER}`, background: "white" }} data-testid="profile-completion-widget">
       <div style={{ padding: "14px 16px 10px", borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}>Profile Strength</div>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d" }}>Profile Strength</div>
           <span style={{ fontSize: 18, fontWeight: 700, fontFamily: "monospace", color: barColor }}>{pct}%</span>
         </div>
         <div style={{ height: 4, background: "#E2E8F0", marginTop: 8 }}>
@@ -1268,8 +1268,8 @@ function CompletionWidget({ completion }) {
             <div key={item.key} style={{ display: "flex", alignItems: "center", gap: 7 }}>
               {item.earned
                 ? <CheckCircle2 size={12} strokeWidth={1.5} style={{ color: "#059669", flexShrink: 0 }} />
-                : <Circle size={12} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} />}
-              <span style={{ flex: 1, fontSize: 11, color: item.earned ? "#374151" : "#94A3B8" }}>{item.label}</span>
+                : <Circle size={12} strokeWidth={1.5} style={{ color: "#8a909a", flexShrink: 0 }} />}
+              <span style={{ flex: 1, fontSize: 11, color: item.earned ? "#374151" : "#6b717d" }}>{item.label}</span>
               {item.earned
                 ? <span style={{ fontSize: 10, fontFamily: "monospace", color: "#059669" }}>+{item.points}</span>
                 : <Link to={item.action} style={{ fontSize: 10, color: NAVY, textDecoration: "none" }}>{item.action_label}</Link>
@@ -1288,9 +1288,9 @@ function TeachingStatsWidget({ stats }) {
       <div style={{ padding: "14px 16px 10px", borderBottom: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
           <BarChart2 size={12} strokeWidth={1.5} style={{ color: NAVY }} />
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}>Teaching (30d)</span>
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d" }}>Teaching (30d)</span>
         </div>
-        <Link to="/teaching/analytics" style={{ fontSize: 10, color: "#94A3B8", textDecoration: "none" }}>Analytics →</Link>
+        <Link to="/teaching/analytics" style={{ fontSize: 10, color: "#6b717d", textDecoration: "none" }}>Analytics →</Link>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: BORDER }}>
         {[
@@ -1301,7 +1301,7 @@ function TeachingStatsWidget({ stats }) {
         ].map(({ label, value }) => (
           <div key={label} style={{ background: "white", padding: "10px 12px" }}>
             <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "monospace", color: "#0f172a" }}>{value ?? 0}</div>
-            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.07em", marginTop: 1 }}>{label}</div>
+            <div style={{ fontSize: 10, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.07em", marginTop: 1 }}>{label}</div>
           </div>
         ))}
       </div>
@@ -1331,7 +1331,7 @@ function QuickActionsWidget({ profile }) {
   return (
     <Card padding="none">
       <div style={{ padding: "14px 16px 10px", borderBottom: `1px solid ${BORDER}` }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8" }}>Quick Actions</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d" }}>Quick Actions</div>
       </div>
       <List border={false} radius={0} style={{ padding: "8px 10px", background: "transparent" }}>
         <ListItem

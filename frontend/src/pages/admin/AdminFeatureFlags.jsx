@@ -188,7 +188,7 @@ export default function AdminFeatureFlags() {
       subtitle="Manage gradual rollouts, scheduled flags, and module gating"
       actions={
         <div className="flex gap-2">
-          <Button variant="hero" size="sm" onClick={() => setShowCreate(true)}>
+          <Button variant="primary" size="sm" onClick={() => setShowCreate(true)}>
             <Plus size={12} /> New Flag
           </Button>
           <Button variant="hero" size="icon" onClick={refetch} aria-label="Refresh">

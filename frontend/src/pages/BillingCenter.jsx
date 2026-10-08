@@ -22,7 +22,7 @@ import { SettingsLayout } from "@/layouts";
 import api from "../lib/api";
 import { toast } from "sonner";
 import {
-  Sparkles, AlertCircle, CreditCard, ArrowRight, Crown, CheckCircle2,
+  Sparkles, AlertCircle, CreditCard, ArrowRight, CheckCircle2,
   Headphones, Zap,
 } from "lucide-react";
 import { Card } from "@/components/ds/Card";
@@ -35,7 +35,7 @@ import { Dialog } from "@/components/ds/Modal";
 import { DataTable } from "@/components/ds/DataTable";
 import { List, ListItem } from "@/components/ds/List";
 import {
-  TYPE, NAVY, NAVY2, WHITE, WARM, BRD, EMERALD, AMBER, TEXT_MUTED, TEXT_SECONDARY,
+  TYPE, NAVY, WARM, BRD, EMERALD, AMBER, TEXT_MUTED, TEXT_SECONDARY,
   WARNING_BG, WARNING_TEXT,
 } from "@/lib/tokens";
 
@@ -166,56 +166,52 @@ export default function BillingCenter() {
               </Link>
             </div>
 
-            <div style={{ margin: "16px 24px 24px", borderRadius: 8, padding: 24, background: `linear-gradient(135deg, ${NAVY} 0%, ${NAVY2} 100%)`, color: WHITE }}>
+            <div style={{ margin: "14px 24px 20px", paddingBottom: 20, borderBottom: `1px solid ${BRD}` }}>
               <div className="flex flex-col sm:flex-row" style={{ alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
-                <div className="flex-wrap" style={{ display: "flex", alignItems: "flex-start", gap: 14, minWidth: 0 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(124,58,237,0.35)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Crown size={20} color="#d4dde9" />
+                <div style={{ minWidth: 0 }}>
+                  <div className="flex-wrap" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 26, lineHeight: 1.15, color: "#10141c" }}>{planLabel}</span>
+                    <Badge variant={status === "active" || status === "trialing" ? "success" : status === "past_due" ? "warning" : "neutral"} size="sm">
+                      {status === "active" ? "Active" : status}
+                    </Badge>
                   </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div className="flex-wrap" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 17, fontWeight: 700 }}>{planLabel} Plan</span>
-                      <Badge variant={status === "active" || status === "trialing" ? "success" : status === "past_due" ? "warning" : "neutral"} size="sm">
-                        {status === "active" ? "Active" : status}
-                      </Badge>
-                    </div>
-                    <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.65)", margin: "4px 0 0", maxWidth: 420 }}>
-                      {plan.tagline || "Your current Synaptiq subscription."}
-                    </p>
-                  </div>
+                  <p style={{ fontSize: 13.5, color: TEXT_SECONDARY, margin: "6px 0 0", maxWidth: 460, lineHeight: 1.55 }}>
+                    {plan.tagline || "Your current Synaptiq subscription."}
+                  </p>
                 </div>
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 24, fontWeight: 700 }}>
+                <div className="sm:text-right" style={{ flexShrink: 0 }}>
+                  <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 26, lineHeight: 1.15, color: "#10141c" }}>
                     {plan.code === "free" ? "€0" : plan.price_eur_monthly ? `€${plan.price_eur_monthly}` : "Custom"}
-                    {plan.price_eur_monthly > 0 && <span style={{ fontSize: 12, fontWeight: 400, color: "rgba(255,255,255,0.55)" }}>/month</span>}
+                    {plan.price_eur_monthly > 0 && <span style={{ fontFamily: "inherit", fontSize: 13, color: TEXT_MUTED }}> / month</span>}
                   </div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: TEXT_MUTED, marginTop: 2 }}>
                     {plan.code === "free" ? "Forever" : plan.price_eur_monthly > 0 ? "Billed monthly" : "Contact sales"}
                   </div>
-                  <Button size="sm" variant="subtle" onClick={openPortal} style={{ marginTop: 10 }}>Manage Plan</Button>
                 </div>
               </div>
 
               {(plan.features || []).length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-4" style={{ gap: 16, marginTop: 20, paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.12)" }}>
+                <ul className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: "8px 24px", margin: "18px 0 0", padding: 0, listStyle: "none" }}>
                   {plan.features.slice(0, 4).map((f) => (
-                    <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 7, minWidth: 0 }}>
-                      <CheckCircle2 size={14} color="#34D399" style={{ flexShrink: 0, marginTop: 1 }} />
-                      <span style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", lineHeight: 1.4, minWidth: 0 }}>{f}</span>
-                    </div>
+                    <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, minWidth: 0 }}>
+                      <CheckCircle2 size={14} color={NAVY} style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span style={{ fontSize: 13, color: TEXT_SECONDARY, lineHeight: 1.45, minWidth: 0 }}>{f}</span>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
             </div>
 
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "0 24px 20px" }}>
-              <Link to="/pricing"><Button as="span" size="sm">Upgrade Plan</Button></Link>
+              {(plan.code === "free" || plan.code === "researcher") && (
+                <Link to="/pricing"><Button as="span" size="sm">Upgrade Plan</Button></Link>
+              )}
+              {plan.code !== "free" && (
+                <Button size="sm" variant={plan.code === "researcher" ? "secondary" : "primary"} onClick={openPortal}>Manage Plan</Button>
+              )}
               <Link to={plan.code === "free" ? "/pricing" : "/ai-credits#buy-credits"}><Button as="span" size="sm" variant="outline">Buy Credits</Button></Link>
               {subscription && !cancelAtPeriodEnd && (
                 <Button size="sm" variant="ghost" onClick={() => setConfirmCancelOpen(true)} loading={cancelling}>Cancel Subscription</Button>
-              )}
-              {subscription && (
-                <Button size="sm" variant="ghost" onClick={openPortal}>Manage Billing</Button>
               )}
             </div>
           </Card>

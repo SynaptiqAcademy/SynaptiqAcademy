@@ -40,6 +40,7 @@ export function DashboardLayout({
   return (
     <PageLayout
       title={typeof greeting === "string" ? greeting : undefined}
+      header={typeof greeting === "string" ? undefined : greeting}
       actions={actions}
       banner={banner}
     >

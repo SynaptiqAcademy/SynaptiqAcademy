@@ -1,5 +1,5 @@
-import React from "react";
-import { useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Breadcrumb } from "./Breadcrumb";
 import { Footer } from "./Footer";
 import { getBreadcrumbTrail } from "@/lib/breadcrumbTrail";
@@ -28,8 +28,51 @@ const FLUSH_ROUTES = new Set(["/messages", "/notifications"]);
  *   variant   "app" | "admin"
  *   children  the routed page content
  */
+// The last path segment when it looks like a record id (not a word like
+// "new" or "settings"): ids here are 24-char hex, UUIDs or other long tokens.
+function routeRecordId(pathname) {
+  const parts = pathname.split("/").filter(Boolean);
+  if (parts.length < 2) return null;
+  const last = parts[parts.length - 1];
+  return /^[A-Za-z0-9_-]{8,}$/.test(last) && /\d/.test(last) ? last : null;
+}
+
+function NotAvailable({ status, pathname }) {
+  const parent = "/" + pathname.split("/").filter(Boolean).slice(0, -1).join("/");
+  const forbidden = status === 403;
+  return (
+    <div style={{ maxWidth: 560, padding: "24px 0" }} role="status">
+      <h1 className="pl-hero-title" style={{ fontSize: "1.6rem" }}>
+        {forbidden ? "You don't have access to this." : "This isn't available."}
+      </h1>
+      <p className="pl-sub" style={{ marginTop: 8 }}>
+        {forbidden
+          ? "It belongs to a team, project or institution you're not part of. Nothing in your account has changed."
+          : "It may have been removed, or the link is out of date. Nothing in your account has changed."}
+      </p>
+      <div style={{ marginTop: 16 }}>
+        <Link to={parent || "/discover"} className="inline-flex items-center h-9 px-4 text-[13px] font-semibold rounded-btn border border-hairline-strong bg-white text-[color:var(--sq-text-primary)] no-underline hover:border-[color:var(--sq-text-primary)]">
+          Go back
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export function ContentFrame({ variant = "app", children }) {
   const { pathname } = useLocation();
+  const [missing, setMissing] = useState(null);
+  useEffect(() => {
+    setMissing(null);
+    const id = routeRecordId(pathname);
+    if (!id) return undefined;
+    const onMissing = (e) => {
+      const path = String(e.detail?.url || "").split("?")[0].replace(/\/+$/, "");
+      if (path.endsWith("/" + id)) setMissing(e.detail.status);
+    };
+    window.addEventListener("synaptiq:record-missing", onMissing);
+    return () => window.removeEventListener("synaptiq:record-missing", onMissing);
+  }, [pathname]);
   const flush = FLUSH_ROUTES.has(pathname);
   const trail = variant === "app" && !flush ? getBreadcrumbTrail(pathname) : null;
 
@@ -53,7 +96,7 @@ export function ContentFrame({ variant = "app", children }) {
       )}
 
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-        {children}
+        {missing ? <NotAvailable status={missing} pathname={pathname} /> : children}
       </div>
 
       {!flush && <Footer variant={variant} />}

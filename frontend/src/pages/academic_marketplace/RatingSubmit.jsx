@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useParams, useNavigate } from "react-router-dom";
 import { Star, Receipt } from "lucide-react";
 import { NAVY } from "@/lib/tokens";
 import { ResearchLayout } from "@/layouts";
-import { Card, Textarea, Checkbox, Button, Alert, LoadingOverlay } from "@/components/ds";
+import { Card, Textarea, Checkbox, Button, Alert, LoadingOverlay, EmptyState } from "@/components/ds";
 import { fetchApi } from "@/lib/api";
 
 const API = "/api/acad-market";
@@ -13,12 +14,16 @@ export default function RatingSubmit() {
   const { id: orderId } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
+  const [missing, setMissing] = useState(false);
   const [form, setForm] = useState({ communication: 5, quality: 5, expertise: 5, timeliness: 5, value: 5, review_text: "", would_recommend: true });
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState(null);
 
   useEffect(() => {
-    fetchApi(`${API}/orders/${orderId}`).then(r => r.json()).then(d => setOrder(d.error ? null : d));
+    fetchApi(`${API}/orders/${orderId}`)
+      .then(r => (r.ok ? r.json() : Promise.reject(r)))
+      .then(d => (d && !d.error && !d.detail ? setOrder(d) : setMissing(true)))
+      .catch(() => setMissing(true));
   }, [orderId]);
 
   const submit = async () => {
@@ -32,6 +37,13 @@ export default function RatingSubmit() {
     else { navigate(`/academic-marketplace/orders/${orderId}`); }
   };
 
+  if (missing) return (
+    <EmptyState
+      title="This order isn't available."
+      description="It may belong to another account, or the link is out of date."
+      action={<Button as={Link} to="/academic-marketplace/orders" size="sm" variant="secondary">My orders</Button>}
+    />
+  );
   if (!order) return <LoadingOverlay text="Loading..." />;
 
   return (
@@ -97,16 +109,16 @@ function RatingSubmitSidebar({ order }) {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-            <span style={{ color: "#94A3B8" }}>Package</span>
+            <span style={{ color: "#6b717d" }}>Package</span>
             <span style={{ color: "#374151", fontWeight: 600, textTransform: "capitalize" }}>{order.package_tier}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-            <span style={{ color: "#94A3B8" }}>Price</span>
+            <span style={{ color: "#6b717d" }}>Price</span>
             <span style={{ color: "#374151", fontWeight: 600 }}>${order.price?.toFixed(2)}</span>
           </div>
           {order.completed_at && (
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-              <span style={{ color: "#94A3B8" }}>Completed</span>
+              <span style={{ color: "#6b717d" }}>Completed</span>
               <span style={{ color: "#374151", fontWeight: 600 }}>{new Date(order.completed_at).toLocaleDateString()}</span>
             </div>
           )}

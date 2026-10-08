@@ -253,7 +253,7 @@ export default function Collaborations() {
                   type="button"
                   onClick={() => setQ("")}
                   aria-label="Clear search"
-                  style={{ color: "#94A3B8", display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", pointerEvents: "auto" }}
+                  style={{ color: "#6b717d", display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", pointerEvents: "auto" }}
                 >
                   <X size={13} strokeWidth={1.5} />
                 </button>
@@ -274,19 +274,19 @@ export default function Collaborations() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.1em" }}>Filters</span>
               {hasFilters && (
-                <Button variant="link" onClick={() => { setType(""); setArea(""); }} style={{ fontSize: 10, color: "#94A3B8", textDecoration: "underline" }}>Clear</Button>
+                <Button variant="link" onClick={() => { setType(""); setArea(""); }} style={{ fontSize: 10, color: "#6b717d", textDecoration: "underline" }}>Clear</Button>
               )}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
               <div>
-                <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Type</div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Type</div>
                 <FormSelect size="sm" value={type} onChange={(e) => setType(e.target.value)}>
                   <option value="">All types</option>
                   {TYPES.map((t) => <option key={t}>{t}</option>)}
                 </FormSelect>
               </div>
               <div>
-                <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Area</div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Area</div>
                 <FormSelect size="sm" value={area} onChange={(e) => setArea(e.target.value)}>
                   <option value="">All areas</option>
                   {AREAS.map((a) => <option key={a}>{a}</option>)}
@@ -354,18 +354,18 @@ function CollaborationsSidebar({ mine, hubLoading }) {
       <Card padding="lg">
         <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 10 }}>Pending Collaborations</div>
         {hubLoading ? (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0 }}>Loading…</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0 }}>Loading…</p>
         ) : pending.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {pending.slice(0, 4).map((c) => (
               <Link key={c.id} to={`/collaborations/${c.id}`} style={{ textDecoration: "none" }}>
                 <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
-                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>{c.collab_type}</div>
+                <div style={{ fontSize: 11, color: "#6b717d", marginTop: 1 }}>{c.collab_type}</div>
               </Link>
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No collaborations awaiting confirmation right now.
           </p>
         )}
@@ -407,7 +407,7 @@ function InvitationCard({ req, onAccept, onDecline }) {
               <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>
                 {sender.full_name || "Unknown Researcher"}
               </div>
-              <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: "#6b717d", marginTop: 2 }}>
                 {[userTypeLabel(sender), sender.institution].filter(Boolean).join(" · ")}
               </div>
             </div>
@@ -450,9 +450,9 @@ function ActiveCollabCard({ c }) {
     <Card to={`/collaborations/${c.id}`} padding="md" style={{ display: "flex", alignItems: "center", gap: 14 }}>
       <div style={{ width: 4, height: 44, background: statusColor, flexShrink: 0, borderRadius: 2 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 3 }}>{c.collab_type}</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#6b717d", marginBottom: 3 }}>{c.collab_type}</div>
         <div style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>{c.title}</div>
-        <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2 }}>{c.research_area} {c.duration ? `· ${c.duration}` : ""}</div>
+        <div style={{ fontSize: 11, color: "#6b717d", marginTop: 2 }}>{c.research_area} {c.duration ? `· ${c.duration}` : ""}</div>
       </div>
       {c.creator && (
         <Avatar url={c.creator.avatar_url} name={c.creator.full_name} size={28} />
@@ -487,30 +487,30 @@ function CollabCard({ c }) {
               <Avatar url={c.creator.avatar_url} name={c.creator.full_name} size={24} />
               <div style={{ fontSize: 12, color: "#374151" }}>
                 <span style={{ fontWeight: 500 }}>{c.creator.full_name || "Anonymous"}</span>
-                {c.creator.institution && <span style={{ color: "#94A3B8" }}> · {c.creator.institution}</span>}
+                {c.creator.institution && <span style={{ color: "#6b717d" }}> · {c.creator.institution}</span>}
               </div>
             </div>
           )}
         </div>
-        <div style={{ textAlign: "right", fontSize: 12, color: "#94A3B8", whiteSpace: "nowrap", flexShrink: 0 }}>
+        <div style={{ textAlign: "right", fontSize: 12, color: "#6b717d", whiteSpace: "nowrap", flexShrink: 0 }}>
           {c.research_area && (
             <div style={{ fontFamily: "monospace", fontSize: 11, color: "#64748B", marginBottom: 8 }}>{c.research_area}</div>
           )}
           {c.team_size && (
             <div style={{ marginBottom: 4 }}>
-              <span style={{ color: "#94A3B8" }}>Team: </span>
+              <span style={{ color: "#6b717d" }}>Team: </span>
               <span style={{ color: "#374151", fontWeight: 500 }}>{c.team_size}</span>
             </div>
           )}
           {c.duration && (
             <div style={{ marginBottom: 4 }}>
-              <span style={{ color: "#94A3B8" }}>Duration: </span>
+              <span style={{ color: "#6b717d" }}>Duration: </span>
               <span style={{ color: "#374151", fontWeight: 500 }}>{c.duration}</span>
             </div>
           )}
           {c.funding_status && c.funding_status !== "—" && (
             <div>
-              <span style={{ color: "#94A3B8" }}>Funding: </span>
+              <span style={{ color: "#6b717d" }}>Funding: </span>
               <span style={{ color: "#374151", fontWeight: 500 }}>{c.funding_status}</span>
             </div>
           )}

@@ -8,7 +8,8 @@ import { fetchApi } from "@/lib/api";
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
 
-const LEVEL_COLOR = { critical: "#dc2626", high: "#f97316", medium: "#f59e0b", low: "#64748b" };
+// Severity is semantic; shades are dark enough to read as text on their tints.
+const LEVEL_COLOR = { critical: "#b42318", high: "#c2410c", medium: "#b45309", low: "#5f6673" };
 
 function PriorityItem({ item, index }) {
   const [open, setOpen] = useState(index < 3);

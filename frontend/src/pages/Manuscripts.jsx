@@ -38,7 +38,7 @@ const STATUS = {
   accepted:              { label: "Accepted",        color: EMRL,      bg: "#ECFDF5", border: "#6EE7B7", icon: CheckCircle2 },
   published:             { label: "Published",       color: "#065F46", bg: "#D1FAE5", border: "#34D399", icon: CheckCircle2 },
   rejected:              { label: "Rejected",        color: "#DC2626", bg: "#FEF2F2", border: "#FCA5A5", icon: XCircle    },
-  withdrawn:             { label: "Withdrawn",       color: "#94A3B8", bg: "#F8FAFC", border: "#CBD5E1", icon: XCircle    },
+  withdrawn:             { label: "Withdrawn",       color: "#6b717d", bg: "#F8FAFC", border: "#CBD5E1", icon: XCircle    },
 };
 
 const PIPELINE_ORDER = [
@@ -67,12 +67,12 @@ function LifecycleNav({ current }) {
         const isCur = s.to === current;
         return (
           <React.Fragment key={s.to}>
-            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} />}
+            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#8a909a", flexShrink: 0 }} />}
             <Link
               to={s.to}
               style={{
                 fontSize: 11, fontWeight: isCur ? 700 : 400,
-                color: isCur ? NAVY : "#94A3B8",
+                color: isCur ? NAVY : "#6b717d",
                 padding: "3px 7px",
                 background: isCur ? `rgba(15,40,71,0.07)` : "transparent",
                 borderRadius: 3, textDecoration: "none",
@@ -144,11 +144,11 @@ function ManuscriptCard({ m }) {
       <div style={{ display: "flex", alignItems: "flex-start", gap: 20, justifyContent: "space-between" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94A3B8" }}>
+            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#6b717d" }}>
               {m.manuscript_type}
             </span>
             {m.current_version > 0 && (
-              <span style={{ fontSize: 10, fontFamily: "monospace", color: "#CBD5E1", paddingLeft: 8, borderLeft: `1px solid ${BRD}` }}>
+              <span style={{ fontSize: 10, fontFamily: "monospace", color: "#8a909a", paddingLeft: 8, borderLeft: `1px solid ${BRD}` }}>
                 v{m.current_version}
               </span>
             )}
@@ -161,18 +161,18 @@ function ManuscriptCard({ m }) {
           </h3>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, flexWrap: "wrap" }}>
             {m.authors?.length > 0 && (
-              <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace" }}>
+              <span style={{ fontSize: 11, color: "#6b717d", fontFamily: "monospace" }}>
                 {m.authors.length} author{m.authors.length !== 1 ? "s" : ""}
               </span>
             )}
             {m.target_journal?.title && (
               <span style={{ fontSize: 11, color: "#64748B" }}>
                 → <strong style={{ fontWeight: 600, color: "#475569" }}>{m.target_journal.title}</strong>
-                {m.target_journal.quartile && <span style={{ color: "#94A3B8" }}> · {m.target_journal.quartile}</span>}
+                {m.target_journal.quartile && <span style={{ color: "#6b717d" }}> · {m.target_journal.quartile}</span>}
               </span>
             )}
             {m.updated_at && (
-              <span style={{ fontSize: 10, color: "#CBD5E1", fontFamily: "monospace" }}>
+              <span style={{ fontSize: 10, color: "#8a909a", fontFamily: "monospace" }}>
                 {new Date(m.updated_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
               </span>
             )}
@@ -211,7 +211,7 @@ function NewManuscriptForm({ projects, workspaces, onCreated, onCancel }) {
 
   return (
     <Card padding="lg" style={{ maxWidth: 680 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 16 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b717d", marginBottom: 16 }}>
         New Manuscript
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -320,7 +320,7 @@ export default function Manuscripts() {
       <Button
         data-testid={TID.manuscriptCreateBtn}
         onClick={() => setShowNew(true)}
-        variant="hero"
+        variant="primary"
         size="sm"
       >
         <Plus size={13} strokeWidth={1.5} /> New Manuscript
@@ -413,7 +413,7 @@ export default function Manuscripts() {
         {rest.length > 0 && (
           <div>
             {priority.length > 0 && (
-              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 12 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#6b717d", marginBottom: 12 }}>
                 All Manuscripts
               </div>
             )}
@@ -470,12 +470,12 @@ function ManuscriptsSidebar({ drafts, projects, workspaces }) {
             {drafts.slice(0, 4).map((m) => (
               <Link key={m.id} to={`/manuscripts/${m.id}`} style={{ textDecoration: "none" }}>
                 <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.title || "Untitled"}</div>
-                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>{m.manuscript_type}</div>
+                <div style={{ fontSize: 11, color: "#6b717d", marginTop: 1 }}>{m.manuscript_type}</div>
               </Link>
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No drafts in progress right now.
           </p>
         )}
@@ -489,11 +489,11 @@ function ManuscriptsSidebar({ drafts, projects, workspaces }) {
         <div style={{ display: "flex", gap: 20 }}>
           <div>
             <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{projects.length}</div>
-            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Projects</div>
+            <div style={{ fontSize: 10, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.05em" }}>Projects</div>
           </div>
           <div>
             <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{workspaces.length}</div>
-            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Workspaces</div>
+            <div style={{ fontSize: 10, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.05em" }}>Workspaces</div>
           </div>
         </div>
       </Card>

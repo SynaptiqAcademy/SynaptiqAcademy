@@ -194,7 +194,7 @@ function AuditSidebar({ items, fmt }) {
           <BarChart2 size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Action Breakdown</div>
         </div>
-        <p style={{ fontSize: 11, color: "#94A3B8", margin: "0 0 8px" }}>Across the {items.length} events currently loaded</p>
+        <p style={{ fontSize: 11, color: "#6b717d", margin: "0 0 8px" }}>Across the {items.length} events currently loaded</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {Object.entries(actionCounts).map(([prefix, count]) => (
             <div key={prefix} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151" }}>

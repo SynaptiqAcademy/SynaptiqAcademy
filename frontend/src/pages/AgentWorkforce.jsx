@@ -394,7 +394,7 @@ export default function AgentWorkforce() {
       <Button onClick={() => loadTab(tab)} variant="hero" size="icon" aria-label="Refresh">
         <RefreshCw size={15} />
       </Button>
-      <Button onClick={() => setShowNew(v => !v)} variant="hero" size="sm">
+      <Button onClick={() => setShowNew(v => !v)} variant="primary" size="sm">
         <Plus size={15} />
         New Mission
       </Button>

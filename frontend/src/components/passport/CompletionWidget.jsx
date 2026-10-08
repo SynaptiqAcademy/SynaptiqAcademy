@@ -27,7 +27,7 @@ export function CompletionWidget({ completion }) {
           <div key={item.key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {item.earned
               ? <CheckCircle2 size={13} style={{ color: EMERALD, flexShrink: 0 }} />
-              : <Circle size={13} style={{ color: "#CBD5E1", flexShrink: 0 }} />}
+              : <Circle size={13} style={{ color: "#8a909a", flexShrink: 0 }} />}
             <span style={{ flex: 1, fontSize: 12, color: item.earned ? TEXT_SECONDARY : TEXT_MUTED }}>{item.label}</span>
             {item.earned
               ? <span style={{ fontSize: 10.5, color: EMERALD, fontWeight: 600 }}>+{item.points}</span>

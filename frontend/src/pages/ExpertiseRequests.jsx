@@ -83,7 +83,7 @@ export default function ExpertiseRequests() {
       title="Expertise Requests"
       subtitle="Researchers post specific needs — co-author, statistician, reviewer, AI specialist, methodologist — and you respond."
       actions={
-        <Button data-testid="expertise-create-btn" onClick={() => setCreating(true)} variant="hero" size="sm">
+        <Button data-testid="expertise-create-btn" onClick={() => setCreating(true)} variant="primary" size="sm">
           <Plus size={12} strokeWidth={1.5} /> Post request
         </Button>
       }

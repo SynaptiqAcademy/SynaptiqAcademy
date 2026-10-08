@@ -1,6 +1,6 @@
 /* eslint-disable */
 import React from "react";
-import { NAVY, BRD, WHITE, TEXT_PRIMARY } from "@/lib/tokens";
+import { BRD, WHITE, TEXT_PRIMARY } from "@/lib/tokens";
 import { HeroRing } from "@/components/ds/HeroRing";
 
 /**
@@ -29,6 +29,7 @@ import { HeroRing } from "@/components/ds/HeroRing";
  *   asideWidth   number       px width of side panel (default 320)
  *   asideLeft    boolean      put aside on left instead of right
  *   customHero   ReactNode    replaces entire hero bar (escape hatch for Profile/Artifact)
+ *   header       ReactNode    a custom header built from the pl-* classes (e.g. Today)
  *   split        boolean      full-height split-pane mode (workspace/editor)
  *   noPad        boolean      skip content-area vertical padding
  *   children     ReactNode    main content
@@ -44,7 +45,7 @@ const isBlank = (v) => {
   const t = String(v).trim();
   return t === "" || t === "—" || t === "-" || BROKEN.test(t);
 };
-const isZero = (v) => ["0", "0%", "0.0", "€0", "$0", "$0.00", "€0k"].includes(String(v).trim());
+const isZero = (v) => ["0", "0%", "+0%", "+0", "0.0", "0/0", "0h", "€0", "$0", "$0.00", "€0k"].includes(String(v).trim());
 function cleanStats(stats) {
   if (!stats || !stats.length) return [];
   const shown = stats.filter((s) => s && !isBlank(s.value));
@@ -69,9 +70,11 @@ export function PageLayout({
   split = false,
   noPad = false,
   customHero,
+  header,
   children,
 }) {
-  const hasHero = customHero || title || eyebrow || actions || icon;
+  // The light header has no icon slot: an icon alone does not make a header.
+  const hasHero = customHero || title || eyebrow || actions;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: 0, flex: 1 }}>
@@ -102,11 +105,6 @@ export function PageLayout({
         .pl-head { padding: 8px 0 20px; margin-bottom: 4px; border-bottom: 1px solid ${BRD}; }
         .pl-hero-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; }
         .pl-hero-row > :first-child { flex: 1 1 20rem; }
-        .pl-eyebrow { margin: 0 0 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-          font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: ${NAVY}; }
-        .pl-hero-title { margin: 0; font-family: 'Newsreader Variable', 'Newsreader', Georgia, serif; font-weight: 400;
-          font-size: clamp(1.6rem, 2.4vw, 2rem); line-height: 1.12; letter-spacing: -0.015em; color: ${TEXT_PRIMARY}; text-wrap: balance; }
-        .pl-sub { margin: 6px 0 0; font-size: 14px; line-height: 1.55; color: var(--sq-text-tertiary); max-width: 40rem; }
         .pl-hero-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .pl-stats { display: flex; flex-wrap: wrap; gap: 8px 0; margin: 18px 0 0; padding: 0; }
         .pl-stats > div { padding: 0 24px; border-left: 1px solid ${BRD}; min-width: 0; }
@@ -125,6 +123,8 @@ export function PageLayout({
           optional quiet metrics row. It sits on the page surface (no banner),
           separated from the content by a single rule, like the public site's
           sections. customHero (Profile/Artifact) keeps its own band. */}
+      {/* header: a page-specific header node in the shared pl-* language */}
+      {header}
       {hasHero && customHero && (
         <div style={{ background: WHITE, border: `1px solid ${BRD}`, borderRadius: 6, overflow: "hidden", marginBottom: 8 }}>
           {customHero}

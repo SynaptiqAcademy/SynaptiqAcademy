@@ -12,7 +12,7 @@ const API = "/api/trust";
 const STATUS_COLORS = {
   pending_review:   "#D97706",
   approved:         EMERALD,
-  rejected:         ACCENT,
+  rejected:         "#B42318",
   auto_approved:    EMERALD,
   more_info_needed: "#0F2847",
 };
@@ -74,7 +74,7 @@ export default function VerificationRequests() {
       title="Verification Requests"
       subtitle="Submit evidence for manual admin review"
       actions={
-        <Button variant="hero" onClick={() => setShowForm(!showForm)}>
+        <Button variant="primary" onClick={() => setShowForm(!showForm)}>
           <Upload size={14} /> New Request
         </Button>
       }

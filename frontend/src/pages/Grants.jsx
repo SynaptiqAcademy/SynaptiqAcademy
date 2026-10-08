@@ -36,7 +36,7 @@ function daysUntil(dl) {
 function urgencyLabel(dl) {
   const d = daysUntil(dl);
   if (d === null)  return null;
-  if (d < 0)       return { text: "Closed",     color: "#94A3B8", bg: "#F1F5F9", urgent: false, closed: true };
+  if (d < 0)       return { text: "Closed",     color: "#6b717d", bg: "#F1F5F9", urgent: false, closed: true };
   if (d === 0)     return { text: "Due today",  color: ACCENT,   bg: "#FFF1F2", urgent: true,  closed: false };
   if (d <= 7)      return { text: `${d}d left`, color: ACCENT,   bg: "#FFF1F2", urgent: true,  closed: false };
   if (d <= 30)     return { text: `${d}d left`, color: "#B45309",bg: "#FFFBEB", urgent: false, closed: false };
@@ -253,7 +253,7 @@ export default function Grants() {
         { label: "Closing Soon",  value: upcoming.length },
         { label: "Quota",         value: quotaText },
       ]}
-      sidebar={<GrantsSidebar grantQuota={grantQuota} upcoming={upcoming} compareList={compareList} />}
+      sidebar={(grantQuota && grantQuota.limit != null) || upcoming.length || compareList.length ? <GrantsSidebar grantQuota={grantQuota} upcoming={upcoming} compareList={compareList} /> : undefined}
       actions={
         <>
           <Button onClick={() => explorerRef.current?.scrollIntoView({ behavior: "smooth" })} variant="hero" size="sm">
@@ -386,7 +386,7 @@ export default function Grants() {
 
           {/* Results count */}
           {!loading && !gated && (
-            <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 16, fontFamily: "monospace" }}>
+            <div style={{ fontSize: 12, color: "#6b717d", marginBottom: 16, fontFamily: "monospace" }}>
               {total.toLocaleString()} {hasFilters ? "matching" : "total"} funding opportunities
             </div>
           )}
@@ -441,7 +441,7 @@ export default function Grants() {
               >
                 <ChevronLeft size={14} strokeWidth={1.5} /> Previous
               </Button>
-              <span style={{ fontSize: 12, color: "#94A3B8", fontFamily: "monospace" }}>
+              <span style={{ fontSize: 12, color: "#6b717d", fontFamily: "monospace" }}>
                 Page {page} of {Math.ceil(total / PAGE_SIZE)}
               </span>
               <Button
@@ -473,7 +473,7 @@ export default function Grants() {
 function GrantsSidebar({ grantQuota, upcoming, compareList }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <Card padding="lg">
+      {grantQuota && grantQuota.limit != null && (<Card padding="lg">
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
           <Clock size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Discovery Quota</div>
@@ -488,15 +488,15 @@ function GrantsSidebar({ grantQuota, upcoming, compareList }) {
               <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 24, fontWeight: 700, color: "#0f172a" }}>
                 {grantQuota.used} / {grantQuota.limit}
               </div>
-              <p style={{ fontSize: 11, color: "#94A3B8", margin: "2px 0 0" }}>Grant searches used this month</p>
+              <p style={{ fontSize: 11, color: "#6b717d", margin: "2px 0 0" }}>Grant searches used this month</p>
             </>
           )
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>Loading quota…</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>Loading quota…</p>
         )}
-      </Card>
+      </Card>)}
 
-      <Card padding="lg">
+      {upcoming.length > 0 && (<Card padding="lg">
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
           <Timer size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Upcoming Deadlines</div>
@@ -514,13 +514,13 @@ function GrantsSidebar({ grantQuota, upcoming, compareList }) {
             })}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No deadlines in the next 60 days among currently loaded results.
           </p>
         )}
-      </Card>
+      </Card>)}
 
-      <Card padding="lg">
+      {compareList.length > 0 && (<Card padding="lg">
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
           <BarChart2 size={13} style={{ color: NAVY }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Comparing</div>
@@ -531,15 +531,15 @@ function GrantsSidebar({ grantQuota, upcoming, compareList }) {
               <div key={g.id} style={{ fontSize: 12, color: "#374151" }}>{g.title}</div>
             ))}
             {compareList.length < 2 && (
-              <p style={{ fontSize: 11, color: "#94A3B8", margin: "6px 0 0" }}>Add one more to compare.</p>
+              <p style={{ fontSize: 11, color: "#6b717d", margin: "6px 0 0" }}>Add one more to compare.</p>
             )}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             Select up to 3 grants below to compare them side by side.
           </p>
         )}
-      </Card>
+      </Card>)}
     </div>
   );
 }
@@ -557,7 +557,7 @@ function MatchesPanel({ matches, loading, isSaved, toggleSave, compareList, togg
           <span style={{ fontSize: 12, fontWeight: 700, color: NAVY, textTransform: "uppercase", letterSpacing: "0.08em" }}>
             Recommended for You
           </span>
-          <span style={{ fontSize: 11, color: "#94A3B8" }}>Profile-matched · No credits consumed</span>
+          <span style={{ fontSize: 11, color: "#6b717d" }}>Profile-matched · No credits consumed</span>
           {!hasProfile && (
             <span style={{ fontSize: 11, color: "#D97706", display: "flex", alignItems: "center", gap: 3 }}>
               <AlertCircle size={11} strokeWidth={1.5} />
@@ -578,7 +578,7 @@ function MatchesPanel({ matches, loading, isSaved, toggleSave, compareList, togg
             onClick={() => setExpanded((v) => !v)}
             aria-label={expanded ? "Collapse recommendations" : "Expand recommendations"}
             style={{
-              color: "#94A3B8",
+              color: "#6b717d",
               display: "flex",
               alignItems: "center"
             }}>
@@ -643,8 +643,8 @@ function MatchCard({ g, isSaved, onSave, isCompared, onCompare }) {
             <span style={{ fontSize: 11, fontWeight: 800, color, fontFamily: "monospace" }}>{score}</span>
           </div>
           <div>
-            <div style={{ fontSize: 9, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>Match</div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: g.career_stage_relevance === "matches career-stage keywords" ? EMERALD : "#94A3B8" }}>
+            <div style={{ fontSize: 9, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>Match</div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: g.career_stage_relevance === "matches career-stage keywords" ? EMERALD : "#6b717d" }}>
               {g.career_stage_relevance === "matches career-stage keywords" ? "Matches your career stage" : "Verify eligibility on source site"}
             </div>
           </div>
@@ -655,7 +655,7 @@ function MatchCard({ g, isSaved, onSave, isCompared, onCompare }) {
           onClick={(e) => onSave(g, e)}
           title={isSaved ? "Remove from saved" : "Save grant"}
           style={{
-            color: isSaved ? ACCENT : "#CBD5E1",
+            color: isSaved ? ACCENT : "#8a909a",
             padding: 2,
             display: "flex",
             alignItems: "center",
@@ -683,7 +683,7 @@ function MatchCard({ g, isSaved, onSave, isCompared, onCompare }) {
       </div>
       {/* Match reason */}
       {g.match_reason && (
-        <div style={{ fontSize: 10, color: "#94A3B8", fontStyle: "italic", marginBottom: 8, lineHeight: 1.4 }}>
+        <div style={{ fontSize: 10, color: "#6b717d", fontStyle: "italic", marginBottom: 8, lineHeight: 1.4 }}>
           {g.match_reason}
         </div>
       )}
@@ -751,7 +751,7 @@ function DeadlineTicker({ items }) {
               }}
             >
               <span style={{ fontSize: 10, fontWeight: 700, color: ul.color, whiteSpace: "nowrap" }}>{ul.text}</span>
-              <span style={{ fontSize: 10, color: "#94A3B8" }}>·</span>
+              <span style={{ fontSize: 10, color: "#6b717d" }}>·</span>
               <span style={{ fontSize: 10, color: "#374151", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.title}</span>
             </Link>
           ) : null;
@@ -784,7 +784,7 @@ function FacetPanel({ facets, filters, setFilter, openOnly, setOpenOnly }) {
           <span style={{ fontSize: 10, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.1em" }}>{title}</span>
           <ChevronDown
             size={11} strokeWidth={1.5}
-            style={{ color: "#94A3B8", transform: isOpen ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 150ms ease-out" }}
+            style={{ color: "#6b717d", transform: isOpen ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 150ms ease-out" }}
           />
         </button>
         {isOpen && (items || []).slice(0, 12).map((f) => (
@@ -808,7 +808,7 @@ function FacetPanel({ facets, filters, setFilter, openOnly, setOpenOnly }) {
             <span style={{ fontSize: 12, color: active === f._id ? NAVY : "#64748B", fontWeight: active === f._id ? 700 : 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>
               {active === f._id && "✓ "}{f._id}
             </span>
-            <span style={{ fontSize: 10, color: "#94A3B8", fontFamily: "monospace", flexShrink: 0, marginLeft: 4 }}>{f.count}</span>
+            <span style={{ fontSize: 10, color: "#6b717d", fontFamily: "monospace", flexShrink: 0, marginLeft: 4 }}>{f.count}</span>
           </button>
         ))}
       </div>
@@ -919,7 +919,7 @@ function GrantCard({ g, isSaved, onSave, isCompared, onCompare }) {
             onClick={(e) => onSave(g, e)}
             title={isSaved ? "Remove from saved" : "Save grant"}
             style={{
-              color: isSaved ? ACCENT : "#CBD5E1",
+              color: isSaved ? ACCENT : "#8a909a",
               padding: 2,
               display: "flex",
               alignItems: "center",
@@ -960,7 +960,7 @@ function GrantCard({ g, isSaved, onSave, isCompared, onCompare }) {
               <span key={i} style={{ fontSize: 9, color: "#64748B", background: "#F8FAFC", border: `1px solid ${BORDER}`, padding: "2px 5px" }}>{a}</span>
             ))}
             {g.research_areas.length > 3 && (
-              <span style={{ fontSize: 9, color: "#94A3B8" }}>+{g.research_areas.length - 3}</span>
+              <span style={{ fontSize: 9, color: "#6b717d" }}>+{g.research_areas.length - 3}</span>
             )}
           </div>
         )}
@@ -1002,7 +1002,7 @@ function GrantCard({ g, isSaved, onSave, isCompared, onCompare }) {
           style={{
             fontSize: 10,
             fontWeight: 600,
-            color: isCompared ? NAVY : "#94A3B8",
+            color: isCompared ? NAVY : "#6b717d",
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
@@ -1020,7 +1020,7 @@ function GrantCard({ g, isSaved, onSave, isCompared, onCompare }) {
         <Link
           to="/ai"
           onClick={(e) => e.stopPropagation()}
-          style={{ fontSize: 10, fontWeight: 600, color: "#94A3B8", display: "flex", alignItems: "center", gap: 3, textDecoration: "none" }}
+          style={{ fontSize: 10, fontWeight: 600, color: "#6b717d", display: "flex", alignItems: "center", gap: 3, textDecoration: "none" }}
         >
           <Sparkles size={10} strokeWidth={1.5} /> Prepare
         </Link>
@@ -1028,7 +1028,7 @@ function GrantCard({ g, isSaved, onSave, isCompared, onCompare }) {
         <Link
           to="/grant-applications"
           onClick={(e) => e.stopPropagation()}
-          style={{ fontSize: 10, fontWeight: 600, color: "#94A3B8", display: "flex", alignItems: "center", gap: 3, textDecoration: "none" }}
+          style={{ fontSize: 10, fontWeight: 600, color: "#6b717d", display: "flex", alignItems: "center", gap: 3, textDecoration: "none" }}
         >
           <Plus size={10} strokeWidth={1.5} /> Apply
         </Link>
@@ -1090,7 +1090,7 @@ function TimelineView({ items, loading, isSaved, toggleSave, compareList, toggle
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>{month}</div>
             <div style={{ flex: 1, height: 1, background: BORDER }} />
-            <span style={{ fontSize: 10, color: "#94A3B8", fontFamily: "monospace" }}>{grants.length}</span>
+            <span style={{ fontSize: 10, color: "#6b717d", fontFamily: "monospace" }}>{grants.length}</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {grants.map((g) => (
@@ -1155,7 +1155,7 @@ function TimelineCard({ g, isSaved, onSave, isCompared, onCompare }) {
             )}
           </>
         ) : (
-          <div style={{ fontSize: 9, color: "#94A3B8", textAlign: "center" }}>Rolling</div>
+          <div style={{ fontSize: 9, color: "#6b717d", textAlign: "center" }}>Rolling</div>
         )}
       </div>
 
@@ -1182,13 +1182,13 @@ function TimelineCard({ g, isSaved, onSave, isCompared, onCompare }) {
         style={{ width: 76, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: 10, borderLeft: `1px solid ${BORDER}` }}
         onClick={(e) => e.preventDefault()}
       >
-        <Button variant="ghost" className="!flex-col !h-auto !p-0 !border-none" onClick={(e) => onSave(g, e)} style={{ color: isSaved ? ACCENT : "#CBD5E1" }}>
+        <Button variant="ghost" className="!flex-col !h-auto !p-0 !border-none" onClick={(e) => onSave(g, e)} style={{ color: isSaved ? ACCENT : "#8a909a" }}>
           {isSaved ? <BookmarkCheck size={14} strokeWidth={1.5} /> : <Bookmark size={14} strokeWidth={1.5} />}
-          <span style={{ fontSize: 9, color: "#94A3B8" }}>{isSaved ? "Saved" : "Save"}</span>
+          <span style={{ fontSize: 9, color: "#6b717d" }}>{isSaved ? "Saved" : "Save"}</span>
         </Button>
-        <Button variant="ghost" className="!flex-col !h-auto !p-0 !border-none" onClick={(e) => onCompare(g, e)} style={{ color: isCompared ? NAVY : "#CBD5E1" }}>
+        <Button variant="ghost" className="!flex-col !h-auto !p-0 !border-none" onClick={(e) => onCompare(g, e)} style={{ color: isCompared ? NAVY : "#8a909a" }}>
           <BarChart2 size={14} strokeWidth={1.5} />
-          <span style={{ fontSize: 9, color: "#94A3B8" }}>Compare</span>
+          <span style={{ fontSize: 9, color: "#6b717d" }}>Compare</span>
         </Button>
       </div>
     </Link>
@@ -1230,7 +1230,7 @@ function GrantsEmptyState({ hasFilters }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 300, margin: "0 auto", textAlign: "left" }}>
           {tips.map(({ icon: Icon, text }) => (
             <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "#64748B" }}>
-              <Icon size={12} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0, marginTop: 2 }} />
+              <Icon size={12} strokeWidth={1.5} style={{ color: "#6b717d", flexShrink: 0, marginTop: 2 }} />
               {text}
             </div>
           ))}

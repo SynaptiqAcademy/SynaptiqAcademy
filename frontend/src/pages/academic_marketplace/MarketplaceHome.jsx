@@ -26,7 +26,7 @@ function MarketplaceHomeSidebar({ trending, featured }) {
                 <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{svc.title}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 1 }}>
                   <Star size={9} style={{ color: "#F59E0B" }} fill="#F59E0B" />
-                  <span style={{ fontSize: 11, color: "#94A3B8" }}>{svc.average_rating?.toFixed(1) || "New"}</span>
+                  <span style={{ fontSize: 11, color: "#6b717d" }}>{svc.average_rating?.toFixed(1) || "New"}</span>
                   {svc.recent_orders > 0 && (
                     <span style={{ fontSize: 11, color: EMERALD }}>· {svc.recent_orders} recent orders</span>
                   )}
@@ -45,7 +45,7 @@ function MarketplaceHomeSidebar({ trending, featured }) {
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
             <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: ACCENT + "22" }}>
-              <span className="text-sm font-bold text-crimson-600">{(topFeatured.display_name || "?")[0]}</span>
+              <span className="text-sm font-bold text-navy-700">{(topFeatured.display_name || "?")[0]}</span>
             </div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{topFeatured.display_name}</div>
@@ -129,7 +129,7 @@ export default function MarketplaceHome() {
             {categories.map(cat => (
               <Card key={cat.key} to={`/academic-marketplace/services?category=${cat.key}`} padding="md">
                 <div className="flex items-center gap-3">
-                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: cat.color }} />
+                  <div className="w-2 h-2 rounded-full shrink-0 bg-navy-700" aria-hidden="true" />
                   <span className="text-navy-700 text-sm font-medium">{cat.label}</span>
                   <ChevronRight size={14} className="text-slate-500 ml-auto" />
                 </div>
@@ -146,12 +146,12 @@ export default function MarketplaceHome() {
                 <TrendingUp size={18} className="mr-2 align-middle inline" />
                 Trending Services
               </H2>
-              <Link to="/academic-marketplace/services" className="text-crimson-600 text-sm font-medium no-underline">View all →</Link>
+              <Link to="/academic-marketplace/services" className="text-navy-700 text-sm font-medium no-underline">View all →</Link>
             </div>
             <Grid cols={3} gap="md">
               {trending.slice(0, 6).map(svc => (
                 <Card key={svc.id} to={`/academic-marketplace/services/${svc.id}`} padding="lg">
-                  <div className="text-xs text-crimson-600 font-semibold uppercase mb-2">
+                  <div className="text-xs text-navy-700 font-semibold uppercase mb-2">
                     {svc.category?.replace(/_/g, " ")}
                   </div>
                   <div className="text-[15px] font-semibold text-navy-700 mb-2">{svc.title}</div>
@@ -178,14 +178,14 @@ export default function MarketplaceHome() {
                 <Award size={18} className="mr-2 align-middle inline" />
                 Featured Experts
               </H2>
-              <Link to="/academic-marketplace/providers" className="text-crimson-600 text-sm font-medium no-underline">View all →</Link>
+              <Link to="/academic-marketplace/providers" className="text-navy-700 text-sm font-medium no-underline">View all →</Link>
             </div>
             <Grid cols={4} gap="md">
               {featured.map(p => (
                 <Card key={p.user_id} to={`/academic-marketplace/providers/${p.user_id}`} padding="lg">
                   <div className="text-center">
                     <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: ACCENT + "22" }}>
-                      <span className="text-xl font-bold text-crimson-600">{(p.display_name || "?")[0]}</span>
+                      <span className="text-xl font-bold text-navy-700">{(p.display_name || "?")[0]}</span>
                     </div>
                     <div className="text-sm font-semibold text-navy-700 mb-1">{p.display_name}</div>
                     <Caption className="mb-2">{p.headline?.slice(0, 50)}</Caption>

@@ -255,7 +255,7 @@ export default function TeachingPortfolio() {
       sidebar={!loading && items.length > 0 ? <TeachingPortfolioSidebar items={items} /> : undefined}
       actions={
         <Button
-          variant="hero"
+          variant="primary"
           onClick={() => { setShowAdd(!showAdd); setEditItem(null); }}
         >
           <Plus size={14} strokeWidth={1.5} /> Add item
@@ -370,12 +370,12 @@ function TeachingPortfolioSidebar({ items }) {
             {topTypes.map(([type, count]) => (
               <div key={type} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                 <span style={{ fontSize: 12.5, color: "#374151", textTransform: "capitalize" }}>{type}</span>
-                <span style={{ fontSize: 11, color: "#94A3B8", fontFamily: "monospace", flexShrink: 0 }}>{count}</span>
+                <span style={{ fontSize: 11, color: "#6b717d", fontFamily: "monospace", flexShrink: 0 }}>{count}</span>
               </div>
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             Item types will appear here as you build your portfolio.
           </p>
         )}
@@ -391,7 +391,7 @@ function TeachingPortfolioSidebar({ items }) {
             {subjects.map((s) => <Tag key={s} size="sm">{s}</Tag>)}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             Subjects will appear here once you tag portfolio items.
           </p>
         )}

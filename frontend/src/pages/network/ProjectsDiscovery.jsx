@@ -44,7 +44,7 @@ export default function ProjectsDiscovery() {
   const handleSearch = e => { e.preventDefault(); setPage(1); search(filters, 1); };
 
   return (
-    <ResearchLayout title="Research Projects" sidebar={<ProjectsDiscoverySidebar results={results} total={total} />}>
+    <ResearchLayout title="Research Projects">
 
       <form onSubmit={handleSearch} style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         <Input

@@ -5,6 +5,7 @@ import { TID } from "../lib/testIds";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { toast } from "sonner";
 import { SkeletonCard } from "@/components/ds/LoadingState";
+import { EmptyState } from "@/components/ds/EmptyState";
 import { Card } from "@/components/ds/Card";
 import { Button } from "@/components/ds/Button";
 import { Tag, TagGroup } from "@/components/ds/Tag";
@@ -13,10 +14,11 @@ import { ResearchLayout } from "@/layouts";
 export default function FundingDetail() {
   const { id } = useParams();
   const [g, setG] = useState(null);
+  const [missing, setMissing] = useState(false);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    api.get(`/funding/${id}`).then((r) => setG(r.data)).catch(() => {});
+    api.get(`/funding/${id}`).then((r) => setG(r.data)).catch(() => setMissing(true));
     api.get("/auth/me").then((r) => setSaved((r.data.saved_funding_ids || []).includes(id))).catch(() => {});
   }, [id]);
 
@@ -27,6 +29,15 @@ export default function FundingDetail() {
     } catch (e) { toast.error("Failed"); }
   };
 
+  if (missing) return (
+    <ResearchLayout title="Funding opportunity">
+      <EmptyState
+        title="This funding opportunity isn't available."
+        description="It may have closed or been removed from the source it was indexed from."
+        action={<Button as={Link} to="/funding" size="sm" variant="secondary">All funding</Button>}
+      />
+    </ResearchLayout>
+  );
   if (!g) return <ResearchLayout title="Funding"><SkeletonCard rows={4} /></ResearchLayout>;
 
   return (

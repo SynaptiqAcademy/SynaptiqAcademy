@@ -222,13 +222,13 @@ function SecuritySidebar({ failedLogins, blockedIps, hours, fmt }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Failed Logins</div>
         </div>
         {failedLogins.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No failed login attempts in the last {hours}h.
           </p>
         ) : (
           <div>
             <span className="font-serif" style={{ fontSize: 26, color: "#0f172a" }}>{totalAttempts.toLocaleString()}</span>
-            <p style={{ fontSize: 11.5, color: "#94A3B8", margin: "6px 0 0" }}>
+            <p style={{ fontSize: 11.5, color: "#6b717d", margin: "6px 0 0" }}>
               attempts from {failedLogins.length} IP{failedLogins.length !== 1 ? "s" : ""} in the last {hours}h
             </p>
           </div>
@@ -241,11 +241,11 @@ function SecuritySidebar({ failedLogins, blockedIps, hours, fmt }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Blocked IPs</div>
         </div>
         {blockedIps.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No IPs currently blocked.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No IPs currently blocked.</p>
         ) : (
           <div>
             <span className="font-serif" style={{ fontSize: 26, color: "#0f172a" }}>{blockedIps.length}</span>
-            <p style={{ fontSize: 11.5, color: "#94A3B8", margin: "6px 0 0" }}>currently blocked</p>
+            <p style={{ fontSize: 11.5, color: "#6b717d", margin: "6px 0 0" }}>currently blocked</p>
             {mostRecentBlock && (
               <p style={{ fontSize: 11, color: "#64748B", margin: "8px 0 0", fontFamily: "monospace" }}>
                 Latest: {mostRecentBlock.ip} ({fmt(mostRecentBlock.blocked_at)})

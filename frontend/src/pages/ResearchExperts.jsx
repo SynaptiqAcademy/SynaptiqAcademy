@@ -58,24 +58,28 @@ function ChipRow({ items }) {
   );
 }
 
+// Basic search ranks by a deterministic relevance score, but the card shows
+// the evidence, never the number: Synaptiq doesn't show match percentages.
 function CompatibilityBadge({ compatibility }) {
   if (compatibility === undefined) return null;
   if (compatibility === null) {
-    return <div style={{ fontSize: 11, color: TEXT_MUTED, fontStyle: "italic" }}>Limited profile information</div>;
+    return <div style={{ fontSize: 11, color: TEXT_MUTED }}>Limited profile information</div>;
   }
-  const { score, shared_keywords, complementary_skills, explanation } = compatibility;
+  const { shared_keywords, complementary_skills, explanation } = compatibility;
+  const hasEvidence = shared_keywords?.length > 0 || complementary_skills?.length > 0;
+  if (!hasEvidence && !explanation) return null;
   return (
     <div style={{ borderTop: `1px solid ${BRD}`, marginTop: 10, paddingTop: 10 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: NAVY, marginBottom: 4 }}>
-        <Sparkles size={12} /> Research compatibility · {score}%
+      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: NAVY, marginBottom: 4 }}>
+        <Sparkles size={12} /> Why they may fit
       </div>
-      {(shared_keywords?.length > 0 || complementary_skills?.length > 0) ? (
+      {hasEvidence ? (
         <ul style={{ margin: 0, paddingLeft: 16, fontSize: 11.5, color: TEXT_SECONDARY, lineHeight: 1.7 }}>
           {shared_keywords?.slice(0, 3).map((k) => <li key={`s-${k}`}>Shared: {k}</li>)}
           {complementary_skills?.slice(0, 2).map((k) => <li key={`c-${k}`}>Complementary: {k}</li>)}
         </ul>
       ) : (
-        explanation && <p style={{ margin: 0, fontSize: 11.5, color: TEXT_SECONDARY, lineHeight: 1.6 }}>{explanation}</p>
+        <p style={{ margin: 0, fontSize: 11.5, color: TEXT_SECONDARY, lineHeight: 1.6 }}>{explanation}</p>
       )}
     </div>
   );

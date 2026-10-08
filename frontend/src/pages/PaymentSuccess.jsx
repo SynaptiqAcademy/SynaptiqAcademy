@@ -83,7 +83,7 @@ export default function PaymentSuccess() {
         {polling ? (
           <>
             <Loader2 size={32} className="animate-spin" style={{ color: NAVY, margin: "0 auto 20px" }} />
-            <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0a0f1a", marginBottom: 8 }}>
+            <h1 className="pl-hero-title" style={{ marginBottom: 8 }}>
               Confirming your payment…
             </h1>
             <p style={{ fontSize: "0.9rem", color: "#64748b" }}>
@@ -93,7 +93,7 @@ export default function PaymentSuccess() {
         ) : type === "pack" && packConfirmed ? (
           <>
             <CheckCircle2 size={36} style={{ color: "#059669", margin: "0 auto 20px" }} />
-            <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#0a0f1a", marginBottom: 8 }}>
+            <h1 className="pl-hero-title" style={{ marginBottom: 8 }}>
               Credits added.
             </h1>
             <p style={{ fontSize: "0.92rem", color: "#64748b", marginBottom: 8 }}>
@@ -106,7 +106,7 @@ export default function PaymentSuccess() {
         ) : confirmedPaid ? (
           <>
             <CheckCircle2 size={36} style={{ color: "#059669", margin: "0 auto 20px" }} />
-            <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#0a0f1a", marginBottom: 8 }}>
+            <h1 className="pl-hero-title" style={{ marginBottom: 8 }}>
               Your {sub.plan.name} plan is active.
             </h1>
             <p style={{ fontSize: "0.92rem", color: "#64748b", marginBottom: 28 }}>
@@ -121,7 +121,7 @@ export default function PaymentSuccess() {
           </>
         ) : (
           <>
-            <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#0a0f1a", marginBottom: 8 }}>
+            <h1 className="pl-hero-title" style={{ marginBottom: 8 }}>
               Still confirming your payment.
             </h1>
             <p style={{ fontSize: "0.9rem", color: "#64748b", marginBottom: 24 }}>

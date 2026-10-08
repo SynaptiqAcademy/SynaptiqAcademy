@@ -1065,7 +1065,7 @@ function TeachingWorkspaceSidebar({ workspace, members, activity, actLoaded, onV
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {facts.map(([label, value]) => (
               <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-                <span style={{ color: "#94A3B8" }}>{label}</span>
+                <span style={{ color: "#6b717d" }}>{label}</span>
                 <span style={{ color: "#374151", fontWeight: 600 }}>{value}</span>
               </div>
             ))}
@@ -1084,7 +1084,7 @@ function TeachingWorkspaceSidebar({ workspace, members, activity, actLoaded, onV
               {members.slice(0, 5).map((m) => (
                 <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                   <span style={{ fontSize: 12, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.full_name || "—"}</span>
-                  <span style={{ fontSize: 10, color: "#94A3B8", flexShrink: 0 }}>{ROLE_LABELS[m.role] || m.role}</span>
+                  <span style={{ fontSize: 10, color: "#6b717d", flexShrink: 0 }}>{ROLE_LABELS[m.role] || m.role}</span>
                 </div>
               ))}
             </div>
@@ -1095,7 +1095,7 @@ function TeachingWorkspaceSidebar({ workspace, members, activity, actLoaded, onV
             )}
           </>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0 }}>No other members yet.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0 }}>No other members yet.</p>
         )}
       </Card>
 

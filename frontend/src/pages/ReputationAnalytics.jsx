@@ -40,7 +40,7 @@ const INTEL_NAV = [
 
 function IntelNav({ current }) {
   const ChevSmall = () => (
-    <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: "#CBD5E1", flexShrink: 0 }}>
+    <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: "#8a909a", flexShrink: 0 }}>
       <polyline points="9 18 15 12 9 6" />
     </svg>
   );
@@ -51,7 +51,7 @@ function IntelNav({ current }) {
         return (
           <React.Fragment key={s.to}>
             {i > 0 && <ChevSmall />}
-            <Link to={s.to} style={{ fontSize: 11, fontWeight: isCur ? 700 : 400, color: isCur ? "#0F2847" : "#94A3B8", padding: "3px 7px", background: isCur ? "rgba(15,40,71,0.07)" : "transparent", borderRadius: 3, textDecoration: "none", whiteSpace: "nowrap" }}>
+            <Link to={s.to} style={{ fontSize: 11, fontWeight: isCur ? 700 : 400, color: isCur ? "#0F2847" : "#6b717d", padding: "3px 7px", background: isCur ? "rgba(15,40,71,0.07)" : "transparent", borderRadius: 3, textDecoration: "none", whiteSpace: "nowrap" }}>
               {s.label}
             </Link>
           </React.Fragment>

@@ -189,11 +189,11 @@ export default function LegalCenter() {
                   {/* Footer */}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 16, borderTop: "1px solid #f1f5f9" }}>
                     <div style={{ display: "flex", gap: 10 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.66rem", color: "#94a3b8" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.66rem", color: "#6b717d" }}>
                         <Clock size={9} strokeWidth={1.5} />
                         <span>{doc.readingTime}</span>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.66rem", color: "#94a3b8" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.66rem", color: "#6b717d" }}>
                         <Calendar size={9} strokeWidth={1.5} />
                         <span>{doc.updated}</span>
                       </div>
@@ -227,9 +227,9 @@ export default function LegalCenter() {
                 >
                   <div>
                     <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#0f172a", marginBottom: 2 }}>{r.label}</div>
-                    <div style={{ fontSize: "0.78rem", color: "#94a3b8" }}>{r.desc}</div>
+                    <div style={{ fontSize: "0.78rem", color: "#6b717d" }}>{r.desc}</div>
                   </div>
-                  <ChevronRight size={16} strokeWidth={1.5} style={{ color: "#94a3b8", flexShrink: 0 }} />
+                  <ChevronRight size={16} strokeWidth={1.5} style={{ color: "#6b717d", flexShrink: 0 }} />
                 </Link>
               ))}
             </div>

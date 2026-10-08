@@ -61,6 +61,8 @@ export default function GrantIntelligence() {
         <Card padding="lg">
           <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 700, color: NAVY }}>Top Funding Agencies</h3>
           <List>
+            {(grants?.top_funders || []).length === 0 && <p style={{ fontSize: 12.5, color: "var(--sq-text-tertiary)", margin: "4px 0 0" }}>No data recorded yet.</p>}
+
             {(grants?.top_funders || []).slice(0, 8).map((f, i) => (
               <ListItem
                 key={i}
@@ -75,6 +77,8 @@ export default function GrantIntelligence() {
         {/* Funding by dept */}
         <Card padding="lg">
           <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 700, color: NAVY }}>Funding by Department</h3>
+          {(grants?.funding_by_department || []).length === 0 && <p style={{ fontSize: 12.5, color: "var(--sq-text-tertiary)", margin: "4px 0 0" }}>No data recorded yet.</p>}
+
           {(grants?.funding_by_department || []).slice(0, 8).map((d, i) => {
             const max = grants.funding_by_department[0]?.funding || 1;
             const pct = Math.round(d.funding / max * 100);

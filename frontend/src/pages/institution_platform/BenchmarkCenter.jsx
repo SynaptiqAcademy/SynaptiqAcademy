@@ -9,7 +9,7 @@ const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
 
 function TrendCell({ v }) {
-  const color = v >= 0 ? EMERALD : ACCENT;
+  const color = v >= 0 ? EMERALD : "#B42318";
   return (
     <span style={{ fontSize: 12, fontWeight: 700, color }}>
       {v >= 0 ? "+" : ""}{v.toFixed(1)}
@@ -85,11 +85,11 @@ export default function BenchmarkCenter() {
     { key: "department", label: "Department", render: (v) => <span style={{ fontWeight: 600, color: NAVY }}>{v}</span> },
     {
       key: "health_score", label: "Health Score",
-      render: (v) => <span style={{ fontWeight: 700, color: v >= 70 ? EMERALD : v >= 50 ? "#f59e0b" : ACCENT }}>{v}</span>,
+      render: (v) => <span style={{ fontWeight: 700, color: v >= 70 ? EMERALD : v >= 50 ? "#b45309" : "#B42318" }}>{v}</span>,
     },
     {
       key: "vs_institution_health", label: "vs Institution",
-      render: (v) => <span style={{ fontSize: 12, fontWeight: 700, color: v >= 0 ? EMERALD : ACCENT }}>{v >= 0 ? "+" : ""}{v}</span>,
+      render: (v) => <span style={{ fontSize: 12, fontWeight: 700, color: v >= 0 ? EMERALD : "#B42318" }}>{v >= 0 ? "+" : ""}{v}</span>,
     },
     { key: "pubs_per_faculty", label: "Pubs/Faculty", render: (v) => <span style={{ color: TEXT_SECONDARY }}>{v}</span> },
     { key: "grant_success_rate", label: "Grant Rate %", render: (v) => <span style={{ color: TEXT_SECONDARY }}>{v}%</span> },

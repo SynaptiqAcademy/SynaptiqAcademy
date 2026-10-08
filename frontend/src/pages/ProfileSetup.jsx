@@ -252,7 +252,7 @@ function CompletionRow({ label, earned, hint }) {
     <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "6px 0" }}>
       {earned
         ? <CheckCircle2 size={14} style={{ color: EMERALD, flexShrink: 0, marginTop: 1 }} />
-        : <Circle size={14} style={{ color: TEXT_DISABLED, flexShrink: 0, marginTop: 1 }} />}
+        : <Circle size={14} style={{ color: TEXT_MUTED, flexShrink: 0, marginTop: 1 }} />}
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 12.5, color: earned ? TEXT_PRIMARY : TEXT_SECONDARY, lineHeight: 1.4 }}>{label}</div>
         {!earned && hint && <div style={{ fontSize: 11, color: TEXT_MUTED, lineHeight: 1.4, marginTop: 1 }}>{hint}</div>}
@@ -507,7 +507,7 @@ function ProfileSectionNav({ sections, active, onSelect, sectionStatus }) {
             leading={<Icon size={14} style={{ flexShrink: 0, color: isActive ? NAVY : TEXT_MUTED }} />}
             trailing={done
               ? <CheckCircle2 size={13} style={{ color: EMERALD, flexShrink: 0 }} />
-              : <Circle size={13} style={{ color: TEXT_DISABLED, flexShrink: 0 }} />}
+              : <Circle size={13} style={{ color: TEXT_MUTED, flexShrink: 0 }} />}
             style={{
               borderBottom: "none", borderRadius: 7,
               background: isActive ? NAVY_08 : "transparent",

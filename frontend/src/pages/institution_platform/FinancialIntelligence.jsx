@@ -59,6 +59,8 @@ export default function FinancialIntelligence() {
         <Card padding="lg">
           <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 700, color: NAVY }}>Top Funding Sources (by income)</h3>
           <List>
+            {(fin?.top_funding_sources || []).length === 0 && <p style={{ fontSize: 12.5, color: "var(--sq-text-tertiary)", margin: "4px 0 0" }}>No data recorded yet.</p>}
+
             {(fin?.top_funding_sources || []).slice(0, 8).map((f, i) => (
               <ListItem
                 key={i}
@@ -72,6 +74,7 @@ export default function FinancialIntelligence() {
 
         <Card padding="lg">
           <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 700, color: NAVY }}>Income by Department</h3>
+          {byDept.length === 0 && <p style={{ fontSize: 12.5, color: "var(--sq-text-tertiary)", margin: "4px 0 0" }}>No data recorded yet.</p>}
           {byDept.slice(0, 8).map((d, i) => {
             const max = byDept[0]?.total_income || 1;
             const pct = Math.round(d.total_income / max * 100);

@@ -131,22 +131,22 @@ function GrantApplicationDetailSidebar({ app, isPi, onDelete }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {app.grant?.deadline && (
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-              <span style={{ color: "#94A3B8" }}>Deadline</span>
+              <span style={{ color: "#6b717d" }}>Deadline</span>
               <span style={{ color: "#0f172a", fontFamily: "monospace" }}>{app.grant.deadline}</span>
             </div>
           )}
           {app.grant?.funding_amount?.amount && (
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-              <span style={{ color: "#94A3B8" }}>Available budget</span>
+              <span style={{ color: "#6b717d" }}>Available budget</span>
               <span style={{ color: "#0f172a" }}>{fmtBudget(app.grant.funding_amount.amount, app.grant.funding_amount.currency)}</span>
             </div>
           )}
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-            <span style={{ color: "#94A3B8" }}>Your request</span>
+            <span style={{ color: "#6b717d" }}>Your request</span>
             <span style={{ color: "#059669", fontWeight: 600 }}>{fmtBudget(app.requested_budget, app.currency)}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-            <span style={{ color: "#94A3B8" }}>Team</span>
+            <span style={{ color: "#6b717d" }}>Team</span>
             <span style={{ color: "#0f172a" }}>{(app.team || []).length + 1} members</span>
           </div>
         </div>

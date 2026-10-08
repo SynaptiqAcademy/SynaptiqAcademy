@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ds/EmptyState";
 import React, { useState, useEffect, useCallback } from "react";
 import { Award, AlertTriangle } from "lucide-react";
 import { NAVY, ACCENT, EMERALD, TEXT_SECONDARY } from "@/lib/tokens";
@@ -7,14 +8,14 @@ import { fetchApi } from "@/lib/api";
 
 const API = process.env.REACT_APP_API_URL || "";
 const authH = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
-const GRADE_COLOR = { A: EMERALD, B: "#2f5486", C: "#f59e0b", D: "#f97316", F: ACCENT };
+const GRADE_COLOR = { A: EMERALD, B: "#2f5486", C: "#b45309", D: "#c2410c", F: "#B42318" };
 
 function DeptCard({ dept, onClick }) {
   const score = dept.health_score || 0;
   // Health-score bar color follows 70/50 thresholds tied to grade semantics —
   // ProgressBar's colorByValue only maps by 80/100 thresholds, so it can't
   // express this scheme; left hand-rolled.
-  const barColor = score >= 70 ? EMERALD : score >= 50 ? "#f59e0b" : ACCENT;
+  const barColor = score >= 70 ? EMERALD : score >= 50 ? "#b45309" : "#B42318";
   return (
     <Card onClick={onClick} padding="lg">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
@@ -75,6 +76,8 @@ function DeptDetail({ dept, data, onClose }) {
           )}
           <h4 style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: NAVY }}>Faculty Members</h4>
           <List>
+            {(data.faculty || []).length === 0 && <p style={{ fontSize: 12.5, color: "var(--sq-text-tertiary)", margin: "4px 0 0" }}>No data recorded yet.</p>}
+
             {(data.faculty || []).slice(0, 10).map((f, i) => (
               <ListItem
                 key={i}
@@ -127,9 +130,12 @@ export default function DepartmentIntelligence() {
   return (
     <InstitutionLayout
       title="Department Intelligence"
-      subtitle={`${depts.length} departments · Click any card for details`}
-      sidebar={<DepartmentIntelligenceSidebar depts={depts} />}
+      subtitle={depts.length ? `${depts.length} departments · select one for details` : "Departments and their research activity"}
+      sidebar={depts.length ? <DepartmentIntelligenceSidebar depts={depts} /> : undefined}
     >
+      {depts.length === 0 && (
+        <EmptyState title="No departments yet." description="Departments appear here once institution administrators create them and members join." />
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
         {depts.map((d, i) => <DeptCard key={i} dept={d} onClick={() => openDetail(d)} />)}
       </div>
@@ -175,7 +181,7 @@ function DepartmentIntelligenceSidebar({ depts }) {
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No department is currently below a health score of 50.
           </p>
         )}

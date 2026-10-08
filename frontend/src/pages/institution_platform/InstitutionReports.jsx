@@ -16,7 +16,7 @@ const REPORT_COLUMNS = [
   { key: "health_score", label: "Health Score", render: (v) => <span style={{ fontWeight: 800, color: NAVY }}>{v?.toFixed(1) ?? "—"}</span> },
   {
     key: "grade", label: "Grade",
-    render: (v) => <Badge color={v === "A" || v === "A+" ? EMERALD : ACCENT}>{v}</Badge>,
+    render: (v) => <Badge color={v === "A" || v === "A+" ? EMERALD : "#B42318"}>{v}</Badge>,
   },
   {
     key: "risk_count", label: "Risks",
@@ -89,7 +89,7 @@ export default function InstitutionReports() {
       subtitle="Generate and download executive intelligence reports"
       icon={<FileText size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
       actions={
-        <Button variant="hero" onClick={generate} disabled={generating} loading={generating}>
+        <Button variant="primary" onClick={generate} disabled={generating} loading={generating}>
           {!generating && <RefreshCw size={14} />} Generate Report
         </Button>
       }
@@ -113,7 +113,7 @@ export default function InstitutionReports() {
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {[
-            { fmt: "csv", label: "CSV Export", color: EMERALD, desc: "Structured data for Excel" },
+            { fmt: "csv", label: "CSV Export", color: NAVY, desc: "Structured data for Excel" },
             { fmt: "json", label: "JSON Export", color: "#2f5486", desc: "Machine-readable full report" },
           ].map(({ fmt, label, color, desc }) => (
             <button key={fmt} onClick={() => download(fmt)} disabled={downloading} style={{

@@ -24,7 +24,7 @@ import {
 // ─── Design constants ─────────────────────────────────────────────────────────
 
 const BRD = BRDX || "#E4E8EF";
-const MUTED   = "#94A3B8";
+const MUTED   = "#6b717d";
 const TEXT     = "#0F172A";
 const TEXT2    = "#475569";
 const EMERALD  = "#059669";
@@ -205,16 +205,7 @@ export default function FirstExperience({ user, steps, progress, completedCount,
 
         {/* ── Welcome heading ───────────────────────────────────────────── */}
         <div style={{ marginBottom: 48 }}>
-          <h1
-            style={{
-              fontSize: 30,
-              fontWeight: 700,
-              color: TEXT,
-              margin: "0 0 10px",
-              letterSpacing: "-0.035em",
-              lineHeight: 1.15,
-            }}
-          >
+          <h1 className="pl-hero-title" style={{ margin: "0 0 10px" }}>
             {isComplete ? "Setup complete." : `Welcome, ${firstName}.`}
           </h1>
           <p style={{ fontSize: 15, color: TEXT2, margin: 0, lineHeight: 1.6 }}>

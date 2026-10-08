@@ -11,8 +11,8 @@ const API = "/api/trust";
 const STATUS_CONFIG = {
   verified:  { icon: CheckCircle2, color: EMERALD,  label: "Verified" },
   pending:   { icon: Clock,        color: "#D97706", label: "Pending" },
-  failed:    { icon: XCircle,      color: ACCENT,    label: "Failed" },
-  rejected:  { icon: XCircle,      color: ACCENT,    label: "Rejected" },
+  failed:    { icon: XCircle,      color: "#B42318",    label: "Failed" },
+  rejected:  { icon: XCircle,      color: "#B42318",    label: "Rejected" },
 };
 
 function StatusBadge({ status }) {
@@ -30,7 +30,7 @@ function StatusBadge({ status }) {
 // thresholds (80/100, amber/crimson/emerald-only-at-100), so mapping to it
 // would silently change which color shows at a given confidence value.
 function ConfidenceBar({ value = 0 }) {
-  const color = value >= 80 ? EMERALD : value >= 50 ? "#D97706" : ACCENT;
+  const color = value >= 80 ? EMERALD : value >= 50 ? "#D97706" : "#B42318";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <div style={{ flex: 1, height: 4, background: BRD, borderRadius: 2 }}>
@@ -183,14 +183,14 @@ function MyVerificationsSidebar({ needsAttention, availableTypes }) {
             {needsAttention.slice(0, 5).map(v => (
               <div key={v._id || v.verification_type} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                 <span style={{ fontSize: 12, color: "#374151" }}>{v.label}</span>
-                <span style={{ fontSize: 10.5, fontWeight: 700, color: v.status === "pending" ? "#D97706" : ACCENT, textTransform: "uppercase" }}>
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: v.status === "pending" ? "#D97706" : "#B42318", textTransform: "uppercase" }}>
                   {v.status}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             All caught up — nothing pending or failed.
           </p>
         )}
@@ -209,11 +209,11 @@ function MyVerificationsSidebar({ needsAttention, availableTypes }) {
               ))}
             </div>
             {availableTypes.length > 5 && (
-              <p style={{ fontSize: 11, color: "#94A3B8", margin: "6px 0 0" }}>+{availableTypes.length - 5} more</p>
+              <p style={{ fontSize: 11, color: "#6b717d", margin: "6px 0 0" }}>+{availableTypes.length - 5} more</p>
             )}
           </>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             You've run every available verification type.
           </p>
         )}

@@ -8,10 +8,11 @@ import { fetchApi } from "@/lib/api";
 
 const API = (p) => `/api/akg${p}`;
 
-const QuickLink = ({ to, icon: Icon, label, description, color }) => (
+// Tiles are navigation, not categories: one navy treatment (the colour prop is ignored).
+const QuickLink = ({ to, icon: Icon, label, description }) => (
   <Card to={to}>
-    <div style={{ width: 40, height: 40, borderRadius: 10, background: color + "18", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-      <Icon size={20} color={color} />
+    <div style={{ width: 32, height: 32, borderRadius: 4, background: "rgba(15,40,71,0.06)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+      <Icon size={16} color={NAVY} strokeWidth={1.6} />
     </div>
     <div style={{ fontWeight: 600, color: NAVY, marginBottom: 4 }}>{label}</div>
     <div style={{ fontSize: 12, color: TEXT_SECONDARY }}>{description}</div>
@@ -51,7 +52,7 @@ export default function KnowledgeGraphHome() {
       }
     >
 
-      <h2 style={{ fontSize: 16, fontWeight: 700, color: NAVY, marginBottom: 16 }}>Explore the Graph</h2>
+      <h2 className="sq-h2">Explore the graph</h2>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 32 }}>
         <QuickLink to="/akg/explorer"         icon={Network}      label="Graph Explorer"        description="Interactive visualization of entities and relationships"  color={ACCENT} />
         <QuickLink to="/akg/search"           icon={Search}       label="Semantic Search"       description="TF-IDF powered search across all graph entities"          color="#0F2847" />
@@ -63,7 +64,7 @@ export default function KnowledgeGraphHome() {
 
       {overview?.entities_by_type && (
         <Card padding="lg">
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: NAVY, marginBottom: 16 }}>Entity Distribution</h2>
+          <h2 className="sq-h2">Entity distribution</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
             {Object.entries(overview.entities_by_type).slice(0, 12).map(([type, count]) => (
               <div key={type} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: WARM, borderRadius: 8 }}>

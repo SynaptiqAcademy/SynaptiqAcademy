@@ -54,7 +54,7 @@ export default function TrustOverview() {
         { label: "Badges",           value: data.badge_count || 0 },
         { label: "Recent Events",    value: data.recent_activity?.length || 0 },
       ] : undefined}
-      sidebar={data ? <TrustOverviewSidebar data={data} /> : undefined}
+      sidebar={data && (data.badges || []).length ? <TrustOverviewSidebar data={data} /> : undefined}
     >
       {loading ? (
           <LoadingOverlay text="Loading…" />
@@ -114,7 +114,7 @@ function TrustOverviewSidebar({ data }) {
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             Complete verifications to start earning badges.
           </p>
         )}
@@ -132,14 +132,14 @@ function TrustOverviewSidebar({ data }) {
                 <span style={{ fontSize: 12, color: "#374151", textTransform: "capitalize" }}>
                   {e.event?.replace(/_/g, " ")}
                 </span>
-                <span style={{ fontSize: 11, color: "#94A3B8", whiteSpace: "nowrap" }}>
+                <span style={{ fontSize: 11, color: "#6b717d", whiteSpace: "nowrap" }}>
                   {e.created_at ? new Date(e.created_at).toLocaleDateString() : ""}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No trust events recorded yet.
           </p>
         )}

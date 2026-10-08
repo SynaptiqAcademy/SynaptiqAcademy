@@ -109,6 +109,8 @@ export default function PublicationIntelligence() {
         <Card padding="lg">
           <h3 style={{ margin: "0 0 14px", fontSize: 14, fontWeight: 700, color: NAVY }}>Top Journals</h3>
           <List>
+            {(pubs?.top_journals || []).length === 0 && <p style={{ fontSize: 12.5, color: "var(--sq-text-tertiary)", margin: "4px 0 0" }}>No data recorded yet.</p>}
+
             {(pubs?.top_journals || []).slice(0, 8).map((j, i) => (
               <ListItem
                 key={i}

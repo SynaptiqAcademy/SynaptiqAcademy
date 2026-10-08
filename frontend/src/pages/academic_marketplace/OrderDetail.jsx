@@ -125,7 +125,7 @@ export default function OrderDetail() {
                   <div key={i} className="border border-hairline rounded-md p-3.5 mb-2.5">
                     <div className="font-semibold text-navy-700 mb-1">{d.title}</div>
                     <div className="text-[13px] text-slate-600 mb-2">{d.description}</div>
-                    {d.file_url && <a href={d.file_url} target="_blank" rel="noreferrer" className="text-[13px] text-crimson-600 no-underline">Download file →</a>}
+                    {d.file_url && <a href={d.file_url} target="_blank" rel="noreferrer" className="text-[13px] text-navy-700 no-underline">Download file →</a>}
                     <Caption className="mt-1.5">{new Date(d.submitted_at).toLocaleString()}</Caption>
                   </div>
                 ))}
@@ -219,13 +219,13 @@ function OrderDetailSidebar({ order, id, contract, actionLoading, transition }) 
         {["accepted", "in_progress", "under_review", "revision_requested"].includes(order.status) && (
           <Link
             to={`/academic-marketplace/disputes?order=${id}`}
-            className="block text-center border border-crimson-600 text-crimson-600 rounded-md py-2.5 text-[13px] no-underline mt-2"
+            className="block text-center border border-navy-700 text-navy-700 rounded-md py-2.5 text-[13px] no-underline mt-2"
           >
             Open Dispute
           </Link>
         )}
         {order.status !== "pending" && order.status !== "completed" && !["accepted", "in_progress", "under_review", "revision_requested"].includes(order.status) && (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No actions available for this order status.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No actions available for this order status.</p>
         )}
       </Card>
 

@@ -13,11 +13,11 @@ const token = () => localStorage.getItem("token");
 const authH = () => ({ Authorization: `Bearer ${token()}` });
 
 const GRADE_COLOR = {
-  "A+": EMERALD, A: EMERALD, B: "#2f5486", C: "#f59e0b", D: "#f97316", F: ACCENT,
+  "A+": EMERALD, A: EMERALD, B: "#2f5486", C: "#b45309", D: "#c2410c", F: "#B42318",
 };
 
 const STATUS_COLOR = {
-  complete: EMERALD, running: "#2f5486", pending: "#f59e0b", error: ACCENT, not_started: "#94a3b8",
+  complete: EMERALD, running: "#2f5486", pending: "#f59e0b", error: "#B42318", not_started: "#94a3b8",
 };
 
 function ProviderBadge({ provider }) {

@@ -25,7 +25,6 @@ const AVAIL_TONE = {
 export default function MatchCard({ match, onInvite, onMessage, compact = false }) {
   const u = match.user || {};
   const reranked = match.llm_score != null;
-  const score = Math.round(reranked ? match.llm_score : match.score);
   const initials = (u.full_name || "").split(" ").map((s) => s[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
 
   return (
@@ -64,15 +63,12 @@ export default function MatchCard({ match, onInvite, onMessage, compact = false 
                 )}
               </div>
             </div>
-            <div className="shrink-0 text-right">
-              <div className={`inline-flex flex-col items-end gap-1 ${reranked ? "" : ""}`}>
-                <span className={`font-serif text-2xl ${reranked ? "text-amber-700" : "text-[#0F2847]"}`} data-testid={`match-score-${u.id}`}>
-                  {score}
-                  {reranked && <Sparkles size={11} strokeWidth={1.5} className="inline ml-1 -mt-1" />}
-                </span>
-                <span className="overline text-slate-500">{reranked ? "AI score" : "Match"}</span>
-              </div>
-            </div>
+            {/* Ranked by relevance; the card shows the overlap, not a score. */}
+            {reranked && (
+              <span className="shrink-0 inline-flex items-center gap-1 text-[11px] text-[color:var(--sq-text-tertiary)]" data-testid={`match-score-${u.id}`}>
+                <Sparkles size={11} strokeWidth={1.5} /> Reranked with AI
+              </span>
+            )}
           </div>
 
           {/* Availability + reputation */}

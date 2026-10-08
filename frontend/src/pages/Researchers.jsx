@@ -278,7 +278,7 @@ export default function Researchers() {
                   type="button"
                   onClick={() => setQ("")}
                   aria-label="Clear search"
-                  style={{ color: "#94A3B8", display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", pointerEvents: "auto" }}
+                  style={{ color: "#6b717d", display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", pointerEvents: "auto" }}
                 >
                   <X size={13} strokeWidth={1.5} />
                 </button>
@@ -313,7 +313,7 @@ export default function Researchers() {
 
             {!loading && items.length > 0 && (
               <>
-                <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 12, fontFamily: "monospace" }}>
+                <div style={{ fontSize: 12, color: "#6b717d", marginBottom: 12, fontFamily: "monospace" }}>
                   {items.length} researcher{items.length !== 1 ? "s" : ""} found
                   {hasMore ? " (showing first batch)" : ""}
                 </div>
@@ -391,7 +391,7 @@ function ResearchersSidebar({ savedCount, compareList, topMatch }) {
             </Link>
           </>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             Bookmark researchers you want to revisit — they'll show up here.
           </p>
         )}
@@ -408,11 +408,11 @@ function ResearchersSidebar({ savedCount, compareList, topMatch }) {
               <div key={r.id} style={{ fontSize: 12, color: "#374151" }}>{r.full_name}</div>
             ))}
             {compareList.length < 2 && (
-              <p style={{ fontSize: 11, color: "#94A3B8", margin: "6px 0 0" }}>Add one more to compare.</p>
+              <p style={{ fontSize: 11, color: "#6b717d", margin: "6px 0 0" }}>Add one more to compare.</p>
             )}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             Select up to 3 researchers below to compare them side by side.
           </p>
         )}
@@ -455,7 +455,7 @@ function AiRecsPanel({ recs, loading, isSaved, toggleSave, compareList, toggleCo
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Sparkles size={13} strokeWidth={1.5} style={{ color: NAVY }} />
           <span style={{ fontSize: 12, fontWeight: 700, color: NAVY, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Recommendations</span>
-          <span style={{ fontSize: 11, color: "#94A3B8" }}>Powered by your research profile</span>
+          <span style={{ fontSize: 11, color: "#6b717d" }}>Powered by your research profile</span>
         </div>
         <Button
           size="icon"
@@ -463,7 +463,7 @@ function AiRecsPanel({ recs, loading, isSaved, toggleSave, compareList, toggleCo
           onClick={() => setExpanded((v) => !v)}
           aria-label={expanded ? "Collapse recommendations" : "Expand recommendations"}
           style={{
-            color: "#94A3B8",
+            color: "#6b717d",
             display: "flex",
             alignItems: "center"
           }}>
@@ -537,7 +537,6 @@ function DiscoverySections({ sections, loading, activeSection, setActiveSection,
               onSave={toggleSave}
               isCompared={compareList.some((x) => x.id === r.id)}
               onCompare={toggleCompare}
-              showMatchScore={activeSection === "recommended" && r.match_score > 0}
             />
           ))}
         </div>
@@ -552,7 +551,7 @@ function AvatarCircle({ r, size = 44 }) {
 }
 
 // ── Researcher Card (full) ─────────────────────────────────────────────────────
-function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchScore }) {
+function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare }) {
   const orcidPresent = hasOrcid(r);
   const areas = (r.research_areas || []).slice(0, 3);
   const saved = isSaved;
@@ -576,29 +575,6 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
           {/* Avatar with optional score ring */}
           <div style={{ position: "relative", flexShrink: 0 }}>
             <AvatarCircle r={r} size={44} />
-            {showMatchScore && r.match_score > 0 && (
-              <div
-                title="Relevance to your profile in this list — not a collaboration compatibility score"
-                style={{
-                  position: "absolute",
-                  bottom: -4,
-                  right: -4,
-                  width: 20,
-                  height: 20,
-                  borderRadius: "50%",
-                  background: NAVY,
-                  border: "2px solid white",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 7,
-                  fontWeight: 800,
-                  color: "white",
-                  fontFamily: "monospace",
-                }}>
-                {Math.min(r.match_score, 99)}
-              </div>
-            )}
           </div>
 
           {/* Name + role */}
@@ -624,7 +600,7 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
             title={saved ? "Remove from saved" : "Save researcher"}
             style={{
               flexShrink: 0,
-              color: saved ? NAVY : "#CBD5E1",
+              color: saved ? NAVY : "#8a909a",
               display: "flex",
               alignItems: "center",
               padding: 2
@@ -637,13 +613,13 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
         <div style={{ marginBottom: 8 }}>
           {r.institution && (
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
-              <Building2 size={10} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0 }} />
+              <Building2 size={10} strokeWidth={1.5} style={{ color: "#6b717d", flexShrink: 0 }} />
               <span style={{ fontSize: 11, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.institution}</span>
             </div>
           )}
           {(r.country || r.city) && (
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <MapPin size={10} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0 }} />
+              <MapPin size={10} strokeWidth={1.5} style={{ color: "#6b717d", flexShrink: 0 }} />
               <span style={{ fontSize: 11, color: "#64748B" }}>{[r.city, r.country].filter(Boolean).join(", ")}</span>
             </div>
           )}
@@ -656,7 +632,7 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
               <span key={i} style={{ fontSize: 9, color: "#374151", background: WARM, border: `1px solid ${BORDER}`, padding: "2px 6px" }}>{a}</span>
             ))}
             {(r.research_areas || []).length > 3 && (
-              <span style={{ fontSize: 9, color: "#94A3B8" }}>+{r.research_areas.length - 3}</span>
+              <span style={{ fontSize: 9, color: "#6b717d" }}>+{r.research_areas.length - 3}</span>
             )}
           </div>
         )}
@@ -666,13 +642,13 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
           <div style={{ display: "flex", gap: 12, marginBottom: 8 }}>
             {r.h_index > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                <TrendingUp size={9} strokeWidth={1.5} style={{ color: "#94A3B8" }} />
+                <TrendingUp size={9} strokeWidth={1.5} style={{ color: "#6b717d" }} />
                 <span style={{ fontSize: 10, color: "#64748B" }}>h={r.h_index}</span>
               </div>
             )}
             {r.publications_count > 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                <BookOpen size={9} strokeWidth={1.5} style={{ color: "#94A3B8" }} />
+                <BookOpen size={9} strokeWidth={1.5} style={{ color: "#6b717d" }} />
                 <span style={{ fontSize: 10, color: "#64748B" }}>{r.publications_count} pub{r.publications_count !== 1 ? "s" : ""}</span>
               </div>
             )}
@@ -708,7 +684,7 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
         <Button
           variant="link"
           onClick={(e) => onCompare(r, e)}
-          style={{ fontSize: 10, fontWeight: 600, color: isCompared ? NAVY : "#94A3B8", textDecoration: isCompared ? "underline" : "none" }}
+          style={{ fontSize: 10, fontWeight: 600, color: isCompared ? NAVY : "#6b717d", textDecoration: isCompared ? "underline" : "none" }}
         >
           <BarChart2 size={10} strokeWidth={1.5} /> Compare
         </Button>
@@ -716,7 +692,7 @@ function ResearcherCard({ r, isSaved, onSave, isCompared, onCompare, showMatchSc
         <Link
           to={profileUrl(r)}
           onClick={(e) => e.stopPropagation()}
-          style={{ fontSize: 10, fontWeight: 600, color: "#94A3B8", display: "flex", alignItems: "center", gap: 3, textDecoration: "none" }}
+          style={{ fontSize: 10, fontWeight: 600, color: "#6b717d", display: "flex", alignItems: "center", gap: 3, textDecoration: "none" }}
         >
           <UserPlus size={10} strokeWidth={1.5} /> Collab
         </Link>
@@ -743,8 +719,6 @@ function ResearcherCardCompact({ r, isSaved, onSave, isCompared, onCompare, show
     );
   }
 
-  const score = r?.match_score || r?.score;
-
   return (
     <Link
       to={profileUrl(r)}
@@ -753,16 +727,7 @@ function ResearcherCardCompact({ r, isSaved, onSave, isCompared, onCompare, show
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; }}
     >
       <div style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 8 }}>
-        {score != null && score > 0 ? (
-          <div style={{ position: "relative", flexShrink: 0 }}>
-            <AvatarCircle r={r} size={36} />
-            <div style={{ position: "absolute", bottom: -3, right: -3, width: 16, height: 16, borderRadius: "50%", background: NAVY, border: "2px solid white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 6, fontWeight: 800, color: "white", fontFamily: "monospace" }}>
-              {Math.min(Math.round(score), 99)}
-            </div>
-          </div>
-        ) : (
-          <AvatarCircle r={r} size={36} />
-        )}
+        <AvatarCircle r={r} size={36} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{r?.full_name}</div>
           <div style={{ fontSize: 10, color: "#64748B", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r?.institution || r?.country || ""}</div>
@@ -773,7 +738,7 @@ function ResearcherCardCompact({ r, isSaved, onSave, isCompared, onCompare, show
           onClick={(e) => onSave && onSave(r, e)}
           aria-label={isSaved ? "Remove from saved" : "Save researcher"}
           style={{
-            color: isSaved ? NAVY : "#CBD5E1",
+            color: isSaved ? NAVY : "#8a909a",
             flexShrink: 0
           }}>
           {isSaved ? <BookmarkCheck size={12} strokeWidth={1.5} /> : <Bookmark size={12} strokeWidth={1.5} />}
@@ -787,7 +752,7 @@ function ResearcherCardCompact({ r, isSaved, onSave, isCompared, onCompare, show
         </div>
       )}
       {showExplanation && r?.explanation && (
-        <div style={{ fontSize: 10, color: "#94A3B8", fontStyle: "italic", lineHeight: 1.4 }}>{r.explanation}</div>
+        <div style={{ fontSize: 10, color: "#6b717d", fontStyle: "italic", lineHeight: 1.4 }}>{r.explanation}</div>
       )}
     </Link>
   );
@@ -825,13 +790,13 @@ function FilterPanel({ filters, setFilter, clearAll }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.1em" }}>Filters</span>
         {Object.values(filters).some(Boolean) && (
-          <Button variant="link" onClick={clearAll} style={{ fontSize: 10, color: "#94A3B8", textDecoration: "underline" }}>Clear</Button>
+          <Button variant="link" onClick={clearAll} style={{ fontSize: 10, color: "#6b717d", textDecoration: "underline" }}>Clear</Button>
         )}
       </div>
 
       {/* Availability */}
       <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Availability</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Availability</div>
         {[
           { key: "available_for_collaboration", label: "Open to collaborate" },
           { key: "available_for_reviewing",     label: "Peer reviewer" },
@@ -849,7 +814,7 @@ function FilterPanel({ filters, setFilter, clearAll }) {
 
       {/* Identifiers */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Identifiers</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Identifiers</div>
         <Checkbox
           label="Has ORCID"
           checked={!!filters.has_orcid}
@@ -859,7 +824,7 @@ function FilterPanel({ filters, setFilter, clearAll }) {
 
       {/* Country */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Country</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Country</div>
         <Input
           size="sm"
           value={filters.country || ""}
@@ -870,7 +835,7 @@ function FilterPanel({ filters, setFilter, clearAll }) {
 
       {/* Institution */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Institution</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Institution</div>
         <Input
           size="sm"
           value={filters.institution || ""}
@@ -881,7 +846,7 @@ function FilterPanel({ filters, setFilter, clearAll }) {
 
       {/* Research area */}
       <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Area</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Research Area</div>
         <Input
           size="sm"
           value={filters.research_area || ""}
@@ -892,7 +857,7 @@ function FilterPanel({ filters, setFilter, clearAll }) {
 
       {/* Min H-index */}
       <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Min H-Index</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Min H-Index</div>
         <Input
           size="sm"
           type="number"
@@ -932,7 +897,7 @@ function SectionEmptyState({ activeSection, user }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 7, maxWidth: 360, margin: "0 auto" }}>
         {hints.map((h) => (
           <div key={h} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "#64748B", textAlign: "left" }}>
-            <Lightbulb size={12} strokeWidth={1.5} style={{ color: "#94A3B8", flexShrink: 0, marginTop: 2 }} />
+            <Lightbulb size={12} strokeWidth={1.5} style={{ color: "#6b717d", flexShrink: 0, marginTop: 2 }} />
             {h}
           </div>
         ))}

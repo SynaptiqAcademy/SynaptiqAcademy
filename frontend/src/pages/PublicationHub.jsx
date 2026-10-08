@@ -36,7 +36,7 @@ const STAGES = [
   { key: "accepted",           label: "Accepted",     color: EMRL,      bg: "#ECFDF5", border: "#6EE7B7", accent: "#6EE7B7" },
   { key: "published",          label: "Published",    color: "#065F46", bg: "#D1FAE5", border: "#34D399", accent: "#34D399" },
   { key: "rejected",           label: "Rejected",     color: "#DC2626", bg: "#FEF2F2", border: "#FCA5A5", accent: "#FCA5A5" },
-  { key: "withdrawn",          label: "Withdrawn",    color: "#94A3B8", bg: "#F8FAFC", border: "#CBD5E1", accent: "#CBD5E1" },
+  { key: "withdrawn",          label: "Withdrawn",    color: "#6b717d", bg: "#F8FAFC", border: "#CBD5E1", accent: "#CBD5E1" },
 ];
 
 // ─── Lifecycle nav ─────────────────────────────────────────────────────────────
@@ -54,12 +54,12 @@ function LifecycleNav({ current }) {
         const isCur = s.to === current;
         return (
           <React.Fragment key={s.to}>
-            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} />}
+            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#8a909a", flexShrink: 0 }} />}
             <Link
               to={s.to}
               style={{
                 fontSize: 11, fontWeight: isCur ? 700 : 400,
-                color: isCur ? NAVY : "#94A3B8",
+                color: isCur ? NAVY : "#6b717d",
                 padding: "3px 7px",
                 background: isCur ? "rgba(15,40,71,0.07)" : "transparent",
                 borderRadius: 3, textDecoration: "none", whiteSpace: "nowrap",
@@ -137,7 +137,7 @@ function VenuePicker({ manuscriptId, onPicked, onClose }) {
           wrapperClassName="mb-3"
         />
         <div style={{ maxHeight: 280, overflowY: "auto", borderTop: q && results.length > 0 ? `1px solid ${BRD}` : "none" }}>
-          {q && results.length === 0 && <div style={{ fontSize: 13, color: "#94A3B8", padding: "12px 0" }}>No matches found.</div>}
+          {q && results.length === 0 && <div style={{ fontSize: 13, color: "#6b717d", padding: "12px 0" }}>No matches found.</div>}
           {results.map((v) => (
             <button
               key={v.id}
@@ -146,7 +146,7 @@ function VenuePicker({ manuscriptId, onPicked, onClose }) {
               style={{ width: "100%", textAlign: "left", padding: "10px 4px", borderBottom: `1px solid ${BRD}`, background: "none", border: "none", borderBottom: `1px solid ${BRD}`, cursor: "pointer", fontFamily: "inherit" }}
             >
               <div style={{ fontSize: 13, fontWeight: 600, color: "#0F172A" }}>{kind === "journal" ? v.title : v.name}</div>
-              <div style={{ fontSize: 10, fontFamily: "monospace", color: "#94A3B8", marginTop: 2 }}>
+              <div style={{ fontSize: 10, fontFamily: "monospace", color: "#6b717d", marginTop: 2 }}>
                 {kind === "journal"
                   ? [v.publisher, v.quartile ? v.quartile : null, v.open_access ? "Open Access" : null].filter(Boolean).join(" · ")
                   : [v.acronym, v.submission_deadline ? `deadline ${v.submission_deadline}` : null].filter(Boolean).join(" · ")
@@ -173,7 +173,7 @@ function PipelineCard({ row, onAction }) {
       <Link to={`/manuscripts/${m.id}`} style={{ display: "block", textDecoration: "none" }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: "#0F172A", lineHeight: 1.4 }}>{m.title || "Untitled"}</div>
       </Link>
-      <div style={{ fontSize: 10, fontFamily: "monospace", color: "#94A3B8", marginTop: 4 }}>
+      <div style={{ fontSize: 10, fontFamily: "monospace", color: "#6b717d", marginTop: 4 }}>
         {m.manuscript_type} · v{m.current_version || 0}
       </div>
       {venueText && (
@@ -262,12 +262,12 @@ function OrcidSection() {
             Registered Publications
           </h3>
         </div>
-        <span style={{ fontSize: 11, fontFamily: "monospace", color: "#94A3B8" }}>
+        <span style={{ fontSize: 11, fontFamily: "monospace", color: "#6b717d" }}>
           {pubs.length} record{pubs.length !== 1 ? "s" : ""}
         </span>
       </div>
       {pubs.length === 0 ? (
-        <div style={{ fontSize: 13, color: "#94A3B8", background: "#fff", border: `1px solid ${BRD}`, padding: "24px", textAlign: "center" }}>
+        <div style={{ fontSize: 13, color: "#6b717d", background: "#fff", border: `1px solid ${BRD}`, padding: "24px", textAlign: "center" }}>
           No publications imported yet — sync in Settings.
         </div>
       ) : (
@@ -281,7 +281,7 @@ function OrcidSection() {
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "#0F172A", lineHeight: 1.4, fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif" }}>{p.title}</div>
-                  <div style={{ fontSize: 10, fontFamily: "monospace", color: "#94A3B8", marginTop: 4 }}>
+                  <div style={{ fontSize: 10, fontFamily: "monospace", color: "#6b717d", marginTop: 4 }}>
                     {[p.journal, p.year, (p.type || "").replace(/_/g," "), p.doi ? `DOI: ${p.doi}` : null].filter(Boolean).join(" · ")}
                     {p.doi && (
                       <a
@@ -310,7 +310,7 @@ function OrcidSection() {
                     </Link>
                   )}
                   {p.citations != null && (
-                    <div style={{ fontSize: 10, fontFamily: "monospace", color: "#94A3B8", marginTop: 2 }}>
+                    <div style={{ fontSize: 10, fontFamily: "monospace", color: "#6b717d", marginTop: 2 }}>
                       {p.citations} cites
                     </div>
                   )}
@@ -459,11 +459,11 @@ export default function PublicationHub() {
                 >
                   <div style={{ padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${BRD}` }}>
                     <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: col.color }}>{col.label}</span>
-                    <span style={{ fontSize: 10, fontFamily: "monospace", color: "#94A3B8" }}>{col.rows.length}</span>
+                    <span style={{ fontSize: 10, fontFamily: "monospace", color: "#6b717d" }}>{col.rows.length}</span>
                   </div>
                   <div style={{ padding: "8px", display: "flex", flexDirection: "column", gap: 8, minHeight: 100 }}>
                     {col.rows.length === 0 && (
-                      <div style={{ fontSize: 11, color: "#CBD5E1", textAlign: "center", padding: "16px 0", fontFamily: "monospace" }}>—</div>
+                      <div style={{ fontSize: 11, color: "#8a909a", textAlign: "center", padding: "16px 0", fontFamily: "monospace" }}>—</div>
                     )}
                     {col.rows.map((r) => (
                       <PipelineCard key={r.manuscript.id + (r.submission?.id || "")} row={r} onAction={act} />

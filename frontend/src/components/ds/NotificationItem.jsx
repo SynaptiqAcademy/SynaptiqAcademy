@@ -96,7 +96,7 @@ export function NotificationItem({
             {title}
           </p>
           {time && (
-            <span style={{ fontSize: "0.68rem", color: TEXT_DISABLED, flexShrink: 0, marginTop: 2 }}>
+            <span style={{ fontSize: "0.68rem", color: TEXT_MUTED, flexShrink: 0, marginTop: 2 }}>
               {time}
             </span>
           )}

@@ -98,21 +98,16 @@ export default function ProjectDetail() {
   return (
     <ResearchLayout>
     <div className="space-y-6">
-      <header className="border-b border-slate-200 pb-6">
+      {/* The shared product page header (pl-* classes from PageLayout) */}
+      <header className="pl-head">
         <div>
-          <div className="flex items-center justify-between gap-4">
+          <div className="pl-hero-row">
             <div className="min-w-0">
-              <div className="flex items-center gap-2 mb-1.5">
-                <Badge variant="outline" className="capitalize">{project.visibility} project</Badge>
-              </div>
-              <h1 className="text-[1.4rem] font-semibold text-slate-900 tracking-tight leading-snug">
-                {project.title}
-              </h1>
-              {project.description && (
-                <p className="text-[13px] text-slate-500 mt-2 max-w-2xl leading-relaxed">{project.description}</p>
-              )}
+              <p className="pl-eyebrow">{project.visibility} project</p>
+              <h1 className="pl-hero-title">{project.title}</h1>
+              {project.description && <p className="pl-sub">{project.description}</p>}
             </div>
-            <div className="flex flex-col items-end gap-2 shrink-0">
+            <div className="pl-hero-actions">
               <Button
                 data-testid={TID.openChatBtn}
                 onClick={() => navigate("/messages", { state: { openContext: { type: "project", id } } })}
@@ -125,7 +120,7 @@ export default function ProjectDetail() {
                   <Layers size={12} strokeWidth={1.5} /> Open Workspace
                 </Button>
               )}
-              <Button onClick={createManuscript} variant="ghost">
+              <Button onClick={createManuscript} variant="primary">
                 <FileText size={12} strokeWidth={1.5} /> Create Manuscript
               </Button>
               <AssistantLauncher entityKind="project" entityId={id} entityTitle={project.title} />

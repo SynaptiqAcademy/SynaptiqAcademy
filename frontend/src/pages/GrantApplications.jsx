@@ -31,8 +31,8 @@ const STATUS = {
   under_evaluation:      { label: "Under Evaluation",  color: "#B45309", bg: "#FFFBEB", border: "#FCD34D" },
   funded:                { label: "Funded",            color: EMRL,      bg: "#ECFDF5", border: "#6EE7B7" },
   rejected:              { label: "Rejected",          color: "#DC2626", bg: "#FEF2F2", border: "#FCA5A5" },
-  closed:                { label: "Closed",            color: "#94A3B8", bg: "#F8FAFC", border: "#CBD5E1" },
-  withdrawn:             { label: "Withdrawn",         color: "#94A3B8", bg: "#F8FAFC", border: "#CBD5E1" },
+  closed:                { label: "Closed",            color: "#6b717d", bg: "#F8FAFC", border: "#CBD5E1" },
+  withdrawn:             { label: "Withdrawn",         color: "#6b717d", bg: "#F8FAFC", border: "#CBD5E1" },
 };
 
 const PRIORITY_STATUSES = ["internal_review","ready_for_submission","under_evaluation"];
@@ -60,12 +60,12 @@ function LifecycleNav({ current }) {
         const isCur = s.to === current;
         return (
           <React.Fragment key={s.to}>
-            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#CBD5E1", flexShrink: 0 }} />}
+            {i > 0 && <ChevronRight size={10} strokeWidth={1.5} style={{ color: "#8a909a", flexShrink: 0 }} />}
             <Link
               to={s.to}
               style={{
                 fontSize: 11, fontWeight: isCur ? 700 : 400,
-                color: isCur ? NAVY : "#94A3B8",
+                color: isCur ? NAVY : "#6b717d",
                 padding: "3px 7px",
                 background: isCur ? "rgba(15,40,71,0.07)" : "transparent",
                 borderRadius: 3, textDecoration: "none", whiteSpace: "nowrap",
@@ -114,12 +114,12 @@ function GrantApplicationsSidebar({ apps }) {
                 <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {a.grant?.title || a.grant_title || "Untitled Grant"}
                 </div>
-                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>{a.grant.deadline}</div>
+                <div style={{ fontSize: 11, color: "#6b717d", marginTop: 1 }}>{a.grant.deadline}</div>
               </Link>
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             No upcoming deadlines among your applications.
           </p>
         )}
@@ -140,7 +140,7 @@ function GrantApplicationsSidebar({ apps }) {
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No applications yet.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No applications yet.</p>
         )}
       </Card>
 
@@ -152,11 +152,11 @@ function GrantApplicationsSidebar({ apps }) {
         <div style={{ display: "flex", gap: 20 }}>
           <div>
             <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{piCount}</div>
-            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>As PI</div>
+            <div style={{ fontSize: 10, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.05em" }}>As PI</div>
           </div>
           <div>
             <div style={{ fontFamily: "'Newsreader Variable', Newsreader, Georgia, serif", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>{teamCount}</div>
-            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>As Team Member</div>
+            <div style={{ fontSize: 10, color: "#6b717d", textTransform: "uppercase", letterSpacing: "0.05em" }}>As Team Member</div>
           </div>
         </div>
       </Card>
@@ -183,7 +183,7 @@ function ApplicationCard({ app }) {
           </h3>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 10, flexWrap: "wrap" }}>
             {app.grant?.deadline && (
-              <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontFamily: "monospace", color: "#94A3B8" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontFamily: "monospace", color: "#6b717d" }}>
                 <Calendar size={10} strokeWidth={1.5} />
                 Deadline: {app.grant.deadline}
               </span>
@@ -203,7 +203,7 @@ function ApplicationCard({ app }) {
               <DsBadge color="#0F2847">Team Member</DsBadge>
             )}
             {app.updated_at && (
-              <span style={{ fontSize: 10, fontFamily: "monospace", color: "#CBD5E1" }}>
+              <span style={{ fontSize: 10, fontFamily: "monospace", color: "#8a909a" }}>
                 {new Date(app.updated_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
               </span>
             )}
@@ -310,7 +310,7 @@ export default function GrantApplications() {
             {rest.length > 0 && (
               <div>
                 {priority.length > 0 && (
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 12 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#6b717d", marginBottom: 12 }}>
                     All Applications
                   </div>
                 )}

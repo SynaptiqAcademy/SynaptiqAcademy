@@ -13,6 +13,7 @@ import MatchCard from "../components/marketplace/MatchCard";
 import InviteModal from "../components/marketplace/InviteModal";
 import ReputationBadge from "../components/marketplace/ReputationBadge";
 import { NAVY } from "@/lib/tokens";
+import { loadCreditCatalogue } from "@/components/billing/creditCatalogue";
 import { ResearchLayout } from "@/layouts";
 import {
   Sparkles, Search, SlidersHorizontal, Compass, TrendingUp,
@@ -32,7 +33,6 @@ const ROLES = [
   { value: "sme",             label: "Subject experts",   Icon: Award },
 ];
 
-const RERANK_COST = 5;
 
 function MarketplaceSidebar({ reverse, analytics }) {
   return (
@@ -45,6 +45,14 @@ function MarketplaceSidebar({ reverse, analytics }) {
 }
 
 export default function Marketplace() {
+  // Rerank price from the server catalogue (the key the backend charges).
+  const [rerankCost, setRerankCost] = useState(null);
+  useEffect(() => {
+    loadCreditCatalogue().then((c) => {
+      const n = c?.actions?.ai_marketplace_rerank ?? c?.operations?.ai_marketplace_rerank;
+      if (n != null) setRerankCost(n);
+    }).catch(() => {});
+  }, []);
   const navigate = useNavigate();
   const { user, refreshMe } = useAuth();
   const [role, setRole] = useState(null);
@@ -92,8 +100,8 @@ export default function Marketplace() {
 
   const rerank = async () => {
     if (!results.length) return;
-    if ((user?.credits_balance ?? 0) < RERANK_COST) {
-      toast.error(`AI rerank costs ${RERANK_COST} credits; balance too low.`);
+    if (rerankCost != null && (user?.credits_balance ?? 0) < rerankCost) {
+      toast.error(`AI rerank costs ${rerankCost} credits; balance too low.`);
       return;
     }
     setReranking(true);
@@ -184,7 +192,7 @@ export default function Marketplace() {
           className="bg-gradient-to-r from-[#0F2847] to-[#1E3A5F] hover:from-[#0a1f3a] hover:to-[#0F2847]"
         >
           {!reranking && <Sparkles size={11} strokeWidth={1.5} />}
-          Rerank with AI ({RERANK_COST} credits)
+          Rerank with AI{rerankCost != null ? ` · ${rerankCost} credits` : ""}
         </Button>
       </div>
 

@@ -29,7 +29,7 @@ export default function ResearchCommandCenter() {
       icon={<FlaskConical size={15} strokeWidth={1.5} style={{ color: "#0F2847" }} />}
       actions={
         <>
-          <Button as={Link} to="/projects" variant="hero" size="sm">
+          <Button as={Link} to="/projects" variant="primary" size="sm">
             Start a Project <ArrowRight size={13} />
           </Button>
           <Button as={Link} to="/workspaces" variant="hero" size="sm">

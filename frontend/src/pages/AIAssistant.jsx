@@ -4,7 +4,6 @@ import { Dialog } from "@/components/ds/Modal";
 import { getDailyWelcomeMessage, getGreeting } from "@/lib/welcomeEngine";
 import { Link, useLocation } from "react-router-dom";
 import { ResearchLayout } from "@/layouts";
-import { AI_NAV_ITEMS } from "@/lib/navItems";
 import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -17,6 +16,23 @@ import {
 } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { ACCENT, NAVY, WARM } from "@/lib/tokens";
+import { loadCreditCatalogue } from "@/components/billing/creditCatalogue";
+
+// The price of one AI Research Assistant message, read from the server's
+// credit catalogue (the same "ai_os_message" key the backend charges). Null
+// until loaded: no price is shown rather than a guessed one.
+function useMessageCost() {
+  var [cost, setCost] = useState(null);
+  useEffect(function(){
+    var alive = true;
+    loadCreditCatalogue().then(function(c){
+      var n = c && ((c.actions && c.actions.ai_os_message) ?? (c.operations && c.operations.ai_os_message));
+      if (alive && n != null) setCost(n);
+    }).catch(function(){});
+    return function(){ alive = false; };
+  },[]);
+  return cost;
+}
 
 // ─── AI Nav ───────────────────────────────────────────────────────────────────
 
@@ -57,11 +73,8 @@ const AGENT_COLORS = {
   auto:          { bg:"bg-slate-100",  text:"text-slate-700",  dot:"bg-navy-500" },
 };
 
-const SIDEBAR_DOT = {
-  research:"#2f5486", publication:"#2f5486", journal:"#2f5486",
-  grant:"#34d399", collaboration:"#fb923c", teaching:"#fbbf24",
-  analytics:"#2f5486", profile:"#fb7185", general:"#94a3b8", auto:"#2f5486",
-};
+// Session type is a label, not a status: one quiet dot.
+const SIDEBAR_DOT = new Proxy({}, { get: () => "#b9b4a8" });
 
 const AGENTS = [
   { id:"auto",          label:"Auto",          icon:Sparkles,      description:"Let Synaptiq choose the best agent" },
@@ -203,7 +216,8 @@ function detectCalloutType(line) {
 var initialState = {
   conversations:[],activeConvId:null,messages:[],loading:false,sending:false,
   context:null,insights:[],memory:[],agents:[],
-  leftPanelOpen:true,rightPanelOpen:true,inputText:"",selectedAgent:"auto",
+  // Side panels start open only where there is room for the conversation too.
+  leftPanelOpen:typeof window==="undefined"||window.innerWidth>=1024,rightPanelOpen:typeof window==="undefined"||window.innerWidth>=1280,inputText:"",selectedAgent:"auto",
 };
 
 function reducer(state, action) {
@@ -222,8 +236,9 @@ function reducer(state, action) {
     case "SET_INSIGHTS": return Object.assign({},state,{insights:action.payload});
     case "SET_MEMORY":   return Object.assign({},state,{memory:action.payload});
     case "SET_AGENTS":   return Object.assign({},state,{agents:action.payload});
-    case "TOGGLE_LEFT":  return Object.assign({},state,{leftPanelOpen:!state.leftPanelOpen});
-    case "TOGGLE_RIGHT": return Object.assign({},state,{rightPanelOpen:!state.rightPanelOpen});
+    // On narrow screens only one side panel is open at a time.
+    case "TOGGLE_LEFT":  return Object.assign({},state,{leftPanelOpen:!state.leftPanelOpen},(!state.leftPanelOpen&&window.innerWidth<1024)?{rightPanelOpen:false}:{});
+    case "TOGGLE_RIGHT": return Object.assign({},state,{rightPanelOpen:!state.rightPanelOpen},(!state.rightPanelOpen&&window.innerWidth<1024)?{leftPanelOpen:false}:{});
     case "SET_INPUT":    return Object.assign({},state,{inputText:action.payload});
     case "SET_AGENT":    return Object.assign({},state,{selectedAgent:action.payload});
     case "UPDATE_CONV_TITLE":
@@ -303,7 +318,7 @@ function CodeBlock({ lang, code }) {
   return (
     <div style={{margin:"14px 0",borderRadius:10,overflow:"hidden",border:"1px solid "+BORDER}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"7px 14px",background:"#1E2937"}}>
-        <span style={{fontSize:"0.69rem",fontFamily:"monospace",color:"#94a3b8",background:"rgba(255,255,255,0.08)",padding:"2px 8px",borderRadius:4}}>{lang||"code"}</span>
+        <span style={{fontSize:"0.69rem",fontFamily:"monospace",color:"#6b717d",background:"rgba(255,255,255,0.08)",padding:"2px 8px",borderRadius:4}}>{lang||"code"}</span>
         <button onClick={handleCopy} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:5,fontSize:"0.72rem",color:copied?"#4ade80":"#64748b",transition:"color 150ms"}}>
           {copied ? <Check size={11}/> : <Copy size={11}/>}{copied ? "Copied" : "Copy"}
         </button>
@@ -335,7 +350,7 @@ function AcademicTable({ rows }) {
   return (
     <div style={{margin:"16px 0",borderRadius:10,border:"1px solid "+BORDER,overflow:"hidden"}}>
       <div style={{display:"flex",justifyContent:"flex-end",padding:"5px 10px",background:WARM,borderBottom:"1px solid "+BORDER}}>
-        <button onClick={handleCopy} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:4,fontSize:"0.71rem",color:copied?"#059669":"#94a3b8",transition:"color 150ms"}}>
+        <button onClick={handleCopy} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:4,fontSize:"0.71rem",color:copied?"#059669":"#6b717d",transition:"color 150ms"}}>
           {copied ? <Check size={10}/> : <Copy size={10}/>}{copied ? "Copied" : "Copy table"}
         </button>
       </div>
@@ -369,7 +384,7 @@ function CitationList({ citations }) {
   var shown = expanded ? citations : citations.slice(0, PREVIEW);
   return (
     <div style={{borderTop:"1px solid "+BORDER,padding:"12px 22px 14px"}}>
-      <div style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"#94a3b8",marginBottom:10}}>
+      <div style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"#6b717d",marginBottom:10}}>
         References ({citations.length})
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:6}}>
@@ -412,8 +427,8 @@ function CollapsibleSection({ heading, children, defaultOpen }) {
         onMouseEnter={function(e){e.currentTarget.style.background=WARM;}}
         onMouseLeave={function(e){e.currentTarget.style.background=open?WARM:"#fff";}}
       >
-        <span style={{fontFamily:"'Newsreader Variable', Newsreader, Georgia, serif",fontSize:"0.94rem",fontWeight:700,color:NAVY,lineHeight:1.3}}>{heading}</span>
-        <span style={{flexShrink:0,color:"#94a3b8",marginLeft:12}}>{open ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}</span>
+        <span style={{fontFamily:"'Newsreader Variable', Newsreader, Georgia, serif",fontSize:"0.94rem",fontWeight:500,color:NAVY,lineHeight:1.3}}>{heading}</span>
+        <span style={{flexShrink:0,color:"#6b717d",marginLeft:12}}>{open ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}</span>
       </button>
       {open && <div style={{padding:"18px 20px 14px"}}>{children}</div>}
     </div>
@@ -423,7 +438,7 @@ function CollapsibleSection({ heading, children, defaultOpen }) {
 function MiniTOC({ sections }) {
   return (
     <div style={{display:"flex",flexWrap:"wrap",gap:6,padding:"9px 20px",borderBottom:"1px solid "+BORDER,background:"#FAFBFC",alignItems:"center"}}>
-      <span style={{fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:"#94a3b8",marginRight:4}}>Contents</span>
+      <span style={{fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:"#6b717d",marginRight:4}}>Contents</span>
       {sections.map(function(s,i){return (
         <span key={i} style={{fontSize:"0.74rem",color:NAVY,background:"#fff",border:"1px solid "+BORDER,borderRadius:6,padding:"3px 9px",fontWeight:500,lineHeight:1.4}}>{s.heading}</span>
       );})}
@@ -442,13 +457,13 @@ function ResponseHeader({ agent, time }) {
         <span style={{fontSize:"0.75rem",fontWeight:700,color:NAVY,letterSpacing:"0.02em"}}>Synaptiq AI</span>
         {agent && agent!=="auto" && agentInfo && (
           <>
-            <span style={{color:"#CBD5E1",fontSize:"0.8rem"}}>&middot;</span>
+            <span style={{color:"#8a909a",fontSize:"0.8rem"}}>&middot;</span>
             <span style={{fontSize:"0.7rem",fontWeight:600,color:"#64748b"}}>{agentInfo.label}</span>
           </>
         )}
       </div>
       {time && (
-        <span style={{display:"flex",alignItems:"center",gap:4,fontSize:"0.68rem",color:"#94a3b8"}}>
+        <span style={{display:"flex",alignItems:"center",gap:4,fontSize:"0.68rem",color:"#6b717d"}}>
           <Clock size={10}/>{time}
         </span>
       )}
@@ -477,7 +492,7 @@ function ActionBar({ msg, onActionClick }) {
         );})}
       </div>
       <button onClick={handleCopy}
-        style={{display:"inline-flex",alignItems:"center",gap:5,padding:"5px 11px",background:"transparent",border:"none",color:copied?"#059669":"#94a3b8",fontSize:"0.74rem",cursor:"pointer",borderRadius:6,transition:"color 150ms",flexShrink:0}}>
+        style={{display:"inline-flex",alignItems:"center",gap:5,padding:"5px 11px",background:"transparent",border:"none",color:copied?"#059669":"#6b717d",fontSize:"0.74rem",cursor:"pointer",borderRadius:6,transition:"color 150ms",flexShrink:0}}>
         {copied ? <Check size={11}/> : <Copy size={11}/>}{copied ? "Copied" : "Copy"}
       </button>
     </div>
@@ -512,7 +527,7 @@ function MarkdownRenderer({ text }) {
                 <span style={{flexShrink:0,width:16,height:16,borderRadius:4,border:"2px solid "+(checked?"#059669":BORDER),background:checked?"#059669":"#fff",display:"flex",alignItems:"center",justifyContent:"center",marginTop:3}}>
                   {checked && <Check size={9} style={{color:"#fff"}}/>}
                 </span>
-                <span style={{fontSize:"0.9rem",color:checked?"#94a3b8":"#374151",textDecoration:checked?"line-through":"none",lineHeight:1.7}}>{renderInline(ckm[2])}</span>
+                <span style={{fontSize:"0.9rem",color:checked?"#6b717d":"#374151",textDecoration:checked?"line-through":"none",lineHeight:1.7}}>{renderInline(ckm[2])}</span>
               </li>
             );
           }
@@ -595,7 +610,7 @@ function MarkdownRenderer({ text }) {
     if (line.startsWith("# ")) {
       flushList(); flushOrdered();
       var h1text = line.slice(2);
-      elements.push(<h1 key={"h1-"+i} style={{fontFamily:"'Newsreader Variable', Newsreader, Georgia, serif",fontSize:"1.22rem",fontWeight:700,color:NAVY,margin:"22px 0 10px",lineHeight:1.3,letterSpacing:"-0.01em"}}>{renderInline(h1text)}</h1>);
+      elements.push(<h1 key={"h1-"+i} style={{fontFamily:"'Newsreader Variable', Newsreader, Georgia, serif",fontSize:"1.22rem",fontWeight:500,color:NAVY,margin:"22px 0 10px",lineHeight:1.3,letterSpacing:"-0.01em"}}>{renderInline(h1text)}</h1>);
       i++; continue;
     }
     if (line.startsWith("## ")) {
@@ -603,7 +618,7 @@ function MarkdownRenderer({ text }) {
       var h2text = line.slice(3);
       elements.push(
         <div key={"h2-"+i} style={{margin:"20px 0 8px"}}>
-          <h2 style={{fontFamily:"'Newsreader Variable', Newsreader, Georgia, serif",fontSize:"1.04rem",fontWeight:700,color:"#0f172a",margin:0,lineHeight:1.4}}>{renderInline(h2text)}</h2>
+          <h2 style={{fontFamily:"'Newsreader Variable', Newsreader, Georgia, serif",fontSize:"1.04rem",fontWeight:500,color:"#0f172a",margin:0,lineHeight:1.4}}>{renderInline(h2text)}</h2>
           <div style={{height:1,background:BORDER,marginTop:5}}/>
         </div>
       );
@@ -768,7 +783,7 @@ function MessageThread({ messages, onActionClick, onRetry }) {
   if (!messages.length) {
     return (
       <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",background:WARM}}>
-        <div style={{textAlign:"center",color:"#94a3b8"}}>
+        <div style={{textAlign:"center",color:"#6b717d"}}>
           <Sparkles size={24} style={{margin:"0 auto 10px",opacity:0.4}}/>
           <p style={{fontSize:"0.84rem"}}>Begin your research below</p>
         </div>
@@ -792,19 +807,19 @@ function ConvItem({ conv, active, onSelect, onPin, onArchive, onDelete }) {
     <div
       onMouseEnter={function(){setHover(true);}} onMouseLeave={function(){setHover(false);}}
       onClick={function(){onSelect(conv.id);}}
-      style={{position:"relative",display:"flex",alignItems:"flex-start",gap:10,padding:"9px 12px",borderRadius:8,cursor:"pointer",transition:"background 120ms",background:active?"rgba(255,255,255,0.12)":hover?"rgba(255,255,255,0.07)":"transparent",borderLeft:active?"2px solid rgba(255,255,255,0.5)":"2px solid transparent"}}
+      style={{position:"relative",display:"flex",alignItems:"flex-start",gap:10,padding:"9px 12px",borderRadius:4,cursor:"pointer",transition:"background 120ms",background:active?"rgba(15,40,71,0.07)":hover?"rgba(16,20,28,0.04)":"transparent",borderLeft:active?"2px solid #0F2847":"2px solid transparent"}}
     >
       <span style={{width:6,height:6,borderRadius:"50%",background:dot,flexShrink:0,marginTop:5}}/>
       <div style={{flex:1,minWidth:0}}>
-        <div style={{fontSize:"0.8rem",fontWeight:active?600:400,color:active?"#fff":"rgba(255,255,255,0.8)",lineHeight:1.4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{truncate(conv.title,28)}</div>
-        <div style={{fontSize:"0.68rem",color:"rgba(255,255,255,0.35)",marginTop:2}}>{relativeTime(conv.updated_at)}</div>
+        <div style={{fontSize:"0.8rem",fontWeight:active?600:400,color:active?"#0F2847":"#10141c",lineHeight:1.4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{truncate(conv.title,28)}</div>
+        <div style={{fontSize:"0.68rem",color:"#5f6673",marginTop:2}}>{relativeTime(conv.updated_at)}</div>
       </div>
       {hover && (
         <div style={{display:"flex",gap:2,flexShrink:0}} onClick={function(e){e.stopPropagation();}}>
           <Button size="icon" variant="ghost" onClick={function(){onPin(conv.id,!conv.pinned);}} title={conv.pinned?"Unpin":"Pin"}
-            style={{padding:4,width:"auto",height:"auto",color:conv.pinned?"#ffffff":"rgba(255,255,255,0.4)"}}><Pin size={10}/></Button>
+            style={{padding:4,width:"auto",height:"auto",color:conv.pinned?"#0F2847":"#8a909a"}}><Pin size={10}/></Button>
           <Button size="icon" variant="ghost" onClick={function(){onDelete(conv.id);}} title="Delete"
-            style={{padding:4,width:"auto",height:"auto",color:"rgba(255,255,255,0.35)"}}><Trash2 size={10}/></Button>
+            style={{padding:4,width:"auto",height:"auto",color:"#8a909a"}}><Trash2 size={10}/></Button>
         </div>
       )}
     </div>
@@ -815,44 +830,37 @@ function LeftPanel({ state, dispatch, onNewChat, onSelectConv, onPin, onArchive,
   var pinned = state.conversations.filter(function(c){return c.pinned&&!c.archived;});
   var recent = state.conversations.filter(function(c){return !c.pinned&&!c.archived;}).slice(0,24);
   return (
-    <div style={{display:"flex",flexDirection:"column",height:"100%",background:NAVY2,transition:"width 200ms",width:state.leftPanelOpen?264:0,overflow:"hidden",flexShrink:0}}>
+    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#fff",borderRight:state.leftPanelOpen?"1px solid rgba(16,20,28,0.10)":"none",transition:"width 200ms",width:state.leftPanelOpen?264:0,overflow:"hidden",flexShrink:0}}>
       <div style={{minWidth:264,flex:1,display:"flex",flexDirection:"column",height:"100%"}}>
         <div style={{padding:"18px 14px 12px",flexShrink:0}}>
-          <Button
-            onClick={onNewChat}
-            variant="ghost"
-            className="w-full"
-            style={{background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.15)",color:"#fff"}}
-            onMouseEnter={function(e){e.currentTarget.style.background="rgba(255,255,255,0.16)";}}
-            onMouseLeave={function(e){e.currentTarget.style.background="rgba(255,255,255,0.1)";}}
-          >
-            <Plus size={14}/>New Research Session
+          <Button onClick={onNewChat} variant="primary" className="w-full">
+            <Plus size={14}/>New research session
           </Button>
         </div>
         <div style={{flex:1,overflowY:"auto",padding:"0 10px 16px"}}>
           {pinned.length>0&&(
             <div style={{marginBottom:8}}>
-              <div style={{fontSize:"0.6rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",padding:"6px 4px 4px",marginBottom:2}}>Pinned</div>
+              <div style={{fontSize:"0.6rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#5f6673",fontFamily:"ui-monospace, SFMono-Regular, Menlo, monospace",padding:"6px 4px 4px",marginBottom:2}}>Pinned</div>
               {pinned.map(function(c){return <ConvItem key={c.id} conv={c} active={state.activeConvId===c.id} onSelect={onSelectConv} onPin={onPin} onArchive={onArchive} onDelete={onDelete}/>;}) }
             </div>
           )}
           {recent.length>0&&(
             <div>
-              <div style={{fontSize:"0.6rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",padding:"6px 4px 4px",marginBottom:2}}>Recent</div>
+              <div style={{fontSize:"0.6rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#5f6673",fontFamily:"ui-monospace, SFMono-Regular, Menlo, monospace",padding:"6px 4px 4px",marginBottom:2}}>Recent</div>
               {recent.map(function(c){return <ConvItem key={c.id} conv={c} active={state.activeConvId===c.id} onSelect={onSelectConv} onPin={onPin} onArchive={onArchive} onDelete={onDelete}/>;}) }
             </div>
           )}
           {state.conversations.length===0&&(
-            <EmptyState dark size="sm" icon={<MessageSquare />} title="No research sessions yet" />
+            <p style={{fontSize:13,color:"#5f6673",lineHeight:1.5,margin:0,padding:"4px 4px"}}>No research sessions yet. Each question you ask starts one.</p>
           )}
         </div>
-        <div style={{padding:"12px 14px",borderTop:"1px solid rgba(255,255,255,0.07)",flexShrink:0}}>
+        <div style={{padding:"12px 14px",borderTop:"1px solid rgba(16,20,28,0.08)",flexShrink:0}}>
           <Button
             variant="ghost"
             className="w-full !justify-start"
-            style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)"}}
-            onMouseEnter={function(e){e.currentTarget.style.color="rgba(255,255,255,0.7)";}}
-            onMouseLeave={function(e){e.currentTarget.style.color="rgba(255,255,255,0.4)";}}>
+            style={{background:"none",border:"none",color:"#5f6673"}}
+            onMouseEnter={function(e){e.currentTarget.style.color="#10141c";}}
+            onMouseLeave={function(e){e.currentTarget.style.color="#5f6673";}}>
             <Archive size={13}/>Archived sessions
           </Button>
         </div>
@@ -861,9 +869,9 @@ function LeftPanel({ state, dispatch, onNewChat, onSelectConv, onPin, onArchive,
   );
 }
 
-var WF_CREDITS = { lit:12, gap:8, design:10, meth:8, stats:10, jrnl:5, grant:15, peer:12, write:8, teach:6 };
 
 function WelcomeScreen({ user, context, conversations, insights, onStartWithAgent, onSelectConv }) {
+  var msgCost = useMessageCost();
   var firstName = (user && (user.first_name || (user.name && user.name.split(" ")[0]))) || "";
   var [hoveredWF, setHoveredWF] = useState(null);
   var [hoveredAgent, setHoveredAgent] = useState(null);
@@ -917,13 +925,13 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:36}}>
           <div style={{position:"relative",width:28,height:28}}>
             <div style={{position:"absolute",width:16,height:16,borderRadius:"50%",background:NAVY,top:0,left:0}}/>
-            <div style={{position:"absolute",width:11,height:11,borderRadius:"50%",background:ACCENT,top:9,left:9}}/>
+            <div style={{position:"absolute",width:11,height:11,borderRadius:"50%",background:"#7c97b8",top:9,left:9}}/>
           </div>
-          <span style={{fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#94a3b8"}}>Synaptiq AI Workspace</span>
+          <span style={{fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#6b717d"}}>Synaptiq AI Workspace</span>
         </div>
 
         {/* ── Greeting ──────────────────────────────────────────────────────── */}
-        <h1 style={{fontFamily:"'Newsreader Variable', Newsreader, Georgia, serif",fontSize:"clamp(1.8rem,4vw,2.5rem)",fontWeight:700,color:NAVY,lineHeight:1.15,marginBottom:10,letterSpacing:"-0.025em"}}>
+        <h1 className="pl-hero-title" style={{marginBottom:8}}>
           {getGreeting(firstName)}.
         </h1>
         <p style={{fontSize:"1rem",color:"#475569",marginBottom:briefItems.length?28:36,lineHeight:1.65,maxWidth:560,fontStyle:"italic"}}>
@@ -937,7 +945,7 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
               var Ic = item.Icon;
               return (
                 <div key={item.label} style={{display:"flex",alignItems:"center",gap:8,background:"#fff",border:"1px solid "+BORDER,borderRadius:10,padding:"7px 13px"}}>
-                  <Ic size={12} style={{color:"#94a3b8",flexShrink:0}}/>
+                  <Ic size={12} style={{color:"#6b717d",flexShrink:0}}/>
                   <span style={{fontSize:"0.73rem",color:"#64748b"}}>{item.label}</span>
                   <span style={{fontSize:"0.8rem",fontWeight:700,color:NAVY,fontFamily:"'Newsreader Variable', Newsreader, Georgia, serif",textTransform:"capitalize"}}>{item.value}</span>
                 </div>
@@ -948,12 +956,12 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
 
         {/* ── Quick Actions ──────────────────────────────────────────────────── */}
         <div style={{marginBottom:44}}>
-          <div style={{fontSize:"0.6rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#94a3b8",marginBottom:14}}>Quick Actions</div>
+          <div style={{fontSize:"0.6rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#6b717d",marginBottom:14}}>Quick Actions</div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(198px,1fr))",gap:10}}>
             {RESEARCH_WORKFLOWS.map(function(wf){
               var Icon = wf.icon;
               var isHover = hoveredWF===wf.id;
-              var cost = WF_CREDITS[wf.id] || 8;
+
               return (
                 <Card key={wf.id}
                   onMouseEnter={function(){setHoveredWF(wf.id);}}
@@ -967,7 +975,7 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
                   <div style={{fontSize:"0.85rem",fontWeight:600,color:"#0f172a",marginBottom:4,lineHeight:1.3}}>{wf.label}</div>
                   <div style={{fontSize:"0.74rem",color:"#64748b",lineHeight:1.5,flex:1}}>{wf.desc}</div>
                   <div style={{marginTop:11,display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%"}}>
-                    <span style={{fontSize:"0.6rem",fontWeight:700,color:isHover?NAVY:"#94a3b8",background:isHover?WARM:"#f1f5f9",border:"1px solid "+(isHover?BORDER:"transparent"),padding:"2px 7px",borderRadius: 8,transition:"all 160ms"}}>~{cost} cr</span>
+                    <span style={{fontSize:"0.68rem",fontWeight:600,color:isHover?NAVY:"#5f6673",background:isHover?WARM:"#f6f5f1",border:"1px solid "+(isHover?BORDER:"transparent"),padding:"2px 7px",borderRadius:4,transition:"all 160ms"}}>{msgCost!=null ? msgCost+" credits per message" : "Uses AI credits"}</span>
                     {isHover && <ArrowRight size={11} style={{color:NAVY}}/>}
                   </div>
                 </Card>
@@ -978,7 +986,7 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
 
         {/* ── AI Agents ──────────────────────────────────────────────────────── */}
         <div style={{marginBottom:44}}>
-          <div style={{fontSize:"0.6rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#94a3b8",marginBottom:13}}>AI Agents</div>
+          <div style={{fontSize:"0.6rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#6b717d",marginBottom:13}}>AI Agents</div>
           <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
             {AGENTS.map(function(a){
               var Icon = a.icon;
@@ -1003,7 +1011,7 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
           <div style={{display:"grid",gridTemplateColumns:recentSessions.length>0&&smartInsights.length>0?"1fr 1fr":"1fr",gap:20,marginBottom:40}}>
             {recentSessions.length > 0 && (
               <div>
-                <div style={{fontSize:"0.6rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#94a3b8",marginBottom:11}}>Recent Sessions</div>
+                <div style={{fontSize:"0.6rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#6b717d",marginBottom:11}}>Recent Sessions</div>
                 <div style={{display:"flex",flexDirection:"column",gap:6}}>
                   {recentSessions.map(function(c){
                     var dot = SIDEBAR_DOT[c.agent_type]||SIDEBAR_DOT.general;
@@ -1015,8 +1023,8 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
                         onMouseLeave={function(e){e.currentTarget.style.borderColor=BORDER;e.currentTarget.style.boxShadow="none";}}>
                         <span style={{width:6,height:6,borderRadius:"50%",background:dot,flexShrink:0}}/>
                         <span style={{flex:1,fontSize:"0.8rem",fontWeight:500,color:"#0f172a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{truncate(c.title,40)}</span>
-                        <span style={{fontSize:"0.67rem",color:"#94a3b8",flexShrink:0}}>{relativeTime(c.updated_at)}</span>
-                        <ArrowRight size={11} style={{color:"#94a3b8",flexShrink:0}}/>
+                        <span style={{fontSize:"0.67rem",color:"#6b717d",flexShrink:0}}>{relativeTime(c.updated_at)}</span>
+                        <ArrowRight size={11} style={{color:"#6b717d",flexShrink:0}}/>
                       </Card>
                     );
                   })}
@@ -1025,7 +1033,7 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
             )}
             {smartInsights.length > 0 && (
               <div>
-                <div style={{fontSize:"0.6rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#94a3b8",marginBottom:11}}>Smart Recommendations</div>
+                <div style={{fontSize:"0.6rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#6b717d",marginBottom:11}}>Smart Recommendations</div>
                 <div style={{display:"flex",flexDirection:"column",gap:6}}>
                   {smartInsights.map(function(ins,idx){return (
                     <div key={idx} style={{padding:"12px 13px",background:"#fff",border:"1px solid "+BORDER,borderRadius:10,borderLeft:"3px solid "+NAVY}}>
@@ -1043,7 +1051,7 @@ function WelcomeScreen({ user, context, conversations, insights, onStartWithAgen
         <div style={{display:"flex",alignItems:"center",gap:20,flexWrap:"wrap"}}>
           {[[Shield,"Private workspace"],[Check,"Encrypted conversations"],[User,"ORCID-connected"]].map(function(pair){
             var I=pair[0],label=pair[1];
-            return <div key={label} style={{display:"flex",alignItems:"center",gap:6,color:"#94a3b8",fontSize:"0.73rem"}}><I size={12}/>{label}</div>;
+            return <div key={label} style={{display:"flex",alignItems:"center",gap:6,color:"#6b717d",fontSize:"0.73rem"}}><I size={12}/>{label}</div>;
           })}
         </div>
 
@@ -1079,7 +1087,7 @@ function ConversationHeader({ conv, onPin, onArchive, onDelete, onTitleChange })
           onClick={startEdit}
           aria-label="Rename conversation"
           style={{
-            color:"#94a3b8",
+            color:"#6b717d",
             padding:2,
             flexShrink:0
           }}><Edit2 size={12}/></Button>
@@ -1093,7 +1101,7 @@ function ConversationHeader({ conv, onPin, onArchive, onDelete, onTitleChange })
           style={{
             padding:6,
             borderRadius:6,
-            color:conv.pinned?NAVY:"#94a3b8"
+            color:conv.pinned?NAVY:"#6b717d"
           }}><Pin size={14}/></Button>
         <Button
           size="icon"
@@ -1103,7 +1111,7 @@ function ConversationHeader({ conv, onPin, onArchive, onDelete, onTitleChange })
           style={{
             padding:6,
             borderRadius:6,
-            color:"#94a3b8"
+            color:"#6b717d"
           }}><Archive size={14}/></Button>
         <Button
           size="icon"
@@ -1113,7 +1121,7 @@ function ConversationHeader({ conv, onPin, onArchive, onDelete, onTitleChange })
           style={{
             padding:6,
             borderRadius:6,
-            color:"#94a3b8"
+            color:"#6b717d"
           }}><Trash2 size={14}/></Button>
       </div>
     </div>
@@ -1121,6 +1129,7 @@ function ConversationHeader({ conv, onPin, onArchive, onDelete, onTitleChange })
 }
 
 function InputArea({ state, dispatch, onSend }) {
+  var msgCost = useMessageCost();
   var textareaRef = useRef(null);
   var [agentOpen, setAgentOpen] = useState(false);
   var [phIdx, setPhIdx] = useState(0);
@@ -1195,18 +1204,18 @@ function InputArea({ state, dispatch, onSend }) {
                 disabled
                 title="Voice input coming soon"
                 style={{
-                  color:"#cbd5e1",
+                  color:"#8a909a",
                   padding:4
                 }}><Mic size={16}/></Button>
               <Button onClick={onSend} disabled={state.sending||!state.inputText.trim()} variant="primary" size="sm">
-                <Send size={13}/>{state.sending?"Analysing…":"Send"}
+                <Send size={13}/>{state.sending?"Analysing…":(msgCost!=null?"Send · "+msgCost+" credits":"Send")}
               </Button>
             </div>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:16,marginTop:10}}>
           {[["↵","Send"],["⇧↵","New line"],["⌘K","Focus"]].map(function(pair){return (
-            <span key={pair[0]} style={{fontSize:"0.68rem",color:"#94a3b8",display:"flex",alignItems:"center",gap:4}}>
+            <span key={pair[0]} style={{fontSize:"0.68rem",color:"#6b717d",display:"flex",alignItems:"center",gap:4}}>
               <kbd style={{fontFamily:"monospace",background:"#fff",border:"1px solid "+BORDER,borderRadius:4,padding:"1px 5px",fontSize:"0.65rem"}}>{pair[0]}</kbd>{pair[1]}
             </span>
           );})}
@@ -1251,8 +1260,8 @@ function RightPanel({ state, dispatch, onRefreshContext, onDeleteMemory, onClear
       <div style={{minWidth:280,flex:1,overflowY:"auto"}}>
         <div style={{padding:"16px 16px 4px"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-            <span style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#94a3b8"}}>Research Context</span>
-            <Button size="icon" variant="ghost" onClick={onRefreshContext} title="Refresh" style={{padding:4,width:"auto",height:"auto",color:"#94a3b8"}}
+            <span style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"#6b717d"}}>Research Context</span>
+            <Button size="icon" variant="ghost" onClick={onRefreshContext} title="Refresh" style={{padding:4,width:"auto",height:"auto",color:"#6b717d"}}
               onMouseEnter={function(e){e.currentTarget.style.color=NAVY;}} onMouseLeave={function(e){e.currentTarget.style.color="#94a3b8";}}>
               <RefreshCw size={12}/>
             </Button>
@@ -1272,7 +1281,7 @@ function RightPanel({ state, dispatch, onRefreshContext, onDeleteMemory, onClear
             <div style={{border:"1px solid "+BORDER,borderRadius:10,overflow:"hidden",marginBottom:12}}>
               <button onClick={function(){toggle("context");}} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",background:WARM,border:"none",cursor:"pointer"}}>
                 <span style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"#64748b"}}>Platform Data</span>
-                {secOpen.context ? <ChevronUp size={12} style={{color:"#94a3b8"}}/> : <ChevronDown size={12} style={{color:"#94a3b8"}}/>}
+                {secOpen.context ? <ChevronUp size={12} style={{color:"#6b717d"}}/> : <ChevronDown size={12} style={{color:"#6b717d"}}/>}
               </button>
               {secOpen.context && (
                 <div style={{padding:"10px 14px",display:"flex",flexDirection:"column",gap:8}}>
@@ -1280,7 +1289,7 @@ function RightPanel({ state, dispatch, onRefreshContext, onDeleteMemory, onClear
                     var label=row[0],val=row[1],Icon=row[2];
                     return (
                       <div key={label} style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                        <span style={{display:"flex",alignItems:"center",gap:6,fontSize:"0.78rem",color:"#64748b"}}><Icon size={12} style={{color:"#94a3b8"}}/>{label}</span>
+                        <span style={{display:"flex",alignItems:"center",gap:6,fontSize:"0.78rem",color:"#64748b"}}><Icon size={12} style={{color:"#6b717d"}}/>{label}</span>
                         <span style={{fontSize:"0.82rem",fontWeight:700,color:NAVY,textTransform:"capitalize"}}>{val}</span>
                       </div>
                     );
@@ -1299,7 +1308,7 @@ function RightPanel({ state, dispatch, onRefreshContext, onDeleteMemory, onClear
             <div style={{border:"1px solid "+BORDER,borderRadius:10,overflow:"hidden",marginBottom:12}}>
               <button onClick={function(){toggle("insights");}} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",background:WARM,border:"none",cursor:"pointer"}}>
                 <span style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"#64748b"}}>Insights</span>
-                {secOpen.insights ? <ChevronUp size={12} style={{color:"#94a3b8"}}/> : <ChevronDown size={12} style={{color:"#94a3b8"}}/>}
+                {secOpen.insights ? <ChevronUp size={12} style={{color:"#6b717d"}}/> : <ChevronDown size={12} style={{color:"#6b717d"}}/>}
               </button>
               {secOpen.insights && (
                 <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:8}}>
@@ -1317,12 +1326,12 @@ function RightPanel({ state, dispatch, onRefreshContext, onDeleteMemory, onClear
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",background:WARM}}>
               <button onClick={function(){toggle("memory");}} style={{display:"flex",alignItems:"center",gap:4,background:"none",border:"none",cursor:"pointer"}}>
                 <span style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"#64748b"}}>AI Memory</span>
-                {secOpen.memory ? <ChevronUp size={12} style={{color:"#94a3b8"}}/> : <ChevronDown size={12} style={{color:"#94a3b8"}}/>}
+                {secOpen.memory ? <ChevronUp size={12} style={{color:"#6b717d"}}/> : <ChevronDown size={12} style={{color:"#6b717d"}}/>}
               </button>
               <Button size="icon" variant="ghost"
                 onClick={function(){setShowMemoryForm(function(v){return !v;});setSecOpen(function(s){return Object.assign({},s,{memory:true});});}}
                 aria-label="Add memory"
-                style={{padding:3,width:"auto",height:"auto",color:"#94a3b8"}}
+                style={{padding:3,width:"auto",height:"auto",color:"#6b717d"}}
                 onMouseEnter={function(e){e.currentTarget.style.color=NAVY;}} onMouseLeave={function(e){e.currentTarget.style.color="#94a3b8";}}>
                 <Plus size={13}/>
               </Button>
@@ -1356,12 +1365,12 @@ function RightPanel({ state, dispatch, onRefreshContext, onDeleteMemory, onClear
                           onMouseEnter={function(e){var b=e.currentTarget.querySelector(".del-m");if(b)b.style.opacity="1";}}
                           onMouseLeave={function(e){var b=e.currentTarget.querySelector(".del-m");if(b)b.style.opacity="0";}}>
                           <div style={{flex:1,minWidth:0}}>
-                            <span style={{display:"inline-block",fontSize:"0.6rem",textTransform:"uppercase",fontWeight:700,color:"#94a3b8",letterSpacing:"0.1em",marginBottom:2}}>{m.memory_type}</span>
+                            <span style={{display:"inline-block",fontSize:"0.6rem",textTransform:"uppercase",fontWeight:700,color:"#6b717d",letterSpacing:"0.1em",marginBottom:2}}>{m.memory_type}</span>
                             <p style={{fontSize:"0.77rem",color:"#374151",lineHeight:1.45,margin:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={m.content}>{m.content}</p>
                           </div>
                           <Button size="icon" variant="ghost" className="del-m" onClick={function(){onDeleteMemory(m.id);}}
                             aria-label="Delete memory"
-                            style={{color:"#94a3b8",padding:2,width:"auto",height:"auto",flexShrink:0,opacity:0,transition:"opacity 120ms"}}><X size={11}/></Button>
+                            style={{color:"#6b717d",padding:2,width:"auto",height:"auto",flexShrink:0,opacity:0,transition:"opacity 120ms"}}><X size={11}/></Button>
                         </div>
                       );})}
                     </div>
@@ -1560,23 +1569,23 @@ export default function AIAssistant() {
   var hasConv = !!state.activeConvId;
 
   return (
-    <ResearchLayout navItems={AI_NAV_ITEMS}>
-    <div style={{margin:0,display:"flex",flexDirection:"column",background:WARM,overflow:"hidden",height:"calc(100vh - 120px)"}}>
+    <ResearchLayout noPad>
+    <div style={{margin:0,display:"flex",flexDirection:"column",background:WARM,overflow:"hidden",height:"100vh"}}>
       <header style={{flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 18px",height:52,background:"#fff",borderBottom:"1px solid "+BORDER,zIndex:10}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <Button size="icon" variant="ghost" onClick={function(){dispatch({type:"TOGGLE_LEFT"});}} aria-label={state.leftPanelOpen ? "Collapse sidebar" : "Expand sidebar"} style={{color:"#94a3b8"}}>
+          <Button size="icon" variant="ghost" onClick={function(){dispatch({type:"TOGGLE_LEFT"});}} aria-label={state.leftPanelOpen ? "Collapse sidebar" : "Expand sidebar"} style={{color:"#6b717d"}}>
             {state.leftPanelOpen ? <ChevronLeft size={16}/> : <ChevronRight size={16}/>}
           </Button>
           <div style={{display:"flex",alignItems:"center",gap:9}}>
             <div style={{position:"relative",width:24,height:24}}>
               <div style={{position:"absolute",width:14,height:14,borderRadius:"50%",background:NAVY,top:0,left:0}}/>
-              <div style={{position:"absolute",width:10,height:10,borderRadius:"50%",background:ACCENT,top:7,left:8}}/>
+              <div style={{position:"absolute",width:10,height:10,borderRadius:"50%",background:"#7c97b8",top:7,left:8}}/>
             </div>
             <span style={{fontSize:"0.9rem",fontWeight:700,color:NAVY,letterSpacing:"-0.01em"}}>Synaptiq AI</span>
           </div>
           {hasConv && activeConv && (
             <div style={{display:"flex",alignItems:"center",gap:6,marginLeft:8}}>
-              <span style={{color:"#CBD5E1",fontSize:"0.8rem"}}>/</span>
+              <span style={{color:"#8a909a",fontSize:"0.8rem"}}>/</span>
               <span style={{fontSize:"0.82rem",color:"#64748b",maxWidth:240,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{activeConv.title||"New session"}</span>
             </div>
           )}
@@ -1590,7 +1599,7 @@ export default function AIAssistant() {
           <Button onClick={handleNewChat} variant="primary" size="sm">
             <Plus size={13}/>New
           </Button>
-          <Button size="icon" variant="ghost" onClick={function(){dispatch({type:"TOGGLE_RIGHT"});}} aria-label={state.rightPanelOpen ? "Collapse insights panel" : "Expand insights panel"} style={{color:"#94a3b8"}}>
+          <Button size="icon" variant="ghost" onClick={function(){dispatch({type:"TOGGLE_RIGHT"});}} aria-label={state.rightPanelOpen ? "Collapse insights panel" : "Expand insights panel"} style={{color:"#6b717d"}}>
             {state.rightPanelOpen ? <ChevronRight size={16}/> : <ChevronLeft size={16}/>}
           </Button>
         </div>

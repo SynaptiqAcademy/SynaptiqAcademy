@@ -135,8 +135,8 @@ export default function ServiceBrowse() {
             {results.map(svc => (
               <Card key={svc.id} to={`/academic-marketplace/services/${svc.id}`} padding="lg">
                 <div className="flex items-center gap-2 mb-2.5">
-                  <TagIcon size={13} className="text-crimson-600" />
-                  <span className="text-xs text-crimson-600 font-semibold uppercase">
+                  <TagIcon size={13} className="text-navy-700" />
+                  <span className="text-xs text-navy-700 font-semibold uppercase">
                     {svc.category?.replace(/_/g, " ")}
                   </span>
                 </div>

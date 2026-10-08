@@ -9,6 +9,7 @@
  *  - Deadlines + Feed  → live data from /discover/feed
  */
 
+import { loadCreditCatalogue } from "@/components/billing/creditCatalogue";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { DashboardLayout } from "@/layouts";
@@ -263,7 +264,7 @@ function ContinueWorking({ pages }) {
     <section className="mb-6">
       <div className="flex items-center gap-2 mb-3">
         <Clock size={11} strokeWidth={1.5} className="text-slate-400" />
-        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8" }}>
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b717d" }}>
           Continue Working
         </span>
       </div>
@@ -295,11 +296,11 @@ function QuickActionsGrid({ actions }) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Zap size={11} strokeWidth={1.5} className="text-slate-400" />
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8" }}>
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b717d" }}>
             Quick Actions
           </span>
         </div>
-        <span style={{ fontSize: 10, color: "#CBD5E1" }}>sorted by your usage</span>
+        <span style={{ fontSize: 10, color: "#8a909a" }}>sorted by your usage</span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 7 }}>
         {actions.map((action) => {
@@ -399,58 +400,44 @@ function ModeSpotlight({ modeConfig, items }) {
 // ─── AI Entry Card ────────────────────────────────────────────────────────────
 
 function AIEntryCard() {
+  // Prices come from the server catalogue (the keys each tool is charged
+  // under); nothing is shown until they load rather than a guessed number.
   const AI_LINKS = [
-    { label: "Literature Review",     to: "/literature-review",  credit: 20 },
-    { label: "Manuscript Review",     to: "/manuscript-review",  credit: 20 },
-    { label: "Research Gap Finder",   to: "/research-gap-finder", credit: 10 },
-    { label: "Statistical Analysis",  to: "/statistical-review", credit: 25 },
-    { label: "Generate Abstract",     to: "/ai/abstract",        credit: 5  },
-    { label: "AI Rewriting",          to: "/ai/rewrite",         credit: 2  },
+    { label: "Literature review",     to: "/literature-review",   key: "ai_literature_review" },
+    { label: "Manuscript review",     to: "/manuscript-review",   key: "ai_manuscript_review" },
+    { label: "Research gap finder",   to: "/research-gap-finder", key: "ai_research_gap_finder" },
+    { label: "Statistical review",    to: "/statistical-review",  key: "ai_statistical_review" },
+    { label: "Abstract generator",    to: "/ai/abstract",         key: "ai_abstract_generator" },
+    { label: "AI rewriting",          to: "/ai/rewrite",          key: "ai_rewriting" },
   ];
+  const [costs, setCosts] = useState(null);
+  useEffect(() => {
+    loadCreditCatalogue().then((c) => setCosts({ ...(c?.operations || {}), ...(c?.actions || {}) })).catch(() => {});
+  }, []);
   return (
-    <div style={{ background: NAVY, overflow: "hidden" }}>
-      <div style={{ padding: "18px 18px 12px" }}>
-        <div className="flex items-center gap-2 mb-2">
-          <BrainCircuit size={12} strokeWidth={1.5} style={{ color: "rgba(255,255,255,0.45)" }} />
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>
-            Synaptiq AI
-          </span>
-        </div>
-        <h3 style={{ fontSize: 14, fontWeight: 700, color: "white", margin: "0 0 3px", letterSpacing: "-0.01em" }}>
-          Your research partner
+    <section className="border border-hairline bg-white rounded-card" aria-label="AI tools">
+      <div style={{ padding: "16px 16px 8px" }}>
+        <h3 className="sq-h3" style={{ display: "flex", alignItems: "center", gap: 6, margin: 0 }}>
+          <BrainCircuit size={13} strokeWidth={1.6} style={{ color: NAVY }} aria-hidden="true" /> AI tools
         </h3>
-        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.55, margin: 0 }}>
-          Powered by Claude. Review papers, synthesize literature, analyze citations.
+        <p style={{ fontSize: 12, color: "var(--sq-text-tertiary)", lineHeight: 1.5, margin: "4px 0 0" }}>
+          Each shows its credit cost before it runs.
         </p>
       </div>
-      <div style={{ padding: "2px 10px 10px" }}>
-        {AI_LINKS.map(({ label, to, credit }) => (
-          <Link
-            key={to}
-            to={to}
-            className="flex items-center justify-between py-1.5 px-2 text-[12px] no-underline transition-all duration-100"
-            style={{ color: "rgba(255,255,255,0.5)" }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "white"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
-          >
+      <div style={{ padding: "0 8px 8px" }}>
+        {AI_LINKS.map(({ label, to, key }) => (
+          <Link key={to} to={to}
+            className="flex items-center justify-between py-1.5 px-2 text-[12.5px] no-underline rounded-sm hover:bg-[color:var(--sq-surface-2)]"
+            style={{ color: "var(--sq-text-primary)" }}>
             <span>{label}</span>
-            <span style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.22)" }}>{credit} cr</span>
+            {costs?.[key] != null && <span style={{ fontSize: 11, color: "var(--sq-text-tertiary)" }}>{costs[key]} credits</span>}
           </Link>
         ))}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", marginTop: 6, paddingTop: 6 }}>
-          <Link
-            to="/ai"
-            className="flex items-center justify-between p-2 text-[12px] font-semibold text-white no-underline transition-all duration-150"
-            style={{ background: ACCENT }}
-            onMouseEnter={(e) => e.currentTarget.style.background = "#0a1c34"}
-            onMouseLeave={(e) => e.currentTarget.style.background = ACCENT}
-          >
-            Open Synaptiq AI
-            <ArrowRight size={12} strokeWidth={2} />
-          </Link>
-        </div>
+        <Link to="/ai" className="flex items-center justify-between mt-1 py-1.5 px-2 text-[12.5px] font-semibold no-underline" style={{ color: NAVY }}>
+          Open the AI Research Assistant <ArrowRight size={12} strokeWidth={2} />
+        </Link>
       </div>
-    </div>
+    </section>
   );
 }
 

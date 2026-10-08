@@ -65,29 +65,16 @@ export default function AiBriefing({ compact = false }) {
   }
 
   return (
-    <div
-      className="mb-6 border border-slate-200"
-      style={{ background: "white" }}
-    >
-      {/* Header */}
-      <div
-        className="flex items-start justify-between gap-4 px-5 py-4"
-        style={{ background: NAVY }}
-      >
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles size={11} strokeWidth={1.5} className="text-white/40" />
-            <span className="text-[9px] font-bold uppercase tracking-widest text-white/35">
-              AI Briefing
-            </span>
-          </div>
-          <h3 className="text-[15px] font-bold text-white m-0 leading-snug">
-            {greeting}
-          </h3>
+    <div className="mb-6 border border-hairline bg-white rounded-card overflow-hidden">
+      {/* Header — light, like every other panel; the greeting is already the page title */}
+      <div className="flex items-start justify-between gap-4 px-5 pt-4 pb-3">
+        <div className="flex items-center gap-2">
+          <Sparkles size={12} strokeWidth={1.6} style={{ color: NAVY }} aria-hidden="true" />
+          <h3 className="sq-h3" style={{ margin: 0 }}>Briefing</h3>
         </div>
         <button
           onClick={() => setHidden(true)}
-          className="text-white/30 hover:text-white/60 transition-colors p-0.5 shrink-0 mt-0.5"
+          className="text-[color:var(--sq-text-tertiary)] hover:text-[color:var(--sq-text-primary)] transition-colors p-0.5 shrink-0"
           aria-label="Dismiss briefing"
         >
           <X size={13} strokeWidth={1.5} />
@@ -136,7 +123,7 @@ export default function AiBriefing({ compact = false }) {
               to={top_recommendation.action.route}
               className="flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 shrink-0 transition-colors no-underline"
               style={{ background: NAVY, color: "white" }}
-              onMouseEnter={e => e.currentTarget.style.background = "#0a1d38"}
+              onMouseEnter={e => e.currentTarget.style.background = "#0a1c34"}
               onMouseLeave={e => e.currentTarget.style.background = NAVY}
             >
               {top_recommendation.action.label}

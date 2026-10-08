@@ -432,7 +432,6 @@ function MatchesTab({ requestId, data, loading, onRefresh }) {
             const name = match.user?.full_name || match.user?.name || match.name || "Reviewer";
             const institution = match.user?.institution || match.institution || "";
             const score = match.reviewer?.reviewer_score || match.reviewer_score || 0;
-            const matchScore = match.match_score || {};
             const isInvited = invitedSet.has(uid) || match.is_invited;
 
             return (
@@ -450,26 +449,7 @@ function MatchesTab({ requestId, data, loading, onRefresh }) {
                     </div>
                     <DivBar value={score} max={100} />
                   </div>
-                  {Object.keys(matchScore).length > 0 && (
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                      {[
-                        { key: "area_match", label: "Area Match", color: "bg-navy-500" },
-                        { key: "quality", label: "Quality", color: "bg-navy-500" },
-                        { key: "availability", label: "Availability", color: "bg-emerald-500" },
-                        { key: "diversity", label: "Diversity", color: "bg-amber-500" },
-                      ].map(({ key, label, color }) => (
-                        matchScore[key] != null && (
-                          <div key={key} className="space-y-0.5">
-                            <div className="flex justify-between text-xs text-slate-500">
-                              <span>{label}</span>
-                              <span className="font-medium">{(matchScore[key] * 100).toFixed(0)}%</span>
-                            </div>
-                            <DivBar value={matchScore[key] * 100} max={100} color={color} />
-                          </div>
-                        )
-                      ))}
-                    </div>
-                  )}
+                  {/* Suggestions are ranked by fit; per-dimension percentages are not shown. */}
                 </div>
                 <div className="flex-shrink-0 mt-1">
                   {isInvited ? (

@@ -433,7 +433,7 @@ function ReputationCenterSidebar({ badgeDist, levelDistribution, fraudAlerts, na
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Badge Distribution</div>
         </div>
         {topBadges.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No badge data yet.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No badge data yet.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {topBadges.map((b) => (
@@ -455,12 +455,12 @@ function ReputationCenterSidebar({ badgeDist, levelDistribution, fraudAlerts, na
           <div>
             <span className="font-serif" style={{ fontSize: 22, color: "#0f172a" }}>Lv {topLevel.level}</span>
             <span style={{ fontSize: 12, color: "#64748B", marginLeft: 8 }}>{topLevel.label}</span>
-            <p style={{ fontSize: 11.5, color: "#94A3B8", margin: "6px 0 0" }}>
+            <p style={{ fontSize: 11.5, color: "#6b717d", margin: "6px 0 0" }}>
               {(topLevel.count || 0).toLocaleString()} researchers at this level
             </p>
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No level data yet.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No level data yet.</p>
         )}
       </Card>
 

@@ -142,7 +142,7 @@ export default function AdminPromotions() {
             <option value={30}>30 days</option>
             <option value={90}>90 days</option>
           </FormSelect>
-          <Button variant="hero" size="sm" onClick={() => setShowCreate(true)}>
+          <Button variant="primary" size="sm" onClick={() => setShowCreate(true)}>
             <Plus size={12} />
             New Campaign
           </Button>

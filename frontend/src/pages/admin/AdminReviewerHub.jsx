@@ -99,12 +99,12 @@ function ReviewerHubSidebar({ stats }) {
         {certRate != null ? (
           <div>
             <span className="font-serif" style={{ fontSize: 26, color: "#0f172a" }}>{certRate}%</span>
-            <p style={{ fontSize: 11.5, color: "#94A3B8", margin: "6px 0 0" }}>
+            <p style={{ fontSize: 11.5, color: "#6b717d", margin: "6px 0 0" }}>
               {certified.toLocaleString()} of {total.toLocaleString()} reviewers certified
             </p>
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No reviewer data yet.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No reviewer data yet.</p>
         )}
       </Card>
 
@@ -114,7 +114,7 @@ function ReviewerHubSidebar({ stats }) {
           <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Top Review Areas</div>
         </div>
         {topAreas.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>No area data yet.</p>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>No area data yet.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {topAreas.map((a) => (

@@ -47,7 +47,7 @@ const TYPE_CONFIG = {
   "Systematic Review":           { icon: BookOpen,    color: "#0F2847", bg: "#eef2f8" },
   "Institutional Research Team": { icon: Building2,   color: "#64748B", bg: "#F8FAFC" },
   "Consulting Project":          { icon: Target,      color: "#0F2847", bg: "#eef2f8" },
-  "Custom Workspace":            { icon: Layers,      color: "#94A3B8", bg: "#F8FAFC" },
+  "Custom Workspace":            { icon: Layers,      color: "#6b717d", bg: "#F8FAFC" },
   "Book":                        { icon: BookMarked,  color: "#059669", bg: "#F0FDF4" },
   "Monograph":                   { icon: BookOpen,    color: "#065F46", bg: "#ECFDF5" },
   "Dissertation":                { icon: GraduationCap, color: "#2f5486", bg: "#eef2f8" },
@@ -179,7 +179,7 @@ export default function Workspaces() {
             <Users size={12} strokeWidth={1.5} />
             Find Collaborators
           </Button>
-          <Button data-testid={TID.workspaceCreateBtn} onClick={() => setShowNew((v) => !v)} variant="hero" size="sm">
+          <Button data-testid={TID.workspaceCreateBtn} onClick={() => setShowNew((v) => !v)} variant="primary" size="sm">
             <Plus size={13} strokeWidth={2} />
             New Workspace
           </Button>
@@ -218,7 +218,7 @@ export default function Workspaces() {
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {inv.workspace?.name || "Workspace"}
                   </div>
-                  <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 2, fontFamily: "monospace" }}>
+                  <div style={{ fontSize: 11, color: "#6b717d", marginTop: 2, fontFamily: "monospace" }}>
                     Role offered: <span style={{ color: "#374151", fontWeight: 600 }}>{inv.role}</span>
                   </div>
                 </div>
@@ -239,7 +239,7 @@ export default function Workspaces() {
       {/* ── CREATE FORM ──────────────────────────────────────────────────── */}
       {showNew && (
         <Card padding="xl" style={{ marginTop: 24 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94A3B8", marginBottom: 18 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b717d", marginBottom: 18 }}>
             New Research Workspace
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -410,7 +410,7 @@ function WorkspaceCard({ w, userId }) {
 
         {/* Institution */}
         {w.institution && (
-          <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#94A3B8", marginBottom: 8, fontFamily: "monospace" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6b717d", marginBottom: 8, fontFamily: "monospace" }}>
             <Building2 size={10} strokeWidth={1.5} />
             {w.institution}
           </div>
@@ -445,12 +445,12 @@ function WorkspaceCard({ w, userId }) {
         {/* Footer */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 12, borderTop: `1px solid ${BORDER}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#94A3B8" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6b717d" }}>
               <Users2 size={10} strokeWidth={1.5} />
               {memberCount} {memberCount === 1 ? "member" : "members"}
             </span>
             {projCount > 0 && (
-              <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#94A3B8" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6b717d" }}>
                 <FolderOpen size={10} strokeWidth={1.5} />
                 {projCount} {projCount === 1 ? "project" : "projects"}
               </span>
@@ -458,9 +458,9 @@ function WorkspaceCard({ w, userId }) {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             {w.updated_at && (
-              <span style={{ fontSize: 10, color: "#CBD5E1", fontFamily: "monospace" }}>{fmtDate(w.updated_at)}</span>
+              <span style={{ fontSize: 10, color: "#8a909a", fontFamily: "monospace" }}>{fmtDate(w.updated_at)}</span>
             )}
-            <ChevronRight size={12} strokeWidth={1.5} style={{ color: "#CBD5E1" }} />
+            <ChevronRight size={12} strokeWidth={1.5} style={{ color: "#8a909a" }} />
           </div>
         </div>
       </div>

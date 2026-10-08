@@ -125,7 +125,7 @@ export default function AIExecutiveAssistant() {
     <InstitutionLayout
       title="AI Executive Assistant"
       subtitle="Ask strategic questions about your institution. Powered by real institutional data."
-      sidebar={<AIExecutiveAssistantSidebar history={history} />}
+      sidebar={(history || []).length ? <AIExecutiveAssistantSidebar history={history} /> : undefined}
     >
       <div style={{ marginBottom: 16 }}>
         <NavTabs
@@ -226,12 +226,12 @@ function AIExecutiveAssistantSidebar({ history }) {
             {history.slice(0, 4).map((item, i) => (
               <div key={i}>
                 <div style={{ fontSize: 12.5, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.query}</div>
-                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>{new Date(item.created_at).toLocaleDateString()}</div>
+                <div style={{ fontSize: 11, color: "#6b717d", marginTop: 1 }}>{new Date(item.created_at).toLocaleDateString()}</div>
               </div>
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 12, color: "#94A3B8", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "#6b717d", margin: 0, lineHeight: 1.5 }}>
             Questions you ask the assistant will show up here.
           </p>
         )}

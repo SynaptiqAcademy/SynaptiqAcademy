@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Lightbulb, Star, RefreshCw, X, TrendingUp } from "lucide-react";
-import { Card, Grid, Button, H2, Caption, LoadingOverlay } from "@/components/ds";
+import { Card, Grid, Button, H2, Caption, LoadingOverlay, EmptyState } from "@/components/ds";
 import { ResearchLayout } from "@/layouts";
 import { fetchApi } from "@/lib/api";
 
@@ -57,6 +57,14 @@ export default function Recommendations() {
           <LoadingOverlay text="Generating recommendations..." />
         ) : (
           <>
+            {recs.length === 0 && trending.length === 0 && (
+              <EmptyState
+                icon={<Lightbulb />}
+                title="No service recommendations yet."
+                description="Recommendations come from your research areas and the services providers list. Add research areas to your Academic Passport, or browse services directly."
+                action={<Button as={Link} to="/academic-marketplace/services" size="sm" variant="secondary">Browse services</Button>}
+              />
+            )}
             {recs.length > 0 && (
               <div className="mb-10">
                 <Grid cols={3} gap="md">
@@ -67,7 +75,7 @@ export default function Recommendations() {
                         className="absolute top-3 right-3 bg-transparent border-none cursor-pointer text-slate-600 p-1">
                         <X size={14} />
                       </button>
-                      <div className="text-xs text-crimson-600 font-semibold uppercase mb-1.5">
+                      <div className="text-xs text-navy-700 font-semibold uppercase mb-1.5">
                         {r.category?.replace(/_/g, " ")}
                       </div>
                       <Link to={`/academic-marketplace/services/${r.service_id}`}
@@ -96,7 +104,7 @@ export default function Recommendations() {
                 <Grid cols={3} gap="sm">
                   {trending.map(svc => (
                     <Card key={svc.id} to={`/academic-marketplace/services/${svc.id}`} padding="md">
-                      <div className="text-xs text-crimson-600 font-semibold uppercase mb-1.5">
+                      <div className="text-xs text-navy-700 font-semibold uppercase mb-1.5">
                         {svc.category?.replace(/_/g, " ")}
                       </div>
                       <div className="text-sm font-bold text-navy-700 mb-1.5">{svc.title}</div>

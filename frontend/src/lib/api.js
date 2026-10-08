@@ -117,6 +117,16 @@ api.interceptors.response.use(
       } catch (_) {}
     }
 
+    // A page's primary record that doesn't exist (404) or isn't the user's
+    // to see (403): ContentFrame shows one standard "not available" state
+    // instead of a blank page. Only GETs; ContentFrame decides whether the
+    // URL is the page's own record (it must end with the route's id).
+    if ((status === 404 || status === 403) && (config?.method || "get").toLowerCase() === "get" && config?.url) {
+      try {
+        window.dispatchEvent(new CustomEvent("synaptiq:record-missing", { detail: { url: config.url, status } }));
+      } catch (_) {}
+    }
+
     const isAuthEndpoint =
       config?.url &&
       (config.url.includes("/auth/refresh") ||
