@@ -19,7 +19,7 @@ import uuid
 import concurrent.futures
 import pytest
 
-pytestmark = pytest.mark.performance
+pytestmark = [pytest.mark.performance, pytest.mark.usefixtures("registration_open")]
 
 # Latency SLOs (seconds).  Doubled in CI to avoid flaky failures.
 _CI = os.environ.get("CI", "").lower() in ("1", "true", "yes")

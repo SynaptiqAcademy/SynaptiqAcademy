@@ -162,6 +162,12 @@ def app_db():
         {"owner_id": str(ids["pub"]), "title": "TEAM-PROJECT", "visibility": "team", "created_at": "1"},
         {"owner_id": str(ids["pub"]), "title": "PUBLIC-PROJECT", "visibility": "public", "created_at": "2"},
     ])
+    # A module that ran earlier may have left the app's Motor client bound to
+    # its own (now closed) event loop and the DB circuit breaker open. Start
+    # this module's in-process app with a fresh client and a closed breaker.
+    import db as _app_db
+    _app_db.close_db()
+    _app_db.mark_db_up()
     with TestClient(server.app) as c:
         c.cookies.clear()
         yield c, tag, ids

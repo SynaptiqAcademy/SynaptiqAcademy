@@ -39,6 +39,24 @@ def _csrf_headers(client) -> dict:
     return {"X-CSRF-Token": token, "Cookie": all_cookies}
 
 
+@pytest.fixture(scope="module", autouse=True)
+def _registration_open():
+    """Registration is seeded closed until billing is live (seed.py), and other
+    tests may leave the flag closed. These tests exercise sign-up, so open it
+    in the test database for this module and restore the previous state."""
+    from pymongo import MongoClient
+    client = MongoClient(os.environ["MONGODB_URI"], serverSelectionTimeoutMS=3000)
+    flags = client[os.environ["MONGODB_DB_NAME"]].feature_flags
+    before = flags.find_one({"name": "public_registration"})
+    flags.update_one({"name": "public_registration"}, {"$set": {"enabled": True}}, upsert=True)
+    yield
+    if before is None:
+        flags.delete_one({"name": "public_registration"})
+    else:
+        flags.update_one({"name": "public_registration"}, {"$set": {"enabled": before.get("enabled", True)}})
+    client.close()
+
+
 # Use the session-scoped client from conftest.py — do NOT create a second
 # TestClient here.  Creating a second TestClient for the same app object
 # in the middle of a session causes motor's event loop to be re-bound to a
@@ -82,11 +100,33 @@ def test_register_creates_user(client, unique_email):
     assert "password_hash" not in data
 
 
-def test_register_duplicate_email(client, unique_email):
-    r = client.post("/api/auth/register", json={"accepted_terms": True, 
+def test_register_duplicate_email_does_not_reveal_or_duplicate_account(client, unique_email):
+    """AUTH-EMAIL-ENUM: registering an existing address returns the same shape
+    as a fresh sign-up (so callers cannot probe which emails have accounts),
+    creates no second account and does not change the existing one."""
+    from pymongo import MongoClient
+    users = MongoClient(os.environ["MONGODB_URI"])[os.environ["MONGODB_DB_NAME"]].users
+    before = users.find_one({"email": unique_email})
+    assert before is not None
+    r = client.post("/api/auth/register", json={"accepted_terms": True,
         "full_name": "Dup", "email": unique_email, "password": "TestPass1"
     })
-    assert r.status_code == 400
+    assert r.status_code == 200
+    body = r.json()
+    assert body["id"] is None and body["email"] == unique_email
+    assert users.count_documents({"email": unique_email}) == 1
+    after = users.find_one({"email": unique_email})
+    assert after["password_hash"] == before["password_hash"] and after["full_name"] == before["full_name"]
+
+
+def test_encryption_fails_closed_without_key_in_production(monkeypatch):
+    import services.encryption_service as enc_svc
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.delenv("ENCRYPTION_KEY", raising=False)
+    monkeypatch.setattr(enc_svc, "_key_cache", enc_svc._UNSET)
+    with pytest.raises(enc_svc.EncryptionUnavailable):
+        enc_svc.encrypt_field("orcid-access-token")
+    monkeypatch.setattr(enc_svc, "_key_cache", enc_svc._UNSET)
 
 
 def test_register_weak_password_rejected(client):

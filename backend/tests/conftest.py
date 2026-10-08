@@ -170,3 +170,24 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if item.fspath.basename in _LIVE_SERVER_FILES:
             item.add_marker(skip_mark)
+
+
+@pytest.fixture(scope="module")
+def registration_open():
+    """Open public sign-up in the test database for one module, then restore it.
+
+    seed.py creates the `public_registration` flag closed ("off until billing is
+    live"), so any test that registers users must opt in explicitly:
+        pytestmark = pytest.mark.usefixtures("registration_open")
+    """
+    from pymongo import MongoClient
+    client = MongoClient(os.environ["MONGODB_URI"], serverSelectionTimeoutMS=3000)
+    flags = client[os.environ["MONGODB_DB_NAME"]].feature_flags
+    before = flags.find_one({"name": "public_registration"})
+    flags.update_one({"name": "public_registration"}, {"$set": {"enabled": True}}, upsert=True)
+    yield
+    if before is None:
+        flags.delete_one({"name": "public_registration"})
+    else:
+        flags.update_one({"name": "public_registration"}, {"$set": {"enabled": before.get("enabled", True)}})
+    client.close()

@@ -12,7 +12,7 @@ import os
 import uuid
 import pytest
 
-pytestmark = pytest.mark.regression
+pytestmark = [pytest.mark.regression, pytest.mark.usefixtures("registration_open")]
 
 
 def unique_email(pfx: str = "reg") -> str:
@@ -129,15 +129,15 @@ class TestAuthRegressions:
             "Old refresh token must be revoked after password reset"
 
     def test_reg005_duplicate_email_rejected(self, client):
-        """Invariant: registering the same email twice returns 400, not 500."""
+        """Invariant: registering the same email twice never 500s and never reveals the account."""
         email = unique_email("dup")
         payload = {"full_name": "Dup", "email": email, "password": "DupPass1!", "accepted_terms": True}
         r1 = client.post("/api/auth/register", json=payload)
         assert r1.status_code == 200
         r2 = client.post("/api/auth/register", json=payload)
-        assert r2.status_code == 400
-        assert "password" not in r2.text.lower() or "hash" not in r2.text.lower(), \
-            "Password hash must not appear in error responses"
+        # Not 500, and indistinguishable from a fresh sign-up (AUTH-EMAIL-ENUM).
+        assert r2.status_code == 200 and r2.json()["id"] is None
+        assert "password_hash" not in r2.text.lower(), "Password hash must not appear in responses"
 
     def test_reg006_no_password_hash_in_responses(self, client):
         """

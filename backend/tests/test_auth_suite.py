@@ -69,13 +69,20 @@ async def test_register_success():
 
 
 @pytest.mark.asyncio
-async def test_register_duplicate_email_rejected():
+async def test_register_duplicate_email_is_indistinguishable_and_harmless():
+    """AUTH-EMAIL-ENUM: a second sign-up with an existing email answers like a
+    fresh sign-up (no account-existence signal) and cannot take the account
+    over: the original password still works, the new one does not."""
     async with httpx.AsyncClient(timeout=10) as c:
         email = _unique_email()
         await _register(c, email)
-        r = await c.post(f"{BASE}/api/auth/register", json={"accepted_terms": True, "full_name": "Dup", "email": email, "password": "TestPass1!"})
-        assert r.status_code == 400
-        assert "already" in r.json()["detail"].lower()
+        r = await c.post(f"{BASE}/api/auth/register", json={"accepted_terms": True, "full_name": "Dup", "email": email, "password": "Other99Pass!"})
+        assert r.status_code == 200
+        assert r.json()["id"] is None
+    async with httpx.AsyncClient(timeout=10) as c2:
+        await _login(c2, email, "TestPass1!")
+        bad = await c2.post(f"{BASE}/api/auth/login", json={"email": email, "password": "Other99Pass!"})
+        assert bad.status_code == 401
 
 
 @pytest.mark.asyncio
@@ -128,7 +135,7 @@ async def test_login_wrong_password():
 @pytest.mark.asyncio
 async def test_login_unknown_email():
     async with httpx.AsyncClient(timeout=10) as c:
-        r = await c.post(f"{BASE}/api/auth/login", json={"email": "nobody@nowhere.invalid", "password": "SomePass1!"})
+        r = await c.post(f"{BASE}/api/auth/login", json={"email": f"nobody-{uuid.uuid4().hex[:8]}@synaptiq-test.io", "password": "SomePass1!"})
         assert r.status_code == 401
 
 
@@ -254,7 +261,7 @@ async def test_resend_verification_anti_enumeration():
 async def test_forgot_password_anti_enumeration():
     """Forgot-password returns the same response for known and unknown emails."""
     async with httpx.AsyncClient(timeout=10) as c:
-        for email in (_unique_email(), "nobody@void.invalid"):
+        for email in (_unique_email(), f"nobody-{uuid.uuid4().hex[:8]}@synaptiq-test.io"):
             r = await c.post(f"{BASE}/api/auth/forgot-password", json={"email": email})
             assert r.status_code == 200
             assert r.json()["ok"] is True
@@ -306,12 +313,19 @@ async def test_reset_token_single_use():
 async def test_change_password_requires_current():
     async with httpx.AsyncClient(timeout=10) as c:
         email = _unique_email()
-        await _register(c, email)
-        r = await c.post(f"{BASE}/api/auth/change-password",
+        reg = await _register(c, email)
+        # State-changing calls need the CSRF token the API returns in the body.
+        csrf = reg.get("csrf_token") or (await c.get(f"{BASE}/api/auth/csrf-token")).json()["csrf_token"]
+        h = {"X-CSRF-Token": csrf}
+        no_csrf = await c.post(f"{BASE}/api/auth/change-password",
+                               json={"current_password": "TestPass1!", "new_password": "New99Pass!"})
+        assert no_csrf.status_code == 403
+
+        r = await c.post(f"{BASE}/api/auth/change-password", headers=h,
                          json={"current_password": "WrongOld1!", "new_password": "New99Pass!"})
         assert r.status_code == 400
 
-        r2 = await c.post(f"{BASE}/api/auth/change-password",
+        r2 = await c.post(f"{BASE}/api/auth/change-password", headers=h,
                           json={"current_password": "TestPass1!", "new_password": "New99Pass!"})
         assert r2.status_code == 200
 
@@ -320,12 +334,18 @@ async def test_change_password_requires_current():
 
 @pytest.mark.asyncio
 async def test_login_rate_limit():
-    """More than 5 login attempts in 60s triggers 429."""
-    async with httpx.AsyncClient(timeout=30) as c:
-        for _ in range(5):
-            await c.post(f"{BASE}/api/auth/login", json={"email": "flood@x.invalid", "password": "x"})
-        r = await c.post(f"{BASE}/api/auth/login", json={"email": "flood@x.invalid", "password": "x"})
-        assert r.status_code == 429, f"Expected 429, got {r.status_code}"
+    """More than 5 login attempts in 60s triggers 429 — and rotating a spoofed
+    X-Forwarded-For (or using a new connection, which may land on another
+    worker process) does not reset the count."""
+    email = f"flood-{uuid.uuid4().hex[:8]}@synaptiq-test.io"
+    statuses = []
+    for i in range(8):
+        async with httpx.AsyncClient(timeout=30) as c:   # new connection each time
+            r = await c.post(f"{BASE}/api/auth/login", json={"email": email, "password": "x"},
+                             headers={"X-Forwarded-For": f"198.51.100.{i}"})
+            statuses.append(r.status_code)
+    assert statuses[:5] == [401] * 5, statuses
+    assert statuses[5:] == [429] * 3, statuses
 
 
 # ─────────────────────────── 9. PROTECTED ENDPOINTS ──────────────────────────

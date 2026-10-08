@@ -586,6 +586,7 @@ def _signed_request(event: dict):
 def webhook_env(monkeypatch):
     monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", WH_SECRET)
     monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_dummy")
+    monkeypatch.setenv("STRIPE_REFETCH_SUBSCRIPTIONS", "0")   # no network in tests
     from routers import billing
     monkeypatch.setattr(billing, "get_plan_by_price_id",
                         lambda pid: {"price_pro": ("researcher", "monthly"),

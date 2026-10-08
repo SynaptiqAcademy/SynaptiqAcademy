@@ -13,7 +13,7 @@ import os
 import uuid
 import pytest
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("registration_open")]
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -81,6 +81,14 @@ def _ensure_logged_in(client, user: dict) -> None:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
+
+def _ok_or_plan_gate(r, ok=(200, 404)):
+    """Free accounts get the plan gate (402 upgrade_required) on paid areas."""
+    if r.status_code == 402:
+        assert r.json()["detail"]["code"] == "upgrade_required"
+        return
+    assert r.status_code in ok
+
 class TestAuthFlow:
     def test_register_login_me(self, client):
         """Full register → login → /me round-trip."""
@@ -136,13 +144,15 @@ class TestAuthFlow:
         assert lr.status_code == 200
 
     def test_duplicate_register_rejected(self, client):
-        """Second registration with same email must return 400."""
+        """A second registration with the same email creates nothing and answers
+        exactly like a fresh sign-up (AUTH-EMAIL-ENUM: no account-existence signal)."""
         email = unique_email("dup")
         payload = {"full_name": "Dup", "email": email, "password": "DupPass1!", "accepted_terms": True}
         r1 = client.post("/api/auth/register", json=payload)
-        assert r1.status_code == 200
+        assert r1.status_code == 200 and r1.json()["id"]
         r2 = client.post("/api/auth/register", json=payload)
-        assert r2.status_code == 400
+        assert r2.status_code == 200 and r2.json()["id"] is None
+        assert set(r2.json()) <= set(r1.json()) | {"email_send_mode", "verification_email_sent"}
 
     def test_weak_password_rejected(self, client):
         r = client.post("/api/auth/register", json={"accepted_terms": True, 
@@ -329,13 +339,13 @@ class TestBillingFlow:
 class TestAnalyticsFlow:
     def test_analytics_dashboard_authenticated(self, client, user):
         r = client.get("/api/analytics/dashboard", headers=_auth_headers(client))
-        assert r.status_code in (200, 404)
+        _ok_or_plan_gate(r)
         if r.status_code == 200:
             assert isinstance(r.json(), dict)
 
     def test_analytics_reachable(self, client):
         r = client.get("/api/analytics/dashboard", headers=_auth_headers(client))
-        assert r.status_code in (200, 401, 403, 404)
+        _ok_or_plan_gate(r, ok=(200, 401, 403, 404))
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -347,12 +357,12 @@ class TestCollaborationFlow:
     def test_list_collaborations_authenticated(self, client, user):
         _ensure_logged_in(client, user)
         r = client.get("/api/collaborations", headers=_auth_headers(client))
-        assert r.status_code in (200, 404)
+        _ok_or_plan_gate(r)
 
     def test_collaborations_reachable(self, client, user):
         _ensure_logged_in(client, user)
         r = client.get("/api/collaborations", headers=_auth_headers(client))
-        assert r.status_code in (200, 401, 403, 404)
+        _ok_or_plan_gate(r, ok=(200, 401, 403, 404))
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
