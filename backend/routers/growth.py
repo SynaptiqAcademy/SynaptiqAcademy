@@ -1,5 +1,6 @@
 """Growth router — referrals + rewards + session telemetry endpoints (user-facing)."""
 from fastapi import APIRouter, Depends, Request
+from services.client_ip import client_ip
 
 from auth_utils import get_current_user
 from db import get_db
@@ -53,7 +54,7 @@ async def session_event(payload: dict, request: Request, user: dict = Depends(ge
         "feature": payload.get("feature"),
         "duration_minutes": float(payload.get("duration_minutes", 0) or 0),
         "metadata": payload.get("metadata", {}),
-        "ip": (request.headers.get("x-forwarded-for") or "").split(",")[0].strip(),
+        "ip": client_ip(request),
         "user_agent": request.headers.get("user-agent", "")[:200],
         "created_at": datetime.now(timezone.utc).isoformat(),
     }

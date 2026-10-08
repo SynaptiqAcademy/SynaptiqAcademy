@@ -27,7 +27,10 @@ Endpoints:
   PATCH  /api/comments/{comment_id}
   DELETE /api/comments/{comment_id}
 """
-from __future__ import annotations
+# No `from __future__ import annotations` here: slowapi's @limiter.limit wraps
+# the endpoint, and FastAPI then resolves string annotations in the wrapper's
+# module, so the request body model became an unresolvable query parameter
+# (POST /api/comments rejected every body; /openapi.json returned 500).
 
 import logging
 from datetime import datetime, timezone

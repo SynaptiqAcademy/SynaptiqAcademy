@@ -111,6 +111,51 @@ def verify_password(plain: str, hashed: str) -> bool:
         return False
 
 
+# bcrypt is deliberately slow (~0.3 s). Called directly inside an async
+# handler it stalls every request on that worker, so request handlers use
+# these wrappers. They run on a small dedicated thread pool rather than the
+# default executor: Motor runs its blocking MongoDB calls on the default
+# executor, and password checks queued behind long database calls would wait.
+_DUMMY_HASH: str | None = None
+_HASH_POOL = None
+
+
+def _hash_pool():
+    global _HASH_POOL
+    if _HASH_POOL is None:
+        from concurrent.futures import ThreadPoolExecutor
+        n = int(os.environ.get("PASSWORD_HASH_THREADS", "0") or 0) or min(4, (os.cpu_count() or 2))
+        _HASH_POOL = ThreadPoolExecutor(max_workers=n, thread_name_prefix="pwhash")
+    return _HASH_POOL
+
+
+async def run_password_work(fn, *args):
+    """Run CPU-bound password/secret hashing off the event loop."""
+    import asyncio
+    return await asyncio.get_running_loop().run_in_executor(_hash_pool(), fn, *args)
+
+
+def _dummy_hash() -> str:
+    global _DUMMY_HASH
+    if _DUMMY_HASH is None:
+        _DUMMY_HASH = hash_password(secrets.token_hex(16))
+    return _DUMMY_HASH
+
+
+async def hash_password_async(password: str) -> str:
+    return await run_password_work(hash_password, password)
+
+
+async def verify_password_async(plain: str, hashed: str | None) -> bool:
+    """Constant-work check: when there is no stored hash (unknown email) a
+    dummy hash is still verified, so response time does not reveal whether an
+    account exists."""
+    if not hashed:
+        await run_password_work(verify_password, plain, _dummy_hash())
+        return False
+    return await run_password_work(verify_password, plain, hashed)
+
+
 # ─────────────────── Token creation ──────────────────────────────────────────
 
 def create_access_token(user_id: str, email: str) -> str:
@@ -143,10 +188,13 @@ def create_refresh_token(user_id: str) -> tuple[str, str]:
 # ─────────────────── Cookies ─────────────────────────────────────────────────
 
 def _cookie_flags() -> dict:
-    secure = os.environ.get("COOKIE_SECURE", "0") == "1"
-    samesite = os.environ.get("COOKIE_SAMESITE", "lax").lower()
+    secure = os.environ.get("COOKIE_SECURE", "0").strip().lower() in ("1", "true", "yes", "on")
+    samesite = os.environ.get("COOKIE_SAMESITE", "lax").strip().lower()
     if samesite not in ("lax", "strict", "none"):
         samesite = "lax"
+    if samesite == "none":
+        # Browsers drop SameSite=None cookies that are not Secure.
+        secure = True
     return {"secure": secure, "samesite": samesite}
 
 

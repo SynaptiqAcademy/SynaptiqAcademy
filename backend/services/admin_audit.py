@@ -82,7 +82,7 @@ async def write_security_event(
 
 
 def request_meta(request) -> dict:
-    xff = request.headers.get("x-forwarded-for", "")
-    ip = xff.split(",")[0].strip() if xff else (request.client.host if request.client else None)
+    from services.client_ip import client_ip
+    ip = client_ip(request) or None
     ua = request.headers.get("user-agent", "")
     return {"ip": ip, "user_agent": ua}

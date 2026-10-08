@@ -148,15 +148,8 @@ _IP_CACHE_TTL: float = 60.0
 
 
 def _extract_client_ip(request: Request) -> str:
-    forwarded = request.headers.get("X-Forwarded-For", "")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    real_ip = request.headers.get("X-Real-IP", "")
-    if real_ip:
-        return real_ip.strip()
-    if request.client:
-        return request.client.host
-    return ""
+    from services.client_ip import client_ip
+    return client_ip(request)
 
 
 async def _get_blocked_ips() -> set:
@@ -192,8 +185,21 @@ async def _get_blocked_ips() -> set:
     return _blocked_ip_cache
 
 
+_API_DOC_PATHS = ("/docs", "/redoc", "/openapi.json", "/docs/oauth2-redirect")
+
+
+def _api_docs_public() -> bool:
+    """The interactive API docs publish the full route map. They are served
+    only in development and tests unless API_DOCS_PUBLIC=1 is set."""
+    if os.environ.get("API_DOCS_PUBLIC", "") == "1":
+        return True
+    return os.environ.get("APP_ENV", "development").lower() in ("development", "dev", "local", "test")
+
+
 class IPBlockMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        if request.url.path in _API_DOC_PATHS and not _api_docs_public():
+            return JSONResponse({"detail": "Not Found"}, status_code=404)
         ip = _extract_client_ip(request)
         if ip:
             blocked = await _get_blocked_ips()

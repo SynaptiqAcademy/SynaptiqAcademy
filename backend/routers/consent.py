@@ -55,9 +55,8 @@ def _hash_ip(ip: str) -> str:
 
 
 def _client_ip(req: Request) -> str:
-    xff = req.headers.get("x-forwarded-for", "")
-    if xff: return xff.split(",")[0].strip()
-    return req.client.host if req.client else ""
+    from services.client_ip import client_ip
+    return client_ip(req)
 
 
 @router.post("")

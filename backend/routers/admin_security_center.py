@@ -70,6 +70,17 @@ async def security_events(
 
 
 # ---------------------------------------------------------------------------
+# GET /api/admin/security/client-ip
+# Shows which client address the backend resolved for this request and the
+# forwarding headers that arrived. Used after a deploy to confirm that a
+# client-supplied X-Forwarded-For / X-Real-IP cannot change the resolved
+# address (see services/client_ip.py).
+@router.get("/security/client-ip", dependencies=[Depends(require_super_admin)])
+async def client_ip_check(request: Request):
+    from services.client_ip import describe
+    return describe(request)
+
+
 # GET /api/admin/security/failed-logins
 # ---------------------------------------------------------------------------
 

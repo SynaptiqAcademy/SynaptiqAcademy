@@ -44,8 +44,8 @@ logger = logging.getLogger("synaptiq.device_service")
 
 def build_fingerprint(request: Request) -> str:
     """Deterministic fingerprint: hash of IP + User-Agent + Accept-Language."""
-    xff = request.headers.get("x-forwarded-for", "")
-    ip  = xff.split(",")[0].strip() if xff else (request.client.host if request.client else "unknown")
+    from services.client_ip import client_ip
+    ip  = client_ip(request) or "unknown"
     ua  = request.headers.get("user-agent", "")
     al  = request.headers.get("accept-language", "")
     raw = f"{ip}|{ua}|{al}"
@@ -74,8 +74,8 @@ def _parse_os(ua: str) -> str:
 
 
 def _get_ip(request: Request) -> str:
-    xff = request.headers.get("x-forwarded-for", "")
-    return xff.split(",")[0].strip() if xff else (request.client.host if request.client else "unknown")
+    from services.client_ip import client_ip
+    return client_ip(request) or "unknown"
 
 
 # ─────────────────────────────────────────────────────────────────────────────

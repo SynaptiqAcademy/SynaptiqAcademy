@@ -33,11 +33,11 @@ logger = logging.getLogger("synaptiq.rate_limit")
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _client_ip(request: Request) -> str:
-    """Honour proxy chain (Kubernetes ingress sets X-Forwarded-For)."""
-    xff = request.headers.get("x-forwarded-for", "")
-    if xff:
-        return xff.split(",")[0].strip()
-    return get_remote_address(request)
+    """Rate-limit key: the client address from trusted proxy headers only
+    (services/client_ip.py). Never the leftmost X-Forwarded-For entry, which
+    the client controls."""
+    from services.client_ip import client_ip
+    return client_ip(request) or get_remote_address(request)
 
 
 def _is_test() -> bool:
@@ -118,18 +118,70 @@ def _resolve_redis_url(raw: str) -> str | None:
         return None
 
 
+def _redact(url: str) -> str:
+    """Connection string without credentials, safe for logs."""
+    try:
+        p = urlparse(url)
+        host = p.hostname or ""
+        port = f":{p.port}" if p.port else ""
+        return f"{p.scheme}://{host}{port}"
+    except Exception:
+        return "<unparseable>"
+
+
 def _storage_uri() -> str | None:
-    """Return the resolved Redis URL for SlowAPI, or None for MemoryStorage."""
+    """The resolved Redis URL, or None when Redis is not usable."""
     raw = os.environ.get("REDIS_URL", "").strip()
-    if not raw:
-        logger.info("Rate limiter: REDIS_URL not set — using in-memory storage")
-        return None
-    resolved = _resolve_redis_url(raw)
-    if resolved:
-        logger.info("Rate limiter: Redis backend ready (%s)", resolved)
-    else:
-        logger.info("Rate limiter: using in-memory storage (Redis unavailable)")
-    return resolved
+    return _resolve_redis_url(raw) if raw else None
+
+
+def _mongo_uri() -> str:
+    return (os.environ.get("MONGODB_URI", "").strip()
+            or os.environ.get("MONGO_URL", "").strip())
+
+
+def _storage_config() -> tuple[str | None, dict]:
+    """(storage_uri, storage_options) for SlowAPI.
+
+    Limits must be shared by every worker process and replica, otherwise each
+    process enforces its own copy (2 workers = twice the allowance) and a
+    restart resets them. Order:
+      1. Redis, when REDIS_URL is set and resolvable.
+      2. MongoDB (the application database, in dedicated rate_limit_*
+         collections with TTL indexes), when no Redis is configured.
+      3. Per-process memory — tests, or RATE_LIMIT_STORAGE=memory.
+    """
+    choice = os.environ.get("RATE_LIMIT_STORAGE", "auto").strip().lower()
+    if choice == "memory" or _is_test():
+        logger.info("Rate limiter: in-memory storage (per process)")
+        return None, {}
+
+    raw = os.environ.get("REDIS_URL", "").strip()
+    if raw and choice in ("auto", "redis"):
+        resolved = _storage_uri()
+        if resolved:
+            logger.info("Rate limiter: Redis backend (%s)", _redact(resolved))
+            return resolved, {}
+
+    mongo = _mongo_uri()
+    if mongo and choice in ("auto", "mongodb"):
+        db_name = (os.environ.get("MONGODB_DB_NAME", "").strip()
+                   or os.environ.get("DB_NAME", "").strip() or "synaptiq")
+        logger.info("Rate limiter: shared MongoDB backend (%s, db=%s)", _redact(mongo), db_name)
+        return mongo, {
+            "database_name": db_name,
+            "counter_collection_name": "rate_limit_counters",
+            "window_collection_name": "rate_limit_windows",
+            "serverSelectionTimeoutMS": 3000,
+            "connectTimeoutMS": 3000,
+            "socketTimeoutMS": 3000,
+        }
+
+    logger.warning("Rate limiter: no shared storage configured — limits are per process")
+    return None, {}
+
+
+_STORAGE_URI, _STORAGE_OPTIONS = _storage_config()
 
 
 # ── Limiter ────────────────────────────────────────────────────────────────────
@@ -137,7 +189,8 @@ def _storage_uri() -> str | None:
 limiter = Limiter(
     key_func=_client_ip,
     default_limits=[],
-    storage_uri=_storage_uri(),
+    storage_uri=_STORAGE_URI,
+    storage_options=_STORAGE_OPTIONS,
     enabled=not _is_test(),
     # When Redis becomes unreachable at runtime, SlowAPI automatically switches
     # to _fallback_storage (MemoryStorage) and sets _storage_dead=True.

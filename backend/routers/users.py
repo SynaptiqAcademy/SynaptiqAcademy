@@ -568,7 +568,7 @@ async def delete_my_account(payload: DeleteAccountIn, user: dict = Depends(get_c
     last few minutes. What is deleted, anonymised, handed over or retained is
     defined in services/account_lifecycle.py.
     """
-    from auth_utils import verify_password
+    from auth_utils import verify_password_async
     from services.account_lifecycle import DeletionBlocked, delete_account, preflight
 
     if (payload.confirm or "").strip() != "DELETE":
@@ -578,7 +578,7 @@ async def delete_my_account(payload: DeleteAccountIn, user: dict = Depends(get_c
     db = DBProxy(db, SecurityContext.from_user(user))
     full = await db.users.find_one({"_id": ObjectId(user["id"])}, {"password_hash": 1, "last_successful_login": 1}) or {}
     if full.get("password_hash"):
-        if not payload.password or not verify_password(payload.password, full["password_hash"]):
+        if not payload.password or not await verify_password_async(payload.password, full.get("password_hash")):
             raise HTTPException(status_code=403, detail="That password isn't right.")
     else:
         last = full.get("last_successful_login")

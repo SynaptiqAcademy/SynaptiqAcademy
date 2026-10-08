@@ -46,11 +46,29 @@ def _get_key() -> bytes | None:
         return None
 
 
+class EncryptionUnavailable(RuntimeError):
+    """Raised instead of silently storing a secret in plaintext."""
+
+
+def _encryption_required() -> bool:
+    return (os.environ.get("APP_ENV", "").lower() in ("prod", "production")
+            or os.environ.get("ENCRYPTION_REQUIRED", "") == "1")
+
+
 def encrypt_field(plaintext: str) -> dict:
-    """Encrypt a string. Returns an encrypted envelope dict, or a plaintext fallback."""
+    """Encrypt a string into an envelope dict.
+
+    Fails closed: when encryption is required (production, or a key is
+    configured) and cannot be performed, raises EncryptionUnavailable rather
+    than storing the secret in plaintext. Plaintext envelopes are only
+    produced in development without an ENCRYPTION_KEY."""
+    if not plaintext:
+        return {"encrypted": False, "value": ""}
     key = _get_key()
-    if not key or not plaintext:
-        return {"encrypted": False, "value": plaintext or ""}
+    if not key:
+        if _encryption_required() or os.environ.get("ENCRYPTION_KEY", "").strip():
+            raise EncryptionUnavailable("ENCRYPTION_KEY missing or invalid — refusing to store plaintext")
+        return {"encrypted": False, "value": plaintext}
     try:
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
         nonce = os.urandom(12)
@@ -62,8 +80,8 @@ def encrypt_field(plaintext: str) -> dict:
             "nonce": base64.b64encode(nonce).decode(),
         }
     except Exception as e:
-        logger.error("Encryption failed (storing plaintext as fallback): %s", e)
-        return {"encrypted": False, "value": plaintext}
+        logger.error("Encryption failed — refusing to store plaintext: %s", type(e).__name__)
+        raise EncryptionUnavailable("field encryption failed") from e
 
 
 def decrypt_field(data: Union[dict, str, None]) -> str:

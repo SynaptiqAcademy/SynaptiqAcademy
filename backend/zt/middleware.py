@@ -157,11 +157,8 @@ class ZeroTrustMiddleware(BaseHTTPMiddleware):
         return ANONYMOUS_IDENTITY
 
     def _get_ip(self, request: Request) -> str:
-        forwarded = request.headers.get("x-forwarded-for", "")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
-        client = request.client
-        return client.host if client else "unknown"
+        from services.client_ip import client_ip
+        return client_ip(request) or "unknown"
 
     async def _track(self, identity: IdentityContext, request: Request) -> None:
         try:

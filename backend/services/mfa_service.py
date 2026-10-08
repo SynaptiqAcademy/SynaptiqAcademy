@@ -27,6 +27,8 @@ from typing import Optional
 import bcrypt
 import pyotp
 import qrcode
+
+from auth_utils import run_password_work
 import qrcode.image.svg
 
 from db import get_db
@@ -161,7 +163,7 @@ async def complete_enrollment(user_id: str, code: str) -> tuple[bool, list[str]]
     if not verify_totp(cfg["secret"], code):
         return False, []
 
-    plaintext, hashes = generate_recovery_codes()
+    plaintext, hashes = await run_password_work(generate_recovery_codes)
     now = datetime.now(timezone.utc).isoformat()
     await db.mfa_configs.update_one(
         {"user_id": user_id},
@@ -200,7 +202,7 @@ async def verify_mfa_code(user_id: str, code: str) -> tuple[bool, str]:
         return True, "totp"
 
     # Try recovery codes
-    ok, remaining = verify_and_consume_recovery_code(cfg.get("recovery_codes", []), code)
+    ok, remaining = await run_password_work(verify_and_consume_recovery_code, cfg.get("recovery_codes", []), code)
     if ok:
         upd: dict = {
             "recovery_codes": remaining,
@@ -234,7 +236,7 @@ async def regenerate_recovery_codes(user_id: str) -> tuple[bool, list[str]]:
     cfg = await db.mfa_configs.find_one({"user_id": user_id})
     if not cfg or not cfg.get("enabled"):
         return False, []
-    plaintext, hashes = generate_recovery_codes()
+    plaintext, hashes = await run_password_work(generate_recovery_codes)
     await db.mfa_configs.update_one(
         {"user_id": user_id},
         {"$set": {"recovery_codes": hashes, "codes_regenerated_at": datetime.now(timezone.utc).isoformat()}},

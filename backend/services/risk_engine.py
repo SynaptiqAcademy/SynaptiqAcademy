@@ -61,14 +61,27 @@ def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 # Geolocation
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _geolocation_url() -> str:
+    """External IP geolocation sends the user's IP address to a third party.
+    It is OFF unless LOGIN_GEOLOCATION_URL is set to an HTTPS endpoint (with
+    `{ip}` placeholder) of a provider listed in docs/privacy/processors-and-transfers.md.
+    The former default (plain-HTTP free tier of ip-api.com, non-commercial use
+    only, not disclosed as a processor) is no longer used."""
+    url = os.environ.get("LOGIN_GEOLOCATION_URL", "").strip()
+    return url if url.startswith("https://") and "{ip}" in url else ""
+
+
 async def geolocate(ip: str) -> dict:
     """Returns {country, city, lat, lon, proxy, hosting, query} or empty dict."""
     if not ip or ip in ("127.0.0.1", "::1", "localhost", "unknown"):
         return {}
+    url = _geolocation_url()
+    if not url:
+        return {}
     try:
         async with httpx.AsyncClient(timeout=_GEO_TIMEOUT) as client:
             r = await client.get(
-                f"http://ip-api.com/json/{ip}",
+                url.format(ip=ip),
                 params={"fields": "country,countryCode,city,lat,lon,proxy,hosting,query,status"},
             )
             data = r.json()

@@ -10,7 +10,8 @@ from fastapi import APIRouter, HTTPException, Request, Response, Depends
 import jwt
 
 from auth_utils import (
-    hash_password, verify_password, create_access_token, create_refresh_token,
+    hash_password, verify_password, hash_password_async, verify_password_async,
+    create_access_token, create_refresh_token,
     set_auth_cookies, clear_auth_cookies, serialize_user, get_current_user,
     get_optional_user, JWT_ALGORITHM, set_csrf_cookie,
 )
@@ -315,7 +316,7 @@ async def register(request: Request, payload: RegisterIn, response: Response):
     from legal_versions import TERMS_VERSION, PRIVACY_VERSION
     user_doc = {
         "email": email,
-        "password_hash": hash_password(payload.password),
+        "password_hash": await hash_password_async(payload.password),
         "terms_version": TERMS_VERSION,
         "terms_accepted_at": _now(),
         "privacy_version_acknowledged": PRIVACY_VERSION,
@@ -459,7 +460,8 @@ async def login(request: Request, payload: LoginIn, response: Response):
     if user:
         await _check_lockout(user)
 
-    if not user or not verify_password(payload.password, user.get("password_hash") or ""):
+    password_ok = await verify_password_async(payload.password, (user or {}).get("password_hash"))
+    if not user or not password_ok:
         if user:
             await _record_failed_login(db, str(user["_id"]), meta["ip"])
         await _sec_event("login_failed", ip=meta["ip"], user_agent=meta["user_agent"], extra={"email": email})
@@ -496,11 +498,31 @@ async def login(request: Request, payload: LoginIn, response: Response):
     _, _, csrf_token = await _issue_tokens_and_cookies(response, uid, email, request=request, remember=payload.remember)
     await _audit("auth.login", actor_id=uid, actor_email=email, ip=meta["ip"], user_agent=meta["user_agent"])
 
-    # Run risk assessment asynchronously (non-blocking)
+    # Risk assessment runs after the response: sign-in never waits for it
+    # (it may call an external geolocation service; see services/risk_engine.py).
+    from services.device_service import build_fingerprint
+    _spawn_background(_assess_login_risk(user, uid, email, meta, build_fingerprint(request)))
+
+    out = serialize_user(user)
+    out["csrf_token"] = csrf_token
+    return out
+
+
+_background_tasks: set = set()
+
+
+def _spawn_background(coro) -> None:
+    """Fire-and-forget with a strong reference so the task is not collected."""
+    import asyncio
+    task = asyncio.create_task(coro)
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
+
+
+async def _assess_login_risk(user: dict, uid: str, email: str, meta: dict, fp: str) -> None:
     try:
-        from services.device_service import build_fingerprint, is_trusted_device
+        from services.device_service import is_trusted_device
         from services.risk_engine import assess_login_risk, geolocate, update_user_geo_state
-        fp  = build_fingerprint(request)
         geo = await geolocate(meta["ip"])
         trusted = await is_trusted_device(uid, fp)
         risk = await assess_login_risk(user, meta["ip"], trusted, geo)
@@ -513,11 +535,7 @@ async def login(request: Request, payload: LoginIn, response: Response):
             )
         await update_user_geo_state(uid, geo)
     except Exception:
-        pass
-
-    out = serialize_user(user)
-    out["csrf_token"] = csrf_token
-    return out
+        logger.debug("login risk assessment failed", exc_info=True)
 
 
 @router.post("/mfa-verify")
@@ -866,7 +884,7 @@ async def reset_password(request: Request, payload: ResetPasswordIn):
 
     await db.users.update_one(
         {"_id": ObjectId(user_id)},
-        {"$set": {"password_hash": hash_password(payload.new_password)}},
+        {"$set": {"password_hash": await hash_password_async(payload.new_password)}},
     )
     if record:
         await db.password_resets.update_one(
@@ -892,12 +910,12 @@ async def change_password(payload: ChangePasswordIn, request: Request, user: dic
     db = DBProxy(db, SecurityContext.from_user(user))
 
     full_user = await db.users.find_one({"_id": ObjectId(user["id"])})
-    if not full_user or not verify_password(payload.current_password, full_user.get("password_hash") or ""):
+    if not full_user or not await verify_password_async(payload.current_password, full_user.get("password_hash")):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
     _validate_password(payload.new_password)
     await db.users.update_one(
         {"_id": ObjectId(user["id"])},
-        {"$set": {"password_hash": hash_password(payload.new_password)}},
+        {"$set": {"password_hash": await hash_password_async(payload.new_password)}},
     )
     # AUTH-005: Revoke all OTHER refresh tokens (user stays logged in on current device)
     # To be conservative, revoke all and let the client re-authenticate
